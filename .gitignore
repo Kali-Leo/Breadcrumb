@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# build outputs
+dist/
+target/
+*.tsbuildinfo
+
+# tauri
+apps/desktop/src-tauri/gen/
+
+# editor/os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# logs & local data
+*.log
+*.db
+*.sqlite

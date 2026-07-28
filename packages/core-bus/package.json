@@ -1,0 +1,19 @@
+{
+  "name": "@breadcrumb/core-bus",
+  "version": "0.0.1",
+  "description": "Typed event bus: the nervous system connecting Breadcrumb core and plugins.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
