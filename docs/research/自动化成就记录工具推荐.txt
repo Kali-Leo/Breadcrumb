@@ -1,0 +1,44 @@
+﻿自动化成就记录工具推荐
+https://gemini.google.com/app/76cf457524e84f8c
+
+
+User prompt: 请你搜索github和product hunt等项目平台 看看是否存在一个项目是：自动整理并记录用户每天做了什么，让用户有成就感减少焦虑
+Response: 在 GitHub 和 Product Hunt 等平台上，确实存在不少这类“自动记录/整理每日成就、缓解焦虑”的项目。
+这个需求在产品圈和开发者社区里通常被称为 Done-List（已完成清单）、Personal Achievement Journal（成就日志），或是 Quantified Self（量化自我）。
+这类开源与独立产品主要分为以下三大方向：
+1. 完全自动化：全天候记录与 AI 自动生成
+这类工具主打“零手动输入”，在后台默默记录你的电脑/手机操作，并在一天结束时自动通过 AI 帮你生成一份漂亮的每日成就总结。
+🛠️ Screenpipe
+* 平台/类型：GitHub 开源项目 & 独立产品
+* 核心机制：它在后台静默运行，自动记录你的屏幕画面和音频。到了晚上，利用 AI（如 Claude 或本地模型）把你今天写过的代码、看过的文档、打过的会议整理成一份结构化的 Daily Journal（每日日志）。
+* 情绪价值：极其适合经常觉得“我今天到底忙了啥但感觉什么都没做”的人，直接用事实证明你完成了多少工作。支持一键同步到 Obsidian 或 Notion。
+🛠️ ActivityWatch
+* 平台/类型：GitHub 极高 Star 的开源项目
+* 核心机制：跨平台的自动时间与行为追踪器。自动记录你在各个软件、网页上的停留时间，并自动分类生成图表。
+* 情绪价值：数据完全存储在本地，注重隐私。通过可视化图表让你对自己的产出一目了然，减少“虚度光阴”的焦虑感。
+2. 心理赋能与成就感导向：强调正向反馈
+这类产品侧重于心理健康与正向强化，其核心逻辑不是“督促你做任务”，而是“记录你做成了什么”。
+🛠️ WinDiary
+* 平台/类型：Product Hunt 高赞产品
+* 核心机制：一款专门用来记录与庆祝个人微小胜利（Small Wins）的心理健康应用。它鼓励用户在一天结束时记录今天做成的成就（无论大小），并将其生成为好看的“胜利卡片（Win Cards）”。
+* 情绪价值：创始人打造这款产品的初衷正是为了应对低谷期与焦虑感，让用户在怀疑自己时，可以翻看过去的“胜利记录”来重拾自信。
+🛠️ I Done This
+* 平台/类型：Product Hunt / Web
+* 核心机制：经典的“反向待办事项”工具。每天晚上通过邮件或弹窗提醒你：“今天你完成了什么？” 你只需回复几句话，它就会自动生成一份每日/每周的成就周报。
+* 情绪价值：将传统的“TODO 压力”转变为“DONE 的成就感”。
+3. 开发者与特定工作流自动化
+如果你是开发者或数字游民，开源社区有很多集成在日常工具里的轻量自动化项目：
+* Super Productivity（GitHub 开源）：结合了时间追踪与任务完成记录，能自动抓取你在 GitHub、GitLab、Jira 上的 Commit 和 PR，自动汇总成你今天的“工作成果图表”。
+* Git Revision Tracker / Progress Trackers（Obsidian 插件 / CLI）：针对写作者或程序员，自动读取 Git 提交记录，绘制出类似 GitHub 的每日热力图（Heatmap），直观呈现“我今天确实产出了成果”。
+💡 总结与建议
+如果你希望彻底自动化、不需要自己手动输入： 👉 推荐尝试 Screenpipe 或 ActivityWatch。
+如果你更偏向心理疏导，需要仪式感和成就感： 👉 推荐体验 WinDiary 或搜索关键词 "Done List" 相关的卡片应用。
+Sources
+1. Super Productivity is an advanced todo list app with integrated Timeboxing and time tracking capabilities. It also comes with integrations for Jira, GitLab, GitHub and Open Project.
+2. AI-powered Obsidian notes from screen activity - Screenpipe
+3. GitHub - ActivityWatch/activitywatch: The best free and open-source automated time tracker. Cross-platform, extensible, privacy-focused.
+4. Automatic daily journal from your screen - screenpipe
+5. ActivityWatch - GitHub
+6. Mirror: Track habits, log activities, build streaks & view insights | Product Hunt
+7. Git Revision Tracker - Obsidian Plugin
+________________

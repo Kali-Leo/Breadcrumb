@@ -1,0 +1,112 @@
+﻿AI 编码可读性规范
+https://gemini.google.com/app/a45822bba51af13e
+
+
+User prompt: 在纯vibe coding的项目中，为了增强ai对代码的可读性，有没有rules让ai写适合ai阅读的代码
+Response: 在纯 Vibe Coding（由 AI 全权负责写代码与重构，人类只负责表达意图）的项目中，代码不仅是给编译器看的，其真正的“第一读者”变成了 AI 自己。
+由于 AI（LLM）依赖上下文窗口（Context Window）、注意力机制（Self-Attention）和 RAG 检索，人类喜欢的“优雅抽象”往往反而会让 AI 迷失。为了让 AI 在未来的对话中能以最低 Token 成本、极少幻觉精准理解代码，必须建立一套专门针对 “AI 可读性” 的写码规范（AI-Native Coding Rules）。
+核心原则：AI 喜欢怎样的代码？
+AI 阅读代码有三个硬伤：
+1. 害怕跨文件深度跳转（跟踪 5 层继承或回调会导致 Context 爆满或中途遗忘）。
+2. 害怕隐式推导（弱类型、动态拼接字符串会让 AI 猜错数据结构）。
+3. 害怕过于“聪明”的抽象（越特殊的自定义设计，越不在 AI 的预训练分布里）。
+因此，AI 可读代码的核心思想是：高内聚（Behavior Locality）、显式契约（Explicit Contracts）、拥抱大流（Standard Idioms）。
+7 条适合 AI 阅读的代码规范 (AI Rules)
+建议将以下规则直接写入项目的 .cursorrules、AGENTS.md 或 CLAUDE.md 中，约束 AI 自动遵守：
+1. 行为局部性 (Locality of Behavior) > 盲目 DRY
+* 规则：宁可少量重复，不要深度抽象。 将处理某个逻辑所需的代码尽量集中在单个文件或相邻函数内。
+* 原因：人类喜欢抽象出各种层级（Factory, Provider, Wrapper），但 AI 在读取代码时，跨文件跳转越深，丢失上下文信息的概率越高。逻辑越直铺（Linear Flow），AI 读得越准。
+2. 强类型与显式契约 (Strict Typing & Explicit Contracts)
+* 规则：必须使用 TypeScript（Strict Mode）、Python Type Hints 等。所有函数的输入/输出参数、API 返回数据，必须显式定义 Type/Interface/Pydantic 模型。严禁使用 any 或未定义的隐式字典。
+* 原因：AI 不需要再去推导或者猜测变量长什么样。类型定义就是给 AI 看的最佳文档，也是 LLM 最不容易理解错的“硬契约”。
+3. 单文件体积限制 (File Size Hard Limit)
+* 规则：单个文件代码量严禁超过 150～200 行。如果超长，必须按业务粒度拆分为独立小模块。
+* 原因：AI 读取小文件时耗费的 Token 更少，修改时生成的 Diff 也更小，大幅减少了由于文本过长导致写出语法断裂或修改错误的风险。
+4. 语义化与全名命名 (Semantic & Descriptive Naming)
+* 规则：禁止使用缩写（如 calc -> calculateDiscountedPriceForVIPUser），变量和函数名尽量长且充满上下文语义。
+* 原因：现代 AI IDE（如 Cursor、Windsurf、Claude Code）依赖向量检索（RAG）寻找相关代码。精准且语义丰富的词汇能直接提高 AI 检索代码的匹配度。
+5. 拥抱“标准模式”，禁用“聪明代码”
+* 规则：要求 AI 必须使用框架官方推荐的、最通用的范式（如 Next.js App Router 标准写法、FastAPI 标准路由），绝对不写“炫技”或极度不常见的黑魔法代码。
+* 原因：AI 的知识来自于训练集里的亿级代码。越标准、越主流的代码模式，AI 预测和维护的准确率越高；越奇特自定义的写法，下一次对话时 AI 越容易产生幻觉。
+6. 文件头提供 AI 摘要 (Header Docstrings)
+* 规则：每一个文件的开头，必须写一段标准的 Markdown/Docstring 格式注释，说明：
+   1. 这个文件是干什么的（Purpose）。
+   2. 它的核心入口/对外暴露函数是什么（Main Exports）。
+   3. 它依赖哪些关键模块（Dependencies）。
+* 原因：AI 扫描目录或做全局检索时，只需要读取文件前几行就能建立完整导航图，不需要解析全文。
+7. 维护自我更新的架构元文件 (Memory Bank)
+* 规则：在项目根目录维护一个 .context/ 文件夹或 ARCHITECTURE.md，要求 AI 每次在完成大型变更时，必须顺手更新架构文档和模块关系图。
+* 原因：AI 是没有跨 Session 记忆的。项目元文件就是它的“长期记忆库”，新开对话时直接将该文件喂给 AI，它能瞬间掌握全貌。
+📋 贴入项目即可使用的 Prompt/Rules 模版
+你可以将以下内容直接复制到你的项目配置文件（如 .cursorrules 或 AGENTS.md）中：
+# AI-Native Code Rules (Optimized for AI Readability & Maintenance)
+
+You are operating in a pure "Vibe Coding" environment. You write and maintain the entire codebase. 
+To ensure that you (and future LLM agents) can efficiently read, parse, and extend this repo with low hallucination and low context usage, follow these strict rules:
+
+## 1. Code Architecture & Style
+- **Locality over Abstraction**: Keep logic plain and readable. Avoid deep object hierarchies or excessive wrapper abstractions that span multiple files.
+- **Strict Typing**: ALWAYS use strict typing (TypeScript strict mode / Python type hints). Do NOT use `any` or ambiguous objects. Define explicit interfaces for every function input/output.
+- **File Length Limit**: Keep single files under 150-200 lines. Split logic into modular sub-files if a file grows too large.
+- **Standard Idioms Only**: Use mainstream, canonical, framework-recommended patterns. Avoid "clever" hacks or unusual tricks.
+
+## 2. Naming & Documentation
+- **Descriptive Naming**: Use long, highly-descriptive variable and function names (e.g., `calculateMonthlyTaxForEmployee` instead of `calcTax`).
+- **File Header Summaries**: Include a short comment at the top of EVERY file detailing:
+ - Purpose of the file
+ - Main exported interfaces/functions
+ - Key side effects (if any)
+
+## 3. Memory & Maintenance
+- **Keep Architecture Updated**: If your change modifies the core data flow, routing, or database models, update `ARCHITECTURE.md` or `.context/activeContext.md` accordingly before concluding your task.
+- **Self-Contained Error Messages**: Include clear, domain-specific contexts in error messages to make debugging easy during future log inspections.
+
+总结： 给人类看的代码追求“简洁优雅”；给 AI 看的代码追求“显式描述、边界清晰、没有猜想”。通过限制文件体积、增加显示类型和提供模块头注释，你可以让 AI 维护数万行大型项目时依然保持极高的准度。
+________________
+
+
+User prompt: 我说的是在开源的rules里有没有这种rules，或者开源项目
+Response: 在开源社区中，随着 Vibe Coding（AI 全权接管代码编写）的爆发，专门针对“让 AI 更好地阅读和维护代码”的开源规则库与标准项目已经形成了一个非常热门的生态。
+以下是目前开源社区中最知名、最实用的 AI 规则库和开源框架：
+1. 热门开源项目与规则库
+📂 obviousworks/vibe-coding-ai-rules
+* 项目特点：目前开源社区中最系统化的 Vibe Coding 规则整合库。
+* 核心思想：认为“上下文即一切（Context is King）”。它汇总了防止 AI 幻觉、让代码对 AI 更友好（Agentic Coding）的工程规范，并支持转换为 Cursor、Windsurf、Claude Code、Cline 等多种工具的配置格式。
+🧠 Cline / Roo-Code Memory Bank 系统
+* 项目特点：AI Agent 领域最著名的“长期记忆与代码自我更新规范”。
+* 核心规则：它通过一组固定的 Markdown 规则文件（如 .clinerules/memory-bank.md）要求 AI 在编写任何代码前，先阅读自己的记忆库；编写完代码后，必须更新架构图和上下文。这样即使新开一个对话窗口，下一个 AI 也能 1 秒接手。
+🌐 AGENTS.md 开源规范标准
+* 项目特点：就像人类看 README.md 一样，AGENTS.md 是开源社区正在发起的专门给 AI 读的项目入口规范标准。
+* 核心作用：许多主流 AI Coding 工具（如 Claude Code、Windsurf、Codex 等）原生支持读取根目录的 AGENTS.md。在这个文件里，开源作者会定义项目的“AI 编码公约”。
+🛠️ PatrickJS/awesome-cursorrules & cursor.directory
+* 项目特点：社区最大的 Cursor Rules (.mdc / .cursorrules) 开源聚合库。
+* 核心内容：包含大量针对特定语言和框架的开源规则文件。其中不少高质量规则（如 TypeScript 强约束、避免深层抽象等）就是专门为了提高 AI 解析效率而设计的。
+⚡ FutureExcited/vibe-rules
+* 项目特点：一个开源的规则自动化同步 CLI 工具。
+* 核心作用：让你编写一套“AI 可读性规则”，然后自动推送到 .cursor/rules/、CLAUDE.md 或 AGENTS.md 中，解决不同 AI 编辑器配置不兼容的问题。
+2. 这些开源规则库中最经典的“AI 可读性”公约
+直接拆解上述开源库（如 vibe-coding-ai-rules 和 Memory Bank）中被高频使用的规则条目：
+
+
+规则名称 (Rule)
+	开源规则的真实描述/约束内容
+	为什么这么规定？
+	Locality of Behavior (行为局部性)
+	"Prefer inline logic and flat module trees over deep class hierarchies or high-level abstractions."
+	防止 AI 在分析某个功能时沿着类继承链跳转太多层，导致上下文溢出。
+	Explicit Type Boundaries (显式类型边界)
+	"Every function must specify explicit return types. Do not rely on implicit type inference across modules."
+	类型定义是 AI 检索和理解数据流最快的方式，能大幅减少类型断言错误。
+	Self-Documenting Headers (自描述头注释)
+	"Every created file MUST begin with a 2-sentence summary of its purpose and main exports."
+	AI 做语义检索（RAG）时，读文件头比解析全文本要精准得多。
+	Atomic File Principle (原子化单文件)
+	"Keep files focused under 150 lines. Split when a module takes on multiple responsibilities."
+	AI 生成小文件的修改 Diff 时几乎不报错，而大文件重写极易漏掉花括号。
+	Sources
+1. Memory Bank System | Agentic Coding Handbook
+2. obviousworks/vibe-coding-ai-rules - GitHub
+3. vibe-coding-rules · GitHub Topics
+4. GitHub - PatrickJS/awesome-cursorrules: Configuration files that enhance Cursor AI editor experience with custom rules and behaviors
+5. FutureExcited/vibe-rules: Save, load, distribute your AI rules - GitHub
+________________

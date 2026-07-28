@@ -1,0 +1,73 @@
+﻿开源AI日程助手推荐
+https://gemini.google.com/app/5639f1d8bcbed932
+
+
+User prompt: 有没有一个开源的项目提供计划辅助功能，除了用自然语言直接操作计划表外，提示你可能忘了的事情或建议你添加的计划
+Response: 这类需求正是当前“AI Copilot + 日程管理”最热门的探索方向。要满足“开源”、“自然语言直接操作”以及“智能提醒遗漏/建议计划”这三个核心条件，目前开源社区主要有以下几种不同形态的项目和解决方案：
+1. 专注于智能排程的开源替代品：Atomic
+如果你听说过 Motion、Reclaim.ai 或 Clockwise 这类商业 AI 日程工具（它们主打自动时间块排程、根据优先级调整任务），那么 Atomic 就是它们的开源自托管替代品。
+* 项目地址： GitHub 搜索 rush86999/atomic
+* 如何满足你的需求：
+   * 自动时间块（Time Blocking）： 你只需输入任务、截止日期和优先级，它的 AI 排程器（AI Planner）会自动在你的日历空闲时段中“占位”。
+   * 每日自动盘点（Autopilot）： 它拥有一个每日运行的自动驾驶功能，会分析你当天的日程，确保所有事情都安排妥当，并在发现时间冲突或任务可能延期时发出调整建议。
+2. 开源日程的基础标杆：Cal.com + AI 插件/工作流
+Cal.com（原名 Calendly.to）是目前全球最知名的开源日程预约与管理系统。它本身是一个极度强大的日历生态，通过引入 AI 元素可以实现非常聪明的辅助功能。
+* 项目地址： GitHub 搜索 calcom/cal.com
+* 如何满足你的需求：
+   * Cal AI： 官方正在逐步集成 AI 代理（Agent）功能，允许用户通过自然语言或邮件直接处理日程。
+   * 智能工作流（Workflows）： 你可以配置自动化规则，例如“如果连续 3 天没有安排复盘”，或者“在某类会议结束后提示添加跟进计划”。
+3. “组装派”：基于 Python + LLM 的自制 AI 日历助手
+因为许多人对于隐私和定制化有极高要求，开源社区里最成熟、也最容易实现“提示你可能忘了的事”的做法，是通过开源脚本将你的本地日历变成 LLM（大语言模型）的向量数据库。
+其中一个代表性的开源思路是：ai-calendar。
+* 项目地址： GitHub 搜索 joebunting/ai-calendar
+* 它是怎么工作的：
+   1. 它是一个 Python 脚本，会定时将你的 Google Calendar 或本地日历数据同步，并利用 Embedding 技术变成 AI 可读的上下文。
+   2. 你可以直接用自然语言问它：“我这周是不是漏掉了什么？”或者“根据我最近的习惯，我有什么该做但没列上去的计划吗？”
+   3. 系统自带的 AI 提示词（Prompt）里包含了习惯分析和工作/生活平衡建议，它会主动指出：“你连续工作了 5 天且每天超过 9 小时，建议在周五下午添加一个休息缓冲时间。”
+💡 核心痛点提示：为什么“主动提醒你忘了的事”在开源中通常需要额外配置？
+要让 AI “猜到你忘了什么”，AI 必须拥有除日历以外的第二上下文（例如你的笔记、邮件、或是长期的行为习惯）。
+* 如果你倾向于开箱即用：可以尝试自托管 Atomic。
+* 如果你更注重深度的“查漏补缺”：建议使用类似 ai-calendar 的开源脚本，将其连接到包含你日常笔记（如 Obsidian、Logseq）或邮件的本地知识库中，通过 Prompt 明确要求它：“扮演我的私人秘书，对比我的周报/笔记与我的日历，指出有哪些口头承诺了但没有落实到日历上的事件。”
+Sources
+1. Open source AI planner that is an alternative to Reclaim, Motion, & Clockwise - Reddit
+2. 12 Best AI Assistants for Google Calendar (2026 Rankings) - Carly AI
+3. AI scheduling assistant: Smart calendar management for teams - Manus
+4. What Is an AI Scheduling Assistant? Top Tools, Benefits, and Key Features - Slack
+5. 9 Best AI Calendar Tools I Tested for Scheduling (2026) - Lindy
+6. GitHub - joebunting/ai-calendar: Create your own AI calendar assistant with Python and Open AI. This checks your calendar every hour and uploads it as a vector store to your Open AI assistant.
+________________
+
+
+User prompt: 那么能实现类似功能的私人秘书ai呢
+Response: 要实现“像私人秘书一样，不仅能操作，还能通过记忆和多渠道信息主动查漏补缺”的功能，AI 必须具备两大底层能力：长期记忆（Long-term Memory）和多应用集成（Integrations）。
+开源社区正在往这个方向爆发，目前最具代表性、且最符合你对“秘书”幻想的开源项目主要有以下几个：
+1. OpenHuman —— 真正的开源“数字分身/第二大脑”
+OpenHuman 是开源社区里直接对标“智能私人秘书”的明星项目。它的核心定位就是成为一个有持久记忆、能连接你所有数字化生活的数字伴侣。
+* 项目特点：
+   * 海量记忆树（Memory Tree）： 它支持高达 10 亿 token 的记忆容量，不仅能记住聊天，还能“消化”你的邮件、文档、会议记录和个人偏好，并自动把它们织成一张记忆网。
+   * 全渠道连接（118+ 集成）： 原生支持连接 Gmail、Google Calendar、Notion、Obsidian、Slack、GitHub 等。
+* 如何实现你的需求： 因为它同时读取了你的日历和你的笔记/邮件，当你问它“我漏了什么”时，它能通过跨应用对比发现盲点。例如：“你在周二的邮件里答应了 Slack 上张三要交报告，但你的 Notion 任务栏和日历里都没有这一项，需要我帮你加上吗？”
+2. Vellum —— 主动型、高安全的 Mac 秘书
+Vellum 是一项设计极其惊艳的开源个人 AI 助手（主要运行在 Mac 上），它在 2026 年的开源 AI 助手评选中拿到了极高的评分。
+* 项目特点：
+   * 主动性（Proactivity）： 绝大多数 AI 都是“你不问，它不动”。而 Vellum 支持主动外联。它可以通过 Telegram 或 Slack 主动发消息弹你：“看你日历下午有个重要会议，但你还没准备讲稿，需要现在开始吗？”
+   * 安全隔离架构： 秘书需要接管你的各种账号，隐私是死穴。Vellum 独创了凭证执行服务（CES），模型本身接触不到你的明文密码或 API Key，只发出操作指令，由隔离层执行，极大保护了隐私。
+3. Charlie Mnemonic —— 拥有无限长短期记忆的 PA
+由 GoodAI 团队开发的 Charlie Mnemonic，是一个纯粹以“记忆力”为核心驱动的开源私人秘书（PA）。
+* 项目特点：
+   * 动态记忆融合： 传统的 RAG（检索增强）只是死板地去数据库里搜关键词，而 Charlie 拥有类似人类的情节记忆和长期记忆。它会把每一天的交谈、你习惯的变化自动融合成一份“关于你的动态画像”。
+   * 日程与沟通管理： 它的愿景就是帮你打理日历、邮件、笔记和自动化任务。因为它随时在更新对你的认知，它能发现那些你潜意识里遗忘、但它能通过逻辑推导出来的日程冲突或遗漏。
+4. 终极极客玩法：利用 Mem0 改造任何日程工具
+如果你不想换掉你现有的开源日程软件（比如上文提到的 Cal.com），你可以引入 Mem0（原名 EmbedChain）。
+* 项目地址： GitHub 搜索 mem0ai/mem0
+* 它是做什么的： 它是专门为 AI Agent（智能体）打造的通用记忆层。
+* 实现逻辑： 你可以把 Mem0 作为中间件。它会静默地学习你所有的输入。当你往计划表里写“明天和老板吃饭”，Mem0 会立刻提取并更新记忆：“主人明天有重要饭局”；当它发现你日历里没有任何准备动作时，结合它之前记住的“老板是个注重细节的人”，它就会触发提示，建议你添加一个“准备晚宴谈话资料”的计划。
+总结建议：
+* 想体验最省心、连接软件最多的现代开源秘书，冲 OpenHuman。
+* 如果你用 Mac 且希望 AI 能主动发信息提醒你，关注 Vellum。
+* 如果你有一定开发能力，想在现有系统里套一个超级大脑，用 Mem0 去做连接。
+Sources
+1. Introducing Charlie Mnemonic: The First Personal Assistant with Long-Term Memory
+2. GitHub - mem0ai/mem0: Universal memory layer for AI Agents
+3. 10 Best AI Assistants With Memory in 2026 (Tested) | Dume.ai
+________________

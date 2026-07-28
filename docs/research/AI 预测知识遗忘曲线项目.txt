@@ -1,0 +1,33 @@
+﻿AI 预测知识遗忘曲线项目
+https://gemini.google.com/app/78818cdf324ae289
+
+
+User prompt: 有没有开源项目做这样一件事：用ai预测知识的遗忘
+Response: 有的，而且在开源领域，利用机器学习/AI预测知识遗忘曲线并指导复习已经发展得相当成熟。
+最核心、最成熟的开源项目主要集中在间隔重复算法（Spaced Repetition Algorithm）以及 AI Agent 记忆衰减 这两个方向：
+1. 领头羊：FSRS (Free Spaced Repetition Scheduler)
+如果你想预测“人类对某个知识点的记忆保留概率”，Open Spaced Repetition (OSR) 团队维护的 FSRS 是目前全网公认最强、预测最准的开源项目。
+* 核心逻辑：基于 DSR 模型（Difficulty 难度, Stability 稳定性, Retrievability 可提取性）。它利用机器学习拟合你个人的历史复习数据，动态算出任意时间点 t 你对该知识点的记忆保留率 R(t)。
+* AI 预测机制：FSRS-6（最新版本）包含 21 个可优化的机器学习参数。通过梯度下降算法，它能根据每个人的记忆规律预测你“明天、三天后或一个月后”还记得该知识点的概率。
+* 生态与库：
+   * 核心引擎：提供 Python (fsrs-rs-python)、Rust (fsrs-rs)、JavaScript/TypeScript (ts-fsrs)、Go 等多种语言实现。
+   * 基准测试：srs-benchmark 项目专门对比了各大预测算法（如 Duolingo 的 HLR 半衰期回归模型、Anki 传统的 SM-2、FSRS 等）在真实数据集上的预测准确率（RMSE / AUC）。
+   * 落地应用：知名记忆软件 Anki 已原生内置 FSRS 作为官方下一代复习预测调度引擎；Obsidian 和 RemNote 也有对应的 FSRS 插件。
+2. 经典贝叶斯概率预测模型：Ebisu
+如果你喜欢纯粹的统计概率与贝叶斯预测，Ebisu 是另一个非常经典的开源项目。
+* 原理：使用 Beta 分布对知识点在脑海中的遗忘曲线建模。每次你测试自己（对/错），Ebisu 会利用贝叶斯更新（Bayesian update）重新预测该知识点随时间推移的衰减曲线。
+* 特点：极轻量（Python/JS），能够非常直观地返回一个 predict_recall(prior, elapsed_time) 函数，预测经过多久后成功回忆该知识点的概率。
+3. 大模型/AI Agent 的“遗忘与记忆”开源引擎
+除了预测人类记忆，现在也有项目尝试用遗忘曲线来管理 LLM（大语言模型）的上下文/长期记忆：
+* PowerMem：利用艾宾浩斯遗忘曲线对 AI Agent 记忆库中的 Vector/RAG 节点进行衰减预测与清理。知识越旧且越少被调用，其“存活率”衰减越快，模拟大脑的遗忘机制。
+* Awesome-AI-Memory：收录了大量将 Ebbinghaus Curve（遗忘曲线）引入大模型外置记忆系统的开源架构与前沿论文。
+💡 总结与建议
+* 如果你想开发自己的背单词/知识库/闪卡软件：直接引入 FSRS（推荐 fsrs-rs 或 ts-fsrs），它是目前预测准确度最高、调优参数最丰富的算法。
+* 如果你想做统计预测或简单建模：可以研究 Ebisu 的贝叶斯更新机制。
+* 如果你想给 AI Agent 做长期记忆衰减：可以参考 PowerMem 中遗忘曲线对向量索引加权计算的逻辑。
+Sources
+1. Open Spaced Repetition: About
+2. open-spaced-repetition/srs-benchmark - GitHub
+3. IAAR-Shanghai/Awesome-AI-Memory - GitHub
+4. ABC of FSRS · open-spaced-repetition/awesome-fsrs Wiki - GitHub
+________________

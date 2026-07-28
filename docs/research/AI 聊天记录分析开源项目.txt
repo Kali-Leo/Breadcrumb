@@ -1,0 +1,41 @@
+﻿AI 聊天记录分析开源项目
+https://gemini.google.com/app/69c9a987222c3f11
+
+
+User prompt: 有没有一个开源项目可以分析与ai的聊天记录
+Response: 开源社区确实有几个非常不错的专门用来分析与 AI 聊天记录的项目。这些工具通常支持导入 ChatGPT、Claude 等主流 AI 的导出数据（JSON 格式），并在本地进行深度挖掘。
+这里为你推荐三个在 GitHub 上比较有代表性的开源项目，它们的功能侧重点各有不同：
+1. ChatLab —— 本地优先的 AI 聊天记录分析工具
+这是一个非常强大的开源桌面应用，结合了本地 SQL 引擎和 AI 智能体。它可以把你的所有聊天历史统一建模，非常适合拥有“海量记录”的用户。
+* GitHub 地址：ChatLab/ChatLab
+* 核心功能：
+   * 海量导入：支持百万级别的消息流解析，导入速度快。
+   * 可视化图表：可以直观地看到你与 AI 互动的趋势、时间分布、互动频率等数据看板。
+   * AI 智能分析：内置 24+ 种工具，你可以直接让一个本地 AI 智能体去“阅读”和总结你过去的所有聊天记录。
+   * 隐私安全：100% 本地运行，数据绝不上传服务器。
+2. LLM Chat Explorer —— 轻量、专注隐私的浏览器分析器
+如果你不想在电脑上安装繁重的软件，只是想快速查看、搜索或分析一下刚导出的 JSON 文件，这个项目是完美的轻量化选择。
+* GitHub 地址：levysoft/llm-chat-explorer
+* 核心功能：
+   * 零安装运行：它实际上就是一个纯前端的 HTML 页面，下载后双击在浏览器里就能打开。
+   * 跨平台支持：完美支持 ChatGPT 和 Claude 的官方导出 JSON。
+   * 深度搜索：弥补了官方搜索功能慢、难用的缺点，支持按标题、内容全文快速检索。
+   * 本地处理：数据直接在浏览器内存中处理，没有网络请求，不会泄露隐私。
+3. Chat Wizard —— 专为开发者及多 AI 切换者设计
+如果你是一个开发者，日常频繁在不同的 AI 编程助手（如 GitHub Copilot、Claude、Cursor、Windsurf 等）之间切换，这个项目能帮你把碎片化的上下文拼凑起来。
+* GitHub 地址：Veverke/ChatWizard
+* 核心功能：
+   * 多平台聚合：把散落在各个 IDE 和独立客户端里的 AI 聊天记录聚合成一个统一的视角。
+   * 代码块归档：能把你让 AI 写过的所有代码块、Prompt（提示词）单独提取并去重归档。
+   * 使用率分析：自带热力图和模型使用分析看板，让你知道自己哪段时间在疯狂敲代码、哪个模型用得最多。
+💡 怎么获取你的聊天记录？
+使用这些工具前，你需要先去 AI 官方网站导出你的数据。一般来说流程如下：
+* ChatGPT：点击头像 -> 设置 (Settings) -> 数据控制 (Data controls) -> 导出数据 (Export data)。你会收到一封包含 conversations.json 的邮件。
+* Claude：点击头像 -> 账户设置 (Account Settings) -> 导出数据 (Export Data)。
+你可以根据自己的需求选择：想看炫酷的数据分析和让 AI 帮你总结选 ChatLab；单纯想快速搜索和阅读选 LLM Chat Explorer。
+Sources
+1. levysoft/llm-chat-explorer: A privacy-focused web app for locally processing and analyzing ChatGPT and Claude chat exports. - GitHub
+2. ChatLab/ChatLab: Local-first chat history analyzer with AI. | 本地优先的 AI 聊天记录分析工具
+3. GitHub - Veverke/ChatWizard: Unify, search & analyse your AI chat history from Copilot, Claude, Cline, Roo Code, Cursor, Windsurf, Aider & Antigravity — with MCP server. 100% local.
+4. mental-health-chatbot · GitHub Topics
+________________

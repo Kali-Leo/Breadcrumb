@@ -1,0 +1,383 @@
+﻿AI 协作开源项目规范指南
+https://gemini.google.com/app/491d70fcf411ff5a
+
+
+User prompt: 在现在的vibe coding过程中，对于开源项目的可维护性以及一些基本要求，以及项目可能需要和人类开发者或其他使用ai的人类开发者合作（我的意思是github这种开源匿名合作），有没有什么开源项目能够让ai在编写的过程中按照某些规则commit等，使其符合开源项目开发规范
+Response: 在 Vibe Coding（以 AI 辅助快速生成代码）流行之后，代码垃圾（AI Slop）、乱七八糟的 Commit 历史以及缺乏工程规范 成了开源协作最大的痛点。
+为了让 AI 在“自由发挥”的同时，遵守开源项目的可维护性规范（如 Conventional Commits 规范、代码格式、单元测试等），目前开源社区已经沉淀出了一套“软性提示词规范 + 硬性自动化拦截 + 专用 AI 工具”的治理体系。
+1. AI 代理统一行为规范：AGENTS.md
+为了防止不同的 AI 助手（如 Cursor、Claude Code、Aider、Windsurf 等）在同一个开源项目中乱写乱提交，目前 Linux 基金会旗下 Agentic AI Foundation 与 OpenAI、Cursor、Google 等联合推出了统一规范：AGENTS.md。
+把 AGENTS.md 放在项目根目录下，几乎所有主流 AI 编码工具都会自动读取它。你可以在其中明确规定 AI 提交 Commit 的规则：
+# AGENTS.md
+
+## Git Commit Rules
+- Must follow the **Conventional Commits** standard: `<type>(<scope>): <description>`.
+- Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+- Keep the first line under 52 characters, imperative mood ("add" not "added").
+- Example: `feat(auth): add OAuth2 login support`
+
+## Quality Guardrails
+- Before making any git commit, ALWAYS run `npm run lint` and `npm test`.
+- NEVER commit broken code or failing tests.
+- DO NOT edit vendor files or environment secrets.
+
+提示：除了 AGENTS.md，很多开发平台支持的原生文件（如 .cursor/rules/、.github/copilot-instructions.md、CLAUDE.md）也可以通过重定向指向 AGENTS.md，实现项目规范的单一事实来源（Single Source of Truth）。
+2. 约束 AI 的硬性拦截器（Git Hooks & CI）
+纯靠提示词（Prompt）约束 AI 并不总是 100% 靠谱，AI 有时会“幻觉”忽略规则。因此在开源协作中，必须配合 Git 本地的硬性校验工具。
+当 AI 试图执行 git commit 时，这些工具会在底层阻断不合规的提交，强制 AI 重新修改 commit message 或代码：
+
+
+工具组件
+	作用
+	开源地址/安装
+	commitlint
+	校验 Commit 格式是否符合 Conventional Commits，不合规直接拒绝提交。
+	@commitlint/cli
+	husky / pre-commit
+	在 git commit 执行前自动触发格式化、Lint 检查和 commitlint。
+	Husky (JS/TS) / pre-commit (Python/多语言)
+	lint-staged
+	只对 AI 提交暂存区（Staged）的代码运行 Prettier/ESLint，提高运行效率。
+	lint-staged
+	AI 被拦截后的工作流： AI 执行 git commit -m "added some feature" → commitlint 报错阻断 → AI 读取终端报错信息 → AI 自动修正为 git commit -m "feat(ui): add modern button component" → 提交成功。
+3. 针对 Git 规范优化的 AI 编码工具与项目
+如果你想让 AI 从一开始就天生具备严谨的 Git 提交习惯，可以参考以下开源项目和 Agent 技能：
+1. Aider (CLI 最佳 Git 配合 AI)
+* 特点：Aider 是目前对 Git 版本控制最友好的开源终端 AI 助手。
+* 规范参数：
+   * aider --conventional-commits：原生支持自动将代码变更按规范分包，并生成标准 Conventional Commits 信息。
+   * aider --auto-test：在 Commit 前自动运行项目的测试套件，测试不通过绝不提交。
+2. Qodo PR-Agent (开源 PR 自动化审查工具)
+* 开源地址：qodo-ai/pr-agent
+* 特点：在 GitHub 上以机器人身份运行。不论是人类还是 AI 提交了 Pull Request，它都会根据开源规范检查代码质量、生成标准的 PR 说明（PR Description）、提取 Changelog，并检查 Commit 历史。
+3. Agent Skills Library / agent-rules 开源库
+* 开源项目：GitHub 上有许多社区维护的规则模板库（如 awesome-cursorrules 或 agent-rules 标号项目）。
+* 你可以在项目中直接包含针对 Commit 的 Agent 技能定义（如 conventional-commit skill），它会教会 AI 在提交前执行 git diff 检查改动范围，再生成精准的语义化提交信息。
+💡 推荐的开源 Vibe Coding 最佳配置清单
+要建立一个适合人类与 AI 匿名高效协作的开源项目，建议按以下步骤配置：
+1. 项目根目录添加 AGENTS.md：写入技术栈规范、代码风格、Commit 格式要求。
+2. 配置 Git 钩子（Husky + commitlint）：在底层守住底线，确保任何非法 Commit Message 都会抛出终端错误信息提示 AI。
+3. 设置 GitHub Actions CI 流水线：配置自动化格式校验（如 prettier --check）、类型检查（如 tsc）与单元测试，任何不合格的 PR 无法 Merge 到 main 分支。
+4. 配置 .github/PULL_REQUEST_TEMPLATE.md：要求 AI 或开发者在提交 PR 时填写的标准格式（变更内容、关联 Issue、测试证明等）。
+Sources
+1. How to write a great agents.md: Lessons from over 2,500 repositories - The GitHub Blog
+2. AGENTS.md: a Single Source of Truth for Any AI in Your Repo - Medium
+3. agent-rules · GitHub Topics
+________________
+
+
+User prompt: 那有没有一些开源项目能够让ai自己搜索和为自己添加rules和mcp
+Response: 有的，这在 AI Agent 生态中被称为“元扩展（Meta-Capability）”或“Agent 自给自足（Self-Provisioning）”。
+随着 MCP（Model Context Protocol）被正式确立为 AI 协议标准，开源社区已经衍生出了一套让 AI “缺乏工具时自己找 MCP”、“技术栈生疏时自己拉取/写入最新 Rules” 的开源工具与配置流。
+以下是实现这一目标的核心开源项目与机制：
+1. 让 AI 自己搜索并安装 MCP 的开源工具
+AI 要为自己添加 MCP，前提是它能像人类使用 npm install 一样去检索和配置 MCP。
+1. Smithery CLI (@smithery/cli)
+* 开源/生态定位：目前开源社区最大的 MCP 注册中心与 CLI 命令行工具。
+* AI 如何自主使用： Smithery 提供了完整的命令行交互 API（smithery mcp search <keyword> 和 smithery mcp add <server-name>）。当你给 AI 授予了终端 Shell 执行权限时，AI 如果发现在任务中缺少某种能力（如连接 PostgreSQL 或发送 Slack 消息），它可以自主触发：
+# 1. AI 自己在命令行中搜索对应的 MCP
+smithery mcp search "postgres"
+
+# 2. AI 自动将其安装并注册到当前的 IDE/客户端配置（如 .mcp.json 或 claude_desktop_config.json）
+smithery mcp add @smithery/postgres-mcp --client claude
+
+配置完成后，AI 即可直接调用新安装的工具。
+2. AgentGateway / Supergateway（开源 MCP 网关控制台）
+   * 开源项目：agentgateway / supergateway
+   * AI 如何自主使用： 它把多个 MCP 抽象为网关控制面。网关只暴露一个“元工具”（Meta-Tool，如 search_and_mount_tool）。当 AI 在执行任务时发现缺少某项能力，只需调用这个元工具，网关就会在后台动态拉取 Docker 容器或 npx 包，即时将新 Tool 挂载到 AI 当前的上下文会话中，无需重启 AI 客户端。
+2. 让 AI 自己搜索并添加 Rules / Docs 的开源项目
+传统方式是人类手动往项目里放 .cursor/rules/*.mdc 或 AGENTS.md。而通过以下工具，AI 可以根据项目代码动态检索并自动写入/更新规则：
+1. Upstash Context7 (@upstash/context7)
+   * 开源项目：upstash/context7
+   * AI 如何自主使用： Context7 是专门为 AI 编码助手设计的实时文档与规范检索 MCP 平台。它提供了 resolve-library-id 和 query-docs 两个 MCP 工具。
+   * 动态注入：当 AI 发现自己不熟悉某个库（例如 Next.js 15 或 Tailwind v4）时，会自动触发 Context7 检索该版本最正宗的规则与最佳实践，直接注入到对话中。
+   * 自动写入本地：配合命令行工具 npx ctx7 setup，AI 也可以把搜到的最新官方规则直接持久化写入本地的 AGENTS.md 或 .cursor/rules/ 中。
+2. agent-rules-kit
+   * 开源项目：tecnomanu/agent-rules-kit
+   * AI 如何自主使用： 这套工具包含技术栈规则检索与脚手架生成器。AI 可以识别项目中的 package.json 或 Cargo.toml，自动执行命令拉取匹配当前框架的工程规范模版，并写入 .cursor/rules/ 文件夹：
+# AI 识别到是 Next.js 项目后自主运行，拉取对应规则并配置支持的 MCP 工具
+npx agent-rules-kit --stack=nextjs --auto-install --mcp-tools=github,memory
+
+3. mcp-ai-agent-guidelines
+      * 开源项目：Anselmoo/mcp-ai-agent-guidelines
+      * AI 如何自主使用： 这是一个将“敏捷开发规范、代码洁癖规则、分层 Prompt 模板”封装为 MCP 服务的开源项目。AI 在回答复杂重构或设计模式问题前，会主动调用这个 MCP 的资源库：“查询目前模块解耦的标准 Guideline”，从而按照工业级规范输出代码。
+3. 如何在你的开源项目里开启“AI 自给自足”模式？
+要让 AI（如 Cursor Agent、Claude Code、Aider 等）实现这一能力，你只需要在项目的 AGENTS.md 或系统提示词（System Prompt）中赋予它权限与指引：
+# AGENTS.md
+
+## Meta Capabilities & Self-Improvement
+1. **Lack of Tools (MCP)**: If you need an external capability (e.g., PostgreSQL, Redis, GitHub API) that isn't in your current environment, run `npx @smithery/cli mcp search "<keyword>"` to find and install the appropriate MCP server automatically.
+2. **Outdated Knowledge/Rules**: Before writing code for external libraries, query `Context7` MCP or run `npx agent-rules-kit` to fetch version-matched rules and documentation. Append newly discovered patterns to `.cursor/rules/` or `AGENTS.md`.
+
+⚠️ 开发者安全提醒（Sandboxing）
+给予 AI “自动搜索并安装 MCP / Rules” 的权限虽然极大地解放了双手，但也伴随一定安全风险（如恶意 MCP 注入或恶意文档诱导执行代码，即 ContextCrush 类攻击）。
+最佳安全做法：
+      1. 在 Docker 沙盒环境或测试分支中让 AI 自由装配工具与 Rules。
+      2. 配置 Git 钩子（如前文提到的 commitlint / CI 流水线），限制 AI 提交未受信任的二进制文件或破坏性的规则。
+Sources
+      1. Yapi Auto MCP Server - GitHub
+      2. Smithery CLI: Setup, Usage & Alternatives (2026) | Apigene Blog
+      3. GitHub - browser-use/browser-use: Make websites accessible for AI agents. Automate tasks online with ease.
+      4. AI Rules - Stagehand Docs
+      5. tecnomanu/agent-rules-kit: Bootstrap of Cursor rules (.mdc) and mirror documentation (.md) for AI agent-guided projects. - GitHub
+________________
+
+
+User prompt: 那有没有一些开源项目能够让ai自己搜索和为自己添加skill
+Response: 在 AI Agent 和 Vibe Coding 演进中，“让 AI 自动搜索、学习、并为自己生成/添加 Skill（技能）” 是实现“自进化 Agent（Self-Evolving Agent）”的核心方向。
+目前开源社区已经建立了统一的 Agent Skill 规范（如 SKILL.md 标准），并涌现出了专门负责 “技能自动检索”、“技能自学习合成” 和 “私有技能注册表” 的开源项目。
+1. 让 AI 自动上网搜索并“自创/保存”Skill 的开源项目
+这类项目的原理是给 AI 装配一个“元技能（Meta-Skill）”。当 AI 遇到未知的技术栈或复杂的工程需求时，它会自动触发“搜索 → 总结规范 → 写入 Skill 文件 → 永久掌握该技能”的闭环。
+1. philschmid/self-learning-skill
+      * 开源地址：philschmid/self-learning-skill
+      * 核心机制：这是一个专门用来“教 AI 自学”的开源 Skill。
+      * AI 工作流程：
+      1. 当 AI 发现自己不了解某个新出现的开源库或工具时，自动触发 self-learning 流程。
+      2. 使用 Web Search 检索该工具的官方最新文档。
+      3. 提炼出最佳实践、代码示例与常见踩坑点。
+      4. 自动在本地生成一个符合规范的 SKILL.md 并写入 .agent/skills/ 或全局技能目录。下次再遇到同类任务时，AI 就能直接调用该 Skill。
+2. sentient-agi/EvoSkill
+      * 开源地址：sentient-agi/EvoSkill
+      * 核心机制：针对 Coding Agent 的技能自动发现与合成框架。
+      * AI 工作流程：它能在 AI 执行任务（如编写代码、跑测试）失败或遇到挫折时，分析失败轨迹（Trajectories），自动提取出“怎么避坑”的解决经验，将该经验提炼为一个可重复使用的 Agent Skill。支持 Claude Code、OpenCode、OpenHands 等主流开源 Agent 环境。
+3. Voyager (经典自学习技能库项目)
+      * 开源地址：MineDojo/Voyager
+      * 核心机制：AI 终身学习（Lifelong Learning）的开山项目之一。虽然最初用于 Minecraft 自动化，但其“技能树生成、向量检索 Skill 库、代码执行验证”的架构设计被广泛借用到代码 Agent 中。AI 每次成功解决一个新难题，就会把解决该难题的函数打包存入向量数据库，以便未来自动检索调用。
+2. 让 AI 自动检索并下载“已熟成”技能的开源注册中心
+如果不想让 AI 从零上网总结，也可以让 AI 像人类使用 npm 或 pip 一样，自动从开源技能注册表（Agent Skill Registry）中检索并安装现成的专业 Skill。
+1. iflytek/skillhub (开源 Agent 技能注册表)
+      * 开源地址：iflytek/skillhub
+      * 核心机制：相当于 Agent Skills 领域的私有/开源 npm 仓库。
+      * AI 如何自主使用： 它提供了 REST API 和命令行工具。当 AI 在项目中感知到缺少某种能力（如缺乏针对 Docker 或 k8s 的规范 Skill）时，可以自主向 SkillHub 发起 API 请求，检索匹配的技能包，下载并解压安装到当前工作区。
+2. opencode-agent-skills (OpenCode 动态技能检索插件)
+      * 开源地址：joshuadavidthomas/opencode-agent-skills
+      * 核心机制：为开源终端 AI（如 OpenCode）提供语义化的 Skill 检索与动态注入机制。
+      * 工具集：提供 get_available_skills 和 use_skill 工具，允许 AI 在运行中动态浏览可用的 Skill 目录，并按需加载到当前对话上下文中，避免一次性注入太多提示词撑爆 Context。
+3. orchestra-research/AI-research-SKILLs
+      * 开源地址：orchestra-research/AI-research-SKILLs
+      * 核心机制：包含了近百个深度封装的技能包。 AI 可以直接读取其提供的 welcome.md 指引，在终端中自主触发 npx 或 /plugin install 命令，动态拉取并挂载各类专项技能（如微调、Post-training、科研自动化等）。
+🛠️ 如何在项目中落地“AI 自寻 Skill”工作流？
+要在你自己的开源项目中搭建这套机制，最推荐的极简落地路径如下：
+你的项目根目录/
+├── AGENTS.md                  # 规定 AI 什么时候该去找 Skill
+└── .agent/
+   └── skills/                # 存放 Skill 的目录
+       ├── self-learning/     # 引入 self-learning-skill
+       │   └── SKILL.md
+       └── your-custom-skill/
+           └── SKILL.md
+
+      1. 引入标准规范：在项目根路径下配置 .agent/skills/ 目录（兼容 Anthropic/OpenCode 等通用 Skill 格式）。
+      2. 嵌入自学元技能：将 philschmid/self-learning-skill 的 SKILL.md 放入该目录。
+      3. 在 AGENTS.md 中给 AI 下达指令：
+## Skill Management
+- Whenever you encounter an unfamiliar framework, library, or complex domain workflow, DO NOT guess or hallucinate.
+- Use the `self-learning` skill to search the official documentation, distill the patterns, and create a new `SKILL.md` under `.agent/skills/<skill-name>/`.
+- Before executing tasks, check `.agent/skills/` to see if a relevant skill already exists.
+
+通过这种配置，AI 只要碰到生疏的任务，就会自动搜索 → 总结最佳实践 → 在本地落地为一个可复用的新 Skill，从而实现项目的 AI 技能自动累积。
+Sources
+         1. philschmid/self-learning-skill - GitHub
+         2. EvoSkill: Automated Skill Discovery for Coding Agents - GitHub
+         3. Agent Skills Registry - JFrog
+         4. GitHub - iflytek/skillhub: Self-hosted, open-source agent skill registry for enterprises. Publish & version skill packages, govern with RBAC and audit logs, deploy on-premise with Docker or Kubernetes.
+         5. AI Research Skills Library - GitHub
+________________
+
+
+User prompt: 分别是什么情况需要为ai添加skill，rules，mcp
+Response: 简单来说，这三者解决了 AI 协作中不同维度的能力问题：
+         * Rules（规则） → “员工守则”：告诉 AI 什么能做、什么绝对不能做、代码写成什么格式（侧重规范与约束）。
+         * Skill（技能） → “专家 SOP / 秘籍”：告诉 AI 解决某个特定领域的复杂任务，应该按哪几个步骤来做（侧重方法论与流程）。
+         * MCP（工具接口） → “手与脚 / 外部器官”：赋予 AI 触达外部世界、读取动态数据或执行系统操作的能力（侧重数据获取与环境交互）。
+1. 什么情况下需要添加 Rules（规则）？
+核心痛点：AI 生成的代码乱七八糟、不符合团队风格、总是使用弃用的 API，或者 Commit 格式乱写。
+📌 典型应用场景：
+         1. 统一团队代码规范（Code Style）
+         * 场景：团队规定必须使用 TypeScript 严格模式（禁用 any）、组件必须用 Function Component、必须使用 TailwindCSS 而不是裸写 CSS。
+         2. 约束项目架构边界（Architectural Constraints）
+         * 场景：要求 AI 在写后端时必须遵守 Clean Architecture 分层规范（Controller → Service → Repository），禁止 Controller 直接操作数据库。
+         3. 强制 Git 提交与工程规范（Commit & CI Rules）
+         * 场景：要求 AI 在 Commit 时必须遵循 feat(scope): description 的 Conventional Commits 格式，提交前必须运行 npm test。
+         4. 安全与划红线（Guardrails）
+         * 场景：禁止 AI 修改 .env 环境变量文件、禁止将敏感密钥硬编码进代码里。
+载体形式：AGENTS.md、.cursor/rules/*.mdc、CLAUDE.md 等文件。
+2. 什么情况下需要添加 Skill（技能）？
+核心痛点：任务太复杂、跨步骤太长，或者属于高度定制化的业务领域，单纯靠写在 Rules 里会导致全局 Context 膨胀，AI 依然容易搞砸。
+📌 典型应用场景：
+         1. 特定领域的复杂 SOP / 迁移工作流（Multi-step SOP）
+         * 场景：项目需要从 Next.js 13 升级到 15。这包含路由重构、Server Component 替换、中间件修改等 6 个步骤。把这套步骤打包成 next-upgrade-skill，AI 遇到升级需求时按 SOP 逐步执行。
+         2. 特定框架/内部库的“专家级调优秘籍”（Domain Expertise）
+         * 场景：公司内部写了一个自研的 RPC 框架，大模型在通用训练集里根本没见过。你需要写一个 Skill，指导 AI“如何用这套自研框架编写一个微服务端点，并处理特定的异常”。
+         3. 复用性极强的专业任务（Specialized Tasks）
+         * 场景：自动化编写单元测试（包含 Mock 数据生成、边界条件覆盖）、编写符合 OpenAPI 标准的 API 文档、性能瓶颈诊断与内存泄露排查。
+         4. 自进化与自学习（Self-Learning）
+         * 场景：让 AI 自动上网查阅某个新框架的最新文档，并提炼成一份可永久调用的 SKILL.md，方便下次直接复用。
+载体形式：包含明确输入/输出格式、执行步骤和 Trigger 条件的 .agent/skills/<skill-name>/SKILL.md 文件。
+3. 什么情况下需要添加 MCP（Model Context Protocol）？
+核心痛点：AI 只有“大脑”，但它看不见外部数据库、打不开你的 Jira 网页、拿不到最新的实时天气或 GitHub 上的动态。
+📌 典型应用场景：
+         1. 需要直接读写外部数据库/缓存（Live Database Access）
+         * 场景：你希望 AI 帮你在本地调试 bug 时，直接查询 Postgres 或 Redis 里的真实数据。你接入 Postgres MCP，AI 就能自己去查表了。
+         2. 与第三方 SaaS / 开发者平台集成（API & Tools Integration）
+         * 场景：要求 AI“把这个 Bug 的修复方案自动更新到 Jira 上，并给 GitHub 提一个 PR，最后在 Slack 里 @ 团队经理”。这需要接入 Jira MCP、GitHub MCP 和 Slack MCP。
+         3. 获取超越训练集截止日期的最新数据/文档（Live Browsing & Search）
+         * 场景：AI 需要查阅刚发布几个小时的新开源库文档，接入 Brave Search MCP 或 Puppeteer MCP，让 AI 能够自主爬取并阅读指定网页。
+         4. 执行系统级或环境级的底层操作（System Execution）
+         * 场景：控制 Headless 浏览器进行 UI 自动化测试、运行本地 Docker 容器、分析本地日志文件等。
+载体形式：在 .mcp.json 或 AI 客户端中配置的 MCP Server 服务（如 @smithery/postgres）。
+📊 三者对比与协同工作模型
+
+
+维度
+	Rules（规则）
+	Skill（技能）
+	MCP（工具接口）
+	本质定位
+	被动约束与代码风格规范
+	主动调用的方法论/SOP
+	外部系统能力扩展
+	解决的问题
+	“代码不要乱写，守规矩”
+	“这个复杂的专业任务怎么做”
+	“去哪里拿数据/怎么控制外部工具”
+	触发时机
+	全程生效（AI 随时被约束）
+	按需加载（识别到特定任务时激活）
+	动作发生时（需要调外部工具时）
+	类比
+	法律/公司员工手册
+	操作指南/技能秘籍
+	鼠标/键盘/API 密钥/打印机
+	💡 真实案例：三者如何联合搞定一个任务？
+假设你让 AI 负责 “修复 Sentry 报错并提交代码”：
+         1. MCP 出马：AI 调用 Sentry MCP 拿到线上具体的崩溃 StackTrace，并调用 Postgres MCP 确认崩溃用户的数据库状态（获取实时上下文）。
+         2. Skill 出马：AI 激活 bug-fixing-sop 技能，按照预设流程：定位代码 → 编写重现测试用例 → 修复 Bug → 验证测试（确保排查质量）。
+         3. Rules 出马：AI 在修改代码时，严格遵循 .cursor/rules/ 中的 TypeScript 规范，并在提交时按照 AGENTS.md 规定的 Conventional Commits 格式写下 fix(auth): handle null user token gracefully（确保不污染项目）。
+________________
+
+
+User prompt: 如果希望ai在做的时候能留下清晰的记录（但是又不会过于冗长无法阅读），有什么开源项目能做到
+Response: 在 AI 参与的开源或多人协作开发中，AI 的记录往往陷入两个极端：要么“黑盒操作”（只改代码不留痕迹，他人难以 Code Review），要么“灌水式输出”（产生大量刷屏的 Token 和漫无边际的 Log，无人想看）。
+要实现“清晰、高信息密度、易读不冗长”的记录，开源社区主要通过以下几个维度的项目和规范来解决：
+1. 过程与意图记录：SpecStory / Aider
+这类工具能够在 AI 编写代码的同时，自动将 AI 的推理、决策过程以及与人类的交互提炼为结构化的 Markdown 文档，并静默保存在仓库中。
+📌 SpecStory
+         * 开源/定位：专门将 Cursor、Claude Code、VS Code 中的 AI 对话记录自动转换为 Markdown 日志的工具。
+         * 它是如何做到“清晰不冗长”的：
+         * 它不会全盘照搬所有废话，而是提取“提了什么问题”、“AI 做了什么决定”、“涉及哪些关键 Diff”，自动生成在项目 .specstory/history/ 目录下。
+         * 记录格式完全基于 Git 友好的 Markdown，支持可折叠展开（<details>），方便人类开发者快速扫视（Scanning）。
+📌 Aider
+         * 开源地址：paul-gauthier/aider
+         * 特点：极简的终端 AI 协作工具。它在修改代码时，会生成非常干净的原子级 Git Commit，并会在 .aider.chat.history.md 中以精简的 Timeline 形式记录交互历程。
+2. 代码提交与变更摘要：aicommits / git-cliff
+把 AI 大段大段的代码改动，压缩成一行行符合 Conventional Commits 规范的提交日志，是保持版本历史清晰的关键。
+📌 aicommits / OpenCommit
+         * 开源地址：Nutlope/aicommits
+         * 工作机制：
+         * 当 AI（或开发者）改动完代码后，工具会读取 git diff，自动压缩并生成单行的规范 Commit Message（例如 feat(auth): add JWT expiration check）。
+         * 过滤掉任何“废话”，只保留改动类型、范围和一句话描述。
+📌 git-cliff
+         * 开源地址：orhun/git-cliff
+         * 工作机制：基于正则表达式和模板引擎，自动读取上面的规范 Commit 记录，生成高可读性、分门别类的 CHANGELOG.md（分为 Features, Bug Fixes, Refactor 等区域）。他人只需看 CHANGELOG 就能了解 AI 的工作成果。
+3. PR 级的宏观总结：Qodo PR-Agent
+当 AI 完成了一个完整的 Issue 或特性开发并提起 Pull Request 时，需要让评审代码的人（Human Reviewer）一眼看懂发生了什么。
+📌 Qodo PR-Agent (Codium PR-Agent)
+         * 开源地址：qodo-ai/pr-agent
+         * 工作机制：
+         * 在 GitHub / GitLab 的 PR 触发时自动运行。
+         * 它会将大块的代码修改提炼为一个标准的 PR 说明模板：包含 1 段高层概述、1 个关键改动点表格（Walkthrough Table）、1 个可折叠的逻辑序列图。
+         * 它利用 Markdown 的折叠语法，把冗长的代码分析收纳在 <details> 标签后，主界面只呈现 3-5 条核心结论，保持极高的高层可读性。
+4. 架构级重大决策记录：ADR 规范 + adr-tools
+对于重大架构改动（例如“AI 决定将数据库从 SQLite 迁移到 Postgres”），不应该只记在 Commit 里，而需要记录为 ADR（Architecture Decision Record，架构决策记录）。
+         * 工具/规范：npryce/adr-tools
+         * 标准格式（单页 Markdown）：
+# 0003. 使用 Redis 作为 Token 缓存
+
+* **状态**: 已批准
+* **上下文**: 原有内存 Token 校验在多节点部署时失效。
+* **决策**: 引入 Redis 作为集中式缓存。
+* **后果**: 增加了基础设施复杂度，但解决了多节点同步问题。
+
+         * AI 规则引导：你可以在 AGENTS.md 中约束 AI：“当涉及系统架构变动时，必须在 docs/adr/ 目录下新增一份不超过 200 字的 ADR 文档。”
+💡 最佳实践组合策略
+如果你想在自己的开源项目里落地一套“轻量、清晰、不烦人”的 AI 记录机制，推荐组合配置：
+
+
+阶段
+	使用的开源工具/规范
+	产生的记录效果
+	实时编写
+	SpecStory
+	将对话精简为 .specstory/history/*.md 备查
+	本地提交
+	aicommits + Conventional Commits
+	产生干净的 type(scope): summary 提交历史
+	合并代码
+	qodo-ai/pr-agent
+	生成带折叠面板、带表格的高层 PR 摘要
+	发布版本
+	git-cliff
+	一键将历史提取为精炼的 CHANGELOG.md
+	Sources
+            1. SpecStory - Visual Studio Marketplace
+________________
+
+
+User prompt: 我还需要ai评估自己把任务完成到了什么程度，比如有时候ai会偷懒或使用奇怪的方式蒙混过关，有什么开源项目能做到吗
+Response: AI 在面对复杂工程时，本质上会倾向于寻找“Token 消耗最少、语法上合法但未真正实现”的路径。例如：写 // TODO: implement later、直接写死返回值以凑合通过测试、甚至偷偷注释掉报错的单元测试。
+要解决这个问题，开源社区的核心策略是：“不要听 AI 嘴上说什么（AI 的自我评估经常盲目乐观），而是用‘执行反馈（Execution Feedback）’与‘对抗审计（Critic/Evaluator）’强制 AI 进行客观自我评估”。
+目前有以下几类优秀的开源项目和机制能做到这一点：
+1. 基于“执行闭环与自省”的 AI 编码工具
+这类工具的核心思想是：代码有没有写好，让编译器和测试套件说了算，而不是让 AI 自己评估。
+📌 Aider (--auto-test & --lint-cmd)
+            * 开源地址：Aider-AI/aider
+            * 如何防偷懒：
+            * Aider 可以在每次修改代码后自动运行项目的 Lint 和单元测试命令（如 aider --auto-test --test-cmd "npm test"）。
+            * 如果 AI 写了假代码或 incomplete 逻辑导致测试报错，Aider 会自动抓取最新的报错堆栈塞回给 AI，强制其在本地循环重写，直到 100% 真正通过测试才会允许提交 Git。
+📌 reflect (Reflect MCP Server)
+            * 开源地址：rohansx/reflect
+            * 如何防偷懒：
+            * 这是一个基于经典 Reflexion 论文（语言 Agent 自我强化反思）实现的 Rust MCP 服务。
+            * 当 AI Agent 试图完成任务时，reflect 会抓取并解析编译/测试的结构化信号（Error Signals）。如果发现异常，它会强制要求 AI 对自己的草稿代码写出“结构化反思日志（Self-Reflection Log）”，记录为什么没实现完整、模式是什么，并强制重新重构。
+📌 OpenHands (原 OpenDevin) / SWE-agent
+            * 开源地址：All-Hands-AI/OpenHands
+            * 如何防偷懒：
+            * 这些项目运行在独立的 Docker 沙盒中。它内置了评估节点（Evaluation Loop）：当 AI 宣告“我已完成任务”时，环境会触发独立的校验脚本，评估需求覆盖率和改动 Diff。如果未达到预设指标，任务会被强制驳回，继续重做。
+2. “双 Agent 审计”模式（Generator-Critic 架构）
+如果单靠单个 AI 容易“自欺欺人”，可以使用双 Agent 模式，引入专门负责“找茬”的审核 Agent。
+📌 LangGraph / AutoGen (Reflection & Critic 模式)
+            * 开源项目/模式：LangGraph Reflection Pattern
+            * 工作流程：
+            1. Coder Agent：编写代码并交卷。
+            2. Critic Agent（审计者）：专门负责审查 Coder 的输出。它的 Prompt 被赋予了极度苛刻的审查规则（例如：“检查是否有未实现的 // TODO”、“检查是否有硬编码假数据”、“检查是否真的覆盖了边界条件”）。
+            3. 评估循环：只有 Critic 评价给出 PASS 状态，工作流才会结束；否则 Critic 会抛出具体不符合规范的列表，打回 Coder 重写。
+📌 Promptfoo / DeepEval（自动化质量断言工具）
+            * 开源地址：promptfoo/promptfoo
+            * 如何防偷懒：
+            * 你可以用它为 AI 建立 LLM-as-a-Judge（AI 裁判） 的自动断言。
+            * 定义规则，如 assert: javascript-valid、assert: not-contains "// TODO"、assert: code-completeness > 0.9，在 CI/CD 中拦截 AI 的违规提交。
+3. 在配置文件中写入“硬性自我完成度评估规则”
+除了借力开源工具，最轻量有效的做法是在项目的 AGENTS.md 或 .cursor/rules 中增加专门的完成度自我检查清单：
+# AGENTS.md - Self-Evaluation & Anti-Laziness Protocol
+
+## 1. Strict Anti-Laziness Guardrails
+- **Zero Stubs Policy**: NEVER leave `// TODO`, `// FIXME`, `throw NotImplementedError`, or empty functions.
+- **No Test Cheating**: DO NOT fix a failing test by deleting the test, mocking the entire functionality, or hardcoding return values. Implement the real business logic.
+- **No Partial Refactoring**: If a signature changes, update ALL call sites across the codebase—do not leave unresolved imports or missing arguments.
+
+## 2. Mandatory Pre-Commit Self-Checklist
+Before marking any task as "Completed", you MUST verify and state in your log:
+1. Did I run tests and do they all pass? (Yes/No)
+2. Did I leave any unhandled edge cases or missing implementations?
+3. Did I write tests covering the new feature/fix?
+If any answer is "No", you MUST NOT announce task completion. Continue fixing.
+
+💡 方案落地建议
+            * 如果使用 IDE / CLI 工具：建议启用 Aider 并传入 --auto-test 参数，用终端自动化测试构成强约束。
+            * 如果构建自动化 Agent：建议采用 LangGraph / AutoGen 的 Reflection 架构，用 Critic Agent 专门监控 Coder Agent 是否偷懒。
+Sources
+            1. Document --message + --auto-test for headless CI/benchmark usage · Issue #4923 · Aider-AI/aider - GitHub
+            2. rohansx/reflect: Self-correction engine for AI coding agents - implements the Reflexion paper (Shinn et al., 2023) as a Rust MCP server. Turns failures into persistent, searchable lessons that prevent the same mistakes across sessions. · GitHub
+            3. Reflexion | Prompt Engineering Guide
+________________

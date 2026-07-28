@@ -1,0 +1,14 @@
+{
+  "name": "@breadcrumb/sdk",
+  "version": "0.0.1",
+  "description": "Types and contracts for Breadcrumb plugins: event map, manifest, permissions.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
