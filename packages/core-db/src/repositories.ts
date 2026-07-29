@@ -125,6 +125,10 @@ export function createNodeSightingsRepo(sql: SqlClient) {
         [row.id, row.node_id, row.conversation_id, row.message_id, row.created_at],
       );
     },
+    /** Every footprint ever — raw material for the memory (fog) engine. */
+    async listAll(): Promise<NodeSightingRow[]> {
+      return sql.select<NodeSightingRow>("SELECT * FROM node_sightings ORDER BY created_at ASC");
+    },
     /** This conversation's footprints in walking order — the session trail. */
     async listByConversation(conversationId: string): Promise<NodeSightingRow[]> {
       return sql.select<NodeSightingRow>(

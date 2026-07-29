@@ -47,6 +47,9 @@ importers:
       '@breadcrumb/plugin-map':
         specifier: workspace:*
         version: link:../../packages/plugin-map
+      '@breadcrumb/plugin-memory':
+        specifier: workspace:*
+        version: link:../../packages/plugin-memory
       '@breadcrumb/plugin-trail':
         specifier: workspace:*
         version: link:../../packages/plugin-trail
@@ -175,6 +178,22 @@ importers:
       '@types/d3-force':
         specifier: ^3.0.10
         version: 3.0.10
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+
+  packages/plugin-memory:
+    dependencies:
+      '@breadcrumb/core-db':
+        specifier: workspace:*
+        version: link:../core-db
+      ts-fsrs:
+        specifier: ^5.2.1
+        version: 5.4.1
+    devDependencies:
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -1689,6 +1708,10 @@ packages:
     resolution: {integrity: sha512-azl+t0z7pw/z958Gy9svOTuzqIk6xq+NSheJzn5MMWtWTFywIacg2wUlzKFGtt3cthx0r2SxMK0yzJOR0IES7Q==}
     engines: {node: '>=14.0.0'}
 
+  ts-fsrs@5.4.1:
+    resolution: {integrity: sha512-mOp9+oexJexBTkwjg/jQI1aSUQRLIAvbimeKHLSmVdNJPwObugFNKmZkoggH5d6kZ0uaWLboP1Al1DnXAfIb9w==}
+    engines: {node: '>=20.0.0'}
+
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
@@ -3116,6 +3139,8 @@ snapshots:
   tinyrainbow@2.0.0: {}
 
   tinyspy@4.0.4: {}
+
+  ts-fsrs@5.4.1: {}
 
   typescript@5.8.3: {}
 

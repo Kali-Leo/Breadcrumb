@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useMapStore } from "../stores/mapStore";
+import { useMemoryStore } from "../stores/memoryStore";
 import { type Camera, CLOSE_UP_SCALE, drawMap, findNodeAt, findPlaceAt } from "./mapRender";
 
 interface MapViewProps {
@@ -17,6 +18,7 @@ export function MapView({ onJumpToChat }: MapViewProps) {
   const places = useMapStore((state) => state.places);
   const unchartedCount = useMapStore((state) => state.unchartedCount);
   const nodes = useKnowledgeStore((state) => state.nodes);
+  const retentionByNode = useMemoryStore((state) => state.retentionByNode);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraRef = useRef<Camera>({ x: 0, y: 0, scale: 0.8 });
   const flyRef = useRef<number | null>(null);
@@ -29,14 +31,20 @@ export function MapView({ onJumpToChat }: MapViewProps) {
   } | null>(null);
 
   // Latest data for the draw loop without re-subscribing it.
-  const sceneRef = useRef({ places, nodeLabels: new Map<string, string>() });
+  const sceneRef = useRef({
+    places,
+    nodeLabels: new Map<string, string>(),
+    retentionByNode: retentionByNode as ReadonlyMap<string, number>,
+  });
   sceneRef.current = {
     places,
     nodeLabels: new Map(nodes.map((node) => [node.id, node.label])),
+    retentionByNode,
   };
 
   useEffect(() => {
     void useMapStore.getState().refresh();
+    void useMemoryStore.getState().refresh();
   }, []);
 
   // The heartbeat: ~30fps while the map is open, zero cost once unmounted.
@@ -54,6 +62,7 @@ export function MapView({ onJumpToChat }: MapViewProps) {
             cameraRef.current,
             sceneRef.current.nodeLabels,
             now,
+            sceneRef.current.retentionByNode,
           );
         }
       }
