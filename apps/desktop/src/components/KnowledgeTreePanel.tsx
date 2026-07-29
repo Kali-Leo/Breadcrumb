@@ -82,7 +82,7 @@ export function KnowledgeTreePanel() {
           🍞 本次足迹
         </button>
         <button type="button" onClick={() => setView("tree")} className={tabClass(view === "tree")}>
-          🌳 我的知识树
+          🧭 知识导航
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
@@ -98,9 +98,9 @@ export function KnowledgeTreePanel() {
           )
         ) : nodes.length === 0 ? (
           <p className="px-2 py-6 text-center text-xs leading-relaxed text-stone-400">
-            你学到的一切
+            你学过的知识点
             <br />
-            会在这里长成一棵属于你的树
+            会在这里形成一份可导航的目录
           </p>
         ) : (
           flattenTree(nodes).map(({ node, depth }) => (
@@ -108,6 +108,10 @@ export function KnowledgeTreePanel() {
           ))
         )}
       </div>
+      <p className="border-t border-stone-100 px-3 py-2 text-[11px] leading-relaxed text-stone-400">
+        💡 点击任意知识点可<span className="text-amber-600">锚定</span>
+        ，让接下来的对话围绕它展开
+      </p>
     </aside>
   );
 }
