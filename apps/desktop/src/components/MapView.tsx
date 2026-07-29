@@ -1,9 +1,10 @@
 /**
- * Purpose: the ink nautical chart — hand-drawn places, wheel zoom with empty-sea bounce,
- * drag panning, click-to-fly into a region, click a node to anchor it and jump to chat.
+ * Purpose: the living ink nautical chart — a ~30fps draw loop (only while mounted)
+ * renders places, smoke, cats and waves; wheel zoom with empty-sea bounce, drag panning,
+ * click-to-fly, click a node to anchor and jump to chat.
  * Main exports: MapView.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useMapStore } from "../stores/mapStore";
 import { type Camera, CLOSE_UP_SCALE, drawMap, findNodeAt, findPlaceAt } from "./mapRender";
@@ -18,8 +19,7 @@ export function MapView({ onJumpToChat }: MapViewProps) {
   const nodes = useKnowledgeStore((state) => state.nodes);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraRef = useRef<Camera>({ x: 0, y: 0, scale: 0.8 });
-  const animationRef = useRef<number | null>(null);
-  const [, forceRender] = useState(0);
+  const flyRef = useRef<number | null>(null);
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -28,34 +28,44 @@ export function MapView({ onJumpToChat }: MapViewProps) {
     moved: boolean;
   } | null>(null);
 
-  const nodeLabels = new Map(nodes.map((node) => [node.id, node.label]));
+  // Latest data for the draw loop without re-subscribing it.
+  const sceneRef = useRef({ places, nodeLabels: new Map<string, string>() });
+  sceneRef.current = {
+    places,
+    nodeLabels: new Map(nodes.map((node) => [node.id, node.label])),
+  };
 
   useEffect(() => {
     void useMapStore.getState().refresh();
   }, []);
 
-  // Repaint on container resize so shapes never stretch with the window.
+  // The heartbeat: ~30fps while the map is open, zero cost once unmounted.
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const observer = new ResizeObserver(() => forceRender((tick) => tick + 1));
-    observer.observe(canvas);
-    return () => observer.disconnect();
+    let frameId: number;
+    let lastDraw = 0;
+    const loop = (now: number) => {
+      if (now - lastDraw >= 33) {
+        lastDraw = now;
+        const canvas = canvasRef.current;
+        if (canvas) {
+          drawMap(
+            canvas,
+            sceneRef.current.places,
+            cameraRef.current,
+            sceneRef.current.nodeLabels,
+            now,
+          );
+        }
+      }
+      frameId = requestAnimationFrame(loop);
+    };
+    frameId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frameId);
   }, []);
-
-  useEffect(() => {
-    // No dependency array on purpose: redraw after every render (camera lives in a ref).
-    const canvas = canvasRef.current;
-    if (canvas) drawMap(canvas, places, cameraRef.current, nodeLabels);
-  });
-
-  function repaint() {
-    forceRender((tick) => tick + 1);
-  }
 
   /** Smoothly animates the camera to a target position/zoom (~0.5s ease-out). */
   function flyTo(targetX: number, targetY: number, targetScale: number) {
-    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    if (flyRef.current !== null) cancelAnimationFrame(flyRef.current);
     const camera = cameraRef.current;
     const from = { ...camera };
     const start = performance.now();
@@ -66,10 +76,9 @@ export function MapView({ onJumpToChat }: MapViewProps) {
       camera.x = from.x + (targetX - from.x) * eased;
       camera.y = from.y + (targetY - from.y) * eased;
       camera.scale = from.scale + (targetScale - from.scale) * eased;
-      repaint();
-      if (progress < 1) animationRef.current = requestAnimationFrame(step);
+      if (progress < 1) flyRef.current = requestAnimationFrame(step);
     }
-    animationRef.current = requestAnimationFrame(step);
+    flyRef.current = requestAnimationFrame(step);
   }
 
   function handleWheel(event: React.WheelEvent<HTMLCanvasElement>) {
@@ -84,16 +93,13 @@ export function MapView({ onJumpToChat }: MapViewProps) {
     // Zooming into empty sea: a playful bounce instead of a zoom (Leo's design).
     if (zoomingIn && !overPlace && camera.scale > 1.1) {
       camera.scale *= 1.06;
-      repaint();
       setTimeout(() => {
         camera.scale /= 1.06;
-        repaint();
       }, 110);
       return;
     }
     const factor = zoomingIn ? 1.15 : 1 / 1.15;
     camera.scale = Math.min(3.2, Math.max(0.25, camera.scale * factor));
-    repaint();
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
@@ -118,7 +124,6 @@ export function MapView({ onJumpToChat }: MapViewProps) {
     const camera = cameraRef.current;
     camera.x = drag.camX - deltaX / camera.scale;
     camera.y = drag.camY - deltaY / camera.scale;
-    repaint();
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
