@@ -52,4 +52,4 @@ Built entirely by AI (Claude Code); the human founder provides direction and tas
 
 ## License
 
-TBD (will be a permissive open-source license)
+[Apache-2.0](LICENSE)
