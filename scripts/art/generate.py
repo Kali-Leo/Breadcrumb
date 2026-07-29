@@ -53,7 +53,52 @@ def generate_one(key: str, item: dict, batch: dict, out_dir: pathlib.Path) -> No
     else:
         subprocess.run(["convert", str(raw_path), str(png_path)], check=True)
         raw_path.unlink()
-    print(f"  ✓ {item['name']}")
+
+    verdict = enforce_white_background(key, png_path)
+    print(f"  ✓ {item['name']}{verdict}")
+
+
+def border_whiteness(png_path: pathlib.Path) -> float:
+    """Mean luminance (0..1) of the four 6%-thick edge strips."""
+    strips = ["100%x6%+0+0", "100%x6%+0+94%", "6%x100%+0+0", "6%x100%+94%+0"]
+    values = []
+    for strip in strips:
+        result = subprocess.run(
+            ["convert", str(png_path), "-crop", strip, "+repage", "-colorspace", "Gray",
+             "-format", "%[fx:mean]", "info:"],
+            capture_output=True, text=True, check=True,
+        )
+        values.append(float(result.stdout.split()[0]))
+    return sum(values) / len(values)
+
+
+def enforce_white_background(key: str, png_path: pathlib.Path) -> str:
+    """The white-background contract: dirty borders get auto-cleaned, failures flagged."""
+    whiteness = border_whiteness(png_path)
+    if whiteness >= 0.97:
+        return ""
+    subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         "https://external.api.recraft.ai/v1/images/removeBackground",
+         "-H", f"Authorization: Bearer {key}", "-F", f"file=@{png_path}",
+         "-o", f"{png_path}.rb.json"],
+        check=True,
+    )
+    info = json.loads(pathlib.Path(f"{png_path}.rb.json").read_text())
+    pathlib.Path(f"{png_path}.rb.json").unlink()
+    url = info.get("image", {}).get("url")
+    if not url:
+        return f"  ⚠ 脏底(亮度{whiteness:.2f})且清洗失败，标记 re-roll"
+    subprocess.run(["curl", "-s", url, "-o", f"{png_path}.rb"], check=True)
+    subprocess.run(
+        ["convert", f"{png_path}.rb", "-background", "white", "-flatten", str(png_path)],
+        check=True,
+    )
+    pathlib.Path(f"{png_path}.rb").unlink()
+    cleaned = border_whiteness(png_path)
+    if cleaned >= 0.97:
+        return f"  🧼 脏底(亮度{whiteness:.2f})已自动清洗"
+    return f"  ⚠ 清洗后仍不达标(亮度{cleaned:.2f})，标记 re-roll"
 
 
 def main() -> None:
