@@ -5,6 +5,7 @@
  */
 import type { MapPlace } from "@breadcrumb/plugin-map";
 import rough from "roughjs";
+import { drawCats, drawCompassRose, drawSeaWaves, drawSmoke } from "./mapDecorations";
 
 export interface Camera {
   x: number;
@@ -65,6 +66,7 @@ export function drawMap(
   places: readonly MapPlace[],
   camera: Camera,
   nodeLabels: ReadonlyMap<string, string> = new Map(),
+  timeMs = 0,
 ): void {
   const rect = canvas.getBoundingClientRect();
   const ratio = window.devicePixelRatio || 1;
@@ -77,6 +79,7 @@ export function drawMap(
   context.fillRect(0, 0, canvas.width, canvas.height);
   const roughCanvas = rough.canvas(canvas);
   const scale = camera.scale * ratio;
+  drawSeaWaves(context, canvas.width, canvas.height, camera.x, camera.y, scale);
 
   const closeUp = camera.scale >= CLOSE_UP_SCALE;
   for (const place of places) {
@@ -90,8 +93,11 @@ export function drawMap(
       drawPlaceInterior(roughCanvas, context, place, center.x, center.y, scale, nodeLabels);
     } else {
       drawPlace(roughCanvas, context, place, center.x, center.y, scale);
+      drawSmoke(context, place, center.x, center.y, scale, timeMs);
+      drawCats(context, place, center.x, center.y, scale, timeMs);
     }
   }
+  drawCompassRose(context, canvas.width);
 }
 
 /** Close-up view: a faint ink ring with the member knowledge nodes laid out inside. */
