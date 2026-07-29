@@ -17,6 +17,7 @@ interface MapViewProps {
 export function MapView({ onJumpToChat }: MapViewProps) {
   const places = useMapStore((state) => state.places);
   const unchartedCount = useMapStore((state) => state.unchartedCount);
+  const chartError = useMapStore((state) => state.chartError);
   const nodes = useKnowledgeStore((state) => state.nodes);
   const retentionByNode = useMemoryStore((state) => state.retentionByNode);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -181,6 +182,11 @@ export function MapView({ onJumpToChat }: MapViewProps) {
       {unchartedCount > 0 && (
         <p className="absolute bottom-3 right-4 text-xs text-stone-400">
           ✍️ 还有 {unchartedCount} 个知识点正在测绘…
+        </p>
+      )}
+      {chartError && (
+        <p className="absolute top-3 left-4 max-w-md rounded bg-white/70 px-3 py-2 text-xs text-red-800">
+          测绘遇到问题：{chartError}
         </p>
       )}
       <p className="absolute bottom-3 left-4 text-xs text-stone-400">

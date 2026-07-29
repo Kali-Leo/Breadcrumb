@@ -13,27 +13,36 @@ interface MapState {
   places: MapPlace[];
   /** How many nodes still await an embedding (shown as "测绘中" in the UI). */
   unchartedCount: number;
+  /** Surfaced instead of a silent empty chart when charting fails (honesty rule). */
+  chartError: string | null;
   refresh(): Promise<void>;
 }
 
 export const useMapStore = create<MapState>((set) => ({
   places: [],
   unchartedCount: 0,
+  chartError: null,
 
   async refresh() {
-    await embedMissingNodes();
-    const repos = await getRepos();
-    const [nodes, embeddingRows] = await Promise.all([
-      repos.knowledgeNodes.listAll(),
-      repos.nodeEmbeddings.listAll(),
-    ]);
-    const embeddings = new Map<string, readonly number[]>(
-      embeddingRows.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
-    );
-    set({
-      places: computeMapLayout(nodes, embeddings),
-      unchartedCount: nodes.filter((node) => !embeddings.has(node.id)).length,
-    });
+    try {
+      await embedMissingNodes();
+      const repos = await getRepos();
+      const [nodes, embeddingRows] = await Promise.all([
+        repos.knowledgeNodes.listAll(),
+        repos.nodeEmbeddings.listAll(),
+      ]);
+      const embeddings = new Map<string, readonly number[]>(
+        embeddingRows.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
+      );
+      set({
+        places: computeMapLayout(nodes, embeddings),
+        unchartedCount: nodes.filter((node) => !embeddings.has(node.id)).length,
+        chartError: null,
+      });
+    } catch (error) {
+      console.error("map refresh failed:", error);
+      set({ chartError: error instanceof Error ? `${error.message}` : String(error) });
+    }
   },
 }));
 

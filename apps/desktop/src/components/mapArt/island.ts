@@ -60,20 +60,18 @@ export function drawIsland(
   const radius = islandRadius(place);
   const coast = coastlinePoints(seed, radius, 14, 0.5);
 
-  // Ripple arcs in the sea around the island (two broken rings).
+  // A few quiet ripple arcs hugging the coast (reference islands use just a handful).
   const rippleRandom = seededRandom(seed + 7);
   context.strokeStyle = INK_FAINT;
-  context.lineWidth = Math.max(0.7, 1 * scale);
-  for (let ring = 0; ring < 2; ring++) {
-    const rippleRadius = radius * (1.22 + ring * 0.24);
-    const arcCount = 7 + ring * 2;
-    for (let arc = 0; arc < arcCount; arc++) {
-      const start = rippleRandom() * Math.PI * 2;
-      context.beginPath();
-      context.arc(x, y, rippleRadius * scale, start, start + 0.35 + rippleRandom() * 0.3);
-      context.stroke();
-    }
+  context.lineWidth = Math.max(0.6, 0.8 * scale);
+  context.globalAlpha = 0.55;
+  for (let arc = 0; arc < 5; arc++) {
+    const start = rippleRandom() * Math.PI * 2;
+    context.beginPath();
+    context.arc(x, y, radius * 1.14 * scale, start, start + 0.3 + rippleRandom() * 0.25);
+    context.stroke();
   }
+  context.globalAlpha = 1;
 
   // Landmass: paper-sand fill with a firm ink coastline.
   traceClosedCurve(context, x, y, coast, scale);
@@ -89,18 +87,33 @@ export function drawIsland(
   context.lineWidth = Math.max(0.6, 0.9 * scale);
   context.stroke();
 
-  // Beach stipples between shore lines.
+  // Coast hatching: short radial strokes just inside the shoreline give the island weight.
+  const hatchRandom = seededRandom(seed + 5);
+  context.strokeStyle = INK_FAINT;
+  context.lineWidth = Math.max(0.5, 0.7 * scale);
+  const hatchCount = Math.round(radius * 0.42);
+  for (let hatch = 0; hatch < hatchCount; hatch++) {
+    const angle = hatchRandom() * Math.PI * 2;
+    const inner = radius * (0.88 + hatchRandom() * 0.04);
+    const outer = inner + radius * 0.06;
+    context.beginPath();
+    context.moveTo(x + Math.cos(angle) * inner * scale, y + Math.sin(angle) * inner * scale);
+    context.lineTo(x + Math.cos(angle) * outer * scale, y + Math.sin(angle) * outer * scale);
+    context.stroke();
+  }
+
+  // A pinch of beach stipples.
   const stippleRandom = seededRandom(seed + 11);
   context.fillStyle = INK_FAINT;
-  const stippleCount = Math.round(radius * 0.9);
+  const stippleCount = Math.round(radius * 0.35);
   for (let dot = 0; dot < stippleCount; dot++) {
     const angle = stippleRandom() * Math.PI * 2;
-    const distance = radius * (0.86 + stippleRandom() * 0.1);
+    const distance = radius * (0.8 + stippleRandom() * 0.08);
     context.beginPath();
     context.arc(
       x + Math.cos(angle) * distance * scale,
       y + Math.sin(angle) * distance * scale,
-      Math.max(0.5, 0.7 * scale),
+      Math.max(0.4, 0.6 * scale),
       0,
       Math.PI * 2,
     );

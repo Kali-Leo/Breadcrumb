@@ -136,7 +136,8 @@ export function drawRoundTree(
   context.stroke();
 }
 
-/** Castle town: wall, gate, two flag towers and a keep (微观建筑参考 castles). */
+/** Castle: delicate keep with hatched roof flanked by two slim conical towers,
+ * tiny pennants, fine unified line weight (微观建筑参考 castles are light, not heavy). */
 export function drawCastle(
   context: CanvasRenderingContext2D,
   x: number,
@@ -146,69 +147,69 @@ export function drawCastle(
 ): void {
   context.strokeStyle = INK;
   context.fillStyle = PAPER_SAND;
-  context.lineWidth = Math.max(1, size * 0.045);
-  const wallW = size * 1.5;
-  const wallH = size * 0.5;
+  context.lineWidth = Math.max(0.9, size * 0.05);
 
-  // Wall with battlements
+  // Central keep: rectangle + pitched hatched roof (same language as huts).
+  const keepW = size * 0.56;
+  const keepH = size * 0.62;
   context.beginPath();
-  context.moveTo(x - wallW / 2, y);
-  context.lineTo(x - wallW / 2 + j(jitter, 2), y - wallH);
-  for (let tooth = 0; tooth < 6; tooth++) {
-    const toothX = x - wallW / 2 + (wallW / 6) * tooth;
-    context.lineTo(toothX + wallW / 12, y - wallH - size * 0.09);
-    context.lineTo(toothX + wallW / 12, y - wallH);
-    context.lineTo(toothX + wallW / 6, y - wallH);
-  }
-  context.lineTo(x + wallW / 2, y);
-  context.closePath();
+  context.rect(x - keepW / 2 + j(jitter, 1.5), y - keepH, keepW, keepH);
   context.fill();
   context.stroke();
-
-  // Gate
+  const peakY = y - keepH - size * 0.34;
   context.beginPath();
-  context.arc(x, y, size * 0.22, Math.PI, 0);
-  context.lineTo(x + size * 0.22, y);
+  context.moveTo(x - keepW * 0.62, y - keepH);
+  context.lineTo(x + j(jitter, 2), peakY);
+  context.lineTo(x + keepW * 0.62, y - keepH);
+  context.stroke();
+  for (let line = 1; line <= 2; line++) {
+    const t = line / 3;
+    const hatchY = y - keepH + (peakY - (y - keepH)) * t;
+    context.beginPath();
+    context.moveTo(x - keepW * 0.62 * (1 - t), hatchY);
+    context.lineTo(x + keepW * 0.62 * (1 - t), hatchY);
+    context.stroke();
+  }
+  // Keep door + window
+  context.beginPath();
+  context.arc(x, y, keepW * 0.18, Math.PI, 0);
+  context.stroke();
+  context.beginPath();
+  context.arc(x, y - keepH * 0.62, keepW * 0.1, 0, Math.PI * 2);
   context.stroke();
 
-  // Two side towers with flags + central keep
+  // Two slim flanking towers with conical roofs and pennants.
   for (const side of [-1, 1]) {
-    const towerX = x + side * wallW * 0.42;
-    towerWithFlag(context, towerX, y - wallH, size * 0.34, size * 0.85, side, jitter);
+    const towerX = x + side * size * 0.52;
+    const towerW = size * 0.2;
+    const towerH = size * 0.52;
+    context.beginPath();
+    context.rect(towerX - towerW / 2 + j(jitter, 1), y - towerH, towerW, towerH);
+    context.fill();
+    context.stroke();
+    const roofY = y - towerH - size * 0.24;
+    context.beginPath();
+    context.moveTo(towerX - towerW * 0.75, y - towerH);
+    context.lineTo(towerX + j(jitter, 1.5), roofY);
+    context.lineTo(towerX + towerW * 0.75, y - towerH);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    // Pennant: a tiny fluttering line-flag
+    context.beginPath();
+    context.moveTo(towerX, roofY);
+    context.lineTo(towerX, roofY - size * 0.14);
+    context.quadraticCurveTo(
+      towerX + side * size * 0.12,
+      roofY - size * 0.15,
+      towerX + side * size * 0.1,
+      roofY - size * 0.09,
+    );
+    context.stroke();
+    // Slit window
+    context.beginPath();
+    context.moveTo(towerX, y - towerH * 0.6);
+    context.lineTo(towerX, y - towerH * 0.4);
+    context.stroke();
   }
-  towerWithFlag(context, x + j(jitter, 3), y - wallH, size * 0.46, size * 1.15, 1, jitter);
-}
-
-function towerWithFlag(
-  context: CanvasRenderingContext2D,
-  x: number,
-  baseY: number,
-  width: number,
-  height: number,
-  flagSide: number,
-  jitter: Jitter,
-): void {
-  context.beginPath();
-  context.rect(x - width / 2 + j(jitter, 1.5), baseY - height, width, height);
-  context.fill();
-  context.stroke();
-  const roofY = baseY - height - width * 0.9;
-  context.beginPath();
-  context.moveTo(x - width * 0.68, baseY - height);
-  context.lineTo(x + j(jitter, 2), roofY);
-  context.lineTo(x + width * 0.68, baseY - height);
-  context.closePath();
-  context.fill();
-  context.stroke();
-  // Flag
-  context.beginPath();
-  context.moveTo(x, roofY);
-  context.lineTo(x, roofY - width * 0.8);
-  context.lineTo(x + flagSide * width * 0.7, roofY - width * 0.62);
-  context.lineTo(x, roofY - width * 0.44);
-  context.stroke();
-  // Window
-  context.beginPath();
-  context.arc(x, baseY - height * 0.55, width * 0.14, 0, Math.PI * 2);
-  context.stroke();
 }
