@@ -8,6 +8,7 @@ import type {
   KnowledgeNodeRow,
   LlmCallRow,
   MessageRow,
+  NodeSightingRow,
   SettingRow,
   SqlClient,
   TrailSummaryRow,
@@ -71,31 +72,39 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
   return {
     async insert(row: KnowledgeNodeRow): Promise<void> {
       await sql.execute(
-        `INSERT INTO knowledge_nodes
-           (id, conversation_id, parent_id, label, summary, source_message_id, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          row.id,
-          row.conversation_id,
-          row.parent_id,
-          row.label,
-          row.summary,
-          row.source_message_id,
-          row.created_at,
-        ],
+        "INSERT INTO knowledge_nodes (id, parent_id, label, summary, created_at) VALUES (?, ?, ?, ?, ?)",
+        [row.id, row.parent_id, row.label, row.summary, row.created_at],
       );
     },
-    async listByConversation(conversationId: string): Promise<KnowledgeNodeRow[]> {
+    /** The user's whole tree, oldest first. */
+    async listAll(): Promise<KnowledgeNodeRow[]> {
       return sql.select<KnowledgeNodeRow>(
-        "SELECT * FROM knowledge_nodes WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
-        [conversationId],
+        "SELECT * FROM knowledge_nodes ORDER BY created_at ASC, id ASC",
       );
     },
-    /** Nodes created inside [fromIso, toIso) — the raw material of the daily trail. */
+    /** Nodes first learned inside [fromIso, toIso) — the raw material of the daily trail. */
     async listCreatedBetween(fromIso: string, toIso: string): Promise<KnowledgeNodeRow[]> {
       return sql.select<KnowledgeNodeRow>(
         "SELECT * FROM knowledge_nodes WHERE created_at >= ? AND created_at < ? ORDER BY created_at ASC",
         [fromIso, toIso],
+      );
+    },
+  };
+}
+
+export function createNodeSightingsRepo(sql: SqlClient) {
+  return {
+    async record(row: NodeSightingRow): Promise<void> {
+      await sql.execute(
+        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at) VALUES (?, ?, ?, ?, ?)",
+        [row.id, row.node_id, row.conversation_id, row.message_id, row.created_at],
+      );
+    },
+    /** This conversation's footprints in walking order — the session trail. */
+    async listByConversation(conversationId: string): Promise<NodeSightingRow[]> {
+      return sql.select<NodeSightingRow>(
+        "SELECT * FROM node_sightings WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
+        [conversationId],
       );
     },
   };

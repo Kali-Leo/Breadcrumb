@@ -1,7 +1,7 @@
 /**
- * Purpose: zustand store for the knowledge tree — nodes of the active conversation,
- * fresh-node highlighting, anchoring, and the background extraction pipeline that
- * listens to chat:responseFinished. Side effect on import: subscribes to the app bus.
+ * Purpose: zustand store for the USER's global knowledge tree plus the active
+ * conversation's trail (sightings), fresh-node highlighting, anchoring, and the
+ * background extraction pipeline. Side effect on import: subscribes to the app bus.
  * Main exports: useKnowledgeStore.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -9,7 +9,7 @@ import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildExtractionMessages,
   extractionResponseSchema,
-  planNodeInserts,
+  planNodeChanges,
 } from "@breadcrumb/plugin-knowledge-tree";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
@@ -20,26 +20,40 @@ import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
 interface KnowledgeState {
+  /** The whole user tree (global — grows across conversations). */
   nodes: KnowledgeNodeRow[];
+  /** Node ids this conversation walked past, in walking order (session trail). */
+  sessionNodeIds: string[];
   freshNodeIds: ReadonlySet<string>;
   anchoredNodeId: string | null;
-  loadForConversation(conversationId: string | null): Promise<void>;
+  loadTree(): Promise<void>;
+  loadSessionTrail(conversationId: string | null): Promise<void>;
   toggleAnchor(nodeId: string): void;
 }
 
 export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
   nodes: [],
+  sessionNodeIds: [],
   freshNodeIds: new Set(),
   anchoredNodeId: null,
 
-  async loadForConversation(conversationId) {
+  async loadTree() {
+    const repos = await getRepos();
+    set({ nodes: await repos.knowledgeNodes.listAll() });
+  },
+
+  async loadSessionTrail(conversationId) {
     if (conversationId === null) {
-      set({ nodes: [], freshNodeIds: new Set(), anchoredNodeId: null });
+      set({ sessionNodeIds: [], freshNodeIds: new Set(), anchoredNodeId: null });
       return;
     }
     const repos = await getRepos();
-    const nodes = await repos.knowledgeNodes.listByConversation(conversationId);
-    set({ nodes, freshNodeIds: new Set(), anchoredNodeId: null });
+    const sightings = await repos.nodeSightings.listByConversation(conversationId);
+    set({
+      sessionNodeIds: [...new Set(sightings.map((sighting) => sighting.node_id))],
+      freshNodeIds: new Set(),
+      anchoredNodeId: null,
+    });
   },
 
   toggleAnchor(nodeId) {
@@ -60,7 +74,7 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
 
   try {
     const repos = await getRepos();
-    const existingNodes = await repos.knowledgeNodes.listByConversation(conversationId);
+    const existingNodes = await repos.knowledgeNodes.listAll();
     const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
     const { parsed, usage } = await chatJson(
       config,
@@ -74,7 +88,7 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
       usage,
     });
 
-    const rows = planNodeInserts({
+    const plan = planNodeChanges({
       conversationId,
       sourceMessageId: answer.id,
       existingNodes,
@@ -82,13 +96,28 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
       newId,
       nowIso,
     });
-    for (const row of rows) {
-      await repos.knowledgeNodes.insert(row);
+    for (const node of plan.newNodes) {
+      await repos.knowledgeNodes.insert(node);
     }
-    if (useChatStore.getState().activeConversationId === conversationId) {
-      const nodes = await repos.knowledgeNodes.listByConversation(conversationId);
-      useKnowledgeStore.setState({ nodes, freshNodeIds: new Set(rows.map((row) => row.id)) });
+    for (const sighting of plan.sightings) {
+      await repos.nodeSightings.record(sighting);
     }
+
+    const store = useKnowledgeStore.getState();
+    const isViewingThisConversation =
+      useChatStore.getState().activeConversationId === conversationId;
+    useKnowledgeStore.setState({
+      nodes: await repos.knowledgeNodes.listAll(),
+      freshNodeIds: new Set(plan.newNodes.map((node) => node.id)),
+      sessionNodeIds: isViewingThisConversation
+        ? [
+            ...store.sessionNodeIds,
+            ...plan.sightings
+              .map((sighting) => sighting.node_id)
+              .filter((nodeId) => !store.sessionNodeIds.includes(nodeId)),
+          ]
+        : store.sessionNodeIds,
+    });
   } catch (error) {
     console.warn("knowledge extraction skipped:", error);
   }

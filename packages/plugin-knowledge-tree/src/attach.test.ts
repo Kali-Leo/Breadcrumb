@@ -1,9 +1,10 @@
 /**
- * Purpose: unit tests for tree-attachment planning (parent resolution, dedupe, batch links).
+ * Purpose: unit tests for global-tree change planning (new nodes, re-sightings, dedupe,
+ * in-batch parent links).
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { planNodeInserts } from "./attach";
+import { planNodeChanges } from "./attach";
 
 let idCounter = 0;
 const testDefaults = {
@@ -14,30 +15,36 @@ const testDefaults = {
 };
 
 function existingNode(id: string, label: string, parentId: string | null): KnowledgeNodeRow {
-  return {
-    id,
-    conversation_id: "conv-1",
-    parent_id: parentId,
-    label,
-    summary: "s",
-    source_message_id: null,
-    created_at: "2026-07-29T09:00:00Z",
-  };
+  return { id, parent_id: parentId, label, summary: "s", created_at: "2026-07-28T09:00:00Z" };
 }
 
-describe("planNodeInserts", () => {
-  it("attaches to an existing node by parentLabel", () => {
-    const rows = planNodeInserts({
+describe("planNodeChanges", () => {
+  it("creates a node under an existing parent and leaves a sighting", () => {
+    const plan = planNodeChanges({
       ...testDefaults,
       existingNodes: [existingNode("js-1", "JavaScript", null)],
       extracted: [{ label: "闭包", summary: "函数携带其词法作用域", parentLabel: "JavaScript" }],
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.parent_id).toBe("js-1");
+    expect(plan.newNodes).toHaveLength(1);
+    expect(plan.newNodes[0]?.parent_id).toBe("js-1");
+    expect(plan.sightings).toHaveLength(1);
+    expect(plan.sightings[0]?.node_id).toBe(plan.newNodes[0]?.id);
+  });
+
+  it("re-meeting a known concept records a sighting but no new node", () => {
+    const plan = planNodeChanges({
+      ...testDefaults,
+      existingNodes: [existingNode("n1", "闭包", null)],
+      extracted: [{ label: "闭包", summary: "重逢", parentLabel: null }],
+    });
+    expect(plan.newNodes).toHaveLength(0);
+    expect(plan.sightings).toHaveLength(1);
+    expect(plan.sightings[0]?.node_id).toBe("n1");
+    expect(plan.sightings[0]?.conversation_id).toBe("conv-1");
   });
 
   it("links a node to another node created in the same batch", () => {
-    const rows = planNodeInserts({
+    const plan = planNodeChanges({
       ...testDefaults,
       existingNodes: [],
       extracted: [
@@ -45,25 +52,29 @@ describe("planNodeInserts", () => {
         { label: "闭包", summary: "函数携带作用域", parentLabel: "函数" },
       ],
     });
-    expect(rows).toHaveLength(2);
-    expect(rows[1]?.parent_id).toBe(rows[0]?.id);
+    expect(plan.newNodes).toHaveLength(2);
+    expect(plan.newNodes[1]?.parent_id).toBe(plan.newNodes[0]?.id);
+    expect(plan.sightings).toHaveLength(2);
   });
 
-  it("skips labels that already exist in the tree", () => {
-    const rows = planNodeInserts({
+  it("records at most one sighting per concept per round", () => {
+    const plan = planNodeChanges({
       ...testDefaults,
       existingNodes: [existingNode("n1", "闭包", null)],
-      extracted: [{ label: "闭包", summary: "重复", parentLabel: null }],
+      extracted: [
+        { label: "闭包", summary: "a", parentLabel: null },
+        { label: "闭包", summary: "b", parentLabel: null },
+      ],
     });
-    expect(rows).toHaveLength(0);
+    expect(plan.sightings).toHaveLength(1);
   });
 
   it("falls back to root when parentLabel matches nothing", () => {
-    const rows = planNodeInserts({
+    const plan = planNodeChanges({
       ...testDefaults,
       existingNodes: [],
       extracted: [{ label: "闭包", summary: "s", parentLabel: "不存在的节点" }],
     });
-    expect(rows[0]?.parent_id).toBeNull();
+    expect(plan.newNodes[0]?.parent_id).toBeNull();
   });
 });
