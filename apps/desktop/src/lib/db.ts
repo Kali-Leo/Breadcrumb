@@ -8,6 +8,7 @@ import {
   createKnowledgeNodesRepo,
   createLlmCallsRepo,
   createMessagesRepo,
+  createNodeEmbeddingsRepo,
   createNodeSightingsRepo,
   createSettingsRepo,
   createTrailSummariesRepo,
@@ -23,6 +24,7 @@ export interface Repos {
   llmCalls: ReturnType<typeof createLlmCallsRepo>;
   knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
+  nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
 }
 
@@ -50,6 +52,7 @@ async function openAndMigrate(): Promise<Repos> {
     llmCalls: createLlmCallsRepo(sqlClient),
     knowledgeNodes: createKnowledgeNodesRepo(sqlClient),
     nodeSightings: createNodeSightingsRepo(sqlClient),
+    nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
   };
 }

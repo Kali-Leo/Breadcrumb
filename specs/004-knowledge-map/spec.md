@@ -27,9 +27,9 @@
 
 ## 任务
 
-- [ ] T1 Rust：fastembed 集成 + embed_texts command + 模型缓存目录
-- [ ] T2 core-db：迁移 0004（node_embeddings）+ 仓储
-- [ ] T3 plugin-map：相似度/kNN/聚类/规模分级 + 确定性布局种子 + 单元测试
-- [ ] T4 desktop：嵌入管线（新节点即嵌入 + 启动补算 + 离线排队）
-- [ ] T5 desktop：地图页（rough.js 渲染 + 缩放漫游 + 回弹 + 两级 LOD）
+- [x] T1 Rust：fastembed 集成 + embed_texts command + 模型缓存目录
+- [x] T2 core-db：迁移 0004（node_embeddings）+ 仓储
+- [x] T3 plugin-map：相似度/kNN/聚类/规模分级 + 确定性布局种子 + 单元测试
+- [x] T4 desktop：嵌入管线（新节点即嵌入 + 启动补算 + 离线排队）
+- [x] T5 desktop：地图页（rough.js 渲染 + 缩放漫游 + 回弹 + 两级 LOD）
 - [ ] T6 集成验收 + 文档

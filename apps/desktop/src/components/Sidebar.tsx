@@ -7,9 +7,10 @@ import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
   onOpenSettings(): void;
+  onOpenMap(): void;
 }
 
-export function Sidebar({ onOpenSettings }: SidebarProps) {
+export function Sidebar({ onOpenSettings, onOpenMap }: SidebarProps) {
   const conversations = useChatStore((state) => state.conversations);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const openConversation = useChatStore((state) => state.openConversation);
@@ -45,13 +46,22 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
         ))}
       </nav>
       <TrailPanel />
-      <button
-        type="button"
-        onClick={onOpenSettings}
-        className="m-3 rounded-lg px-3 py-2 text-left text-sm text-stone-500 transition-colors hover:bg-stone-100"
-      >
-        ⚙️ 设置
-      </button>
+      <div className="m-3 space-y-1">
+        <button
+          type="button"
+          onClick={onOpenMap}
+          className="block w-full rounded-lg px-3 py-2 text-left text-sm text-stone-500 transition-colors hover:bg-stone-100"
+        >
+          🗺️ 知识地图
+        </button>
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="block w-full rounded-lg px-3 py-2 text-left text-sm text-stone-500 transition-colors hover:bg-stone-100"
+        >
+          ⚙️ 设置
+        </button>
+      </div>
     </aside>
   );
 }

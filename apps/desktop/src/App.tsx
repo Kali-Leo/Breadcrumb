@@ -7,16 +7,18 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
+import { MapView } from "./components/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
+import { embedMissingNodes } from "./lib/embeddings";
 import { useChatStore } from "./stores/chatStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -28,6 +30,7 @@ export default function App() {
       await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();
       await useTrailStore.getState().ensureYesterdaySummary();
+      await embedMissingNodes(); // charts existing knowledge in the background
     })();
   }, []);
 
@@ -46,9 +49,11 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col text-stone-800">
       <div className="flex min-h-0 flex-1">
-        <Sidebar onOpenSettings={() => setView("settings")} />
+        <Sidebar onOpenSettings={() => setView("settings")} onOpenMap={() => setView("map")} />
         <main className="min-w-0 flex-1">
-          {view === "chat" ? <ChatView /> : <SettingsPanel onClose={() => setView("chat")} />}
+          {view === "chat" && <ChatView />}
+          {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
+          {view === "map" && <MapView />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>
