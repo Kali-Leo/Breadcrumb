@@ -12,6 +12,9 @@ export interface Camera {
   scale: number;
 }
 
+/** Above this zoom, places open up and show their inner knowledge structure. */
+export const CLOSE_UP_SCALE = 1.5;
+
 const INK = "#4a3f35";
 
 function worldToScreen(camera: Camera, canvas: HTMLCanvasElement, x: number, y: number) {
@@ -37,10 +40,31 @@ export function findPlaceAt(
   return null;
 }
 
+/** Finds the member node marker under the pointer (close-up view only). */
+export function findNodeAt(
+  places: readonly MapPlace[],
+  camera: Camera,
+  canvas: HTMLCanvasElement,
+  screenX: number,
+  screenY: number,
+): { placeId: string; nodeId: string } | null {
+  if (camera.scale < CLOSE_UP_SCALE) return null;
+  const ratio = canvas.width / canvas.getBoundingClientRect().width || 1;
+  for (const place of places) {
+    for (const member of place.internal) {
+      const center = worldToScreen(camera, canvas, place.x + member.dx, place.y + member.dy);
+      const distance = Math.hypot(center.x - screenX * ratio, center.y - screenY * ratio);
+      if (distance <= 14 * camera.scale) return { placeId: place.id, nodeId: member.nodeId };
+    }
+  }
+  return null;
+}
+
 export function drawMap(
   canvas: HTMLCanvasElement,
   places: readonly MapPlace[],
   camera: Camera,
+  nodeLabels: ReadonlyMap<string, string> = new Map(),
 ): void {
   const rect = canvas.getBoundingClientRect();
   const ratio = window.devicePixelRatio || 1;
@@ -54,6 +78,7 @@ export function drawMap(
   const roughCanvas = rough.canvas(canvas);
   const scale = camera.scale * ratio;
 
+  const closeUp = camera.scale >= CLOSE_UP_SCALE;
   for (const place of places) {
     const center = worldToScreen(
       { ...camera, scale },
@@ -61,7 +86,51 @@ export function drawMap(
       place.x,
       place.y,
     );
-    drawPlace(roughCanvas, context, place, center.x, center.y, scale);
+    if (closeUp) {
+      drawPlaceInterior(roughCanvas, context, place, center.x, center.y, scale, nodeLabels);
+    } else {
+      drawPlace(roughCanvas, context, place, center.x, center.y, scale);
+    }
+  }
+}
+
+/** Close-up view: a faint ink ring with the member knowledge nodes laid out inside. */
+function drawPlaceInterior(
+  roughCanvas: ReturnType<typeof rough.canvas>,
+  context: CanvasRenderingContext2D,
+  place: MapPlace,
+  x: number,
+  y: number,
+  scale: number,
+  nodeLabels: ReadonlyMap<string, string>,
+): void {
+  const seed = 1 + (place.name.charCodeAt(0) % 1000);
+  const ringRadius = place.radius * 1.5 * scale;
+  roughCanvas.circle(x, y, ringRadius * 2, {
+    stroke: "#b5a58e",
+    strokeWidth: 1.2,
+    roughness: 2.2,
+    seed,
+  });
+  context.fillStyle = "#8a7b6b";
+  context.textAlign = "center";
+  context.font = `${Math.max(10, 11 * scale)}px serif`;
+  context.fillText(place.name, x, y - ringRadius - 8 * scale);
+
+  for (const member of place.internal) {
+    const nodeX = x + member.dx * scale;
+    const nodeY = y + member.dy * scale;
+    roughCanvas.circle(nodeX, nodeY, 9 * scale, {
+      stroke: INK,
+      strokeWidth: 1.2,
+      roughness: 1.2,
+      seed: seed + member.nodeId.length,
+      fill: "#e8dcc3",
+      fillStyle: "solid",
+    });
+    context.fillStyle = INK;
+    context.font = `${Math.max(10, 11 * scale)}px "Noto Serif CJK SC", serif`;
+    context.fillText(nodeLabels.get(member.nodeId) ?? "…", nodeX, nodeY + 18 * scale);
   }
 }
 

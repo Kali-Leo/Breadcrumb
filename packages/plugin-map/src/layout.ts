@@ -16,6 +16,7 @@ import {
   type SimulationNodeDatum,
 } from "d3-force";
 import { clusterNodes, type EmbeddedNode } from "./clustering";
+import { computePlaceInternalLayout, type InternalNodePosition } from "./internalLayout";
 import { centroid, cosineSimilarity } from "./similarity";
 
 export type PlaceTier = "house" | "village" | "city";
@@ -30,6 +31,8 @@ export interface MapPlace {
   radius: number;
   tier: PlaceTier;
   nodeIds: string[];
+  /** Member node offsets inside the region disc (semantic-zoom close-up view). */
+  internal: InternalNodePosition[];
 }
 
 export function placeTier(nodeCount: number): PlaceTier {
@@ -98,14 +101,16 @@ export function computeMapLayout(
       return (nodeA?.created_at ?? "").localeCompare(nodeB?.created_at ?? "");
     });
     const nameNode = nodeById.get(membersOldestFirst[0] ?? "");
+    const radius = radii[index] ?? 24;
     return {
       id: `place-${index}`,
       name: nameNode?.label ?? "未知之地",
       x: placeData[index]?.x ?? 0,
       y: placeData[index]?.y ?? 0,
-      radius: radii[index] ?? 24,
+      radius,
       tier: placeTier(memberIds.length),
       nodeIds: membersOldestFirst,
+      internal: computePlaceInternalLayout(membersOldestFirst, embeddings, radius),
     };
   });
 }
