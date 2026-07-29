@@ -23,10 +23,7 @@ Breadcrumb 把你与 AI 的每次学习对话变成看得见的痕迹：
 
 ## 状态
 
-🚧 早期开发中（M0 奠基阶段）。产品设计见 [docs/vision](docs/vision/)。
-
-本项目由 AI（Claude Code）全权开发，人类发起人提供方向与审美。
-工程规范见 [CLAUDE.md](CLAUDE.md)。
+🚧 早期开发中。产品设计见 [docs/vision](docs/vision/)，工程规范见 [CLAUDE.md](CLAUDE.md)。
 
 ## 技术栈
 
@@ -47,8 +44,6 @@ knowledge tree, an automatic "done list" of what you actually learned, and an FS
 forgetting map that shows how much you'll remember on exam day. Local-first (SQLite, offline-capable),
 every AI-consuming feature has its own switch and cost meter, and the whole product is built on a
 plugin bus — official features are plugins too, on equal footing with community ones.
-
-Built entirely by AI (Claude Code); the human founder provides direction and taste.
 
 ## License
 
