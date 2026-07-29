@@ -36,14 +36,22 @@ export interface MessageRow {
   created_at: string;
 }
 
+/** A node of the USER's global knowledge tree (unique by label). */
 export interface KnowledgeNodeRow {
   id: string;
-  conversation_id: string;
-  /** null = a root node of this conversation's tree. */
+  /** null = a root node of the user's tree. */
   parent_id: string | null;
   label: string;
   summary: string;
-  source_message_id: string | null;
+  created_at: string;
+}
+
+/** One footprint: a conversation touched (learned or re-met) a knowledge node. */
+export interface NodeSightingRow {
+  id: string;
+  node_id: string;
+  conversation_id: string;
+  message_id: string | null;
   created_at: string;
 }
 

@@ -25,14 +25,15 @@ export default function App() {
     void (async () => {
       await useSettingsStore.getState().loadFromDatabase();
       await useChatStore.getState().loadFromDatabase();
+      await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();
       await useTrailStore.getState().ensureYesterdaySummary();
     })();
   }, []);
 
-  // Keep the knowledge tree in sync with the open conversation.
+  // Keep the session trail in sync with the open conversation.
   useEffect(() => {
-    void useKnowledgeStore.getState().loadForConversation(activeConversationId);
+    void useKnowledgeStore.getState().loadSessionTrail(activeConversationId);
   }, [activeConversationId]);
 
   // First run: no API configured yet -> open settings so the user can start in one step.
