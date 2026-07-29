@@ -1,0 +1,21 @@
+{
+  "name": "@breadcrumb/plugin-trail",
+  "version": "0.0.1",
+  "description": "Headless trail plugin: turns each day's knowledge nodes into a gentle done-list and an encouraging daily summary.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-llm": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

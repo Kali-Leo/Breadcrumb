@@ -36,6 +36,24 @@ export interface MessageRow {
   created_at: string;
 }
 
+export interface KnowledgeNodeRow {
+  id: string;
+  conversation_id: string;
+  /** null = a root node of this conversation's tree. */
+  parent_id: string | null;
+  label: string;
+  summary: string;
+  source_message_id: string | null;
+  created_at: string;
+}
+
+export interface TrailSummaryRow {
+  /** Local calendar date, e.g. "2026-07-29". One gentle summary per day. */
+  date: string;
+  content: string;
+  created_at: string;
+}
+
 export interface LlmCallRow {
   id: string;
   conversation_id: string | null;

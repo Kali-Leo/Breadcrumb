@@ -42,6 +42,23 @@ export const ALL_MIGRATIONS: readonly string[] = [
     created_at TEXT NOT NULL
   );`,
   `CREATE INDEX IF NOT EXISTS idx_llm_calls_created ON llm_calls(created_at);`,
+  // 0002: knowledge tree + trail
+  `CREATE TABLE IF NOT EXISTS knowledge_nodes (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL REFERENCES conversations(id),
+    parent_id TEXT REFERENCES knowledge_nodes(id),
+    label TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    source_message_id TEXT REFERENCES messages(id),
+    created_at TEXT NOT NULL
+  );`,
+  `CREATE INDEX IF NOT EXISTS idx_knowledge_nodes_conversation ON knowledge_nodes(conversation_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_knowledge_nodes_created ON knowledge_nodes(created_at);`,
+  `CREATE TABLE IF NOT EXISTS trail_summaries (
+    date TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );`,
 ];
 
 export async function runMigrations(executor: SqlExecutor): Promise<void> {
