@@ -60,15 +60,15 @@ export function drawCats(
   timeMs: number,
 ): void {
   const catCount = place.tier === "city" ? 2 : place.tier === "village" ? 1 : 0;
-  if (catCount === 0) return;
+  if (catCount === 0 || scale < 0.55) return; // too small to read as a cat — skip
   const size = place.radius * scale;
   for (let index = 0; index < catCount; index++) {
     const phase = placePhase(place) * 53 + index * 4300;
     const walk = Math.sin((timeMs + phase) / 2400); // -1..1 pacing
     const facing = Math.cos((timeMs + phase) / 2400) >= 0 ? 1 : -1;
-    const catX = x + walk * size * 0.9 + (index === 1 ? size * 0.3 : 0);
-    const catY = y + size * (1.18 + index * 0.16);
-    drawOneCat(context, catX, catY, Math.max(2.6, 3.4 * scale), facing, timeMs + phase);
+    const catX = x + walk * size * 0.7 + (index === 1 ? size * 0.3 : 0);
+    const catY = y + size * (1.06 + index * 0.14);
+    drawOneCat(context, catX, catY, Math.max(3.6, 4 * scale), facing, timeMs + phase);
   }
 }
 

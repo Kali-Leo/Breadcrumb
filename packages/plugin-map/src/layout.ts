@@ -79,13 +79,14 @@ export function computeMapLayout(
       forceLink<PlaceDatum, (typeof links)[number]>(links)
         .id((datum) => datum.id)
         // Higher similarity -> shorter ideal distance (related places sit near each other).
-        .distance((link) => 140 + (1 - link.similarity) * 420)
+        .distance((link) => 320 + (1 - link.similarity) * 520)
         .strength((link) => Math.max(0.05, link.similarity)),
     )
-    .force("charge", forceManyBody().strength(-260))
+    .force("charge", forceManyBody().strength(-320))
     .force(
       "collide",
-      forceCollide<PlaceDatum>().radius((_, index) => (radii[index] ?? 24) + 40),
+      // Islands render at ~1.9x the place radius plus ripples — keep whole islands apart.
+      forceCollide<PlaceDatum>().radius((_, index) => (radii[index] ?? 24) * 1.9 + 80),
     )
     .force("x", forceX(0).strength(0.03))
     .force("y", forceY(0).strength(0.03))

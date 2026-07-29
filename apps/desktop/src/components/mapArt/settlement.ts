@@ -27,10 +27,11 @@ export function drawSettlement(
     drawRoundTree(context, x - size * 0.95, y + size * 0.1, size * 0.42, jitter);
     drawPineTree(context, x + size * 0.95, y + size * 0.05, size * 0.5, jitter);
   } else {
-    drawCastle(context, x, y + size * 0.3, size * 0.85, jitter);
-    drawHut(context, x - size * 0.95, y + size * 0.62, size * 0.42, jitter);
-    drawHut(context, x + size * 0.95, y + size * 0.66, size * 0.46, jitter);
-    drawPineTree(context, x - size * 1.25, y + size * 0.25, size * 0.4, jitter);
-    drawRoundTree(context, x + size * 1.3, y + size * 0.3, size * 0.38, jitter);
+    drawCastle(context, x, y + size * 0.18, size * 0.72, jitter);
+    drawHut(context, x - size * 0.78, y + size * 0.52, size * 0.34, jitter);
+    drawHut(context, x + size * 0.78, y + size * 0.56, size * 0.36, jitter);
+    drawHut(context, x - size * 0.3, y + size * 0.72, size * 0.3, jitter);
+    drawPineTree(context, x - size * 1.08, y + size * 0.2, size * 0.34, jitter);
+    drawRoundTree(context, x + size * 1.1, y + size * 0.26, size * 0.32, jitter);
   }
 }
