@@ -1,0 +1,46 @@
+/**
+ * Purpose: opens the local SQLite database via tauri-plugin-sql, runs migrations,
+ * and exposes ready-to-use repositories. Side effect: creates breadcrumb.db on first call.
+ * Main exports: getRepos() (memoized async singleton), Repos.
+ */
+import {
+  createConversationsRepo,
+  createLlmCallsRepo,
+  createMessagesRepo,
+  createSettingsRepo,
+  runMigrations,
+  type SqlClient,
+} from "@breadcrumb/core-db";
+import Database from "@tauri-apps/plugin-sql";
+
+export interface Repos {
+  settings: ReturnType<typeof createSettingsRepo>;
+  conversations: ReturnType<typeof createConversationsRepo>;
+  messages: ReturnType<typeof createMessagesRepo>;
+  llmCalls: ReturnType<typeof createLlmCallsRepo>;
+}
+
+let reposPromise: Promise<Repos> | null = null;
+
+export function getRepos(): Promise<Repos> {
+  reposPromise ??= openAndMigrate();
+  return reposPromise;
+}
+
+async function openAndMigrate(): Promise<Repos> {
+  const database = await Database.load("sqlite:breadcrumb.db");
+  const sqlClient: SqlClient = {
+    select: <Row>(sql: string, params?: readonly unknown[]) =>
+      database.select<Row[]>(sql, params ? [...params] : []),
+    execute: async (sql: string, params?: readonly unknown[]) => {
+      await database.execute(sql, params ? [...params] : []);
+    },
+  };
+  await runMigrations({ execute: sqlClient.execute });
+  return {
+    settings: createSettingsRepo(sqlClient),
+    conversations: createConversationsRepo(sqlClient),
+    messages: createMessagesRepo(sqlClient),
+    llmCalls: createLlmCallsRepo(sqlClient),
+  };
+}
