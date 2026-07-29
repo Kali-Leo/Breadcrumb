@@ -1,0 +1,17 @@
+{
+  "name": "@breadcrumb/core-db",
+  "version": "0.0.1",
+  "description": "Local-first data layer: Drizzle schema + sqlite-proxy database factory. The single source of truth for all persisted shapes.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
