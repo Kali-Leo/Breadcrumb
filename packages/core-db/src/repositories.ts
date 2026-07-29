@@ -125,6 +125,12 @@ interface CostSumRow {
   total_micros: number | null;
 }
 
+export interface PurposeCostRow {
+  purpose: string;
+  currency: Currency;
+  total_micros: number | null;
+}
+
 export function createLlmCallsRepo(sql: SqlClient) {
   return {
     async record(row: LlmCallRow): Promise<void> {
@@ -152,6 +158,14 @@ export function createLlmCallsRepo(sql: SqlClient) {
         [sinceIso],
       );
       return new Map(rows.map((row) => [row.currency, row.total_micros ?? 0]));
+    },
+    /** Today's spend broken down by feature (purpose) — feeds the meter详情 tooltip. */
+    async sumCostSinceByPurpose(sinceIso: string): Promise<PurposeCostRow[]> {
+      return sql.select<PurposeCostRow>(
+        `SELECT purpose, currency, SUM(cost_micros) AS total_micros FROM llm_calls
+         WHERE created_at >= ? GROUP BY purpose, currency ORDER BY total_micros DESC`,
+        [sinceIso],
+      );
     },
     async sumCostForConversation(conversationId: string): Promise<Map<Currency, number>> {
       const rows = await sql.select<CostSumRow>(

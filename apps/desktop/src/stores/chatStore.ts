@@ -113,6 +113,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: m.role,
         content: m.content,
       }));
+      // Anchored knowledge node (if any) steers this round without polluting stored history.
+      const { useKnowledgeStore } = await import("./knowledgeStore");
+      const knowledge = useKnowledgeStore.getState();
+      const anchoredNode = knowledge.nodes.find((node) => node.id === knowledge.anchoredNodeId);
+      if (anchoredNode) {
+        history.unshift({
+          role: "system",
+          content: `学习者当前锚定的知识点：「${anchoredNode.label}」（${anchoredNode.summary}）。请围绕这个知识点展开回答。`,
+        });
+      }
       const result = await client.chatStream(history, (delta) => {
         set({ streamingText: (get().streamingText ?? "") + delta });
       });

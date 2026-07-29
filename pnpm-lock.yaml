@@ -41,6 +41,12 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/plugin-knowledge-tree':
+        specifier: workspace:*
+        version: link:../../packages/plugin-knowledge-tree
+      '@breadcrumb/plugin-trail':
+        specifier: workspace:*
+        version: link:../../packages/plugin-trail
       '@breadcrumb/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk

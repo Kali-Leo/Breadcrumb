@@ -1,26 +1,39 @@
 /**
  * Purpose: application root — loads persisted state once, lays out the three-column shell
- * (sidebar / chat or settings / future knowledge-tree slot) plus the status bar.
+ * (sidebar+trail / chat or settings / knowledge tree) plus the status bar.
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
+import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { useChatStore } from "./stores/chatStore";
+import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
+import { useTrailStore } from "./stores/trailStore";
 
 export default function App() {
   const [view, setView] = useState<"chat" | "settings">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
+  const activeConversationId = useChatStore((state) => state.activeConversationId);
 
   useEffect(() => {
-    void useSettingsStore.getState().loadFromDatabase();
-    void useChatStore.getState().loadFromDatabase();
+    void (async () => {
+      await useSettingsStore.getState().loadFromDatabase();
+      await useChatStore.getState().loadFromDatabase();
+      await useTrailStore.getState().refreshToday();
+      await useTrailStore.getState().ensureYesterdaySummary();
+    })();
   }, []);
+
+  // Keep the knowledge tree in sync with the open conversation.
+  useEffect(() => {
+    void useKnowledgeStore.getState().loadForConversation(activeConversationId);
+  }, [activeConversationId]);
 
   // First run: no API configured yet -> open settings so the user can start in one step.
   useEffect(() => {
@@ -36,6 +49,7 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {view === "chat" ? <ChatView /> : <SettingsPanel onClose={() => setView("chat")} />}
         </main>
+        {view === "chat" && <KnowledgeTreePanel />}
       </div>
       <StatusBar />
     </div>

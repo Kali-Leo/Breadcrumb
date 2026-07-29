@@ -3,6 +3,7 @@
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
+import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
   onOpenSettings(): void;
@@ -43,6 +44,7 @@ export function Sidebar({ onOpenSettings }: SidebarProps) {
           </button>
         ))}
       </nav>
+      <TrailPanel />
       <button
         type="button"
         onClick={onOpenSettings}
