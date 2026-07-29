@@ -45,6 +45,8 @@ export function MapView({ onJumpToChat }: MapViewProps) {
   useEffect(() => {
     void useMapStore.getState().refresh();
     void useMemoryStore.getState().refresh();
+    // Canvas text does not trigger lazy font loading — request the handwriting face now.
+    void document.fonts.load('16px "Ma Shan Zheng"');
   }, []);
 
   // The heartbeat: ~30fps while the map is open, zero cost once unmounted.

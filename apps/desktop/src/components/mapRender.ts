@@ -1,11 +1,18 @@
 /**
- * Purpose: pure canvas drawing for the ink chart — paper texture tone, rough.js
- * hand-drawn places (house/village/city), name labels, LOD (member labels when zoomed).
- * Main exports: drawMap, findPlaceAt, Camera.
+ * Purpose: draw orchestration for the fantasy chart — parchment, sea, islands with
+ * settlements, fog of forgetting, kraken easter egg, compass rose, and the close-up
+ * interior view. Art bible: docs/vision/05.
+ * Main exports: drawMap, findPlaceAt, findNodeAt, Camera, CLOSE_UP_SCALE.
  */
 import type { MapPlace } from "@breadcrumb/plugin-map";
 import rough from "roughjs";
-import { drawCats, drawCompassRose, drawFog, drawSeaWaves, drawSmoke } from "./mapDecorations";
+import { drawIsland, islandRadius } from "./mapArt/island";
+import { INK, INK_FAINT, INK_SOFT, LABEL_FONT, PAPER_SAND } from "./mapArt/palette";
+import { drawParchment } from "./mapArt/parchment";
+import { hashString } from "./mapArt/prng";
+import { drawKraken, drawSoftFog, drawWaveField } from "./mapArt/sea";
+import { drawSettlement } from "./mapArt/settlement";
+import { drawCats, drawCompassRose, drawSmoke } from "./mapDecorations";
 
 export interface Camera {
   x: number;
@@ -16,7 +23,8 @@ export interface Camera {
 /** Above this zoom, places open up and show their inner knowledge structure. */
 export const CLOSE_UP_SCALE = 1.5;
 
-const INK = "#4a3f35";
+/** The kraken guards a fixed spot in open water. */
+const KRAKEN_WORLD = { x: 420, y: 460 };
 
 function worldToScreen(camera: Camera, canvas: HTMLCanvasElement, x: number, y: number) {
   return {
@@ -36,7 +44,7 @@ export function findPlaceAt(
   for (const place of places) {
     const center = worldToScreen(camera, canvas, place.x, place.y);
     const distance = Math.hypot(center.x - screenX * ratio, center.y - screenY * ratio);
-    if (distance <= (place.radius + 24) * camera.scale) return place;
+    if (distance <= (islandRadius(place) + 12) * camera.scale) return place;
   }
   return null;
 }
@@ -75,27 +83,27 @@ export function drawMap(
   canvas.height = Math.max(1, Math.round(rect.height * ratio));
   const context = canvas.getContext("2d");
   if (!context) return;
-
-  context.fillStyle = "#f6efe0"; // aged paper
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  const roughCanvas = rough.canvas(canvas);
   const scale = camera.scale * ratio;
-  drawSeaWaves(context, canvas.width, canvas.height, camera.x, camera.y, scale);
+  const view = { width: canvas.width, height: canvas.height } as HTMLCanvasElement;
+
+  drawParchment(context, canvas.width, canvas.height);
+  drawWaveField(context, canvas.width, canvas.height, camera.x, camera.y, scale);
+
+  const kraken = worldToScreen({ ...camera, scale }, view, KRAKEN_WORLD.x, KRAKEN_WORLD.y);
+  drawKraken(context, kraken.x, kraken.y, scale, timeMs);
 
   const closeUp = camera.scale >= CLOSE_UP_SCALE;
+  const roughCanvas = rough.canvas(canvas);
   for (const place of places) {
-    const center = worldToScreen(
-      { ...camera, scale },
-      { width: canvas.width, height: canvas.height } as HTMLCanvasElement,
-      place.x,
-      place.y,
-    );
+    const center = worldToScreen({ ...camera, scale }, view, place.x, place.y);
     const memberRetentions = place.nodeIds.map((nodeId) => retentionByNode.get(nodeId) ?? 1);
     const averageRetention =
       memberRetentions.reduce((sum, value) => sum + value, 0) /
       Math.max(1, memberRetentions.length);
+
+    drawIsland(context, place, center.x, center.y, scale);
     if (closeUp) {
-      drawPlaceInterior(
+      drawInterior(
         roughCanvas,
         context,
         place,
@@ -106,17 +114,47 @@ export function drawMap(
         retentionByNode,
       );
     } else {
-      drawPlace(roughCanvas, context, place, center.x, center.y, scale);
+      drawSettlement(context, place, center.x, center.y, scale);
       drawSmoke(context, place, center.x, center.y, scale, timeMs);
       drawCats(context, place, center.x, center.y, scale, timeMs);
-      drawFog(context, place, center.x, center.y, scale, 1 - averageRetention, timeMs);
+      drawLabel(context, place, center.x, center.y, scale);
+      drawSoftFog(
+        context,
+        place,
+        center.x,
+        center.y,
+        islandRadius(place),
+        scale,
+        1 - averageRetention,
+        timeMs,
+      );
     }
   }
   drawCompassRose(context, canvas.width);
 }
 
-/** Close-up view: a faint ink ring with the member knowledge nodes laid out inside. */
-function drawPlaceInterior(
+/** Place name in handwriting, with the knowledge count as a small subtitle. */
+function drawLabel(
+  context: CanvasRenderingContext2D,
+  place: MapPlace,
+  x: number,
+  y: number,
+  scale: number,
+): void {
+  const offset = islandRadius(place) * scale;
+  context.fillStyle = INK;
+  context.textAlign = "center";
+  context.font = `${Math.max(13, 17 * scale)}px ${LABEL_FONT}`;
+  context.fillText(place.name, x, y + offset + 20 * scale);
+  if (place.nodeIds.length > 1) {
+    context.font = `${Math.max(9, 10.5 * scale)}px ${LABEL_FONT}`;
+    context.fillStyle = INK_SOFT;
+    context.fillText(`${place.nodeIds.length} 个知识点`, x, y + offset + 36 * scale);
+  }
+}
+
+/** Close-up: member knowledge nodes on the island, ink fading with memory. */
+function drawInterior(
   roughCanvas: ReturnType<typeof rough.canvas>,
   context: CanvasRenderingContext2D,
   place: MapPlace,
@@ -124,25 +162,17 @@ function drawPlaceInterior(
   y: number,
   scale: number,
   nodeLabels: ReadonlyMap<string, string>,
-  retentionByNode: ReadonlyMap<string, number> = new Map(),
+  retentionByNode: ReadonlyMap<string, number>,
 ): void {
-  const seed = 1 + (place.name.charCodeAt(0) % 1000);
-  const ringRadius = place.radius * 1.5 * scale;
-  roughCanvas.circle(x, y, ringRadius * 2, {
-    stroke: "#b5a58e",
-    strokeWidth: 1.2,
-    roughness: 2.2,
-    seed,
-  });
-  context.fillStyle = "#8a7b6b";
+  const seed = 1 + (hashString(place.id) % 1000);
+  context.fillStyle = INK_FAINT;
   context.textAlign = "center";
-  context.font = `${Math.max(10, 11 * scale)}px serif`;
-  context.fillText(place.name, x, y - ringRadius - 8 * scale);
+  context.font = `${Math.max(11, 12 * scale)}px ${LABEL_FONT}`;
+  context.fillText(place.name, x, y - islandRadius(place) * scale - 10 * scale);
 
   for (const member of place.internal) {
     const nodeX = x + member.dx * scale;
     const nodeY = y + member.dy * scale;
-    // Memory as ink: well-remembered nodes are crisp, fading ones grow pale.
     const retention = retentionByNode.get(member.nodeId) ?? 1;
     context.globalAlpha = 0.35 + retention * 0.65;
     roughCanvas.circle(nodeX, nodeY, 9 * scale, {
@@ -150,53 +180,12 @@ function drawPlaceInterior(
       strokeWidth: 1.2,
       roughness: 1.2,
       seed: seed + member.nodeId.length,
-      fill: "#e8dcc3",
+      fill: PAPER_SAND,
       fillStyle: "solid",
     });
     context.fillStyle = INK;
-    context.font = `${Math.max(10, 11 * scale)}px "Noto Serif CJK SC", serif`;
+    context.font = `${Math.max(11, 12.5 * scale)}px ${LABEL_FONT}`;
     context.fillText(nodeLabels.get(member.nodeId) ?? "…", nodeX, nodeY + 18 * scale);
     context.globalAlpha = 1;
-  }
-}
-
-function drawPlace(
-  roughCanvas: ReturnType<typeof rough.canvas>,
-  context: CanvasRenderingContext2D,
-  place: MapPlace,
-  x: number,
-  y: number,
-  scale: number,
-): void {
-  const size = place.radius * scale;
-  const seed = 1 + (place.name.charCodeAt(0) % 1000); // stable sketchiness per place
-  const options = { stroke: INK, strokeWidth: 1.4, roughness: 1.6, seed, fill: "#e8dcc3" };
-
-  if (place.tier === "house") {
-    roughCanvas.rectangle(x - size * 0.45, y - size * 0.35, size * 0.9, size * 0.7, options);
-    roughCanvas.path(
-      `M ${x - size * 0.55} ${y - size * 0.35} L ${x} ${y - size * 0.85} L ${x + size * 0.55} ${y - size * 0.35}`,
-      { ...options, fill: undefined },
-    );
-  } else if (place.tier === "village") {
-    roughCanvas.circle(x, y, size * 1.5, { ...options, fillStyle: "hachure" });
-    roughCanvas.rectangle(x - size * 0.5, y - size * 0.3, size * 0.45, size * 0.5, options);
-    roughCanvas.rectangle(x + size * 0.08, y - size * 0.42, size * 0.5, size * 0.62, options);
-  } else {
-    roughCanvas.circle(x, y, size * 1.9, { ...options, fillStyle: "hachure" });
-    roughCanvas.rectangle(x - size * 0.62, y - size * 0.3, size * 0.4, size * 0.62, options);
-    roughCanvas.rectangle(x - size * 0.12, y - size * 0.6, size * 0.42, size * 0.92, options);
-    roughCanvas.rectangle(x + size * 0.36, y - size * 0.4, size * 0.36, size * 0.72, options);
-  }
-
-  context.fillStyle = INK;
-  context.textAlign = "center";
-  context.font = `${Math.max(11, 13 * scale)}px "Noto Serif CJK SC", serif`;
-  context.fillText(place.name, x, y + size + 16 * scale);
-  const memberCount = place.nodeIds.length;
-  if (memberCount > 1) {
-    context.font = `${Math.max(9, 10 * scale)}px serif`;
-    context.fillStyle = "#8a7b6b";
-    context.fillText(`${memberCount} 个知识点`, x, y + size + 30 * scale);
   }
 }

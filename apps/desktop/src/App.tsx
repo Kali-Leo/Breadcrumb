@@ -4,6 +4,7 @@
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
+import "@fontsource/ma-shan-zheng";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";

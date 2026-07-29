@@ -1,8 +1,8 @@
 /**
- * Purpose: the map's life layer — chimney smoke, strolling ink cats, sea waves and a
- * compass rose. Pure canvas drawing, deterministic per place (seeded phases), animated
+ * Purpose: the map life layer — chimney smoke, strolling ink cats and the compass rose
+ * (art bible docs/vision/05). Deterministic per place (seeded phases), animated
  * by a time parameter. No learning semantics; charm only.
- * Main exports: drawSmoke, drawCats, drawSeaWaves, drawCompassRose.
+ * Main exports: drawSmoke, drawCats, drawCompassRose.
  */
 import type { MapPlace } from "@breadcrumb/plugin-map";
 
@@ -112,77 +112,6 @@ function drawOneCat(
     y - unit * 1.8 + swish * 0.4,
   );
   context.stroke();
-}
-
-/** Deterministic short wave strokes sprinkled over empty sea (viewport-culled). */
-export function drawSeaWaves(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  cameraX: number,
-  cameraY: number,
-  scale: number,
-): void {
-  const gridWorld = 260;
-  context.strokeStyle = "#c9bda6";
-  context.lineWidth = 1;
-  const startColumn = Math.floor((cameraX - width / 2 / scale) / gridWorld) - 1;
-  const endColumn = Math.ceil((cameraX + width / 2 / scale) / gridWorld) + 1;
-  const startRow = Math.floor((cameraY - height / 2 / scale) / gridWorld) - 1;
-  const endRow = Math.ceil((cameraY + height / 2 / scale) / gridWorld) + 1;
-  for (let column = startColumn; column <= endColumn; column++) {
-    for (let row = startRow; row <= endRow; row++) {
-      const hash = ((column * 73856093) ^ (row * 19349663)) >>> 0;
-      if (hash % 3 !== 0) continue; // sparse
-      const worldX = column * gridWorld + (hash % 120);
-      const worldY = row * gridWorld + ((hash >> 4) % 120);
-      const screenX = (worldX - cameraX) * scale + width / 2;
-      const screenY = (worldY - cameraY) * scale + height / 2;
-      context.beginPath();
-      for (let dash = 0; dash < 3; dash++) {
-        const dashX = screenX + dash * 9 * scale;
-        context.moveTo(dashX, screenY);
-        context.quadraticCurveTo(
-          dashX + 3 * scale,
-          screenY - 2.4 * scale,
-          dashX + 6 * scale,
-          screenY,
-        );
-      }
-      context.stroke();
-    }
-  }
-}
-
-/**
- * Fog of forgetting: soft cloud puffs over a place, denser as memory fades.
- * Never fully hides the name — fog is weather, not punishment.
- */
-export function drawFog(
-  context: CanvasRenderingContext2D,
-  place: MapPlace,
-  x: number,
-  y: number,
-  scale: number,
-  fogIntensity: number,
-  timeMs: number,
-): void {
-  if (fogIntensity <= 0.05) return;
-  const size = place.radius * scale;
-  const alpha = Math.min(0.55, fogIntensity * 0.6);
-  const phase = placePhase(place);
-  context.fillStyle = "#ded5c2";
-  for (let puff = 0; puff < 4; puff++) {
-    const angle = (puff / 4) * Math.PI * 2 + phase;
-    const drift = Math.sin(timeMs / 4200 + puff + phase) * size * 0.14;
-    const puffX = x + Math.cos(angle) * size * 0.55 + drift;
-    const puffY = y + Math.sin(angle) * size * 0.35 - size * 0.15;
-    context.globalAlpha = alpha * (0.75 + 0.25 * Math.sin(timeMs / 3100 + puff * 2));
-    context.beginPath();
-    context.ellipse(puffX, puffY, size * (0.65 + puff * 0.08), size * 0.34, 0, 0, Math.PI * 2);
-    context.fill();
-  }
-  context.globalAlpha = 1;
 }
 
 /** A small hand-drawn compass rose, fixed to the top-right corner. */
