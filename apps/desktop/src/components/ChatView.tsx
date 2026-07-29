@@ -4,6 +4,7 @@
  */
 import { useEffect, useRef } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { Composer } from "./Composer";
 import { MessageBubble } from "./MessageBubble";
 
@@ -41,7 +42,29 @@ export function ChatView() {
         )}
         <div ref={scrollAnchor} />
       </div>
+      <AnchorBanner />
       <Composer disabled={isStreaming} onSend={(content) => void sendMessage(content)} />
+    </div>
+  );
+}
+
+/** Shows which knowledge node is anchored; one click releases it. */
+function AnchorBanner() {
+  const nodes = useKnowledgeStore((state) => state.nodes);
+  const anchoredNodeId = useKnowledgeStore((state) => state.anchoredNodeId);
+  const toggleAnchor = useKnowledgeStore((state) => state.toggleAnchor);
+  const anchoredNode = nodes.find((node) => node.id === anchoredNodeId);
+  if (!anchoredNode) return null;
+  return (
+    <div className="flex items-center gap-2 border-t border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-stone-600">
+      <span>📍 正在围绕「{anchoredNode.label}」讨论</span>
+      <button
+        type="button"
+        onClick={() => toggleAnchor(anchoredNode.id)}
+        className="ml-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
+      >
+        取消锚定
+      </button>
     </div>
   );
 }

@@ -5,9 +5,11 @@
  */
 import {
   createConversationsRepo,
+  createKnowledgeNodesRepo,
   createLlmCallsRepo,
   createMessagesRepo,
   createSettingsRepo,
+  createTrailSummariesRepo,
   runMigrations,
   type SqlClient,
 } from "@breadcrumb/core-db";
@@ -18,6 +20,8 @@ export interface Repos {
   conversations: ReturnType<typeof createConversationsRepo>;
   messages: ReturnType<typeof createMessagesRepo>;
   llmCalls: ReturnType<typeof createLlmCallsRepo>;
+  knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
+  trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -42,5 +46,7 @@ async function openAndMigrate(): Promise<Repos> {
     conversations: createConversationsRepo(sqlClient),
     messages: createMessagesRepo(sqlClient),
     llmCalls: createLlmCallsRepo(sqlClient),
+    knowledgeNodes: createKnowledgeNodesRepo(sqlClient),
+    trailSummaries: createTrailSummariesRepo(sqlClient),
   };
 }

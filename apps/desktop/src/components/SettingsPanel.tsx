@@ -1,9 +1,33 @@
 /**
- * Purpose: settings view — OpenAI-compatible API config and the global network switch.
+ * Purpose: settings view — OpenAI-compatible API config, the global network switch,
+ * and per-feature AI switches (each metered feature can be turned off independently).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
-import { useSettingsStore } from "../stores/settingsStore";
+import { type FeatureSwitches, useSettingsStore } from "../stores/settingsStore";
+
+const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string }> = {
+  knowledgeTree: {
+    name: "🌳 知识树提取",
+    hint: "每轮对话后额外调用一次 AI 提取知识点（独立计费）",
+  },
+  trail: { name: "🍞 轨迹每日总结", hint: "每天生成一句昨日学习总结（独立计费）" },
+};
+
+function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors ${on ? "bg-amber-500" : "bg-stone-300"}`}
+    >
+      <span
+        className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-6" : "translate-x-0"}`}
+      />
+    </button>
+  );
+}
 
 interface SettingsPanelProps {
   onClose(): void;
@@ -14,6 +38,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const networkEnabled = useSettingsStore((state) => state.networkEnabled);
   const saveApiConfig = useSettingsStore((state) => state.saveApiConfig);
   const setNetworkEnabled = useSettingsStore((state) => state.setNetworkEnabled);
+  const featureSwitches = useSettingsStore((state) => state.featureSwitches);
+  const setFeatureSwitch = useSettingsStore((state) => state.setFeatureSwitch);
 
   const [baseUrl, setBaseUrl] = useState(apiConfig?.baseUrl ?? "https://api.deepseek.com/v1");
   const [apiKey, setApiKey] = useState(apiConfig?.apiKey ?? "");
@@ -83,16 +109,28 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             关闭后，所有需要联网的功能（包括 API 调用）都会安静地停下。
           </p>
         </div>
-        <button
-          type="button"
+        <Toggle
+          on={networkEnabled}
           onClick={() => void setNetworkEnabled(!networkEnabled)}
-          className={`h-7 w-13 rounded-full p-0.5 transition-colors ${networkEnabled ? "bg-amber-500" : "bg-stone-300"}`}
-          aria-label="网络总开关"
-        >
-          <span
-            className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${networkEnabled ? "translate-x-6" : "translate-x-0"}`}
-          />
-        </button>
+          label="网络总开关"
+        />
+      </section>
+
+      <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
+        <h3 className="font-medium text-stone-700">AI 功能开关</h3>
+        {(Object.keys(FEATURE_LABELS) as (keyof FeatureSwitches)[]).map((feature) => (
+          <div key={feature} className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-stone-700">{FEATURE_LABELS[feature].name}</p>
+              <p className="text-xs text-stone-500">{FEATURE_LABELS[feature].hint}</p>
+            </div>
+            <Toggle
+              on={featureSwitches[feature]}
+              onClick={() => void setFeatureSwitch(feature, !featureSwitches[feature])}
+              label={FEATURE_LABELS[feature].name}
+            />
+          </div>
+        ))}
       </section>
     </div>
   );
