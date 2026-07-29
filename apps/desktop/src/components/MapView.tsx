@@ -1,21 +1,34 @@
 /**
- * Purpose: the ink nautical chart — canvas rendering of knowledge places (rough.js
- * hand-drawn style), wheel zoom with empty-sea bounce, drag panning, two LOD levels.
+ * Purpose: the ink nautical chart — hand-drawn places, wheel zoom with empty-sea bounce,
+ * drag panning, click-to-fly into a region, click a node to anchor it and jump to chat.
  * Main exports: MapView.
  */
 import { useEffect, useRef, useState } from "react";
+import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useMapStore } from "../stores/mapStore";
-import { type Camera, drawMap, findPlaceAt } from "./mapRender";
+import { type Camera, CLOSE_UP_SCALE, drawMap, findNodeAt, findPlaceAt } from "./mapRender";
 
-export function MapView() {
+interface MapViewProps {
+  onJumpToChat(): void;
+}
+
+export function MapView({ onJumpToChat }: MapViewProps) {
   const places = useMapStore((state) => state.places);
   const unchartedCount = useMapStore((state) => state.unchartedCount);
+  const nodes = useKnowledgeStore((state) => state.nodes);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraRef = useRef<Camera>({ x: 0, y: 0, scale: 0.8 });
+  const animationRef = useRef<number | null>(null);
   const [, forceRender] = useState(0);
-  const dragRef = useRef<{ startX: number; startY: number; camX: number; camY: number } | null>(
-    null,
-  );
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    camX: number;
+    camY: number;
+    moved: boolean;
+  } | null>(null);
+
+  const nodeLabels = new Map(nodes.map((node) => [node.id, node.label]));
 
   useEffect(() => {
     void useMapStore.getState().refresh();
@@ -33,11 +46,30 @@ export function MapView() {
   useEffect(() => {
     // No dependency array on purpose: redraw after every render (camera lives in a ref).
     const canvas = canvasRef.current;
-    if (canvas) drawMap(canvas, places, cameraRef.current);
+    if (canvas) drawMap(canvas, places, cameraRef.current, nodeLabels);
   });
 
   function repaint() {
     forceRender((tick) => tick + 1);
+  }
+
+  /** Smoothly animates the camera to a target position/zoom (~0.5s ease-out). */
+  function flyTo(targetX: number, targetY: number, targetScale: number) {
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    const camera = cameraRef.current;
+    const from = { ...camera };
+    const start = performance.now();
+    const duration = 500;
+    function step(now: number) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - (1 - progress) ** 3;
+      camera.x = from.x + (targetX - from.x) * eased;
+      camera.y = from.y + (targetY - from.y) * eased;
+      camera.scale = from.scale + (targetScale - from.scale) * eased;
+      repaint();
+      if (progress < 1) animationRef.current = requestAnimationFrame(step);
+    }
+    animationRef.current = requestAnimationFrame(step);
   }
 
   function handleWheel(event: React.WheelEvent<HTMLCanvasElement>) {
@@ -60,8 +92,7 @@ export function MapView() {
       return;
     }
     const factor = zoomingIn ? 1.15 : 1 / 1.15;
-    const next = Math.min(3.2, Math.max(0.25, camera.scale * factor));
-    camera.scale = next;
+    camera.scale = Math.min(3.2, Math.max(0.25, camera.scale * factor));
     repaint();
   }
 
@@ -72,6 +103,7 @@ export function MapView() {
       startY: event.clientY,
       camX: camera.x,
       camY: camera.y,
+      moved: false,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -79,10 +111,39 @@ export function MapView() {
   function handlePointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
     const drag = dragRef.current;
     if (!drag) return;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (Math.hypot(deltaX, deltaY) > 6) drag.moved = true;
+    if (!drag.moved) return;
     const camera = cameraRef.current;
-    camera.x = drag.camX - (event.clientX - drag.startX) / camera.scale;
-    camera.y = drag.camY - (event.clientY - drag.startY) / camera.scale;
+    camera.x = drag.camX - deltaX / camera.scale;
+    camera.y = drag.camY - deltaY / camera.scale;
     repaint();
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    if (!drag || drag.moved) return; // a drag, not a click
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const camera = cameraRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+
+    // Close-up: clicking a knowledge node anchors it and jumps back to the chat.
+    const hit = findNodeAt(places, camera, canvas, pointer.x, pointer.y);
+    if (hit) {
+      const knowledge = useKnowledgeStore.getState();
+      if (knowledge.anchoredNodeId !== hit.nodeId) knowledge.toggleAnchor(hit.nodeId);
+      onJumpToChat();
+      return;
+    }
+    // Far view: clicking a place flies into it.
+    const place = findPlaceAt(places, camera, canvas, pointer.x, pointer.y);
+    if (place && camera.scale < CLOSE_UP_SCALE) {
+      flyTo(place.x, place.y, Math.max(CLOSE_UP_SCALE + 0.2, camera.scale));
+    }
   }
 
   return (
@@ -93,9 +154,7 @@ export function MapView() {
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={() => {
-          dragRef.current = null;
-        }}
+        onPointerUp={handlePointerUp}
       />
       {places.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-stone-400">
@@ -108,6 +167,9 @@ export function MapView() {
           ✍️ 还有 {unchartedCount} 个知识点正在测绘…
         </p>
       )}
+      <p className="absolute bottom-3 left-4 text-xs text-stone-400">
+        点击地点飞入 · 近景点击知识点可锚定去聊
+      </p>
     </div>
   );
 }

@@ -80,3 +80,43 @@ describe("computeMapLayout", () => {
     expect(places.flatMap((place) => place.nodeIds)).not.toContain("dddd");
   });
 });
+
+describe("computePlaceInternalLayout", () => {
+  const embeddings = new Map<string, readonly number[]>([
+    ["a", [1, 0]],
+    ["b", [0.97, 0.2]],
+    ["c", [0.2, 1]],
+  ]);
+
+  it("centers a lone member", async () => {
+    const { computePlaceInternalLayout } = await import("./internalLayout");
+    expect(computePlaceInternalLayout(["a"], embeddings, 40)).toEqual([
+      { nodeId: "a", dx: 0, dy: 0 },
+    ]);
+  });
+
+  it("keeps every member inside the disc and is deterministic", async () => {
+    const { computePlaceInternalLayout } = await import("./internalLayout");
+    const first = computePlaceInternalLayout(["a", "b", "c"], embeddings, 40);
+    const second = computePlaceInternalLayout(["a", "b", "c"], embeddings, 40);
+    expect(second).toEqual(first);
+    for (const position of first) {
+      expect(Math.hypot(position.dx, position.dy)).toBeLessThanOrEqual(40 * 1.35 + 1e-6);
+    }
+  });
+
+  it("places similar members closer than dissimilar ones", async () => {
+    const { computePlaceInternalLayout } = await import("./internalLayout");
+    const positions = computePlaceInternalLayout(["a", "b", "c"], embeddings, 40);
+    const byId = new Map(positions.map((position) => [position.nodeId, position]));
+    const ab = Math.hypot(
+      (byId.get("a")?.dx ?? 0) - (byId.get("b")?.dx ?? 0),
+      (byId.get("a")?.dy ?? 0) - (byId.get("b")?.dy ?? 0),
+    );
+    const ac = Math.hypot(
+      (byId.get("a")?.dx ?? 0) - (byId.get("c")?.dx ?? 0),
+      (byId.get("a")?.dy ?? 0) - (byId.get("c")?.dy ?? 0),
+    );
+    expect(ab).toBeLessThan(ac);
+  });
+});

@@ -53,7 +53,7 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
-          {view === "map" && <MapView />}
+          {view === "map" && <MapView onJumpToChat={() => setView("chat")} />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>
