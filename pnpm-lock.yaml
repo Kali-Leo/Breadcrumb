@@ -44,6 +44,9 @@ importers:
       '@breadcrumb/plugin-knowledge-tree':
         specifier: workspace:*
         version: link:../../packages/plugin-knowledge-tree
+      '@breadcrumb/plugin-map':
+        specifier: workspace:*
+        version: link:../../packages/plugin-map
       '@breadcrumb/plugin-trail':
         specifier: workspace:*
         version: link:../../packages/plugin-trail
