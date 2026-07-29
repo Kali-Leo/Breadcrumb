@@ -19,12 +19,20 @@ export interface ModelPrice {
 /**
  * Fallback prices for common OpenAI-compatible models. Users can override any model's
  * price in settings; unknown models fall back to zero with a UI hint to configure.
- * NOTE: values are placeholders until verified against provider pricing pages (task T8);
- * keep entries few and honest.
+ * Verified against provider pricing pages 2026-07-29. We bill input at the cache-miss
+ * rate, so the meter is an honest upper bound (cache hits cost the provider-side less).
  */
 export const BUILTIN_MODEL_PRICES: Readonly<Record<string, ModelPrice>> = {
-  "deepseek-chat": { inputPerMillionTokens: 2, outputPerMillionTokens: 3, currency: "CNY" },
-  "deepseek-reasoner": { inputPerMillionTokens: 4, outputPerMillionTokens: 16, currency: "CNY" },
+  "deepseek-v4-flash": {
+    inputPerMillionTokens: 0.14,
+    outputPerMillionTokens: 0.28,
+    currency: "USD",
+  },
+  "deepseek-v4-pro": {
+    inputPerMillionTokens: 0.435,
+    outputPerMillionTokens: 0.87,
+    currency: "USD",
+  },
 };
 
 export function calculateCostMicros(usage: TokenUsage, price: ModelPrice): number {

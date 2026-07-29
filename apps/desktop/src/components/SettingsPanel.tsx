@@ -17,7 +17,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   const [baseUrl, setBaseUrl] = useState(apiConfig?.baseUrl ?? "https://api.deepseek.com/v1");
   const [apiKey, setApiKey] = useState(apiConfig?.apiKey ?? "");
-  const [model, setModel] = useState(apiConfig?.model ?? "deepseek-chat");
+  const [model, setModel] = useState(apiConfig?.model ?? "deepseek-v4-flash");
   const [savedHint, setSavedHint] = useState(false);
 
   async function save() {
