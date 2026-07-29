@@ -1,0 +1,10 @@
+{
+  "style": "vector_illustration",
+  "substyle": "line_art",
+  "items": [
+    {
+      "name": "cat-sheet",
+      "prompt": "a character sheet of six chibi cat villagers arranged in an even 3x2 grid with wide spacing: a plump baker cat holding a bread basket, a thin fisher cat with a fishing rod, a farmer cat in a straw hat holding a hoe, a scholar cat reading a book, a sturdy blacksmith cat with apron and hammer, a cheerful innkeeper cat holding a mug; simple cloth villager outfits, no magic, no staffs, varied plump and thin body shapes, clean black ink line art, plain white background, generous space between characters"
+    }
+  ]
+}
