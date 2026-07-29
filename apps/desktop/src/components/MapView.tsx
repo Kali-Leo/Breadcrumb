@@ -21,6 +21,15 @@ export function MapView() {
     void useMapStore.getState().refresh();
   }, []);
 
+  // Repaint on container resize so shapes never stretch with the window.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const observer = new ResizeObserver(() => forceRender((tick) => tick + 1));
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     // No dependency array on purpose: redraw after every render (camera lives in a ref).
     const canvas = canvasRef.current;
