@@ -5,7 +5,7 @@
  */
 import type { MapPlace } from "@breadcrumb/plugin-map";
 import rough from "roughjs";
-import { drawCats, drawCompassRose, drawSeaWaves, drawSmoke } from "./mapDecorations";
+import { drawCats, drawCompassRose, drawFog, drawSeaWaves, drawSmoke } from "./mapDecorations";
 
 export interface Camera {
   x: number;
@@ -67,6 +67,7 @@ export function drawMap(
   camera: Camera,
   nodeLabels: ReadonlyMap<string, string> = new Map(),
   timeMs = 0,
+  retentionByNode: ReadonlyMap<string, number> = new Map(),
 ): void {
   const rect = canvas.getBoundingClientRect();
   const ratio = window.devicePixelRatio || 1;
@@ -89,12 +90,26 @@ export function drawMap(
       place.x,
       place.y,
     );
+    const memberRetentions = place.nodeIds.map((nodeId) => retentionByNode.get(nodeId) ?? 1);
+    const averageRetention =
+      memberRetentions.reduce((sum, value) => sum + value, 0) /
+      Math.max(1, memberRetentions.length);
     if (closeUp) {
-      drawPlaceInterior(roughCanvas, context, place, center.x, center.y, scale, nodeLabels);
+      drawPlaceInterior(
+        roughCanvas,
+        context,
+        place,
+        center.x,
+        center.y,
+        scale,
+        nodeLabels,
+        retentionByNode,
+      );
     } else {
       drawPlace(roughCanvas, context, place, center.x, center.y, scale);
       drawSmoke(context, place, center.x, center.y, scale, timeMs);
       drawCats(context, place, center.x, center.y, scale, timeMs);
+      drawFog(context, place, center.x, center.y, scale, 1 - averageRetention, timeMs);
     }
   }
   drawCompassRose(context, canvas.width);
@@ -109,6 +124,7 @@ function drawPlaceInterior(
   y: number,
   scale: number,
   nodeLabels: ReadonlyMap<string, string>,
+  retentionByNode: ReadonlyMap<string, number> = new Map(),
 ): void {
   const seed = 1 + (place.name.charCodeAt(0) % 1000);
   const ringRadius = place.radius * 1.5 * scale;
@@ -126,6 +142,9 @@ function drawPlaceInterior(
   for (const member of place.internal) {
     const nodeX = x + member.dx * scale;
     const nodeY = y + member.dy * scale;
+    // Memory as ink: well-remembered nodes are crisp, fading ones grow pale.
+    const retention = retentionByNode.get(member.nodeId) ?? 1;
+    context.globalAlpha = 0.35 + retention * 0.65;
     roughCanvas.circle(nodeX, nodeY, 9 * scale, {
       stroke: INK,
       strokeWidth: 1.2,
@@ -137,6 +156,7 @@ function drawPlaceInterior(
     context.fillStyle = INK;
     context.font = `${Math.max(10, 11 * scale)}px "Noto Serif CJK SC", serif`;
     context.fillText(nodeLabels.get(member.nodeId) ?? "…", nodeX, nodeY + 18 * scale);
+    context.globalAlpha = 1;
   }
 }
 

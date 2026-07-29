@@ -154,6 +154,37 @@ export function drawSeaWaves(
   }
 }
 
+/**
+ * Fog of forgetting: soft cloud puffs over a place, denser as memory fades.
+ * Never fully hides the name — fog is weather, not punishment.
+ */
+export function drawFog(
+  context: CanvasRenderingContext2D,
+  place: MapPlace,
+  x: number,
+  y: number,
+  scale: number,
+  fogIntensity: number,
+  timeMs: number,
+): void {
+  if (fogIntensity <= 0.05) return;
+  const size = place.radius * scale;
+  const alpha = Math.min(0.55, fogIntensity * 0.6);
+  const phase = placePhase(place);
+  context.fillStyle = "#ded5c2";
+  for (let puff = 0; puff < 4; puff++) {
+    const angle = (puff / 4) * Math.PI * 2 + phase;
+    const drift = Math.sin(timeMs / 4200 + puff + phase) * size * 0.14;
+    const puffX = x + Math.cos(angle) * size * 0.55 + drift;
+    const puffY = y + Math.sin(angle) * size * 0.35 - size * 0.15;
+    context.globalAlpha = alpha * (0.75 + 0.25 * Math.sin(timeMs / 3100 + puff * 2));
+    context.beginPath();
+    context.ellipse(puffX, puffY, size * (0.65 + puff * 0.08), size * 0.34, 0, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.globalAlpha = 1;
+}
+
 /** A small hand-drawn compass rose, fixed to the top-right corner. */
 export function drawCompassRose(context: CanvasRenderingContext2D, width: number): void {
   const x = width - 64;

@@ -16,6 +16,7 @@
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/plugin-knowledge-tree": "workspace:*",
     "@breadcrumb/plugin-map": "workspace:*",
+    "@breadcrumb/plugin-memory": "workspace:*",
     "@breadcrumb/plugin-trail": "workspace:*",
     "@breadcrumb/sdk": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
