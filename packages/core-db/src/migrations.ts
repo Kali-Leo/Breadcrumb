@@ -108,6 +108,18 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_knowledge_nodes_created ON knowledge_nodes(created_at);`,
     ],
   },
+  {
+    // Locally-computed embedding per knowledge node — the map's spatial raw material.
+    id: "0004_node_embeddings",
+    statements: [
+      `CREATE TABLE node_embeddings (
+        node_id TEXT PRIMARY KEY REFERENCES knowledge_nodes(id),
+        model TEXT NOT NULL,
+        vector_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
