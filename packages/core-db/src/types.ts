@@ -46,6 +46,14 @@ export interface KnowledgeNodeRow {
   created_at: string;
 }
 
+/** Locally-computed embedding of one knowledge node (vector stored as a JSON array). */
+export interface NodeEmbeddingRow {
+  node_id: string;
+  model: string;
+  vector_json: string;
+  created_at: string;
+}
+
 /** One footprint: a conversation touched (learned or re-met) a knowledge node. */
 export interface NodeSightingRow {
   id: string;

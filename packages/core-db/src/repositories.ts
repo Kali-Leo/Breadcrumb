@@ -8,6 +8,7 @@ import type {
   KnowledgeNodeRow,
   LlmCallRow,
   MessageRow,
+  NodeEmbeddingRow,
   NodeSightingRow,
   SettingRow,
   SqlClient,
@@ -87,6 +88,30 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
       return sql.select<KnowledgeNodeRow>(
         "SELECT * FROM knowledge_nodes WHERE created_at >= ? AND created_at < ? ORDER BY created_at ASC",
         [fromIso, toIso],
+      );
+    },
+  };
+}
+
+export function createNodeEmbeddingsRepo(sql: SqlClient) {
+  return {
+    async upsert(row: NodeEmbeddingRow): Promise<void> {
+      await sql.execute(
+        `INSERT INTO node_embeddings (node_id, model, vector_json, created_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(node_id) DO UPDATE SET
+           model = excluded.model, vector_json = excluded.vector_json, created_at = excluded.created_at`,
+        [row.node_id, row.model, row.vector_json, row.created_at],
+      );
+    },
+    async listAll(): Promise<NodeEmbeddingRow[]> {
+      return sql.select<NodeEmbeddingRow>("SELECT * FROM node_embeddings");
+    },
+    /** Nodes that still lack an embedding — the backfill queue. */
+    async listNodesMissingEmbedding(): Promise<KnowledgeNodeRow[]> {
+      return sql.select<KnowledgeNodeRow>(
+        `SELECT k.* FROM knowledge_nodes k
+         LEFT JOIN node_embeddings e ON e.node_id = k.id
+         WHERE e.node_id IS NULL ORDER BY k.created_at ASC`,
       );
     },
   };
