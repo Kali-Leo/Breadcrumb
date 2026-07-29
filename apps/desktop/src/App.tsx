@@ -1,51 +1,43 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+/**
+ * Purpose: application root — loads persisted state once, lays out the three-column shell
+ * (sidebar / chat or settings / future knowledge-tree slot) plus the status bar.
+ * Main exports: App (default).
+ */
+import { useEffect, useState } from "react";
 import "./App.css";
+import { ChatView } from "./components/ChatView";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { Sidebar } from "./components/Sidebar";
+import { StatusBar } from "./components/StatusBar";
+import { useChatStore } from "./stores/chatStore";
+import { useSettingsStore } from "./stores/settingsStore";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+export default function App() {
+  const [view, setView] = useState<"chat" | "settings">("chat");
+  const settingsLoaded = useSettingsStore((state) => state.loaded);
+  const apiConfig = useSettingsStore((state) => state.apiConfig);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    void useSettingsStore.getState().loadFromDatabase();
+    void useChatStore.getState().loadFromDatabase();
+  }, []);
+
+  // First run: no API configured yet -> open settings so the user can start in one step.
+  useEffect(() => {
+    if (settingsLoaded && apiConfig === null) {
+      setView("settings");
+    }
+  }, [settingsLoaded, apiConfig]);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank" rel="noopener">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank" rel="noopener">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="flex h-screen flex-col text-stone-800">
+      <div className="flex min-h-0 flex-1">
+        <Sidebar onOpenSettings={() => setView("settings")} />
+        <main className="min-w-0 flex-1">
+          {view === "chat" ? <ChatView /> : <SettingsPanel onClose={() => setView("chat")} />}
+        </main>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      <StatusBar />
+    </div>
   );
 }
-
-export default App;

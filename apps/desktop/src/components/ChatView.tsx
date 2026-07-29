@@ -1,0 +1,47 @@
+/**
+ * Purpose: center column — message history, streaming reply, gentle error banner, composer.
+ * Main exports: ChatView.
+ */
+import { useEffect, useRef } from "react";
+import { useChatStore } from "../stores/chatStore";
+import { Composer } from "./Composer";
+import { MessageBubble } from "./MessageBubble";
+
+export function ChatView() {
+  const messages = useChatStore((state) => state.messages);
+  const streamingText = useChatStore((state) => state.streamingText);
+  const errorText = useChatStore((state) => state.errorText);
+  const sendMessage = useChatStore((state) => state.sendMessage);
+  const scrollAnchor = useRef<HTMLDivElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll whenever a message or stream delta arrives
+  useEffect(() => {
+    scrollAnchor.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streamingText]);
+
+  const isStreaming = streamingText !== null;
+
+  return (
+    <div className="flex h-full flex-col bg-stone-50">
+      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+        {messages.length === 0 && !isStreaming && (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">
+            <span className="text-4xl">🍞</span>
+            <p>每一次对话，都会留下一枚面包屑。</p>
+          </div>
+        )}
+        {messages.map((message) => (
+          <MessageBubble key={message.id} author={message.role} content={message.content} />
+        ))}
+        {isStreaming && <MessageBubble author="assistant" content={streamingText || "…"} />}
+        {errorText && (
+          <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
+            {errorText}
+          </div>
+        )}
+        <div ref={scrollAnchor} />
+      </div>
+      <Composer disabled={isStreaming} onSend={(content) => void sendMessage(content)} />
+    </div>
+  );
+}
