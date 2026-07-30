@@ -3,6 +3,11 @@
  * Main exports: runFactCheck pipeline, claim/verdict contracts, evidence providers.
  */
 
+export { type BingProviderOptions, createBingProvider } from "./evidence/bing";
+export {
+  createDefaultEvidenceProviders,
+  type DefaultProvidersOptions,
+} from "./evidence/defaults";
 export { createDuckDuckGoProvider, type DuckDuckGoProviderOptions } from "./evidence/duckduckgo";
 export {
   type EvidenceItem,
