@@ -165,6 +165,7 @@ export function MapView() {
         applyBandAlpha(scene.geoParts, visibility.geo);
         applyBandAlpha(scene.kingdomParts, visibility.kingdom);
         applyBandAlpha(scene.villageParts, visibility.village);
+        applyBandAlpha(scene.detailParts, 1 - visibility.geo);
         counterScaleLabels(scene, viewport.scale.x);
         cameraRef.current = {
           x: viewport.center.x,

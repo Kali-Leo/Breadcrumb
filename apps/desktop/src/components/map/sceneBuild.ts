@@ -14,6 +14,7 @@ import { drawHouseCluster, strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawIslandTerrain } from "./islandArt";
 import { mapTheme } from "./mapTheme";
+import { drawIslandRelief } from "./reliefArt";
 import { drawSeaField } from "./seaArt";
 
 export interface FlyRequest {
@@ -27,8 +28,10 @@ export interface WorldScene {
   geoParts: Container[];
   kingdomParts: Container[];
   villageParts: Container[];
-  /** Island names — kept at constant screen size while zooming out. */
-  islandLabels: Text[];
+  /** Engraving detail (hatching, woods) — hidden in the geographic view. */
+  detailParts: Container[];
+  /** Island names — kept at near-constant screen size while zooming out. */
+  islandLabels: { label: Text; islandRadius: number }[];
   /** Kingdom names — gently counter-scaled so they stay readable at band entry. */
   kingdomLabelTexts: Text[];
 }
@@ -38,9 +41,11 @@ export interface WorldScene {
  * (capped), kingdom names get a gentle boost when the viewport is still far out.
  */
 export function counterScaleLabels(scene: WorldScene, viewportScale: number): void {
-  const islandFactor = Math.min(Math.max(1 / viewportScale, 1), 4.5) / LABEL_SUPERSAMPLE;
-  for (const label of scene.islandLabels) {
-    label.scale.set(islandFactor);
+  for (const { label, islandRadius } of scene.islandLabels) {
+    // Small islands cap their name growth earlier so text never dwarfs the land.
+    const cap = 1.6 + islandRadius / 110;
+    const factor = Math.min(Math.max(1 / viewportScale, 1), cap) / LABEL_SUPERSAMPLE;
+    label.scale.set(factor);
   }
   const kingdomFactor = Math.min(Math.max(1 / viewportScale, 1), 1.8) / LABEL_SUPERSAMPLE;
   for (const label of scene.kingdomLabelTexts) {
@@ -91,15 +96,22 @@ function buildIslandParts(
   onFly: (request: FlyRequest) => void,
   parts: {
     terrain: Container;
+    terrainDetail: Container;
     kingdomContent: Container;
     villageContent: Container;
     geoLabels: Container;
     kingdomLabels: Container;
     villageLabels: Container;
   },
-  collect: { islandLabels: Text[]; kingdomLabelTexts: Text[] },
+  collect: {
+    islandLabels: { label: Text; islandRadius: number }[];
+    kingdomLabelTexts: Text[];
+  },
 ): void {
   parts.terrain.addChild(drawIslandTerrain(island));
+  const relief = drawIslandRelief(island);
+  parts.terrainDetail.addChild(relief.detail);
+  parts.terrain.addChild(relief.landmarks);
 
   const borders = new Graphics();
   for (const path of island.kingdomBorderPaths) {
@@ -114,7 +126,7 @@ function buildIslandParts(
   });
   islandLabel.position.set(island.center.x, island.center.y - island.radius - 28);
   parts.geoLabels.addChild(islandLabel);
-  collect.islandLabels.push(islandLabel);
+  collect.islandLabels.push({ label: islandLabel, islandRadius: island.radius });
 
   const villageDots = new Graphics();
   const villageGlyphs = new Graphics();
@@ -167,13 +179,17 @@ export function buildWorldScene(
 ): WorldScene {
   const parts = {
     terrain: new Container(),
+    terrainDetail: new Container(),
     kingdomContent: new Container(),
     villageContent: new Container(),
     geoLabels: new Container(),
     kingdomLabels: new Container(),
     villageLabels: new Container(),
   };
-  const collect = { islandLabels: [] as Text[], kingdomLabelTexts: [] as Text[] };
+  const collect = {
+    islandLabels: [] as { label: Text; islandRadius: number }[],
+    kingdomLabelTexts: [] as Text[],
+  };
   for (const island of world.islands) {
     buildIslandParts(island, retentionByNode, onFly, parts, collect);
   }
@@ -184,6 +200,7 @@ export function buildWorldScene(
   root.addChild(
     drawSeaField(world),
     parts.terrain,
+    parts.terrainDetail,
     parts.kingdomContent,
     parts.villageContent,
     fog,
@@ -196,6 +213,7 @@ export function buildWorldScene(
     geoParts: [parts.geoLabels],
     kingdomParts: [parts.kingdomContent, parts.kingdomLabels],
     villageParts: [parts.villageContent, parts.villageLabels],
+    detailParts: [parts.terrainDetail],
     islandLabels: collect.islandLabels,
     kingdomLabelTexts: collect.kingdomLabelTexts,
   };
