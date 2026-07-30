@@ -40,6 +40,13 @@ export interface KingdomModel {
   memberNodeIds: string[];
 }
 
+export interface LandCellModel {
+  polygon: WorldPoint[];
+  site: WorldPoint;
+  /** Height normalized to 0..1 across this island's land — drives relief shading. */
+  height01: number;
+}
+
 export interface IslandModel {
   nodeId: string;
   label: string;
@@ -48,6 +55,8 @@ export interface IslandModel {
   radius: number;
   /** Closed, smoothed coast loops, largest first. */
   coastLoops: WorldPoint[][];
+  /** Every land cell with its normalized height (for shading and relief glyphs). */
+  landCells: LandCellModel[];
   /** Inner kingdom frontiers, chained into polylines, drawn once per island. */
   kingdomBorderPaths: WorldPoint[][];
   /** Anchors for hill glyphs on high ground. */

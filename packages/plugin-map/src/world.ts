@@ -10,7 +10,14 @@ import { partitionKingdoms } from "./regions";
 import { placeVillagePoints, placeVillages } from "./settlements";
 import { generateTerrain, type IslandTerrain } from "./terrain";
 import { type ShapedIsland, type ShapedKingdom, shapeTree } from "./treeShape";
-import type { IslandModel, KingdomModel, VillageModel, WorldModel, WorldPoint } from "./types";
+import type {
+  IslandModel,
+  KingdomModel,
+  LandCellModel,
+  VillageModel,
+  WorldModel,
+  WorldPoint,
+} from "./types";
 
 const TINT_PALETTE_SIZE = 4;
 const HILL_COUNT_BASE = 3;
@@ -96,6 +103,26 @@ function pickHills(
     .map((cell) => translate(cell.site, center));
 }
 
+function buildLandCells(terrain: IslandTerrain, center: WorldPoint): LandCellModel[] {
+  const landHeights = terrain.landCellIndices
+    .map((cellIndex) => terrain.cells[cellIndex]?.height)
+    .filter((height): height is number => height !== undefined);
+  const minHeight = Math.min(...landHeights);
+  const maxHeight = Math.max(...landHeights);
+  const heightRange = Math.max(maxHeight - minHeight, 1e-6);
+  return terrain.landCellIndices.flatMap((cellIndex) => {
+    const cell = terrain.cells[cellIndex];
+    if (cell === undefined) return [];
+    return [
+      {
+        polygon: translatePath(cell.polygon, center),
+        site: translate(cell.site, center),
+        height01: (cell.height - minHeight) / heightRange,
+      },
+    ];
+  });
+}
+
 function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
   const center = islandSlotCenter(slotIndex);
   const radius = islandRadiusForTier(shaped.sizeTier);
@@ -134,6 +161,7 @@ function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
     center,
     radius,
     coastLoops: terrain.coastLoops.map((loop) => translatePath(loop, center)),
+    landCells: buildLandCells(terrain, center),
     kingdomBorderPaths: (partition?.borderPaths ?? []).map((path) => translatePath(path, center)),
     hills: pickHills(terrain, shaped, villageLocalPositions, center),
     kingdoms,

@@ -124,6 +124,21 @@ export function averagePoint(points: readonly WorldPoint[]): WorldPoint {
   return { x: sumX / points.length, y: sumY / points.length };
 }
 
+/** Ray-casting point-in-polygon test (for telling lakes from sibling landmasses). */
+export function pointInPolygon(point: WorldPoint, polygon: readonly WorldPoint[]): boolean {
+  let inside = false;
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index++) {
+    const a = polygon[index];
+    const b = polygon[previous];
+    if (a === undefined || b === undefined) continue;
+    const crosses = a.y > point.y !== b.y > point.y;
+    if (crosses && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 /** Unsigned shoelace area. */
 export function polygonArea(points: readonly WorldPoint[]): number {
   let doubled = 0;

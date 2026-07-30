@@ -14,6 +14,7 @@ import { drawHouseCluster, strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawIslandTerrain } from "./islandArt";
 import { mapTheme } from "./mapTheme";
+import { drawSeaField } from "./seaArt";
 
 export interface FlyRequest {
   position: WorldPoint;
@@ -26,6 +27,25 @@ export interface WorldScene {
   geoParts: Container[];
   kingdomParts: Container[];
   villageParts: Container[];
+  /** Island names — kept at constant screen size while zooming out. */
+  islandLabels: Text[];
+  /** Kingdom names — gently counter-scaled so they stay readable at band entry. */
+  kingdomLabelTexts: Text[];
+}
+
+/**
+ * Keeps place names readable across zoom: island names hold a constant screen size
+ * (capped), kingdom names get a gentle boost when the viewport is still far out.
+ */
+export function counterScaleLabels(scene: WorldScene, viewportScale: number): void {
+  const islandFactor = Math.min(Math.max(1 / viewportScale, 1), 4.5) / LABEL_SUPERSAMPLE;
+  for (const label of scene.islandLabels) {
+    label.scale.set(islandFactor);
+  }
+  const kingdomFactor = Math.min(Math.max(1 / viewportScale, 1), 1.8) / LABEL_SUPERSAMPLE;
+  for (const label of scene.kingdomLabelTexts) {
+    label.scale.set(kingdomFactor);
+  }
 }
 
 /** Fog dims a name through this factor but never below a readable floor. */
@@ -35,22 +55,32 @@ function labelDim(retention: number): number {
 
 const LABEL_SUPERSAMPLE = 3;
 
-function makeLabel(text: string, fontSize: number, alpha: number, onTap?: () => void): Text {
+interface LabelOptions {
+  letterSpacing?: number;
+  italic?: boolean;
+  onTap?: () => void;
+}
+
+function makeLabel(text: string, fontSize: number, alpha: number, options?: LabelOptions): Text {
   const label = new Text({
     text,
     style: new TextStyle({
       fontFamily: mapTheme.fontFamily,
       fontSize: fontSize * LABEL_SUPERSAMPLE,
       fill: mapTheme.ink,
+      fontStyle: options?.italic === true ? "italic" : "normal",
+      letterSpacing: (options?.letterSpacing ?? 0) * LABEL_SUPERSAMPLE,
+      // Parchment halo keeps names legible over any terrain ink.
+      stroke: { color: mapTheme.parchment, width: 1.6 * LABEL_SUPERSAMPLE, join: "round" },
     }),
   });
   label.scale.set(1 / LABEL_SUPERSAMPLE);
   label.anchor.set(0.5);
   label.alpha = alpha;
-  if (onTap !== undefined) {
+  if (options?.onTap !== undefined) {
     label.eventMode = "static";
     label.cursor = "pointer";
-    label.on("pointertap", onTap);
+    label.on("pointertap", options.onTap);
   }
   return label;
 }
@@ -67,6 +97,7 @@ function buildIslandParts(
     kingdomLabels: Container;
     villageLabels: Container;
   },
+  collect: { islandLabels: Text[]; kingdomLabelTexts: Text[] },
 ): void {
   parts.terrain.addChild(drawIslandTerrain(island));
 
@@ -77,11 +108,13 @@ function buildIslandParts(
   parts.kingdomContent.addChild(borders);
 
   const islandDim = labelDim(averageRetention(island.memberNodeIds, retentionByNode));
-  const islandLabel = makeLabel(island.label, mapTheme.labelSizes.island, islandDim, () =>
-    onFly({ position: island.center, scale: 1.0 }),
-  );
+  const islandLabel = makeLabel(island.label, mapTheme.labelSizes.island, islandDim, {
+    letterSpacing: 6,
+    onTap: () => onFly({ position: island.center, scale: 1.0 }),
+  });
   islandLabel.position.set(island.center.x, island.center.y - island.radius - 28);
   parts.geoLabels.addChild(islandLabel);
+  collect.islandLabels.push(islandLabel);
 
   const villageDots = new Graphics();
   const villageGlyphs = new Graphics();
@@ -89,25 +122,31 @@ function buildIslandParts(
 
   for (const kingdom of island.kingdoms) {
     const kingdomDim = labelDim(averageRetention(kingdom.memberNodeIds, retentionByNode));
-    const kingdomLabel = makeLabel(kingdom.label, mapTheme.labelSizes.kingdom, kingdomDim);
+    const kingdomLabel = makeLabel(kingdom.label, mapTheme.labelSizes.kingdom, kingdomDim, {
+      letterSpacing: 3,
+    });
     kingdomLabel.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y);
     parts.kingdomLabels.addChild(kingdomLabel);
+    collect.kingdomLabelTexts.push(kingdomLabel);
 
     for (const village of kingdom.villages) {
       villageDots.circle(village.position.x, village.position.y, 2.2);
       drawHouseCluster(villageGlyphs, village.position, village.tier);
 
       const villageDim = labelDim(averageRetention(village.memberNodeIds, retentionByNode));
-      const villageLabel = makeLabel(village.label, mapTheme.labelSizes.village, villageDim, () =>
-        onFly({ position: village.position, scale: 3.0 }),
-      );
-      villageLabel.position.set(village.position.x, village.position.y + 15);
+      const villageLabel = makeLabel(village.label, mapTheme.labelSizes.village, villageDim, {
+        letterSpacing: 1,
+        onTap: () => onFly({ position: village.position, scale: 3.0 }),
+      });
+      villageLabel.position.set(village.position.x, village.position.y + 20);
       parts.villageLabels.addChild(villageLabel);
 
       for (const point of village.points) {
         pointDots.circle(point.position.x, point.position.y, 1.5);
         const pointDim = labelDim(retentionByNode.get(point.nodeId) ?? 1);
-        const pointLabel = makeLabel(point.label, mapTheme.labelSizes.point, 0.9 * pointDim);
+        const pointLabel = makeLabel(point.label, mapTheme.labelSizes.point, 0.9 * pointDim, {
+          italic: true,
+        });
         pointLabel.anchor.set(0, 0.5);
         pointLabel.position.set(point.position.x + 4, point.position.y);
         parts.villageLabels.addChild(pointLabel);
@@ -134,14 +173,16 @@ export function buildWorldScene(
     kingdomLabels: new Container(),
     villageLabels: new Container(),
   };
+  const collect = { islandLabels: [] as Text[], kingdomLabelTexts: [] as Text[] };
   for (const island of world.islands) {
-    buildIslandParts(island, retentionByNode, onFly, parts);
+    buildIslandParts(island, retentionByNode, onFly, parts, collect);
   }
   const fog = buildFogLayer(world, retentionByNode);
 
   const root = new Container();
   // Fog sits above all drawn content but below every name — names stay readable.
   root.addChild(
+    drawSeaField(world),
     parts.terrain,
     parts.kingdomContent,
     parts.villageContent,
@@ -155,5 +196,7 @@ export function buildWorldScene(
     geoParts: [parts.geoLabels],
     kingdomParts: [parts.kingdomContent, parts.kingdomLabels],
     villageParts: [parts.villageContent, parts.villageLabels],
+    islandLabels: collect.islandLabels,
+    kingdomLabelTexts: collect.kingdomLabelTexts,
   };
 }

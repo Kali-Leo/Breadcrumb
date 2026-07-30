@@ -21,7 +21,7 @@ export function bandVisibility(scale: number): BandVisibility {
   const intoVillage = smoothstep(ZOOM_BANDS.villageMin * 0.85, ZOOM_BANDS.villageMin * 1.35, scale);
   return {
     geo: 1 - intoKingdom,
-    kingdom: intoKingdom * (1 - intoVillage * 0.65),
+    kingdom: intoKingdom * (1 - intoVillage * 0.82),
     village: intoVillage,
   };
 }
