@@ -1,0 +1,29 @@
+{
+  "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+  "items": [
+    {
+      "name": "prop-well",
+      "prompt": "a single old stone well with a small wooden roof, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "prop-signpost",
+      "prompt": "a single wooden signpost with two arrow signs, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "prop-tree-round",
+      "prompt": "a single leafy round-crown tree, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "prop-tree-pine",
+      "prompt": "a single tall pine tree, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "prop-bush",
+      "prompt": "a single small round bush, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "prop-bench",
+      "prompt": "a single stone bench with a stack of books on it, standalone element, quill and ink linework with fine hatching, on plain white background, single subject, nothing else"
+    }
+  ]
+}

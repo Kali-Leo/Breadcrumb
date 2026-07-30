@@ -1,0 +1,30 @@
+{
+  "style": "vector_illustration",
+  "substyle": "line_art",
+  "items": [
+    {
+      "name": "cat-scholar",
+      "prompt": "a single chibi cat villager, a scholar cat reading an open book, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "cat-librarian",
+      "prompt": "a single chibi cat villager, a librarian cat carrying a tall stack of books, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "cat-scribe",
+      "prompt": "a single chibi cat villager, a scribe cat holding a quill and a scroll, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "cat-baker",
+      "prompt": "a single chibi cat villager, a plump baker cat holding a bread basket, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "cat-farmer",
+      "prompt": "a single chibi cat villager, a farmer cat in a straw hat holding a hoe, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    },
+    {
+      "name": "cat-innkeeper",
+      "prompt": "a single chibi cat villager, a cheerful innkeeper cat holding a mug, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth villager clothes, absolutely no magic and no staff, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    }
+  ]
+}

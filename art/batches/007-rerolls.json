@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "name": "l0-bridge",
+      "style_id": "86e0a14f-edee-486c-b212-6cfc673fc8c9",
+      "prompt": "one small circular medallion stamp containing a tiny stone arch bridge with two arches over wavy water lines, a single round cartographic seal centered alone with generous empty white margins, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "cat-scholar",
+      "style": "vector_illustration",
+      "substyle": "line_art",
+      "prompt": "a single chibi cat villager, a scholar cat holding an open book with BOTH front paws, absolutely nothing else in its paws, no staff, no stick, no magic, it MUST be a cat with pointed cat ears, whiskers and a visible curled tail, simple cloth robe, standing, full body, clean black ink line art, on plain white background, single subject, nothing else"
+    }
+  ]
+}
