@@ -4,7 +4,7 @@
  * (fetch-and-verify). Main exports: createDuckDuckGoProvider.
  */
 import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
-import { stripHtml } from "./provider";
+import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
 
 const RESULT_LINK_PATTERN = /class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
 const RESULT_SNIPPET_PATTERN = /class="result__snippet"[^>]*>([\s\S]*?)<\/(?:a|div)>/g;
@@ -12,19 +12,23 @@ const SNIPPET_MAX_LENGTH = 600;
 
 export interface DuckDuckGoProviderOptions {
   fetchImpl: FetchLike;
+  /** Per-request timeout; blocked networks hang instead of failing, so keep this tight. */
+  timeoutMs?: number;
 }
 
 export function createDuckDuckGoProvider(options: DuckDuckGoProviderOptions): EvidenceProvider {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   return {
     name: "duckduckgo",
     async search(query: string, limit: number): Promise<EvidenceItem[]> {
       try {
         const response = await options.fetchImpl(
           `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+          { signal: AbortSignal.timeout(timeoutMs) },
         );
         if (!response.ok) return [];
         const candidates = parseResults(await response.text());
-        return await verifyCandidates(options.fetchImpl, candidates, limit);
+        return await verifyCandidates(options.fetchImpl, timeoutMs, candidates, limit);
       } catch {
         return [];
       }
@@ -68,6 +72,7 @@ function decodeRedirectUrl(rawHref: string): string | null {
 
 async function verifyCandidates(
   fetchImpl: FetchLike,
+  timeoutMs: number,
   candidates: readonly ResultCandidate[],
   limit: number,
 ): Promise<EvidenceItem[]> {
@@ -75,7 +80,7 @@ async function verifyCandidates(
   for (const candidate of candidates) {
     if (verified.length >= limit) break;
     try {
-      const response = await fetchImpl(candidate.url);
+      const response = await fetchImpl(candidate.url, { signal: AbortSignal.timeout(timeoutMs) });
       if (!response.ok) continue;
       verified.push({ ...candidate, source: "duckduckgo" });
     } catch {

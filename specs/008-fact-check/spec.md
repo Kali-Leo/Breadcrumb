@@ -17,9 +17,13 @@
    - **判定**：证据 + 声明 → 三态结论：`supported`（有佐证）/ `insufficient`
      （没找到佐证）/ `contradicted`（与佐证冲突），附证据链接
    - 一切 LLM 输出过 Zod 边界校验
-2. **证据源抽象**：`EvidenceProvider` 接口，MVP 内置两个免 key 实现
-   （Wikipedia REST API 优先——学习场景概念性知识覆盖高；DuckDuckGo 兜底）；
+2. **证据源抽象**：`EvidenceProvider` 接口，MVP 内置三个免 key 实现：
+   Wikipedia REST API（学习场景概念性知识覆盖高）、必应中国 cn.bing.com
+   （**大陆可达**——Wikipedia/DuckDuckGo 在大陆均不可访问）、DuckDuckGo 兜底；
    预留用户自配搜索 API（Serper/Tavily）的扩展位
+   - **大陆网络适配**：所有证据请求带超时快速失败（被墙连接会挂死而非报错）；
+     提供按网络环境选择的默认源链（大陆=仅 Bing，国际=Wikipedia 优先）；
+     网络环境由设置页选择或启动时探测（T4）
 3. **温柔呈现**（零压力红线）：
    - 消息旁一个安静的小标记，展开可见："这几点我找到了佐证（链接）"、
      "这一点我没找到佐证，值得再确认"

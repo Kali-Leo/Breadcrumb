@@ -7,6 +7,10 @@
 /** Injected fetch so the headless package stays free of platform networking choices. */
 export type FetchLike = typeof fetch;
 
+/** Blocked networks (e.g. walled endpoints in mainland China) hang instead of failing,
+ * so every provider request must time out fast and let the pipeline fall through. */
+export const DEFAULT_TIMEOUT_MS = 8000;
+
 export interface EvidenceItem {
   /** Link already verified accessible (fetch-and-verify) before being surfaced. */
   url: string;
