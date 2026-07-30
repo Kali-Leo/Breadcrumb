@@ -1,18 +1,15 @@
 /**
- * Purpose: application root — loads persisted state once, lays out the three-column shell
- * (sidebar+trail / chat or settings / knowledge tree) plus the status bar.
+ * Purpose: application root — loads persisted state once, lays out the shell
+ * (sidebar / chat or settings / knowledge navigation) plus the status bar.
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
-import "@fontsource/ma-shan-zheng";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
-import { PixiMapView } from "./components/PixiMapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
-import { embedMissingNodes } from "./lib/embeddings";
 import { useChatStore } from "./stores/chatStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -31,7 +28,6 @@ export default function App() {
       await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();
       await useTrailStore.getState().ensureYesterdaySummary();
-      await embedMissingNodes(); // charts existing knowledge in the background
     })();
   }, []);
 
@@ -54,7 +50,19 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
-          {view === "map" && <PixiMapView onJumpToChat={() => setView("chat")} />}
+          {view === "map" && (
+            <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
+              <span className="text-4xl">🗺️</span>
+              <p className="text-sm">知识地图 · 未来重新设计</p>
+              <button
+                type="button"
+                onClick={() => setView("chat")}
+                className="rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
+              >
+                ← 返回对话
+              </button>
+            </div>
+          )}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>
