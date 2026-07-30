@@ -55,7 +55,26 @@ def generate_one(key: str, item: dict, batch: dict, out_dir: pathlib.Path) -> No
         raw_path.unlink()
 
     verdict = enforce_white_background(key, png_path)
+    verdict += check_line_purity(png_path)
     print(f"  ✓ {item['name']}{verdict}")
+
+
+def fraction_below(png_path: pathlib.Path, threshold_percent: int) -> float:
+    """Fraction of pixels darker than the given luminance threshold."""
+    result = subprocess.run(
+        ["convert", str(png_path), "-colorspace", "Gray",
+         "-threshold", f"{threshold_percent}%", "-format", "%[fx:1-mean]", "info:"],
+        capture_output=True, text=True, check=True,
+    )
+    return float(result.stdout.split()[0])
+
+
+def check_line_purity(png_path: pathlib.Path) -> str:
+    """Pure-line contract: too many midtone pixels means gray wash — flag for re-roll."""
+    midtone_fraction = fraction_below(png_path, 75) - fraction_below(png_path, 25)
+    if midtone_fraction > 0.15:
+        return f"  ⚠ 灰晕染(中间调{midtone_fraction:.0%})，违反纯线稿合同，标记 re-roll"
+    return ""
 
 
 def border_whiteness(png_path: pathlib.Path) -> float:

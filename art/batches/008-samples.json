@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "name": "geo-continent",
+      "style_id": "86e0a14f-edee-486c-b212-6cfc673fc8c9",
+      "prompt": "a large continent seen from above on an antique map, coastline with bays and peninsulas, interior mountain ranges and one winding river, pure black ink line work with fine cross-hatching only, no gray shading, no pencil tone, no washes, on plain white background, the landmass floats alone surrounded by empty white, nothing else"
+    },
+    {
+      "name": "geo-island",
+      "style_id": "86e0a14f-edee-486c-b212-6cfc673fc8c9",
+      "prompt": "a small island seen from above on an antique map, wavy coastline, a few hills and pine trees on it, pure black ink line work with fine cross-hatching only, no gray shading, no pencil tone, no washes, on plain white background, the island floats alone surrounded by empty white, nothing else"
+    },
+    {
+      "name": "kingdom-large",
+      "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+      "prompt": "a grand kingdom territory viewed from a high bird angle: a large castle at its heart, several small towns and hamlets scattered across rolling terrain, thin roads connecting them, pure black ink line work with fine cross-hatching only, no gray shading, no pencil tone, no washes, on plain white background, the territory floats alone, nothing else"
+    },
+    {
+      "name": "kingdom-small",
+      "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+      "prompt": "a small kingdom viewed from a high bird angle: one modest castle town and two hamlets on a little patch of terrain, one road, pure black ink line work with fine cross-hatching only, no gray shading, no pencil tone, no washes, on plain white background, the territory floats alone, nothing else"
+    },
+    {
+      "name": "village-tier1",
+      "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+      "prompt": "a tiny one-room scholar cottage with a chimney and a round window, standalone building element, pure black ink line work with fine cross-hatching only, no gray shading, no pencil tone, no washes, on plain white background, single subject, nothing else"
+    }
+  ]
+}
