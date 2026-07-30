@@ -1,0 +1,41 @@
+{
+  "style_id": "86e0a14f-edee-486c-b212-6cfc673fc8c9",
+  "items": [
+    {
+      "name": "l0-village",
+      "prompt": "one small circular medallion stamp containing a tiny cluster of three rooftops symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-town",
+      "prompt": "one small circular medallion stamp containing a tiny walled town gate symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-city",
+      "prompt": "one small circular medallion stamp containing a tiny walled city with towers symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-harbor",
+      "prompt": "one small circular medallion stamp containing a tiny anchor symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-watchtower",
+      "prompt": "one small circular medallion stamp containing a tiny single watchtower symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-monastery",
+      "prompt": "one small circular medallion stamp containing a tiny domed monastery with bell tower symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-mill",
+      "prompt": "one small circular medallion stamp containing a tiny windmill symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-bridge",
+      "prompt": "one small circular medallion stamp containing a tiny stone arch bridge symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    },
+    {
+      "name": "l0-mountain",
+      "prompt": "one small circular medallion stamp containing a tiny mountain peak with three pines symbol, a single round cartographic seal centered alone with generous empty white margins around it, miniature fine ink linework, on plain white background, nothing else outside the circle"
+    }
+  ]
+}
