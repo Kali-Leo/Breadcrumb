@@ -6,7 +6,9 @@
 import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
 
-const RESULT_LINK_PATTERN = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/;
+/** The real result link lives inside <h2>; a plain first-<a> grab hits the site-attribution link. */
+const HEADING_LINK_PATTERN = /<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/;
+const FALLBACK_LINK_PATTERN = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/;
 const RESULT_SNIPPET_PATTERN = /<p[^>]*>([\s\S]*?)<\/p>/;
 const SNIPPET_MAX_LENGTH = 600;
 
@@ -45,7 +47,7 @@ interface ResultCandidate {
 function parseResults(html: string): ResultCandidate[] {
   const candidates: ResultCandidate[] = [];
   for (const chunk of html.split('<li class="b_algo"').slice(1)) {
-    const link = RESULT_LINK_PATTERN.exec(chunk);
+    const link = HEADING_LINK_PATTERN.exec(chunk) ?? FALLBACK_LINK_PATTERN.exec(chunk);
     const url = decodeBingUrl(link?.[1] ?? "");
     const title = stripHtml(link?.[2] ?? "");
     const snippet = stripHtml(RESULT_SNIPPET_PATTERN.exec(chunk)?.[1] ?? "");

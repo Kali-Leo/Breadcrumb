@@ -76,14 +76,25 @@ async function gatherEvidence(
 ): Promise<EvidenceItem[]> {
   const evidence: EvidenceItem[] = [];
   const seenUrls = new Set<string>();
+  // Fair share per query: one badly-phrased query must not fill the whole quota.
+  const perQueryCap = Math.ceil(maxEvidence / Math.max(queries.length, 1));
   for (const query of queries) {
+    let takenForQuery = 0;
     for (const provider of providers) {
-      if (evidence.length >= maxEvidence) return evidence;
-      const items = await provider.search(query, maxEvidence - evidence.length);
+      if (evidence.length >= maxEvidence || takenForQuery >= perQueryCap) break;
+      const items = await provider.search(
+        query,
+        Math.min(perQueryCap - takenForQuery, maxEvidence - evidence.length),
+      );
       for (const item of items) {
-        if (!seenUrls.has(item.url) && evidence.length < maxEvidence) {
+        if (
+          !seenUrls.has(item.url) &&
+          evidence.length < maxEvidence &&
+          takenForQuery < perQueryCap
+        ) {
           seenUrls.add(item.url);
           evidence.push(item);
+          takenForQuery += 1;
         }
       }
     }
