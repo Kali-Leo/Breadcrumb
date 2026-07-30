@@ -81,7 +81,7 @@ export function buildIslandRelief(
       y: cell.site.y + (random() - 0.5) * 8,
     };
     if (!farFromAll(anchor, settlements, SETTLEMENT_CLEARANCE)) continue;
-    if (cell.height01 >= 0.62) {
+    if (cell.height01 >= 0.66) {
       if (farFromAll(anchor, placed, MOUNTAIN_SPACING)) {
         const texture = pickTexture(mountains, random);
         if (texture !== null) {

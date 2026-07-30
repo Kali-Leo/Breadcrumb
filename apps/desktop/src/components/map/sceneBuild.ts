@@ -56,7 +56,7 @@ export function counterScaleLabels(scene: WorldScene, viewportScale: number): vo
 
 /** Fog dims a name through this factor but never below a readable floor. */
 function labelDim(retention: number): number {
-  return 0.55 + 0.45 * retention;
+  return 0.72 + 0.28 * retention;
 }
 
 const LABEL_SUPERSAMPLE = 3;
@@ -76,8 +76,8 @@ function makeLabel(text: string, fontSize: number, alpha: number, options?: Labe
       fill: mapTheme.ink,
       fontStyle: options?.italic === true ? "italic" : "normal",
       letterSpacing: (options?.letterSpacing ?? 0) * LABEL_SUPERSAMPLE,
-      // Parchment halo keeps names legible over any terrain ink.
-      stroke: { color: mapTheme.parchment, width: 1.6 * LABEL_SUPERSAMPLE, join: "round" },
+      // Land-toned halo keeps names legible over any terrain ink.
+      stroke: { color: mapTheme.landFill, width: 1.2 * LABEL_SUPERSAMPLE, join: "round" },
     }),
   });
   label.scale.set(1 / LABEL_SUPERSAMPLE);
@@ -203,7 +203,7 @@ function buildPaperBackground(world: WorldModel, art: MapArt): TilingSprite {
   });
   paper.position.set(minX, minY);
   paper.tileScale.set(0.7);
-  paper.alpha = 0.55;
+  paper.alpha = 0.32;
   return paper;
 }
 
