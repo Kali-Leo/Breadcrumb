@@ -7,13 +7,22 @@
 import type { LayerCluster } from "@breadcrumb/plugin-map";
 import { Application, Container } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useMapStore } from "../stores/mapStore";
 import { useMemoryStore } from "../stores/memoryStore";
 import { startSmoke } from "./pixiMap/smoke";
-import { loadMapTextures } from "./pixiMap/textures";
+import { loadMapTextures, type MapTextures } from "./pixiMap/textures";
 import { buildWorld, updateLayerFades, type WorldHandles } from "./pixiMap/world";
+
+/** StrictMode double-mounts spawn a throwaway app whose teardown can race Pixi internals. */
+function safeDestroy(app: Application) {
+  try {
+    app.destroy(true, { children: true });
+  } catch (error) {
+    console.warn("pixi destroy race (dev-only):", error);
+  }
+}
 
 interface PixiMapViewProps {
   onJumpToChat(): void;
@@ -33,6 +42,8 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
   const handlesRef = useRef<WorldHandles | null>(null);
   const stopSmokeRef = useRef<(() => void) | null>(null);
   const readyRef = useRef(false);
+  const texturesRef = useRef<MapTextures | null>(null);
+  const [debugText, setDebugText] = useState("");
 
   useEffect(() => {
     void useMapStore.getState().refresh();
@@ -44,13 +55,18 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: engine boots once per mount
   useEffect(() => {
     let disposed = false;
+    let initialized = false;
     const host = hostRef.current;
     if (!host) return;
     const app = new Application();
     void (async () => {
       await app.init({ background: "#ffffff", resizeTo: host, antialias: true });
-      await loadMapTextures();
-      if (disposed) return;
+      initialized = true;
+      texturesRef.current = await loadMapTextures();
+      if (disposed) {
+        safeDestroy(app);
+        return;
+      }
       host.appendChild(app.canvas);
       const viewport = new Viewport({
         events: app.renderer.events,
@@ -60,7 +76,7 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
       viewport.drag().pinch().wheel({ smooth: 4 }).decelerate({ friction: 0.93 });
       viewport.clampZoom({ minScale: 0.18, maxScale: 3.6 });
       viewport.moveCenter(0, 0);
-      viewport.setZoom(1.15, true);
+      viewport.setZoom(1.35, true);
       app.stage.addChild(viewport);
       const worldRoot = new Container();
       viewport.addChild(worldRoot);
@@ -78,7 +94,8 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
       disposed = true;
       readyRef.current = false;
       stopSmokeRef.current?.();
-      app.destroy(true, { children: true });
+      // Destroying before init() resolves crashes Pixi — the async block handles that case.
+      if (initialized) safeDestroy(app);
       appRef.current = null;
     };
   }, []);
@@ -90,8 +107,11 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
     const knowledge = useKnowledgeStore.getState();
     const labels = new Map(knowledge.nodes.map((node) => [node.id, node.label]));
     stopSmokeRef.current?.();
+    const textures = texturesRef.current;
+    if (!textures) return;
     const handles = buildWorld(
       worldRoot,
+      textures,
       currentLayered,
       useMemoryStore.getState().retentionByNode,
       labels,
@@ -117,6 +137,12 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
     );
     handlesRef.current = handles;
     stopSmokeRef.current = startSmoke(handles.layers.village, handles.villageSprites);
+    const viewport = viewportRef.current;
+    setDebugText(
+      `村${currentLayered.village.length} 国${currentLayered.kingdom.length} ` +
+        `地${currentLayered.geo.length} 精灵${handles.villageSprites.size} ` +
+        `scale=${viewport?.scale.x.toFixed(2)}`,
+    );
   }
 
   // Rebuild the world whenever knowledge, memory or layout change.
@@ -148,6 +174,11 @@ export function PixiMapView({ onJumpToChat }: PixiMapViewProps) {
       <p className="absolute bottom-3 left-4 text-xs text-stone-400">
         滚轮缩放穿越三层世界 · 点击村落飞入 · 最深处点击知识点可锚定去聊
       </p>
+      {debugText && (
+        <p className="absolute top-3 right-4 rounded bg-black/70 px-2 py-1 text-xs text-white">
+          {debugText}
+        </p>
+      )}
     </div>
   );
 }

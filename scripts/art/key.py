@@ -37,7 +37,7 @@ def main() -> None:
             "(", "+clone", "-negate", ")",
             "-alpha", "off", "-compose", "CopyOpacity", "-composite",
             "-fill", "black", "-colorize", "100",
-            "-trim", "+repage", str(target),
+            "-trim", "+repage", "-depth", "8", f"png32:{target}",
         ]
     elif mode == "solid":
         width, height = image_size(source)
@@ -51,7 +51,7 @@ def main() -> None:
             "-draw", f"matte {width - 1},0 floodfill",
             "-draw", f"matte 0,{height - 1} floodfill",
             "-draw", f"matte {width - 1},{height - 1} floodfill",
-            "-trim", "+repage", str(target),
+            "-trim", "+repage", "-depth", "8", f"png32:{target}",
         ]
     else:
         raise SystemExit(f"unknown mode: {mode}")

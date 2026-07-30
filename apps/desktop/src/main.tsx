@@ -1,9 +1,39 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
+
+// Dev black box: a crash must never be a silent white screen.
+function showFatal(message: string) {
+  let box = document.getElementById("fatal-error-box");
+  if (!box) {
+    box = document.createElement("pre");
+    box.id = "fatal-error-box";
+    box.style.cssText =
+      "position:fixed;inset:auto 8px 8px 8px;max-height:45vh;overflow:auto;background:#7f1d1d;color:#fff;padding:10px;font-size:12px;z-index:99999;white-space:pre-wrap;border-radius:8px";
+    box.title = "点击关闭";
+    box.addEventListener("click", () => box?.remove());
+    document.body.appendChild(box);
+  }
+  box.textContent += `${message}\n`;
+}
+// Mirror console problems too — my eyes read the screen, not the devtools.
+for (const level of ["error", "warn"] as const) {
+  const original = console[level].bind(console);
+  console[level] = (...parts: unknown[]) => {
+    original(...parts);
+    showFatal(
+      `[${level}] ${parts.map((part) => (part instanceof Error ? part.stack : String(part))).join(" ")}`,
+    );
+  };
+}
+window.addEventListener("error", (event) =>
+  showFatal(`${event.message}\n${event.error?.stack ?? ""}`),
+);
+window.addEventListener("unhandledrejection", (event) =>
+  showFatal(`Unhandled: ${event.reason?.stack ?? event.reason}`),
+);
+
 import App from "./App";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // StrictMode's dev double-mount races Pixi's renderer teardown — intentionally off.
+  <App />,
 );
