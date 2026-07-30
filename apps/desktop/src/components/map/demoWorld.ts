@@ -67,6 +67,17 @@ export const demoKnowledgeNodes: KnowledgeNodeRow[] = [
   row("pulse-pouring", "pouring", "分段注水", "2026-06-21T10:20:00Z"),
 ];
 
+/** A pretend "today's walk" so the footprint trail can be previewed offline. */
+export const demoSessionTrail: string[] = [
+  "react",
+  "hooks",
+  "components",
+  "frontend",
+  "css-layout",
+  "flexbox",
+  "grid",
+];
+
 /** Long-untouched corners of the demo world so the fog has something to breathe on. */
 export const demoRetentionByNode: ReadonlyMap<string, number> = new Map([
   ["eigen", 0.25],

@@ -1,6 +1,13 @@
 /* Purpose: global styles — Tailwind entry plus a few base rules. */
 @import "tailwindcss";
 
+/* Memory-palace handwriting font (LXGW WenKai, SIL OFL 1.1). */
+@font-face {
+  font-family: "LXGW WenKai";
+  src: url("./assets/fonts/LXGWWenKai-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
 html,
 body,
 #root {
