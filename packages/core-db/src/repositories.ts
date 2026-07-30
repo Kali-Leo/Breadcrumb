@@ -5,6 +5,8 @@
 import type {
   ConversationRow,
   Currency,
+  FactcheckClaimRow,
+  FactcheckRunRow,
   KnowledgeNodeRow,
   LlmCallRow,
   MessageRow,
@@ -153,6 +155,46 @@ export function createTrailSummariesRepo(sql: SqlClient) {
         `INSERT INTO trail_summaries (date, content, created_at) VALUES (?, ?, ?)
          ON CONFLICT(date) DO UPDATE SET content = excluded.content, created_at = excluded.created_at`,
         [row.date, row.content, row.created_at],
+      );
+    },
+  };
+}
+
+export function createFactcheckRepo(sql: SqlClient) {
+  return {
+    async recordRun(run: FactcheckRunRow, claims: readonly FactcheckClaimRow[]): Promise<void> {
+      await sql.execute(
+        "INSERT INTO factcheck_runs (id, message_id, conversation_id, created_at) VALUES (?, ?, ?, ?)",
+        [run.id, run.message_id, run.conversation_id, run.created_at],
+      );
+      for (const claim of claims) {
+        await sql.execute(
+          `INSERT INTO factcheck_claims
+             (id, run_id, claim_text, relationship, reasoning, evidence_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            claim.id,
+            claim.run_id,
+            claim.claim_text,
+            claim.relationship,
+            claim.reasoning,
+            claim.evidence_json,
+            claim.created_at,
+          ],
+        );
+      }
+    },
+    /** All runs of one conversation, oldest first — the newest run per message wins in UI. */
+    async listRunsByConversation(conversationId: string): Promise<FactcheckRunRow[]> {
+      return sql.select<FactcheckRunRow>(
+        "SELECT * FROM factcheck_runs WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
+        [conversationId],
+      );
+    },
+    async listClaimsByRun(runId: string): Promise<FactcheckClaimRow[]> {
+      return sql.select<FactcheckClaimRow>(
+        "SELECT * FROM factcheck_claims WHERE run_id = ? ORDER BY created_at ASC, id ASC",
+        [runId],
       );
     },
   };

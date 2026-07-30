@@ -17,22 +17,33 @@ export interface ApiConfig {
 export interface FeatureSwitches {
   knowledgeTree: boolean;
   trail: boolean;
+  factcheck: boolean;
 }
 
 const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
-const DEFAULT_SWITCHES: FeatureSwitches = { knowledgeTree: true, trail: true };
+const MAINLAND_NETWORK_KEY = "mainlandNetwork";
+/** Fact-check defaults off: it spends tokens, so the user opts in (spec 008). */
+const DEFAULT_SWITCHES: FeatureSwitches = { knowledgeTree: true, trail: true, factcheck: false };
+
+/** Best-effort default: mainland users need mainland-reachable evidence sources. */
+function guessMainlandNetwork(): boolean {
+  return navigator.language.toLowerCase() === "zh-cn";
+}
 
 interface SettingsState {
   loaded: boolean;
   apiConfig: ApiConfig | null;
   networkEnabled: boolean;
   featureSwitches: FeatureSwitches;
+  /** True = evidence sources restricted to ones reachable from mainland China. */
+  mainlandNetwork: boolean;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
+  setMainlandNetwork(enabled: boolean): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -40,19 +51,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   apiConfig: null,
   networkEnabled: true,
   featureSwitches: DEFAULT_SWITCHES,
+  mainlandNetwork: guessMainlandNetwork(),
 
   async loadFromDatabase() {
     const repos = await getRepos();
-    const [apiConfig, networkEnabled, featureSwitches] = await Promise.all([
+    const [apiConfig, networkEnabled, featureSwitches, mainlandNetwork] = await Promise.all([
       repos.settings.get<ApiConfig>(API_CONFIG_KEY),
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
       repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
+      repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
     ]);
     set({
       loaded: true,
       apiConfig,
       networkEnabled: networkEnabled ?? true,
       featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
+      mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
     });
   },
 
@@ -73,5 +87,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(FEATURE_SWITCHES_KEY, featureSwitches, nowIso());
     set({ featureSwitches });
+  },
+
+  async setMainlandNetwork(enabled) {
+    const repos = await getRepos();
+    await repos.settings.set(MAINLAND_NETWORK_KEY, enabled, nowIso());
+    set({ mainlandNetwork: enabled });
   },
 }));

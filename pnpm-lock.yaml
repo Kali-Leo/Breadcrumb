@@ -41,6 +41,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/plugin-factcheck':
+        specifier: workspace:*
+        version: link:../../packages/plugin-factcheck
       '@breadcrumb/plugin-knowledge-tree':
         specifier: workspace:*
         version: link:../../packages/plugin-knowledge-tree
