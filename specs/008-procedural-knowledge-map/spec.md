@@ -62,14 +62,14 @@
 
 ## 验收标准
 
-- [ ] 演示数据集（≥3 岛、多王国、深浅混合树）在三段缩放下均正确渲染
-- [ ] 同一输入连续两次 buildWorldModel 输出深度相等（determinism 测试）
-- [ ] 向树中追加节点后：既有岛屿位置不变；同岛海岸线在不跨档时不变（stability 测试）
-- [ ] 浅树/深树/单节点边界情况均有测试且通过
-- [ ] 王国疆域分区完备：每块陆地单元恰属一个王国（测试）
-- [ ] 迷雾随 retention 变化且地名始终可读；界面无数字与催促
-- [ ] plugin-map 不含任何 UI/DOM import（无头架构）
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` 全绿
+- [x] 演示数据集（≥3 岛、多王国、深浅混合树）在三段缩放下均正确渲染
+- [x] 同一输入连续两次 buildWorldModel 输出深度相等（determinism 测试）
+- [x] 向树中追加节点后：既有岛屿位置不变；同岛海岸线在不跨档时不变（stability 测试）
+- [x] 浅树/深树/单节点边界情况均有测试且通过
+- [x] 王国疆域分区完备：每块陆地单元恰属一个王国（测试）
+- [x] 迷雾随 retention 变化且地名始终可读；界面无数字与催促
+- [x] plugin-map 不含任何 UI/DOM import（无头架构）
+- [x] `pnpm typecheck && pnpm lint && pnpm test` 全绿
 - [ ] 缩放连拍对照板交 Leo 美术验收（形态/方向级决策以 Leo 认可为准）
 
 ## 非目标（本期不做）
