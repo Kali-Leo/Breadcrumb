@@ -3,7 +3,7 @@
 Two modes (ink stays pure black; coloring is deliberately deferred):
   ink   — luminance -> alpha (lines float, hatching keeps its gradation)
   solid — corner flood-fill (outer background removed, inner whites kept to occlude)
-Usage: python3 scripts/art/key.py <in.png> <out.png> --mode ink|solid [--prenorm]
+Usage: python3 scripts/art/key.py <in.png> <out.png> --mode ink|solid [--prenorm] [--purify]
 """
 
 import pathlib
@@ -27,6 +27,9 @@ def main() -> None:
     work = [str(source)]
     if prenorm:
         work += ["-level", "8%x92%"]
+    if "--purify" in args:
+        # Pure-line enforcer: wipe gray tones to white, keep dark ink lines.
+        work += ["-white-threshold", "55%", "-level", "0%x90%"]
 
     if mode == "ink":
         command = [

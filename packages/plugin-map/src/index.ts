@@ -3,6 +3,7 @@
  * Main exports: similarity math, clustering, and layout computation.
  */
 export * from "./clustering";
+export * from "./hierarchy";
 export * from "./internalLayout";
 export * from "./layout";
 export * from "./similarity";

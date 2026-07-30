@@ -223,5 +223,75 @@
     "keying": "solid",
     "status": "shelved",
     "batch": "006/007"
+  },
+  {
+    "name": "island",
+    "file": "assets/map/geo/island.png",
+    "level": "geo",
+    "scale": "岛屿",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "large",
+    "file": "assets/map/kingdom/large.png",
+    "level": "kingdom",
+    "scale": "大国",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "small",
+    "file": "assets/map/kingdom/small.png",
+    "level": "kingdom",
+    "scale": "小国",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "tier1",
+    "file": "assets/map/village/tier1.png",
+    "level": "village",
+    "scale": "孤屋",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "tier2",
+    "file": "assets/map/village/tier2.png",
+    "level": "village",
+    "scale": "村落",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "tier3",
+    "file": "assets/map/village/tier3.png",
+    "level": "village",
+    "scale": "城镇",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
+  },
+  {
+    "name": "tier4",
+    "file": "assets/map/village/tier4.png",
+    "level": "village",
+    "scale": "都城",
+    "keying": "solid",
+    "status": "approved",
+    "batch": "008-series",
+    "approved_by": "Leo 2026-07-30"
   }
 ]
