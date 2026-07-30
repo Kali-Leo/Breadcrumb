@@ -4,7 +4,7 @@
  * 1..5 = zoom presets, 0 = demo dataset toggle.
  * Main exports: MapView.
  */
-import { buildWorldModel, type WorldModel } from "@breadcrumb/plugin-map";
+import { buildWorldModel, type WorldModel, type WorldPoint } from "@breadcrumb/plugin-map";
 import { Application, type Container, Point } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,13 +12,15 @@ import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode } from "./demoWorld";
 import { mapTheme, ZOOM_PRESETS } from "./mapTheme";
-import { buildWorldScene, type FlyRequest } from "./sceneBuild";
+import { buildWorldScene, counterScaleLabels, type FlyRequest } from "./sceneBuild";
 import { bandVisibility } from "./semanticZoom";
 
 interface CameraMemory {
   x: number;
   y: number;
   scale: number;
+  /** Which dataset the camera belongs to — switching datasets refits the view. */
+  dataset: "real" | "demo";
 }
 
 function fitWholeWorld(viewport: Viewport, world: WorldModel): void {
@@ -50,7 +52,7 @@ function applyBandAlpha(parts: readonly Container[], target: number): void {
 export function MapView() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cameraRef = useRef<CameraMemory | null>(null);
-  const zoomPresetRef = useRef<((scale: number) => void) | null>(null);
+  const zoomPresetRef = useRef<((presetIndex: number) => void) | null>(null);
 
   const storeNodes = useKnowledgeStore((state) => state.nodes);
   const storeRetention = useMemoryStore((state) => state.retentionByNode);
@@ -69,12 +71,11 @@ export function MapView() {
     if (!import.meta.env.DEV) return undefined;
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "0") {
-        cameraRef.current = null;
         setDemoMode((value) => !value);
         return;
       }
       const presetIndex = ["1", "2", "3", "4", "5"].indexOf(event.key);
-      if (presetIndex >= 0) zoomPresetRef.current?.(ZOOM_PRESETS[presetIndex] ?? 0.7);
+      if (presetIndex >= 0) zoomPresetRef.current?.(presetIndex);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -130,15 +131,33 @@ export function MapView() {
       const scene = buildWorldScene(world, retentionByNode, fly);
       viewport.addChild(scene.root);
 
+      const datasetKey: CameraMemory["dataset"] = demoMode ? "demo" : "real";
       const savedCamera = cameraRef.current;
-      if (savedCamera === null) {
+      if (savedCamera === null || savedCamera.dataset !== datasetKey) {
         fitWholeWorld(viewport, world);
       } else {
         viewport.setZoom(savedCamera.scale, true);
         viewport.moveCenter(savedCamera.x, savedCamera.y);
       }
-      zoomPresetRef.current = (scale) => {
-        viewport.animate({ scale, time: 700, ease: "easeInOutSine" });
+      // Dev sweep presets: 1 refits the world, 3/4 visit the first island, 5 its
+      // first village — so every zoom band lands on real content.
+      zoomPresetRef.current = (presetIndex) => {
+        if (presetIndex === 0) {
+          fitWholeWorld(viewport, world);
+          return;
+        }
+        const scale = ZOOM_PRESETS[presetIndex] ?? 0.7;
+        const firstIsland = world.islands.at(0);
+        let target: WorldPoint = { x: viewport.center.x, y: viewport.center.y };
+        if (presetIndex >= 2 && firstIsland !== undefined) target = firstIsland.center;
+        const firstVillage = firstIsland?.kingdoms.flatMap((kingdom) => kingdom.villages).at(0);
+        if (presetIndex === 4 && firstVillage !== undefined) target = firstVillage.position;
+        viewport.animate({
+          position: new Point(target.x, target.y),
+          scale,
+          time: 700,
+          ease: "easeInOutSine",
+        });
       };
 
       created.ticker.add(() => {
@@ -146,7 +165,13 @@ export function MapView() {
         applyBandAlpha(scene.geoParts, visibility.geo);
         applyBandAlpha(scene.kingdomParts, visibility.kingdom);
         applyBandAlpha(scene.villageParts, visibility.village);
-        cameraRef.current = { x: viewport.center.x, y: viewport.center.y, scale: viewport.scale.x };
+        counterScaleLabels(scene, viewport.scale.x);
+        cameraRef.current = {
+          x: viewport.center.x,
+          y: viewport.center.y,
+          scale: viewport.scale.x,
+          dataset: datasetKey,
+        };
       });
     })();
 
@@ -156,7 +181,7 @@ export function MapView() {
       app?.destroy(true, { children: true });
       app = null;
     };
-  }, [world, retentionByNode]);
+  }, [world, retentionByNode, demoMode]);
 
   if (world.islands.length === 0) {
     return (

@@ -60,8 +60,8 @@ export function placeVillagePoints(
   villageTier: number,
   random: SeededRandom,
 ): WorldPoint[] {
-  const innerRadius = 9 + villageTier * 2;
-  const spread = 12 + villageTier * 5;
+  const innerRadius = 15 + villageTier * 3;
+  const spread = 13 + villageTier * 5;
   const angleOffset = random() * 2 * Math.PI;
   const positions: WorldPoint[] = [];
   for (let index = 0; index < pointCount; index += 1) {

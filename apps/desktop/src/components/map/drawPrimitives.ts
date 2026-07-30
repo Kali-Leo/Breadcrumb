@@ -96,6 +96,38 @@ export function drawHillGlyph(graphics: Graphics, position: WorldPoint): void {
   graphics.stroke({ width: 1.4, color: mapTheme.ink, alpha: 0.75, cap: "round" });
 }
 
+/** Tall double-stroke peak with a hatched right flank — the high country. */
+export function drawMountainGlyph(graphics: Graphics, position: WorldPoint): void {
+  const { x, y } = position;
+  graphics.moveTo(x - 10, y + 5);
+  graphics.lineTo(x, y - 9);
+  graphics.lineTo(x + 10, y + 5);
+  graphics.moveTo(x + 1.5, y - 6);
+  graphics.lineTo(x + 5.5, y + 0.5);
+  graphics.moveTo(x + 4, y - 2.5);
+  graphics.lineTo(x + 7, y + 2.5);
+  graphics.stroke({ width: 1.7, color: mapTheme.ink, alpha: 0.85, join: "round", cap: "round" });
+}
+
+/** Little round tree on a trunk for the lowlands. */
+export function drawTreeGlyph(graphics: Graphics, position: WorldPoint, size = 1): void {
+  const { x, y } = position;
+  graphics.circle(x, y - 4 * size, 3.1 * size);
+  graphics.stroke({ width: 1.2, color: mapTheme.ink, alpha: 0.6 });
+  graphics.moveTo(x, y - 0.9 * size);
+  graphics.lineTo(x, y + 3 * size);
+  graphics.stroke({ width: 1.2, color: mapTheme.ink, alpha: 0.6, cap: "round" });
+}
+
+/** Two soft bumps — a distant sea wave. */
+export function drawWaveGlyph(graphics: Graphics, position: WorldPoint): void {
+  const { x, y } = position;
+  graphics.moveTo(x - 6, y);
+  graphics.quadraticCurveTo(x - 3, y - 3, x, y);
+  graphics.quadraticCurveTo(x + 3, y - 3, x + 6, y);
+  graphics.stroke({ width: 1, color: mapTheme.inkSoft, alpha: 0.22, cap: "round" });
+}
+
 /** Two rows of fading dots on the seaward side of a coast loop. */
 export function drawCoastStipples(
   graphics: Graphics,
