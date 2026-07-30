@@ -186,8 +186,8 @@ export function MapView() {
   if (world.islands.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
-        <span className="text-4xl">🧭</span>
-        <p className="text-sm">海图待展开——去聊聊天，第一座岛屿会浮现</p>
+        <span className="text-4xl">🏛️</span>
+        <p className="text-sm">你的记忆宫殿还是一片海——去聊聊天，第一座岛屿会浮现</p>
         {import.meta.env.DEV && <p className="text-xs text-stone-300">DEV：按 0 载入演示海图</p>}
       </div>
     );

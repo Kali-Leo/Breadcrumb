@@ -52,7 +52,7 @@ export function Sidebar({ onOpenSettings, onOpenMap }: SidebarProps) {
           onClick={onOpenMap}
           className="block w-full rounded-lg px-3 py-2 text-left text-sm text-stone-500 transition-colors hover:bg-stone-100"
         >
-          🗺️ 知识地图
+          🏛️ 记忆宫殿
         </button>
         <button
           type="button"
