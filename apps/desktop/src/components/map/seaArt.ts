@@ -1,15 +1,19 @@
 /**
- * Purpose: the ocean's ambience — deterministic speckle-and-wave field around the
- * islands plus a compass rose. Pure decoration, stable as the world grows.
- * Main exports: drawSeaField.
+ * Purpose: the ocean's ambience — deterministic speckle-and-wave field, a hand-drawn
+ * compass rose and rare sea creatures/ships from the Nortantis art pack. Grid-keyed,
+ * so a growing world never reshuffles its sea.
+ * Main exports: buildSeaLayer.
  */
 import { createSeededRandom, hashStringToSeed, type WorldModel } from "@breadcrumb/plugin-map";
-import { Graphics } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { drawWaveGlyph } from "./drawPrimitives";
+import type { MapArt } from "./mapArtAssets";
 import { mapTheme } from "./mapTheme";
 
 const GRID_STEP = 130;
 const PADDING = 420;
+/** One decoration roughly every this many sea grid cells. */
+const DECOR_RARITY = 220;
 
 interface Bounds {
   minX: number;
@@ -32,36 +36,10 @@ function worldBounds(world: WorldModel): Bounds {
   return { minX, minY, maxX, maxY };
 }
 
-function drawCompassRose(graphics: Graphics, x: number, y: number): void {
-  graphics.circle(x, y, 46).stroke({ width: 1.6, color: mapTheme.ink, alpha: 0.4 });
-  graphics.circle(x, y, 34).stroke({ width: 0.8, color: mapTheme.ink, alpha: 0.3 });
-  for (let ray = 0; ray < 8; ray += 1) {
-    const angle = (ray * Math.PI) / 4;
-    const isCardinal = ray % 2 === 0;
-    const length = isCardinal ? 44 : 28;
-    graphics.moveTo(x, y);
-    graphics.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
-    graphics.stroke({
-      width: isCardinal ? 1.4 : 0.9,
-      color: mapTheme.ink,
-      alpha: isCardinal ? 0.45 : 0.3,
-    });
-  }
-  // North needle.
-  graphics.poly(
-    [
-      { x, y: y - 58 },
-      { x: x + 4.5, y: y - 40 },
-      { x: x - 4.5, y: y - 40 },
-    ],
-    true,
-  );
-  graphics.fill({ color: mapTheme.ink, alpha: 0.5 });
-}
-
-/** Sea decor is keyed by grid coordinates, so growing the world never reshuffles it. */
-export function drawSeaField(world: WorldModel): Graphics {
+export function buildSeaLayer(world: WorldModel, art: MapArt): Container {
+  const layer = new Container();
   const graphics = new Graphics();
+  layer.addChild(graphics);
   const bounds = worldBounds(world);
 
   for (
@@ -78,19 +56,36 @@ export function drawSeaField(world: WorldModel): Graphics {
       const x = (gridX + 0.15 + random() * 0.7) * GRID_STEP;
       const y = (gridY + 0.15 + random() * 0.7) * GRID_STEP;
       const nearLand = world.islands.some(
-        (island) => Math.hypot(x - island.center.x, y - island.center.y) < island.radius * 1.3 + 30,
+        (island) => Math.hypot(x - island.center.x, y - island.center.y) < island.radius * 1.4 + 40,
       );
       if (nearLand) continue;
       const roll = random();
-      if (roll < 0.3) {
+      if (roll < 0.28) {
         graphics.circle(x, y, 0.8 + random() * 0.6);
         graphics.fill({ color: mapTheme.inkSoft, alpha: 0.05 + random() * 0.04 });
-      } else if (roll < 0.42) {
+      } else if (roll < 0.4) {
         drawWaveGlyph(graphics, { x, y });
+      } else if (roll > 1 - 1 / DECOR_RARITY && art.seaDecor.length > 0) {
+        const texture = art.seaDecor[Math.floor(random() * art.seaDecor.length)];
+        if (texture !== undefined) {
+          const sprite = new Sprite(texture);
+          sprite.anchor.set(0.5);
+          const width = 70 + random() * 30;
+          const scale = width / Math.max(texture.width, 1);
+          sprite.scale.set(random() < 0.5 ? -scale : scale, scale);
+          sprite.position.set(x, y);
+          sprite.alpha = 0.85;
+          layer.addChild(sprite);
+        }
       }
     }
   }
 
-  drawCompassRose(graphics, bounds.minX + 200, bounds.minY + 200);
-  return graphics;
+  const compass = new Sprite(art.compass);
+  compass.anchor.set(0.5);
+  compass.scale.set(150 / Math.max(art.compass.width, 1));
+  compass.position.set(bounds.minX + 220, bounds.minY + 220);
+  compass.alpha = 0.8;
+  layer.addChild(compass);
+  return layer;
 }

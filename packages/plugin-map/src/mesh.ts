@@ -4,6 +4,7 @@
  * origin at the island center.
  * Main exports: buildIslandMesh, IslandMesh, SEA_MARGIN.
  */
+/// <reference path="./poisson-disk-sampling.d.ts" />
 import { Delaunay } from "d3-delaunay";
 import PoissonDiskSampling from "poisson-disk-sampling";
 import { quantizedPointKey } from "./geometry";
