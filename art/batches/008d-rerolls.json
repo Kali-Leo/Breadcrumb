@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "name": "geo-continent-b",
+      "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+      "prompt": "an imaginary fictional continent on a fantasy map, drawn SMALL in the exact center occupying only half of the frame, complete coastline all the way around, mountain and forest marks and a river inside, pure black ink line work, no gray shading, on plain white background, no compass, no text, no boats, nothing else"
+    },
+    {
+      "name": "geo-island-b",
+      "style_id": "63dd3260-2764-4d1f-b868-ef9770eb1c0e",
+      "prompt": "an imaginary tiny island on a fantasy map, drawn SMALL in the exact center occupying only one third of the frame, complete wavy coastline all the way around, a few hill and pine marks, pure black ink line work, no gray shading, on plain white background, no compass, no text, no boats, nothing else"
+    }
+  ]
+}
