@@ -45,6 +45,17 @@ export interface LandCellModel {
   site: WorldPoint;
   /** Height normalized to 0..1 across this island's land — drives relief shading. */
   height01: number;
+  /** Downhill slope 0..1 — drives hatching density. */
+  slope01: number;
+  /** Flow accumulation 0..1 — moist lowlands grow the woods. */
+  flux01: number;
+}
+
+export interface RiverModel {
+  points: WorldPoint[];
+  /** Ink width at the spring and at the mouth (world units). */
+  startWidth: number;
+  endWidth: number;
 }
 
 export interface IslandModel {
@@ -57,6 +68,8 @@ export interface IslandModel {
   coastLoops: WorldPoint[][];
   /** Every land cell with its normalized height (for shading and relief glyphs). */
   landCells: LandCellModel[];
+  /** Rivers traced from high ground to the sea, widths tapering downstream. */
+  rivers: RiverModel[];
   /** Inner kingdom frontiers, chained into polylines, drawn once per island. */
   kingdomBorderPaths: WorldPoint[][];
   /** Anchors for hill glyphs on high ground. */
