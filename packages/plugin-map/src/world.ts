@@ -141,6 +141,7 @@ function buildLandCells(terrain: IslandTerrain, center: WorldPoint): LandCellMod
         height01: (cell.height - minHeight) / heightRange,
         slope01: cell.slope01,
         flux01: cell.flux01,
+        downhillAngle: cell.downhillAngle,
       },
     ];
   });

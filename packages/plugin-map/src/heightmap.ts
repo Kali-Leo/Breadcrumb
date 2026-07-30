@@ -119,7 +119,8 @@ function radialMask(context: SculptContext, radius: number): void {
     const point = mesh.points[index];
     if (point === undefined) continue;
     const distance = Math.hypot(point.x, point.y) / radius;
-    const falloff = Math.max(0, 1 - distance ** 2.2);
+    // Flat interior, steep shoulder — irregular silhouettes survive the mask.
+    const falloff = Math.max(0, 1 - distance ** 3);
     heights[index] = (heights[index] ?? 0) * falloff;
   }
 }
@@ -155,10 +156,13 @@ export function generateHeightmap(
     random,
     blobPower: blobPowerFor(mesh.points.length),
   };
-  raiseBlob(context, pickCellNear(context, 0.3), 52 + sizeTier * 3, 1);
+  raiseBlob(context, pickCellNear(context, 0.45), 52 + sizeTier * 3, 1);
+  if (sizeTier >= 4) {
+    raiseBlob(context, pickCellNear(context, 0.55), 40 + random() * 10, 1);
+  }
   const minorHills = 2 + sizeTier;
   for (let hill = 0; hill < minorHills; hill += 1) {
-    raiseBlob(context, pickCellNear(context, 0.7), 18 + random() * 18, 1);
+    raiseBlob(context, pickCellNear(context, 0.85), 18 + random() * 18, 1);
   }
   for (let ridge = 0; ridge < Math.max(0, sizeTier - 2); ridge += 1) {
     raiseRange(
@@ -171,8 +175,8 @@ export function generateHeightmap(
   if (sizeTier >= 2 && random() < 0.6) {
     raiseBlob(context, pickCellNear(context, 0.45), 14 + random() * 10, -1);
   }
-  addFbmDetail(context, radius, 7);
-  radialMask(context, radius * 1.08);
+  addFbmDetail(context, radius, 11);
+  radialMask(context, radius * 1.15);
   smooth(context, 3);
   return context.heights;
 }

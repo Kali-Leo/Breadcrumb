@@ -12,6 +12,7 @@ export const mapTheme = {
   /** Low-saturation territory tints, indexed by KingdomModel.tintIndex. */
   kingdomTints: [0xd9c49b, 0xc7cda6, 0xd6b9a3, 0xb7c4bb],
   fog: 0xfaf6ec,
+  river: 0x4a6274,
   fontFamily: 'Georgia, "Noto Serif CJK SC", "Songti SC", serif',
   labelSizes: { island: 30, kingdom: 17, village: 12, point: 9 },
 } as const;

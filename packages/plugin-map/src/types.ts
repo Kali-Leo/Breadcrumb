@@ -49,6 +49,8 @@ export interface LandCellModel {
   slope01: number;
   /** Flow accumulation 0..1 — moist lowlands grow the woods. */
   flux01: number;
+  /** Direction toward the downhill neighbor (radians) — orients hatching strokes. */
+  downhillAngle: number;
 }
 
 export interface RiverModel {

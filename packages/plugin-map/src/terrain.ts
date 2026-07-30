@@ -23,6 +23,8 @@ export interface TerrainCell {
   slope01: number;
   /** Flow accumulation normalized to 0..1 by the island maximum. */
   flux01: number;
+  /** Direction toward the downhill neighbor (radians; 0 when flat). */
+  downhillAngle: number;
 }
 
 export interface IslandTerrain {
@@ -84,14 +86,20 @@ export function generateTerrain(seed: number, radius: number, sizeTier: number):
   }
   const slope01 = normalizedSlopes(erosion.slope, landCellIndices);
 
-  const cells: TerrainCell[] = mesh.points.map((site, index) => ({
-    polygon: mesh.cellPolygons[index] ?? [],
-    site,
-    height: erosion.heights[index] ?? 0,
-    isLand: (erosion.heights[index] ?? 0) > 0,
-    slope01: slope01[index] ?? 0,
-    flux01: erosion.flux01[index] ?? 0,
-  }));
+  const cells: TerrainCell[] = mesh.points.map((site, index) => {
+    const target = erosion.downhill[index] ?? -1;
+    const targetPoint = target >= 0 ? mesh.points[target] : undefined;
+    return {
+      polygon: mesh.cellPolygons[index] ?? [],
+      site,
+      height: erosion.heights[index] ?? 0,
+      isLand: (erosion.heights[index] ?? 0) > 0,
+      slope01: slope01[index] ?? 0,
+      flux01: erosion.flux01[index] ?? 0,
+      downhillAngle:
+        targetPoint === undefined ? 0 : Math.atan2(targetPoint.y - site.y, targetPoint.x - site.x),
+    };
+  });
 
   const coastLoops = chainEdges(collectCoastEdges(mesh.cellPolygons, landCellIndices))
     .filter((chain) => chain.closed)
