@@ -28,9 +28,13 @@ for (const level of ["error", "warn"] as const) {
 window.addEventListener("error", (event) =>
   showFatal(`${event.message}\n${event.error?.stack ?? ""}`),
 );
-window.addEventListener("unhandledrejection", (event) =>
-  showFatal(`Unhandled: ${event.reason?.stack ?? event.reason}`),
-);
+window.addEventListener("unhandledrejection", (event) => {
+  // JavaScriptCore stacks omit the message line — print both explicitly.
+  const reason: unknown = event.reason;
+  const message = reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason);
+  const stack = reason instanceof Error ? (reason.stack ?? "") : "";
+  showFatal(`Unhandled: ${message}\n${stack}`);
+});
 
 import App from "./App";
 
