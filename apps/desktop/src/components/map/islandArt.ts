@@ -50,16 +50,46 @@ function drawWaterRings(graphics: Graphics, loop: readonly WorldPoint[]): void {
   });
 }
 
+/**
+ * Nortantis-style coast shading — a darkened band just inside the shoreline.
+ * Tints the whole island, then repaints the interior back, leaving only the band
+ * (widest band first so the passes stack near the coast).
+ */
+function drawCoastShading(graphics: Graphics, loop: readonly WorldPoint[]): void {
+  const ringSource = loop.map((point) => [point.x, point.y] as [number, number]);
+  for (const [inset, alpha] of [
+    [11, 0.04],
+    [5, 0.055],
+  ] as const) {
+    try {
+      const interior = new Offset().data([ringSource]).padding(inset);
+      graphics.poly([...loop], true).fill({ color: mapTheme.inkSoft, alpha });
+      for (const ring of interior) {
+        graphics
+          .poly(
+            ring.map(([x, y]) => ({ x, y })),
+            true,
+          )
+          .fill({ color: mapTheme.landFill });
+      }
+    } catch {
+      graphics.poly([...loop], true);
+      graphics.stroke({ width: inset, color: mapTheme.inkSoft, alpha: alpha * 0.8 });
+    }
+  }
+}
+
 function drawLandAndShading(graphics: Graphics, island: IslandModel): void {
   const outerLoop = island.coastLoops.at(0) ?? [];
   for (const loop of island.coastLoops) {
     if (loop !== outerLoop && isLake(loop, outerLoop)) continue;
     graphics.poly([...loop], true).fill({ color: mapTheme.landFill });
+    drawCoastShading(graphics, loop);
   }
   // Relief shading: higher cells get a deeper warm tone; cells are small enough
   // that seams read as engraving texture, so fills only.
   for (const cell of island.landCells) {
-    const alpha = 0.04 + 0.2 * cell.height01;
+    const alpha = 0.03 + 0.14 * cell.height01;
     graphics.poly(cell.polygon, true).fill({ color: RELIEF_SHADE, alpha });
   }
 }

@@ -9,13 +9,14 @@ import {
   type WorldModel,
   type WorldPoint,
 } from "@breadcrumb/plugin-map";
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
-import { drawHouseCluster, strokeDashedPath } from "./drawPrimitives";
+import { Container, Graphics, Text, TextStyle, TilingSprite } from "pixi.js";
+import { strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawIslandTerrain } from "./islandArt";
+import type { MapArt } from "./mapArtAssets";
 import { mapTheme } from "./mapTheme";
-import { drawIslandRelief } from "./reliefArt";
-import { drawSeaField } from "./seaArt";
+import { buildIslandRelief, stampSprite } from "./reliefArt";
+import { buildSeaLayer } from "./seaArt";
 
 export interface FlyRequest {
   position: WorldPoint;
@@ -93,6 +94,7 @@ function makeLabel(text: string, fontSize: number, alpha: number, options?: Labe
 function buildIslandParts(
   island: IslandModel,
   retentionByNode: ReadonlyMap<string, number>,
+  art: MapArt,
   onFly: (request: FlyRequest) => void,
   parts: {
     terrain: Container;
@@ -109,7 +111,7 @@ function buildIslandParts(
   },
 ): void {
   parts.terrain.addChild(drawIslandTerrain(island));
-  const relief = drawIslandRelief(island);
+  const relief = buildIslandRelief(island, art.mountainSeries, art.hillSeries, art.trees);
   parts.terrainDetail.addChild(relief.detail);
   parts.terrain.addChild(relief.landmarks);
 
@@ -129,7 +131,8 @@ function buildIslandParts(
   collect.islandLabels.push({ label: islandLabel, islandRadius: island.radius });
 
   const villageDots = new Graphics();
-  const villageGlyphs = new Graphics();
+  const villageIcons = new Container();
+  villageIcons.sortableChildren = true;
   const pointDots = new Graphics();
 
   for (const kingdom of island.kingdoms) {
@@ -143,7 +146,17 @@ function buildIslandParts(
 
     for (const village of kingdom.villages) {
       villageDots.circle(village.position.x, village.position.y, 2.2);
-      drawHouseCluster(villageGlyphs, village.position, village.tier);
+      // Settlement grows with knowledge: farm -> village -> town -> walled city.
+      const settlementTexture = art.settlementByTier[village.tier - 1];
+      if (settlementTexture !== undefined) {
+        stampSprite(
+          villageIcons,
+          settlementTexture,
+          village.position,
+          14 + village.tier * 5,
+          false,
+        );
+      }
 
       const villageDim = labelDim(averageRetention(village.memberNodeIds, retentionByNode));
       const villageLabel = makeLabel(village.label, mapTheme.labelSizes.village, villageDim, {
@@ -168,13 +181,36 @@ function buildIslandParts(
   villageDots.fill({ color: mapTheme.ink, alpha: 0.8 });
   pointDots.fill({ color: mapTheme.inkSoft, alpha: 0.9 });
   parts.kingdomContent.addChild(villageDots);
-  parts.villageContent.addChild(villageGlyphs);
+  parts.villageContent.addChild(villageIcons);
   parts.villageContent.addChild(pointDots);
+}
+
+function buildPaperBackground(world: WorldModel, art: MapArt): TilingSprite {
+  let minX = -600;
+  let minY = -600;
+  let maxX = 600;
+  let maxY = 600;
+  for (const island of world.islands) {
+    minX = Math.min(minX, island.center.x - island.radius - 600);
+    minY = Math.min(minY, island.center.y - island.radius - 600);
+    maxX = Math.max(maxX, island.center.x + island.radius + 600);
+    maxY = Math.max(maxY, island.center.y + island.radius + 600);
+  }
+  const paper = new TilingSprite({
+    texture: art.paper,
+    width: maxX - minX,
+    height: maxY - minY,
+  });
+  paper.position.set(minX, minY);
+  paper.tileScale.set(0.7);
+  paper.alpha = 0.55;
+  return paper;
 }
 
 export function buildWorldScene(
   world: WorldModel,
   retentionByNode: ReadonlyMap<string, number>,
+  art: MapArt,
   onFly: (request: FlyRequest) => void,
 ): WorldScene {
   const parts = {
@@ -191,14 +227,15 @@ export function buildWorldScene(
     kingdomLabelTexts: [] as Text[],
   };
   for (const island of world.islands) {
-    buildIslandParts(island, retentionByNode, onFly, parts, collect);
+    buildIslandParts(island, retentionByNode, art, onFly, parts, collect);
   }
   const fog = buildFogLayer(world, retentionByNode);
 
   const root = new Container();
   // Fog sits above all drawn content but below every name — names stay readable.
   root.addChild(
-    drawSeaField(world),
+    buildPaperBackground(world, art),
+    buildSeaLayer(world, art),
     parts.terrain,
     parts.terrainDetail,
     parts.kingdomContent,

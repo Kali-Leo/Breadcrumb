@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode } from "./demoWorld";
+import { loadMapArt } from "./mapArtAssets";
 import { mapTheme, ZOOM_PRESETS } from "./mapTheme";
 import { buildWorldScene, counterScaleLabels, type FlyRequest } from "./sceneBuild";
 import { bandVisibility } from "./semanticZoom";
@@ -128,7 +129,12 @@ export function MapView() {
           ease: "easeInOutSine",
         });
       };
-      const scene = buildWorldScene(world, retentionByNode, fly);
+      const art = await loadMapArt();
+      if (cancelled) {
+        created.destroy(true, { children: true });
+        return;
+      }
+      const scene = buildWorldScene(world, retentionByNode, art, fly);
       viewport.addChild(scene.root);
 
       const datasetKey: CameraMemory["dataset"] = demoMode ? "demo" : "real";
