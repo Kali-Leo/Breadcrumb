@@ -3,7 +3,12 @@
  * their local embeddings, and keeps it fresh as extraction lands new knowledge.
  * Main exports: useMapStore.
  */
-import { computeMapLayout, type MapPlace } from "@breadcrumb/plugin-map";
+import {
+  computeLayeredMap,
+  computeMapLayout,
+  type LayeredMap,
+  type MapPlace,
+} from "@breadcrumb/plugin-map";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { embedMissingNodes } from "../lib/embeddings";
@@ -11,6 +16,7 @@ import { appEventBus } from "./chatStore";
 
 interface MapState {
   places: MapPlace[];
+  layered: LayeredMap | null;
   /** How many nodes still await an embedding (shown as "测绘中" in the UI). */
   unchartedCount: number;
   /** Surfaced instead of a silent empty chart when charting fails (honesty rule). */
@@ -20,6 +26,7 @@ interface MapState {
 
 export const useMapStore = create<MapState>((set) => ({
   places: [],
+  layered: null,
   unchartedCount: 0,
   chartError: null,
 
@@ -36,6 +43,7 @@ export const useMapStore = create<MapState>((set) => ({
       );
       set({
         places: computeMapLayout(nodes, embeddings),
+        layered: computeLayeredMap(nodes, embeddings),
         unchartedCount: nodes.filter((node) => !embeddings.has(node.id)).length,
         chartError: null,
       });

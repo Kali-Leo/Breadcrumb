@@ -8,7 +8,7 @@ import "@fontsource/ma-shan-zheng";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
-import { MapView } from "./components/MapView";
+import { PixiMapView } from "./components/PixiMapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -54,7 +54,7 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
-          {view === "map" && <MapView onJumpToChat={() => setView("chat")} />}
+          {view === "map" && <PixiMapView onJumpToChat={() => setView("chat")} />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>

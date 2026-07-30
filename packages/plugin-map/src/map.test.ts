@@ -120,3 +120,44 @@ describe("computePlaceInternalLayout", () => {
     expect(ab).toBeLessThan(ac);
   });
 });
+
+describe("computeLayeredMap", () => {
+  const nodes = [node("a", "闭包"), node("bb", "作用域"), node("ccc", "光合作用")];
+  const embeddings = new Map<string, readonly number[]>([
+    ["a", [1, 0, 0.05]],
+    ["bb", [0.98, 0.12, 0]],
+    ["ccc", [0, 0.05, 1]],
+  ]);
+
+  it("keeps parents at the centroid of their children", async () => {
+    const { computeLayeredMap } = await import("./hierarchy");
+    const layered = computeLayeredMap(nodes, embeddings);
+    for (const kingdom of layered.kingdom) {
+      const children = layered.village.filter((v) =>
+        v.nodeIds.some((id) => kingdom.nodeIds.includes(id)),
+      );
+      const cx = children.reduce((s, c) => s + c.x, 0) / children.length;
+      expect(kingdom.x).toBeCloseTo(cx, 5);
+    }
+  });
+
+  it("assigns scale slots by member count", async () => {
+    const { computeLayeredMap } = await import("./hierarchy");
+    const layered = computeLayeredMap(nodes, embeddings);
+    for (const village of layered.village) {
+      expect(["tier1", "tier2", "tier3", "tier4"]).toContain(village.scaleSlot);
+    }
+    for (const geo of layered.geo) {
+      expect(geo.scaleSlot).toBe("island");
+    }
+  });
+
+  it("total node coverage is identical across layers", async () => {
+    const { computeLayeredMap } = await import("./hierarchy");
+    const layered = computeLayeredMap(nodes, embeddings);
+    const count = (clusters: { nodeIds: string[] }[]) =>
+      clusters.reduce((s, c) => s + c.nodeIds.length, 0);
+    expect(count(layered.kingdom)).toBe(count(layered.village));
+    expect(count(layered.geo)).toBe(count(layered.village));
+  });
+});
