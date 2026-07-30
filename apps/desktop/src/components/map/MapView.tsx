@@ -10,10 +10,12 @@ import { Viewport } from "pixi-viewport";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
-import { demoKnowledgeNodes, demoRetentionByNode } from "./demoWorld";
+import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
+import { applyReveals, drawFootprintTrail } from "./livingMap";
 import { loadMapArt } from "./mapArtAssets";
+import { counterScaleLabels } from "./mapLabels";
 import { mapTheme, ZOOM_PRESETS } from "./mapTheme";
-import { buildWorldScene, counterScaleLabels, type FlyRequest } from "./sceneBuild";
+import { buildWorldScene, type FlyRequest } from "./sceneBuild";
 import { bandVisibility } from "./semanticZoom";
 
 interface CameraMemory {
@@ -56,8 +58,11 @@ export function MapView() {
   const zoomPresetRef = useRef<((presetIndex: number) => void) | null>(null);
 
   const storeNodes = useKnowledgeStore((state) => state.nodes);
+  const storeSessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
   const storeRetention = useMemoryStore((state) => state.retentionByNode);
   const [demoMode, setDemoMode] = useState(false);
+  const previousIdsRef = useRef(new Map<string, ReadonlySet<string>>());
+  const trailIdsRef = useRef<readonly string[]>([]);
 
   // Fog data should be fresh whenever the map opens.
   useEffect(() => {
@@ -67,6 +72,7 @@ export function MapView() {
   const nodes = demoMode ? demoKnowledgeNodes : storeNodes;
   const retentionByNode = demoMode ? demoRetentionByNode : storeRetention;
   const world = useMemo(() => buildWorldModel(nodes), [nodes]);
+  trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;
@@ -134,10 +140,20 @@ export function MapView() {
         created.destroy(true, { children: true });
         return;
       }
-      const scene = buildWorldScene(world, retentionByNode, art, fly);
-      viewport.addChild(scene.root);
-
       const datasetKey: CameraMemory["dataset"] = demoMode ? "demo" : "real";
+      // Ink reveal: only places learned while the palace is open fade in.
+      const currentIds: ReadonlySet<string> = new Set(
+        world.islands.flatMap((i) => i.memberNodeIds),
+      );
+      const previousIds = previousIdsRef.current.get(datasetKey);
+      const newNodeIds =
+        previousIds === undefined
+          ? new Set<string>()
+          : new Set([...currentIds].filter((id) => !previousIds.has(id)));
+      previousIdsRef.current.set(datasetKey, currentIds);
+
+      const scene = buildWorldScene(world, retentionByNode, art, newNodeIds, fly);
+      viewport.addChild(scene.root);
       const savedCamera = cameraRef.current;
       if (savedCamera === null || savedCamera.dataset !== datasetKey) {
         fitWholeWorld(viewport, world);
@@ -166,13 +182,21 @@ export function MapView() {
         });
       };
 
-      created.ticker.add(() => {
+      let footprintPhase = 0;
+      created.ticker.add((ticker) => {
         const visibility = bandVisibility(viewport.scale.x);
         applyBandAlpha(scene.geoParts, visibility.geo);
         applyBandAlpha(scene.kingdomParts, visibility.kingdom);
         applyBandAlpha(scene.villageParts, visibility.village);
         applyBandAlpha(scene.detailParts, 1 - visibility.geo);
-        counterScaleLabels(scene, viewport.scale.x);
+        counterScaleLabels(scene.labelSets, viewport.scale.x);
+        const deltaSeconds = ticker.deltaMS / 1000;
+        scene.revealTargets = applyReveals(scene.revealTargets, deltaSeconds);
+        footprintPhase += deltaSeconds * 14;
+        const trailPath = trailIdsRef.current
+          .map((nodeId) => scene.placePositions.get(nodeId))
+          .filter((point): point is NonNullable<typeof point> => point !== undefined);
+        drawFootprintTrail(scene.footprintLayer, trailPath, footprintPhase);
         cameraRef.current = {
           x: viewport.center.x,
           y: viewport.center.y,

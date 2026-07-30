@@ -213,6 +213,19 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
 
+  packages/plugin-town:
+    dependencies:
+      '@breadcrumb/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+
   packages/plugin-trail:
     dependencies:
       '@breadcrumb/core-db':
