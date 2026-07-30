@@ -20,6 +20,7 @@ export type {
   KingdomModel,
   KnowledgePointModel,
   LandCellModel,
+  RiverModel,
   VillageModel,
   WorldModel,
   WorldPoint,

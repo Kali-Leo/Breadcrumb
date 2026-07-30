@@ -14,10 +14,31 @@ import type {
   IslandModel,
   KingdomModel,
   LandCellModel,
+  RiverModel,
   VillageModel,
   WorldModel,
   WorldPoint,
 } from "./types";
+
+/**
+ * Terrain generation is the expensive step and deterministic in (seed, radius, tier)
+ * — memoized so incremental learning only regenerates islands that changed tier.
+ */
+const terrainCache = new Map<string, IslandTerrain>();
+const TERRAIN_CACHE_LIMIT = 96;
+
+function terrainFor(nodeId: string, radius: number, sizeTier: number): IslandTerrain {
+  const key = `${nodeId}:${radius}:${sizeTier}`;
+  const cached = terrainCache.get(key);
+  if (cached !== undefined) return cached;
+  const terrain = generateTerrain(hashStringToSeed(nodeId), radius, sizeTier);
+  if (terrainCache.size >= TERRAIN_CACHE_LIMIT) {
+    const oldestKey = terrainCache.keys().next().value;
+    if (oldestKey !== undefined) terrainCache.delete(oldestKey);
+  }
+  terrainCache.set(key, terrain);
+  return terrain;
+}
 
 const TINT_PALETTE_SIZE = 4;
 const HILL_COUNT_BASE = 3;
@@ -118,15 +139,25 @@ function buildLandCells(terrain: IslandTerrain, center: WorldPoint): LandCellMod
         polygon: translatePath(cell.polygon, center),
         site: translate(cell.site, center),
         height01: (cell.height - minHeight) / heightRange,
+        slope01: cell.slope01,
+        flux01: cell.flux01,
       },
     ];
   });
 }
 
+function buildRivers(terrain: IslandTerrain, center: WorldPoint): RiverModel[] {
+  return terrain.rivers.map((river) => ({
+    points: translatePath(river.points, center),
+    startWidth: river.startWidth,
+    endWidth: river.endWidth,
+  }));
+}
+
 function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
   const center = islandSlotCenter(slotIndex);
   const radius = islandRadiusForTier(shaped.sizeTier);
-  const terrain = generateTerrain(hashStringToSeed(shaped.nodeId), radius);
+  const terrain = terrainFor(shaped.nodeId, radius, shaped.sizeTier);
   const partition =
     shaped.kingdoms.length > 0
       ? partitionKingdoms(
@@ -162,6 +193,7 @@ function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
     radius,
     coastLoops: terrain.coastLoops.map((loop) => translatePath(loop, center)),
     landCells: buildLandCells(terrain, center),
+    rivers: buildRivers(terrain, center),
     kingdomBorderPaths: (partition?.borderPaths ?? []).map((path) => translatePath(path, center)),
     hills: pickHills(terrain, shaped, villageLocalPositions, center),
     kingdoms,

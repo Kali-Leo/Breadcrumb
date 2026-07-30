@@ -1,63 +1,48 @@
 /**
- * Purpose: per-island terrain — jittered-grid Voronoi cells, radial-falloff-plus-noise
- * height field, land mask and smoothed closed coast loops. Island-local coordinates
- * (origin at island center).
+ * Purpose: terrain orchestrator — blue-noise mesh, Azgaar-sculpted heightmap,
+ * mewo2 hydraulic erosion, land mask with smoothed coast loops and flow-accumulation
+ * rivers. Island-local coordinates (origin at island center).
  * Main exports: generateTerrain, IslandTerrain, TerrainCell.
  */
-import { Delaunay } from "d3-delaunay";
-import { createNoise2D } from "simplex-noise";
-import {
-  chaikinSmooth,
-  chainEdges,
-  type Edge,
-  polygonArea,
-  quantizedPointKey,
-  undirectedEdgeKey,
-} from "./geometry";
+
+import { erodeTerrain } from "./erosion";
+import { chaikinSmooth, chainEdges, type Edge, polygonArea, undirectedEdgeKey } from "./geometry";
+import { generateHeightmap } from "./heightmap";
+import { buildIslandMesh } from "./mesh";
 import { createSeededRandom } from "./random";
+import { extractRivers, type RiverPath } from "./rivers";
 import type { WorldPoint } from "./types";
 
 export interface TerrainCell {
   polygon: WorldPoint[];
   site: WorldPoint;
+  /** Eroded height, sea level at 0 (normalized units, land > 0). */
   height: number;
   isLand: boolean;
+  /** Downhill slope normalized to 0..1 by the land's 90th percentile. */
+  slope01: number;
+  /** Flow accumulation normalized to 0..1 by the island maximum. */
+  flux01: number;
 }
 
 export interface IslandTerrain {
   cells: TerrainCell[];
   landCellIndices: number[];
   coastLoops: WorldPoint[][];
+  rivers: RiverPath[];
 }
 
-const GRID_STEPS = 14;
-/** Voronoi bounds relative to the island radius — leaves a sea ring around every coast. */
-const SEA_MARGIN = 1.35;
-const NOISE_AMPLITUDE = 0.42;
-const NOISE_FREQUENCY = 1.8;
-const LAND_THRESHOLD = 0.22;
-
-function stripClosingDuplicate(polygon: WorldPoint[]): WorldPoint[] {
-  const first = polygon.at(0);
-  const last = polygon.at(-1);
-  if (
-    first !== undefined &&
-    last !== undefined &&
-    polygon.length > 1 &&
-    quantizedPointKey(first) === quantizedPointKey(last)
-  ) {
-    return polygon.slice(0, -1);
-  }
-  return polygon;
-}
+const CELL_TARGET_BY_TIER = [1600, 2000, 2400, 2800, 3200, 3600] as const;
+const LAND_FRACTION_BY_TIER = [0.28, 0.3, 0.33, 0.35, 0.37, 0.39] as const;
 
 /** Edges of land-cell polygons that no other land cell shares — the coastline. */
-function collectCoastEdges(cells: readonly TerrainCell[], landIndices: readonly number[]): Edge[] {
+function collectCoastEdges(
+  polygons: readonly WorldPoint[][],
+  landIndices: readonly number[],
+): Edge[] {
   const seen = new Map<string, { edge: Edge; count: number }>();
   for (const cellIndex of landIndices) {
-    const cell = cells[cellIndex];
-    if (cell === undefined) continue;
-    const polygon = cell.polygon;
+    const polygon = polygons[cellIndex] ?? [];
     for (let index = 0; index < polygon.length; index += 1) {
       const a = polygon[index];
       const b = polygon[(index + 1) % polygon.length];
@@ -74,43 +59,44 @@ function collectCoastEdges(cells: readonly TerrainCell[], landIndices: readonly 
   return [...seen.values()].filter((entry) => entry.count === 1).map((entry) => entry.edge);
 }
 
-export function generateTerrain(seed: number, radius: number): IslandTerrain {
-  const random = createSeededRandom(seed);
-  const noise2D = createNoise2D(random);
-  const bound = radius * SEA_MARGIN;
-  const step = (2 * bound) / GRID_STEPS;
-
-  const sites: [number, number][] = [];
-  for (let row = 0; row < GRID_STEPS; row += 1) {
-    for (let column = 0; column < GRID_STEPS; column += 1) {
-      sites.push([
-        -bound + (column + 0.5) * step + (random() - 0.5) * step * 0.8,
-        -bound + (row + 0.5) * step + (random() - 0.5) * step * 0.8,
-      ]);
-    }
+function normalizedSlopes(slopes: Float64Array, landIndices: readonly number[]): Float64Array {
+  const landSlopes = landIndices.map((index) => slopes[index] ?? 0).sort((a, b) => a - b);
+  const percentile90 = landSlopes[Math.floor(landSlopes.length * 0.9)] ?? 1;
+  const scale = percentile90 > 0 ? percentile90 : 1;
+  const result = new Float64Array(slopes.length);
+  for (let index = 0; index < slopes.length; index += 1) {
+    result[index] = Math.min(1, (slopes[index] ?? 0) / scale);
   }
-  const voronoi = Delaunay.from(sites).voronoi([-bound, -bound, bound, bound]);
+  return result;
+}
 
-  const cells: TerrainCell[] = sites.map((site, index) => {
-    const [x, y] = site;
-    const distance = Math.hypot(x, y) / radius;
-    const falloff = 1 - distance ** 1.7;
-    const noise = noise2D((x / radius) * NOISE_FREQUENCY, (y / radius) * NOISE_FREQUENCY);
-    const height = falloff + noise * NOISE_AMPLITUDE;
-    const rawPolygon = voronoi.cellPolygon(index) ?? [];
-    return {
-      polygon: stripClosingDuplicate(rawPolygon.map(([px, py]) => ({ x: px, y: py }))),
-      site: { x, y },
-      height,
-      isLand: height > LAND_THRESHOLD,
-    };
-  });
+export function generateTerrain(seed: number, radius: number, sizeTier: number): IslandTerrain {
+  const tierIndex = Math.min(Math.max(Math.trunc(sizeTier), 1), 6) - 1;
+  const random = createSeededRandom(seed);
+  const mesh = buildIslandMesh(random, radius, CELL_TARGET_BY_TIER[tierIndex] ?? 2000);
+  const sculpted = generateHeightmap(mesh, random, radius, sizeTier);
+  const erosion = erodeTerrain(mesh, sculpted, LAND_FRACTION_BY_TIER[tierIndex] ?? 0.33);
+  const rivers = extractRivers(mesh, erosion);
 
-  const landCellIndices = cells.flatMap((cell, index) => (cell.isLand ? [index] : []));
-  const coastLoops = chainEdges(collectCoastEdges(cells, landCellIndices))
+  const landCellIndices: number[] = [];
+  for (let index = 0; index < mesh.points.length; index += 1) {
+    if ((erosion.heights[index] ?? 0) > 0) landCellIndices.push(index);
+  }
+  const slope01 = normalizedSlopes(erosion.slope, landCellIndices);
+
+  const cells: TerrainCell[] = mesh.points.map((site, index) => ({
+    polygon: mesh.cellPolygons[index] ?? [],
+    site,
+    height: erosion.heights[index] ?? 0,
+    isLand: (erosion.heights[index] ?? 0) > 0,
+    slope01: slope01[index] ?? 0,
+    flux01: erosion.flux01[index] ?? 0,
+  }));
+
+  const coastLoops = chainEdges(collectCoastEdges(mesh.cellPolygons, landCellIndices))
     .filter((chain) => chain.closed)
-    .map((chain) => chaikinSmooth(chain.points, 2, true))
+    .map((chain) => chaikinSmooth(chain.points, 1, true))
     .sort((a, b) => polygonArea(b) - polygonArea(a));
 
-  return { cells, landCellIndices, coastLoops };
+  return { cells, landCellIndices, coastLoops, rivers };
 }
