@@ -7,6 +7,7 @@ import type {
   Currency,
   KnowledgeNodeRow,
   LlmCallRow,
+  MapPlaceNameRow,
   MessageRow,
   NodeEmbeddingRow,
   NodeSightingRow,
@@ -113,6 +114,31 @@ export function createNodeEmbeddingsRepo(sql: SqlClient) {
          LEFT JOIN node_embeddings e ON e.node_id = k.id
          WHERE e.node_id IS NULL ORDER BY k.created_at ASC`,
       );
+    },
+  };
+}
+
+export function createMapPlaceNamesRepo(sql: SqlClient) {
+  return {
+    /** Every override, for building the map's display names. */
+    async listAll(): Promise<MapPlaceNameRow[]> {
+      return sql.select<MapPlaceNameRow>("SELECT * FROM map_place_names");
+    },
+    /** User renames always win; an AI suggestion never overwrites a user name. */
+    async upsert(row: MapPlaceNameRow): Promise<void> {
+      await sql.execute(
+        `INSERT INTO map_place_names (node_id, custom_label, source, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(node_id) DO UPDATE SET
+           custom_label = excluded.custom_label,
+           source = excluded.source,
+           updated_at = excluded.updated_at
+         WHERE NOT (map_place_names.source = 'user' AND excluded.source = 'ai')`,
+        [row.node_id, row.custom_label, row.source, row.updated_at],
+      );
+    },
+    async removeOverride(nodeId: string): Promise<void> {
+      await sql.execute("DELETE FROM map_place_names WHERE node_id = ?", [nodeId]);
     },
   };
 }

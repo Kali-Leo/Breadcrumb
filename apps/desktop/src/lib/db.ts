@@ -26,6 +26,7 @@ export interface Repos {
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
+  mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -54,5 +55,6 @@ async function openAndMigrate(): Promise<Repos> {
     nodeSightings: createNodeSightingsRepo(sqlClient),
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
+    mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
   };
 }

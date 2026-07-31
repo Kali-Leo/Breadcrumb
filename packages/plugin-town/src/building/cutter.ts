@@ -10,7 +10,6 @@ import { interpolate } from "../geom/geomUtils";
 import { Point } from "../geom/point";
 import { Polygon } from "../geom/polygon";
 import { itemAt } from "./arraySupport";
-import { polygonCentroid } from "./polygonSupport";
 
 /** Cuts the polygon across the edge starting at vertex, at the given ratio and tilt angle. */
 export function bisect(
@@ -36,7 +35,7 @@ export function bisect(
 
 /** Slices the polygon into triangular sectors around a center (centroid by default). */
 export function radial(poly: Polygon, center: Point | null = null, gap = 0.0): Polygon[] {
-  const c = center !== null ? center : polygonCentroid(poly);
+  const c = center !== null ? center : poly.centroid;
 
   const sectors: Polygon[] = [];
   poly.forEdge((v0, v1) => {
@@ -53,7 +52,7 @@ export function radial(poly: Polygon, center: Point | null = null, gap = 0.0): P
 export function semiRadial(poly: Polygon, center: Point | null = null, gap = 0.0): Polygon[] {
   let c: Point;
   if (center === null) {
-    const centroid = polygonCentroid(poly);
+    const centroid = poly.centroid;
     c = poly.min((v) => Point.distance(v, centroid));
   } else {
     c = center;
