@@ -4,7 +4,7 @@
  * Main exports: buildWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { islandRadiusForTier, islandSlotCenter } from "./layout";
+import { islandRadiusForTier, packIslandCenters } from "./layout";
 import { createSeededRandom, hashStringToSeed } from "./random";
 import { partitionKingdoms } from "./regions";
 import { placeVillagePoints, placeVillages } from "./settlements";
@@ -155,8 +155,7 @@ function buildRivers(terrain: IslandTerrain, center: WorldPoint): RiverModel[] {
   }));
 }
 
-function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
-  const center = islandSlotCenter(slotIndex);
+function buildIsland(shaped: ShapedIsland, center: WorldPoint): IslandModel {
   const radius = islandRadiusForTier(shaped.sizeTier);
   const terrain = terrainFor(shaped.nodeId, radius, shaped.sizeTier);
   const partition =
@@ -203,5 +202,13 @@ function buildIsland(shaped: ShapedIsland, slotIndex: number): IslandModel {
 }
 
 export function buildWorldModel(nodes: readonly KnowledgeNodeRow[]): WorldModel {
-  return { islands: shapeTree(nodes).map((shaped, slotIndex) => buildIsland(shaped, slotIndex)) };
+  const shapedIslands = shapeTree(nodes);
+  const centers = packIslandCenters(
+    shapedIslands.map((shaped) => islandRadiusForTier(shaped.sizeTier)),
+  );
+  return {
+    islands: shapedIslands.map((shaped, index) =>
+      buildIsland(shaped, centers[index] ?? { x: 0, y: 0 }),
+    ),
+  };
 }
