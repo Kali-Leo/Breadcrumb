@@ -30,6 +30,7 @@ export interface BreadcrumbEventMap {
   "app:launched": { launchedAt: string };
   "chat:messageSent": { conversationId: string; messageId: string; sentAt: string };
   "chat:responseFinished": { conversationId: string; messageId: string; finishedAt: string };
+  "factcheck:finished": { conversationId: string; messageId: string; runId: string };
 }
 
 export type BreadcrumbEventName = keyof BreadcrumbEventMap;

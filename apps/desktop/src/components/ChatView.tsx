@@ -4,8 +4,10 @@
  */
 import { useEffect, useRef } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { useFactcheckStore } from "../stores/factcheckStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { Composer } from "./Composer";
+import { FactcheckBadge } from "./FactcheckBadge";
 import { MessageBubble } from "./MessageBubble";
 
 export function ChatView() {
@@ -13,7 +15,13 @@ export function ChatView() {
   const streamingText = useChatStore((state) => state.streamingText);
   const errorText = useChatStore((state) => state.errorText);
   const sendMessage = useChatStore((state) => state.sendMessage);
+  const activeConversationId = useChatStore((state) => state.activeConversationId);
+  const loadFactchecks = useFactcheckStore((state) => state.loadForConversation);
   const scrollAnchor = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void loadFactchecks(activeConversationId);
+  }, [activeConversationId, loadFactchecks]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll whenever a message or stream delta arrives
   useEffect(() => {
@@ -32,7 +40,10 @@ export function ChatView() {
           </div>
         )}
         {messages.map((message) => (
-          <MessageBubble key={message.id} author={message.role} content={message.content} />
+          <div key={message.id} className="space-y-1">
+            <MessageBubble author={message.role} content={message.content} />
+            {message.role === "assistant" && <FactcheckBadge messageId={message.id} />}
+          </div>
         ))}
         {isStreaming && <MessageBubble author="assistant" content={streamingText || "…"} />}
         {errorText && (
