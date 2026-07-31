@@ -1,11 +1,12 @@
 /**
  * Purpose: Azgaar-style heightmap sculpting on the island mesh — blob-spread hills
- * and pits, ranged ridges, smoothing, radial mask, plus an fBm detail layer.
- * Heights live in 0..100. Ported from Azgaar's FMG heightmap generator (MIT).
+ * and pits, ranged ridges, smoothing, tectonic-plate land mask, plus an fBm detail
+ * layer. Heights live in 0..100. Ported from Azgaar's FMG heightmap generator (MIT).
  * Main exports: generateHeightmap.
  */
 import { createNoise2D } from "simplex-noise";
 import type { IslandMesh } from "./mesh";
+import { plateLandMask } from "./nortantis/plates";
 import type { SeededRandom } from "./random";
 
 interface SculptContext {
@@ -112,16 +113,12 @@ function smooth(context: SculptContext, blend: number): void {
   heights.set(smoothed);
 }
 
-/** Radial falloff toward the bounds — guarantees ocean all around. */
-function radialMask(context: SculptContext, radius: number): void {
-  const { mesh, heights } = context;
+/** Tectonic-plate land mask (Nortantis port) — ocean where oceanic plates sit. */
+function applyPlateMask(context: SculptContext, sizeTier: number): void {
+  const { mesh, heights, random } = context;
+  const mask = plateLandMask(mesh, random, sizeTier);
   for (let index = 0; index < heights.length; index += 1) {
-    const point = mesh.points[index];
-    if (point === undefined) continue;
-    const distance = Math.hypot(point.x, point.y) / radius;
-    // Flat interior, steep shoulder — irregular silhouettes survive the mask.
-    const falloff = Math.max(0, 1 - distance ** 3);
-    heights[index] = (heights[index] ?? 0) * falloff;
+    heights[index] = (heights[index] ?? 0) * (mask[index] ?? 0);
   }
 }
 
@@ -164,19 +161,14 @@ export function generateHeightmap(
   for (let hill = 0; hill < minorHills; hill += 1) {
     raiseBlob(context, pickCellNear(context, 0.85), 18 + random() * 18, 1);
   }
-  for (let ridge = 0; ridge < Math.max(0, sizeTier - 2); ridge += 1) {
-    raiseRange(
-      context,
-      pickCellNear(context, 0.55),
-      pickCellNear(context, 0.75),
-      24 + random() * 14,
-    );
+  for (let ridge = 0; ridge < Math.max(1, sizeTier - 1); ridge += 1) {
+    raiseRange(context, pickCellNear(context, 0.6), pickCellNear(context, 0.9), 24 + random() * 14);
   }
   if (sizeTier >= 2 && random() < 0.6) {
     raiseBlob(context, pickCellNear(context, 0.45), 14 + random() * 10, -1);
   }
-  addFbmDetail(context, radius, 11);
-  radialMask(context, radius * 1.15);
-  smooth(context, 3);
+  addFbmDetail(context, radius, 14);
+  applyPlateMask(context, sizeTier);
+  smooth(context, 2);
   return context.heights;
 }

@@ -6,9 +6,10 @@
  */
 
 import { erodeTerrain } from "./erosion";
-import { chaikinSmooth, chainEdges, type Edge, polygonArea, undirectedEdgeKey } from "./geometry";
+import { chainEdges, type Edge, polygonArea, undirectedEdgeKey } from "./geometry";
 import { generateHeightmap } from "./heightmap";
 import { buildIslandMesh } from "./mesh";
+import { smoothCoastLoop } from "./nortantis/coastCurve";
 import { createSeededRandom } from "./random";
 import { extractRivers, type RiverPath } from "./rivers";
 import type { WorldPoint } from "./types";
@@ -103,7 +104,7 @@ export function generateTerrain(seed: number, radius: number, sizeTier: number):
 
   const coastLoops = chainEdges(collectCoastEdges(mesh.cellPolygons, landCellIndices))
     .filter((chain) => chain.closed)
-    .map((chain) => chaikinSmooth(chain.points, 1, true))
+    .map((chain) => smoothCoastLoop(chain.points))
     .sort((a, b) => polygonArea(b) - polygonArea(a));
 
   return { cells, landCellIndices, coastLoops, rivers };
