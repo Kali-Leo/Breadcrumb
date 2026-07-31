@@ -70,6 +70,26 @@ export interface TrailSummaryRow {
   created_at: string;
 }
 
+/** One fact-check pass over one assistant message (spec 008). */
+export interface FactcheckRunRow {
+  id: string;
+  message_id: string;
+  conversation_id: string;
+  created_at: string;
+}
+
+/** One checked claim inside a run; evidence_json holds the verified EvidenceItem array. */
+export interface FactcheckClaimRow {
+  id: string;
+  run_id: string;
+  claim_text: string;
+  /** "supported" | "contradicted" | "insufficient" — kept TEXT for forward compatibility. */
+  relationship: string;
+  reasoning: string;
+  evidence_json: string;
+  created_at: string;
+}
+
 export interface LlmCallRow {
   id: string;
   conversation_id: string | null;
