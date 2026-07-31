@@ -16,7 +16,7 @@ export interface LabelSets {
 }
 
 /** Target on-screen text height per band (px) — labels stay readable at any level. */
-const SCREEN_SIZE_BY_BAND = { island: 34, kingdom: 24, village: 19, point: 14 } as const;
+const SCREEN_SIZE_BY_BAND = { island: 26, kingdom: 24, village: 19, point: 14 } as const;
 
 /** Fog dims a name through this factor but never below a readable floor. */
 export function labelDim(retention: number): number {
