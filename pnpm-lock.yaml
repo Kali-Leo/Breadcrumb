@@ -50,6 +50,9 @@ importers:
       '@breadcrumb/plugin-memory':
         specifier: workspace:*
         version: link:../../packages/plugin-memory
+      '@breadcrumb/plugin-town':
+        specifier: workspace:*
+        version: link:../../packages/plugin-town
       '@breadcrumb/plugin-trail':
         specifier: workspace:*
         version: link:../../packages/plugin-trail

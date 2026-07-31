@@ -19,6 +19,7 @@ import { addBannerBehind, type LabelSets, labelDim, makeLabel } from "./mapLabel
 import { mapTheme } from "./mapTheme";
 import { buildIslandRelief, stampSprite } from "./reliefArt";
 import { buildSeaLayer } from "./seaArt";
+import { buildVillagePlan } from "./villageArt";
 
 export interface FlyRequest {
   position: WorldPoint;
@@ -32,6 +33,10 @@ export interface WorldScene {
   villageParts: Container[];
   /** Engraving detail (woods) — hidden in the geographic view. */
   detailParts: Container[];
+  /** Settlement icons — fade out as micro-plans take over. */
+  iconParts: Container[];
+  /** Settlement micro-plans (deepest zoom band). */
+  planParts: Container[];
   labelSets: LabelSets;
   /** Session trail dashes, redrawn in place as the walk grows. */
   footprintLayer: Graphics;
@@ -45,6 +50,8 @@ interface SceneParts {
   terrainDetail: Container;
   kingdomContent: Container;
   villageContent: Container;
+  villageIconsLayer: Container;
+  villagePlans: Container;
   geoLabels: Container;
   kingdomLabels: Container;
   villageLabels: Container;
@@ -109,6 +116,7 @@ function buildIslandParts(
         villageIcons.addChild(iconHolder);
         if (newNodeIds.has(village.nodeId)) reveal(iconHolder);
       }
+      parts.villagePlans.addChild(buildVillagePlan(village));
 
       const villageDim = labelDim(averageRetention(village.memberNodeIds, retentionByNode));
       const villageLabel = makeLabel(village.label, mapTheme.labelSizes.village, villageDim, {
@@ -138,7 +146,7 @@ function buildIslandParts(
   villageDots.fill({ color: mapTheme.ink, alpha: 0.8 });
   pointDots.fill({ color: mapTheme.inkSoft, alpha: 0.9 });
   parts.kingdomContent.addChild(villageDots);
-  parts.villageContent.addChild(villageIcons);
+  parts.villageIconsLayer.addChild(villageIcons);
   parts.villageContent.addChild(pointDots);
 }
 
@@ -172,6 +180,8 @@ export function buildWorldScene(
     terrainDetail: new Container(),
     kingdomContent: new Container(),
     villageContent: new Container(),
+    villageIconsLayer: new Container(),
+    villagePlans: new Container(),
     geoLabels: new Container(),
     kingdomLabels: new Container(),
     villageLabels: new Container(),
@@ -202,6 +212,8 @@ export function buildWorldScene(
     parts.terrainDetail,
     parts.kingdomContent,
     parts.villageContent,
+    parts.villageIconsLayer,
+    parts.villagePlans,
     fog,
     footprintLayer,
     parts.kingdomLabels,
@@ -214,6 +226,8 @@ export function buildWorldScene(
     kingdomParts: [parts.kingdomContent, parts.kingdomLabels],
     villageParts: [parts.villageContent, parts.villageLabels],
     detailParts: [parts.terrainDetail],
+    iconParts: [parts.villageIconsLayer],
+    planParts: [parts.villagePlans],
     labelSets,
     footprintLayer,
     placePositions: buildPlacePositions(world),
