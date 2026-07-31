@@ -52,6 +52,7 @@ interface SceneParts {
 
 function buildIslandParts(
   island: IslandModel,
+  islandIndex: number,
   retentionByNode: ReadonlyMap<string, number>,
   art: MapArt,
   newNodeIds: ReadonlySet<string>,
@@ -76,7 +77,9 @@ function buildIslandParts(
     letterSpacing: 6,
     onTap: () => onTap({ kind: "island", nodeId: island.nodeId }),
   });
-  islandLabel.position.set(island.center.x, island.center.y - island.radius - 34);
+  // Alternate names above/below neighbouring islands — the cartographer's dodge.
+  const labelSide = islandIndex % 2 === 0 ? -1 : 1;
+  islandLabel.position.set(island.center.x, island.center.y + labelSide * (island.radius + 34));
   parts.worldBand.addChild(islandLabel);
   labelSets.islandLabels.push(islandLabel);
 
@@ -153,9 +156,10 @@ export function buildWorldScene(
     pointLabels: [],
   };
   const revealTargets: RevealTarget[] = [];
-  for (const island of world.islands) {
+  world.islands.forEach((island, islandIndex) => {
     buildIslandParts(
       island,
+      islandIndex,
       retentionByNode,
       art,
       newNodeIds,
@@ -164,7 +168,7 @@ export function buildWorldScene(
       labelSets,
       revealTargets,
     );
-  }
+  });
   const fog = buildFogLayer(world, retentionByNode);
   const footprintLayer = new Graphics();
 
