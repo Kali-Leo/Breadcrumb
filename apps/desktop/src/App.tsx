@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
+import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -50,19 +51,7 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
-          {view === "map" && (
-            <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
-              <span className="text-4xl">🗺️</span>
-              <p className="text-sm">知识地图 · 未来重新设计</p>
-              <button
-                type="button"
-                onClick={() => setView("chat")}
-                className="rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
-              >
-                ← 返回对话
-              </button>
-            </div>
-          )}
+          {view === "map" && <MapView />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>

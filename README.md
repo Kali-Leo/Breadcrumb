@@ -48,4 +48,4 @@ plugin bus — official features are plugins too, on equal footing with communit
 
 ## License
 
-[Apache-2.0](LICENSE)
+[AGPL-3.0](LICENSE) · 第三方声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)

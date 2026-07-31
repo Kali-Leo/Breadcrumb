@@ -54,6 +54,15 @@ export interface NodeEmbeddingRow {
   created_at: string;
 }
 
+/** Memory-palace place-name override — decoupled from the knowledge concept itself. */
+export interface MapPlaceNameRow {
+  node_id: string;
+  custom_label: string;
+  /** 'user' names always outrank 'ai' suggestions and are never overwritten by AI. */
+  source: "user" | "ai";
+  updated_at: string;
+}
+
 /** One footprint: a conversation touched (learned or re-met) a knowledge node. */
 export interface NodeSightingRow {
   id: string;
