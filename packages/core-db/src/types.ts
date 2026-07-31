@@ -70,7 +70,7 @@ export interface TrailSummaryRow {
   created_at: string;
 }
 
-/** One fact-check pass over one assistant message (spec 008). */
+/** One fact-check pass over one assistant message (spec 009). */
 export interface FactcheckRunRow {
   id: string;
   message_id: string;
