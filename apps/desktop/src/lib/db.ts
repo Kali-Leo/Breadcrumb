@@ -7,6 +7,7 @@ import {
   createConversationsRepo,
   createKnowledgeNodesRepo,
   createLlmCallsRepo,
+  createMapPlaceNamesRepo,
   createMessagesRepo,
   createNodeEmbeddingsRepo,
   createNodeSightingsRepo,
