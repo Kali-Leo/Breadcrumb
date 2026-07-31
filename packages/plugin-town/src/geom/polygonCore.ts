@@ -5,6 +5,7 @@
  * Main exports: PolygonCore.
  */
 
+import { max as arrayMax, min as arrayMin } from "../utils/arrayHelpers";
 import type { Point } from "./point";
 
 export class PolygonCore implements Iterable<Point> {
@@ -85,6 +86,16 @@ export class PolygonCore implements Iterable<Point> {
 
   [Symbol.iterator](): Iterator<Point> {
     return this.vertices[Symbol.iterator]();
+  }
+
+  /** Vertex with the smallest measure (Haxe `using ArrayExtender` on the Polygon abstract). */
+  min(measure: (v: Point) => number): Point {
+    return arrayMin(this.vertices, measure);
+  }
+
+  /** Vertex with the largest measure (Haxe `using ArrayExtender` on the Polygon abstract). */
+  max(measure: (v: Point) => number): Point {
+    return arrayMax(this.vertices, measure);
   }
 
   /** Calls f for every edge including the closing v(n)-v(0) edge. */
