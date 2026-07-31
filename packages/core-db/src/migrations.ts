@@ -133,6 +133,32 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Fact-check results per assistant message: one run holds gentle per-claim verdicts
+    // with their verified evidence (spec 009). Renumbered from 0005_factcheck at merge
+    // time; safe because no local database had applied the old id yet.
+    id: "0006_factcheck",
+    statements: [
+      `CREATE TABLE factcheck_runs (
+        id TEXT PRIMARY KEY,
+        message_id TEXT NOT NULL REFERENCES messages(id),
+        conversation_id TEXT NOT NULL REFERENCES conversations(id),
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_factcheck_runs_message ON factcheck_runs(message_id);`,
+      `CREATE INDEX idx_factcheck_runs_conversation ON factcheck_runs(conversation_id);`,
+      `CREATE TABLE factcheck_claims (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL REFERENCES factcheck_runs(id),
+        claim_text TEXT NOT NULL,
+        relationship TEXT NOT NULL,
+        reasoning TEXT NOT NULL,
+        evidence_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_factcheck_claims_run ON factcheck_claims(run_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

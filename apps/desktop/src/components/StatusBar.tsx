@@ -15,6 +15,7 @@ const PURPOSE_NAMES: Record<string, string> = {
   chat: "对话",
   "knowledge-tree": "知识树",
   trail: "轨迹总结",
+  factcheck: "求真核查",
 };
 
 function renderCost(cost: CostByCurrency): string {
