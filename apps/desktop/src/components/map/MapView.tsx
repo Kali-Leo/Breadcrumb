@@ -10,9 +10,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
+import { findIsland, findKingdom, findVillage, type MapLevel } from "./levels";
 import { applyReveals, drawFootprintTrail } from "./livingMap";
+import { MapInfoPanel } from "./MapInfoPanel";
 import { loadMapArt, resetMapArt } from "./mapArtAssets";
-import { createMapController, type MapController } from "./mapController";
+import { createMapController, type HoverInfo, type MapController } from "./mapController";
 import { mapTheme } from "./mapTheme";
 
 export function MapView() {
@@ -26,6 +28,8 @@ export function MapView() {
   const storeSessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
   const storeRetention = useMemoryStore((state) => state.retentionByNode);
   const [demoMode, setDemoMode] = useState(false);
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [level, setLevel] = useState<MapLevel>({ kind: "world" });
 
   // Fog data should be fresh whenever the palace opens.
   useEffect(() => {
@@ -59,7 +63,10 @@ export function MapView() {
       }
       app = created;
       container.appendChild(created.canvas);
-      const controller = createMapController(created, art);
+      const controller = createMapController(created, art, {
+        onHover: setHover,
+        onLevel: setLevel,
+      });
       controllerRef.current = controller;
 
       created.ticker.add((ticker) => {
@@ -131,5 +138,30 @@ export function MapView() {
       </div>
     );
   }
-  return <div ref={containerRef} className="h-full w-full overflow-hidden" />;
+  const levelPath: string[] = ["世界"];
+  if (level.kind !== "world") {
+    const island = findIsland(world, level.islandId);
+    if (island !== undefined) {
+      levelPath.push(island.label);
+      if (level.kind === "kingdom" || level.kind === "village") {
+        const kingdom = findKingdom(island, level.kingdomId);
+        if (kingdom !== undefined) {
+          levelPath.push(kingdom.label);
+          if (level.kind === "village") {
+            const village = findVillage(kingdom, level.villageId);
+            if (village !== undefined) levelPath.push(village.label);
+          }
+        }
+      }
+    }
+  }
+  return (
+    <div className="flex h-full w-full overflow-hidden">
+      {/* Square map hugging the left; the info panel takes the rest. */}
+      <div ref={containerRef} className="aspect-square h-full shrink-0 overflow-hidden" />
+      <div className="min-w-0 flex-1">
+        <MapInfoPanel world={world} hover={hover} levelPath={levelPath} />
+      </div>
+    </div>
+  );
 }

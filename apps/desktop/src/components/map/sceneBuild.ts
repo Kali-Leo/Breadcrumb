@@ -10,7 +10,41 @@ import {
   type WorldModel,
   type WorldPoint,
 } from "@breadcrumb/plugin-map";
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics, Sprite, type Texture } from "pixi.js";
+
+/** Places one art stamp grounded at its position, painter-ordered by y. */
+export function stampSprite(
+  container: Container,
+  texture: Texture,
+  position: WorldPoint,
+  worldWidth: number,
+): void {
+  const sprite = new Sprite(texture);
+  sprite.anchor.set(0.5, 0.85);
+  const scale = worldWidth / Math.max(texture.width, 1);
+  sprite.scale.set(scale);
+  sprite.position.set(position.x, position.y);
+  sprite.zIndex = position.y;
+  container.addChild(sprite);
+}
+
+/** Kingdom seat grandeur grows with the branch's knowledge. */
+function seatTextureFor(art: MapArt, memberCount: number): Texture | undefined {
+  const tier =
+    memberCount <= 3
+      ? 0
+      : memberCount <= 7
+        ? 1
+        : memberCount <= 12
+          ? 2
+          : memberCount <= 18
+            ? 3
+            : memberCount <= 28
+              ? 4
+              : 5;
+  return art.kingdomSeats[Math.min(tier, art.kingdomSeats.length - 1)];
+}
+
 import { strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawIslandTerrain } from "./islandArt";
@@ -18,7 +52,6 @@ import { buildPlacePositions, type RevealTarget } from "./livingMap";
 import type { MapArt } from "./mapArtAssets";
 import { type LabelSets, labelDim, makeLabel } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
-import { buildIslandRelief, stampSprite } from "./reliefArt";
 import { buildSeaLayer } from "./seaArt";
 
 export interface TapTarget {
@@ -62,9 +95,6 @@ function buildIslandParts(
   revealTargets: RevealTarget[],
 ): void {
   parts.terrain.addChild(drawIslandTerrain(island));
-  const relief = buildIslandRelief(island, art.mountainSeries, art.hillSeries, art.trees);
-  parts.terrain.addChild(relief.detail);
-  parts.terrain.addChild(relief.landmarks);
 
   const borders = new Graphics();
   for (const path of island.kingdomBorderPaths) {
@@ -91,10 +121,18 @@ function buildIslandParts(
   const pointDots = new Graphics();
   for (const kingdom of island.kingdoms) {
     const kingdomDim = labelDim(averageRetention(kingdom.memberNodeIds, retentionByNode));
+    // Every realm gets one large seat building; its grandeur tracks knowledge size.
+    const seatTexture = seatTextureFor(art, kingdom.memberNodeIds.length);
+    if (seatTexture !== undefined) {
+      const seat = new Container();
+      stampSprite(seat, seatTexture, kingdom.labelPosition, 70 + kingdom.memberNodeIds.length * 3);
+      seat.alpha = kingdomDim;
+      parts.islandBand.addChild(seat);
+    }
     const kingdomLabel = makeLabel(kingdom.label, mapTheme.labelSizes.kingdom, kingdomDim, {
       letterSpacing: 3,
     });
-    kingdomLabel.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y);
+    kingdomLabel.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y + 22);
     parts.islandBand.addChild(kingdomLabel);
     labelSets.kingdomLabels.push(kingdomLabel);
 
@@ -103,7 +141,7 @@ function buildIslandParts(
       const settlementTexture = art.settlementByTier[village.tier - 1];
       if (settlementTexture !== undefined) {
         const iconHolder = new Container();
-        stampSprite(iconHolder, settlementTexture, village.position, 15 + village.tier * 5, false);
+        stampSprite(iconHolder, settlementTexture, village.position, 15 + village.tier * 5);
         parts.kingdomBand.addChild(iconHolder);
         if (newNodeIds.has(village.nodeId)) reveal(iconHolder);
       }

@@ -59,27 +59,6 @@ function drawLandAndShading(graphics: Graphics, island: IslandModel): void {
   }
 }
 
-/** Laham rivers: thin dark-ink lines tapering downstream — never blue. */
-function drawRivers(graphics: Graphics, island: IslandModel): void {
-  for (const river of island.rivers) {
-    const segments = river.points.length - 1;
-    for (let index = 0; index < segments; index += 1) {
-      const a = river.points[index];
-      const b = river.points[index + 1];
-      if (a === undefined || b === undefined) continue;
-      const progress = segments > 0 ? index / segments : 0;
-      graphics.moveTo(a.x, a.y);
-      graphics.lineTo(b.x, b.y);
-      graphics.stroke({
-        width: (river.startWidth + (river.endWidth - river.startWidth) * progress) * 0.45,
-        color: mapTheme.river,
-        alpha: 0.85,
-        cap: "round",
-      });
-    }
-  }
-}
-
 function drawLakesAndCoast(graphics: Graphics, island: IslandModel): void {
   const outerLoop = island.coastLoops.at(0) ?? [];
   for (const loop of island.coastLoops) {
@@ -101,7 +80,6 @@ function drawLakesAndCoast(graphics: Graphics, island: IslandModel): void {
 export function drawIslandTerrain(island: IslandModel): Graphics {
   const graphics = new Graphics();
   drawLandAndShading(graphics, island);
-  drawRivers(graphics, island);
   drawLakesAndCoast(graphics, island);
   return graphics;
 }

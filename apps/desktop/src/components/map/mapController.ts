@@ -22,6 +22,20 @@ import { counterScaleLabels } from "./mapLabels";
 import { buildWorldScene, type TapTarget, type WorldScene } from "./sceneBuild";
 import { buildTownScene } from "./townScene";
 
+export interface HoverInfo {
+  kind: "island" | "kingdom" | "village";
+  nodeId: string;
+  label: string;
+  memberCount: number;
+  childCount: number;
+  pointLabels: string[];
+}
+
+export interface MapHooks {
+  onHover(info: HoverInfo | null): void;
+  onLevel(level: MapLevel): void;
+}
+
 export interface MapController {
   scene: WorldScene | null;
   footprintPhase: number;
@@ -50,17 +64,19 @@ function bandsFor(level: MapLevel): BandTargets {
   return { world: 0, island: 0, kingdom: 1, borders: 1 };
 }
 
-export function createMapController(app: Application, art: MapArt): MapController {
+export function createMapController(app: Application, art: MapArt, hooks: MapHooks): MapController {
   const worldRoot = new Container();
   app.stage.addChild(worldRoot);
 
   let world: WorldModel | null = null;
+  let retention: ReadonlyMap<string, number> = new Map();
   let level: MapLevel = { kind: "world" };
   let cameraTarget: CameraFrame = { scale: 1, x: 0, y: 0 };
   let bandTargets: BandTargets = bandsFor(level);
   let overlay: Container | null = null;
   let overlayTarget = 0;
   let lastWheelAt = 0;
+  let lastHoverId: string | null = null;
   const pointer = { x: 0, y: 0 };
 
   const controller: MapController = {
@@ -68,6 +84,7 @@ export function createMapController(app: Application, art: MapArt): MapControlle
     footprintPhase: 0,
     setWorld(nextWorld, retentionByNode, newNodeIds) {
       world = nextWorld;
+      retention = retentionByNode;
       controller.scene?.root.destroy({ children: true });
       controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, onTap);
       worldRoot.addChild(controller.scene.root);
@@ -159,7 +176,7 @@ export function createMapController(app: Application, art: MapArt): MapControlle
       const kingdom = island ? findKingdom(island, level.kingdomId) : undefined;
       const village = kingdom ? findVillage(kingdom, level.villageId) : undefined;
       if (village !== undefined && overlay === null) {
-        overlay = buildTownScene(village, app.screen.width, app.screen.height);
+        overlay = buildTownScene(village, app.screen.width, app.screen.height, art, retention);
         overlay.alpha = 0;
         app.stage.addChild(overlay);
       }
@@ -167,6 +184,7 @@ export function createMapController(app: Application, art: MapArt): MapControlle
     } else {
       overlayTarget = 0;
     }
+    hooks.onLevel(level);
   }
 
   function toWorldPoint(screenX: number, screenY: number): WorldPoint {
@@ -206,8 +224,19 @@ export function createMapController(app: Application, art: MapArt): MapControlle
     } else if (level.kind === "island") {
       const island = findIsland(world, level.islandId);
       const kingdom = island ? hitKingdom(island, point) : null;
-      if (island && kingdom !== null)
-        level = { kind: "kingdom", islandId: island.nodeId, kingdomId: kingdom.nodeId };
+      if (island && kingdom !== null) {
+        const onlyVillage = kingdom.villages.length === 1 ? kingdom.villages.at(0) : undefined;
+        // A realm with a single village skips straight into it (founder rule).
+        level =
+          onlyVillage !== undefined
+            ? {
+                kind: "village",
+                islandId: island.nodeId,
+                kingdomId: kingdom.nodeId,
+                villageId: onlyVillage.nodeId,
+              }
+            : { kind: "kingdom", islandId: island.nodeId, kingdomId: kingdom.nodeId };
+      }
     } else if (level.kind === "kingdom") {
       const island = findIsland(world, level.islandId);
       const kingdom = island ? findKingdom(island, level.kingdomId) : undefined;
@@ -220,9 +249,15 @@ export function createMapController(app: Application, art: MapArt): MapControlle
   }
 
   function back(): void {
-    if (level.kind === "village")
-      level = { kind: "kingdom", islandId: level.islandId, kingdomId: level.kingdomId };
-    else if (level.kind === "kingdom") level = { kind: "island", islandId: level.islandId };
+    if (level.kind === "village") {
+      const island = world !== null ? findIsland(world, level.islandId) : undefined;
+      const kingdom = island ? findKingdom(island, level.kingdomId) : undefined;
+      // Symmetric to the dive: a single-village realm returns straight to the island.
+      level =
+        kingdom !== undefined && kingdom.villages.length <= 1
+          ? { kind: "island", islandId: level.islandId }
+          : { kind: "kingdom", islandId: level.islandId, kingdomId: level.kingdomId };
+    } else if (level.kind === "kingdom") level = { kind: "island", islandId: level.islandId };
     else if (level.kind === "island") level = { kind: "world" };
     applyLevel(false);
   }
@@ -236,10 +271,63 @@ export function createMapController(app: Application, art: MapArt): MapControlle
     else dive();
   }
 
+  function hoverInfoAt(point: WorldPoint): HoverInfo | null {
+    if (world === null) return null;
+    if (level.kind === "world") {
+      const island = hitIsland(world, point);
+      if (island === null) return null;
+      return {
+        kind: "island",
+        nodeId: island.nodeId,
+        label: island.label,
+        memberCount: island.memberNodeIds.length,
+        childCount: island.kingdoms.length,
+        pointLabels: island.kingdoms.map((kingdom) => kingdom.label),
+      };
+    }
+    if (level.kind === "island") {
+      const island = findIsland(world, level.islandId);
+      const kingdom = island ? hitKingdom(island, point) : null;
+      if (kingdom === null) return null;
+      return {
+        kind: "kingdom",
+        nodeId: kingdom.nodeId,
+        label: kingdom.label,
+        memberCount: kingdom.memberNodeIds.length,
+        childCount: kingdom.villages.length,
+        pointLabels: kingdom.villages.flatMap((village) => [
+          village.label,
+          ...village.points.map((point) => point.label),
+        ]),
+      };
+    }
+    if (level.kind === "kingdom") {
+      const island = findIsland(world, level.islandId);
+      const kingdom = island ? findKingdom(island, level.kingdomId) : undefined;
+      const village = kingdom ? hitVillage(kingdom, point) : null;
+      if (village === null || village === undefined) return null;
+      return {
+        kind: "village",
+        nodeId: village.nodeId,
+        label: village.label,
+        memberCount: village.memberNodeIds.length,
+        childCount: village.points.length,
+        pointLabels: village.points.map((point) => point.label),
+      };
+    }
+    return null;
+  }
+
   function onPointerMove(event: PointerEvent): void {
     const rect = app.canvas.getBoundingClientRect();
     pointer.x = event.clientX - rect.left;
     pointer.y = event.clientY - rect.top;
+    const info = hoverInfoAt(toWorldPoint(pointer.x, pointer.y));
+    const infoId = info === null ? null : `${info.kind}:${info.nodeId}`;
+    if (infoId !== lastHoverId) {
+      lastHoverId = infoId;
+      hooks.onHover(info);
+    }
   }
 
   app.canvas.addEventListener("wheel", onWheel, { passive: false });

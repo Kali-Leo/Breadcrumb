@@ -1,195 +1,137 @@
 /**
- * Purpose: the village level — a full-window town scene reproducing TownGeneratorOS's
- * official CityMap renderer (ANCIENT palette): outlined roads, light buildings with
- * dark outlines, park groves, wall with towers and gates. Knowledge points label the
- * largest buildings.
+ * Purpose: the village level — founder-picked case #5: an elevation-view gallery of
+ * official Nortantis building illustrations. The village seat stands large on the
+ * left; every knowledge point is a building with a name plate along an official-style
+ * road winding to the right. Retention gently dims what is fading.
  * Main exports: buildTownScene.
  */
-import { hashStringToSeed, type VillageModel } from "@breadcrumb/plugin-map";
-import { generateTown, type TownPlan, type TownPoint } from "@breadcrumb/plugin-town";
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import {
+  averageRetention,
+  createSeededRandom,
+  hashStringToSeed,
+  type VillageModel,
+} from "@breadcrumb/plugin-map";
+import { Container, Graphics, Sprite, Text, TextStyle, type Texture } from "pixi.js";
+import type { MapArt } from "./mapArtAssets";
+import { labelDim } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
 
-/** Official palette: TownGeneratorOS Palette.ANCIENT. */
-const PALETTE = { paper: 0xccc5a3, light: 0xa69974, medium: 0x806f4d, dark: 0x342414 } as const;
-/** Official stroke constants: Ward.MAIN_STREET, Brush.NORMAL/THICK_STROKE. */
-const MAIN_STREET = 2.0;
-const NORMAL_STROKE = 0.3;
-const THICK_STROKE = 1.8;
-const N_PATCHES_BY_TIER = [4, 8, 15, 24] as const;
+/** Official TownGeneratorOS ANCIENT palette for the village interior. */
+const PALETTE = { paper: 0xccc5a3, medium: 0x806f4d, dark: 0x342414 } as const;
 
-const planCache = new Map<string, TownPlan>();
-
-function planFor(village: VillageModel): TownPlan {
-  const key = `${village.nodeId}:${village.tier}`;
-  const cached = planCache.get(key);
-  if (cached !== undefined) return cached;
-  const plan = generateTown(
-    hashStringToSeed(village.nodeId),
-    N_PATCHES_BY_TIER[village.tier - 1] ?? 8,
-  );
-  if (planCache.size > 64) planCache.clear();
-  planCache.set(key, plan);
-  return plan;
+function roadPoint(t: number, width: number, height: number): { x: number; y: number } {
+  // A gentle S-curve across the lower half of the scene.
+  const x = width * (0.12 + t * 0.78);
+  const y = height * (0.62 + 0.13 * Math.sin(t * Math.PI * 1.6));
+  return { x, y };
 }
 
-function drawRoad(graphics: Graphics, road: readonly TownPoint[]): void {
-  const first = road.at(0);
-  if (first === undefined) return;
+/** Official road look: pale core inside a darker edge (TownGeneratorOS CityMap). */
+function drawRoad(graphics: Graphics, width: number, height: number): void {
   for (const pass of [
-    { width: MAIN_STREET + NORMAL_STROKE, color: PALETTE.medium },
-    { width: MAIN_STREET - NORMAL_STROKE, color: PALETTE.paper },
+    { lineWidth: 26, color: PALETTE.medium, alpha: 0.5 },
+    { lineWidth: 18, color: PALETTE.paper, alpha: 1 },
   ]) {
-    graphics.moveTo(first.x, first.y);
-    for (const point of road.slice(1)) graphics.lineTo(point.x, point.y);
-    graphics.stroke({ width: pass.width, color: pass.color, cap: "butt", join: "round" });
-  }
-}
-
-function drawBuildings(
-  graphics: Graphics,
-  blocks: readonly TownPoint[][],
-  strokeWidth: number,
-): void {
-  for (const block of blocks) {
-    graphics.poly([...block], true).stroke({ width: strokeWidth * 2, color: PALETTE.dark });
-  }
-  for (const block of blocks) {
-    graphics.poly([...block], true).fill({ color: PALETTE.light });
-  }
-}
-
-function drawWall(graphics: Graphics, plan: TownPlan): void {
-  if (plan.wall.length < 3) return;
-  graphics.poly([...plan.wall], true).stroke({ width: THICK_STROKE, color: PALETTE.dark });
-  for (const gate of plan.gates) {
-    const index = plan.wall.findIndex(
-      (point) => Math.hypot(point.x - gate.x, point.y - gate.y) < 0.01,
-    );
-    if (index >= 0) {
-      const next = plan.wall[(index + 1) % plan.wall.length];
-      const previous = plan.wall[(index - 1 + plan.wall.length) % plan.wall.length];
-      if (next !== undefined && previous !== undefined) {
-        const dirLength = Math.hypot(next.x - previous.x, next.y - previous.y) || 1;
-        const dx = ((next.x - previous.x) / dirLength) * THICK_STROKE * 1.5;
-        const dy = ((next.y - previous.y) / dirLength) * THICK_STROKE * 1.5;
-        graphics.moveTo(gate.x - dx, gate.y - dy);
-        graphics.lineTo(gate.x + dx, gate.y + dy);
-        graphics.stroke({ width: THICK_STROKE * 2, color: PALETTE.dark, cap: "butt" });
-      }
+    const start = roadPoint(0, width, height);
+    graphics.moveTo(start.x, start.y);
+    for (let step = 1; step <= 40; step += 1) {
+      const point = roadPoint(step / 40, width, height);
+      graphics.lineTo(point.x, point.y);
     }
-  }
-  for (const tower of plan.towers) {
-    graphics.circle(tower.x, tower.y, THICK_STROKE).fill({ color: PALETTE.dark });
+    graphics.stroke({ width: pass.lineWidth, color: pass.color, alpha: pass.alpha, cap: "round" });
   }
 }
 
-/** Knowledge points caption the largest buildings, walking outward from the centre. */
-function labelKnowledgePoints(town: Container, village: VillageModel, plan: TownPlan): void {
-  const buildings = plan.patches
-    .filter((patch) => patch.withinCity)
-    .flatMap((patch) => patch.buildings)
-    .map((block) => {
-      let area = 0;
-      let sumX = 0;
-      let sumY = 0;
-      for (let index = 0; index < block.length; index += 1) {
-        const a = block[index];
-        const b = block[(index + 1) % block.length];
-        if (a === undefined || b === undefined) continue;
-        area += a.x * b.y - b.x * a.y;
-        sumX += a.x;
-        sumY += a.y;
-      }
-      return {
-        area: Math.abs(area) / 2,
-        x: sumX / Math.max(block.length, 1),
-        y: sumY / Math.max(block.length, 1),
-      };
-    })
-    .sort((a, b) => b.area - a.area);
-  village.points.forEach((point, index) => {
-    const building = buildings[index];
-    if (building === undefined) return;
-    const label = new Text({
-      text: point.label,
-      style: new TextStyle({
-        fontFamily: mapTheme.fontFamily,
-        fontSize: 10,
-        fill: PALETTE.dark,
-        fontStyle: "italic",
-        stroke: { color: PALETTE.paper, width: 3, join: "round" },
-      }),
-    });
-    label.anchor.set(0.5, 0);
-    label.position.set(building.x, building.y + 2);
-    label.scale.set(0.32);
-    town.addChild(label);
+function plate(text: string, fontSize: number, alpha: number): Text {
+  const label = new Text({
+    text,
+    style: new TextStyle({
+      fontFamily: mapTheme.fontFamily,
+      fontSize: fontSize * 2,
+      fill: PALETTE.dark,
+      letterSpacing: 2,
+      stroke: { color: PALETTE.paper, width: 5, join: "round" },
+    }),
   });
+  label.scale.set(0.5);
+  label.anchor.set(0.5, 0);
+  label.alpha = alpha;
+  return label;
+}
+
+function placeBuilding(
+  container: Container,
+  texture: Texture,
+  x: number,
+  y: number,
+  targetHeight: number,
+  alpha: number,
+): void {
+  const sprite = new Sprite(texture);
+  sprite.anchor.set(0.5, 1);
+  const scale = targetHeight / Math.max(texture.height, 1);
+  sprite.scale.set(scale);
+  sprite.position.set(x, y);
+  sprite.alpha = alpha;
+  sprite.zIndex = y;
+  container.addChild(sprite);
 }
 
 export function buildTownScene(
   village: VillageModel,
   screenWidth: number,
   screenHeight: number,
+  art: MapArt,
+  retentionByNode: ReadonlyMap<string, number>,
 ): Container {
-  const plan = planFor(village);
   const scene = new Container();
   const background = new Graphics();
   background.rect(0, 0, screenWidth, screenHeight).fill({ color: PALETTE.paper });
   scene.addChild(background);
 
-  const town = new Container();
-  const graphics = new Graphics();
-  town.addChild(graphics);
+  const ground = new Graphics();
+  drawRoad(ground, screenWidth, screenHeight);
+  scene.addChild(ground);
 
-  for (const road of plan.roads) drawRoad(graphics, road);
-  for (const patch of plan.patches) {
-    if (patch.wardLabel === null) continue;
-    if (patch.wardLabel === "Park") {
-      for (const grove of patch.buildings) {
-        graphics.poly([...grove], true).fill({ color: PALETTE.medium });
-      }
-    } else if (patch.wardLabel === "Castle") {
-      drawBuildings(graphics, patch.buildings, NORMAL_STROKE * 2);
-    } else {
-      drawBuildings(graphics, patch.buildings, NORMAL_STROKE);
-    }
-  }
-  drawWall(graphics, plan);
-  labelKnowledgePoints(town, village, plan);
+  const buildingsLayer = new Container();
+  buildingsLayer.sortableChildren = true;
+  scene.addChild(buildingsLayer);
+  const random = createSeededRandom(hashStringToSeed(village.nodeId));
 
-  // Frame on the built-up area's real extent (city patches plus wall).
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  const extend = (point: TownPoint): void => {
-    minX = Math.min(minX, point.x);
-    minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x);
-    maxY = Math.max(maxY, point.y);
-  };
-  for (const patch of plan.patches) {
-    if (!patch.withinCity) continue;
-    for (const point of patch.shape) extend(point);
+  // The village's own seat, standing large on the left.
+  const seatTexture = art.settlementByTier[village.tier - 1];
+  const seatDim = labelDim(averageRetention(village.memberNodeIds, retentionByNode));
+  if (seatTexture !== undefined) {
+    const seatBase = roadPoint(0.02, screenWidth, screenHeight);
+    placeBuilding(
+      buildingsLayer,
+      seatTexture,
+      seatBase.x + screenWidth * 0.02,
+      seatBase.y - screenHeight * 0.02,
+      screenHeight * 0.3,
+      seatDim,
+    );
   }
-  for (const point of plan.wall) extend(point);
-  if (!Number.isFinite(minX)) {
-    minX = -24;
-    minY = -24;
-    maxX = 24;
-    maxY = 24;
-  }
-  const spanX = Math.max(maxX - minX, 1);
-  const spanY = Math.max(maxY - minY, 1);
-  const scale = Math.min((screenWidth * 0.8) / spanX, (screenHeight * 0.74) / spanY);
-  town.scale.set(scale);
-  town.position.set(
-    screenWidth / 2 - ((minX + maxX) / 2) * scale,
-    screenHeight / 2 - ((minY + maxY) / 2) * scale,
-  );
-  scene.addChild(town);
+
+  // One building per knowledge point along the road, alternating sides.
+  const pointCount = village.points.length;
+  const baseHeight = Math.min(screenHeight * 0.17, (screenWidth * 0.72) / Math.max(pointCount, 4));
+  village.points.forEach((point, index) => {
+    const t = (index + 1) / (pointCount + 1);
+    const base = roadPoint(t, screenWidth, screenHeight);
+    const side = index % 2 === 0 ? -1 : 1;
+    const x = base.x + (random() - 0.5) * 20;
+    const y = base.y + side * (14 + random() * 10);
+    const texture = art.buildings[hashStringToSeed(point.nodeId) % art.buildings.length];
+    if (texture === undefined) return;
+    const dim = labelDim(retentionByNode.get(point.nodeId) ?? 1);
+    const buildingHeight = baseHeight * (0.85 + random() * 0.3);
+    placeBuilding(buildingsLayer, texture, x, y, buildingHeight, dim);
+    const nameplate = plate(point.label, 15, dim);
+    nameplate.position.set(x, y + 6);
+    nameplate.zIndex = y + 1;
+    buildingsLayer.addChild(nameplate);
+  });
 
   const title = new Text({
     text: village.label,
