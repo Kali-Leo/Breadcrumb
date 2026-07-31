@@ -12,6 +12,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     hint: "每轮对话后额外调用一次 AI 提取知识点（独立计费）",
   },
   trail: { name: "🍞 轨迹每日总结", hint: "每天生成一句昨日学习总结（独立计费）" },
+  factcheck: {
+    name: "🔍 求真核查",
+    hint: "在 AI 回答下方点「求证」：提取事实并检索公开资料佐证（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
@@ -40,6 +44,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setNetworkEnabled = useSettingsStore((state) => state.setNetworkEnabled);
   const featureSwitches = useSettingsStore((state) => state.featureSwitches);
   const setFeatureSwitch = useSettingsStore((state) => state.setFeatureSwitch);
+  const mainlandNetwork = useSettingsStore((state) => state.mainlandNetwork);
+  const setMainlandNetwork = useSettingsStore((state) => state.setMainlandNetwork);
 
   const [baseUrl, setBaseUrl] = useState(apiConfig?.baseUrl ?? "https://api.deepseek.com/v1");
   const [apiKey, setApiKey] = useState(apiConfig?.apiKey ?? "");
@@ -131,6 +137,20 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             />
           </div>
         ))}
+      </section>
+
+      <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
+        <div>
+          <h3 className="font-medium text-stone-700">大陆网络模式</h3>
+          <p className="text-sm text-stone-500">
+            求真核查只使用大陆可访问的资料源（必应）；关闭后优先维基百科。
+          </p>
+        </div>
+        <Toggle
+          on={mainlandNetwork}
+          onClick={() => void setMainlandNetwork(!mainlandNetwork)}
+          label="大陆网络模式"
+        />
       </section>
     </div>
   );

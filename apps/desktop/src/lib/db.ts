@@ -5,6 +5,7 @@
  */
 import {
   createConversationsRepo,
+  createFactcheckRepo,
   createKnowledgeNodesRepo,
   createLlmCallsRepo,
   createMapPlaceNamesRepo,
@@ -28,6 +29,7 @@ export interface Repos {
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
+  factcheck: ReturnType<typeof createFactcheckRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -57,5 +59,6 @@ async function openAndMigrate(): Promise<Repos> {
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
+    factcheck: createFactcheckRepo(sqlClient),
   };
 }

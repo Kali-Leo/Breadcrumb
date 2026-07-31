@@ -41,6 +41,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/plugin-factcheck':
+        specifier: workspace:*
+        version: link:../../packages/plugin-factcheck
       '@breadcrumb/plugin-knowledge-tree':
         specifier: workspace:*
         version: link:../../packages/plugin-knowledge-tree
@@ -136,6 +139,22 @@ importers:
 
   packages/core-llm:
     dependencies:
+      zod:
+        specifier: ^4.1.0
+        version: 4.4.3
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+
+  packages/plugin-factcheck:
+    dependencies:
+      '@breadcrumb/core-llm':
+        specifier: workspace:*
+        version: link:../core-llm
       zod:
         specifier: ^4.1.0
         version: 4.4.3
