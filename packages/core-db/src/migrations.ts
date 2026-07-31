@@ -121,6 +121,19 @@ export const MIGRATIONS: readonly Migration[] = [
     ],
   },
   {
+    // Memory-palace place-name overrides: renaming an island never rewrites the
+    // knowledge concept itself. source 'user' always outranks 'ai'.
+    id: "0005_map_place_names",
+    statements: [
+      `CREATE TABLE map_place_names (
+        node_id TEXT PRIMARY KEY REFERENCES knowledge_nodes(id),
+        custom_label TEXT NOT NULL,
+        source TEXT NOT NULL CHECK (source IN ('user','ai')),
+        updated_at TEXT NOT NULL
+      );`,
+    ],
+  },
+  {
     // Fact-check results per assistant message: one run holds gentle per-claim verdicts
     // with their verified evidence (spec 009). Renumbered from 0005_factcheck at merge
     // time; safe because no local database had applied the old id yet.
