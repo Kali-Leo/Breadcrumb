@@ -24,7 +24,7 @@ const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
-/** Fact-check defaults off: it spends tokens, so the user opts in (spec 008). */
+/** Fact-check defaults off: it spends tokens, so the user opts in (spec 009). */
 const DEFAULT_SWITCHES: FeatureSwitches = { knowledgeTree: true, trail: true, factcheck: false };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

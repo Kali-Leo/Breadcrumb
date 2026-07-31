@@ -122,8 +122,9 @@ export const MIGRATIONS: readonly Migration[] = [
   },
   {
     // Fact-check results per assistant message: one run holds gentle per-claim verdicts
-    // with their verified evidence (spec 008).
-    id: "0005_factcheck",
+    // with their verified evidence (spec 009). Renumbered from 0005_factcheck at merge
+    // time; safe because no local database had applied the old id yet.
+    id: "0006_factcheck",
     statements: [
       `CREATE TABLE factcheck_runs (
         id TEXT PRIMARY KEY,
