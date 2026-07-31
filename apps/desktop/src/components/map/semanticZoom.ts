@@ -9,6 +9,8 @@ export interface BandVisibility {
   geo: number;
   kingdom: number;
   village: number;
+  /** Deepest band — the settlement micro-plans replace the settlement icons. */
+  plan: number;
 }
 
 function smoothstep(edge0: number, edge1: number, value: number): number {
@@ -19,9 +21,11 @@ function smoothstep(edge0: number, edge1: number, value: number): number {
 export function bandVisibility(scale: number): BandVisibility {
   const intoKingdom = smoothstep(ZOOM_BANDS.geoMax * 0.85, ZOOM_BANDS.geoMax * 1.35, scale);
   const intoVillage = smoothstep(ZOOM_BANDS.villageMin * 0.85, ZOOM_BANDS.villageMin * 1.35, scale);
+  const intoPlan = smoothstep(3.4, 4.4, scale);
   return {
     geo: 1 - intoKingdom,
     kingdom: intoKingdom * (1 - intoVillage * 0.82),
     village: intoVillage,
+    plan: intoPlan,
   };
 }

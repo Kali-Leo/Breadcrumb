@@ -26,4 +26,4 @@ export const ZOOM_BANDS = {
 } as const;
 
 /** Dev keys 1..5 fly to these scales (min zoom to max zoom). */
-export const ZOOM_PRESETS = [0.12, 0.3, 0.7, 1.6, 3.2] as const;
+export const ZOOM_PRESETS = [0.12, 0.3, 0.7, 1.6, 4.6] as const;

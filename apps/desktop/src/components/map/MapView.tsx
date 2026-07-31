@@ -189,6 +189,8 @@ export function MapView() {
         applyBandAlpha(scene.kingdomParts, visibility.kingdom);
         applyBandAlpha(scene.villageParts, visibility.village);
         applyBandAlpha(scene.detailParts, 1 - visibility.geo);
+        applyBandAlpha(scene.iconParts, visibility.village * (1 - visibility.plan));
+        applyBandAlpha(scene.planParts, visibility.plan);
         counterScaleLabels(scene.labelSets, viewport.scale.x);
         const deltaSeconds = ticker.deltaMS / 1000;
         scene.revealTargets = applyReveals(scene.revealTargets, deltaSeconds);
