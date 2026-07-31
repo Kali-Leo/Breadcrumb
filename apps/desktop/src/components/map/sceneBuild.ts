@@ -10,7 +10,7 @@ import {
   type WorldModel,
   type WorldPoint,
 } from "@breadcrumb/plugin-map";
-import { Container, Graphics, type Text } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawIslandTerrain } from "./islandArt";
@@ -78,7 +78,7 @@ function buildIslandParts(
   });
   islandLabel.position.set(island.center.x, island.center.y - island.radius - 34);
   parts.worldBand.addChild(islandLabel);
-  labelSets.islandLabels.push({ label: islandLabel, islandRadius: island.radius });
+  labelSets.islandLabels.push(islandLabel);
 
   const reveal = (object: Container): void => {
     object.alpha = 0;
@@ -93,7 +93,7 @@ function buildIslandParts(
     });
     kingdomLabel.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y);
     parts.islandBand.addChild(kingdomLabel);
-    labelSets.kingdomLabelTexts.push(kingdomLabel);
+    labelSets.kingdomLabels.push(kingdomLabel);
 
     for (const village of kingdom.villages) {
       // Settlement grows with knowledge: farm -> village -> town -> walled city.
@@ -111,6 +111,7 @@ function buildIslandParts(
       });
       villageLabel.position.set(village.position.x, village.position.y + 20);
       parts.kingdomBand.addChild(villageLabel);
+      labelSets.villageLabels.push(villageLabel);
       if (newNodeIds.has(village.nodeId)) reveal(villageLabel);
 
       for (const point of village.points) {
@@ -122,6 +123,7 @@ function buildIslandParts(
         pointLabel.anchor.set(0, 0.5);
         pointLabel.position.set(point.position.x + 4, point.position.y);
         parts.kingdomBand.addChild(pointLabel);
+        labelSets.pointLabels.push(pointLabel);
         if (newNodeIds.has(point.nodeId)) reveal(pointLabel);
       }
     }
@@ -144,7 +146,12 @@ export function buildWorldScene(
     islandBand: new Container(),
     kingdomBand: new Container(),
   };
-  const labelSets: LabelSets = { islandLabels: [], kingdomLabelTexts: [] as Text[] };
+  const labelSets: LabelSets = {
+    islandLabels: [],
+    kingdomLabels: [],
+    villageLabels: [],
+    pointLabels: [],
+  };
   const revealTargets: RevealTarget[] = [];
   for (const island of world.islands) {
     buildIslandParts(

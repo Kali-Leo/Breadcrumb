@@ -159,10 +159,36 @@ export function buildTownScene(
   drawWall(graphics, plan);
   labelKnowledgePoints(town, village, plan);
 
-  const reach = Math.max(plan.cityRadius * 1.25, 24);
-  const scale = (Math.min(screenWidth, screenHeight) * 0.82) / (reach * 2);
+  // Frame on the built-up area's real extent (city patches plus wall).
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  const extend = (point: TownPoint): void => {
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
+  };
+  for (const patch of plan.patches) {
+    if (!patch.withinCity) continue;
+    for (const point of patch.shape) extend(point);
+  }
+  for (const point of plan.wall) extend(point);
+  if (!Number.isFinite(minX)) {
+    minX = -24;
+    minY = -24;
+    maxX = 24;
+    maxY = 24;
+  }
+  const spanX = Math.max(maxX - minX, 1);
+  const spanY = Math.max(maxY - minY, 1);
+  const scale = Math.min((screenWidth * 0.8) / spanX, (screenHeight * 0.74) / spanY);
   town.scale.set(scale);
-  town.position.set(screenWidth / 2, screenHeight / 2);
+  town.position.set(
+    screenWidth / 2 - ((minX + maxX) / 2) * scale,
+    screenHeight / 2 - ((minY + maxY) / 2) * scale,
+  );
   scene.addChild(town);
 
   const title = new Text({

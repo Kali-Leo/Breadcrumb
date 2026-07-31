@@ -145,6 +145,13 @@ export function createMapController(app: Application, art: MapArt): MapControlle
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);
       worldRoot.position.set(cameraTarget.x, cameraTarget.y);
+      const scene = controller.scene;
+      if (scene !== null) {
+        scene.worldBand.alpha = bandTargets.world;
+        scene.islandBand.alpha = bandTargets.island;
+        scene.kingdomBand.alpha = bandTargets.kingdom;
+        scene.bordersLayer.alpha = bandTargets.borders;
+      }
     }
     // Village level = an independent full-window town scene above the world.
     if (level.kind === "village") {

@@ -9,9 +9,14 @@ import { mapTheme } from "./mapTheme";
 export const LABEL_SUPERSAMPLE = 3;
 
 export interface LabelSets {
-  islandLabels: { label: Text; islandRadius: number }[];
-  kingdomLabelTexts: Text[];
+  islandLabels: Text[];
+  kingdomLabels: Text[];
+  villageLabels: Text[];
+  pointLabels: Text[];
 }
+
+/** Target on-screen text height per band (px) — labels stay readable at any level. */
+const SCREEN_SIZE_BY_BAND = { island: 34, kingdom: 24, village: 19, point: 14 } as const;
 
 /** Fog dims a name through this factor but never below a readable floor. */
 export function labelDim(retention: number): number {
@@ -54,17 +59,19 @@ export function makeLabel(
 }
 
 /**
- * Called once per level change: island and kingdom names render at a readable
- * screen size for the level's fixed camera scale.
+ * Called once per level change: every band's names render at their target screen
+ * size under the level's fixed camera scale (no free zoom, so this is exact).
  */
 export function counterScaleLabels(sets: LabelSets, cameraScale: number): void {
-  for (const { label, islandRadius } of sets.islandLabels) {
-    const cap = 1.6 + islandRadius / 110;
-    const factor = Math.min(Math.max(1 / cameraScale, 1), cap) / LABEL_SUPERSAMPLE;
-    label.scale.set(factor);
-  }
-  const kingdomFactor = Math.min(Math.max(1 / cameraScale, 1), 1.8) / LABEL_SUPERSAMPLE;
-  for (const label of sets.kingdomLabelTexts) {
-    label.scale.set(kingdomFactor);
-  }
+  const apply = (labels: readonly Text[], band: keyof typeof SCREEN_SIZE_BY_BAND): void => {
+    for (const label of labels) {
+      const renderedSize = label.style.fontSize;
+      const factor = SCREEN_SIZE_BY_BAND[band] / (renderedSize * Math.max(cameraScale, 1e-6));
+      label.scale.set(factor);
+    }
+  };
+  apply(sets.islandLabels, "island");
+  apply(sets.kingdomLabels, "kingdom");
+  apply(sets.villageLabels, "village");
+  apply(sets.pointLabels, "point");
 }
