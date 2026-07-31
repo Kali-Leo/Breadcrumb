@@ -102,8 +102,9 @@ export function partitionKingdoms(
     weights.forEach((weight, kingdomIndex) => {
       const seedCell = terrain.cells[seedCells[kingdomIndex] ?? -1];
       if (seedCell === undefined) return;
+      // Linear weighting so a branch's territory visibly tracks its knowledge share.
       const distance = Math.hypot(cell.site.x - seedCell.site.x, cell.site.y - seedCell.site.y);
-      const score = distance / Math.sqrt(Math.max(weight, 1));
+      const score = distance / Math.max(weight, 1);
       if (score < bestScore) {
         bestScore = score;
         bestKingdom = kingdomIndex;
