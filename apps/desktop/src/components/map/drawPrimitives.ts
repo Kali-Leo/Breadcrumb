@@ -1,12 +1,10 @@
 /**
- * Purpose: small ink primitives still drawn by code — dashed polylines (frontiers,
- * future footprints) and sea wave squiggles. Relief/settlement art now comes from the
- * hand-drawn Nortantis stamps (see mapArtAssets).
- * Main exports: InkStroke, strokeDashedPath, drawWaveGlyph.
+ * Purpose: dashed ink polylines — the standard cartographic dashed-boundary stroke
+ * (region frontiers, session footprints), as seen in the Laham reference.
+ * Main exports: InkStroke, strokeDashedPath.
  */
 import type { WorldPoint } from "@breadcrumb/plugin-map";
 import type { Graphics } from "pixi.js";
-import { mapTheme } from "./mapTheme";
 
 export interface InkStroke {
   width: number;
@@ -49,13 +47,4 @@ export function strokeDashedPath(
     }
   }
   graphics.stroke(style);
-}
-
-/** Two soft bumps — a distant sea wave. */
-export function drawWaveGlyph(graphics: Graphics, position: WorldPoint): void {
-  const { x, y } = position;
-  graphics.moveTo(x - 6, y);
-  graphics.quadraticCurveTo(x - 3, y - 3, x, y);
-  graphics.quadraticCurveTo(x + 3, y - 3, x + 6, y);
-  graphics.stroke({ width: 1, color: mapTheme.inkSoft, alpha: 0.22, cap: "round" });
 }

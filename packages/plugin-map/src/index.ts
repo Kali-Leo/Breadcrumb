@@ -5,7 +5,7 @@
  */
 
 export { pointInPolygon } from "./geometry";
-export { islandRadiusForTier, islandSlotCenter, RADIUS_BY_TIER, SLOT_SPACING } from "./layout";
+export { islandRadiusForTier, packIslandCenters, RADIUS_BY_TIER } from "./layout";
 export { createSeededRandom, hashStringToSeed, type SeededRandom } from "./random";
 export { averageRetention } from "./retention";
 export {

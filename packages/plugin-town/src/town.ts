@@ -25,8 +25,12 @@ export interface TownPlan {
   /** Closed wall polygon, empty when the town is unwalled. */
   wall: TownPoint[];
   gates: TownPoint[];
+  /** Wall tower positions (drawn as filled circles in the official renderer). */
+  towers: TownPoint[];
   /** Smoothed street/road polylines (arteries). */
   streets: TownPoint[][];
+  /** Roads outside the walls — the only paths the official CityMap renderer draws. */
+  roads: TownPoint[][];
   /** Radius of the built-up area — lets the renderer frame the scene. */
   cityRadius: number;
 }
@@ -52,7 +56,9 @@ export function generateTown(seed: number, nPatches: number): TownPlan {
     })),
     wall: model.wall !== null ? toPoints(model.wall.shape) : [],
     gates: toPoints(model.gates),
+    towers: model.wall !== null ? toPoints(model.wall.towers) : [],
     streets: model.arteries.map((street) => toPoints(street)),
+    roads: model.roads.map((road) => toPoints(road)),
     cityRadius: model.cityRadius,
   };
 }

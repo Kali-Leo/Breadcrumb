@@ -61,7 +61,7 @@ importers:
         version: link:../../packages/sdk
       '@tailwindcss/vite':
         specifier: ^4.3.3
-        version: 4.3.3(vite@7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.3.3(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.1
@@ -74,9 +74,6 @@ importers:
       '@tauri-apps/plugin-sql':
         specifier: ^2.4.0
         version: 2.4.0
-      pixi-viewport:
-        specifier: ^6.0.3
-        version: 6.0.3(pixi.js@8.19.0)
       pixi.js:
         specifier: ^8.19.0
         version: 8.19.0
@@ -89,9 +86,6 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.2.8(react@19.2.8)
-      roughjs:
-        specifier: ^4.6.6
-        version: 4.6.6
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -110,13 +104,13 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
         specifier: ^4.6.0
-        version: 4.7.0(vite@7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.7.0(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
       vite:
         specifier: ^7.0.4
-        version: 7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
+        version: 7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
 
   packages/core-bus:
     dependencies:
@@ -183,9 +177,6 @@ importers:
       poisson-disk-sampling:
         specifier: ^2.3.1
         version: 2.3.1
-      polygon-clipping:
-        specifier: ^0.15.7
-        version: 0.15.7
       simplex-noise:
         specifier: ^4.0.3
         version: 4.0.3
@@ -1317,9 +1308,6 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  hachure-fill@0.5.2:
-    resolution: {integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==}
-
   husky@9.1.7:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
     engines: {node: '>=18'}
@@ -1581,9 +1569,6 @@ packages:
   parse-svg-path@0.2.0:
     resolution: {integrity: sha512-Tf7FFIrguPKQwzD4pWnYkR2VOv3raoHeKED80Bm+BYHI3KxC8KsgsGC5+fSMzAGDA6UEk4bHvmi+RsjmL3khpg==}
 
-  path-data-parser@0.1.0:
-    resolution: {integrity: sha512-NOnmBpt5Y2RWbuv0LMzsayp3lVylAHLPUTut412ZA3l+C4uw4ZVkQbjShYCQ8TCpUMdPapr4YjUqLYD6v68j+w==}
-
   path-exists@5.0.0:
     resolution: {integrity: sha512-RjhtfwJOxzcFmNOi6ltcbcu4Iu+FL3zEj83dk4kAS+fVpTxXLO1b38RvJgT/0QwvV/L3aY9TAnyv0EOqW4GoMQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -1602,25 +1587,11 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  pixi-viewport@6.0.3:
-    resolution: {integrity: sha512-2+qPJ0/n+8hQYhWvY+795+x9y3MiUrCOWacK0DY53whowWaGdx9iDocy7z1pBwjkZhC52YvrJQuZKK0sdVLtBw==}
-    peerDependencies:
-      pixi.js: '>=8'
-
   pixi.js@8.19.0:
     resolution: {integrity: sha512-pq1O6emA/GFjjeF+8d3Pb5t7knD8FsnfWGqQcRjYjsqFZ7QdzG1XgjLDUu0DFJRbafjV5+g8iNLFBx0b9649lg==}
 
-  points-on-curve@0.2.0:
-    resolution: {integrity: sha512-0mYKnYYe9ZcqMCWhUjItv/oHjvgEsfKvnUTg8sAtnHr3GVy7rGkXCb6d5cSyqrWqL4k81b9CPg3urd+T7aop3A==}
-
-  points-on-path@0.2.1:
-    resolution: {integrity: sha512-25ClnWWuw7JbWZcgqY/gJ4FQWadKxGWk+3kR/7kD0tCaDtPPMj7oHu2ToLaVhfpnHrZzYby2w6tUA0eOIuUg8g==}
-
   poisson-disk-sampling@2.3.1:
     resolution: {integrity: sha512-O3TzHR8IA+Do5zC7EgPdHLOYOpUJ6DikiTwqRqXdSPUhx1ZqfeH6PqAD86KKi+8Nq8vnL2navErsgURKTe089w==}
-
-  polygon-clipping@0.15.7:
-    resolution: {integrity: sha512-nhfdr83ECBg6xtqOAJab1tbksbBAOMUltN60bU+llHVOL0e5Onm1WpAXXWXVB39L8AJFssoIhEVuy/S90MmotA==}
 
   polygon-offset@0.3.2:
     resolution: {integrity: sha512-+EqcQ6aITqEzgTFiLTPdeYRJq/JiV2eJFxBPI6sKgULz4x7UPNPKcCQb8YvXp1lMPeeBK+qqLTI8AbYy9W2CUg==}
@@ -1673,9 +1644,6 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  roughjs@4.6.6:
-    resolution: {integrity: sha512-ZUz/69+SYpFN/g/lUlo2FXcIjRkSu3nDarreVdGGndHEBJ6cXPdKguS8JGxwj5HA5xIbVKSmLgr5b3AWxtRfvQ==}
-
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
@@ -1709,10 +1677,6 @@ packages:
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
-
-  splaytree@3.2.3:
-    resolution: {integrity: sha512-7OXrNWzy6CK+r7Ch9OLPBDTKfB6XlWHjX4P0RU5B3IgFuWPeYN0XtRtlexGRjgbQxpfaUve6jTAwBGWuGntz/w==}
-    engines: {node: '>=18.20 || >=20'}
 
   split2@4.2.0:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
@@ -2452,12 +2416,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.3
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.3
 
-  '@tailwindcss/vite@4.3.3(vite@7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.3(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
       tailwindcss: 4.3.3
-      vite: 7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
 
   '@tauri-apps/api@2.11.1': {}
 
@@ -2570,7 +2534,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@vitejs/plugin-react@4.7.0(vite@7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@vitejs/plugin-react@4.7.0(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -2578,7 +2542,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -2878,8 +2842,6 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  hachure-fill@0.5.2: {}
-
   husky@9.1.7: {}
 
   import-fresh@3.3.1:
@@ -3084,8 +3046,6 @@ snapshots:
 
   parse-svg-path@0.2.0: {}
 
-  path-data-parser@0.1.0: {}
-
   path-exists@5.0.0: {}
 
   pathe@2.0.3: {}
@@ -3095,10 +3055,6 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.5: {}
-
-  pixi-viewport@6.0.3(pixi.js@8.19.0):
-    dependencies:
-      pixi.js: 8.19.0
 
   pixi.js@8.19.0:
     dependencies:
@@ -3113,21 +3069,9 @@ snapshots:
       parse-svg-path: 0.2.0
       tiny-lru: 11.4.7
 
-  points-on-curve@0.2.0: {}
-
-  points-on-path@0.2.1:
-    dependencies:
-      path-data-parser: 0.1.0
-      points-on-curve: 0.2.0
-
   poisson-disk-sampling@2.3.1:
     dependencies:
       moore: 1.0.0
-
-  polygon-clipping@0.15.7:
-    dependencies:
-      robust-predicates: 3.0.3
-      splaytree: 3.2.3
 
   polygon-offset@0.3.2:
     dependencies:
@@ -3196,13 +3140,6 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.62.3
       fsevents: 2.3.3
 
-  roughjs@4.6.6:
-    dependencies:
-      hachure-fill: 0.5.2
-      path-data-parser: 0.1.0
-      points-on-curve: 0.2.0
-      points-on-path: 0.2.1
-
   scheduler@0.27.0: {}
 
   semver@6.3.1: {}
@@ -3226,8 +3163,6 @@ snapshots:
       is-fullwidth-code-point: 5.1.0
 
   source-map-js@1.2.1: {}
-
-  splaytree@3.2.3: {}
 
   split2@4.2.0: {}
 
@@ -3331,21 +3266,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-
-  vite@7.3.6(@types/node@26.1.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0):
-    dependencies:
-      esbuild: 0.28.1
-      fdir: 6.5.0(picomatch@4.0.5)
-      picomatch: 4.0.5
-      postcss: 8.5.23
-      rollup: 4.62.3
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      '@types/node': 26.1.2
-      fsevents: 2.3.3
-      jiti: 2.6.1
-      lightningcss: 1.32.0
-      yaml: 2.9.0
 
   vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0):
     dependencies:
