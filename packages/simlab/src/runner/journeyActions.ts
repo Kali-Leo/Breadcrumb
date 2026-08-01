@@ -4,29 +4,26 @@
  * experience coherent"), self-report old knowledge, create a goal from its targetConcepts,
  * revisit an old topic, or jump to an unrelated domain. Each action either seeds the next
  * conversation's topic, exercises a real LLM pipeline and persists its result, or both.
- * Main exports: pickAndApplyJourneyAction, JourneyActionType, JourneyActionResult.
+ * Self-report and create-goal are split into their own modules (selfReportAction.ts,
+ * createGoalAction.ts) to stay under the file-size ceiling; shared types live in
+ * journeyActionTypes.ts.
+ * Main exports: pickAndApplyJourneyAction, JourneyActionType, JourneyActionResult,
+ * JourneyActionContext, resolvePendingSelfReportTopics (re-exported for journey.ts's day-end
+ * retry).
  */
-import { randomUUID } from "node:crypto";
-import { chatJson, type LlmClientConfig, type TokenUsage } from "@breadcrumb/core-llm";
-import { buildSelfReportMessages, selfReportMappingSchema } from "@breadcrumb/plugin-interest";
-import { buildGoalMappingMessages, goalMappingSchema } from "@breadcrumb/plugin-planner";
-import type { SimlabRepos } from "../db/repos";
-import type { Persona } from "../persona/schema";
 import { pickWeighted } from "../util/prng";
+import { applyCreateGoal } from "./createGoalAction";
+import type {
+  JourneyActionContext,
+  JourneyActionResult,
+  JourneyActionType,
+} from "./journeyActionTypes";
 import { computePlannerSnapshot } from "./plannerSnapshot";
+import { applySelfReport, resolvePendingSelfReportTopics } from "./selfReportAction";
 import type { TopicHint } from "./student";
 
-export type JourneyActionType =
-  | "follow-frontier"
-  | "self-report"
-  | "create-goal"
-  | "revisit-old-topic"
-  | "jump-new-domain";
-
-export interface JourneyActionResult {
-  actionType: JourneyActionType;
-  topicHint: TopicHint;
-}
+export type { JourneyActionContext, JourneyActionResult, JourneyActionType };
+export { resolvePendingSelfReportTopics };
 
 /** Default weights (tunable, not spec-mandated exact numbers) — follow-frontier gets the
  * largest share since closing the recommendation loop is the journey model's core realism
@@ -38,51 +35,6 @@ const ACTION_WEIGHTS: { item: JourneyActionType; weight: number }[] = [
   { item: "revisit-old-topic", weight: 0.2 },
   { item: "jump-new-domain", weight: 0.15 },
 ];
-
-export interface JourneyActionContext {
-  repos: SimlabRepos;
-  persona: Persona;
-  llmConfig: LlmClientConfig;
-  nowIso: string;
-  random: () => number;
-  recordCall: (purpose: string, model: string, usage: TokenUsage) => void;
-  recordFailure?: (purpose: string) => void;
-  logStage: (record: Record<string, unknown>) => void;
-  touchedLabelsSoFar: readonly string[];
-  /** Self-reported knownTopics that had no matching tree node yet (mutated in place — same
-   * Set instance threaded across the whole journey, see resolvePendingSelfReportTopics). */
-  pendingSelfReportTopics: Set<string>;
-}
-
-/** Retries every pending self-reported topic against the tree's current labels — a topic
- * queued because its concept hadn't been created yet may match now that a later conversation
- * extracted it. Called both at the top of applySelfReport (so a subsequent self-report action
- * naturally retries) and once at day end (so a persona that never self-reports again still
- * gets a same-day chance once its topics enter the tree). Resolved topics are removed from
- * `pending` and reported via `onResolved` for the journey log. */
-export async function resolvePendingSelfReportTopics(
-  pending: Set<string>,
-  repos: SimlabRepos,
-  nowIso: string,
-  onResolved: (label: string) => void,
-): Promise<void> {
-  if (pending.size === 0) return;
-  const allNodes = await repos.knowledgeNodes.listAll();
-  const nodeIdByLabel = new Map(allNodes.map((node) => [node.label, node.id]));
-  for (const topic of pending) {
-    const nodeId = nodeIdByLabel.get(topic);
-    if (nodeId === undefined) continue;
-    await repos.masteryClaims.insert({
-      id: randomUUID(),
-      node_id: nodeId,
-      level: "learned",
-      source: "self-report",
-      created_at: nowIso,
-    });
-    pending.delete(topic);
-    onResolved(topic);
-  }
-}
 
 export async function pickAndApplyJourneyAction(
   ctx: JourneyActionContext,
@@ -128,124 +80,6 @@ async function applyFollowFrontier(ctx: JourneyActionContext): Promise<TopicHint
   return top === undefined
     ? { label: null, isDomainJump: false }
     : { label: top.label, isDomainJump: false };
-}
-
-async function applySelfReport(ctx: JourneyActionContext): Promise<TopicHint> {
-  const { repos, persona, llmConfig } = ctx;
-  if (persona.knowledge.knownTopics.length === 0) return { label: null, isDomainJump: false };
-
-  // Retry anything queued from an earlier self-report first — the node backing it may have
-  // been created by a conversation since then (S4 requeue).
-  await resolvePendingSelfReportTopics(ctx.pendingSelfReportTopics, repos, ctx.nowIso, (label) =>
-    ctx.logStage({ event: "self-report-pending-resolved", label }),
-  );
-
-  const allNodes = await repos.knowledgeNodes.listAll();
-  if (allNodes.length === 0) {
-    // Nothing in the tree yet to plausibly match against — the whole brief is premature.
-    for (const topic of persona.knowledge.knownTopics) ctx.pendingSelfReportTopics.add(topic);
-    return { label: null, isDomainJump: false };
-  }
-
-  const userText = `我以前学过：${persona.knowledge.knownTopics.join("、")}`;
-  const existingLabels = allNodes.map((node) => node.label);
-  try {
-    const { parsed, usage } = await chatJson(
-      llmConfig,
-      buildSelfReportMessages(userText, existingLabels),
-      selfReportMappingSchema,
-    );
-    ctx.recordCall("self-report-mapping", llmConfig.model, usage);
-    ctx.logStage({ purpose: "self-report-mapping", request: userText, response: parsed });
-
-    const nodeIdByLabel = new Map(allNodes.map((node) => [node.label, node.id]));
-    for (const mapping of parsed.mappings) {
-      const nodeId = nodeIdByLabel.get(mapping.label);
-      if (nodeId === undefined) continue;
-      await repos.masteryClaims.insert({
-        id: randomUUID(),
-        node_id: nodeId,
-        level: mapping.claimLevel,
-        source: "self-report",
-        created_at: ctx.nowIso,
-      });
-    }
-
-    // The persona's own knownTopics that don't (yet) correspond to any existing tree node
-    // can never have been in the LLM's candidate list — not a model miss, just premature
-    // timing. Queue them instead of losing the signal for good.
-    for (const topic of persona.knowledge.knownTopics) {
-      if (!nodeIdByLabel.has(topic)) ctx.pendingSelfReportTopics.add(topic);
-    }
-  } catch (error) {
-    ctx.recordFailure?.("self-report-mapping");
-    ctx.logStage({
-      purpose: "self-report-mapping",
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-  return { label: null, isDomainJump: false };
-}
-
-async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicHint> {
-  const { repos, persona, llmConfig } = ctx;
-  const allNodes = await repos.knowledgeNodes.listAll();
-  const goalText = `学会：${persona.knowledge.targetConcepts.join("、")}`;
-  try {
-    const { parsed, usage } = await chatJson(
-      llmConfig,
-      buildGoalMappingMessages(
-        goalText,
-        allNodes.map((node) => node.label),
-      ),
-      goalMappingSchema,
-    );
-    ctx.recordCall("goal-planning", llmConfig.model, usage);
-    ctx.logStage({ purpose: "goal-planning", request: goalText, response: parsed });
-
-    const labelToId = new Map(allNodes.map((node) => [node.label, node.id]));
-    const suggestedIds: string[] = [];
-    for (const suggested of parsed.suggested) {
-      if (labelToId.has(suggested.label)) continue; // avoid inserting a duplicate label
-      const id = randomUUID();
-      await repos.knowledgeNodes.insert({
-        id,
-        parent_id: null,
-        label: suggested.label,
-        summary: suggested.summary,
-        kind: "concept",
-        created_at: ctx.nowIso,
-      });
-      suggestedIds.push(id);
-      labelToId.set(suggested.label, id);
-    }
-    const existingIds = parsed.existing
-      .map((label) => labelToId.get(label))
-      .filter((id): id is string => id !== undefined);
-    const nodeIds = [...existingIds, ...suggestedIds];
-    const trimmedTitle = goalText.trim();
-    const existingGoals = await repos.goals.listAll();
-    const duplicateGoal = existingGoals.find((goal) => goal.title.trim() === trimmedTitle);
-    if (duplicateGoal !== undefined) {
-      // Idempotent on title: refresh the existing goal instead of inserting a duplicate card.
-      await repos.goals.updateNodeIds(duplicateGoal.id, nodeIds, ctx.nowIso);
-    } else {
-      await repos.goals.insert({
-        id: randomUUID(),
-        title: trimmedTitle,
-        node_ids_json: JSON.stringify(nodeIds),
-        created_at: ctx.nowIso,
-        updated_at: ctx.nowIso,
-      });
-    }
-  } catch (error) {
-    ctx.recordFailure?.("goal-planning");
-    ctx.logStage({
-      purpose: "goal-planning",
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-  return { label: null, isDomainJump: false };
 }
 
 function applyRevisitOldTopic(ctx: JourneyActionContext): TopicHint {

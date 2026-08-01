@@ -13,6 +13,7 @@ import { findPressureLexiconHits } from "../judges/pressureLexicon";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import type { JourneyLogWriter } from "./artifacts";
+import { logTopicHintMismatchIfAny, withEmptyRetry } from "./conversationGuards";
 import type { CostGuard } from "./costGuard";
 import { runRoundPipeline } from "./pipeline";
 import type { PipelineFailure } from "./pipelineTypes";
@@ -23,33 +24,6 @@ import { getTutorReply } from "./tutor";
 export const ROUND_STEP_MS = 60_000;
 
 export type ConversationStopReason = "stop-token" | "max-rounds" | "degenerate-turn";
-
-/** Retries a fallible reply call exactly once when its content trims to empty (a model
- * quirk, not a real silent turn); returns whatever the (possibly still-empty) retry got. */
-async function withEmptyRetry<T extends { content: string }>(fn: () => Promise<T>): Promise<T> {
-  const first = await fn();
-  if (first.content.trim() !== "") return first;
-  return fn();
-}
-
-/** A concrete labeled hint (follow-frontier/revisit-old-topic — not a domain jump) is a
- * *nudge*, not a guarantee: the student model may still open on something else. Logs a
- * soft mismatch event rather than failing the round, so the pipeline metrics can surface
- * "action decision vs. actual opener" coherence without gating the run on it. */
-function logTopicHintMismatchIfAny(
-  log: JourneyLogWriter,
-  topicHint: TopicHint | undefined,
-  studentOpenerContent: string,
-  context: { day: number; conversationId: string; round: number },
-): void {
-  if (topicHint === undefined || topicHint.isDomainJump || topicHint.label === null) return;
-  if (studentOpenerContent.includes(topicHint.label)) return;
-  log.writeLine({
-    event: "topic-hint-mismatch",
-    ...context,
-    expectedLabel: topicHint.label,
-  });
-}
 
 export interface ConversationOptions {
   repos: SimlabRepos;

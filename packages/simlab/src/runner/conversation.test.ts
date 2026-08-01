@@ -5,10 +5,11 @@
  * call, no message persisted for that side).
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { createTempDatabase, type TempDatabase } from "../db/sqliteClient";
+import type { TempDatabase } from "../db/sqliteClient";
 import { SEED_PERSONAS } from "../persona/seeds";
 import { STOP_TOKEN } from "../persona/studentPrompt";
 import { runConversation } from "./conversation";
+import { jsonCompletion, makeLog, setupConversation, sseFor } from "./conversationTestHelpers";
 import { createCostGuard } from "./costGuard";
 
 let temp: TempDatabase | null = null;
@@ -20,53 +21,6 @@ afterEach(() => {
 
 const persona = SEED_PERSONAS[0];
 if (persona === undefined) throw new Error("no seed persona");
-
-function sseFor(content: string): Response {
-  const encoder = new TextEncoder();
-  const body = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(
-        encoder.encode(`data: {"choices":[{"delta":{"content":${JSON.stringify(content)}}}]}\n`),
-      );
-      controller.enqueue(encoder.encode("data: [DONE]\n"));
-      controller.close();
-    },
-  });
-  return new Response(body, { status: 200 });
-}
-
-function jsonCompletion(content: unknown): Response {
-  return Response.json({
-    choices: [{ message: { content: JSON.stringify(content) } }],
-    usage: { prompt_tokens: 10, completion_tokens: 5 },
-  });
-}
-
-function makeLog(): {
-  path: string;
-  writeLine: (record: unknown) => void;
-  records: Record<string, unknown>[];
-} {
-  const records: Record<string, unknown>[] = [];
-  return {
-    path: "/dev/null",
-    writeLine: (record) => records.push(record as Record<string, unknown>),
-    records,
-  };
-}
-
-async function setupConversation(): Promise<{ temp: TempDatabase; conversationId: string }> {
-  const db = await createTempDatabase();
-  const now = "2026-08-01T10:00:00.000Z";
-  const conversationId = "conv-1";
-  await db.repos.conversations.create({
-    id: conversationId,
-    title: "t",
-    created_at: now,
-    updated_at: now,
-  });
-  return { temp: db, conversationId };
-}
 
 describe("runConversation empty-turn guard", () => {
   it("retries a student reply once when empty, and proceeds normally once non-empty", async () => {
@@ -198,64 +152,5 @@ describe("runConversation empty-turn guard", () => {
     const messages = await setup.temp.repos.messages.listByConversation(setup.conversationId);
     expect(messages).toHaveLength(1);
     expect(messages[0]?.role).toBe("user");
-  });
-});
-
-describe("runConversation topic-hint binding (S3)", () => {
-  it("logs no mismatch when the student opener actually mentions the follow-frontier label", async () => {
-    const setup = await setupConversation();
-    temp = setup.temp;
-    const fetchImpl = (async (_url, init) => {
-      const body = JSON.parse(String(init?.body)) as { stream?: boolean };
-      if (body.stream === true) return sseFor(STOP_TOKEN);
-      return jsonCompletion({ nodes: [] });
-    }) as typeof fetch;
-
-    const log = makeLog();
-    await runConversation({
-      repos: setup.temp.repos,
-      conversationId: setup.conversationId,
-      persona,
-      llmConfig: { baseUrl: "https://api.example.com/v1", apiKey: "k", model: "m", fetchImpl },
-      costGuard: createCostGuard(1000),
-      log,
-      day: 0,
-      maxRounds: 1,
-      startIso: "2026-08-01T10:00:00.000Z",
-      // Using the STOP token as the "hinted label" is a deliberate shortcut: the opener
-      // exactly equals it, so it trivially satisfies the mention check while letting the
-      // round end immediately (no need to also stub the tutor/pipeline for this case).
-      topicHint: { label: STOP_TOKEN, isDomainJump: false },
-    });
-
-    expect(log.records.some((r) => r.event === "topic-hint-mismatch")).toBe(false);
-  });
-
-  it("logs a topic-hint-mismatch event when the student opener never mentions the hinted label", async () => {
-    const setup = await setupConversation();
-    temp = setup.temp;
-    const fetchImpl = (async (_url, init) => {
-      const body = JSON.parse(String(init?.body)) as { stream?: boolean };
-      if (body.stream === true) return sseFor("完全不相关的开场白");
-      return jsonCompletion({ nodes: [] });
-    }) as typeof fetch;
-
-    const log = makeLog();
-    await runConversation({
-      repos: setup.temp.repos,
-      conversationId: setup.conversationId,
-      persona,
-      llmConfig: { baseUrl: "https://api.example.com/v1", apiKey: "k", model: "m", fetchImpl },
-      costGuard: createCostGuard(1000),
-      log,
-      day: 0,
-      maxRounds: 1,
-      startIso: "2026-08-01T10:00:00.000Z",
-      topicHint: { label: "贝叶斯定理", isDomainJump: false },
-    });
-
-    const mismatches = log.records.filter((r) => r.event === "topic-hint-mismatch");
-    expect(mismatches).toHaveLength(1);
-    expect(mismatches[0]?.expectedLabel).toBe("贝叶斯定理");
   });
 });

@@ -15,16 +15,15 @@ import {
 } from "@breadcrumb/plugin-interest";
 import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
-  coverage,
   type FrontierCandidate,
   frontier,
   type GapAndPathResult,
   type GoalMappingResult,
-  gapAndPath,
   type SuggestedGoalNode,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { computeGapForGoal } from "../lib/plannerGapActions";
 import { persistCalibratedGoal, requestGoalMapping } from "../lib/plannerGoalActions";
 import { nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
@@ -55,28 +54,6 @@ interface PlannerState {
     existingLabels: readonly string[],
     suggested: readonly SuggestedGoalNode[],
   ): Promise<void>;
-}
-
-function computeGapForGoal(
-  goal: GoalRow | null,
-  nodes: readonly KnowledgeNodeRow[],
-  edges: readonly KnowledgeEdgeRow[],
-  masteryByNode: ReadonlyMap<string, number>,
-  interestByNode: ReadonlyMap<string, number>,
-): { gap: GapAndPathResult | null; coverageFraction: number | null } {
-  if (goal === null) return { gap: null, coverageFraction: null };
-  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-  return {
-    gap: gapAndPath({
-      nodes,
-      edges,
-      masteryByNode,
-      interestByNode,
-      goalNodeIds,
-      litThreshold: LIT_THRESHOLD,
-    }),
-    coverageFraction: coverage(goalNodeIds, masteryByNode, LIT_THRESHOLD),
-  };
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
