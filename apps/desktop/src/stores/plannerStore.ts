@@ -186,7 +186,16 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   },
 }));
 
-appEventBus.on("knowledge:edgesUpdated", () => void usePlannerStore.getState().recompute());
-appEventBus.on("interest:updated", () => void usePlannerStore.getState().recompute());
-appEventBus.on("mastery:updated", () => void usePlannerStore.getState().recompute());
-appEventBus.on("knowledge:nodesExtracted", () => void usePlannerStore.getState().recompute());
+/** Recompute is best-effort background work: a failure must warn, never surface as an
+ * unhandled rejection (the app-wide dev black box would show it as a crash). */
+function recomputeSafely(): void {
+  usePlannerStore
+    .getState()
+    .recompute()
+    .catch((error: unknown) => console.warn("planner recompute skipped:", error));
+}
+
+appEventBus.on("knowledge:edgesUpdated", recomputeSafely);
+appEventBus.on("interest:updated", recomputeSafely);
+appEventBus.on("mastery:updated", recomputeSafely);
+appEventBus.on("knowledge:nodesExtracted", recomputeSafely);

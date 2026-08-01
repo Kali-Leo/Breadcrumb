@@ -56,7 +56,12 @@ export function LabPanel() {
   const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
 
   useEffect(() => {
-    if (labPanelEnabled) void usePlannerStore.getState().recompute();
+    if (labPanelEnabled) {
+      usePlannerStore
+        .getState()
+        .recompute()
+        .catch((error: unknown) => console.warn("planner recompute skipped:", error));
+    }
   }, [labPanelEnabled]);
 
   if (!labPanelEnabled) {
