@@ -121,10 +121,11 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
           ]
         : store.sessionNodeIds,
     });
-    if (plan.newNodes.length > 0) {
+    if (plan.sightings.length > 0 || plan.newNodes.length > 0) {
       appEventBus.emit("knowledge:nodesExtracted", {
         conversationId,
         freshNodeIds: plan.newNodes.map((node) => node.id),
+        touchedNodeIds: plan.sightings.map((sighting) => sighting.node_id),
       });
     }
   } catch (error) {
