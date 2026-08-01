@@ -4,7 +4,7 @@
  */
 import type { NodeSightingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { computeNodeRetention, computeRetentionByNode } from "./index";
+import { computeNodeRetention, computeRetentionByNode } from "./retention";
 
 const NOW = "2026-07-29T12:00:00Z";
 
