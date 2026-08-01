@@ -1,0 +1,48 @@
+/**
+ * Purpose: the goal-mapping LLM contract — prompt construction and Zod schema for turning a
+ * free-text learning goal (e.g. "通过考研数学") into a subset of existing tree node labels
+ * plus new concept-node suggestions the tree doesn't have yet, clearly separated so the lab
+ * panel can render a checkbox calibration step before anything is created.
+ * Main exports: goalMappingSchema, buildGoalMappingMessages, GoalMappingResult, SuggestedGoalNode.
+ */
+import type { ChatMessage } from "@breadcrumb/core-llm";
+import { z } from "zod";
+
+export const goalMappingSchema = z.object({
+  /** Must exactly match a subset of the given existing node labels. */
+  existing: z.array(z.string().min(1)).max(30),
+  suggested: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(40),
+        summary: z.string().min(1).max(200),
+      }),
+    )
+    .max(15),
+});
+
+export type GoalMappingResult = z.infer<typeof goalMappingSchema>;
+export type SuggestedGoalNode = GoalMappingResult["suggested"][number];
+
+const SYSTEM_PROMPT = `你是一个学习目标拆解器。学习者会用自然语言描述一个学习目标（如"通过考研数学"），
+你需要判断达成这个目标大致需要哪些知识点，以 JSON 返回：
+{"existing":["已有知识点列表中原样匹配的节点名"],"suggested":[{"label":"目标需要但树里还没有的知识点短名","summary":"这个知识点是什么(一句话)"}]}
+规则：
+- existing 的每一项必须完全等于「已有知识点列表」中的一个原名，绝不允许发明不存在的节点名
+- suggested 是目标需要、但已有知识点列表里确实没有的概念，最多 15 个，宁缺毋滥——不确定、可有可无的不要列
+- existing 与 suggested 合起来应当大致覆盖达成这个目标所需的知识范围，但不必穷尽细节
+- 若已有知识点已完全覆盖目标，suggested 返回空数组；若完全是全新领域，existing 可以为空数组`;
+
+export function buildGoalMappingMessages(
+  goalText: string,
+  existingNodeLabels: readonly string[],
+): ChatMessage[] {
+  const listText =
+    existingNodeLabels.length === 0
+      ? "（空树）"
+      : existingNodeLabels.map((label) => `- ${label}`).join("\n");
+  return [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: `已有知识点列表：\n${listText}\n\n学习目标：\n${goalText}` },
+  ];
+}
