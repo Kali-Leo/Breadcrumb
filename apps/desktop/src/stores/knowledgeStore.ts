@@ -14,6 +14,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { embedNodes } from "../lib/embeddings";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
@@ -102,6 +103,8 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
     for (const sighting of plan.sightings) {
       await repos.nodeSightings.record(sighting);
     }
+    // Local, zero-cost, and best-effort: powers edge-candidate ranking later, never blocks chat.
+    await embedNodes(plan.newNodes);
 
     const store = useKnowledgeStore.getState();
     const isViewingThisConversation =

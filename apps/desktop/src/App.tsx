@@ -11,6 +11,7 @@ import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
+import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { useChatStore } from "./stores/chatStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -29,6 +30,8 @@ export default function App() {
       await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();
       await useTrailStore.getState().ensureYesterdaySummary();
+      // Fire-and-forget: catches up any node missing its embedding without blocking the UI.
+      void backfillMissingEmbeddings();
     })();
   }, []);
 
