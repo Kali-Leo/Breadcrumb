@@ -42,12 +42,17 @@ export async function computePlannerSnapshot(
   );
   const interestByNode = spreadInterest(curiosityByNode, embeddings, DEFAULT_SPREAD_FACTOR);
 
+  const previouslyLitNodeIds = new Set<string>([
+    ...sightings.map((sighting) => sighting.node_id),
+    ...claims.map((claim) => claim.node_id),
+  ]);
   const frontierCandidates = frontier({
     nodes,
     edges,
     masteryByNode,
     interestByNode,
     litThreshold: LIT_THRESHOLD,
+    previouslyLitNodeIds,
   });
 
   return { nodes, edges, masteryByNode, interestByNode, frontierCandidates };

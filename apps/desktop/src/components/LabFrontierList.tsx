@@ -20,7 +20,14 @@ export function LabFrontierList() {
           {candidates.map((candidate) => (
             <li key={candidate.nodeId} className="rounded border border-stone-200 px-2 py-1">
               <div className="flex items-center justify-between">
-                <span className="font-medium">{candidate.label}</span>
+                <span className="flex items-center gap-1 font-medium">
+                  {candidate.label}
+                  {candidate.reason.wasLitBefore && (
+                    <span className="rounded bg-stone-100 px-1 text-stone-500 text-xs">
+                      重逢 · 以前学过，最近有点生疏
+                    </span>
+                  )}
+                </span>
                 <span className="text-stone-400">点亮分 {candidate.score.toFixed(2)}</span>
               </div>
               {candidate.reason.litPrerequisiteLabels.length > 0 && (

@@ -97,8 +97,10 @@ export async function computeDayDigest(
 function describeFrontierReason(reason: {
   litPrerequisiteLabels: string[];
   litHelpsSources: { label: string; weight: number }[];
+  wasLitBefore: boolean;
 }): string {
   const parts: string[] = [];
+  if (reason.wasLitBefore) parts.push("重逢（以前学过，最近有点生疏）");
   if (reason.litPrerequisiteLabels.length > 0)
     parts.push(`前置已点亮：${reason.litPrerequisiteLabels.join("、")}`);
   if (reason.litHelpsSources.length > 0) {

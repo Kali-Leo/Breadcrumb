@@ -78,12 +78,14 @@ describe("frontier (property)", () => {
         fc.array(candidateEdgeArb, { minLength: 0, maxLength: 25 }),
         masteryVectorArb,
         masteryVectorArb,
-        (candidates, masteryVector, interestVector) => {
+        fc.subarray<string>([...NODE_IDS]),
+        (candidates, masteryVector, interestVector, previouslyLit) => {
           const edges = buildEdges(candidates);
           const nodes = NODE_IDS.map((id) => node(id));
           const masteryByNode = toMasteryMap(masteryVector);
           const interestByNode = toMasteryMap(interestVector);
           const isLit = (id: string) => (masteryByNode.get(id) ?? 0) >= LIT_THRESHOLD;
+          const previouslyLitNodeIds = new Set(previouslyLit);
 
           const candidatesOut = frontier({
             nodes,
@@ -91,10 +93,12 @@ describe("frontier (property)", () => {
             masteryByNode,
             interestByNode,
             litThreshold: LIT_THRESHOLD,
+            previouslyLitNodeIds,
           });
           for (const candidate of candidatesOut) {
             const prereqIds = incomingNeighbors(edges, candidate.nodeId, "requires");
             expect(prereqIds.every(isLit)).toBe(true);
+            expect(candidate.reason.wasLitBefore).toBe(previouslyLitNodeIds.has(candidate.nodeId));
           }
         },
       ),

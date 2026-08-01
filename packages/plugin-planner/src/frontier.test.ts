@@ -63,6 +63,7 @@ describe("frontier", () => {
       masteryByNode,
       interestByNode: new Map(),
       litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
     });
     expect(result.map((c) => c.nodeId)).not.toContain("c");
   });
@@ -75,6 +76,7 @@ describe("frontier", () => {
       masteryByNode: new Map(),
       interestByNode: new Map(),
       litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
     });
     expect(result.map((c) => c.nodeId)).toEqual(["d"]);
   });
@@ -88,6 +90,7 @@ describe("frontier", () => {
       masteryByNode,
       interestByNode: new Map(),
       litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
     });
     expect(result).toEqual([]);
   });
@@ -100,7 +103,14 @@ describe("frontier", () => {
       ["b", 0.3],
     ]);
     const interestByNode = new Map([["b", 0.2]]);
-    const result = frontier({ nodes, edges, masteryByNode, interestByNode, litThreshold: LIT });
+    const result = frontier({
+      nodes,
+      edges,
+      masteryByNode,
+      interestByNode,
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
 
     expect(result).toHaveLength(1);
     const candidate = result[0];
@@ -109,6 +119,33 @@ describe("frontier", () => {
     expect(candidate?.score).toBeCloseTo(-0.1);
     expect(candidate?.reason.litPrerequisiteLabels).toEqual(["Alpha"]);
     expect(candidate?.reason.litHelpsSources).toEqual([{ label: "Alpha", weight: 0.7 }]);
+    expect(candidate?.reason.wasLitBefore).toBe(false);
+  });
+
+  it("marks wasLitBefore true for a decayed-back-under-threshold node with prior evidence", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map([["a", 0.2]]),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(["a"]),
+    });
+    expect(result[0]?.reason.wasLitBefore).toBe(true);
+  });
+
+  it("marks wasLitBefore false for a node with no prior sighting/claim evidence", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map([["a", 0.2]]),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
+    expect(result[0]?.reason.wasLitBefore).toBe(false);
   });
 
   it("does not count a helps source that isn't lit yet", () => {
@@ -124,6 +161,7 @@ describe("frontier", () => {
       masteryByNode,
       interestByNode: new Map(),
       litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
     });
     expect(result[0]?.reason.litHelpsSources).toEqual([]);
     expect(result[0]?.score).toBe(0);
@@ -142,6 +180,7 @@ describe("frontier", () => {
       masteryByNode: new Map(),
       interestByNode,
       litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
     });
     expect(result.map((c) => c.nodeId)).toEqual(["f", "d", "e"]);
   });

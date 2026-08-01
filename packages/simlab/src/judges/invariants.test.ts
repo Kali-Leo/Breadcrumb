@@ -97,7 +97,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       nodeId: "b",
       label: "B",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [] },
+      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
     };
     const violations = runInvariants({
       ...BASE,
@@ -116,7 +116,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       nodeId: "b",
       label: "B",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [] },
+      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
     };
     const violations = runInvariants({
       ...BASE,
@@ -134,7 +134,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       nodeId: "b",
       label: "B",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [] }, // no real requires edge exists
+      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false }, // no real requires edge exists
     };
     const violations = runInvariants({
       ...BASE,
