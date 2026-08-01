@@ -1,14 +1,11 @@
 /**
- * Purpose: right column with three tabs — 本次足迹 (this conversation's trail, walking
- * order), 我的知识树 (the user's whole tree, hierarchical) and 🧪 实验室 (spec 012's
- * temporary planner panel, labPanel-switch gated). Click any node to anchor.
+ * Purpose: right column with two tabs — 本次足迹 (this conversation's trail, walking
+ * order) and 我的知识树 (the user's whole tree, hierarchical). Click any node to anchor.
  * Main exports: KnowledgeTreePanel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { useState } from "react";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
-import { useSettingsStore } from "../stores/settingsStore";
-import { LabPanel } from "./LabPanel";
 
 interface TreeItem {
   node: KnowledgeNodeRow;
@@ -60,8 +57,7 @@ function NodeButton({ node, depth }: { node: KnowledgeNodeRow; depth: number }) 
 }
 
 export function KnowledgeTreePanel() {
-  const [view, setView] = useState<"trail" | "tree" | "lab">("trail");
-  const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
+  const [view, setView] = useState<"trail" | "tree">("trail");
   const nodes = useKnowledgeStore((state) => state.nodes);
   const sessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
 
@@ -76,11 +72,7 @@ export function KnowledgeTreePanel() {
     }`;
 
   return (
-    <aside
-      className={`flex h-full flex-col border-l border-stone-200 bg-white transition-[width] ${
-        view === "lab" ? "w-[28rem]" : "w-64"
-      }`}
-    >
+    <aside className="flex h-full w-64 flex-col border-l border-stone-200 bg-white">
       <div className="flex gap-1 border-b border-stone-100 p-2">
         <button
           type="button"
@@ -91,9 +83,6 @@ export function KnowledgeTreePanel() {
         </button>
         <button type="button" onClick={() => setView("tree")} className={tabClass(view === "tree")}>
           🧭 知识导航
-        </button>
-        <button type="button" onClick={() => setView("lab")} className={tabClass(view === "lab")}>
-          🧪 实验室
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
@@ -119,23 +108,11 @@ export function KnowledgeTreePanel() {
               <NodeButton key={node.id} node={node} depth={depth} />
             ))
           ))}
-        {view === "lab" &&
-          (labPanelEnabled ? (
-            <LabPanel />
-          ) : (
-            <p className="px-2 py-6 text-center text-xs leading-relaxed text-stone-400">
-              🧪 实验室面板还没打开
-              <br />
-              去设置里开启「实验室面板」开关就能看到啦
-            </p>
-          ))}
       </div>
-      {view !== "lab" && (
-        <p className="border-t border-stone-100 px-3 py-2 text-[11px] leading-relaxed text-stone-400">
-          💡 点击任意知识点可<span className="text-amber-600">锚定</span>
-          ，让接下来的对话围绕它展开
-        </p>
-      )}
+      <p className="border-t border-stone-100 px-3 py-2 text-[11px] leading-relaxed text-stone-400">
+        💡 点击任意知识点可<span className="text-amber-600">锚定</span>
+        ，让接下来的对话围绕它展开
+      </p>
     </aside>
   );
 }

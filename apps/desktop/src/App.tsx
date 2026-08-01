@@ -1,30 +1,29 @@
 /**
  * Purpose: application root — loads persisted state once, lays out the shell
- * (sidebar / chat or settings / knowledge navigation) plus the status bar.
+ * (sidebar / chat, settings, map or lab view / knowledge navigation) plus the status bar.
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
+import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { useChatStore } from "./stores/chatStore";
-// Side-effect only: registers edgeStore's staggered chat:responseFinished subscription.
-// No component reads useEdgeStore yet (display lands in spec 012's experiment panel).
+// Side-effect only: registers edgeStore's knowledge:nodesExtracted subscription.
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
-// No component reads useInterestStore yet (display lands in spec 012's experiment panel).
 import "./stores/interestStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "lab">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -56,11 +55,18 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col text-stone-800">
       <div className="flex min-h-0 flex-1">
-        <Sidebar onOpenSettings={() => setView("settings")} onOpenMap={() => setView("map")} />
+        <Sidebar
+          activeView={view}
+          onOpenChat={() => setView("chat")}
+          onOpenSettings={() => setView("settings")}
+          onOpenMap={() => setView("map")}
+          onOpenLab={() => setView("lab")}
+        />
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
+          {view === "lab" && <LabPanel />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>

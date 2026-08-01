@@ -1,8 +1,8 @@
 /**
- * Purpose: experimental lab panel (spec 012, 🧪 tab) — a temporary, deliberately unpolished
+ * Purpose: the 🧪 lab view (spec 012) — a temporary, deliberately unpolished full-page
  * surface for validating the planner: node value table, frontier recommendations, a
- * self-report entry point, and the goal/route comparison. Renders null unless the labPanel
- * feature switch is on.
+ * self-report entry point, and the goal/route comparison. It is the debug-grade face of
+ * the same engine the memory palace will eventually wear; sits beside it in the sidebar.
  * Main exports: LabPanel.
  */
 import { useEffect, useState } from "react";
@@ -59,14 +59,30 @@ export function LabPanel() {
     if (labPanelEnabled) void usePlannerStore.getState().recompute();
   }, [labPanelEnabled]);
 
-  if (!labPanelEnabled) return null;
+  if (!labPanelEnabled) {
+    return (
+      <div className="flex h-full items-center justify-center bg-stone-50">
+        <p className="text-center text-sm leading-relaxed text-stone-400">
+          🧪 实验室面板还没打开
+          <br />
+          去设置里开启「实验室面板」开关就能看到啦
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto p-3 text-xs">
-      <LabNodeTable />
-      <LabFrontierList />
-      <SelfReportInput />
-      <LabGoalSection />
+    <div className="h-full overflow-y-auto bg-stone-50">
+      <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4 text-xs">
+        <p className="text-[11px] text-stone-400">
+          🧪
+          实验室是知识网络引擎的临时调试界面，数据和交互都是原始形态；它验证过的能力最终会长进记忆宫殿里。
+        </p>
+        <LabNodeTable />
+        <LabFrontierList />
+        <SelfReportInput />
+        <LabGoalSection />
+      </div>
     </div>
   );
 }
