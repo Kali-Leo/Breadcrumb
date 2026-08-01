@@ -19,6 +19,16 @@ import {
   type SightedNode,
 } from "./pipelineTypes";
 
+/** Retries a fallible async call exactly once on failure (parse/network); rethrows the
+ * second failure so the caller's existing catch/degrade path still handles it. */
+async function retryOnce<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return await fn();
+  }
+}
+
 export async function runInterestStage(
   input: RoundPipelineInput,
   newNodes: readonly KnowledgeNodeRow[],
@@ -44,7 +54,9 @@ export async function runInterestStage(
     if (touchedNodes.length === 0) return;
 
     const messages = buildInterestMessages(touchedNodes, userQuestion, assistantAnswer);
-    const { parsed, usage } = await chatJson(llmConfig, messages, interestSignalsSchema);
+    const { parsed, usage } = await retryOnce(() =>
+      chatJson(llmConfig, messages, interestSignalsSchema),
+    );
     input.recordCall("interest", llmConfig.model, usage);
     input.logStage({ purpose: "interest", request: messages, response: parsed });
 

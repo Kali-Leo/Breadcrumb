@@ -21,6 +21,16 @@ import { newId, nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
+/** Retries a fallible async call exactly once on failure (parse/network); rethrows the
+ * second failure so callers keep their existing silent-degrade handling. */
+async function retryOnce<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return await fn();
+  }
+}
+
 interface InterestState {
   /** Node ids the most recent interest-extraction round wrote a signal for. */
   lastSignalNodeIds: string[];
@@ -112,10 +122,12 @@ async function extractInterestFromRound(
     if (touchedNodes.length === 0) return;
 
     const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
-    const { parsed, usage } = await chatJson(
-      config,
-      buildInterestMessages(touchedNodes, question.content, answer.content),
-      interestSignalsSchema,
+    const { parsed, usage } = await retryOnce(() =>
+      chatJson(
+        config,
+        buildInterestMessages(touchedNodes, question.content, answer.content),
+        interestSignalsSchema,
+      ),
     );
     await recordMeteredCall({ purpose: "interest", model: config.model, conversationId, usage });
 
