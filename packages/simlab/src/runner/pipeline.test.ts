@@ -50,7 +50,15 @@ function dispatchFetch(): typeof fetch {
                     reasoning: "闭包依赖作用域的概念",
                   },
                 ],
-                methodNodes: [],
+                methodNodes: [
+                  {
+                    label: "费曼技巧",
+                    summary: "用简单语言复述给自己听",
+                    helpsLabels: ["闭包"],
+                    weight: 0.8,
+                    confidence: 0.7,
+                  },
+                ],
               }),
             },
           },
@@ -127,17 +135,21 @@ describe("runRoundPipeline", () => {
       },
     });
 
-    expect(result.newNodes).toHaveLength(1);
-    expect(result.newNodes[0]?.label).toBe("闭包");
+    // newNodes includes both the tree-stage extraction ("闭包") and the edge judge's method
+    // node ("费曼技巧") — the latter is easy to undercount since it's inserted by a different
+    // stage (S5: newNodeLabelsToday/newNodeCount must not miss method nodes).
+    expect(result.newNodes).toHaveLength(2);
+    expect(result.newNodes.map((n) => n.label).sort()).toEqual(["费曼技巧", "闭包"]);
+    expect(result.newNodes.find((n) => n.label === "费曼技巧")?.kind).toBe("method");
     expect(result.failures).toEqual([]);
-    expect(result.addedEdges).toHaveLength(1);
-    expect(result.addedEdges[0]?.edge_type).toBe("helps");
+    expect(result.addedEdges).toHaveLength(2); // 闭包->作用域 (helps) + 费曼技巧->闭包 (helps)
+    expect(result.addedEdges.every((edge) => edge.edge_type === "helps")).toBe(true);
     expect(calls.map((c) => c.purpose)).toEqual(["knowledge-tree", "knowledge-edges", "interest"]);
 
     const persistedNodes = await temp.repos.knowledgeNodes.listAll();
-    expect(persistedNodes.map((n) => n.label).sort()).toEqual(["作用域", "闭包"]);
+    expect(persistedNodes.map((n) => n.label).sort()).toEqual(["作用域", "费曼技巧", "闭包"]);
     const persistedEdges = await temp.repos.knowledgeEdges.listAll();
-    expect(persistedEdges).toHaveLength(1);
+    expect(persistedEdges).toHaveLength(2);
     const persistedSignals = await temp.repos.interestSignals.listAll();
     expect(persistedSignals).toHaveLength(1);
     expect(persistedSignals[0]?.curiosity).toBe(0.6);

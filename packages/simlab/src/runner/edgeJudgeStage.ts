@@ -26,9 +26,17 @@ const FALLBACK_RECENT_N = 5;
 export interface EdgeJudgeStageResult {
   addedEdges: KnowledgeEdgeRow[];
   rejectedCyclicEdges: RejectedCyclicEdge[];
+  /** Method nodes the edge judge proposed and this stage inserted (e.g. "费曼技巧") — these
+   * are genuinely new tree nodes too, so callers counting "new nodes this round/day" must
+   * include them alongside the knowledge-tree stage's own newNodes (S5). */
+  methodNodes: KnowledgeNodeRow[];
 }
 
-const EMPTY_RESULT: EdgeJudgeStageResult = { addedEdges: [], rejectedCyclicEdges: [] };
+const EMPTY_RESULT: EdgeJudgeStageResult = {
+  addedEdges: [],
+  rejectedCyclicEdges: [],
+  methodNodes: [],
+};
 
 export async function runEdgeJudgeStage(
   input: RoundPipelineInput,
@@ -90,7 +98,11 @@ export async function runEdgeJudgeStage(
     if (plan.rejectedCyclicEdges.length > 0) {
       input.logStage({ purpose: "knowledge-edges", rejectedCyclicEdges: plan.rejectedCyclicEdges });
     }
-    return { addedEdges: plan.edgesToUpsert, rejectedCyclicEdges: plan.rejectedCyclicEdges };
+    return {
+      addedEdges: plan.edgesToUpsert,
+      rejectedCyclicEdges: plan.rejectedCyclicEdges,
+      methodNodes: plan.methodNodesToInsert,
+    };
   } catch (error) {
     const message = describeError(error);
     failures.push({ purpose: "knowledge-edges", error: message });
