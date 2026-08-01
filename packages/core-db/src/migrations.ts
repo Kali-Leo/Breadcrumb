@@ -209,6 +209,22 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_mastery_claims_node ON mastery_claims(node_id);`,
     ],
   },
+  {
+    // Learning goals set up in the experimental lab panel (spec 012): a title plus the node
+    // ids it maps to (LLM-assisted, user-calibrated). gapAndPath() recomputes routes for a
+    // goal from its node_ids_json on every read — nothing here is a stored plan.
+    id: "0009_goals",
+    statements: [
+      `CREATE TABLE goals (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        node_ids_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_goals_updated ON goals(updated_at);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

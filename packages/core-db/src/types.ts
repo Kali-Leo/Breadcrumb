@@ -1,7 +1,8 @@
 /**
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
- * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow.
+ * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
+ * GoalRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -150,6 +151,17 @@ export interface MasteryClaimRow {
   level: MasteryClaimLevel;
   source: MasteryClaimSource;
   created_at: string;
+}
+
+/** A learning goal set up in the experimental lab panel (spec 012) — a title plus the set
+ * of tree node ids it maps to (existing nodes and freshly-inserted suggested ones alike). */
+export interface GoalRow {
+  id: string;
+  title: string;
+  /** JSON string array of knowledge_nodes ids. */
+  node_ids_json: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LlmCallRow {

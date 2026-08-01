@@ -6,6 +6,7 @@
 import {
   createConversationsRepo,
   createFactcheckRepo,
+  createGoalsRepo,
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
   createKnowledgeNodesRepo,
@@ -36,6 +37,7 @@ export interface Repos {
   factcheck: ReturnType<typeof createFactcheckRepo>;
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
+  goals: ReturnType<typeof createGoalsRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -69,5 +71,6 @@ async function openAndMigrate(): Promise<Repos> {
     factcheck: createFactcheckRepo(sqlClient),
     interestSignals: createInterestSignalsRepo(sqlClient),
     masteryClaims: createMasteryClaimsRepo(sqlClient),
+    goals: createGoalsRepo(sqlClient),
   };
 }
