@@ -9,10 +9,15 @@
 import type { Persona } from "../persona/schema";
 import type { JourneyResult } from "../runner/journey";
 import { type PurposeTally, purposeFailureRates } from "./callLedger";
+import { checkDigestReconciliation, checkFrontierStaleness } from "./digestTripwires";
 import type { Violation } from "./invariants";
 import { checkMasteryTripwires } from "./masteryTripwire";
 import { computeTargetConceptsRecall } from "./targetConceptsRecall";
 import type { PressureHitSample } from "./telemetry";
+
+/** Day boundaries where the frontier stayed byte-identical while nodes kept growing (>=2
+ * consecutive) trip the WARN threshold — see digestTripwires.ts. */
+const FRONTIER_STALENESS_WARN_STREAK = 2;
 
 export interface JourneySummary {
   journeyId: string;
@@ -44,6 +49,19 @@ export interface RunMetrics {
   crossCutting: {
     zodFailureRateByPurpose: Record<string, number>;
     pressureLexiconHits: { tutor: number; trailSummary: number };
+    /** New-tripwire batch (first sim hunt): degenerate (retried-empty) turns, the
+     * student-turn/tutor-turn usage contract, extraction parentLabel violations (all three
+     * scanned from each journey's own JSONL log — see logTripwires.ts), digest-reconciliation
+     * mismatches and duplicate-goal-title rows (both re-derived from live run state — see
+     * digestTripwires.ts / invariants.ts), and the frontier-staleness WARN count (journeys
+     * where the frontier froze for >=2 consecutive day boundaries while nodes kept growing;
+     * a known design gap per P1, so this is visibility, not a hard failure). */
+    degenerateTurnCount: number;
+    usageContractViolationCount: number;
+    parentLabelViolationCount: number;
+    digestReconciliationViolationCount: number;
+    frontierStalenessWarnJourneyCount: number;
+    duplicateGoalTitleCount: number;
   };
   journeys: JourneySummary[];
 }
@@ -60,6 +78,11 @@ export interface BuildRunMetricsInput {
   /** How many times runInvariantsFromRepos actually ran (>= violation count) — one run per
    * conversation completed across every journey. */
   invariantRunCount: number;
+  /** Summed across every completed journey's own JSONL log (the CLI reads each log back
+   * after the journey finishes — see logTripwires.ts and runCommand.ts). */
+  degenerateTurnCount: number;
+  usageContractViolationCount: number;
+  parentLabelViolationCount: number;
 }
 
 export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
@@ -93,6 +116,18 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
   const coverageArithmeticViolationCount = input.invariantViolations.filter(
     (v) => v.kind === "coverage-arithmetic",
   ).length;
+  const duplicateGoalTitleCount = input.invariantViolations.filter(
+    (v) => v.kind === "duplicate-goal-title",
+  ).length;
+
+  const digestReconciliationViolationCount = input.completed.reduce(
+    (sum, { result }) => sum + checkDigestReconciliation(result.dayDigests).length,
+    0,
+  );
+  const frontierStalenessWarnJourneyCount = input.completed.filter(
+    ({ result }) =>
+      checkFrontierStaleness(result.dayDigests).maxStaleStreak >= FRONTIER_STALENESS_WARN_STREAK,
+  ).length;
 
   return {
     runId: input.runId,
@@ -117,6 +152,12 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
         tutor: input.pressureHits.filter((hit) => hit.source === "tutor").length,
         trailSummary: input.pressureHits.filter((hit) => hit.source === "trail-summary").length,
       },
+      degenerateTurnCount: input.degenerateTurnCount,
+      usageContractViolationCount: input.usageContractViolationCount,
+      parentLabelViolationCount: input.parentLabelViolationCount,
+      digestReconciliationViolationCount,
+      frontierStalenessWarnJourneyCount,
+      duplicateGoalTitleCount,
     },
     journeys,
   };

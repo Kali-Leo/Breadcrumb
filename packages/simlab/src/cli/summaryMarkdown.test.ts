@@ -25,6 +25,12 @@ function makeMetrics(overrides: Partial<RunMetrics> = {}): RunMetrics {
     crossCutting: {
       zodFailureRateByPurpose: { "knowledge-tree": 0.1 },
       pressureLexiconHits: { tutor: 0, trailSummary: 0 },
+      degenerateTurnCount: 0,
+      usageContractViolationCount: 0,
+      parentLabelViolationCount: 0,
+      digestReconciliationViolationCount: 0,
+      frontierStalenessWarnJourneyCount: 0,
+      duplicateGoalTitleCount: 0,
     },
     journeys: [
       {

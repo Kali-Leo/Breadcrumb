@@ -19,7 +19,9 @@ export type ViolationKind =
   | "interest-out-of-range"
   | "frontier-hard-gate"
   | "frontier-reason-mismatch"
-  | "coverage-arithmetic";
+  | "coverage-arithmetic"
+  | "duplicate-goal-title"
+  | "digest-reconciliation-mismatch";
 
 export interface Violation {
   kind: ViolationKind;
@@ -44,6 +46,7 @@ export function runInvariants(input: InvariantInput): Violation[] {
     ...checkRange("interest-out-of-range", input.interestByNode),
     ...checkFrontier(input),
     ...checkCoverage(input),
+    ...checkDuplicateGoalTitles(input.goals),
   ];
 }
 
@@ -113,6 +116,23 @@ function checkFrontier(input: InvariantInput): Violation[] {
     }
   }
   return violations;
+}
+
+/** P6 fixed goal creation to be idempotent on trimmed title; this independently re-derives
+ * the same check from the live goals table so a regression in either persistCalibratedGoal
+ * (desktop) or applyCreateGoal (simlab) shows up as a tripwire instead of only a unit test. */
+function checkDuplicateGoalTitles(goals: readonly GoalRow[]): Violation[] {
+  const countByTitle = new Map<string, number>();
+  for (const goal of goals) {
+    const title = goal.title.trim();
+    countByTitle.set(title, (countByTitle.get(title) ?? 0) + 1);
+  }
+  return [...countByTitle.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([title, count]) => ({
+      kind: "duplicate-goal-title" as const,
+      detail: `title "${title}" appears on ${count} goal rows`,
+    }));
 }
 
 function checkCoverage(input: InvariantInput): Violation[] {

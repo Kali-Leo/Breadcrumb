@@ -6,10 +6,17 @@
  * Main exports: runCommand.
  */
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createCallLedger } from "../judges/callLedger";
 import type { Violation } from "../judges/invariants";
 import { runInvariantsFromRepos } from "../judges/invariantsFromRepos";
+import {
+  countDegenerateTurns,
+  countParentLabelViolations,
+  countUsageContractViolations,
+  type JourneyLogRecord,
+} from "../judges/logTripwires";
 import { buildRunMetrics } from "../judges/metrics";
 import { loadPressureLexicon } from "../judges/pressureLexicon";
 import type { PressureHitSample, RunTelemetry } from "../judges/telemetry";
@@ -67,12 +74,14 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
   );
 
   const personaByJourneyIndex = new Map<number, Persona>();
+  const logPathByJourneyIndex = new Map<number, string>();
   const results = await runPool(
     personas,
     flags.workers,
     async (persona, index) => {
       personaByJourneyIndex.set(index, persona);
       const log = artifacts.openJourneyLog(index);
+      logPathByJourneyIndex.set(index, log.path);
       const result = await runJourney({
         persona,
         journeyIndex: index,
@@ -114,6 +123,23 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
         entry !== null && entry.persona !== undefined,
     );
 
+  // New-tripwire batch (first sim hunt): degenerate-turn, usage-contract and parentLabel
+  // violations are scanned from each completed journey's own JSONL log after the fact —
+  // they aren't part of JourneyResult itself, so this is the one place that reads the
+  // artifact back rather than accumulating during the run.
+  let degenerateTurnCount = 0;
+  let usageContractViolationCount = 0;
+  let parentLabelViolationCount = 0;
+  for (let index = 0; index < results.length; index += 1) {
+    if (results[index] === null) continue;
+    const logPath = logPathByJourneyIndex.get(index);
+    if (logPath === undefined) continue;
+    const records = readJourneyLogRecords(logPath);
+    degenerateTurnCount += countDegenerateTurns(records);
+    usageContractViolationCount += countUsageContractViolations(records);
+    parentLabelViolationCount += countParentLabelViolations(records);
+  }
+
   const metrics = buildRunMetrics({
     runId,
     requestedJourneys: flags.journeys,
@@ -121,6 +147,9 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
     totalCostCny: costGuard.totalCny(),
     completed,
     callTallies: ledger.snapshot(),
+    degenerateTurnCount,
+    usageContractViolationCount,
+    parentLabelViolationCount,
     pressureHits,
     invariantViolations,
     invariantRunCount,
@@ -139,5 +168,31 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
     `  pressure-lexicon hits: ${metrics.crossCutting.pressureLexiconHits.tutor} tutor, ` +
       `${metrics.crossCutting.pressureLexiconHits.trailSummary} trail-summary`,
   );
+  console.log(
+    `  new tripwires: ${metrics.crossCutting.degenerateTurnCount} degenerate turns, ` +
+      `${metrics.crossCutting.usageContractViolationCount} usage-contract violations, ` +
+      `${metrics.crossCutting.parentLabelViolationCount} parentLabel violations, ` +
+      `${metrics.crossCutting.digestReconciliationViolationCount} digest mismatches, ` +
+      `${metrics.crossCutting.frontierStalenessWarnJourneyCount} journeys with a stale frontier (WARN), ` +
+      `${metrics.crossCutting.duplicateGoalTitleCount} duplicate goal titles`,
+  );
   console.log(`artifacts: ${artifacts.dir}`);
+}
+
+/** Reads one journey's JSONL log back into parsed records for the post-run log tripwires.
+ * Skips any line that fails to parse rather than failing the whole metrics build — a
+ * malformed line would already show up elsewhere (it'd break `sim summarize` too). */
+function readJourneyLogRecords(path: string): JourneyLogRecord[] {
+  const lines = readFileSync(path, "utf-8")
+    .split("\n")
+    .filter((line) => line.trim() !== "");
+  const records: JourneyLogRecord[] = [];
+  for (const line of lines) {
+    try {
+      records.push(JSON.parse(line) as JourneyLogRecord);
+    } catch {
+      // malformed line: skip, don't fail metrics for it
+    }
+  }
+  return records;
 }

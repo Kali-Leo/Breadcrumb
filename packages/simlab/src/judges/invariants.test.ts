@@ -169,3 +169,31 @@ describe("runInvariants: coverage arithmetic", () => {
     expect(violations).toEqual([]);
   });
 });
+
+describe("runInvariants: duplicate goal title (bad-data self-check)", () => {
+  function goal(id: string, title: string): GoalRow {
+    return { id, title, node_ids_json: "[]", created_at: "x", updated_at: "x" };
+  }
+
+  it("passes distinct goal titles", () => {
+    const violations = runInvariants({
+      ...BASE,
+      nodes: [],
+      edges: [],
+      goals: [goal("g1", "学会：闭包"), goal("g2", "学会：递归")],
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it("catches two goal rows sharing the identical trimmed title", () => {
+    const violations = runInvariants({
+      ...BASE,
+      nodes: [],
+      edges: [],
+      goals: [goal("g1", "学会：闭包"), goal("g2", "学会：闭包 ")], // trailing space still a dup
+    });
+    expect(violations).toEqual([
+      { kind: "duplicate-goal-title", detail: 'title "学会：闭包" appears on 2 goal rows' },
+    ]);
+  });
+});

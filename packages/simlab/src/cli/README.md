@@ -86,7 +86,24 @@ Grouped by the four features this phase built, plus one cross-cutting section (s
   `coverageArithmeticViolationCount`, `totalInvariantChecks` — from the tripwire suite
   (`src/judges/invariants.ts`) run after every conversation.
 - **`crossCutting`**: `zodFailureRateByPurpose` (per LLM-call purpose), `pressureLexiconHits`
-  (`{ tutor, trailSummary }` counts).
+  (`{ tutor, trailSummary }` counts), plus the new-tripwire batch (first sim hunt, 2026-08-01):
+  - `degenerateTurnCount` — sum of `degenerate-turn` events across every journey's own log
+    (`src/judges/logTripwires.ts`); should be rare/zero.
+  - `usageContractViolationCount` — student-turn/tutor-turn events missing well-formed
+    `usage`, scanned from the same logs; nonzero means the S2 contract regressed.
+  - `parentLabelViolationCount` — knowledge-tree extraction responses whose `parentLabel` is
+    neither `null` nor a real (existing-or-batch) label, independently re-derived from each
+    logged request's rendered tree text; nonzero means the P7 fix regressed and attach.ts's
+    fallback is silently absorbing bad labels again.
+  - `digestReconciliationViolationCount` — days where `nodeCount` delta didn't equal
+    `newNodeLabelsToday.length` (`src/judges/digestTripwires.ts`); nonzero is an S5-shaped
+    undercount (or a new one).
+  - `frontierStalenessWarnJourneyCount` — journeys where `frontierTop5` stayed byte-identical
+    across >=2 consecutive day boundaries while nodes kept growing. **WARN-level**, not a
+    hard failure — P1 (frontier concept-space starvation) is a known, undecided design gap.
+  - `duplicateGoalTitleCount` — goal rows sharing an identical trimmed title, re-derived from
+    live goals state (`src/judges/invariants.ts`); nonzero means the P6 idempotency fix
+    regressed.
 - **`journeys`**: one row per completed journey (id, persona, days, conversations, rounds,
   new-node count, per-journey `targetConceptsRecall`).
 

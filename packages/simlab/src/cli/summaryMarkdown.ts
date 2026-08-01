@@ -85,6 +85,12 @@ function crossCuttingSection(metrics: RunMetrics): string {
     "- zodFailureRateByPurpose:",
     ...(rateLines.length > 0 ? rateLines : ["  - (no calls recorded)"]),
     `- pressureLexiconHits: tutor=${metrics.crossCutting.pressureLexiconHits.tutor}, trailSummary=${metrics.crossCutting.pressureLexiconHits.trailSummary}`,
+    `- degenerateTurnCount: ${metrics.crossCutting.degenerateTurnCount}`,
+    `- usageContractViolationCount: ${metrics.crossCutting.usageContractViolationCount}`,
+    `- parentLabelViolationCount: ${metrics.crossCutting.parentLabelViolationCount}`,
+    `- digestReconciliationViolationCount: ${metrics.crossCutting.digestReconciliationViolationCount}`,
+    `- frontierStalenessWarnJourneyCount (WARN, not a gate): ${metrics.crossCutting.frontierStalenessWarnJourneyCount}`,
+    `- duplicateGoalTitleCount: ${metrics.crossCutting.duplicateGoalTitleCount}`,
   ].join("\n");
 }
 
