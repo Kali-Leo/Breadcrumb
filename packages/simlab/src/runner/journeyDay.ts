@@ -46,6 +46,8 @@ export interface DayConversationsContext {
   sightedNodeLabels: string[];
   rejectedCyclicEdges: RejectedCyclicEdge[];
   pipelineFailures: PipelineFailure[];
+  /** Same Set instance for the whole journey — see resolvePendingSelfReportTopics. */
+  pendingSelfReportTopics: Set<string>;
 }
 
 export interface DayConversationsOutcome {
@@ -125,6 +127,7 @@ export async function runJourneyDayConversations(
       recordFailure: (purpose) => ctx.telemetry?.ledger.recordFailure(purpose),
       logStage: (record) => ctx.log.writeLine({ event: "pipeline-stage", day: ctx.day, ...record }),
       touchedLabelsSoFar: ctx.touchedLabels,
+      pendingSelfReportTopics: ctx.pendingSelfReportTopics,
     });
     topicHint = actionResult.topicHint;
     ctx.log.writeLine({

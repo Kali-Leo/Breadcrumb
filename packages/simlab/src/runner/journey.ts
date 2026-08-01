@@ -17,6 +17,7 @@ import { mulberry32, randomFloat, randomInt, seedFromStrings } from "../util/prn
 import type { JourneyLogWriter } from "./artifacts";
 import type { CostGuard } from "./costGuard";
 import { computeDayDigest, type DayDigest } from "./dayDigest";
+import { resolvePendingSelfReportTopics } from "./journeyActions";
 import { runJourneyDayConversations } from "./journeyDay";
 import type { PipelineFailure } from "./pipelineTypes";
 import type { TopicHint } from "./student";
@@ -75,6 +76,7 @@ export async function runJourney(options: JourneyOptions): Promise<JourneyResult
   let nowIso = startIso;
   let topicHint: TopicHint | undefined;
   const touchedLabels: string[] = [];
+  const pendingSelfReportTopics = new Set<string>();
   const newNodeLabels: string[] = [];
   const sightedNodeLabels: string[] = [];
   const rejectedCyclicEdges: RejectedCyclicEdge[] = [];
@@ -103,11 +105,19 @@ export async function runJourney(options: JourneyOptions): Promise<JourneyResult
       sightedNodeLabels,
       rejectedCyclicEdges,
       pipelineFailures,
+      pendingSelfReportTopics,
     });
     nowIso = dayOutcome.nowIso;
     topicHint = dayOutcome.topicHint;
     totalConversations += dayOutcome.conversationsRun;
     totalRounds += dayOutcome.roundsRun;
+
+    // Day end: give any self-reported topic still pending one more chance, in case a
+    // conversation today created the node it needed to match — even for a day where the
+    // persona never triggered another self-report action itself (S4 requeue).
+    await resolvePendingSelfReportTopics(pendingSelfReportTopics, temp.repos, nowIso, (label) =>
+      log.writeLine({ event: "self-report-pending-resolved", day, label }),
+    );
 
     if (dayOutcome.newNodeLabelsToday.length > 0) {
       const newLabelSet = new Set(dayOutcome.newNodeLabelsToday);

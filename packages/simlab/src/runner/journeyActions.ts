@@ -49,6 +49,39 @@ export interface JourneyActionContext {
   recordFailure?: (purpose: string) => void;
   logStage: (record: Record<string, unknown>) => void;
   touchedLabelsSoFar: readonly string[];
+  /** Self-reported knownTopics that had no matching tree node yet (mutated in place — same
+   * Set instance threaded across the whole journey, see resolvePendingSelfReportTopics). */
+  pendingSelfReportTopics: Set<string>;
+}
+
+/** Retries every pending self-reported topic against the tree's current labels — a topic
+ * queued because its concept hadn't been created yet may match now that a later conversation
+ * extracted it. Called both at the top of applySelfReport (so a subsequent self-report action
+ * naturally retries) and once at day end (so a persona that never self-reports again still
+ * gets a same-day chance once its topics enter the tree). Resolved topics are removed from
+ * `pending` and reported via `onResolved` for the journey log. */
+export async function resolvePendingSelfReportTopics(
+  pending: Set<string>,
+  repos: SimlabRepos,
+  nowIso: string,
+  onResolved: (label: string) => void,
+): Promise<void> {
+  if (pending.size === 0) return;
+  const allNodes = await repos.knowledgeNodes.listAll();
+  const nodeIdByLabel = new Map(allNodes.map((node) => [node.label, node.id]));
+  for (const topic of pending) {
+    const nodeId = nodeIdByLabel.get(topic);
+    if (nodeId === undefined) continue;
+    await repos.masteryClaims.insert({
+      id: randomUUID(),
+      node_id: nodeId,
+      level: "learned",
+      source: "self-report",
+      created_at: nowIso,
+    });
+    pending.delete(topic);
+    onResolved(topic);
+  }
 }
 
 export async function pickAndApplyJourneyAction(
@@ -100,8 +133,19 @@ async function applyFollowFrontier(ctx: JourneyActionContext): Promise<TopicHint
 async function applySelfReport(ctx: JourneyActionContext): Promise<TopicHint> {
   const { repos, persona, llmConfig } = ctx;
   if (persona.knowledge.knownTopics.length === 0) return { label: null, isDomainJump: false };
+
+  // Retry anything queued from an earlier self-report first — the node backing it may have
+  // been created by a conversation since then (S4 requeue).
+  await resolvePendingSelfReportTopics(ctx.pendingSelfReportTopics, repos, ctx.nowIso, (label) =>
+    ctx.logStage({ event: "self-report-pending-resolved", label }),
+  );
+
   const allNodes = await repos.knowledgeNodes.listAll();
-  if (allNodes.length === 0) return { label: null, isDomainJump: false };
+  if (allNodes.length === 0) {
+    // Nothing in the tree yet to plausibly match against — the whole brief is premature.
+    for (const topic of persona.knowledge.knownTopics) ctx.pendingSelfReportTopics.add(topic);
+    return { label: null, isDomainJump: false };
+  }
 
   const userText = `我以前学过：${persona.knowledge.knownTopics.join("、")}`;
   const existingLabels = allNodes.map((node) => node.label);
@@ -125,6 +169,13 @@ async function applySelfReport(ctx: JourneyActionContext): Promise<TopicHint> {
         source: "self-report",
         created_at: ctx.nowIso,
       });
+    }
+
+    // The persona's own knownTopics that don't (yet) correspond to any existing tree node
+    // can never have been in the LLM's candidate list — not a model miss, just premature
+    // timing. Queue them instead of losing the signal for good.
+    for (const topic of persona.knowledge.knownTopics) {
+      if (!nodeIdByLabel.has(topic)) ctx.pendingSelfReportTopics.add(topic);
     }
   } catch (error) {
     ctx.recordFailure?.("self-report-mapping");
