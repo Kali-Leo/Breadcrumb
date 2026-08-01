@@ -1,36 +1,11 @@
 /**
  * Purpose: deterministic persona variation — given a seed persona and an integer variant
  * number, produces a reproducible jittered behavior axis and a reproducible topic subset,
- * using a seeded mulberry32 PRNG (never Math.random, per spec 013's determinism rule).
- * Main exports: perturbPersona, mulberry32.
+ * using the shared seeded PRNG (never Math.random, per spec 013's determinism rule).
+ * Main exports: perturbPersona.
  */
+import { mulberry32, seedFromStrings } from "../util/prng";
 import type { Persona, PersonaBehavior } from "./schema";
-
-/** mulberry32: a small, fast, well-known 32-bit seeded PRNG. Returns a function yielding
- * successive floats in [0, 1); same seed -> same sequence, always. */
-export function mulberry32(seed: number): () => number {
-  let state = seed | 0;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** Combines the persona id and variant number into one 32-bit seed via FNV-1a, so distinct
- * (seed persona, variant number) pairs get distinct-but-reproducible PRNG streams. */
-function seedFor(personaId: string, variantNumber: number): number {
-  let hash = 0x811c9dc5;
-  for (const source of [personaId, String(variantNumber)]) {
-    for (let index = 0; index < source.length; index += 1) {
-      hash ^= source.charCodeAt(index);
-      hash = Math.imul(hash, 0x01000193);
-    }
-  }
-  return hash >>> 0;
-}
 
 const JITTER_RANGE = 0.2;
 
@@ -71,7 +46,7 @@ const TOPIC_KEEP_PROBABILITY = 0.7;
  * subset of knownTopics/misconceptions (targetConcepts is left intact — it's the ground
  * truth the harness scores recall against, not something to randomly drop). */
 export function perturbPersona(seed: Persona, variantNumber: number): Persona {
-  const random = mulberry32(seedFor(seed.id, variantNumber));
+  const random = mulberry32(seedFromStrings([seed.id, String(variantNumber)]));
   return {
     ...seed,
     id: `${seed.id}-v${variantNumber}`,

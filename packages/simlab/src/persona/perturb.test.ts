@@ -3,7 +3,8 @@
  * different variant numbers actually diverge, and that mulberry32 is a pure seeded PRNG.
  */
 import { describe, expect, it } from "vitest";
-import { mulberry32, perturbPersona } from "./perturb";
+import { mulberry32 } from "../util/prng";
+import { perturbPersona } from "./perturb";
 import type { Persona } from "./schema";
 import { SEED_PERSONAS } from "./seeds";
 
