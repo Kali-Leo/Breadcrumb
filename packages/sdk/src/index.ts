@@ -31,6 +31,9 @@ export interface BreadcrumbEventMap {
   "chat:messageSent": { conversationId: string; messageId: string; sentAt: string };
   "chat:responseFinished": { conversationId: string; messageId: string; finishedAt: string };
   "factcheck:finished": { conversationId: string; messageId: string; runId: string };
+  /** Fired after new knowledge_edges rows land (spec 010); spec 012's experiment panel
+   * refreshes on this instead of polling. */
+  "knowledge:edgesUpdated": { addedEdgeIds: string[] };
 }
 
 export type BreadcrumbEventName = keyof BreadcrumbEventMap;
