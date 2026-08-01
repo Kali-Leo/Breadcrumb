@@ -65,10 +65,28 @@ export async function pickAndApplyJourneyAction(
     case "revisit-old-topic":
       return { actionType, topicHint: applyRevisitOldTopic(ctx) };
     case "jump-new-domain":
-      return { actionType, topicHint: { label: null, isDomainJump: true } };
+      return {
+        actionType,
+        topicHint: { label: null, isDomainJump: true, domainHint: pickDomainHint(ctx) },
+      };
     default:
       return { actionType, topicHint: { label: null, isDomainJump: false } };
   }
+}
+
+/** Picks one untouched-domain label from the persona's own brief (knownTopics ∪
+ * targetConcepts, minus whatever this journey has already touched) via the shared PRNG, so
+ * a jump-new-domain opener is actually grounded in something outside the touched-labels set
+ * instead of leaving the student model to invent an arbitrary topic. Null when the persona's
+ * whole brief has already been touched. */
+function pickDomainHint(ctx: JourneyActionContext): string | null {
+  const touched = new Set(ctx.touchedLabelsSoFar);
+  const candidates = [
+    ...new Set([...ctx.persona.knowledge.knownTopics, ...ctx.persona.knowledge.targetConcepts]),
+  ].filter((label) => !touched.has(label));
+  if (candidates.length === 0) return null;
+  const index = Math.floor(ctx.random() * candidates.length);
+  return candidates[index] ?? null;
 }
 
 async function applyFollowFrontier(ctx: JourneyActionContext): Promise<TopicHint> {

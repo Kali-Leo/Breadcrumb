@@ -100,6 +100,29 @@ describe("getStudentReply", () => {
     expect(reply.content).toBe("好呀");
   });
 
+  it("builds the domain-jump opener from domainHint when one is given (S3)", async () => {
+    const captured: RequestInit[] = [];
+    const config = {
+      baseUrl: "https://api.example.com/v1",
+      apiKey: "key",
+      model: "test-model",
+      fetchImpl: (_url: RequestInfo | URL, init?: RequestInit) => {
+        if (init) captured.push(init);
+        return Promise.resolve(sseResponse("好呀"));
+      },
+    };
+    await getStudentReply(config, persona, [], {
+      label: null,
+      isDomainJump: true,
+      domainHint: "期望值",
+    });
+    const sentMessages = JSON.parse(String(captured[0]?.body)).messages as {
+      role: string;
+      content: string;
+    }[];
+    expect(sentMessages[1]?.content).toContain("期望值");
+  });
+
   it("does not treat a reply merely mentioning STOP as a real stop", async () => {
     const config = {
       baseUrl: "https://api.example.com/v1",

@@ -39,12 +39,21 @@ function flipRoles(transcript: readonly ChatMessage[]): ChatMessage[] {
 export interface TopicHint {
   label: string | null;
   isDomainJump: boolean;
+  /** For a domain jump only: a concrete untouched-domain label picked from the persona's own
+   * brief (journeyActions.ts), so the opener is actually built from something outside the
+   * touched-labels set instead of leaving the model to invent an arbitrary new topic. */
+  domainHint?: string | null;
 }
 
 function buildTopicHintMessage(hint: TopicHint | undefined): ChatMessage | null {
   if (hint === undefined) return null;
   if (hint.isDomainJump) {
-    return { role: "system", content: "这次你想换个完全不相关的新话题聊聊，不用接着上次的内容。" };
+    return hint.domainHint != null
+      ? {
+          role: "system",
+          content: `这次你想换个完全不相关的新话题聊聊：「${hint.domainHint}」，不用接着上次的内容。`,
+        }
+      : { role: "system", content: "这次你想换个完全不相关的新话题聊聊，不用接着上次的内容。" };
   }
   if (hint.label !== null) {
     return { role: "system", content: `这次对话你想聊聊：「${hint.label}」。` };

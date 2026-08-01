@@ -32,6 +32,25 @@ async function withEmptyRetry<T extends { content: string }>(fn: () => Promise<T
   return fn();
 }
 
+/** A concrete labeled hint (follow-frontier/revisit-old-topic — not a domain jump) is a
+ * *nudge*, not a guarantee: the student model may still open on something else. Logs a
+ * soft mismatch event rather than failing the round, so the pipeline metrics can surface
+ * "action decision vs. actual opener" coherence without gating the run on it. */
+function logTopicHintMismatchIfAny(
+  log: JourneyLogWriter,
+  topicHint: TopicHint | undefined,
+  studentOpenerContent: string,
+  context: { day: number; conversationId: string; round: number },
+): void {
+  if (topicHint === undefined || topicHint.isDomainJump || topicHint.label === null) return;
+  if (studentOpenerContent.includes(topicHint.label)) return;
+  log.writeLine({
+    event: "topic-hint-mismatch",
+    ...context,
+    expectedLabel: topicHint.label,
+  });
+}
+
 export interface ConversationOptions {
   repos: SimlabRepos;
   conversationId: string;
@@ -87,6 +106,13 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       content: studentReply.content,
       usage: studentReply.usage,
     });
+    if (round === 0) {
+      logTopicHintMismatchIfAny(log, options.topicHint, studentReply.content, {
+        day,
+        conversationId,
+        round,
+      });
+    }
     if (studentReply.isStop) {
       stopReason = "stop-token";
       break;

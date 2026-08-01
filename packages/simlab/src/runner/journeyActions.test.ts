@@ -78,3 +78,68 @@ describe("pickAndApplyJourneyAction create-goal idempotency", () => {
     expect(goals[0]?.created_at).toBe("2026-08-01T10:00:00.000Z");
   });
 });
+
+describe("pickAndApplyJourneyAction jump-new-domain (S3)", () => {
+  const domainPersona: Persona = {
+    id: "p2",
+    name: "test",
+    description: "test persona",
+    knowledge: { knownTopics: ["A", "B"], misconceptions: [], targetConcepts: ["C"] },
+    behavior: {
+      typoRate: 0,
+      codeSwitching: 0,
+      driftTendency: 0,
+      boredomThreshold: 0.5,
+      confusionTendency: 0.5,
+    },
+  };
+
+  it("picks an untouched-domain label from the persona brief, excluding touched labels", async () => {
+    temp = await createTempDatabase();
+    const result = await pickAndApplyJourneyAction({
+      repos: temp.repos,
+      persona: domainPersona,
+      llmConfig: {
+        baseUrl: "https://api.example.com/v1",
+        apiKey: "k",
+        model: "m",
+        fetchImpl: goalMappingFetch(),
+      },
+      nowIso: "2026-08-01T10:00:00.000Z",
+      // 0.9 rolls into the "jump-new-domain" bucket (cumulative 0.85-1.0); reused for the
+      // domain-hint index pick too, deterministically landing on the last candidate.
+      random: () => 0.9,
+      recordCall: () => undefined,
+      logStage: () => undefined,
+      touchedLabelsSoFar: ["A"],
+    });
+
+    expect(result.actionType).toBe("jump-new-domain");
+    expect(result.topicHint.isDomainJump).toBe(true);
+    expect(result.topicHint.domainHint).not.toBeNull();
+    expect(["B", "C"]).toContain(result.topicHint.domainHint);
+    expect(result.topicHint.domainHint).not.toBe("A"); // touched label must be excluded
+  });
+
+  it("falls back to a null domainHint once the whole persona brief has been touched", async () => {
+    temp = await createTempDatabase();
+    const result = await pickAndApplyJourneyAction({
+      repos: temp.repos,
+      persona: domainPersona,
+      llmConfig: {
+        baseUrl: "https://api.example.com/v1",
+        apiKey: "k",
+        model: "m",
+        fetchImpl: goalMappingFetch(),
+      },
+      nowIso: "2026-08-01T10:00:00.000Z",
+      random: () => 0.9,
+      recordCall: () => undefined,
+      logStage: () => undefined,
+      touchedLabelsSoFar: ["A", "B", "C"],
+    });
+
+    expect(result.actionType).toBe("jump-new-domain");
+    expect(result.topicHint.domainHint).toBeNull();
+  });
+});
