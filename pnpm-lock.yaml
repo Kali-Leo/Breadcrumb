@@ -59,6 +59,9 @@ importers:
       '@breadcrumb/plugin-memory':
         specifier: workspace:*
         version: link:../../packages/plugin-memory
+      '@breadcrumb/plugin-planner':
+        specifier: workspace:*
+        version: link:../../packages/plugin-planner
       '@breadcrumb/plugin-town':
         specifier: workspace:*
         version: link:../../packages/plugin-town

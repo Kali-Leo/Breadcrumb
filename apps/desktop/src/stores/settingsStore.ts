@@ -20,20 +20,23 @@ export interface FeatureSwitches {
   factcheck: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
+  labPanel: boolean;
 }
 
 const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
-/** Fact-check, knowledge-edges and interest default off: they spend tokens, so the user
- * opts in (spec 009, spec 010, spec 011). */
+/** Fact-check, knowledge-edges, interest and the experimental lab panel default off: they
+ * spend tokens (or, for labPanel, expose debug-grade numbers), so the user opts in
+ * (spec 009, spec 010, spec 011, spec 012). */
 const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
   trail: true,
   factcheck: false,
   knowledgeEdges: false,
   interest: false,
+  labPanel: false,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

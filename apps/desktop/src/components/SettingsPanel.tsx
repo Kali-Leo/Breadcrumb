@@ -24,6 +24,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "💡 兴趣画像",
     hint: "每轮对话后观察好奇/困惑/厌倦倾向；也用于「我学过…」自报映射（独立计费）",
   },
+  labPanel: {
+    name: "🧪 实验室面板",
+    hint: "临时实验面板：看推荐、建目标、比路线；建目标时会额外调用一次 AI（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {

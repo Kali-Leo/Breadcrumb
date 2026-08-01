@@ -19,6 +19,7 @@ const PURPOSE_NAMES: Record<string, string> = {
   "knowledge-edges": "知识关系",
   interest: "兴趣画像",
   "self-report-mapping": "自报映射",
+  "goal-planning": "目标规划",
 };
 
 function renderCost(cost: CostByCurrency): string {
