@@ -15,6 +15,7 @@
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/plugin-factcheck": "workspace:*",
+    "@breadcrumb/plugin-graph": "workspace:*",
     "@breadcrumb/plugin-knowledge-tree": "workspace:*",
     "@breadcrumb/plugin-map": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",

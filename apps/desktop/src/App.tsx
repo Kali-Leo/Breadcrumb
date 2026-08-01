@@ -13,6 +13,9 @@ import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { useChatStore } from "./stores/chatStore";
+// Side-effect only: registers edgeStore's staggered chat:responseFinished subscription.
+// No component reads useEdgeStore yet (display lands in spec 012's experiment panel).
+import "./stores/edgeStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";

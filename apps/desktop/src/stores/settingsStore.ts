@@ -18,14 +18,21 @@ export interface FeatureSwitches {
   knowledgeTree: boolean;
   trail: boolean;
   factcheck: boolean;
+  knowledgeEdges: boolean;
 }
 
 const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
-/** Fact-check defaults off: it spends tokens, so the user opts in (spec 009). */
-const DEFAULT_SWITCHES: FeatureSwitches = { knowledgeTree: true, trail: true, factcheck: false };
+/** Fact-check and knowledge-edges default off: they spend tokens, so the user opts in
+ * (spec 009, spec 010). */
+const DEFAULT_SWITCHES: FeatureSwitches = {
+  knowledgeTree: true,
+  trail: true,
+  factcheck: false,
+  knowledgeEdges: false,
+};
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
 function guessMainlandNetwork(): boolean {

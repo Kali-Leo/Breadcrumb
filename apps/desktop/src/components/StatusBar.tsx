@@ -16,6 +16,7 @@ const PURPOSE_NAMES: Record<string, string> = {
   "knowledge-tree": "知识树",
   trail: "轨迹总结",
   factcheck: "求真核查",
+  "knowledge-edges": "知识关系",
 };
 
 function renderCost(cost: CostByCurrency): string {

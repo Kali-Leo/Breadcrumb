@@ -44,6 +44,9 @@ importers:
       '@breadcrumb/plugin-factcheck':
         specifier: workspace:*
         version: link:../../packages/plugin-factcheck
+      '@breadcrumb/plugin-graph':
+        specifier: workspace:*
+        version: link:../../packages/plugin-graph
       '@breadcrumb/plugin-knowledge-tree':
         specifier: workspace:*
         version: link:../../packages/plugin-knowledge-tree

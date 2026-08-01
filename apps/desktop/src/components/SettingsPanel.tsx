@@ -16,6 +16,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "🔍 求真核查",
     hint: "在 AI 回答下方点「求证」：提取事实并检索公开资料佐证（独立计费）",
   },
+  knowledgeEdges: {
+    name: "🕸️ 知识关系发现",
+    hint: "新知识点落库后额外调用一次 AI，判定前置/辅助关系（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
