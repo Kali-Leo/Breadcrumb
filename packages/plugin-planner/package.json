@@ -1,0 +1,22 @@
+{
+  "name": "@breadcrumb/plugin-planner",
+  "version": "0.0.1",
+  "description": "Headless planner plugin: the no-goal frontier() recommendation query, goal-driven gapAndPath() with three route strategies plus coverage, and the LLM goal-mapping contract.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/plugin-graph": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
