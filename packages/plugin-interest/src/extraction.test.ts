@@ -19,6 +19,16 @@ describe("buildInterestMessages", () => {
     expect(messages[1]?.content).toContain("递归");
     expect(messages[1]?.content).toContain("闭包是什么？");
   });
+
+  it("instructs the model to discriminate impatient/dismissive brevity from efficient engagement", () => {
+    const messages = buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答");
+    const systemContent = messages[0]?.content ?? "";
+    expect(systemContent).toContain("懂了懂了");
+    expect(systemContent).toContain("别讲概念");
+    expect(systemContent).toContain("直接来例子");
+    expect(systemContent).toContain("行吧行吧");
+    expect(systemContent).toContain("高效投入");
+  });
 });
 
 describe("interestSignalsSchema", () => {
