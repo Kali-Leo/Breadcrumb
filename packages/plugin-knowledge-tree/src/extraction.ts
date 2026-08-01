@@ -30,7 +30,10 @@ const SYSTEM_PROMPT = `你是一个知识结构提取器。给定学习者与 AI
 规则：
 - 新学到的知识点：正常提取
 - 这一轮实质性重温了已有树上的知识点：也列出（label 精确用树上原名），这是宝贵的复习足迹；只顺带提及则不算
-- label 用领域通用术语；parentLabel 必须精确等于已有节点的 label（或本批次里另一个节点的 label），否则填 null
+- label 用领域通用术语
+- parentLabel 只能是以下两种取值之一：已有知识树列表中某个节点的精确 label（或本批次里另一个节点的 label）；
+  或者 null（表示挂在顶层，没有合适的已有父节点）。禁止把"顶层""根"之类的描述性文字当作 parentLabel 的值——
+  那不是一个真实存在的节点名
 - 若这一轮是寒暄或没有触及知识，返回 {"nodes":[]}`;
 
 export function buildExtractionMessages(
@@ -42,7 +45,12 @@ export function buildExtractionMessages(
     existingNodes.length === 0
       ? "（空树）"
       : existingNodes
-          .map((node) => `- ${node.label}（父：${findParentLabel(existingNodes, node) ?? "根"}）`)
+          .map((node) => {
+            const parentLabel = findParentLabel(existingNodes, node);
+            return parentLabel === null
+              ? `- ${node.label}（顶层）`
+              : `- ${node.label}（父：${parentLabel}）`;
+          })
           .join("\n");
   return [
     { role: "system", content: SYSTEM_PROMPT },
