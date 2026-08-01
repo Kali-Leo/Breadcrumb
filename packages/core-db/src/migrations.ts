@@ -181,6 +181,34 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_knowledge_edges_target ON knowledge_edges(target_id);`,
     ],
   },
+  {
+    // Two independent evidence streams for the mastery/interest split (spec 011, ADR-0009):
+    // interest_signals is per-round LLM-observed psychological signal, mastery_claims is
+    // user self-report. Neither table is read by the other's computation.
+    id: "0008_interest_and_claims",
+    statements: [
+      `CREATE TABLE interest_signals (
+        id TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        conversation_id TEXT NOT NULL REFERENCES conversations(id),
+        curiosity REAL NOT NULL,
+        confusion REAL NOT NULL,
+        boredom REAL NOT NULL,
+        styles_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_interest_signals_node ON interest_signals(node_id);`,
+      `CREATE INDEX idx_interest_signals_created ON interest_signals(created_at);`,
+      `CREATE TABLE mastery_claims (
+        id TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        level TEXT NOT NULL CHECK (level IN ('learned','familiar')),
+        source TEXT NOT NULL CHECK (source IN ('self-report')),
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_mastery_claims_node ON mastery_claims(node_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

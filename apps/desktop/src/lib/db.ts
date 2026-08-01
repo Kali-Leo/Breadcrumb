@@ -6,10 +6,12 @@
 import {
   createConversationsRepo,
   createFactcheckRepo,
+  createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
   createKnowledgeNodesRepo,
   createLlmCallsRepo,
   createMapPlaceNamesRepo,
+  createMasteryClaimsRepo,
   createMessagesRepo,
   createNodeEmbeddingsRepo,
   createNodeSightingsRepo,
@@ -32,6 +34,8 @@ export interface Repos {
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
   factcheck: ReturnType<typeof createFactcheckRepo>;
+  interestSignals: ReturnType<typeof createInterestSignalsRepo>;
+  masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -63,5 +67,7 @@ async function openAndMigrate(): Promise<Repos> {
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
     factcheck: createFactcheckRepo(sqlClient),
+    interestSignals: createInterestSignalsRepo(sqlClient),
+    masteryClaims: createMasteryClaimsRepo(sqlClient),
   };
 }

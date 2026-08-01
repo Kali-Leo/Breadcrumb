@@ -122,6 +122,36 @@ export interface FactcheckClaimRow {
   created_at: string;
 }
 
+/** One LLM-observed psychological signal for a node in one chat round (spec 011). */
+export interface InterestSignalRow {
+  id: string;
+  node_id: string;
+  conversation_id: string;
+  /** 0 (none) ~ 1 (strong) — active follow-up questions, "tell me more". */
+  curiosity: number;
+  /** 0 (none) ~ 1 (strong) — repeated confusion, "I don't get it". */
+  confusion: number;
+  /** 0 (none) ~ 1 (strong) — disengagement, wanting to skip ahead. */
+  boredom: number;
+  /** JSON string array of preferred explanation-style tags, e.g. ["类比","代码示例"]. */
+  styles_json: string;
+  created_at: string;
+}
+
+/** 'learned' outweighs 'familiar' when computeMastery folds claims into the base retention. */
+export type MasteryClaimLevel = "learned" | "familiar";
+export type MasteryClaimSource = "self-report";
+
+/** A user's self-reported prior knowledge of a node — cold-start evidence, weighted below
+ * real footprints (spec 011). */
+export interface MasteryClaimRow {
+  id: string;
+  node_id: string;
+  level: MasteryClaimLevel;
+  source: MasteryClaimSource;
+  created_at: string;
+}
+
 export interface LlmCallRow {
   id: string;
   conversation_id: string | null;
