@@ -72,7 +72,7 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
     flags.workers,
     async (persona, index) => {
       personaByJourneyIndex.set(index, persona);
-      const log = artifacts.openSessionLog(index);
+      const log = artifacts.openJourneyLog(index);
       const result = await runJourney({
         persona,
         journeyIndex: index,

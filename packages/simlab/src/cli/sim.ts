@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Purpose: CLI entry point. Bare `sim` (or `sim run`) launches N parallel simulated sessions
- * against DeepSeek and writes artifacts/<runId>/; `sim gold` and `sim summarize` (T4/T6)
- * dispatch from here too.
+ * Purpose: CLI entry point. Bare `sim` (or `sim run`) launches N parallel simulated journeys
+ * against DeepSeek and writes artifacts/<runId>/; `sim gold`/`sim recovery` run on-demand
+ * evals; `sim summarize <runId>` mechanically aggregates a run's artifacts into summary.md.
  * Main exports: none — this is a script entry, run via `pnpm --filter @breadcrumb/simlab sim`.
  */
 import { goldCommand } from "./goldCommand";
 import { recoveryCommand } from "./recoveryCommand";
 import { runCommand } from "./runCommand";
+import { summarizeCommand } from "./summarizeCommand";
 
 async function main(): Promise<void> {
   const [subcommand, ...rest] = process.argv.slice(2);
@@ -25,9 +26,13 @@ async function main(): Promise<void> {
     case "recovery":
       await recoveryCommand();
       return;
-    // "summarize" is added in spec 013 T6.
+    case "summarize":
+      await summarizeCommand(rest);
+      return;
     default:
-      console.error(`simlab: unknown subcommand "${subcommand}" (known: run, gold, recovery)`);
+      console.error(
+        `simlab: unknown subcommand "${subcommand}" (known: run, gold, recovery, summarize)`,
+      );
       process.exitCode = 1;
   }
 }

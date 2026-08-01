@@ -1,14 +1,15 @@
 /**
  * Purpose: manages one run's artifacts directory (packages/simlab/artifacts/<runId>/,
- * gitignored) — append-only session-*.jsonl writers, a flagged/ folder for anomaly samples,
- * and the final metrics.json / gold-baseline.json writes. This directory IS the interface
- * the Claude reviewer and `sim summarize` consume (see docs/testing/simlab-评审协议.md).
- * Main exports: createRunArtifacts, RunArtifacts, SessionLogWriter.
+ * gitignored) — append-only journey-*.jsonl writers, a flagged/ folder for anomaly samples,
+ * and the final metrics.json / gold-baseline.json / recovery-result.json / summary.md writes.
+ * This directory IS the interface the Claude reviewer and `sim summarize` consume (see
+ * docs/testing/simlab-评审协议.md and src/cli/README.md for the full schema).
+ * Main exports: createRunArtifacts, RunArtifacts, JourneyLogWriter.
  */
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export interface SessionLogWriter {
+export interface JourneyLogWriter {
   path: string;
   /** Appends one JSON-serializable record as a line (JSONL: one JSON value per line). */
   writeLine(record: unknown): void;
@@ -18,7 +19,7 @@ export interface RunArtifacts {
   runId: string;
   dir: string;
   flaggedDir: string;
-  openSessionLog(sessionIndex: number): SessionLogWriter;
+  openJourneyLog(journeyIndex: number): JourneyLogWriter;
   writeMetrics(metrics: unknown): void;
   writeJson(fileName: string, content: unknown): void;
   writeFlagged(name: string, content: unknown): void;
@@ -38,8 +39,8 @@ export function createRunArtifacts(baseDir: string, runId: string): RunArtifacts
     runId,
     dir,
     flaggedDir,
-    openSessionLog(sessionIndex) {
-      const path = join(dir, `session-${sessionIndex}.jsonl`);
+    openJourneyLog(journeyIndex) {
+      const path = join(dir, `journey-${journeyIndex}.jsonl`);
       writeFileSync(path, "");
       return {
         path,

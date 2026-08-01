@@ -8,7 +8,7 @@
 import type { LlmClientConfig } from "@breadcrumb/core-llm";
 import { createTempDatabase } from "../db/sqliteClient";
 import { SEED_PERSONAS } from "../persona/seeds";
-import type { SessionLogWriter } from "../runner/artifacts";
+import type { JourneyLogWriter } from "../runner/artifacts";
 import { runConversation } from "../runner/conversation";
 import { createCostGuard } from "../runner/costGuard";
 
@@ -25,7 +25,7 @@ export interface ScriptedRecoveryResult {
   signalCount: number;
 }
 
-const NOOP_LOG: SessionLogWriter = {
+const NOOP_LOG: JourneyLogWriter = {
   path: "(scripted-recovery, discarded)",
   writeLine: () => undefined,
 };

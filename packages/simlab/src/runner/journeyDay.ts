@@ -13,7 +13,7 @@ import type { SimlabRepos } from "../db/repos";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import { type mulberry32, randomFloat, randomInt } from "../util/prng";
-import type { SessionLogWriter } from "./artifacts";
+import type { JourneyLogWriter } from "./artifacts";
 import { runConversation } from "./conversation";
 import type { CostGuard } from "./costGuard";
 import { pickAndApplyJourneyAction } from "./journeyActions";
@@ -29,7 +29,7 @@ export interface DayConversationsContext {
   persona: Persona;
   llmConfig: LlmClientConfig;
   costGuard: CostGuard;
-  log: SessionLogWriter;
+  log: JourneyLogWriter;
   day: number;
   conversationsToday: number;
   nowIso: string;
@@ -39,7 +39,7 @@ export interface DayConversationsContext {
   onConversationComplete?: (
     repos: SimlabRepos,
     day: number,
-    log: SessionLogWriter,
+    log: JourneyLogWriter,
   ) => Promise<void>;
   touchedLabels: string[];
   newNodeLabels: string[];

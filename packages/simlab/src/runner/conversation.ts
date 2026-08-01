@@ -12,7 +12,7 @@ import type { SimlabRepos } from "../db/repos";
 import { findPressureLexiconHits } from "../judges/pressureLexicon";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
-import type { SessionLogWriter } from "./artifacts";
+import type { JourneyLogWriter } from "./artifacts";
 import type { CostGuard } from "./costGuard";
 import { runRoundPipeline } from "./pipeline";
 import type { PipelineFailure } from "./pipelineTypes";
@@ -30,7 +30,7 @@ export interface ConversationOptions {
   persona: Persona;
   llmConfig: LlmClientConfig;
   costGuard: CostGuard;
-  log: SessionLogWriter;
+  log: JourneyLogWriter;
   day: number;
   maxRounds: number;
   startIso: string;

@@ -25,9 +25,9 @@ describe("createRunArtifacts", () => {
     expect(existsSync(artifacts.flaggedDir)).toBe(true);
   });
 
-  it("writes one JSON value per line to the session log, appending across calls", () => {
+  it("writes one JSON value per line to the journey log, appending across calls", () => {
     const artifacts = createRunArtifacts(baseDir, "run-2");
-    const log = artifacts.openSessionLog(0);
+    const log = artifacts.openJourneyLog(0);
     log.writeLine({ event: "a", value: 1 });
     log.writeLine({ event: "b", value: 2 });
 

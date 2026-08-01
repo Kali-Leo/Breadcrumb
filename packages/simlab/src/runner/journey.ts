@@ -14,7 +14,7 @@ import { createTempDatabase } from "../db/sqliteClient";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import { mulberry32, randomFloat, randomInt, seedFromStrings } from "../util/prng";
-import type { SessionLogWriter } from "./artifacts";
+import type { JourneyLogWriter } from "./artifacts";
 import type { CostGuard } from "./costGuard";
 import { computeDayDigest, type DayDigest } from "./dayDigest";
 import { runJourneyDayConversations } from "./journeyDay";
@@ -35,13 +35,13 @@ export interface JourneyOptions {
   days: number;
   llmConfig: LlmClientConfig;
   costGuard: CostGuard;
-  log: SessionLogWriter;
+  log: JourneyLogWriter;
   startIso?: string;
   /** T4 hook: run mechanical tripwires against the still-open db after each conversation. */
   onConversationComplete?: (
     repos: SimlabRepos,
     day: number,
-    log: SessionLogWriter,
+    log: JourneyLogWriter,
   ) => Promise<void>;
   /** T4 telemetry: per-purpose call ledger + pressure-lexicon scan, threaded through every
    * LLM call the journey makes (round pipeline, journey actions, daily trail summary). */

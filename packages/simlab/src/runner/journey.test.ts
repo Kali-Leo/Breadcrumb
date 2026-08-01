@@ -99,7 +99,7 @@ describe("runJourney", () => {
   it("runs a multi-day journey end to end and produces one digest per day", async () => {
     artifactsBaseDir = mkdtempSync(join(tmpdir(), "breadcrumb-simlab-journey-"));
     const artifacts = createRunArtifacts(artifactsBaseDir, "run-test");
-    const log = artifacts.openSessionLog(0);
+    const log = artifacts.openJourneyLog(0);
     const persona = SEED_PERSONAS[0];
     if (persona === undefined) throw new Error("no seed persona");
 
@@ -147,7 +147,7 @@ describe("runJourney", () => {
     let logIndex = 0;
     async function run() {
       logIndex += 1;
-      const log = artifacts.openSessionLog(logIndex);
+      const log = artifacts.openJourneyLog(logIndex);
       return runJourney({
         persona,
         journeyIndex: 5,
@@ -174,7 +174,7 @@ describe("runJourney", () => {
   it("threads telemetry through: ledger tallies successes, pressure hits are reported from both tutor replies and trail summaries", async () => {
     artifactsBaseDir = mkdtempSync(join(tmpdir(), "breadcrumb-simlab-journey-telemetry-"));
     const artifacts = createRunArtifacts(artifactsBaseDir, "run-test");
-    const log = artifacts.openSessionLog(0);
+    const log = artifacts.openJourneyLog(0);
     const persona = SEED_PERSONAS[2];
     if (persona === undefined) throw new Error("no seed persona");
 
