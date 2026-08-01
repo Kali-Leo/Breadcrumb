@@ -8,8 +8,10 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildInterestMessages,
+  buildSelfReportMessages,
   type InterestExtractionNode,
   interestSignalsSchema,
+  selfReportMappingSchema,
 } from "@breadcrumb/plugin-interest";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
@@ -22,10 +24,62 @@ import { useSettingsStore } from "./settingsStore";
 interface InterestState {
   /** Node ids the most recent interest-extraction round wrote a signal for. */
   lastSignalNodeIds: string[];
+  /** Maps free text like "我学过高中数学" onto existing tree nodes and writes claims. UI
+   * lands in spec 012 — this is the wired-up action only. */
+  selfReportMastery(userText: string): Promise<void>;
 }
 
 export const useInterestStore = create<InterestState>(() => ({
   lastSignalNodeIds: [],
+
+  async selfReportMastery(userText) {
+    const settings = useSettingsStore.getState();
+    if (!settings.featureSwitches.interest || !settings.networkEnabled || !settings.apiConfig) {
+      return;
+    }
+    try {
+      const repos = await getRepos();
+      const allNodes = await repos.knowledgeNodes.listAll();
+      if (allNodes.length === 0) return;
+
+      const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+      const { parsed, usage } = await chatJson(
+        config,
+        buildSelfReportMessages(
+          userText,
+          allNodes.map((node) => node.label),
+        ),
+        selfReportMappingSchema,
+      );
+      await recordMeteredCall({
+        purpose: "self-report-mapping",
+        model: config.model,
+        conversationId: null,
+        usage,
+      });
+
+      const nodeIdByLabel = new Map(allNodes.map((node) => [node.label, node.id]));
+      const createdAt = nowIso();
+      const changedNodeIds: string[] = [];
+      for (const mapping of parsed.mappings) {
+        const nodeId = nodeIdByLabel.get(mapping.label);
+        if (nodeId === undefined) continue;
+        await repos.masteryClaims.insert({
+          id: newId(),
+          node_id: nodeId,
+          level: mapping.claimLevel,
+          source: "self-report",
+          created_at: createdAt,
+        });
+        changedNodeIds.push(nodeId);
+      }
+      if (changedNodeIds.length > 0) {
+        appEventBus.emit("mastery:updated", { changedNodeIds });
+      }
+    } catch (error) {
+      console.warn("self-report mastery mapping skipped:", error);
+    }
+  },
 }));
 
 /** Extracts interest signals for every node this round touched; failures degrade silently
