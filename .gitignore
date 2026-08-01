@@ -25,3 +25,6 @@ apps/desktop/src-tauri/gen/
 *.log
 *.db
 *.sqlite
+
+# simlab run artifacts (spec 013)
+packages/simlab/artifacts/
