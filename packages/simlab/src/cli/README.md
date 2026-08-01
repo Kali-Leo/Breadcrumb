@@ -36,6 +36,7 @@ One JSON object per line, in chronological order, for journey `n` (0-indexed, ma
 | `journey-start`    | `journeyId`, `personaId`, `days`, `startIso`                          | once, first line |
 | `student-turn`     | `day`, `conversationId`, `round`, `content`, `usage`                   | every student reply, incl. the final `###STOP###` one |
 | `tutor-turn`       | `day`, `conversationId`, `round`, `content`, `usage`                   | every tutor reply |
+| `degenerate-turn`  | `day`, `conversationId`, `round`, `source` (`student`\|`tutor`)        | a reply trimmed to empty twice in a row (one retry already happened); the conversation ends early right after this line — the empty turn never reaches a pipeline |
 | `pipeline-stage`   | `day`, `conversationId?`, `round?`, `purpose`, and either `request`+`response` (success) or `error` (failure) | one per LLM-backed pipeline call: `knowledge-tree`, `knowledge-edges` (only when new nodes exist that round), `interest`, plus journey-action purposes `self-report-mapping`/`goal-planning`, and `trail-summary` (once per day with new nodes) |
 | `journey-action`   | `day`, `action` (`follow-frontier`\|`self-report`\|`create-goal`\|`revisit-old-topic`\|`jump-new-domain`), `topicHint` | after every conversation, between-conversation |
 | `day-digest`       | `day`, `digest` (see below)                                            | once per virtual day, after that day's conversations + trail summary |

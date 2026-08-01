@@ -22,7 +22,15 @@ import { getTutorReply } from "./tutor";
 /** Time between adjacent messages within one conversation — a single sitting, not a gap. */
 export const ROUND_STEP_MS = 60_000;
 
-export type ConversationStopReason = "stop-token" | "max-rounds";
+export type ConversationStopReason = "stop-token" | "max-rounds" | "degenerate-turn";
+
+/** Retries a fallible reply call exactly once when its content trims to empty (a model
+ * quirk, not a real silent turn); returns whatever the (possibly still-empty) retry got. */
+async function withEmptyRetry<T extends { content: string }>(fn: () => Promise<T>): Promise<T> {
+  const first = await fn();
+  if (first.content.trim() !== "") return first;
+  return fn();
+}
 
 export interface ConversationOptions {
   repos: SimlabRepos;
@@ -62,19 +70,22 @@ export async function runConversation(options: ConversationOptions): Promise<Con
   let round = 0;
 
   for (; round < maxRounds; round += 1) {
-    const studentReply = await getStudentReply(
-      llmConfig,
-      persona,
-      transcript,
-      round === 0 ? options.topicHint : undefined,
+    const studentReply = await withEmptyRetry(() =>
+      getStudentReply(llmConfig, persona, transcript, round === 0 ? options.topicHint : undefined),
     );
     costGuard.recordCall(llmConfig.model, studentReply.usage);
+    if (studentReply.content.trim() === "") {
+      log.writeLine({ event: "degenerate-turn", day, conversationId, round, source: "student" });
+      stopReason = "degenerate-turn";
+      break;
+    }
     log.writeLine({
       event: "student-turn",
       day,
       conversationId,
       round,
       content: studentReply.content,
+      usage: studentReply.usage,
     });
     if (studentReply.isStop) {
       stopReason = "stop-token";
@@ -92,9 +103,21 @@ export async function runConversation(options: ConversationOptions): Promise<Con
     });
     transcript.push({ role: "user", content: studentReply.content });
 
-    const tutorReply = await getTutorReply(llmConfig, transcript);
+    const tutorReply = await withEmptyRetry(() => getTutorReply(llmConfig, transcript));
     costGuard.recordCall(llmConfig.model, tutorReply.usage);
-    log.writeLine({ event: "tutor-turn", day, conversationId, round, content: tutorReply.content });
+    if (tutorReply.content.trim() === "") {
+      log.writeLine({ event: "degenerate-turn", day, conversationId, round, source: "tutor" });
+      stopReason = "degenerate-turn";
+      break;
+    }
+    log.writeLine({
+      event: "tutor-turn",
+      day,
+      conversationId,
+      round,
+      content: tutorReply.content,
+      usage: tutorReply.usage,
+    });
     if (options.telemetry) {
       const hits = findPressureLexiconHits(tutorReply.content, options.telemetry.pressureLexicon);
       if (hits.length > 0) {
