@@ -16,6 +16,9 @@ import { useChatStore } from "./stores/chatStore";
 // Side-effect only: registers edgeStore's staggered chat:responseFinished subscription.
 // No component reads useEdgeStore yet (display lands in spec 012's experiment panel).
 import "./stores/edgeStore";
+// Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
+// No component reads useInterestStore yet (display lands in spec 012's experiment panel).
+import "./stores/interestStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";

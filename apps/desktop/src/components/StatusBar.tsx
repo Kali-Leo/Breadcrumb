@@ -17,6 +17,8 @@ const PURPOSE_NAMES: Record<string, string> = {
   trail: "轨迹总结",
   factcheck: "求真核查",
   "knowledge-edges": "知识关系",
+  interest: "兴趣画像",
+  "self-report-mapping": "自报映射",
 };
 
 function renderCost(cost: CostByCurrency): string {

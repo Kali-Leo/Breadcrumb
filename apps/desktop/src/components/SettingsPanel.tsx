@@ -20,6 +20,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "🕸️ 知识关系发现",
     hint: "新知识点落库后额外调用一次 AI，判定前置/辅助关系（独立计费）",
   },
+  interest: {
+    name: "💡 兴趣画像",
+    hint: "每轮对话后观察好奇/困惑/厌倦倾向；也用于「我学过…」自报映射（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
