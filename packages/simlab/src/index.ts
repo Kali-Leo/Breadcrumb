@@ -7,3 +7,7 @@ export * from "./db/repos";
 export * from "./db/sqliteClient";
 export * from "./embedding/embedNodes";
 export * from "./embedding/syntheticEmbedding";
+export * from "./persona/perturb";
+export * from "./persona/schema";
+export * from "./persona/seeds";
+export * from "./persona/studentPrompt";
