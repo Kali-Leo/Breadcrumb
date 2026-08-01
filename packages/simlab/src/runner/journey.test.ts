@@ -9,6 +9,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { createCallLedger } from "../judges/callLedger";
+import { loadPressureLexicon } from "../judges/pressureLexicon";
+import type { PressureHitSample } from "../judges/telemetry";
 import { SEED_PERSONAS } from "../persona/seeds";
 import { STOP_TOKEN } from "../persona/studentPrompt";
 import { createRunArtifacts } from "./artifacts";
@@ -84,6 +87,9 @@ function makeFakeFetch(): typeof fetch {
     }
     if (systemPrompt.includes("学习目标拆解器")) {
       return jsonCompletion({ existing: [], suggested: [] });
+    }
+    if (systemPrompt.includes("温柔的学习见证者")) {
+      return jsonCompletion({ summary: "今天搞懂了测试概念，真棒！" });
     }
     throw new Error(`unexpected LLM call: ${systemPrompt.slice(0, 40)}`);
   }) as typeof fetch;
@@ -163,5 +169,80 @@ describe("runJourney", () => {
     expect(a.totalConversations).toBe(b.totalConversations);
     expect(a.totalRounds).toBe(b.totalRounds);
     expect(a.newNodeLabels).toEqual(b.newNodeLabels);
+  });
+
+  it("threads telemetry through: ledger tallies successes, pressure hits are reported from both tutor replies and trail summaries", async () => {
+    artifactsBaseDir = mkdtempSync(join(tmpdir(), "breadcrumb-simlab-journey-telemetry-"));
+    const artifacts = createRunArtifacts(artifactsBaseDir, "run-test");
+    const log = artifacts.openSessionLog(0);
+    const persona = SEED_PERSONAS[2];
+    if (persona === undefined) throw new Error("no seed persona");
+
+    const ledger = createCallLedger();
+    const pressureHits: PressureHitSample[] = [];
+    let turnInConversation = 0;
+    const pressureFetch = (async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as {
+        stream?: boolean;
+        messages: { role: string; content: string }[];
+      };
+      if (body.stream === true) {
+        const isStudent = body.messages[0]?.role === "system";
+        if (isStudent) {
+          turnInConversation += 1;
+          if (turnInConversation >= 2) {
+            turnInConversation = 0;
+            return sseFor(STOP_TOKEN);
+          }
+          return sseFor("这是什么意思？");
+        }
+        return sseFor("你还差一点就懂了，这是关于该主题的讲解。");
+      }
+      const systemPrompt = body.messages[0]?.content ?? "";
+      if (systemPrompt.includes("知识结构提取器")) {
+        return jsonCompletion({
+          nodes: [{ label: "测试概念", summary: "占位", parentLabel: null }],
+        });
+      }
+      if (systemPrompt.includes("知识关系判定器"))
+        return jsonCompletion({ edges: [], methodNodes: [] });
+      if (systemPrompt.includes("学习心理观察者")) {
+        return jsonCompletion({
+          signals: [{ label: "测试概念", curiosity: 0.5, confusion: 0, boredom: 0, styles: [] }],
+        });
+      }
+      if (systemPrompt.includes("自报知识映射器")) return jsonCompletion({ mappings: [] });
+      if (systemPrompt.includes("学习目标拆解器"))
+        return jsonCompletion({ existing: [], suggested: [] });
+      if (systemPrompt.includes("温柔的学习见证者")) {
+        return jsonCompletion({ summary: "你还差一点就能全部搞懂了。" });
+      }
+      throw new Error(`unexpected LLM call: ${systemPrompt.slice(0, 40)}`);
+    }) as typeof fetch;
+
+    await runJourney({
+      persona,
+      journeyIndex: 0,
+      days: 1,
+      llmConfig: {
+        baseUrl: "https://api.example.com/v1",
+        apiKey: "key",
+        model: "test-model",
+        fetchImpl: pressureFetch,
+      },
+      costGuard: createCostGuard(1000),
+      log,
+      startIso: "2026-08-01T09:00:00.000Z",
+      telemetry: {
+        ledger,
+        pressureLexicon: loadPressureLexicon(),
+        onPressureHit: (sample) => pressureHits.push(sample),
+      },
+    });
+
+    const tallies = ledger.snapshot();
+    expect(tallies["knowledge-tree"]?.success).toBeGreaterThan(0);
+    expect(pressureHits.some((hit) => hit.source === "tutor")).toBe(true);
+    expect(pressureHits.some((hit) => hit.source === "trail-summary")).toBe(true);
   });
 });

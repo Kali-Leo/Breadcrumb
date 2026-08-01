@@ -5,6 +5,8 @@
  * dispatch from here too.
  * Main exports: none — this is a script entry, run via `pnpm --filter @breadcrumb/simlab sim`.
  */
+import { goldCommand } from "./goldCommand";
+import { recoveryCommand } from "./recoveryCommand";
 import { runCommand } from "./runCommand";
 
 async function main(): Promise<void> {
@@ -13,12 +15,21 @@ async function main(): Promise<void> {
     await runCommand(process.argv.slice(2));
     return;
   }
-  if (subcommand === "run") {
-    await runCommand(rest);
-    return;
+  switch (subcommand) {
+    case "run":
+      await runCommand(rest);
+      return;
+    case "gold":
+      await goldCommand();
+      return;
+    case "recovery":
+      await recoveryCommand();
+      return;
+    // "summarize" is added in spec 013 T6.
+    default:
+      console.error(`simlab: unknown subcommand "${subcommand}" (known: run, gold, recovery)`);
+      process.exitCode = 1;
   }
-  console.error(`simlab: unknown subcommand "${subcommand}" (known: run, gold, summarize)`);
-  process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {

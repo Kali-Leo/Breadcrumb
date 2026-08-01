@@ -11,24 +11,23 @@ import type { LlmClientConfig } from "@breadcrumb/core-llm";
 import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
 import type { SimlabRepos } from "../db/repos";
 import { createTempDatabase } from "../db/sqliteClient";
+import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import { mulberry32, randomFloat, randomInt, seedFromStrings } from "../util/prng";
 import type { SessionLogWriter } from "./artifacts";
-import { runConversation } from "./conversation";
 import type { CostGuard } from "./costGuard";
 import { computeDayDigest, type DayDigest } from "./dayDigest";
-import { pickAndApplyJourneyAction } from "./journeyActions";
+import { runJourneyDayConversations } from "./journeyDay";
 import type { PipelineFailure } from "./pipelineTypes";
 import type { TopicHint } from "./student";
+import { runTrailSummaryStage } from "./trailSummaryStage";
 
 const HOUR_MS = 60 * 60 * 1000;
-/** Gaps between same-day conversations, and between the last conversation of one day and
- * the first of the next — tunable constants, not spec-mandated exact numbers except the
- * cross-day range (16-40h), which IS spec-mandated (forgetting must happen for real). */
-const WITHIN_DAY_GAP_HOURS: [number, number] = [0.5, 3];
+/** Gap between the last conversation of one day and the first of the next — spec-mandated
+ * (forgetting must happen for real); within-day gaps and rounds-per-conversation ranges live
+ * in journeyDay.ts alongside the conversation loop they govern. */
 const CROSS_DAY_GAP_HOURS: [number, number] = [16, 40];
 const CONVERSATIONS_PER_DAY_RANGE: [number, number] = [0, 3];
-const ROUNDS_PER_CONVERSATION_RANGE: [number, number] = [2, 8];
 
 export interface JourneyOptions {
   persona: Persona;
@@ -44,6 +43,9 @@ export interface JourneyOptions {
     day: number,
     log: SessionLogWriter,
   ) => Promise<void>;
+  /** T4 telemetry: per-purpose call ledger + pressure-lexicon scan, threaded through every
+   * LLM call the journey makes (round pipeline, journey actions, daily trail summary). */
+  telemetry?: RunTelemetry;
 }
 
 export interface JourneyResult {
@@ -83,82 +85,55 @@ export async function runJourney(options: JourneyOptions): Promise<JourneyResult
   let totalRounds = 0;
 
   for (let day = 0; day < days; day += 1) {
-    const conversationsToday = randomInt(random, ...CONVERSATIONS_PER_DAY_RANGE);
-    let edgesAddedToday = 0;
-    let edgesRejectedToday = 0;
-    const newNodeLabelsToday: string[] = [];
+    const dayOutcome = await runJourneyDayConversations({
+      repos: temp.repos,
+      persona,
+      llmConfig,
+      costGuard,
+      log,
+      day,
+      conversationsToday: randomInt(random, ...CONVERSATIONS_PER_DAY_RANGE),
+      nowIso,
+      topicHint,
+      random,
+      telemetry: options.telemetry,
+      onConversationComplete: options.onConversationComplete,
+      touchedLabels,
+      newNodeLabels,
+      sightedNodeLabels,
+      rejectedCyclicEdges,
+      pipelineFailures,
+    });
+    nowIso = dayOutcome.nowIso;
+    topicHint = dayOutcome.topicHint;
+    totalConversations += dayOutcome.conversationsRun;
+    totalRounds += dayOutcome.roundsRun;
 
-    for (
-      let conversationIndex = 0;
-      conversationIndex < conversationsToday;
-      conversationIndex += 1
-    ) {
-      if (conversationIndex > 0) {
-        nowIso = addHours(nowIso, randomFloat(random, ...WITHIN_DAY_GAP_HOURS));
-      }
-      const conversationId = randomUUID();
-      await temp.repos.conversations.create({
-        id: conversationId,
-        title: `journey:${persona.name}:day${day}`,
-        created_at: nowIso,
-        updated_at: nowIso,
-      });
-
-      const result = await runConversation({
-        repos: temp.repos,
-        conversationId,
-        persona,
-        llmConfig,
-        costGuard,
-        log,
+    if (dayOutcome.newNodeLabelsToday.length > 0) {
+      const newLabelSet = new Set(dayOutcome.newNodeLabelsToday);
+      const allNodes = await temp.repos.knowledgeNodes.listAll();
+      await runTrailSummaryStage({
         day,
-        maxRounds: randomInt(random, ...ROUNDS_PER_CONVERSATION_RANGE),
-        startIso: nowIso,
-        topicHint,
-      });
-
-      nowIso = result.endIso;
-      totalConversations += 1;
-      totalRounds += result.rounds;
-      newNodeLabels.push(...result.newNodeLabels);
-      newNodeLabelsToday.push(...result.newNodeLabels);
-      sightedNodeLabels.push(...result.sightedNodeLabels);
-      touchedLabels.push(...result.newNodeLabels, ...result.sightedNodeLabels);
-      rejectedCyclicEdges.push(...result.rejectedCyclicEdges);
-      pipelineFailures.push(...result.pipelineFailures);
-      edgesAddedToday += result.addedEdgeCount;
-      edgesRejectedToday += result.rejectedCyclicEdges.length;
-
-      if (options.onConversationComplete) {
-        await options.onConversationComplete(temp.repos, day, log);
-      }
-
-      const actionResult = await pickAndApplyJourneyAction({
-        repos: temp.repos,
-        persona,
+        nodesLearnedToday: allNodes.filter((node) => newLabelSet.has(node.label)),
         llmConfig,
-        nowIso,
-        random,
-        recordCall: (_purpose, model, usage) => costGuard.recordCall(model, usage),
+        telemetry: options.telemetry,
         logStage: (record) => log.writeLine({ event: "pipeline-stage", day, ...record }),
-        touchedLabelsSoFar: touchedLabels,
+        recordCall: (model, usage) => costGuard.recordCall(model, usage),
       });
-      topicHint = actionResult.topicHint;
-      log.writeLine({ event: "journey-action", day, action: actionResult.actionType, topicHint });
     }
 
-    const dayOutcome = await computeDayDigest(
+    const digestOutcome = await computeDayDigest(
       temp.repos,
       day,
       nowIso,
-      newNodeLabelsToday,
-      edgesAddedToday,
-      edgesRejectedToday,
+      dayOutcome.newNodeLabelsToday,
+      dayOutcome.edgesAddedToday,
+      dayOutcome.edgesRejectedToday,
       previousMasteryByNode,
     );
-    dayDigests.push(dayOutcome.digest);
-    log.writeLine({ event: "day-digest", day, digest: dayOutcome.digest });
-    previousMasteryByNode = dayOutcome.masteryByNode;
+    dayDigests.push(digestOutcome.digest);
+    log.writeLine({ event: "day-digest", day, digest: digestOutcome.digest });
+    previousMasteryByNode = digestOutcome.masteryByNode;
 
     if (day < days - 1) {
       nowIso = addHours(nowIso, randomFloat(random, ...CROSS_DAY_GAP_HOURS));

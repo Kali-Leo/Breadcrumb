@@ -9,6 +9,8 @@ import { randomUUID } from "node:crypto";
 import type { ChatMessage, LlmClientConfig } from "@breadcrumb/core-llm";
 import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
 import type { SimlabRepos } from "../db/repos";
+import { findPressureLexiconHits } from "../judges/pressureLexicon";
+import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import type { SessionLogWriter } from "./artifacts";
 import type { CostGuard } from "./costGuard";
@@ -33,6 +35,7 @@ export interface ConversationOptions {
   maxRounds: number;
   startIso: string;
   topicHint?: TopicHint;
+  telemetry?: RunTelemetry;
 }
 
 export interface ConversationResult {
@@ -92,6 +95,19 @@ export async function runConversation(options: ConversationOptions): Promise<Con
     const tutorReply = await getTutorReply(llmConfig, transcript);
     costGuard.recordCall(llmConfig.model, tutorReply.usage);
     log.writeLine({ event: "tutor-turn", day, conversationId, round, content: tutorReply.content });
+    if (options.telemetry) {
+      const hits = findPressureLexiconHits(tutorReply.content, options.telemetry.pressureLexicon);
+      if (hits.length > 0) {
+        options.telemetry.onPressureHit({
+          source: "tutor",
+          day,
+          conversationId,
+          round,
+          text: tutorReply.content,
+          hits,
+        });
+      }
+    }
 
     nowIso = new Date(Date.parse(nowIso) + ROUND_STEP_MS).toISOString();
     const tutorMessageId = randomUUID();
@@ -112,7 +128,10 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       assistantAnswer: tutorReply.content,
       nowIso,
       llmConfig,
-      recordCall: (_purpose, model, usage) => costGuard.recordCall(model, usage),
+      recordCall: (purpose, model, usage) => {
+        costGuard.recordCall(model, usage);
+        options.telemetry?.ledger.recordSuccess(purpose);
+      },
       logStage: (record) =>
         log.writeLine({ event: "pipeline-stage", day, conversationId, round, ...record }),
     });
@@ -121,6 +140,9 @@ export async function runConversation(options: ConversationOptions): Promise<Con
     addedEdgeCount += pipelineResult.addedEdges.length;
     rejectedCyclicEdges.push(...pipelineResult.rejectedCyclicEdges);
     pipelineFailures.push(...pipelineResult.failures);
+    for (const failure of pipelineResult.failures) {
+      options.telemetry?.ledger.recordFailure(failure.purpose);
+    }
   }
 
   return {

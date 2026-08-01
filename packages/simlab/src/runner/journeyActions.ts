@@ -46,6 +46,7 @@ export interface JourneyActionContext {
   nowIso: string;
   random: () => number;
   recordCall: (purpose: string, model: string, usage: TokenUsage) => void;
+  recordFailure?: (purpose: string) => void;
   logStage: (record: Record<string, unknown>) => void;
   touchedLabelsSoFar: readonly string[];
 }
@@ -108,6 +109,7 @@ async function applySelfReport(ctx: JourneyActionContext): Promise<TopicHint> {
       });
     }
   } catch (error) {
+    ctx.recordFailure?.("self-report-mapping");
     ctx.logStage({
       purpose: "self-report-mapping",
       error: error instanceof Error ? error.message : String(error),
@@ -159,6 +161,7 @@ async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicHint> {
       updated_at: ctx.nowIso,
     });
   } catch (error) {
+    ctx.recordFailure?.("goal-planning");
     ctx.logStage({
       purpose: "goal-planning",
       error: error instanceof Error ? error.message : String(error),
