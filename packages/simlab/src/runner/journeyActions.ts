@@ -153,13 +153,22 @@ async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicHint> {
     const existingIds = parsed.existing
       .map((label) => labelToId.get(label))
       .filter((id): id is string => id !== undefined);
-    await repos.goals.insert({
-      id: randomUUID(),
-      title: goalText,
-      node_ids_json: JSON.stringify([...existingIds, ...suggestedIds]),
-      created_at: ctx.nowIso,
-      updated_at: ctx.nowIso,
-    });
+    const nodeIds = [...existingIds, ...suggestedIds];
+    const trimmedTitle = goalText.trim();
+    const existingGoals = await repos.goals.listAll();
+    const duplicateGoal = existingGoals.find((goal) => goal.title.trim() === trimmedTitle);
+    if (duplicateGoal !== undefined) {
+      // Idempotent on title: refresh the existing goal instead of inserting a duplicate card.
+      await repos.goals.updateNodeIds(duplicateGoal.id, nodeIds, ctx.nowIso);
+    } else {
+      await repos.goals.insert({
+        id: randomUUID(),
+        title: trimmedTitle,
+        node_ids_json: JSON.stringify(nodeIds),
+        created_at: ctx.nowIso,
+        updated_at: ctx.nowIso,
+      });
+    }
   } catch (error) {
     ctx.recordFailure?.("goal-planning");
     ctx.logStage({

@@ -40,7 +40,11 @@ export async function requestGoalMapping(
 }
 
 /** Inserts confirmed suggested nodes as sighting-free concept nodes (no fake evidence — they
- * start unlit), then saves the goal row over existing + newly-inserted node ids. */
+ * start unlit), then saves the goal row over existing + newly-inserted node ids.
+ *
+ * Idempotent on title: if a goal with the identical trimmed title already exists, its
+ * node_ids_json/updated_at are refreshed in place instead of inserting a duplicate card
+ * (a re-mapped goal text should update the same goal, not clone it). */
 export async function persistCalibratedGoal(
   title: string,
   existingLabels: readonly string[],
@@ -50,6 +54,7 @@ export async function persistCalibratedGoal(
   const repos = await getRepos();
   const labelToId = new Map(currentNodes.map((node) => [node.label, node.id]));
   const createdAt = nowIso();
+  const trimmedTitle = title.trim();
 
   const suggestedIds: string[] = [];
   for (const suggestedNode of suggested) {
@@ -68,11 +73,20 @@ export async function persistCalibratedGoal(
   const existingIds = existingLabels
     .map((label) => labelToId.get(label))
     .filter((id): id is string => id !== undefined);
+  const nodeIds = [...existingIds, ...suggestedIds];
+
+  const existingGoals = await repos.goals.listAll();
+  const duplicateGoal = existingGoals.find((goal) => goal.title.trim() === trimmedTitle);
+  if (duplicateGoal !== undefined) {
+    await repos.goals.updateNodeIds(duplicateGoal.id, nodeIds, createdAt);
+    return { goalId: duplicateGoal.id, insertedNodes: suggestedIds.length > 0 };
+  }
+
   const goalId = newId();
   await repos.goals.insert({
     id: goalId,
-    title,
-    node_ids_json: JSON.stringify([...existingIds, ...suggestedIds]),
+    title: trimmedTitle,
+    node_ids_json: JSON.stringify(nodeIds),
     created_at: createdAt,
     updated_at: createdAt,
   });
