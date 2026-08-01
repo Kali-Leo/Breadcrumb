@@ -121,6 +121,12 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
           ]
         : store.sessionNodeIds,
     });
+    if (plan.newNodes.length > 0) {
+      appEventBus.emit("knowledge:nodesExtracted", {
+        conversationId,
+        freshNodeIds: plan.newNodes.map((node) => node.id),
+      });
+    }
   } catch (error) {
     console.warn("knowledge extraction skipped:", error);
   }

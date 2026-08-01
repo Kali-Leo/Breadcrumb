@@ -2,9 +2,9 @@
  * Purpose: zustand store driving the knowledge-edge extraction pipeline — after
  * knowledge-tree extraction lands new nodes, ranks candidate pairs (embeddings or the
  * same-parent/recent fallback), asks the LLM to judge requires/helps relationships, and
- * persists the cycle-safe result. Side effect on import: subscribes to the app bus with a
- * stagger longer than knowledge-tree extraction (4000/7000ms) so nodes and their embeddings
- * land first.
+ * persists the cycle-safe result. Side effect on import: subscribes to the app bus on
+ * knowledge:nodesExtracted — fired only after new nodes AND their embeddings have landed,
+ * so no timer race against the tree-extraction pipeline.
  * Main exports: useEdgeStore.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -29,7 +29,6 @@ import { useSettingsStore } from "./settingsStore";
 
 const TOP_K_SIMILAR = 3;
 const FALLBACK_RECENT_N = 5;
-const EDGE_EXTRACTION_DELAY_MS = 10000;
 
 interface EdgeState {
   /** Edge ids added by the most recent extraction round, for lightweight UI feedback. */
@@ -63,12 +62,14 @@ function attachNodes(
 
 /** Discovers requires/helps edges for this round's newly-learned nodes; failures degrade
  * silently (spec 010) — the chat and knowledge-tree pipelines are never affected. */
-async function extractEdgesFromFinishedRound(conversationId: string): Promise<void> {
+async function extractEdgesFromFinishedRound(
+  conversationId: string,
+  newNodeIds: readonly string[],
+): Promise<void> {
   const settings = useSettingsStore.getState();
   if (!settings.featureSwitches.knowledgeEdges || !settings.networkEnabled || !settings.apiConfig) {
     return;
   }
-  const newNodeIds = [...useKnowledgeStore.getState().freshNodeIds];
   if (newNodeIds.length === 0) return;
 
   try {
@@ -143,6 +144,6 @@ async function extractEdgesFromFinishedRound(conversationId: string): Promise<vo
   }
 }
 
-appEventBus.on("chat:responseFinished", ({ conversationId }) => {
-  setTimeout(() => void extractEdgesFromFinishedRound(conversationId), EDGE_EXTRACTION_DELAY_MS);
+appEventBus.on("knowledge:nodesExtracted", ({ conversationId, freshNodeIds }) => {
+  void extractEdgesFromFinishedRound(conversationId, freshNodeIds);
 });
