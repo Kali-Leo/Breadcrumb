@@ -1,7 +1,7 @@
 /**
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
- * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow.
+ * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -36,6 +36,10 @@ export interface MessageRow {
   created_at: string;
 }
 
+/** 'concept' = a topic in the taxonomy tree; 'method' = a learning technique (e.g. Feynman
+ * technique) that helps understand one or more concepts via a 'helps' edge. */
+export type KnowledgeNodeKind = "concept" | "method";
+
 /** A node of the USER's global knowledge tree (unique by label). */
 export interface KnowledgeNodeRow {
   id: string;
@@ -43,6 +47,25 @@ export interface KnowledgeNodeRow {
   parent_id: string | null;
   label: string;
   summary: string;
+  kind: KnowledgeNodeKind;
+  created_at: string;
+}
+
+/** requires = hard prerequisite (weight always 1): source_id must be learned before
+ * target_id. helps = weighted aid to understanding (weight 0~1), direction-neutral in
+ * spirit but stored as source helps target. */
+export type KnowledgeEdgeType = "requires" | "helps";
+export type KnowledgeEdgeOrigin = "llm" | "user";
+
+/** A directed learning-structure edge between two knowledge_nodes (spec 010). */
+export interface KnowledgeEdgeRow {
+  id: string;
+  source_id: string;
+  target_id: string;
+  edge_type: KnowledgeEdgeType;
+  weight: number;
+  confidence: number;
+  origin: KnowledgeEdgeOrigin;
   created_at: string;
 }
 

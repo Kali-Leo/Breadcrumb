@@ -15,7 +15,14 @@ const testDefaults = {
 };
 
 function existingNode(id: string, label: string, parentId: string | null): KnowledgeNodeRow {
-  return { id, parent_id: parentId, label, summary: "s", created_at: "2026-07-28T09:00:00Z" };
+  return {
+    id,
+    parent_id: parentId,
+    label,
+    summary: "s",
+    kind: "concept",
+    created_at: "2026-07-28T09:00:00Z",
+  };
 }
 
 describe("planNodeChanges", () => {

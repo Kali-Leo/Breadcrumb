@@ -1,21 +1,15 @@
 /**
- * Purpose: all SQL statements in one place — typed repository functions over SqlClient.
+ * Purpose: core cross-cutting SQL statements — settings, conversations, messages and
+ * billing. Knowledge-graph and feature-specific repos live in their own sibling files.
  * Main exports: settingsRepo, conversationsRepo, messagesRepo, llmCallsRepo factories.
  */
 import type {
   ConversationRow,
   Currency,
-  FactcheckClaimRow,
-  FactcheckRunRow,
-  KnowledgeNodeRow,
   LlmCallRow,
-  MapPlaceNameRow,
   MessageRow,
-  NodeEmbeddingRow,
-  NodeSightingRow,
   SettingRow,
   SqlClient,
-  TrailSummaryRow,
 } from "./types";
 
 export function createSettingsRepo(sql: SqlClient) {
@@ -67,160 +61,6 @@ export function createMessagesRepo(sql: SqlClient) {
       return sql.select<MessageRow>(
         "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
         [conversationId],
-      );
-    },
-  };
-}
-
-export function createKnowledgeNodesRepo(sql: SqlClient) {
-  return {
-    async insert(row: KnowledgeNodeRow): Promise<void> {
-      await sql.execute(
-        "INSERT INTO knowledge_nodes (id, parent_id, label, summary, created_at) VALUES (?, ?, ?, ?, ?)",
-        [row.id, row.parent_id, row.label, row.summary, row.created_at],
-      );
-    },
-    /** The user's whole tree, oldest first. */
-    async listAll(): Promise<KnowledgeNodeRow[]> {
-      return sql.select<KnowledgeNodeRow>(
-        "SELECT * FROM knowledge_nodes ORDER BY created_at ASC, id ASC",
-      );
-    },
-    /** Nodes first learned inside [fromIso, toIso) — the raw material of the daily trail. */
-    async listCreatedBetween(fromIso: string, toIso: string): Promise<KnowledgeNodeRow[]> {
-      return sql.select<KnowledgeNodeRow>(
-        "SELECT * FROM knowledge_nodes WHERE created_at >= ? AND created_at < ? ORDER BY created_at ASC",
-        [fromIso, toIso],
-      );
-    },
-  };
-}
-
-export function createNodeEmbeddingsRepo(sql: SqlClient) {
-  return {
-    async upsert(row: NodeEmbeddingRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO node_embeddings (node_id, model, vector_json, created_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(node_id) DO UPDATE SET
-           model = excluded.model, vector_json = excluded.vector_json, created_at = excluded.created_at`,
-        [row.node_id, row.model, row.vector_json, row.created_at],
-      );
-    },
-    async listAll(): Promise<NodeEmbeddingRow[]> {
-      return sql.select<NodeEmbeddingRow>("SELECT * FROM node_embeddings");
-    },
-    /** Nodes that still lack an embedding — the backfill queue. */
-    async listNodesMissingEmbedding(): Promise<KnowledgeNodeRow[]> {
-      return sql.select<KnowledgeNodeRow>(
-        `SELECT k.* FROM knowledge_nodes k
-         LEFT JOIN node_embeddings e ON e.node_id = k.id
-         WHERE e.node_id IS NULL ORDER BY k.created_at ASC`,
-      );
-    },
-  };
-}
-
-export function createMapPlaceNamesRepo(sql: SqlClient) {
-  return {
-    /** Every override, for building the map's display names. */
-    async listAll(): Promise<MapPlaceNameRow[]> {
-      return sql.select<MapPlaceNameRow>("SELECT * FROM map_place_names");
-    },
-    /** User renames always win; an AI suggestion never overwrites a user name. */
-    async upsert(row: MapPlaceNameRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO map_place_names (node_id, custom_label, source, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(node_id) DO UPDATE SET
-           custom_label = excluded.custom_label,
-           source = excluded.source,
-           updated_at = excluded.updated_at
-         WHERE NOT (map_place_names.source = 'user' AND excluded.source = 'ai')`,
-        [row.node_id, row.custom_label, row.source, row.updated_at],
-      );
-    },
-    async removeOverride(nodeId: string): Promise<void> {
-      await sql.execute("DELETE FROM map_place_names WHERE node_id = ?", [nodeId]);
-    },
-  };
-}
-
-export function createNodeSightingsRepo(sql: SqlClient) {
-  return {
-    async record(row: NodeSightingRow): Promise<void> {
-      await sql.execute(
-        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at) VALUES (?, ?, ?, ?, ?)",
-        [row.id, row.node_id, row.conversation_id, row.message_id, row.created_at],
-      );
-    },
-    /** Every footprint ever — raw material for the memory (fog) engine. */
-    async listAll(): Promise<NodeSightingRow[]> {
-      return sql.select<NodeSightingRow>("SELECT * FROM node_sightings ORDER BY created_at ASC");
-    },
-    /** This conversation's footprints in walking order — the session trail. */
-    async listByConversation(conversationId: string): Promise<NodeSightingRow[]> {
-      return sql.select<NodeSightingRow>(
-        "SELECT * FROM node_sightings WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
-        [conversationId],
-      );
-    },
-  };
-}
-
-export function createTrailSummariesRepo(sql: SqlClient) {
-  return {
-    async get(date: string): Promise<TrailSummaryRow | null> {
-      const rows = await sql.select<TrailSummaryRow>(
-        "SELECT * FROM trail_summaries WHERE date = ?",
-        [date],
-      );
-      return rows[0] ?? null;
-    },
-    async set(row: TrailSummaryRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO trail_summaries (date, content, created_at) VALUES (?, ?, ?)
-         ON CONFLICT(date) DO UPDATE SET content = excluded.content, created_at = excluded.created_at`,
-        [row.date, row.content, row.created_at],
-      );
-    },
-  };
-}
-
-export function createFactcheckRepo(sql: SqlClient) {
-  return {
-    async recordRun(run: FactcheckRunRow, claims: readonly FactcheckClaimRow[]): Promise<void> {
-      await sql.execute(
-        "INSERT INTO factcheck_runs (id, message_id, conversation_id, created_at) VALUES (?, ?, ?, ?)",
-        [run.id, run.message_id, run.conversation_id, run.created_at],
-      );
-      for (const claim of claims) {
-        await sql.execute(
-          `INSERT INTO factcheck_claims
-             (id, run_id, claim_text, relationship, reasoning, evidence_json, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            claim.id,
-            claim.run_id,
-            claim.claim_text,
-            claim.relationship,
-            claim.reasoning,
-            claim.evidence_json,
-            claim.created_at,
-          ],
-        );
-      }
-    },
-    /** All runs of one conversation, oldest first — the newest run per message wins in UI. */
-    async listRunsByConversation(conversationId: string): Promise<FactcheckRunRow[]> {
-      return sql.select<FactcheckRunRow>(
-        "SELECT * FROM factcheck_runs WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
-        [conversationId],
-      );
-    },
-    async listClaimsByRun(runId: string): Promise<FactcheckClaimRow[]> {
-      return sql.select<FactcheckClaimRow>(
-        "SELECT * FROM factcheck_claims WHERE run_id = ? ORDER BY created_at ASC, id ASC",
-        [runId],
       );
     },
   };

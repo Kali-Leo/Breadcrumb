@@ -34,6 +34,7 @@ describe("buildTrailSummaryMessages", () => {
     parent_id: null,
     label: "闭包",
     summary: "函数携带其词法作用域",
+    kind: "concept" as const,
     source_message_id: null,
     created_at: "2026-07-28T12:00:00Z",
   };

@@ -11,7 +11,7 @@ function row(
   label: string,
   createdAt: string,
 ): KnowledgeNodeRow {
-  return { id, parent_id: parentId, label, summary: "", created_at: createdAt };
+  return { id, parent_id: parentId, label, summary: "", kind: "concept", created_at: createdAt };
 }
 
 export const demoKnowledgeNodes: KnowledgeNodeRow[] = [

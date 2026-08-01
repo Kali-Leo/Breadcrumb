@@ -159,6 +159,28 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_factcheck_claims_run ON factcheck_claims(run_id);`,
     ],
   },
+  {
+    // Directed learning-structure edges over the tree (spec 010): 'requires' (hard
+    // prerequisite, weight always 1) and 'helps' (weighted aid, weight 0~1). Learning
+    // methods become first-class nodes via the new 'kind' column, linked by 'helps' edges.
+    id: "0007_knowledge_edges",
+    statements: [
+      `ALTER TABLE knowledge_nodes ADD COLUMN kind TEXT NOT NULL DEFAULT 'concept';`,
+      `CREATE TABLE knowledge_edges (
+        id TEXT PRIMARY KEY,
+        source_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        target_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        edge_type TEXT NOT NULL CHECK (edge_type IN ('requires','helps')),
+        weight REAL NOT NULL,
+        confidence REAL NOT NULL,
+        origin TEXT NOT NULL CHECK (origin IN ('llm','user')),
+        created_at TEXT NOT NULL,
+        UNIQUE (source_id, target_id, edge_type)
+      );`,
+      `CREATE INDEX idx_knowledge_edges_source ON knowledge_edges(source_id);`,
+      `CREATE INDEX idx_knowledge_edges_target ON knowledge_edges(target_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

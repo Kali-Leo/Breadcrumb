@@ -12,7 +12,14 @@ function node(
   parentId: string | null,
   createdAt = "2026-07-01T00:00:00Z",
 ): KnowledgeNodeRow {
-  return { id, parent_id: parentId, label: `label-${id}`, summary: "", created_at: createdAt };
+  return {
+    id,
+    parent_id: parentId,
+    label: `label-${id}`,
+    summary: "",
+    kind: "concept",
+    created_at: createdAt,
+  };
 }
 
 function demoTree(): KnowledgeNodeRow[] {

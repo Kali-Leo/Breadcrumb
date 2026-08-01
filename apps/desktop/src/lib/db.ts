@@ -6,6 +6,7 @@
 import {
   createConversationsRepo,
   createFactcheckRepo,
+  createKnowledgeEdgesRepo,
   createKnowledgeNodesRepo,
   createLlmCallsRepo,
   createMapPlaceNamesRepo,
@@ -27,6 +28,7 @@ export interface Repos {
   knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
+  knowledgeEdges: ReturnType<typeof createKnowledgeEdgesRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
   factcheck: ReturnType<typeof createFactcheckRepo>;
@@ -57,6 +59,7 @@ async function openAndMigrate(): Promise<Repos> {
     knowledgeNodes: createKnowledgeNodesRepo(sqlClient),
     nodeSightings: createNodeSightingsRepo(sqlClient),
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
+    knowledgeEdges: createKnowledgeEdgesRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
     factcheck: createFactcheckRepo(sqlClient),

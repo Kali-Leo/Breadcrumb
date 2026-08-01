@@ -54,6 +54,9 @@ export function planNodeChanges(input: NodeChangePlanInput): NodeChangePlan {
         extracted.parentLabel === null ? null : (idByLabel.get(extracted.parentLabel) ?? null),
       label: extracted.label,
       summary: extracted.summary,
+      // This pipeline extracts curriculum concepts only; method nodes are proposed by
+      // the knowledge-edge judge (plugin-graph) instead.
+      kind: "concept",
       created_at: input.nowIso(),
     };
     idByLabel.set(node.label, node.id);
