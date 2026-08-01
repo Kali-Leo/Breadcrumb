@@ -21,6 +21,10 @@ function makeFakeSql() {
       if (sql.startsWith("INSERT INTO _migrations")) {
         appliedIds.push(String(params?.[0]));
       }
+      if (sql.includes("SET id = '0006_factcheck'") && !appliedIds.includes("0006_factcheck")) {
+        const legacyIndex = appliedIds.indexOf("0005_factcheck");
+        if (legacyIndex !== -1) appliedIds[legacyIndex] = "0006_factcheck";
+      }
       return Promise.resolve();
     },
   };
@@ -39,8 +43,21 @@ describe("runMigrations", () => {
     await runMigrations(client);
     const countAfterFirstRun = executed.length;
     await runMigrations(client);
-    // Second run only creates-if-exists the tracking table; no migration statements re-run.
-    expect(executed.length).toBe(countAfterFirstRun + 1);
+    // Second run only re-issues the tracking-table create and the legacy-id repair;
+    // no migration statements re-run.
+    expect(executed.length).toBe(countAfterFirstRun + 2);
+  });
+
+  it("repairs the legacy 0005_factcheck id instead of re-running the migration", async () => {
+    const { client, appliedIds, executed } = makeFakeSql();
+    // A database migrated when factcheck still shipped as 0005 (before its renumbering).
+    appliedIds.push(...MIGRATIONS.slice(0, 5).map((migration) => migration.id));
+    appliedIds.push("0005_factcheck");
+    await runMigrations(client);
+    expect(appliedIds).toEqual(MIGRATIONS.map((migration) => migration.id));
+    const factcheck = MIGRATIONS.find((migration) => migration.id === "0006_factcheck");
+    const reran = executed.filter((sql) => factcheck?.statements.includes(sql));
+    expect(reran).toHaveLength(0);
   });
 
   it("applies only migrations that are not yet recorded", async () => {

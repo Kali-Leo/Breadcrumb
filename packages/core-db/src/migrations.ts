@@ -232,6 +232,14 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
   await sql.execute(
     "CREATE TABLE IF NOT EXISTS _migrations (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL)",
   );
+  // Repair a legacy id: factcheck first shipped as 0005_factcheck and was renumbered to
+  // 0006_factcheck when 0005_map_place_names merged ahead of it. Databases migrated under
+  // the old id would otherwise re-run the migration and abort on existing tables.
+  await sql.execute(
+    `UPDATE _migrations SET id = '0006_factcheck'
+     WHERE id = '0005_factcheck'
+       AND NOT EXISTS (SELECT 1 FROM _migrations WHERE id = '0006_factcheck')`,
+  );
   const appliedRows = await sql.select<{ id: string }>("SELECT id FROM _migrations");
   const applied = new Set(appliedRows.map((row) => row.id));
   for (const migration of MIGRATIONS) {
