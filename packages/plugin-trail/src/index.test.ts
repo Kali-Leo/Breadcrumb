@@ -1,6 +1,6 @@
 /**
- * Purpose: unit tests for day-boundary math and the no-pressure tone contract of the
- * summary prompt.
+ * Purpose: unit tests for day-boundary math and the no-pressure, no-praise tone contract of
+ * the summary prompt.
  */
 import { describe, expect, it } from "vitest";
 import { buildTrailSummaryMessages, localDateString, localDayRange } from "./index";
@@ -44,9 +44,9 @@ describe("buildTrailSummaryMessages", () => {
     expect(messages[1]?.content).toContain("闭包");
   });
 
-  it("forbids pressure language in the system prompt (product principle 1)", () => {
+  it("forbids pressure language and evaluative praise in the system prompt (product principle 1)", () => {
     const systemPrompt = buildTrailSummaryMessages([node])[0]?.content ?? "";
     expect(systemPrompt).toContain("禁止");
-    expect(systemPrompt).toContain("温柔");
+    expect(systemPrompt).toContain("不评价");
   });
 });

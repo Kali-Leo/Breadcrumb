@@ -1,8 +1,8 @@
 /**
- * Purpose: headless trail logic — day boundaries, and the gentle daily-summary contract.
- * Tone rule (product principle 1): summaries only celebrate what WAS learned; they never
- * mention gaps, streaks or "you haven't...". Main exports: localDayRange, localDateString,
- * trailSummarySchema, buildTrailSummaryMessages.
+ * Purpose: headless trail logic — day boundaries, and the plain daily-summary contract.
+ * Tone rule (product principle 1, 2026-08-02): summaries only state what WAS learned, as
+ * fact, without praise or exclamation; they never mention gaps, streaks or "you haven't...".
+ * Main exports: localDayRange, localDateString, trailSummarySchema, buildTrailSummaryMessages.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
@@ -27,12 +27,12 @@ export function localDayRange(now: Date, dayOffset: number): { fromIso: string; 
 }
 
 export const trailSummarySchema = z.object({
-  /** One warm sentence, <= 60 chars, celebrating what was learned. */
+  /** One plain, factual sentence, <= 60 chars, stating what was learned — no praise. */
   summary: z.string().min(1).max(120),
 });
 
-const SYSTEM_PROMPT = `你是一个温柔的学习见证者。根据学习者昨天学到的知识点列表，写一句 40 字以内的中文总结，
-像朋友一样为他们高兴。只赞美已完成的（"你搞懂了…还理清了…"），绝对禁止提及未完成、天数、频率或任何施压内容。
+const SYSTEM_PROMPT = `你是一个学习记录者。根据学习者昨天学到的知识点列表，用一句 40 字以内的平实中文陈述昨天学到了什么
+（如"昨天你搞懂了X，理清了Y与Z的关系"）。只陈述事实、不评价；绝对禁止提及未完成、天数、频率或任何施压内容。
 以 JSON 返回：{"summary":"..."}`;
 
 export function buildTrailSummaryMessages(nodes: readonly KnowledgeNodeRow[]): ChatMessage[] {
