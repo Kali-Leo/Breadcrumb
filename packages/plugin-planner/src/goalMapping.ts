@@ -1,8 +1,9 @@
 /**
  * Purpose: the goal-mapping LLM contract — prompt construction and Zod schema for turning a
  * free-text learning goal (e.g. "通过考研数学") into a subset of existing tree node labels
- * plus new concept-node suggestions the tree doesn't have yet, clearly separated so the lab
- * panel can render a checkbox calibration step before anything is created.
+ * plus new concept-node suggestions the tree doesn't have yet. Both are persisted immediately
+ * in full — there is no checkbox calibration step (2026-08-02: domain judgment is the
+ * system's job, not something to ask of a learner who hasn't studied the material yet).
  * Main exports: goalMappingSchema, buildGoalMappingMessages, GoalMappingResult, SuggestedGoalNode.
  */
 import type { ChatMessage } from "@breadcrumb/core-llm";
