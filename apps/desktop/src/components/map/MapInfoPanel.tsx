@@ -72,7 +72,7 @@ export function MapInfoPanel({ world, hover, levelPath }: MapInfoPanelProps) {
             </div>
           </div>
           <div className="rounded-xl border border-dashed border-stone-200 p-3 text-xs leading-5 text-stone-400">
-            AI 简介待接入——开启后，这里会根据这片知识写一段温柔的介绍。
+            AI 简介待接入——开启后，这里会根据这片知识写一段简介。
           </div>
           <p className="text-xs text-stone-400">滚轮向上，深入这里 →</p>
         </>

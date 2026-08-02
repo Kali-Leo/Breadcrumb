@@ -70,7 +70,7 @@ export function LabPanel() {
         <p className="text-center text-sm leading-relaxed text-stone-400">
           🧪 实验室面板还没打开
           <br />
-          去设置里开启「实验室面板」开关就能看到啦
+          去设置里开启「实验室面板」开关即可使用
         </p>
       </div>
     );
