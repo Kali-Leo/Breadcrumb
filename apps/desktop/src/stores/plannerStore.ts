@@ -6,7 +6,12 @@
  * recomputing on each — cheap and local, so dynamic replanning falls out for free.
  * Main exports: usePlannerStore.
  */
-import type { GoalRow, KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
+import type {
+  GoalRow,
+  KnowledgeEdgeRow,
+  KnowledgeNodeRow,
+  MasteryClaimRow,
+} from "@breadcrumb/core-db";
 import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
 import {
   aggregateInterest,
@@ -37,6 +42,8 @@ import { useSettingsStore } from "./settingsStore";
 interface PlannerState {
   nodes: KnowledgeNodeRow[];
   edges: KnowledgeEdgeRow[];
+  /** Kept for goal-view semantics: a 'learned' claim satisfies the goal (see plannerGapActions). */
+  claims: MasteryClaimRow[];
   masteryByNode: Map<string, number>;
   /** Raw per-dimension aggregate (curiosity/confusion/boredom) — the node table's columns. */
   interestScoresByNode: Map<string, NodeInterestScore>;
@@ -65,6 +72,7 @@ interface PlannerState {
 export const usePlannerStore = create<PlannerState>((set, get) => ({
   nodes: [],
   edges: [],
+  claims: [],
   masteryByNode: new Map(),
   interestScoresByNode: new Map(),
   interestByNode: new Map(),
@@ -115,11 +123,13 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       edges,
       masteryByNode,
       interestByNode,
+      claims,
     );
 
     set({
       nodes,
       edges,
+      claims,
       masteryByNode,
       interestScoresByNode,
       interestByNode,
@@ -140,6 +150,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       state.edges,
       state.masteryByNode,
       state.interestByNode,
+      state.claims,
     );
     set({ selectedGoalId: goalId, gap, coverageFraction });
   },
