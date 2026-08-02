@@ -69,11 +69,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   async sendMessage(content) {
     const settings = useSettingsStore.getState();
     if (!settings.networkEnabled) {
-      set({ errorText: "当前处于离线模式。想继续对话的话，去设置里打开网络开关就好 🌱" });
+      set({ errorText: "当前处于离线模式。想继续对话，去设置里打开网络开关" });
       return;
     }
     if (!settings.apiConfig) {
-      set({ errorText: "还没有配置 API。去设置页填一下服务地址和密钥，我们就能开始了 ✨" });
+      set({ errorText: "还没有配置 API。去设置页填写服务地址和密钥" });
       return;
     }
     const repos = await getRepos();
@@ -113,6 +113,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: m.role,
         content: m.content,
       }));
+      // Standing tone contract (Leo 2026-08-02): plain and matter-of-fact — one short
+      // positive instruction, no stacked prohibitions (they degrade the model's real work).
+      history.unshift({
+        role: "system",
+        content:
+          "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
+          "讲解清楚、循序，从对方当前的理解出发。",
+      });
       // Anchored knowledge node (if any) steers this round without polluting stored history.
       const { useKnowledgeStore } = await import("./knowledgeStore");
       const knowledge = useKnowledgeStore.getState();
