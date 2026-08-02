@@ -1,12 +1,13 @@
 /**
- * Purpose: lab-panel goal section — free-text goal to LLM mapping, checkbox calibration of
- * existing/suggested nodes, save, then a goal picker with side-by-side shortest/steadiest/
- * interest-first routes and a coverage fraction. Copy is suggest-only ("可以学"), never
- * "behind" or "missing" (product principle 1).
+ * Purpose: lab-panel goal section — free-text goal to LLM mapping (persisted immediately, no
+ * calibration step), a goal picker, side-by-side shortest/steadiest/interest-first routes with
+ * a coverage fraction, and per-node self-statement actions for the gap. Copy is suggest-only
+ * ("可以学"), never "behind" or "missing" (product principle 1).
  * Main exports: LabGoalSection.
  */
 import { useState } from "react";
 import { usePlannerStore } from "../stores/plannerStore";
+import { LabGoalGapActions } from "./LabGoalGapActions";
 import { LabGoalMappingForm } from "./LabGoalMappingForm";
 import { LabGoalRoutes } from "./LabGoalRoutes";
 
@@ -42,6 +43,7 @@ export function LabGoalSection() {
       )}
 
       <LabGoalRoutes />
+      <LabGoalGapActions />
     </section>
   );
 }

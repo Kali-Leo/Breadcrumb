@@ -19,15 +19,19 @@ import {
   frontier,
   type GapAndPathResult,
   type GoalMappingResult,
-  type SuggestedGoalNode,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { computeGapForGoal } from "../lib/plannerGapActions";
-import { persistCalibratedGoal, requestGoalMapping } from "../lib/plannerGoalActions";
+import {
+  claimNodeAsLearned,
+  persistCalibratedGoal,
+  removeNodeFromGoal,
+  requestGoalMapping,
+} from "../lib/plannerGoalActions";
 import { nowIso } from "../lib/time";
-import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
+import { registerRecomputeSubscriptions } from "./plannerStoreEvents";
 import { useSettingsStore } from "./settingsStore";
 
 interface PlannerState {
@@ -46,14 +50,16 @@ interface PlannerState {
   recompute(): Promise<void>;
   selectGoal(goalId: string | null): void;
   /** Calls the goal-mapping LLM; returns null (and does nothing) if labPanel is off or
-   * unconfigured. Does not persist — the panel calibrates the result first. */
+   * unconfigured. Does not persist — createGoal does that immediately with the full result. */
   mapGoalText(goalText: string): Promise<GoalMappingResult | null>;
-  /** Persists a calibrated goal, then refreshes affected stores and recomputes. */
-  createGoal(
-    title: string,
-    existingLabels: readonly string[],
-    suggested: readonly SuggestedGoalNode[],
-  ): Promise<void>;
+  /** Persists the full mapping result (no calibration step, see plannerGoalActions), then
+   * refreshes affected stores and recomputes. */
+  createGoal(title: string, mapping: GoalMappingResult): Promise<void>;
+  /** "我已经会了" on one gap node — direct mastery claim, no LLM call, then recompute. */
+  claimNodeLearned(nodeId: string): Promise<void>;
+  /** "先跳过" on one gap node of the selected goal — removes it from that goal's node set,
+   * then recompute. No-op if no goal is selected. */
+  skipGoalNode(nodeId: string): Promise<void>;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -152,32 +158,35 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     }
   },
 
-  async createGoal(title, existingLabels, suggested) {
+  async createGoal(title, mapping) {
+    const repos = await getRepos();
     const { goalId, insertedNodes } = await persistCalibratedGoal(
+      repos,
       title,
-      existingLabels,
-      suggested,
+      mapping,
       get().nodes,
     );
     if (insertedNodes) {
-      const repos = await getRepos();
       useKnowledgeStore.setState({ nodes: await repos.knowledgeNodes.listAll() });
     }
     set({ selectedGoalId: goalId });
     await get().recompute();
   },
+
+  async claimNodeLearned(nodeId) {
+    const repos = await getRepos();
+    await claimNodeAsLearned(repos, nodeId);
+    await get().recompute();
+  },
+
+  async skipGoalNode(nodeId) {
+    const state = get();
+    const goal = state.goals.find((candidate) => candidate.id === state.selectedGoalId);
+    if (goal === undefined) return;
+    const repos = await getRepos();
+    await removeNodeFromGoal(repos, goal, nodeId);
+    await get().recompute();
+  },
 }));
 
-/** Recompute is best-effort background work: a failure must warn, never surface as an
- * unhandled rejection (the app-wide dev black box would show it as a crash). */
-function recomputeSafely(): void {
-  usePlannerStore
-    .getState()
-    .recompute()
-    .catch((error: unknown) => console.warn("planner recompute skipped:", error));
-}
-
-appEventBus.on("knowledge:edgesUpdated", recomputeSafely);
-appEventBus.on("interest:updated", recomputeSafely);
-appEventBus.on("mastery:updated", recomputeSafely);
-appEventBus.on("knowledge:nodesExtracted", recomputeSafely);
+registerRecomputeSubscriptions(() => usePlannerStore.getState().recompute());

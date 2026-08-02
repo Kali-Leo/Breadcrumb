@@ -1,19 +1,19 @@
 /**
- * Purpose: goal-mapping LLM call and goal persistence helpers for plannerStore, split out so
- * the store itself stays under the file-size ceiling. No React/zustand here.
- * Main exports: requestGoalMapping, persistCalibratedGoal.
+ * Purpose: goal-mapping LLM call and goal persistence/self-statement helpers for plannerStore,
+ * split out so the store itself stays under the file-size ceiling. No React/zustand here.
+ * Main exports: requestGoalMapping, persistCalibratedGoal, claimNodeAsLearned, removeNodeFromGoal.
  */
-import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import type { GoalRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildGoalMappingMessages,
   type GoalMappingResult,
   goalMappingSchema,
-  type SuggestedGoalNode,
 } from "@breadcrumb/plugin-planner";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { appEventBus } from "../stores/chatStore";
 import type { ApiConfig } from "../stores/settingsStore";
-import { getRepos } from "./db";
+import type { Repos } from "./db";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -39,25 +39,32 @@ export async function requestGoalMapping(
   return parsed;
 }
 
-/** Inserts confirmed suggested nodes as sighting-free concept nodes (no fake evidence — they
- * start unlit), then saves the goal row over existing + newly-inserted node ids.
+/** Inserts every suggested node as a sighting-free concept node (no fake evidence — they
+ * start unlit), then saves the goal row over existing + newly-inserted node ids. Persists the
+ * LLM mapping's full result — existing and suggested alike — immediately: there is no
+ * checkbox calibration step (2026-08-02: a learner who hasn't studied the material can't
+ * judge what belongs; domain judgment is the system's job, not a decision request placed on
+ * the user).
  *
  * Idempotent on title: if a goal with the identical trimmed title already exists, its
  * node_ids_json/updated_at are refreshed in place instead of inserting a duplicate card
- * (a re-mapped goal text should update the same goal, not clone it). */
+ * (a re-mapped goal text should update the same goal, not clone it — this is also how a
+ * skipped node comes back: re-run 拆解目标 with the same title). */
 export async function persistCalibratedGoal(
+  repos: {
+    knowledgeNodes: Pick<Repos["knowledgeNodes"], "insert">;
+    goals: Pick<Repos["goals"], "listAll" | "insert" | "updateNodeIds">;
+  },
   title: string,
-  existingLabels: readonly string[],
-  suggested: readonly SuggestedGoalNode[],
+  mapping: GoalMappingResult,
   currentNodes: readonly KnowledgeNodeRow[],
 ): Promise<{ goalId: string; insertedNodes: boolean }> {
-  const repos = await getRepos();
   const labelToId = new Map(currentNodes.map((node) => [node.label, node.id]));
   const createdAt = nowIso();
   const trimmedTitle = title.trim();
 
   const suggestedIds: string[] = [];
-  for (const suggestedNode of suggested) {
+  for (const suggestedNode of mapping.suggested) {
     const id = newId();
     await repos.knowledgeNodes.insert({
       id,
@@ -70,7 +77,7 @@ export async function persistCalibratedGoal(
     suggestedIds.push(id);
   }
 
-  const existingIds = existingLabels
+  const existingIds = mapping.existing
     .map((label) => labelToId.get(label))
     .filter((id): id is string => id !== undefined);
   const nodeIds = [...existingIds, ...suggestedIds];
@@ -92,4 +99,38 @@ export async function persistCalibratedGoal(
   });
 
   return { goalId, insertedNodes: suggestedIds.length > 0 };
+}
+
+/** "我已经会了" — a direct self-statement mastery claim for one gap node. No LLM call: the
+ * learner already knows which node this is, so there is nothing to map. Emits
+ * mastery:updated so every subscriber (plannerStore's own recompute included) picks it up;
+ * the node leaves the gap the same way any other lit node would. */
+export async function claimNodeAsLearned(
+  repos: { masteryClaims: Pick<Repos["masteryClaims"], "insert"> },
+  nodeId: string,
+): Promise<void> {
+  await repos.masteryClaims.insert({
+    id: newId(),
+    node_id: nodeId,
+    level: "learned",
+    source: "self-report",
+    created_at: nowIso(),
+  });
+  appEventBus.emit("mastery:updated", { changedNodeIds: [nodeId] });
+}
+
+/** "先跳过" — removes one node id from a goal's own node_ids_json. No separate undo
+ * mechanism: re-running 拆解目标 on the identical title restores the full mapped set via
+ * persistCalibratedGoal's idempotent update. A no-op if the node wasn't an explicit member of
+ * this goal's set (e.g. it's only present because another still-included node requires it as
+ * a prerequisite — correctly so, since that prerequisite is still genuinely necessary). */
+export async function removeNodeFromGoal(
+  repos: { goals: Pick<Repos["goals"], "updateNodeIds"> },
+  goal: GoalRow,
+  nodeId: string,
+): Promise<void> {
+  const remainingNodeIds = (JSON.parse(goal.node_ids_json) as string[]).filter(
+    (id) => id !== nodeId,
+  );
+  await repos.goals.updateNodeIds(goal.id, remainingNodeIds, nowIso());
 }
