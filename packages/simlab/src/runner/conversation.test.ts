@@ -34,7 +34,9 @@ describe("runConversation empty-turn guard", () => {
         messages: { role: string; content: string }[];
       };
       if (body.stream === true) {
-        const isStudent = body.messages[0]?.role === "system";
+        // Both student and tutor calls now send a leading system message (the tutor mirrors
+        // chatStore.ts's standing tone prompt), so distinguish by content rather than role.
+        const isStudent = (body.messages[0]?.content ?? "").includes("扮演一个真实的学习者");
         if (isStudent) {
           studentCalls += 1;
           return studentCalls === 1 ? sseFor("") : sseFor(STOP_TOKEN);
@@ -74,7 +76,9 @@ describe("runConversation empty-turn guard", () => {
         messages: { role: string; content: string }[];
       };
       if (body.stream === true) {
-        const isStudent = body.messages[0]?.role === "system";
+        // Both student and tutor calls now send a leading system message (the tutor mirrors
+        // chatStore.ts's standing tone prompt), so distinguish by content rather than role.
+        const isStudent = (body.messages[0]?.content ?? "").includes("扮演一个真实的学习者");
         if (isStudent) {
           studentCalls += 1;
           return sseFor("");
@@ -121,7 +125,9 @@ describe("runConversation empty-turn guard", () => {
         messages: { role: string; content: string }[];
       };
       if (body.stream === true) {
-        const isStudent = body.messages[0]?.role === "system";
+        // Both student and tutor calls now send a leading system message (the tutor mirrors
+        // chatStore.ts's standing tone prompt), so distinguish by content rather than role.
+        const isStudent = (body.messages[0]?.content ?? "").includes("扮演一个真实的学习者");
         if (isStudent) return sseFor("这是什么意思？");
         tutorCalls += 1;
         return sseFor("");

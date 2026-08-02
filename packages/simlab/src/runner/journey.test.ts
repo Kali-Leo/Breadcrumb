@@ -56,7 +56,9 @@ function makeFakeFetch(): typeof fetch {
       messages: { role: string; content: string }[];
     };
     if (body.stream === true) {
-      const isStudent = body.messages[0]?.role === "system";
+      // Both student and tutor calls now send a leading system message (the tutor mirrors
+      // chatStore.ts's standing tone prompt), so distinguish by content rather than role.
+      const isStudent = (body.messages[0]?.content ?? "").includes("扮演一个真实的学习者");
       if (isStudent) {
         turnInConversation += 1;
         if (turnInConversation >= 2) {
@@ -88,8 +90,8 @@ function makeFakeFetch(): typeof fetch {
     if (systemPrompt.includes("学习目标拆解器")) {
       return jsonCompletion({ existing: [], suggested: [] });
     }
-    if (systemPrompt.includes("温柔的学习见证者")) {
-      return jsonCompletion({ summary: "今天搞懂了测试概念，真棒！" });
+    if (systemPrompt.includes("学习记录者")) {
+      return jsonCompletion({ summary: "今天搞懂了测试概念。" });
     }
     throw new Error(`unexpected LLM call: ${systemPrompt.slice(0, 40)}`);
   }) as typeof fetch;
@@ -187,7 +189,9 @@ describe("runJourney", () => {
         messages: { role: string; content: string }[];
       };
       if (body.stream === true) {
-        const isStudent = body.messages[0]?.role === "system";
+        // Both student and tutor calls now send a leading system message (the tutor mirrors
+        // chatStore.ts's standing tone prompt), so distinguish by content rather than role.
+        const isStudent = (body.messages[0]?.content ?? "").includes("扮演一个真实的学习者");
         if (isStudent) {
           turnInConversation += 1;
           if (turnInConversation >= 2) {
@@ -214,7 +218,7 @@ describe("runJourney", () => {
       if (systemPrompt.includes("自报知识映射器")) return jsonCompletion({ mappings: [] });
       if (systemPrompt.includes("学习目标拆解器"))
         return jsonCompletion({ existing: [], suggested: [] });
-      if (systemPrompt.includes("温柔的学习见证者")) {
+      if (systemPrompt.includes("学习记录者")) {
         return jsonCompletion({ summary: "你还差一点就能全部搞懂了。" });
       }
       throw new Error(`unexpected LLM call: ${systemPrompt.slice(0, 40)}`);
