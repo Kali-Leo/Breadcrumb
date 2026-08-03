@@ -200,7 +200,7 @@ describe("planEdgeJudgeResult requires edges", () => {
 });
 
 describe("planEdgeJudgeResult helps edges", () => {
-  it("plans a helps edge from A to B with the judged weight", () => {
+  it("plans a helps edge from A to B with the judged weight tier mapped to a number", () => {
     const pairs: JudgedPairContext[] = [{ pairId: "p0", nodeAId: "A", nodeBId: "B" }];
     const judged: EdgeJudgeResult = {
       edges: [
@@ -208,7 +208,7 @@ describe("planEdgeJudgeResult helps edges", () => {
           pairId: "p0",
           relation: "helps",
           direction: null,
-          weight: 0.7,
+          weight: "强",
           confidence: 0.6,
           reasoning: "x",
         },
@@ -222,7 +222,7 @@ describe("planEdgeJudgeResult helps edges", () => {
       nodeIdByLabel: new Map(),
       ...testDefaults,
     });
-    expect(plan.edgesToUpsert[0]).toMatchObject({ edge_type: "helps", weight: 0.7 });
+    expect(plan.edgesToUpsert[0]).toMatchObject({ edge_type: "helps", weight: 0.9 });
   });
 
   it("defaults weight to 0.5 when the model omits it", () => {
@@ -260,7 +260,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           label: "费曼技巧",
           summary: "用简单语言复述",
           helpsLabels: ["导数"],
-          weight: 0.8,
+          weight: "强",
           confidence: 0.7,
         },
       ],
@@ -278,7 +278,7 @@ describe("planEdgeJudgeResult method nodes", () => {
     expect(plan.edgesToUpsert[0]).toMatchObject({
       target_id: "derivative",
       edge_type: "helps",
-      weight: 0.8,
+      weight: 0.9,
     });
   });
 
@@ -290,7 +290,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           label: "费曼技巧",
           summary: "s",
           helpsLabels: ["不存在的知识点"],
-          weight: 0.8,
+          weight: "强",
           confidence: 0.7,
         },
       ],
@@ -310,12 +310,12 @@ describe("planEdgeJudgeResult method nodes", () => {
     const judged: EdgeJudgeResult = {
       edges: [],
       methodNodes: [
-        { label: "间隔重复", summary: "s1", helpsLabels: ["导数"], weight: 0.6, confidence: 0.6 },
+        { label: "间隔重复", summary: "s1", helpsLabels: ["导数"], weight: "中", confidence: 0.6 },
         {
           label: "衍生方法",
           summary: "s2",
           helpsLabels: ["间隔重复"],
-          weight: 0.5,
+          weight: "弱",
           confidence: 0.5,
         },
       ],

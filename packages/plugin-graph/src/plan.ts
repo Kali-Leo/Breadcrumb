@@ -7,7 +7,12 @@
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { EdgeJudgeResult } from "./edgeJudge";
+import { HELPS_WEIGHT_SCORES } from "./edgeJudge";
 import { wouldCreateCycle } from "./graph";
+
+/** Fallback helps weight when the model omits the tier (shouldn't happen per prompt, but
+ * keeps this function total) — a plain mid-point, deliberately not tied to an anchored tier. */
+const DEFAULT_HELPS_WEIGHT = 0.5;
 
 export interface JudgedPairContext {
   pairId: string;
@@ -102,7 +107,7 @@ function planHelpsEdge(
     source_id: pair.nodeAId,
     target_id: pair.nodeBId,
     edge_type: "helps",
-    weight: judged.weight ?? 0.5,
+    weight: judged.weight !== null ? HELPS_WEIGHT_SCORES[judged.weight] : DEFAULT_HELPS_WEIGHT,
     confidence: judged.confidence,
     origin: "llm",
     created_at: input.nowIso(),
@@ -138,7 +143,7 @@ function planMethodNodes(input: EdgeJudgePlanInput): {
         source_id: methodNode.id,
         target_id: targetId,
         edge_type: "helps",
-        weight: proposal.weight,
+        weight: HELPS_WEIGHT_SCORES[proposal.weight],
         confidence: proposal.confidence,
         origin: "llm",
         created_at: input.nowIso(),

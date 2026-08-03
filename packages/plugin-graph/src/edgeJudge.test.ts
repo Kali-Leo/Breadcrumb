@@ -3,7 +3,7 @@
  * LLM output, and prompt message construction.
  */
 import { describe, expect, it } from "vitest";
-import { buildEdgeJudgeMessages, edgeJudgeSchema } from "./edgeJudge";
+import { buildEdgeJudgeMessages, edgeJudgeSchema, HELPS_WEIGHT_SCORES } from "./edgeJudge";
 
 describe("edgeJudgeSchema", () => {
   it("accepts an empty response", () => {
@@ -29,21 +29,21 @@ describe("edgeJudgeSchema", () => {
     expect(parsed.edges[0]?.relation).toBe("requires");
   });
 
-  it("accepts a helps judgment with a weight", () => {
+  it("accepts a helps judgment with a weight tier", () => {
     const parsed = edgeJudgeSchema.parse({
       edges: [
         {
           pairId: "p1",
           relation: "helps",
           direction: null,
-          weight: 0.6,
+          weight: "中",
           confidence: 0.7,
           reasoning: "类比有助于理解",
         },
       ],
       methodNodes: [],
     });
-    expect(parsed.edges[0]?.weight).toBe(0.6);
+    expect(parsed.edges[0]?.weight).toBe("中");
   });
 
   it("accepts a method node proposal", () => {
@@ -54,7 +54,7 @@ describe("edgeJudgeSchema", () => {
           label: "费曼技巧",
           summary: "用简单语言复述以检验理解",
           helpsLabels: ["导数"],
-          weight: 0.8,
+          weight: "强",
           confidence: 0.7,
         },
       ],
@@ -62,7 +62,7 @@ describe("edgeJudgeSchema", () => {
     expect(parsed.methodNodes[0]?.label).toBe("费曼技巧");
   });
 
-  it("rejects a weight outside 0~1", () => {
+  it("rejects a non-tier weight value", () => {
     expect(() =>
       edgeJudgeSchema.parse({
         edges: [
@@ -70,7 +70,7 @@ describe("edgeJudgeSchema", () => {
             pairId: "p0",
             relation: "helps",
             direction: null,
-            weight: 1.5,
+            weight: 0.6,
             confidence: 0.5,
             reasoning: "x",
           },
@@ -78,6 +78,10 @@ describe("edgeJudgeSchema", () => {
         methodNodes: [],
       }),
     ).toThrow();
+  });
+
+  it("maps every anchored helps-weight tier to its documented number", () => {
+    expect(HELPS_WEIGHT_SCORES).toEqual({ 弱: 0.3, 中: 0.6, 强: 0.9 });
   });
 
   it("rejects an unknown relation value", () => {
