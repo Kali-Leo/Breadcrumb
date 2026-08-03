@@ -21,7 +21,16 @@ function okResponse(): Response {
       {
         message: {
           content: JSON.stringify({
-            signals: [{ label: "闭包", curiosity: 0.6, confusion: 0, boredom: 0, styles: [] }],
+            signals: [
+              {
+                label: "闭包",
+                curiosity: "中",
+                confusion: "无",
+                boredom: "无",
+                confidence: "高",
+                styles: [],
+              },
+            ],
           }),
         },
       },

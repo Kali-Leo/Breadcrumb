@@ -25,9 +25,10 @@ function makeFakeSql() {
           curiosity,
           confusion,
           boredom,
+          confidence,
           styles_json,
           created_at,
-        ] = params as [string, string, string, number, number, number, string, string];
+        ] = params as [string, string, string, number, number, number, number, string, string];
         interestRows.push({
           id,
           node_id,
@@ -35,6 +36,7 @@ function makeFakeSql() {
           curiosity,
           confusion,
           boredom,
+          confidence,
           styles_json,
           created_at,
         });
@@ -66,6 +68,7 @@ describe("createInterestSignalsRepo", () => {
       curiosity: 0.8,
       confusion: 0.1,
       boredom: 0,
+      confidence: 0.9,
       styles_json: JSON.stringify(["类比"]),
       created_at: "2026-08-01T10:00:00Z",
     });

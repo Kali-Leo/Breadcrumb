@@ -9,6 +9,8 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildInterestMessages,
+  CONFIDENCE_LEVEL_SCORES,
+  INTEREST_LEVEL_SCORES,
   type InterestExtractionNode,
   interestSignalsSchema,
 } from "@breadcrumb/plugin-interest";
@@ -68,9 +70,10 @@ export async function runInterestStage(
         id: randomUUID(),
         node_id: nodeId,
         conversation_id: conversationId,
-        curiosity: signal.curiosity,
-        confusion: signal.confusion,
-        boredom: signal.boredom,
+        curiosity: INTEREST_LEVEL_SCORES[signal.curiosity],
+        confusion: INTEREST_LEVEL_SCORES[signal.confusion],
+        boredom: INTEREST_LEVEL_SCORES[signal.boredom],
+        confidence: CONFIDENCE_LEVEL_SCORES[signal.confidence],
         styles_json: JSON.stringify(signal.styles),
         created_at: nowIso,
       });

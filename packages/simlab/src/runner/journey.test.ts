@@ -81,7 +81,16 @@ function makeFakeFetch(): typeof fetch {
     }
     if (systemPrompt.includes("学习心理观察者")) {
       return jsonCompletion({
-        signals: [{ label: "测试概念", curiosity: 0.5, confusion: 0.1, boredom: 0.1, styles: [] }],
+        signals: [
+          {
+            label: "测试概念",
+            curiosity: "中",
+            confusion: "弱",
+            boredom: "弱",
+            confidence: "中",
+            styles: [],
+          },
+        ],
       });
     }
     if (systemPrompt.includes("自报知识映射器")) {
@@ -212,7 +221,16 @@ describe("runJourney", () => {
         return jsonCompletion({ edges: [], methodNodes: [] });
       if (systemPrompt.includes("学习心理观察者")) {
         return jsonCompletion({
-          signals: [{ label: "测试概念", curiosity: 0.5, confusion: 0, boredom: 0, styles: [] }],
+          signals: [
+            {
+              label: "测试概念",
+              curiosity: "中",
+              confusion: "无",
+              boredom: "无",
+              confidence: "中",
+              styles: [],
+            },
+          ],
         });
       }
       if (systemPrompt.includes("自报知识映射器")) return jsonCompletion({ mappings: [] });

@@ -134,6 +134,9 @@ export interface InterestSignalRow {
   confusion: number;
   /** 0 (none) ~ 1 (strong) — disengagement, wanting to skip ahead. */
   boredom: number;
+  /** How sure the extraction pass is about this whole read (spec 014, migration 0011):
+   * 0.3 (低) / 0.6 (中) / 0.9 (高). Rows from before the column existed default to 0.6. */
+  confidence: number;
   /** JSON string array of preferred explanation-style tags, e.g. ["类比","代码示例"]. */
   styles_json: string;
   created_at: string;

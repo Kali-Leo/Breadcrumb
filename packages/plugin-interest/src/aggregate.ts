@@ -1,7 +1,9 @@
 /**
- * Purpose: time-decayed aggregation of raw interest_signals rows into a per-node score and
- * a global explanation-style ranking. Pure math, no DB, no I/O.
- * Main exports: aggregateInterest, aggregateStyles, NodeInterestScore, INTEREST_HALF_LIFE_DAYS.
+ * Purpose: time-decayed, confidence-weighted shrinkage aggregation of raw interest_signals
+ * rows into a per-node score plus evidence weight, and a global explanation-style ranking.
+ * Pure math, no DB, no I/O.
+ * Main exports: aggregateInterest, aggregateStyles, NodeInterestScore, INTEREST_HALF_LIFE_DAYS,
+ * K_PSEUDO.
  */
 import type { InterestSignalRow } from "@breadcrumb/core-db";
 
@@ -9,11 +11,21 @@ import type { InterestSignalRow } from "@breadcrumb/core-db";
  * more than what was true a month ago. */
 export const INTEREST_HALF_LIFE_DAYS = 14;
 
+/** Shrinkage pseudo-count (spec 014): a node's score is pulled toward a 0 prior until its
+ * accumulated confidence×decay evidence weight outweighs this many "prior" pseudo-signals.
+ * Two or three thin signals can't carry a high score; once real evidence piles up, the pull
+ * fades on its own — no separate cutoff or "not enough data" branch needed. */
+export const K_PSEUDO = 3;
+
 export interface NodeInterestScore {
   nodeId: string;
   curiosity: number;
   confusion: number;
   boredom: number;
+  /** Σ(confidence × decay) across every signal folded into this node's score — the
+   * shrinkage aggregation's evidence mass. Downstream callers (frontier, lab panel) use this
+   * to decide whether to flag a result as "依据尚少" (evidence still thin). */
+  evidenceWeight: number;
 }
 
 interface WeightedAccumulator {
@@ -23,7 +35,10 @@ interface WeightedAccumulator {
   weightTotal: number;
 }
 
-/** Exponentially time-decayed weighted average of each dimension, per node. */
+/** Shrinkage-weighted average of each dimension, per node: score = Σ(value × confidence ×
+ * decay) / (Σ(confidence × decay) + K_PSEUDO). A single strong-but-confident signal still
+ * shrinks well below its raw value; the shrinkage vanishes as more corroborating evidence
+ * accumulates. */
 export function aggregateInterest(
   signals: readonly InterestSignalRow[],
   nowIso: string,
@@ -32,7 +47,7 @@ export function aggregateInterest(
   const accByNode = new Map<string, WeightedAccumulator>();
 
   for (const signal of signals) {
-    const weight = decayWeight(now, signal.created_at);
+    const weight = signal.confidence * decayWeight(now, signal.created_at);
     const acc = accByNode.get(signal.node_id) ?? {
       curiosity: 0,
       confusion: 0,
@@ -48,11 +63,13 @@ export function aggregateInterest(
 
   const scores = new Map<string, NodeInterestScore>();
   for (const [nodeId, acc] of accByNode) {
+    const denominator = acc.weightTotal + K_PSEUDO;
     scores.set(nodeId, {
       nodeId,
-      curiosity: acc.weightTotal > 0 ? acc.curiosity / acc.weightTotal : 0,
-      confusion: acc.weightTotal > 0 ? acc.confusion / acc.weightTotal : 0,
-      boredom: acc.weightTotal > 0 ? acc.boredom / acc.weightTotal : 0,
+      curiosity: acc.curiosity / denominator,
+      confusion: acc.confusion / denominator,
+      boredom: acc.boredom / denominator,
+      evidenceWeight: acc.weightTotal,
     });
   }
   return scores;

@@ -73,7 +73,14 @@ function dispatchFetch(): typeof fetch {
             message: {
               content: JSON.stringify({
                 signals: [
-                  { label: "闭包", curiosity: 0.6, confusion: 0.2, boredom: 0, styles: ["类比"] },
+                  {
+                    label: "闭包",
+                    curiosity: "中",
+                    confusion: "弱",
+                    boredom: "无",
+                    confidence: "高",
+                    styles: ["类比"],
+                  },
                 ],
               }),
             },

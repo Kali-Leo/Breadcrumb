@@ -240,6 +240,14 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_ai_failures_created ON ai_failures(created_at);`,
     ],
   },
+  {
+    // Per-signal confidence (spec 014): how sure the extraction pass is about its own
+    // psychological read, feeding aggregateInterest's shrinkage-weighted average. Existing
+    // rows default to a mid confidence (0.6) so historical data keeps contributing sanely
+    // without a real value to fall back on — old data is never migrated/reinterpreted.
+    id: "0011_interest_signal_confidence",
+    statements: [`ALTER TABLE interest_signals ADD COLUMN confidence REAL NOT NULL DEFAULT 0.6;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

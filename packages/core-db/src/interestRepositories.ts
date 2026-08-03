@@ -10,8 +10,8 @@ export function createInterestSignalsRepo(sql: SqlClient) {
     async insert(row: InterestSignalRow): Promise<void> {
       await sql.execute(
         `INSERT INTO interest_signals
-           (id, node_id, conversation_id, curiosity, confusion, boredom, styles_json, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, node_id, conversation_id, curiosity, confusion, boredom, confidence, styles_json, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           row.id,
           row.node_id,
@@ -19,6 +19,7 @@ export function createInterestSignalsRepo(sql: SqlClient) {
           row.curiosity,
           row.confusion,
           row.boredom,
+          row.confidence,
           row.styles_json,
           row.created_at,
         ],
