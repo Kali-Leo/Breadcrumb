@@ -8,6 +8,7 @@
  * Main exports: userModelParams, productParams.
  */
 import {
+  ADJACENT_CONCEPT_EDGE_CONFIDENCE,
   DEFAULT_FALLBACK_RECENT_N,
   DEFAULT_TOP_K_SIMILAR,
   HELPS_WEIGHT_SCORES,
@@ -21,6 +22,11 @@ import {
 } from "@breadcrumb/plugin-interest";
 import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
+  GOAL_GAP_SCORE_BOOST,
+  LADDER_REGENERATE_DELTA,
+  MILESTONE_DIM_DISCOUNT,
+  MILESTONE_DIM_WEIGHT,
+  MILESTONE_LIT_WEIGHT,
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
 } from "@breadcrumb/plugin-planner";
@@ -87,4 +93,19 @@ export const productParams = {
    * existing match must clear before it costs one LLM verdict call.
    * plugin-knowledge-tree/synonymGate.ts. */
   synonymSimilarityThreshold: SYNONYM_SIMILARITY_THRESHOLD,
+  /** Casual-mode adjacent-concept proposals (spec 016) carry no separate confidence tier —
+   * this fixed mid value keeps their helps edge from silently outweighing an
+   * explicitly-judged one. plugin-graph/plan.ts. */
+  adjacentConceptEdgeConfidence: ADJACENT_CONCEPT_EDGE_CONFIDENCE,
+  /** Ranked-mode frontier boost (spec 016): flat score bonus for a candidate inside the
+   * selected goal's gap. plugin-planner/frontier.ts. */
+  goalGapScoreBoost: GOAL_GAP_SCORE_BOOST,
+  /** Milestone formula weights (spec 016): 0.8 x litFraction + 0.2 x dimFraction x 0.5.
+   * plugin-planner/milestone.ts. */
+  milestoneLitWeight: MILESTONE_LIT_WEIGHT,
+  milestoneDimWeight: MILESTONE_DIM_WEIGHT,
+  milestoneDimDiscount: MILESTONE_DIM_DISCOUNT,
+  /** Pseudo-ranked ladder refresh (spec 016): minimum milestone movement (either direction)
+   * before a stored ladder gets regenerated. plugin-planner/ladderRefresh.ts. */
+  ladderRegenerateDelta: LADDER_REGENERATE_DELTA,
 } as const;
