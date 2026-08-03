@@ -6,6 +6,7 @@
  * Main exports: LabGoalSection.
  */
 import { useState } from "react";
+import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { LabGoalGapActions } from "./LabGoalGapActions";
 import { LabGoalMappingForm } from "./LabGoalMappingForm";
@@ -15,12 +16,24 @@ export function LabGoalSection() {
   const goals = usePlannerStore((state) => state.goals);
   const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
   const selectGoal = usePlannerStore((state) => state.selectGoal);
+  const openOverlay = useLabUiStore((state) => state.openOverlay);
 
   const [goalText, setGoalText] = useState("");
 
   return (
     <section className="space-y-2">
-      <h3 className="font-semibold text-stone-600">学习目标</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-stone-600">学习目标</h3>
+        {selectedGoalId !== null && (
+          <button
+            type="button"
+            onClick={openOverlay}
+            className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
+          >
+            对照
+          </button>
+        )}
+      </div>
       <LabGoalMappingForm goalText={goalText} onGoalTextChange={setGoalText} />
 
       {goals.length > 0 && (

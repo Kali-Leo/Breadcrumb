@@ -19,6 +19,8 @@ export interface OverlayNode {
   id: string;
   label: string;
   state: OverlayNodeState;
+  /** Raw goal-view mastery (0..1) `state` was derived from — the hover tooltip's "掌握度". */
+  mastery: number;
   /** True for the single node recommendRoute() would have the learner do next. */
   isNextStep: boolean;
   interest: number;
@@ -58,9 +60,10 @@ export interface OverlayModelInput {
 }
 
 /** Fixed box size dagre lays out around — generous enough for a few Chinese characters plus
- * padding without measuring real text (no DOM access in this pure module). */
-const NODE_WIDTH = 152;
-const NODE_HEIGHT = 40;
+ * padding without measuring real text (no DOM access in this pure module). Exported so the
+ * SVG renderer (GoalOverlayView) draws boxes at exactly the size dagre assumed. */
+export const OVERLAY_NODE_WIDTH = 152;
+export const OVERLAY_NODE_HEIGHT = 40;
 const RANK_SEPARATION = 64;
 const NODE_SEPARATION = 24;
 
@@ -109,7 +112,9 @@ export function buildOverlayModel(input: OverlayModelInput): OverlayModel {
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({ rankdir: "LR", ranksep: RANK_SEPARATION, nodesep: NODE_SEPARATION });
   graph.setDefaultEdgeLabel(() => ({}));
-  for (const id of scopeIds) graph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  for (const id of scopeIds) {
+    graph.setNode(id, { width: OVERLAY_NODE_WIDTH, height: OVERLAY_NODE_HEIGHT });
+  }
   // Layering follows requires edges only (prerequisites left, dependents right) — helps edges
   // are drawn as decoration in T5 but don't drive rank assignment.
   for (const edge of overlayEdges) {
@@ -124,6 +129,7 @@ export function buildOverlayModel(input: OverlayModelInput): OverlayModel {
       id,
       label: labelById.get(id) ?? id,
       state: nodeState(mastery, litThreshold, dimThreshold),
+      mastery,
       isNextStep: id === nextStepId,
       interest: interestByNode.get(id) ?? 0,
       evidenceWeight: evidenceWeightByNode.get(id) ?? 0,

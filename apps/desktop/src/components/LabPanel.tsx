@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { useInterestStore } from "../stores/interestStore";
+import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { LabFailuresSection } from "./LabFailuresSection";
@@ -16,6 +17,7 @@ import { LabLadderSection } from "./LabLadderSection";
 import { LabModeToggle } from "./LabModeToggle";
 import { LabNodeTable } from "./LabNodeTable";
 import { LabSynonymSuspectsSection } from "./LabSynonymSuspectsSection";
+import { GoalOverlayView } from "./overlay/GoalOverlayView";
 
 function SelfReportInput() {
   const [text, setText] = useState("");
@@ -58,6 +60,7 @@ function SelfReportInput() {
 
 export function LabPanel() {
   const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
+  const overlayOpen = useLabUiStore((state) => state.overlayOpen);
 
   useEffect(() => {
     if (labPanelEnabled) {
@@ -78,6 +81,10 @@ export function LabPanel() {
         </p>
       </div>
     );
+  }
+
+  if (overlayOpen) {
+    return <GoalOverlayView />;
   }
 
   return (
