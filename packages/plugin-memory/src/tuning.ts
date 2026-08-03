@@ -29,6 +29,7 @@ import {
   MILESTONE_LIT_WEIGHT,
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
+  ROUTE_INTEREST_CHIP_THRESHOLD,
 } from "@breadcrumb/plugin-planner";
 import { CLAIM_HALF_LIFE_DAYS, CLAIM_WEIGHT, DIM_THRESHOLD, LIT_THRESHOLD } from "./mastery";
 
@@ -108,4 +109,7 @@ export const productParams = {
   /** Pseudo-ranked ladder refresh (spec 016): minimum milestone movement (either direction)
    * before a stored ladder gets regenerated. plugin-planner/ladderRefresh.ts. */
   ladderRegenerateDelta: LADDER_REGENERATE_DELTA,
+  /** Single-route recommendation (spec 017): interest score a route step needs before the
+   * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
+  routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
 } as const;

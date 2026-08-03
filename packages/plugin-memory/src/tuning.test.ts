@@ -8,7 +8,10 @@ import {
   INTEREST_LEVEL_SCORES,
   K_PSEUDO,
 } from "@breadcrumb/plugin-interest";
-import { PROPAGATION_INHERIT_FACTOR } from "@breadcrumb/plugin-planner";
+import {
+  PROPAGATION_INHERIT_FACTOR,
+  ROUTE_INTEREST_CHIP_THRESHOLD,
+} from "@breadcrumb/plugin-planner";
 import { describe, expect, it } from "vitest";
 import { LIT_THRESHOLD } from "./mastery";
 import { productParams, userModelParams } from "./tuning";
@@ -21,6 +24,7 @@ describe("tuning", () => {
     expect(productParams.interestLevelScores).toEqual(INTEREST_LEVEL_SCORES);
     expect(productParams.confidenceLevelScores).toEqual(CONFIDENCE_LEVEL_SCORES);
     expect(productParams.propagationInheritFactor).toBe(PROPAGATION_INHERIT_FACTOR);
+    expect(productParams.routeInterestChipThreshold).toBe(ROUTE_INTEREST_CHIP_THRESHOLD);
   });
 
   it("userModelParams carries the forgetting/interest half-lives as plain numbers", () => {

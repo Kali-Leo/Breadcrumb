@@ -46,8 +46,10 @@ export function coverage(
 }
 
 /** The goal's requires-closure plus the goal nodes themselves, minus whatever's already lit —
- * everything still standing between the learner and the goal. */
-function computeGap(
+ * everything still standing between the learner and the goal. Exported so recommendRoute.ts
+ * (single-route greedy scoring) computes the exact same gap set without duplicating this
+ * closure-minus-lit logic. */
+export function computeGap(
   edges: readonly KnowledgeEdgeRow[],
   goalNodeIds: readonly string[],
   isLit: (nodeId: string) => boolean,
@@ -59,8 +61,8 @@ function computeGap(
 
 /** Ready = every requires-prerequisite that's part of the gap has already been scheduled
  * (prerequisites outside the gap are already lit, by construction of computeGap, so they
- * never block). */
-function readyNodes(
+ * never block). Exported for recommendRoute.ts's own greedy walk. */
+export function readyNodes(
   remaining: ReadonlySet<string>,
   scheduledSet: ReadonlySet<string>,
   gapSet: ReadonlySet<string>,
@@ -97,7 +99,10 @@ function scheduleGreedy(
   return scheduled;
 }
 
-function helpsSupportWeight(
+/** Sum of helps-edge weight pointed at nodeId from sources the caller considers "settled"
+ * (already lit, or already scheduled earlier in whatever route is being built). Exported for
+ * recommendRoute.ts's per-step scoring, which needs the exact same accumulation. */
+export function helpsSupportWeight(
   nodeId: string,
   edges: readonly KnowledgeEdgeRow[],
   isSettled: (id: string) => boolean,
