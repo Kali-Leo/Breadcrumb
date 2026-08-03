@@ -35,10 +35,11 @@ export async function runRoundPipeline(input: RoundPipelineInput): Promise<Round
   await runInterestStage(input, treeResult.newNodes, treeResult.sightings, failures);
 
   return {
-    // Method nodes proposed by the edge judge (e.g. "费曼技巧") are genuinely new tree nodes
-    // too — included here so every "new nodes this round" consumer (day digest, metrics
-    // newNodeCount) counts them, not just the knowledge-tree stage's own extractions (S5).
-    newNodes: [...treeResult.newNodes, ...edgeResult.methodNodes],
+    // Method nodes proposed by the edge judge (e.g. "费曼技巧") and casual-mode
+    // adjacent-concept nodes (spec 016) are genuinely new tree nodes too — included here so
+    // every "new nodes this round" consumer (day digest, metrics newNodeCount) counts them,
+    // not just the knowledge-tree stage's own extractions (S5).
+    newNodes: [...treeResult.newNodes, ...edgeResult.methodNodes, ...edgeResult.conceptNodes],
     sightings: treeResult.sightings,
     addedEdges: edgeResult.addedEdges,
     rejectedCyclicEdges: edgeResult.rejectedCyclicEdges,

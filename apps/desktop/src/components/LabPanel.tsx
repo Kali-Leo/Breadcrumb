@@ -12,6 +12,7 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
+import { LabLadderSection } from "./LabLadderSection";
 import { LabModeToggle } from "./LabModeToggle";
 import { LabNodeTable } from "./LabNodeTable";
 import { LabSynonymSuspectsSection } from "./LabSynonymSuspectsSection";
@@ -91,6 +92,7 @@ export function LabPanel() {
         <LabFrontierList />
         <SelfReportInput />
         <LabGoalSection />
+        <LabLadderSection />
         <LabSynonymSuspectsSection />
         <LabFailuresSection />
       </div>

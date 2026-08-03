@@ -1,7 +1,7 @@
 /**
  * Purpose: pure gap/coverage computation for a selected goal, split out of plannerStore.ts
  * to keep that file under the file-size ceiling. No React/zustand here.
- * Main exports: computeGapForGoal.
+ * Main exports: computeGapForGoal, masteryAsSeenByGoal.
  */
 import type {
   GoalRow,
@@ -14,8 +14,11 @@ import { coverage, type GapAndPathResult, gapAndPath } from "@breadcrumb/plugin-
 
 /** Goal views believe the user's own word: a node with a 'learned' self-report claim counts
  * as satisfied FOR THE GOAL, while global mastery stays honest (ADR-0009 keeps self-report
- * capped below real-footprint evidence, so review can still gently resurface it later). */
-function masteryAsSeenByGoal(
+ * capped below real-footprint evidence, so review can still gently resurface it later).
+ * Exported so ladderStore.ts's milestone computation uses the exact same boosted view as
+ * coverage() does here (spec 016 binding decision — milestone must never silently disagree
+ * with the coverage percentage shown elsewhere). */
+export function masteryAsSeenByGoal(
   masteryByNode: ReadonlyMap<string, number>,
   claims: readonly MasteryClaimRow[],
 ): Map<string, number> {

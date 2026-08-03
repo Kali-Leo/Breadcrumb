@@ -2,7 +2,9 @@
  * Purpose: replays edgeStore.ts's edge-discovery pipeline stage in-process — candidate
  * ranking (embeddings or same-parent/recent fallback), edge-judge LLM call, cycle-safe
  * planning, and edge/method-node persistence. Mirrors that store's
- * extractEdgesFromFinishedRound() stage-for-stage.
+ * extractEdgesFromFinishedRound() stage-for-stage. Runs the prompt in casual mode (spec 016)
+ * to mirror the app's own default learningMode; per-persona mode selection is future work —
+ * this stage has no mode input yet, it just always asks for adjacent-concept proposals.
  * Main exports: runEdgeJudgeStage, EdgeJudgeStageResult.
  */
 import { randomUUID } from "node:crypto";
@@ -29,12 +31,16 @@ export interface EdgeJudgeStageResult {
    * are genuinely new tree nodes too, so callers counting "new nodes this round/day" must
    * include them alongside the knowledge-tree stage's own newNodes (S5). */
   methodNodes: KnowledgeNodeRow[];
+  /** Casual-mode adjacent-concept nodes (spec 016) the edge judge proposed and this stage
+   * inserted — sighting-free, same "genuinely new node" accounting as methodNodes above. */
+  conceptNodes: KnowledgeNodeRow[];
 }
 
 const EMPTY_RESULT: EdgeJudgeStageResult = {
   addedEdges: [],
   rejectedCyclicEdges: [],
   methodNodes: [],
+  conceptNodes: [],
 };
 
 export async function runEdgeJudgeStage(
@@ -80,7 +86,7 @@ export async function runEdgeJudgeStage(
       nodeBLabel: pair.nodeB.label,
       nodeBSummary: pair.nodeB.summary,
     }));
-    const messages = buildEdgeJudgeMessages(judgeCandidates);
+    const messages = buildEdgeJudgeMessages(judgeCandidates, { casual: true });
     const { parsed, usage } = await chatJson(llmConfig, messages, edgeJudgeSchema);
     input.recordCall("knowledge-edges", llmConfig.model, usage);
     input.logStage({ purpose: "knowledge-edges", request: messages, response: parsed });
@@ -95,6 +101,11 @@ export async function runEdgeJudgeStage(
     });
     for (const methodNode of plan.methodNodesToInsert)
       await repos.knowledgeNodes.insert(methodNode);
+    // Casual-mode adjacent-concept nodes (spec 016): inserted WITHOUT a sighting, same as
+    // edgeStore.ts does — otherwise plan.edgesToUpsert below would reference a node id that
+    // was never actually persisted.
+    for (const conceptNode of plan.conceptNodesToInsert)
+      await repos.knowledgeNodes.insert(conceptNode);
     for (const edge of plan.edgesToUpsert) await repos.knowledgeEdges.upsert(edge);
     if (plan.rejectedCyclicEdges.length > 0) {
       input.logStage({ purpose: "knowledge-edges", rejectedCyclicEdges: plan.rejectedCyclicEdges });
@@ -103,6 +114,7 @@ export async function runEdgeJudgeStage(
       addedEdges: plan.edgesToUpsert,
       rejectedCyclicEdges: plan.rejectedCyclicEdges,
       methodNodes: plan.methodNodesToInsert,
+      conceptNodes: plan.conceptNodesToInsert,
     };
   } catch (error) {
     const message = describeError(error);
