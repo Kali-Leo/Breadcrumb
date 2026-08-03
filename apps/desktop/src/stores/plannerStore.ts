@@ -120,16 +120,6 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     const evidenceWeightByNode = new Map(
       [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.evidenceWeight]),
     );
-    const frontierCandidates = frontier({
-      nodes,
-      edges,
-      masteryByNode,
-      interestByNode: propagated.interestByNode,
-      litThreshold: LIT_THRESHOLD,
-      previouslyLitNodeIds,
-      interestGatewayByNode: propagated.gatewaySourceByNode,
-      evidenceWeightByNode,
-    });
 
     const selectedGoalId = get().selectedGoalId ?? goals[0]?.id ?? null;
     const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
@@ -141,6 +131,23 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       interestByNode,
       claims,
     );
+
+    // Ranked mode only (spec 016): the selected goal's gap gets a flat frontier boost, so
+    // "what should I learn next" visibly favors goal progress over free wandering.
+    const isRanked = useSettingsStore.getState().learningMode === "ranked";
+    const goalGapNodeIds = isRanked && gap ? new Set(gap.gapNodeIds) : undefined;
+
+    const frontierCandidates = frontier({
+      nodes,
+      edges,
+      masteryByNode,
+      interestByNode: propagated.interestByNode,
+      litThreshold: LIT_THRESHOLD,
+      previouslyLitNodeIds,
+      interestGatewayByNode: propagated.gatewaySourceByNode,
+      evidenceWeightByNode,
+      goalGapNodeIds,
+    });
 
     set({
       nodes,

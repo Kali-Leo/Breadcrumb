@@ -1,8 +1,11 @@
 /**
  * Purpose: pure recommendation-frontier query — nodes one step beyond what's already lit,
  * scored by helps-support from mastered nodes plus interest minus an incoming-requires
- * difficulty estimate. No DB, no I/O; mastery/interest are pre-computed maps from the caller.
- * Main exports: frontier, FrontierCandidate, FrontierReason, FrontierInput.
+ * difficulty estimate. In ranked mode (spec 016), candidates inside the caller's selected
+ * goal's gap get a flat score boost so the frontier visibly favors goal progress. No DB, no
+ * I/O; mastery/interest are pre-computed maps from the caller.
+ * Main exports: frontier, FrontierCandidate, FrontierReason, FrontierInput,
+ * GOAL_GAP_SCORE_BOOST.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors } from "@breadcrumb/plugin-graph";
@@ -21,7 +24,15 @@ export interface FrontierReason {
    * "this gets you closer to X" instead of a bare interest number. Absent when the caller
    * didn't run propagation, or this candidate's interest wasn't propagated. */
   gatewayTo?: { label: string };
+  /** True when this candidate is inside the caller-supplied goalGapNodeIds set (ranked mode,
+   * spec 016) — lets the UI show a "目标内" tag. Absent when the caller didn't supply one. */
+  inGoalGap?: boolean;
 }
+
+/** Flat score boost for a frontier candidate inside the selected goal's gap (ranked mode,
+ * spec 016) — enough to outrank ordinary helps/interest scoring so goal progress visibly
+ * comes first, without needing to zero out everything else. */
+export const GOAL_GAP_SCORE_BOOST = 1.0;
 
 export interface FrontierCandidate {
   nodeId: string;
@@ -53,6 +64,10 @@ export interface FrontierInput {
   interestGatewayByNode?: ReadonlyMap<string, string>;
   /** nodeId -> interest evidenceWeight, surfaced on the candidate for the "依据尚少" UI tag. */
   evidenceWeightByNode?: ReadonlyMap<string, number>;
+  /** Ranked-mode-only (spec 016): the selected goal's gap node ids. A candidate in this set
+   * gets +GOAL_GAP_SCORE_BOOST and reason.inGoalGap = true. Omit in casual mode or when no
+   * goal is selected — frontier() then scores exactly as before. */
+  goalGapNodeIds?: ReadonlySet<string>;
 }
 
 /** Groups helps edges by their target node, computed once per call for O(nodes + edges). */
@@ -82,6 +97,7 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     previouslyLitNodeIds,
     interestGatewayByNode,
     evidenceWeightByNode,
+    goalGapNodeIds,
   } = input;
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
@@ -105,11 +121,13 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
 
     const gatewaySourceId = interestGatewayByNode?.get(node.id);
     const evidenceWeight = evidenceWeightByNode?.get(node.id);
+    const inGoalGap = goalGapNodeIds?.has(node.id) ?? false;
 
     candidates.push({
       nodeId: node.id,
       label: node.label,
-      score: helpsScore + interestScore - difficultyEstimate,
+      score:
+        helpsScore + interestScore - difficultyEstimate + (inGoalGap ? GOAL_GAP_SCORE_BOOST : 0),
       reason: {
         litPrerequisiteLabels: prerequisiteIds.map((id) => labelById.get(id) ?? id),
         litHelpsSources,
@@ -117,6 +135,7 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
         ...(gatewaySourceId !== undefined
           ? { gatewayTo: { label: labelById.get(gatewaySourceId) ?? gatewaySourceId } }
           : {}),
+        ...(inGoalGap ? { inGoalGap: true } : {}),
       },
       ...(evidenceWeight !== undefined ? { evidenceWeight } : {}),
     });

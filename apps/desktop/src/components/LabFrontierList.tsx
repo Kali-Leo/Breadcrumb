@@ -3,8 +3,9 @@
  * structured, suggest-only explanation ("因为你已掌握 X、Y"). Copy carries no pressure
  * language (product principle 1): this is what you could learn next, never what you're
  * behind on. Also surfaces a "通往你感兴趣的「X」" reason for candidates whose interest was
- * inherited via one-hop propagation, and a subtle "依据尚少" tag when the underlying
- * interest evidence is still thin (spec 014).
+ * inherited via one-hop propagation, a subtle "依据尚少" tag when the underlying interest
+ * evidence is still thin (spec 014), and a "目标内" tag for candidates inside the selected
+ * goal's gap in ranked mode (spec 016).
  * Main exports: LabFrontierList.
  */
 import { usePlannerStore } from "../stores/plannerStore";
@@ -39,6 +40,9 @@ export function LabFrontierList() {
                         依据尚少
                       </span>
                     )}
+                  {candidate.reason.inGoalGap && (
+                    <span className="rounded bg-amber-100 px-1 text-amber-700 text-xs">目标内</span>
+                  )}
                 </span>
                 <span className="text-stone-400">点亮分 {candidate.score.toFixed(2)}</span>
               </div>

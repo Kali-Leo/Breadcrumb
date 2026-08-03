@@ -4,7 +4,8 @@
  * ids back to node ids, applies the requires-edge cycle guard, resolves method-node
  * helpsLabels against known labels, and (casual mode, spec 016) turns adjacentConcepts
  * proposals into sighting-free concept nodes with one helps edge each. No DB, no I/O.
- * Main exports: planEdgeJudgeResult, EdgeJudgePlan, JudgedPairContext.
+ * Main exports: planEdgeJudgeResult, EdgeJudgePlan, JudgedPairContext,
+ * ADJACENT_CONCEPT_EDGE_CONFIDENCE.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { EdgeJudgeResult } from "./edgeJudge";
@@ -18,7 +19,7 @@ const DEFAULT_HELPS_WEIGHT = 0.5;
 /** Adjacent-concept proposals (spec 016) carry no separate confidence tier — helpsLevel is
  * the only judgment asked of the model for these. A fixed mid confidence keeps the edge from
  * silently outweighing an explicitly-judged helps edge without inventing an ungrounded number. */
-const ADJACENT_CONCEPT_EDGE_CONFIDENCE = 0.6;
+export const ADJACENT_CONCEPT_EDGE_CONFIDENCE = 0.6;
 
 export interface JudgedPairContext {
   pairId: string;

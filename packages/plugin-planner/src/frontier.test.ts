@@ -255,6 +255,41 @@ describe("frontier", () => {
   });
 });
 
+describe("frontier ranked-mode goal-gap boost (spec 016)", () => {
+  it("adds GOAL_GAP_SCORE_BOOST and marks inGoalGap for a candidate inside goalGapNodeIds", () => {
+    const nodes = [node("a", "Alpha"), node("b", "Beta")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      goalGapNodeIds: new Set(["a"]),
+    });
+    const alpha = result.find((c) => c.nodeId === "a");
+    const beta = result.find((c) => c.nodeId === "b");
+    expect(alpha?.score).toBeCloseTo(1.0);
+    expect(alpha?.reason.inGoalGap).toBe(true);
+    expect(beta?.score).toBe(0);
+    expect(beta?.reason.inGoalGap).toBeUndefined();
+  });
+
+  it("leaves scoring unchanged when goalGapNodeIds is omitted (casual mode)", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
+    expect(result[0]?.score).toBe(0);
+    expect(result[0]?.reason.inGoalGap).toBeUndefined();
+  });
+});
+
 describe("frontier fed by propagateInterestToPrerequisites (spec 014 acceptance scenario)", () => {
   it("surfaces a locked interested node's unlit prerequisite, with a reason naming it", () => {
     // root(lit) --requires--> P(unlit, on the frontier once root is lit) --requires-->
