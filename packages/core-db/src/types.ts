@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow.
+ * GoalRow, AiFailureRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -174,5 +174,16 @@ export interface LlmCallRow {
   output_tokens: number;
   cost_micros: number;
   currency: Currency;
+  created_at: string;
+}
+
+/** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible
+ * only to the developer via the lab panel's "最近的静默失败" section. Writing this row is
+ * itself best-effort: a failure to record a failure must never throw. */
+export interface AiFailureRow {
+  id: string;
+  /** Which pipeline failed, e.g. "interest", "knowledge-edges", "goal-planning". */
+  purpose: string;
+  message: string;
   created_at: string;
 }

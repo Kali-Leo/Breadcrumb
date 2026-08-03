@@ -5,6 +5,7 @@
  * Main exports: createSimlabRepos, SimlabRepos.
  */
 import {
+  createAiFailuresRepo,
   createConversationsRepo,
   createFactcheckRepo,
   createGoalsRepo,
@@ -23,6 +24,7 @@ import {
 } from "@breadcrumb/core-db";
 
 export interface SimlabRepos {
+  aiFailures: ReturnType<typeof createAiFailuresRepo>;
   settings: ReturnType<typeof createSettingsRepo>;
   conversations: ReturnType<typeof createConversationsRepo>;
   messages: ReturnType<typeof createMessagesRepo>;
@@ -41,6 +43,7 @@ export interface SimlabRepos {
 
 export function createSimlabRepos(sql: SqlClient): SimlabRepos {
   return {
+    aiFailures: createAiFailuresRepo(sql),
     settings: createSettingsRepo(sql),
     conversations: createConversationsRepo(sql),
     messages: createMessagesRepo(sql),

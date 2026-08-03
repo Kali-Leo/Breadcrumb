@@ -225,6 +225,21 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_goals_updated ON goals(updated_at);`,
     ],
   },
+  {
+    // Developer-visible record of silent AI pipeline degradation (spec 014): every store's
+    // extraction/judging catch writes one best-effort row here — never surfaced to the user,
+    // only to the lab panel's "最近的静默失败" section.
+    id: "0010_ai_failures",
+    statements: [
+      `CREATE TABLE ai_failures (
+        id TEXT PRIMARY KEY,
+        purpose TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_ai_failures_created ON ai_failures(created_at);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

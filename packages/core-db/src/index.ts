@@ -3,6 +3,7 @@
  * The host app injects a SqlClient (tauri-plugin-sql); tests inject fakes.
  * Main exports: everything from types, migrations and repositories (core, knowledge, feature).
  */
+export * from "./aiFailureRepositories";
 export * from "./featureRepositories";
 export * from "./goalRepositories";
 export * from "./interestRepositories";

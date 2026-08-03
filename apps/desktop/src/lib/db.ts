@@ -4,6 +4,7 @@
  * Main exports: getRepos() (memoized async singleton), Repos.
  */
 import {
+  createAiFailuresRepo,
   createConversationsRepo,
   createFactcheckRepo,
   createGoalsRepo,
@@ -24,6 +25,7 @@ import {
 import Database from "@tauri-apps/plugin-sql";
 
 export interface Repos {
+  aiFailures: ReturnType<typeof createAiFailuresRepo>;
   settings: ReturnType<typeof createSettingsRepo>;
   conversations: ReturnType<typeof createConversationsRepo>;
   messages: ReturnType<typeof createMessagesRepo>;
@@ -58,6 +60,7 @@ async function openAndMigrate(): Promise<Repos> {
   };
   await runMigrations(sqlClient);
   return {
+    aiFailures: createAiFailuresRepo(sqlClient),
     settings: createSettingsRepo(sqlClient),
     conversations: createConversationsRepo(sqlClient),
     messages: createMessagesRepo(sqlClient),
