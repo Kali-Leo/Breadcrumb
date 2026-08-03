@@ -28,6 +28,7 @@ import {
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
 import { computeGapForGoal } from "../lib/plannerGapActions";
 import {
   claimNodeAsLearned,
@@ -180,6 +181,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       return await requestGoalMapping(settings.apiConfig, goalText, existingLabels);
     } catch (error) {
       console.warn("goal mapping skipped:", error);
+      void recordAiFailure("goal-planning", error);
       return null;
     }
   },

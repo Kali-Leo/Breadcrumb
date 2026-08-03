@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useInterestStore } from "../stores/interestStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
 import { LabNodeTable } from "./LabNodeTable";
@@ -87,6 +88,7 @@ export function LabPanel() {
         <LabFrontierList />
         <SelfReportInput />
         <LabGoalSection />
+        <LabFailuresSection />
       </div>
     </div>
   );

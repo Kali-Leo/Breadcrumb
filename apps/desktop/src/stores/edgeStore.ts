@@ -23,6 +23,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
@@ -142,6 +143,7 @@ async function extractEdgesFromFinishedRound(
     }
   } catch (error) {
     console.warn("knowledge-edge extraction skipped:", error);
+    void recordAiFailure("knowledge-edges", error);
   }
 }
 

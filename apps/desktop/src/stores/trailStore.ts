@@ -14,6 +14,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
@@ -73,6 +74,7 @@ export const useTrailStore = create<TrailState>((set) => ({
       set({ yesterdaySummary: parsed.summary });
     } catch (error) {
       console.warn("trail summary skipped:", error);
+      void recordAiFailure("trail", error);
     }
   },
 }));

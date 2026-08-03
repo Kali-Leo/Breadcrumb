@@ -2,10 +2,16 @@
  * Purpose: lab-panel frontier list — recommendation candidates with their score and a
  * structured, suggest-only explanation ("因为你已掌握 X、Y"). Copy carries no pressure
  * language (product principle 1): this is what you could learn next, never what you're
- * behind on.
+ * behind on. Also surfaces a "通往你感兴趣的「X」" reason for candidates whose interest was
+ * inherited via one-hop propagation, and a subtle "依据尚少" tag when the underlying
+ * interest evidence is still thin (spec 014).
  * Main exports: LabFrontierList.
  */
 import { usePlannerStore } from "../stores/plannerStore";
+
+/** Below this, aggregateInterest's shrinkage evidenceWeight counts as "still thin" — a node
+ * with only a signal or two of support, not yet corroborated. */
+const THIN_EVIDENCE_THRESHOLD = 1;
 
 export function LabFrontierList() {
   const candidates = usePlannerStore((state) => state.frontierCandidates);
@@ -27,6 +33,12 @@ export function LabFrontierList() {
                       重逢 · 以前学过，最近有点生疏
                     </span>
                   )}
+                  {candidate.evidenceWeight !== undefined &&
+                    candidate.evidenceWeight < THIN_EVIDENCE_THRESHOLD && (
+                      <span className="rounded bg-stone-100 px-1 text-stone-400 text-xs">
+                        依据尚少
+                      </span>
+                    )}
                 </span>
                 <span className="text-stone-400">点亮分 {candidate.score.toFixed(2)}</span>
               </div>
@@ -41,6 +53,11 @@ export function LabFrontierList() {
                     .map((source) => `${source.label}(${source.weight.toFixed(1)})`)
                     .join("、")}{" "}
                   对理解它有帮助
+                </p>
+              )}
+              {candidate.reason.gatewayTo && (
+                <p className="text-stone-400">
+                  通往你感兴趣的「{candidate.reason.gatewayTo.label}」
                 </p>
               )}
             </li>

@@ -12,6 +12,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
@@ -130,6 +131,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
       });
     } catch (error) {
       console.warn("factcheck skipped:", error);
+      void recordAiFailure("factcheck", error);
       setNotice(messageId, FAILED_NOTICE);
     } finally {
       set({

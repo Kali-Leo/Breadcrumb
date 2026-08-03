@@ -1,7 +1,8 @@
 /**
  * Purpose: lab-panel node value table — mastery (value + tier), interest aggregates
- * (curiosity/confusion/boredom) and edge counts per knowledge node. Debug-grade numbers by
- * design (spec 012); zero visual polish intended.
+ * (curiosity/confusion/boredom), their evidenceWeight (spec 014's shrinkage evidence mass),
+ * and edge counts per knowledge node. Debug-grade numbers by design (spec 012); zero visual
+ * polish intended.
  * Main exports: LabNodeTable.
  */
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
@@ -37,6 +38,7 @@ export function LabNodeTable() {
                 <th className="px-2 py-1">节点</th>
                 <th className="px-2 py-1">掌握度</th>
                 <th className="px-2 py-1">好奇/困惑/厌倦</th>
+                <th className="px-2 py-1">依据</th>
                 <th className="px-2 py-1">出/入边</th>
               </tr>
             </thead>
@@ -56,6 +58,7 @@ export function LabNodeTable() {
                       {(interest?.confusion ?? 0).toFixed(2)} /{" "}
                       {(interest?.boredom ?? 0).toFixed(2)}
                     </td>
+                    <td className="px-2 py-1">{(interest?.evidenceWeight ?? 0).toFixed(2)}</td>
                     <td className="px-2 py-1">
                       {outgoing} / {incoming}
                     </td>

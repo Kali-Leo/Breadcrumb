@@ -18,6 +18,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
@@ -90,6 +91,7 @@ export const useInterestStore = create<InterestState>(() => ({
       }
     } catch (error) {
       console.warn("self-report mastery mapping skipped:", error);
+      void recordAiFailure("self-report-mapping", error);
     }
   },
 }));
@@ -159,6 +161,7 @@ async function extractInterestFromRound(
     }
   } catch (error) {
     console.warn("interest extraction skipped:", error);
+    void recordAiFailure("interest", error);
   }
 }
 

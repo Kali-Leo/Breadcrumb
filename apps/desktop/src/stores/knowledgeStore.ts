@@ -15,6 +15,7 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { embedNodes } from "../lib/embeddings";
+import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
@@ -130,6 +131,7 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
     }
   } catch (error) {
     console.warn("knowledge extraction skipped:", error);
+    void recordAiFailure("knowledge-tree", error);
   }
 }
 
