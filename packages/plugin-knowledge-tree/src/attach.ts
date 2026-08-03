@@ -1,7 +1,9 @@
 /**
  * Purpose: pure tree logic — plans changes to the USER's global tree from one round's
  * extraction: brand-new concepts become nodes, already-known concepts become re-sightings.
- * Every touched concept leaves a sighting (footprint) for the conversation.
+ * Every touched concept leaves a sighting (footprint) for the conversation. An extracted
+ * label that hits the alias table (spec 015 node-dedup gate) behaves exactly like a label
+ * match on the canonical node — a sighting, never a duplicate.
  * Main exports: planNodeChanges, NodeChangePlan.
  */
 import type { KnowledgeNodeRow, NodeSightingRow } from "@breadcrumb/core-db";
@@ -13,6 +15,10 @@ export interface NodeChangePlanInput {
   /** The user's whole tree (global — the tree belongs to the user, not the conversation). */
   existingNodes: readonly KnowledgeNodeRow[];
   extracted: readonly ExtractedNode[];
+  /** Alias labels the synonym gate previously judged identical to an existing node (spec
+   * 015) — a label found here resolves to its canonical node id exactly like a direct
+   * label match, before any new-node logic runs. */
+  aliasNodeIdByLabel: ReadonlyMap<string, string>;
   newId(): string;
   nowIso(): string;
 }
@@ -43,9 +49,10 @@ export function planNodeChanges(input: NodeChangePlanInput): NodeChangePlan {
   }
 
   for (const extracted of input.extracted) {
-    const existingId = idByLabel.get(extracted.label);
+    const existingId =
+      idByLabel.get(extracted.label) ?? input.aliasNodeIdByLabel.get(extracted.label);
     if (existingId !== undefined) {
-      addSighting(existingId); // re-met a known concept — a review signal, not a new node
+      addSighting(existingId); // re-met a known concept (or its alias) — a review signal, not a new node
       continue;
     }
     const node: KnowledgeNodeRow = {

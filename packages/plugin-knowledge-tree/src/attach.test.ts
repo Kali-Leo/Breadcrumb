@@ -10,6 +10,7 @@ let idCounter = 0;
 const testDefaults = {
   conversationId: "conv-1",
   sourceMessageId: "msg-1",
+  aliasNodeIdByLabel: new Map<string, string>(),
   newId: () => `id-${++idCounter}`,
   nowIso: () => "2026-07-29T10:00:00Z",
 };
@@ -83,5 +84,28 @@ describe("planNodeChanges", () => {
       extracted: [{ label: "闭包", summary: "s", parentLabel: "不存在的节点" }],
     });
     expect(plan.newNodes[0]?.parent_id).toBeNull();
+  });
+
+  it("an alias-label hit records a sighting on the canonical node, no new node (spec 015)", () => {
+    const plan = planNodeChanges({
+      ...testDefaults,
+      existingNodes: [existingNode("n1", "if语句为什么要缩进", null)],
+      aliasNodeIdByLabel: new Map([["if缩进", "n1"]]),
+      extracted: [{ label: "if缩进", summary: "换了个说法问同一件事", parentLabel: null }],
+    });
+    expect(plan.newNodes).toHaveLength(0);
+    expect(plan.sightings).toHaveLength(1);
+    expect(plan.sightings[0]?.node_id).toBe("n1");
+  });
+
+  it("prefers a direct label match over an alias when both exist", () => {
+    const plan = planNodeChanges({
+      ...testDefaults,
+      existingNodes: [existingNode("n1", "闭包", null)],
+      aliasNodeIdByLabel: new Map([["闭包", "n2"]]),
+      extracted: [{ label: "闭包", summary: "s", parentLabel: null }],
+    });
+    expect(plan.newNodes).toHaveLength(0);
+    expect(plan.sightings[0]?.node_id).toBe("n1");
   });
 });

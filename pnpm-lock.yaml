@@ -286,6 +286,9 @@ importers:
       '@breadcrumb/plugin-interest':
         specifier: workspace:*
         version: link:../plugin-interest
+      '@breadcrumb/plugin-knowledge-tree':
+        specifier: workspace:*
+        version: link:../plugin-knowledge-tree
       '@breadcrumb/plugin-planner':
         specifier: workspace:*
         version: link:../plugin-planner

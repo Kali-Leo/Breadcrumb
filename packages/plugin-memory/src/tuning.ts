@@ -19,6 +19,7 @@ import {
   INTEREST_LEVEL_SCORES,
   K_PSEUDO,
 } from "@breadcrumb/plugin-interest";
+import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
@@ -82,4 +83,8 @@ export const productParams = {
    * plugin-planner/propagate.ts. */
   propagationInterestThreshold: PROPAGATION_INTEREST_THRESHOLD,
   propagationInheritFactor: PROPAGATION_INHERIT_FACTOR,
+  /** Node-dedup synonym gate (spec 015): cosine-similarity floor a would-be-new node's best
+   * existing match must clear before it costs one LLM verdict call.
+   * plugin-knowledge-tree/synonymGate.ts. */
+  synonymSimilarityThreshold: SYNONYM_SIMILARITY_THRESHOLD,
 } as const;
