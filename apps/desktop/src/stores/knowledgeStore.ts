@@ -17,6 +17,7 @@ import { getRepos } from "../lib/db";
 import { embedNodes } from "../lib/embeddings";
 import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
+import { runSynonymGate } from "../lib/synonymGate";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
@@ -77,6 +78,8 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
   try {
     const repos = await getRepos();
     const existingNodes = await repos.knowledgeNodes.listAll();
+    const aliases = await repos.nodeAliases.listAll();
+    const aliasNodeIdByLabel = new Map(aliases.map((alias) => [alias.alias_label, alias.node_id]));
     const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
     const { parsed, usage } = await chatJson(
       config,
@@ -90,19 +93,34 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
       usage,
     });
 
-    const plan = planNodeChanges({
+    const rawPlan = planNodeChanges({
       conversationId,
       sourceMessageId: answer.id,
       existingNodes,
       extracted: parsed.nodes,
+      aliasNodeIdByLabel,
       newId,
       nowIso,
     });
+    // Node-dedup gate (spec 015): filters would-be-new nodes against the existing tree by
+    // embedding similarity + one anchored LLM verdict before anything gets inserted.
+    // Degrades to rawPlan unchanged on any failure — never blocks extraction.
+    const plan = await runSynonymGate({
+      plan: rawPlan,
+      existingNodes,
+      conversationId,
+      sourceMessageId: answer.id,
+      config,
+    });
+
     for (const node of plan.newNodes) {
       await repos.knowledgeNodes.insert(node);
     }
     for (const sighting of plan.sightings) {
       await repos.nodeSightings.record(sighting);
+    }
+    for (const alias of plan.aliasesToInsert) {
+      await repos.nodeAliases.insert(alias);
     }
     // Local, zero-cost, and best-effort: powers edge-candidate ranking later, never blocks chat.
     await embedNodes(plan.newNodes);
