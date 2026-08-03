@@ -5,6 +5,7 @@
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
 import { frontier } from "./frontier";
+import { propagateInterestToPrerequisites } from "./propagate";
 
 function node(id: string, label: string): KnowledgeNodeRow {
   return {
@@ -167,6 +168,74 @@ describe("frontier", () => {
     expect(result[0]?.score).toBe(0);
   });
 
+  it("attaches gatewayTo when interestGatewayByNode names a source for the candidate", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map([["a", 0.2]]),
+      interestByNode: new Map([["a", 0.45]]),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      interestGatewayByNode: new Map([["a", "gateway-source-id"]]),
+    });
+    expect(result[0]?.reason.gatewayTo).toEqual({ label: "gateway-source-id" });
+  });
+
+  it("resolves gatewayTo's source id to its node label when the source is a known node", () => {
+    const nodes = [node("a", "Alpha"), node("g", "Gamma")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map([["a", 0.2]]),
+      interestByNode: new Map([["a", 0.45]]),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      interestGatewayByNode: new Map([["a", "g"]]),
+    });
+    expect(result[0]?.reason.gatewayTo).toEqual({ label: "Gamma" });
+  });
+
+  it("omits gatewayTo when no interestGatewayByNode is supplied", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
+    expect(result[0]?.reason.gatewayTo).toBeUndefined();
+  });
+
+  it("surfaces evidenceWeight on the candidate when evidenceWeightByNode is supplied", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      evidenceWeightByNode: new Map([["a", 0.6]]),
+    });
+    expect(result[0]?.evidenceWeight).toBe(0.6);
+  });
+
+  it("omits evidenceWeight when no evidenceWeightByNode is supplied", () => {
+    const nodes = [node("a", "Alpha")];
+    const result = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
+    expect(result[0]?.evidenceWeight).toBeUndefined();
+  });
+
   it("orders candidates by score desc, then label asc", () => {
     const nodes = [node("d", "Delta"), node("e", "Echo"), node("f", "Foxtrot")];
     const interestByNode = new Map([
@@ -183,5 +252,39 @@ describe("frontier", () => {
       previouslyLitNodeIds: new Set(),
     });
     expect(result.map((c) => c.nodeId)).toEqual(["f", "d", "e"]);
+  });
+});
+
+describe("frontier fed by propagateInterestToPrerequisites (spec 014 acceptance scenario)", () => {
+  it("surfaces a locked interested node's unlit prerequisite, with a reason naming it", () => {
+    // root(lit) --requires--> P(unlit, on the frontier once root is lit) --requires-->
+    // X(unlit, locked because P isn't lit yet, but highly interesting).
+    const nodes = [node("root", "Root"), node("p", "Prereq"), node("x", "TargetX")];
+    const edges = [requires("root", "p"), requires("p", "x")];
+    const masteryByNode = new Map([
+      ["root", 0.9],
+      ["p", 0],
+      ["x", 0],
+    ]);
+    const rawInterestByNode = new Map([["x", 0.8]]);
+
+    const propagated = propagateInterestToPrerequisites(
+      edges,
+      rawInterestByNode,
+      masteryByNode,
+      LIT,
+    );
+    const result = frontier({
+      nodes,
+      edges,
+      masteryByNode,
+      interestByNode: propagated.interestByNode,
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      interestGatewayByNode: propagated.gatewaySourceByNode,
+    });
+
+    expect(result.map((c) => c.nodeId)).toEqual(["p"]);
+    expect(result[0]?.reason.gatewayTo).toEqual({ label: "TargetX" });
   });
 });

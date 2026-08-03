@@ -11,7 +11,11 @@ import {
   spreadInterest,
 } from "@breadcrumb/plugin-interest";
 import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { type FrontierCandidate, frontier } from "@breadcrumb/plugin-planner";
+import {
+  type FrontierCandidate,
+  frontier,
+  propagateInterestToPrerequisites,
+} from "@breadcrumb/plugin-planner";
 import type { SimlabRepos } from "../db/repos";
 
 export interface PlannerSnapshot {
@@ -46,13 +50,25 @@ export async function computePlannerSnapshot(
     ...sightings.map((sighting) => sighting.node_id),
     ...claims.map((claim) => claim.node_id),
   ]);
+  // One-hop reverse propagation (spec 014), mirroring plannerStore.recompute().
+  const propagated = propagateInterestToPrerequisites(
+    edges,
+    interestByNode,
+    masteryByNode,
+    LIT_THRESHOLD,
+  );
+  const evidenceWeightByNode = new Map(
+    [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.evidenceWeight]),
+  );
   const frontierCandidates = frontier({
     nodes,
     edges,
     masteryByNode,
-    interestByNode,
+    interestByNode: propagated.interestByNode,
     litThreshold: LIT_THRESHOLD,
     previouslyLitNodeIds,
+    interestGatewayByNode: propagated.gatewaySourceByNode,
+    evidenceWeightByNode,
   });
 
   return { nodes, edges, masteryByNode, interestByNode, frontierCandidates };

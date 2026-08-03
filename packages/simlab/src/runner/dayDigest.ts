@@ -98,6 +98,7 @@ function describeFrontierReason(reason: {
   litPrerequisiteLabels: string[];
   litHelpsSources: { label: string; weight: number }[];
   wasLitBefore: boolean;
+  gatewayTo?: { label: string };
 }): string {
   const parts: string[] = [];
   if (reason.wasLitBefore) parts.push("重逢（以前学过，最近有点生疏）");
@@ -108,6 +109,7 @@ function describeFrontierReason(reason: {
       `受助于：${reason.litHelpsSources.map((source) => `${source.label}(${source.weight})`).join("、")}`,
     );
   }
+  if (reason.gatewayTo) parts.push(`通往「${reason.gatewayTo.label}」`);
   return parts.length > 0 ? parts.join("；") : "无前置门槛，直接可学";
 }
 

@@ -16,6 +16,11 @@ export interface FrontierReason {
    * before and has since decayed back under the lit threshold. Distinguishes "review" from
    * "brand new" so callers don't present a decayed-back-in node as fresh material. */
   wasLitBefore: boolean;
+  /** Set when this candidate's interest score was raised by one-hop reverse propagation
+   * (spec 014, propagate.ts) from a locked-but-interesting dependent — lets the UI explain
+   * "this gets you closer to X" instead of a bare interest number. Absent when the caller
+   * didn't run propagation, or this candidate's interest wasn't propagated. */
+  gatewayTo?: { label: string };
 }
 
 export interface FrontierCandidate {
@@ -23,6 +28,9 @@ export interface FrontierCandidate {
   label: string;
   score: number;
   reason: FrontierReason;
+  /** This node's interest evidenceWeight (aggregateInterest's shrinkage mass), when the
+   * caller supplies one. UI uses < 1 to show a subtle "依据尚少" (thin evidence) tag. */
+  evidenceWeight?: number;
 }
 
 export interface FrontierInput {
@@ -39,6 +47,12 @@ export interface FrontierInput {
    * not a fresh recommendation. Caller-supplied for the same layering reason as
    * litThreshold: this package never touches raw sighting/claim rows. */
   previouslyLitNodeIds: ReadonlySet<string>;
+  /** nodeId -> id of the dependent node whose locked interest propagated into it (spec 014,
+   * propagate.ts's gatewaySourceByNode). Optional — omit when the caller didn't run
+   * propagation; interestByNode is then read as-is with no gatewayTo reasons attached. */
+  interestGatewayByNode?: ReadonlyMap<string, string>;
+  /** nodeId -> interest evidenceWeight, surfaced on the candidate for the "依据尚少" UI tag. */
+  evidenceWeightByNode?: ReadonlyMap<string, number>;
 }
 
 /** Groups helps edges by their target node, computed once per call for O(nodes + edges). */
@@ -59,7 +73,16 @@ function incomingHelpsEdgesByTarget(
  * gate — a node with zero requires-prerequisites also qualifies), but the node itself isn't
  * lit yet. Ordered score desc, then label, for deterministic UI rendering. */
 export function frontier(input: FrontierInput): FrontierCandidate[] {
-  const { nodes, edges, masteryByNode, interestByNode, litThreshold, previouslyLitNodeIds } = input;
+  const {
+    nodes,
+    edges,
+    masteryByNode,
+    interestByNode,
+    litThreshold,
+    previouslyLitNodeIds,
+    interestGatewayByNode,
+    evidenceWeightByNode,
+  } = input;
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
   const helpsByTarget = incomingHelpsEdgesByTarget(edges);
@@ -80,6 +103,9 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     const interestScore = interestByNode.get(node.id) ?? 0;
     const difficultyEstimate = prerequisiteIds.length;
 
+    const gatewaySourceId = interestGatewayByNode?.get(node.id);
+    const evidenceWeight = evidenceWeightByNode?.get(node.id);
+
     candidates.push({
       nodeId: node.id,
       label: node.label,
@@ -88,7 +114,11 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
         litPrerequisiteLabels: prerequisiteIds.map((id) => labelById.get(id) ?? id),
         litHelpsSources,
         wasLitBefore: previouslyLitNodeIds.has(node.id),
+        ...(gatewaySourceId !== undefined
+          ? { gatewayTo: { label: labelById.get(gatewaySourceId) ?? gatewaySourceId } }
+          : {}),
       },
+      ...(evidenceWeight !== undefined ? { evidenceWeight } : {}),
     });
   }
 

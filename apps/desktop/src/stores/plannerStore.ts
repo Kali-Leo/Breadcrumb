@@ -24,6 +24,7 @@ import {
   frontier,
   type GapAndPathResult,
   type GoalMappingResult,
+  propagateInterestToPrerequisites,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
@@ -106,13 +107,27 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       ...sightings.map((sighting) => sighting.node_id),
       ...claims.map((claim) => claim.node_id),
     ]);
+    // One-hop reverse propagation (spec 014): a locked-but-interesting node lends interest
+    // to its own unlit prerequisites, so frontier() can surface "gets you closer to X".
+    // gapAndPath's interestFirst route intentionally keeps using the un-propagated map.
+    const propagated = propagateInterestToPrerequisites(
+      edges,
+      interestByNode,
+      masteryByNode,
+      LIT_THRESHOLD,
+    );
+    const evidenceWeightByNode = new Map(
+      [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.evidenceWeight]),
+    );
     const frontierCandidates = frontier({
       nodes,
       edges,
       masteryByNode,
-      interestByNode,
+      interestByNode: propagated.interestByNode,
       litThreshold: LIT_THRESHOLD,
       previouslyLitNodeIds,
+      interestGatewayByNode: propagated.gatewaySourceByNode,
+      evidenceWeightByNode,
     });
 
     const selectedGoalId = get().selectedGoalId ?? goals[0]?.id ?? null;
