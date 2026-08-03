@@ -102,7 +102,7 @@ async function extractEdgesFromFinishedRound(
     const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
     const { parsed, usage } = await chatJson(
       config,
-      buildEdgeJudgeMessages(judgeCandidates),
+      buildEdgeJudgeMessages(judgeCandidates, { casual: settings.learningMode === "casual" }),
       edgeJudgeSchema,
     );
     await recordMeteredCall({
@@ -127,14 +127,20 @@ async function extractEdgesFromFinishedRound(
     for (const methodNode of plan.methodNodesToInsert) {
       await repos.knowledgeNodes.insert(methodNode);
     }
+    // Casual-mode adjacent-concept nodes (spec 016): inserted WITHOUT a node_sightings row,
+    // so they stay genuinely unlit — that's what gives frontier() a real "ahead".
+    for (const conceptNode of plan.conceptNodesToInsert) {
+      await repos.knowledgeNodes.insert(conceptNode);
+    }
     const addedEdges: KnowledgeEdgeRow[] = [];
     for (const edge of plan.edgesToUpsert) {
       await repos.knowledgeEdges.upsert(edge);
       addedEdges.push(edge);
     }
 
-    if (addedEdges.length > 0 || plan.methodNodesToInsert.length > 0) {
-      if (plan.methodNodesToInsert.length > 0) {
+    const insertedNodeCount = plan.methodNodesToInsert.length + plan.conceptNodesToInsert.length;
+    if (addedEdges.length > 0 || insertedNodeCount > 0) {
+      if (insertedNodeCount > 0) {
         useKnowledgeStore.setState({ nodes: await repos.knowledgeNodes.listAll() });
       }
       const addedEdgeIds = addedEdges.map((edge) => edge.id);

@@ -113,6 +113,43 @@ describe("edgeJudgeSchema", () => {
     ).toThrow();
   });
 
+  it("defaults adjacentConcepts to an empty array when the key is omitted (ranked mode)", () => {
+    const parsed = edgeJudgeSchema.parse({ edges: [], methodNodes: [] });
+    expect(parsed.adjacentConcepts).toEqual([]);
+  });
+
+  it("accepts an adjacent-concept proposal with an anchored helpsLevel tier", () => {
+    const parsed = edgeJudgeSchema.parse({
+      edges: [],
+      methodNodes: [],
+      adjacentConcepts: [
+        {
+          label: "拉格朗日乘数法",
+          summary: "带约束的极值问题求解方法",
+          connectsToLabel: "导数",
+          helpsLevel: "中",
+        },
+      ],
+    });
+    expect(parsed.adjacentConcepts[0]?.helpsLevel).toBe("中");
+  });
+
+  it("rejects more than 2 adjacentConcepts", () => {
+    const proposal = {
+      label: "x",
+      summary: "s",
+      connectsToLabel: "y",
+      helpsLevel: "弱" as const,
+    };
+    expect(() =>
+      edgeJudgeSchema.parse({
+        edges: [],
+        methodNodes: [],
+        adjacentConcepts: [proposal, proposal, proposal],
+      }),
+    ).toThrow();
+  });
+
   it("rejects more than 20 edges", () => {
     const edge = {
       pairId: "p0",
@@ -154,5 +191,20 @@ describe("buildEdgeJudgeMessages", () => {
     expect(content.split("\n")).toHaveLength(3);
     expect(content).toContain("p0");
     expect(content).toContain("p1");
+  });
+
+  it("omits the adjacent-concept section by default (ranked mode)", () => {
+    const messages = buildEdgeJudgeMessages([
+      { pairId: "p0", nodeALabel: "A", nodeASummary: "a", nodeBLabel: "B", nodeBSummary: "b" },
+    ]);
+    expect(messages[0]?.content).not.toContain("adjacentConcepts");
+  });
+
+  it("includes the adjacent-concept section only when casual is true", () => {
+    const messages = buildEdgeJudgeMessages(
+      [{ pairId: "p0", nodeALabel: "A", nodeASummary: "a", nodeBLabel: "B", nodeBSummary: "b" }],
+      { casual: true },
+    );
+    expect(messages[0]?.content).toContain("adjacentConcepts");
   });
 });

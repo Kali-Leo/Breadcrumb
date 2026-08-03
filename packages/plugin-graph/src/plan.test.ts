@@ -14,7 +14,7 @@ const testDefaults = {
 };
 
 function emptyJudged(): EdgeJudgeResult {
-  return { edges: [], methodNodes: [] };
+  return { edges: [], methodNodes: [], adjacentConcepts: [] };
 }
 
 describe("planEdgeJudgeResult requires edges", () => {
@@ -32,6 +32,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -63,6 +64,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -100,6 +102,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -137,6 +140,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -162,6 +166,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -187,6 +192,7 @@ describe("planEdgeJudgeResult requires edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -214,6 +220,7 @@ describe("planEdgeJudgeResult helps edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -239,6 +246,7 @@ describe("planEdgeJudgeResult helps edges", () => {
         },
       ],
       methodNodes: [],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -264,6 +272,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           confidence: 0.7,
         },
       ],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -294,6 +303,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           confidence: 0.7,
         },
       ],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -319,6 +329,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           confidence: 0.5,
         },
       ],
+      adjacentConcepts: [],
     };
     const plan = planEdgeJudgeResult({
       judged,
@@ -332,6 +343,103 @@ describe("planEdgeJudgeResult method nodes", () => {
   });
 });
 
+describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
+  it("creates a sighting-free concept node with a helps edge from its connectsToLabel node", () => {
+    const judged: EdgeJudgeResult = {
+      edges: [],
+      methodNodes: [],
+      adjacentConcepts: [
+        {
+          label: "拉格朗日乘数法",
+          summary: "带约束的极值问题求解方法",
+          connectsToLabel: "导数",
+          helpsLevel: "中",
+        },
+      ],
+    };
+    const plan = planEdgeJudgeResult({
+      judged,
+      pairs: [],
+      existingEdges: [],
+      nodeIdByLabel: new Map([["导数", "derivative"]]),
+      ...testDefaults,
+    });
+    expect(plan.conceptNodesToInsert).toHaveLength(1);
+    expect(plan.conceptNodesToInsert[0]).toMatchObject({
+      kind: "concept",
+      label: "拉格朗日乘数法",
+    });
+    expect(plan.edgesToUpsert).toHaveLength(1);
+    expect(plan.edgesToUpsert[0]).toMatchObject({
+      source_id: "derivative",
+      target_id: plan.conceptNodesToInsert[0]?.id,
+      edge_type: "helps",
+      weight: 0.6,
+    });
+  });
+
+  it("skips a proposal whose label already names a known node", () => {
+    const judged: EdgeJudgeResult = {
+      edges: [],
+      methodNodes: [],
+      adjacentConcepts: [
+        { label: "导数", summary: "s", connectsToLabel: "极限", helpsLevel: "强" },
+      ],
+    };
+    const plan = planEdgeJudgeResult({
+      judged,
+      pairs: [],
+      existingEdges: [],
+      nodeIdByLabel: new Map([
+        ["导数", "derivative"],
+        ["极限", "limits"],
+      ]),
+      ...testDefaults,
+    });
+    expect(plan.conceptNodesToInsert).toHaveLength(0);
+    expect(plan.edgesToUpsert).toHaveLength(0);
+  });
+
+  it("skips a proposal whose connectsToLabel resolves to nothing known", () => {
+    const judged: EdgeJudgeResult = {
+      edges: [],
+      methodNodes: [],
+      adjacentConcepts: [
+        { label: "新概念", summary: "s", connectsToLabel: "不存在", helpsLevel: "强" },
+      ],
+    };
+    const plan = planEdgeJudgeResult({
+      judged,
+      pairs: [],
+      existingEdges: [],
+      nodeIdByLabel: new Map(),
+      ...testDefaults,
+    });
+    expect(plan.conceptNodesToInsert).toHaveLength(0);
+    expect(plan.edgesToUpsert).toHaveLength(0);
+  });
+
+  it("dedupes two proposals that repeat the same label into a single node", () => {
+    const judged: EdgeJudgeResult = {
+      edges: [],
+      methodNodes: [],
+      adjacentConcepts: [
+        { label: "新概念", summary: "s1", connectsToLabel: "导数", helpsLevel: "弱" },
+        { label: "新概念", summary: "s2", connectsToLabel: "导数", helpsLevel: "强" },
+      ],
+    };
+    const plan = planEdgeJudgeResult({
+      judged,
+      pairs: [],
+      existingEdges: [],
+      nodeIdByLabel: new Map([["导数", "derivative"]]),
+      ...testDefaults,
+    });
+    expect(plan.conceptNodesToInsert).toHaveLength(1);
+    expect(plan.edgesToUpsert).toHaveLength(1);
+  });
+});
+
 describe("planEdgeJudgeResult with no findings", () => {
   it("returns an empty plan for an empty judged result", () => {
     const plan = planEdgeJudgeResult({
@@ -341,6 +449,11 @@ describe("planEdgeJudgeResult with no findings", () => {
       nodeIdByLabel: new Map(),
       ...testDefaults,
     });
-    expect(plan).toEqual({ edgesToUpsert: [], methodNodesToInsert: [], rejectedCyclicEdges: [] });
+    expect(plan).toEqual({
+      edgesToUpsert: [],
+      methodNodesToInsert: [],
+      conceptNodesToInsert: [],
+      rejectedCyclicEdges: [],
+    });
   });
 });
