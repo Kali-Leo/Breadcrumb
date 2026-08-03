@@ -13,6 +13,7 @@ import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
 import { LabNodeTable } from "./LabNodeTable";
+import { LabSynonymSuspectsSection } from "./LabSynonymSuspectsSection";
 
 function SelfReportInput() {
   const [text, setText] = useState("");
@@ -88,6 +89,7 @@ export function LabPanel() {
         <LabFrontierList />
         <SelfReportInput />
         <LabGoalSection />
+        <LabSynonymSuspectsSection />
         <LabFailuresSection />
       </div>
     </div>

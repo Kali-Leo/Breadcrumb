@@ -58,9 +58,10 @@ export function findSynonymCandidates(
   return candidates;
 }
 
-// Local cosine helper (行为局部性 > DRY — mirrors plugin-graph/src/similarity.ts and
-// plugin-interest/src/spread.ts's own local copies rather than adding a cross-package dep).
-function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
+// Cosine helper, exported for in-package reuse (suspectPairs.ts) — mirrors
+// plugin-graph/src/similarity.ts and plugin-interest/src/spread.ts's own local copies
+// rather than adding a cross-package dep for this one piece of math.
+export function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
   const length = Math.min(a.length, b.length);
   let dotProduct = 0;
   let normA = 0;
