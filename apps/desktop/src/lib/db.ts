@@ -15,6 +15,7 @@ import {
   createMapPlaceNamesRepo,
   createMasteryClaimsRepo,
   createMessagesRepo,
+  createNodeAliasesRepo,
   createNodeEmbeddingsRepo,
   createNodeSightingsRepo,
   createSettingsRepo,
@@ -33,6 +34,7 @@ export interface Repos {
   knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
+  nodeAliases: ReturnType<typeof createNodeAliasesRepo>;
   knowledgeEdges: ReturnType<typeof createKnowledgeEdgesRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
@@ -68,6 +70,7 @@ async function openAndMigrate(): Promise<Repos> {
     knowledgeNodes: createKnowledgeNodesRepo(sqlClient),
     nodeSightings: createNodeSightingsRepo(sqlClient),
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
+    nodeAliases: createNodeAliasesRepo(sqlClient),
     knowledgeEdges: createKnowledgeEdgesRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),

@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow.
+ * GoalRow, AiFailureRow, NodeAliasRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -93,6 +93,15 @@ export interface NodeSightingRow {
   node_id: string;
   conversation_id: string;
   message_id: string | null;
+  created_at: string;
+}
+
+/** A label the node-dedup synonym gate (spec 015) judged identical to an existing node —
+ * every later extraction round that produces this exact label hits node_id directly
+ * (a sighting, never a duplicate node), without ever re-asking the LLM. */
+export interface NodeAliasRow {
+  alias_label: string;
+  node_id: string;
   created_at: string;
 }
 

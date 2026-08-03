@@ -16,6 +16,7 @@ import {
   createMapPlaceNamesRepo,
   createMasteryClaimsRepo,
   createMessagesRepo,
+  createNodeAliasesRepo,
   createNodeEmbeddingsRepo,
   createNodeSightingsRepo,
   createSettingsRepo,
@@ -32,6 +33,7 @@ export interface SimlabRepos {
   knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
+  nodeAliases: ReturnType<typeof createNodeAliasesRepo>;
   knowledgeEdges: ReturnType<typeof createKnowledgeEdgesRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
@@ -51,6 +53,7 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     knowledgeNodes: createKnowledgeNodesRepo(sql),
     nodeSightings: createNodeSightingsRepo(sql),
     nodeEmbeddings: createNodeEmbeddingsRepo(sql),
+    nodeAliases: createNodeAliasesRepo(sql),
     knowledgeEdges: createKnowledgeEdgesRepo(sql),
     trailSummaries: createTrailSummariesRepo(sql),
     mapPlaceNames: createMapPlaceNamesRepo(sql),

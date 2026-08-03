@@ -1,12 +1,15 @@
 /**
  * Purpose: SQL statements for the knowledge-graph domain — tree nodes, their local
- * embeddings, sightings (footprints), and the directed requires/helps edges (spec 010).
- * Main exports: knowledgeNodesRepo, nodeEmbeddingsRepo, nodeSightingsRepo, knowledgeEdgesRepo.
+ * embeddings, sightings (footprints), the directed requires/helps edges (spec 010), and
+ * node-dedup aliases (spec 015).
+ * Main exports: knowledgeNodesRepo, nodeEmbeddingsRepo, nodeSightingsRepo, knowledgeEdgesRepo,
+ * nodeAliasesRepo.
  */
 import type {
   KnowledgeEdgeRow,
   KnowledgeEdgeType,
   KnowledgeNodeRow,
+  NodeAliasRow,
   NodeEmbeddingRow,
   NodeSightingRow,
   SqlClient,
@@ -139,6 +142,30 @@ export function createKnowledgeEdgesRepo(sql: SqlClient) {
     },
     async remove(id: string): Promise<void> {
       await sql.execute("DELETE FROM knowledge_edges WHERE id = ?", [id]);
+    },
+  };
+}
+
+export function createNodeAliasesRepo(sql: SqlClient) {
+  return {
+    /** Insert-or-ignore: a label already aliased (e.g. re-judged "同一" in a later round)
+     * keeps its first-recorded target instead of being silently overwritten. */
+    async insert(row: NodeAliasRow): Promise<void> {
+      await sql.execute(
+        "INSERT OR IGNORE INTO node_aliases (alias_label, node_id, created_at) VALUES (?, ?, ?)",
+        [row.alias_label, row.node_id, row.created_at],
+      );
+    },
+    async findByLabel(aliasLabel: string): Promise<NodeAliasRow | null> {
+      const rows = await sql.select<NodeAliasRow>(
+        "SELECT * FROM node_aliases WHERE alias_label = ?",
+        [aliasLabel],
+      );
+      return rows[0] ?? null;
+    },
+    /** Every alias ever recorded — raw material for planNodeChanges' aliasNodeIdByLabel input. */
+    async listAll(): Promise<NodeAliasRow[]> {
+      return sql.select<NodeAliasRow>("SELECT * FROM node_aliases ORDER BY created_at ASC");
     },
   };
 }

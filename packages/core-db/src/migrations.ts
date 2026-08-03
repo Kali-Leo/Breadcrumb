@@ -248,6 +248,20 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0011_interest_signal_confidence",
     statements: [`ALTER TABLE interest_signals ADD COLUMN confidence REAL NOT NULL DEFAULT 0.6;`],
   },
+  {
+    // Node-dedup synonym gate (spec 015): one row per label the LLM judged identical to an
+    // existing node. alias_label is the primary key so a re-judged label keeps its
+    // first-recorded target (INSERT OR IGNORE) instead of drifting between nodes over time.
+    id: "0012_node_aliases",
+    statements: [
+      `CREATE TABLE node_aliases (
+        alias_label TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_node_aliases_node ON node_aliases(node_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
