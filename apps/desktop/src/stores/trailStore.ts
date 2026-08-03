@@ -34,7 +34,7 @@ export const useTrailStore = create<TrailState>((set) => ({
   async refreshToday() {
     const repos = await getRepos();
     const { fromIso, toIso } = localDayRange(new Date(), 0);
-    const todayNodes = await repos.knowledgeNodes.listCreatedBetween(fromIso, toIso);
+    const todayNodes = await repos.knowledgeNodes.listFirstSightedBetween(fromIso, toIso);
     set({ todayNodes });
   },
 
@@ -50,7 +50,7 @@ export const useTrailStore = create<TrailState>((set) => ({
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.trail || !settings.networkEnabled || !settings.apiConfig) return;
     const { fromIso, toIso } = localDayRange(new Date(), -1);
-    const yesterdayNodes = await repos.knowledgeNodes.listCreatedBetween(fromIso, toIso);
+    const yesterdayNodes = await repos.knowledgeNodes.listFirstSightedBetween(fromIso, toIso);
     if (yesterdayNodes.length === 0) return;
 
     try {

@@ -29,10 +29,16 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
         "SELECT * FROM knowledge_nodes ORDER BY created_at ASC, id ASC",
       );
     },
-    /** Nodes first learned inside [fromIso, toIso) — the raw material of the daily trail. */
-    async listCreatedBetween(fromIso: string, toIso: string): Promise<KnowledgeNodeRow[]> {
+    /** Nodes first SIGHTED inside [fromIso, toIso) — the raw material of the daily trail.
+     * Sighting-based, not creation-based: goal-suggested nodes exist without ever having
+     * been learned, and the trail must only state what actually happened. */
+    async listFirstSightedBetween(fromIso: string, toIso: string): Promise<KnowledgeNodeRow[]> {
       return sql.select<KnowledgeNodeRow>(
-        "SELECT * FROM knowledge_nodes WHERE created_at >= ? AND created_at < ? ORDER BY created_at ASC",
+        `SELECT n.* FROM knowledge_nodes n
+         JOIN (SELECT node_id, MIN(created_at) first_seen FROM node_sightings GROUP BY node_id) f
+           ON f.node_id = n.id
+         WHERE f.first_seen >= ? AND f.first_seen < ?
+         ORDER BY f.first_seen ASC`,
         [fromIso, toIso],
       );
     },
