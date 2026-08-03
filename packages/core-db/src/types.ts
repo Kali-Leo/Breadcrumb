@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderRow, LadderShownDescriptionRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -187,6 +187,30 @@ export interface LlmCallRow {
   cost_micros: number;
   currency: Currency;
   created_at: string;
+}
+
+/** One reference figure of a goal's pseudo-ranked ladder (spec 016) — one generation is 5 of
+ * these rows, sharing the same `generation` and `user_milestone_at_generation`. `position`
+ * is the stable display order assigned at generation time (sorted by milestone desc),
+ * unchanged by later mastery movement so a reused ladder never reshuffles. */
+export interface GoalLadderRow {
+  id: string;
+  goal_id: string;
+  figure_desc: string;
+  figure_note: string;
+  milestone: number;
+  position: number;
+  generation: number;
+  user_milestone_at_generation: number;
+  created_at: string;
+}
+
+/** One figure_desc ever shown for one goal (spec 016) — the never-repeat backstop; the
+ * (goal_id, figure_desc) primary key is what actually enforces uniqueness, not application
+ * code. Rows are never deleted, even across ladder regenerations. */
+export interface LadderShownDescriptionRow {
+  goal_id: string;
+  figure_desc: string;
 }
 
 /** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible

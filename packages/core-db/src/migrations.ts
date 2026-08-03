@@ -262,6 +262,38 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_node_aliases_node ON node_aliases(node_id);`,
     ],
   },
+  {
+    // Pseudo-ranked ladder per goal (spec 016): the current generation's 5 reference figures,
+    // plus the never-repeat backstop of every figure_desc ever shown for that goal. A figure's
+    // row also carries the user's own milestone at the moment it was generated
+    // (user_milestone_at_generation) so planLadderRefresh can later decide reuse vs
+    // regenerate without a separate lookup. figure_desc's uniqueness within a goal is enforced
+    // by ladder_shown_descriptions' own primary key, not by goal_ladders itself (a
+    // reused/redisplayed row is expected to repeat its own figure_desc across recomputes of
+    // the same generation until the next regeneration replaces the whole set).
+    id: "0013_goal_ladders",
+    statements: [
+      `CREATE TABLE goal_ladders (
+        id TEXT PRIMARY KEY,
+        goal_id TEXT NOT NULL REFERENCES goals(id),
+        figure_desc TEXT NOT NULL,
+        figure_note TEXT NOT NULL,
+        milestone INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        generation INTEGER NOT NULL,
+        user_milestone_at_generation INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_goal_ladders_goal ON goal_ladders(goal_id);`,
+      // The never-repeat backstop (spec 016 #3): a plain INSERT (never OR IGNORE) so a real
+      // figure_desc collision for the same goal raises loudly instead of silently reusing it.
+      `CREATE TABLE ladder_shown_descriptions (
+        goal_id TEXT NOT NULL REFERENCES goals(id),
+        figure_desc TEXT NOT NULL,
+        PRIMARY KEY (goal_id, figure_desc)
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

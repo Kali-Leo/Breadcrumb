@@ -7,6 +7,7 @@ import {
   createAiFailuresRepo,
   createConversationsRepo,
   createFactcheckRepo,
+  createGoalLaddersRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
@@ -42,6 +43,7 @@ export interface Repos {
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
   goals: ReturnType<typeof createGoalsRepo>;
+  goalLadders: ReturnType<typeof createGoalLaddersRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -78,5 +80,6 @@ async function openAndMigrate(): Promise<Repos> {
     interestSignals: createInterestSignalsRepo(sqlClient),
     masteryClaims: createMasteryClaimsRepo(sqlClient),
     goals: createGoalsRepo(sqlClient),
+    goalLadders: createGoalLaddersRepo(sqlClient),
   };
 }

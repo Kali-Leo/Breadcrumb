@@ -5,6 +5,7 @@
  */
 export * from "./aiFailureRepositories";
 export * from "./featureRepositories";
+export * from "./goalLadderRepositories";
 export * from "./goalRepositories";
 export * from "./interestRepositories";
 export * from "./knowledgeRepositories";
