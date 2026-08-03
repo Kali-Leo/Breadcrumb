@@ -1,7 +1,8 @@
 /**
- * Purpose: pure gap/coverage computation for a selected goal, split out of plannerStore.ts
- * to keep that file under the file-size ceiling. No React/zustand here.
- * Main exports: computeGapForGoal, masteryAsSeenByGoal.
+ * Purpose: pure gap/coverage/route computation for a selected goal, split out of
+ * plannerStore.ts to keep that file under the file-size ceiling. No React/zustand here.
+ * Main exports: computeGapForGoal, computeRouteForGoal, deriveGoalView, GoalView,
+ * masteryAsSeenByGoal.
  */
 import type {
   GoalRow,
@@ -10,7 +11,14 @@ import type {
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { coverage, type GapAndPathResult, gapAndPath } from "@breadcrumb/plugin-planner";
+import {
+  coverage,
+  type GapAndPathResult,
+  gapAndPath,
+  type RecommendedRouteStep,
+  type RecommendRouteParams,
+  recommendRoute,
+} from "@breadcrumb/plugin-planner";
 
 /** Goal views believe the user's own word: a node with a 'learned' self-report claim counts
  * as satisfied FOR THE GOAL, while global mastery stays honest (ADR-0009 keeps self-report
@@ -53,4 +61,68 @@ export function computeGapForGoal(
     }),
     coverageFraction: coverage(goalNodeIds, goalMasteryByNode, LIT_THRESHOLD),
   };
+}
+
+/** Same single-goal-view mastery as computeGapForGoal, but returns the one recommended route
+ * (spec 017 #1) instead of the legacy three. Null when no goal is selected. */
+export function computeRouteForGoal(
+  goal: GoalRow | null,
+  nodes: readonly KnowledgeNodeRow[],
+  edges: readonly KnowledgeEdgeRow[],
+  masteryByNode: ReadonlyMap<string, number>,
+  interestByNode: ReadonlyMap<string, number>,
+  claims: readonly MasteryClaimRow[],
+  routeParams: RecommendRouteParams,
+): RecommendedRouteStep[] | null {
+  if (goal === null) return null;
+  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
+  const goalMasteryByNode = masteryAsSeenByGoal(masteryByNode, claims);
+  return recommendRoute(
+    {
+      nodes,
+      edges,
+      masteryByNode: goalMasteryByNode,
+      interestByNode,
+      goalNodeIds,
+      litThreshold: LIT_THRESHOLD,
+    },
+    routeParams,
+  );
+}
+
+export interface GoalView {
+  gap: GapAndPathResult | null;
+  coverageFraction: number | null;
+  route: RecommendedRouteStep[] | null;
+}
+
+/** Combines computeGapForGoal and computeRouteForGoal — everything plannerStore's
+ * selectGoal/recomputeRoute need to derive from already-loaded state for one goal id. */
+export function deriveGoalView(
+  goal: GoalRow | null,
+  nodes: readonly KnowledgeNodeRow[],
+  edges: readonly KnowledgeEdgeRow[],
+  masteryByNode: ReadonlyMap<string, number>,
+  interestByNode: ReadonlyMap<string, number>,
+  claims: readonly MasteryClaimRow[],
+  routeParams: RecommendRouteParams,
+): GoalView {
+  const { gap, coverageFraction } = computeGapForGoal(
+    goal,
+    nodes,
+    edges,
+    masteryByNode,
+    interestByNode,
+    claims,
+  );
+  const route = computeRouteForGoal(
+    goal,
+    nodes,
+    edges,
+    masteryByNode,
+    interestByNode,
+    claims,
+    routeParams,
+  );
+  return { gap, coverageFraction, route };
 }

@@ -1,8 +1,8 @@
 /**
  * Purpose: lab-panel goal section — free-text goal to LLM mapping (persisted immediately, no
- * calibration step), a goal picker, side-by-side shortest/steadiest/interest-first routes with
- * a coverage fraction, and per-node self-statement actions for the gap. Copy is suggest-only
- * ("可以学"), never "behind" or "missing" (product principle 1).
+ * calibration step), a goal picker, the single recommended route (spec 017 #1, tunable via two
+ * sliders) with a coverage fraction, and per-node self-statement actions for the gap. Copy is
+ * suggest-only ("可以学"), never "behind" or "missing" (product principle 1).
  * Main exports: LabGoalSection.
  */
 import { useState } from "react";

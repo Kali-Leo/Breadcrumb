@@ -1,9 +1,10 @@
 /**
  * Purpose: zustand store driving the experimental planner — recomputes frontier candidates
- * and, for a selected goal, its gap/three-route/coverage by calling the pure plugin-planner
- * functions with fresh mastery/interest data from repos. Side effect on import: subscribes
- * to knowledge:edgesUpdated, interest:updated, mastery:updated and knowledge:nodesExtracted,
- * recomputing on each — cheap and local, so dynamic replanning falls out for free.
+ * and, for a selected goal, its gap/coverage/recommended route by calling
+ * computePlannerSnapshot with fresh mastery/interest data from repos. Side effect on import:
+ * subscribes to knowledge:edgesUpdated, interest:updated, mastery:updated and
+ * knowledge:nodesExtracted, recomputing on each — cheap and local, so dynamic replanning
+ * falls out for free.
  * Main exports: usePlannerStore.
  */
 import type {
@@ -13,29 +14,23 @@ import type {
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
 import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
-import {
-  aggregateInterest,
-  DEFAULT_SPREAD_FACTOR,
-  spreadInterest,
-} from "@breadcrumb/plugin-interest";
-import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import {
-  type FrontierCandidate,
-  frontier,
-  type GapAndPathResult,
-  type GoalMappingResult,
-  propagateInterestToPrerequisites,
+import type {
+  FrontierCandidate,
+  GapAndPathResult,
+  GoalMappingResult,
+  RecommendedRouteStep,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
-import { computeGapForGoal } from "../lib/plannerGapActions";
+import { deriveGoalView } from "../lib/plannerGapActions";
 import {
   claimNodeAsLearned,
   persistCalibratedGoal,
   removeNodeFromGoal,
   requestGoalMapping,
 } from "../lib/plannerGoalActions";
+import { computePlannerSnapshot } from "../lib/plannerRecompute";
 import { nowIso } from "../lib/time";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { registerRecomputeSubscriptions } from "./plannerStoreEvents";
@@ -56,8 +51,14 @@ interface PlannerState {
   selectedGoalId: string | null;
   gap: GapAndPathResult | null;
   coverageFraction: number | null;
+  /** The one recommended route for the selected goal (spec 017 #1), driven by
+   * settingsStore's routeParams. Null when no goal is selected. */
+  route: RecommendedRouteStep[] | null;
   recompute(): Promise<void>;
   selectGoal(goalId: string | null): void;
+  /** Recomputes only `route` from already-loaded state against the current routeParams —
+   * cheap enough to call on every slider drag, no DB round trip. */
+  recomputeRoute(): void;
   /** Calls the goal-mapping LLM; returns null (and does nothing) if labPanel is off or
    * unconfigured. Does not persist — createGoal does that immediately with the full result. */
   mapGoalText(goalText: string): Promise<GoalMappingResult | null>;
@@ -83,6 +84,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   selectedGoalId: null,
   gap: null,
   coverageFraction: null,
+  route: null,
 
   async recompute() {
     const repos = await getRepos();
@@ -96,86 +98,53 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       repos.goals.listAll(),
     ]);
 
-    const now = nowIso();
-    const masteryByNode = computeMastery(sightings, claims, now);
-    const interestScoresByNode = aggregateInterest(signals, now);
-    const curiosityByNode = new Map(
-      [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.curiosity]),
-    );
-    const interestByNode = spreadInterest(curiosityByNode, embeddings, DEFAULT_SPREAD_FACTOR);
-
-    const previouslyLitNodeIds = new Set<string>([
-      ...sightings.map((sighting) => sighting.node_id),
-      ...claims.map((claim) => claim.node_id),
-    ]);
-    // One-hop reverse propagation (spec 014): a locked-but-interesting node lends interest
-    // to its own unlit prerequisites, so frontier() can surface "gets you closer to X".
-    // gapAndPath's interestFirst route intentionally keeps using the un-propagated map.
-    const propagated = propagateInterestToPrerequisites(
-      edges,
-      interestByNode,
-      masteryByNode,
-      LIT_THRESHOLD,
-    );
-    const evidenceWeightByNode = new Map(
-      [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.evidenceWeight]),
-    );
-
-    const selectedGoalId = get().selectedGoalId ?? goals[0]?.id ?? null;
-    const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
-    const { gap, coverageFraction } = computeGapForGoal(
-      selectedGoal,
+    const snapshot = computePlannerSnapshot(
       nodes,
       edges,
-      masteryByNode,
-      interestByNode,
+      sightings,
       claims,
-    );
-
-    // Ranked mode only (spec 016): the selected goal's gap gets a flat frontier boost, so
-    // "what should I learn next" visibly favors goal progress over free wandering.
-    const isRanked = useSettingsStore.getState().learningMode === "ranked";
-    const goalGapNodeIds = isRanked && gap ? new Set(gap.gapNodeIds) : undefined;
-
-    const frontierCandidates = frontier({
-      nodes,
-      edges,
-      masteryByNode,
-      interestByNode: propagated.interestByNode,
-      litThreshold: LIT_THRESHOLD,
-      previouslyLitNodeIds,
-      interestGatewayByNode: propagated.gatewaySourceByNode,
-      evidenceWeightByNode,
-      goalGapNodeIds,
-    });
-
-    set({
-      nodes,
-      edges,
-      claims,
-      masteryByNode,
-      interestScoresByNode,
-      interestByNode,
-      frontierCandidates,
+      signals,
+      embeddings,
       goals,
-      selectedGoalId,
-      gap,
-      coverageFraction,
-    });
+      get().selectedGoalId,
+      useSettingsStore.getState().learningMode === "ranked",
+      useSettingsStore.getState().routeParams,
+      nowIso(),
+    );
+
+    set({ nodes, edges, claims, goals, ...snapshot });
   },
 
   selectGoal(goalId) {
     const state = get();
-    const selectedGoal = state.goals.find((goal) => goal.id === goalId) ?? null;
-    const { gap, coverageFraction } = computeGapForGoal(
-      selectedGoal,
+    const goal = state.goals.find((candidate) => candidate.id === goalId) ?? null;
+    const routeParams = useSettingsStore.getState().routeParams;
+    const view = deriveGoalView(
+      goal,
       state.nodes,
       state.edges,
       state.masteryByNode,
       state.interestByNode,
       state.claims,
+      routeParams,
     );
-    set({ selectedGoalId: goalId, gap, coverageFraction });
+    set({ selectedGoalId: goalId, ...view });
+  },
+
+  recomputeRoute() {
+    const state = get();
+    const goal = state.goals.find((candidate) => candidate.id === state.selectedGoalId) ?? null;
+    const routeParams = useSettingsStore.getState().routeParams;
+    const { route } = deriveGoalView(
+      goal,
+      state.nodes,
+      state.edges,
+      state.masteryByNode,
+      state.interestByNode,
+      state.claims,
+      routeParams,
+    );
+    set({ route });
   },
 
   async mapGoalText(goalText) {

@@ -1,9 +1,10 @@
 /**
  * Purpose: zustand store for user settings (API config, network switch, per-feature
- * switches, learning mode), persisted in the settings table. Load once at startup; changes
- * write through.
- * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, LearningMode.
+ * switches, learning mode, route params), persisted in the settings table. Load once at
+ * startup; changes write through.
+ * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, LearningMode, RouteParams.
  */
+import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { nowIso } from "../lib/time";
@@ -29,11 +30,19 @@ export interface FeatureSwitches {
  * unlocks the lab's ladder section). Spec 016 — a mindset switch, not a feature switch. */
 export type LearningMode = "ranked" | "casual";
 
+/** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as
+ * plugin-planner's RecommendRouteParams, re-exported here so components import one name. */
+export type RouteParams = RecommendRouteParams;
+
 const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 const LEARNING_MODE_KEY = "learningMode";
+const ROUTE_PARAMS_KEY = "routeParams";
+/** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
+ * learner tunes from the middle (spec 017 #1). */
+const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
 /** Fact-check, knowledge-edges, interest and the experimental lab panel default off: they
  * spend tokens (or, for labPanel, expose debug-grade numbers), so the user opts in
  * (spec 009, spec 010, spec 011, spec 012). */
@@ -60,12 +69,15 @@ interface SettingsState {
   mainlandNetwork: boolean;
   /** casual by default (spec 016) — a new user wanders before they have a goal to rank against. */
   learningMode: LearningMode;
+  /** recommendRoute()'s pace/interestWeight sliders (spec 017 #1), 0.5/0.5 by default. */
+  routeParams: RouteParams;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
   setLearningMode(mode: LearningMode): Promise<void>;
+  setRouteParams(params: RouteParams): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -75,16 +87,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
   learningMode: "casual",
+  routeParams: DEFAULT_ROUTE_PARAMS,
 
   async loadFromDatabase() {
     const repos = await getRepos();
-    const [apiConfig, networkEnabled, featureSwitches, mainlandNetwork, learningMode] =
+    const [apiConfig, networkEnabled, featureSwitches, mainlandNetwork, learningMode, routeParams] =
       await Promise.all([
         repos.settings.get<ApiConfig>(API_CONFIG_KEY),
         repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
         repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
         repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
         repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
+        repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       ]);
     set({
       loaded: true,
@@ -93,6 +107,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
       mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
       learningMode: learningMode ?? "casual",
+      routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
     });
   },
 
@@ -125,5 +140,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(LEARNING_MODE_KEY, mode, nowIso());
     set({ learningMode: mode });
+  },
+
+  async setRouteParams(params) {
+    const repos = await getRepos();
+    await repos.settings.set(ROUTE_PARAMS_KEY, params, nowIso());
+    set({ routeParams: params });
   },
 }));
