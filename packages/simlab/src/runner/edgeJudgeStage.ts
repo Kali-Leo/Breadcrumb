@@ -10,6 +10,8 @@ import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildEdgeJudgeMessages,
+  DEFAULT_FALLBACK_RECENT_N,
+  DEFAULT_TOP_K_SIMILAR,
   type EdgeJudgeCandidatePair,
   edgeJudgeSchema,
   fallbackCandidatePairs,
@@ -19,9 +21,6 @@ import {
   rankCandidatePairs,
 } from "@breadcrumb/plugin-graph";
 import { describeError, type PipelineFailure, type RoundPipelineInput } from "./pipelineTypes";
-
-const TOP_K_SIMILAR = 3;
-const FALLBACK_RECENT_N = 5;
 
 export interface EdgeJudgeStageResult {
   addedEdges: KnowledgeEdgeRow[];
@@ -53,9 +52,11 @@ export async function runEdgeJudgeStage(
       repos.nodeEmbeddings.listAll(),
       repos.knowledgeEdges.listAll(),
     ]);
-    const ranked = rankCandidatePairs(embeddings, newNodeIds, TOP_K_SIMILAR);
+    const ranked = rankCandidatePairs(embeddings, newNodeIds, DEFAULT_TOP_K_SIMILAR);
     const candidates =
-      ranked.length > 0 ? ranked : fallbackCandidatePairs(allNodes, newNodeIds, FALLBACK_RECENT_N);
+      ranked.length > 0
+        ? ranked
+        : fallbackCandidatePairs(allNodes, newNodeIds, DEFAULT_FALLBACK_RECENT_N);
     if (candidates.length === 0) return EMPTY_RESULT;
 
     const nodeById = new Map(allNodes.map((node) => [node.id, node]));

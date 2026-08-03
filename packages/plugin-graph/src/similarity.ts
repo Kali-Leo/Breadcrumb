@@ -2,9 +2,19 @@
  * Purpose: pure candidate-pair generation between new and existing knowledge nodes — cosine
  * similarity ranking when embeddings exist, plus a same-parent/most-recent fallback when
  * they don't. No DB, no I/O.
- * Main exports: rankCandidatePairs, fallbackCandidatePairs, CandidatePair.
+ * Main exports: rankCandidatePairs, fallbackCandidatePairs, CandidatePair,
+ * DEFAULT_TOP_K_SIMILAR, DEFAULT_FALLBACK_RECENT_N.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
+
+/** How many most-similar existing nodes to pair each new node against, by embedding cosine
+ * similarity — enough candidates for the edge-judge LLM to find real relationships without
+ * paying for an exhaustive all-pairs batch. */
+export const DEFAULT_TOP_K_SIMILAR = 3;
+
+/** Degraded-mode (no embeddings yet) fallback pool size: how many most-recently-created
+ * existing nodes each new node gets paired against, alongside its tree siblings. */
+export const DEFAULT_FALLBACK_RECENT_N = 5;
 
 export interface CandidatePair {
   newNodeId: string;

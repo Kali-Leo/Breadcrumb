@@ -2,7 +2,8 @@
  * Purpose: the mastery estimate — FSRS retention (real footprints) as the base, topped up
  * by self-report claims that decay if never revisited. Self-report can never outweigh real
  * evidence; it only fills the gap real evidence hasn't covered yet.
- * Main exports: computeMastery, LIT_THRESHOLD, DIM_THRESHOLD, masteryTier, MasteryTier.
+ * Main exports: computeMastery, LIT_THRESHOLD, DIM_THRESHOLD, masteryTier, MasteryTier,
+ * CLAIM_WEIGHT, CLAIM_HALF_LIFE_DAYS.
  */
 import type { MasteryClaimLevel, MasteryClaimRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { computeRetentionByNode } from "./retention";
@@ -20,9 +21,9 @@ export function masteryTier(value: number): MasteryTier {
 }
 
 /** "learned" ("我学过") is stronger self-report evidence than "familiar" ("我听过"). */
-const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = { learned: 0.6, familiar: 0.4 };
+export const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = { learned: 0.6, familiar: 0.4 };
 /** A never-revisited self-report claim itself fades — cold-start evidence isn't permanent. */
-const CLAIM_HALF_LIFE_DAYS = 30;
+export const CLAIM_HALF_LIFE_DAYS = 30;
 
 /** Mastery (0..1) per node that has at least one sighting or claim. Nodes with neither are
  * absent from the map (callers treat a missing entry as 0, i.e. "unlit"). */

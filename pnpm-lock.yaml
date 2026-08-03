@@ -280,6 +280,15 @@ importers:
       '@breadcrumb/core-db':
         specifier: workspace:*
         version: link:../core-db
+      '@breadcrumb/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@breadcrumb/plugin-interest':
+        specifier: workspace:*
+        version: link:../plugin-interest
+      '@breadcrumb/plugin-planner':
+        specifier: workspace:*
+        version: link:../plugin-planner
       ts-fsrs:
         specifier: ^5.2.1
         version: 5.4.1
