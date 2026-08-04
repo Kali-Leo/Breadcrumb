@@ -146,12 +146,14 @@ export function GoalOverlayView() {
   }, [model, frozenPositionById]);
 
   useEffect(() => {
-    if (scopeSignature === null) return;
-    const frame = requestAnimationFrame(() => {
+    // Refit whenever the scope OR the container size settles — a fit attempted while the
+    // ResizeObserver still reports 0×0 (first mount) silently fits an empty viewport.
+    if (scopeSignature === null || containerSize.width === 0 || containerSize.height === 0) return;
+    const timer = setTimeout(() => {
       graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION_MS, ZOOM_TO_FIT_PADDING);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [scopeSignature]);
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [scopeSignature, containerSize.width, containerSize.height]);
 
   if (selectedGoal === null || model === null) {
     closeOverlay();
