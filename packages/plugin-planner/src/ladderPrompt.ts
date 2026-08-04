@@ -18,7 +18,10 @@ export const ladderFigureSchema = z.object({
   /** Why they sit at this level — domain-specific, concrete, interesting; still only about
    * the figure, never an evaluation of the learner. */
   figureNote: z.string().min(1).max(120),
-  milestone: z.number().int().min(0).max(100),
+  // No hard bounds here: a model slip (e.g. a negative milestone when the learner sits
+  // near 0) must not reject the whole batch — out-of-range figures are dropped in the
+  // post-parse validation instead, which keeps the >=3-valid-figures rule meaningful.
+  milestone: z.number().int(),
 });
 
 export const ladderGenerationSchema = z.object({
@@ -44,7 +47,8 @@ const SYSTEM_PROMPT = `你是一个学习进度参照榜生成器。给定一个
 学习者当前的里程数(0~100)，生成 5 位有代表性、有意思的人物作为"水平邻居"参照，以 JSON 返回：
 {"figures":[{"figureDesc":"人物+年龄或所处时期(如 24 岁的拿破仑)","figureNote":"一句话说明这个人物为什么在这个里程，需具体、和目标领域相关、有趣——只描述这个人物本身，绝不评价学习者","milestone":0~100的整数}]}
 规则：
-- 5 位人物中，2 位的里程略高于学习者当前里程、1 位相近、2 位略低于学习者当前里程，高低偏移大致在 3~15 之间
+- 5 位人物中，2 位的里程略高于学习者当前里程、1 位相近、2 位略低于学习者当前里程，高低偏移大致在 3~15 之间；
+  所有里程必须落在 0~100 内——学习者在起点附近时，人物可以全部或大多在前方；接近 100 时同理反之
 - 人物必须有趣、多样：同一榜最多 2 位是该领域家喻户晓的名人，其余请选取意想不到的时代与身份——如账房先生、修道院抄写员、国王、水手、乞丐、少年学徒等（仅为举例，不必局限于此），但每人的知识水平画像必须在该领域内站得住脚、令人信服
 - 5 个里程数必须互不相同
 - figureDesc 绝不能与"历史已用描述清单"中任何一条完全重复（同一人物不同年龄视为不同描述，允许再次使用同一人物的不同年龄）
@@ -93,6 +97,7 @@ export function validateLadderGeneration(
   const kept: LadderFigureProposal[] = [];
 
   for (const figure of result.figures) {
+    if (figure.milestone < 0 || figure.milestone > 100) continue;
     if (forbidden.has(figure.figureDesc)) continue;
     if (seenMilestones.has(figure.milestone)) continue;
     seenMilestones.add(figure.milestone);
