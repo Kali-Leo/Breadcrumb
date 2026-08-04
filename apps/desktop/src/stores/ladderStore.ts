@@ -2,15 +2,16 @@
  * Purpose: zustand store driving the pseudo-ranked ladder (spec 016) — fetch-on-view only.
  * viewLadder() decides reuse vs regenerate via planLadderRefresh, calls the ladder-generation
  * LLM only when that decision says "generate", and persists the result. Never auto-refreshes
- * on recompute — only the lab panel's "看看同行者" button triggers this.
+ * on recompute — the lab panel's 排位 section triggers this itself, once per section mount per
+ * goal, treating that render as the user's active viewing (2026-08-04 revision: the old "看看
+ * 同行者" button is gone). Band words never leave milestone.ts — this store only carries the
+ * raw 0..100 number the UI renders as a progress percentage.
  * Main exports: useLadderStore, LadderView.
  */
 import type { GoalLadderRow } from "@breadcrumb/core-db";
 import { DIM_THRESHOLD, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
-  type MilestoneBand,
   milestone,
-  milestoneBand,
   planLadderRefresh,
   type StoredLadder,
   validateLadderGeneration,
@@ -21,7 +22,6 @@ import { recordAiFailure } from "../lib/failureLog";
 import {
   buildLadderDisplayRows,
   buildLadderRows,
-  distanceToTopBand,
   type LadderDisplayRow,
   pickDomainLabelsSample,
   requestLadderGeneration,
@@ -37,14 +37,15 @@ const DOMAIN_LABEL_SAMPLE_SIZE = 10;
 export interface LadderView {
   goalId: string;
   milestone: number;
-  band: MilestoneBand;
   rows: LadderDisplayRow[];
-  distanceToTop: number;
 }
 
 interface LadderState {
   ladder: LadderView | null;
   loading: boolean;
+  /** True when the last viewLadder() call threw — drives the "点一下重试" state, distinct
+   * from "no goal selected yet" and from a still-in-flight load. */
+  failed: boolean;
   viewLadder(goalId: string): Promise<void>;
 }
 
@@ -60,12 +61,13 @@ function toStoredLadder(rows: readonly GoalLadderRow[]): StoredLadder | null {
 export const useLadderStore = create<LadderState>((set) => ({
   ladder: null,
   loading: false,
+  failed: false,
 
   async viewLadder(goalId) {
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.labPanel) return; // reuses the lab-panel switch (spec 016)
 
-    set({ loading: true });
+    set({ loading: true, failed: false });
     try {
       const planner = usePlannerStore.getState();
       const goal = planner.goals.find((candidate) => candidate.id === goalId);
@@ -131,18 +133,17 @@ export const useLadderStore = create<LadderState>((set) => ({
 
       set({
         loading: false,
+        failed: false,
         ladder: {
           goalId,
           milestone: currentMilestone,
-          band: milestoneBand(currentMilestone),
           rows: buildLadderDisplayRows(displayRows, currentMilestone),
-          distanceToTop: distanceToTopBand(currentMilestone),
         },
       });
     } catch (error) {
       console.warn("ladder view skipped:", error);
       void recordAiFailure("ladder", error);
-      set({ loading: false });
+      set({ loading: false, failed: true });
     }
   },
 }));

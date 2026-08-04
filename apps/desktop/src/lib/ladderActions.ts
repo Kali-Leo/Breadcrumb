@@ -3,7 +3,7 @@
  * split out of ladderStore.ts to keep that file under the file-size ceiling and to keep the
  * row-shaping/display-merging logic independently testable. No React/zustand here.
  * Main exports: pickDomainLabelsSample, requestLadderGeneration, buildLadderRows,
- * buildLadderDisplayRows, distanceToTopBand, LadderDisplayRow, TOP_BAND_MILESTONE.
+ * buildLadderDisplayRows, LadderDisplayRow.
  */
 import type { GoalLadderRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
@@ -17,9 +17,6 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import { recordMeteredCall } from "./metering";
-
-/** Milestone at which the "贯通" band starts — the anchor for the "距贯通还有 N 里程" line. */
-export const TOP_BAND_MILESTONE = 80;
 
 /** Up to this many lit-node labels from the goal's own node set ground the model in what the
  * goal's domain actually is, without dumping the whole tree into the prompt. */
@@ -103,9 +100,4 @@ export function buildLadderDisplayRows(
   }));
   rows.push({ label: "你", note: null, milestoneValue: currentMilestone, isUser: true });
   return rows.sort((a, b) => b.milestoneValue - a.milestoneValue);
-}
-
-/** "距贯通还有 N 里程" — never negative; already-贯通 shows 0. */
-export function distanceToTopBand(currentMilestone: number): number {
-  return Math.max(0, TOP_BAND_MILESTONE - currentMilestone);
 }

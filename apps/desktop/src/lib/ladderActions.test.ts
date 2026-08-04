@@ -1,18 +1,13 @@
 /**
  * Purpose: unit tests for the pure ladder helpers — domain-label sampling, row shaping from a
- * validated generation, the user-row merge/sort for inline display, and the distance-to-top
- * band line. No LLM/DB involved (requestLadderGeneration is exercised only via typecheck —
- * it's a thin chatJson + recordMeteredCall wrapper mirroring requestGoalMapping).
+ * validated generation, and the user-row merge/sort for inline display. No LLM/DB involved
+ * (requestLadderGeneration is exercised only via typecheck — it's a thin chatJson +
+ * recordMeteredCall wrapper mirroring requestGoalMapping).
  */
 import type { GoalLadderRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { ValidatedLadderFigure } from "@breadcrumb/plugin-planner";
 import { describe, expect, it } from "vitest";
-import {
-  buildLadderDisplayRows,
-  buildLadderRows,
-  distanceToTopBand,
-  pickDomainLabelsSample,
-} from "./ladderActions";
+import { buildLadderDisplayRows, buildLadderRows, pickDomainLabelsSample } from "./ladderActions";
 
 function node(id: string, label: string): KnowledgeNodeRow {
   return { id, parent_id: null, label, summary: "", kind: "concept", created_at: "t" };
@@ -111,16 +106,5 @@ describe("buildLadderDisplayRows", () => {
   it("gives the user's own row a null note", () => {
     const rows = buildLadderDisplayRows([figureRow()], 10);
     expect(rows.find((row) => row.isUser)?.note).toBeNull();
-  });
-});
-
-describe("distanceToTopBand", () => {
-  it("returns the gap to milestone 80", () => {
-    expect(distanceToTopBand(60)).toBe(20);
-  });
-
-  it("floors at 0 once already at or past the top band", () => {
-    expect(distanceToTopBand(80)).toBe(0);
-    expect(distanceToTopBand(95)).toBe(0);
   });
 });
