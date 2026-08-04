@@ -14,10 +14,10 @@ import { z } from "zod";
 export const ladderFigureSchema = z.object({
   /** e.g. "24 岁的拿破仑" — a person (historical, archetypal or fictional), plus their
    * age/period. Describes the figure only, never the learner. */
-  figureDesc: z.string().min(1).max(30),
+  figureDesc: z.string().min(1).max(60),
   /** Why they sit at this level — domain-specific, concrete, interesting; still only about
    * the figure, never an evaluation of the learner. */
-  figureNote: z.string().min(1).max(60),
+  figureNote: z.string().min(1).max(120),
   milestone: z.number().int().min(0).max(100),
 });
 
