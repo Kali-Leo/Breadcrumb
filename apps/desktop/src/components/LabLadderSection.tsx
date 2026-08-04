@@ -1,14 +1,15 @@
 /**
- * Purpose: lab-panel "排位" collapsed section (spec 016) — shown only in ranked mode. Auto-
+ * Purpose: lab-panel "排位" collapsed section (spec 018) — shown only in ranked mode. Auto-
  * evaluates the ladder once per section mount per selected goal (this render IS the user's
  * active viewing, 2026-08-04: the old "看看同行者" button is gone), showing a shimmering
- * skeleton while loading and a quiet retry state on failure. Copy uses only game-industry-plain
- * words ("目标进度 N%", a leaderboard, a non-pressuring hook line) — never the old invented
- * "里程/纵深" band vocabulary, which stays internal to milestone.ts.
+ * skeleton while loading and a quiet retry state on failure. Copy uses only通用语言 ("第 N 名",
+ * a leaderboard, a non-pressuring hook line) — never invented jargon, and never "生成/AI/模拟"
+ * wording (注意力设计手册 硬规矩 #1 #2).
  * Main exports: LabLadderSection.
  */
 import { useEffect } from "react";
 import type { LadderDisplayRow } from "../lib/ladderActions";
+import { rankProgressFraction } from "../lib/ladderActions";
 import { useLadderStore } from "../stores/ladderStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -16,37 +17,65 @@ import { useSettingsStore } from "../stores/settingsStore";
 function LadderSkeleton() {
   return (
     <ul className="space-y-1" aria-label="排行榜加载中">
-      {[0, 1, 2].map((index) => (
+      {[0, 1, 2, 3, 4, 5].map((index) => (
         <li key={index} className="h-5 animate-pulse rounded bg-stone-100" />
       ))}
     </ul>
   );
 }
 
-function GoalProgressBar({ value }: { value: number }) {
+/** "第 N 名" large + a thin progress-to-next-rank bar — no percentage label, no jargon, just
+ * a log-feel sliver that visibly slows down at higher ranks (rankProgressFraction). */
+function LadderHeader({ userRank, progress }: { userRank: number; progress: number }) {
+  const fraction = rankProgressFraction(progress, userRank);
   return (
     <div className="space-y-1">
-      <p className="text-stone-600">目标进度 {value}%</p>
-      <div className="h-2 overflow-hidden rounded bg-stone-100">
+      <p className="text-2xl font-semibold text-stone-700">第 {userRank.toLocaleString()} 名</p>
+      <div className="h-1.5 overflow-hidden rounded bg-stone-100">
         <div
           className="h-full rounded bg-amber-500 transition-[width]"
-          style={{ width: `${value}%` }}
+          style={{ width: `${fraction * 100}%` }}
         />
       </div>
     </div>
   );
 }
 
-/** "下一个：{谁}（M%）——还差 {M-N}%" — attracts without pressure: no countdown, no "落后"
- * wording. The row immediately above the user's in the milestone-sorted list is the nearest
- * target; topping the board gets a plain, praise-free line instead. */
-function LadderHookLine({
-  rows,
-  userMilestone,
-}: {
-  rows: LadderDisplayRow[];
-  userMilestone: number;
-}) {
+/** One compact row: 名字 · 年龄岁 · 年代 · 职业，右对齐第N名。Hovering (CSS-only, so the
+ * card appears the instant the pointer lands, well inside the手册's 100ms feedback rule) shows
+ * a floating selfLine card. The user's own row never gets a card — there is no selfLine for
+ * "你" to reveal. */
+function LadderRow({ row }: { row: LadderDisplayRow }) {
+  if (row.isUser) {
+    return (
+      <li className="flex items-center justify-between gap-2 rounded bg-amber-100 px-2 py-1 text-stone-700">
+        <span className="font-medium">你</span>
+        <span className="shrink-0 font-medium">第 {row.rank.toLocaleString()} 名</span>
+      </li>
+    );
+  }
+  return (
+    <li className="group relative flex items-center justify-between gap-2 rounded px-2 py-1 text-stone-500 hover:bg-stone-50">
+      <span className="truncate">
+        <span className="font-medium text-stone-700">{row.name}</span>
+        <span className="ml-1 text-stone-400">
+          {row.age} 岁 · {row.era} · {row.occupation}
+        </span>
+      </span>
+      <span className="shrink-0 text-stone-400">第 {row.rank.toLocaleString()} 名</span>
+      {row.selfLine && (
+        <div className="pointer-events-none absolute left-0 top-full z-10 mt-1 w-64 rounded border border-stone-200 bg-white p-2 text-stone-600 opacity-0 shadow-md transition-opacity duration-100 group-hover:opacity-100">
+          {row.selfLine}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** "下一个：{name}（第 M 名）" — attracts without pressure: no countdown, no "落后" wording.
+ * The row immediately above the user's in the rank-sorted list is the nearest target; topping
+ * the board gets a plain, praise-free line instead. */
+function LadderHookLine({ rows }: { rows: LadderDisplayRow[] }) {
   const userIndex = rows.findIndex((row) => row.isUser);
   const above = userIndex > 0 ? rows[userIndex - 1] : undefined;
   if (above === undefined) {
@@ -54,7 +83,7 @@ function LadderHookLine({
   }
   return (
     <p className="text-stone-400">
-      下一个：{above.label}（{above.milestoneValue}%）——还差 {above.milestoneValue - userMilestone}%
+      下一个：{above.name}（第 {above.rank.toLocaleString()} 名）
     </p>
   );
 }
@@ -97,30 +126,13 @@ export function LabLadderSection() {
           ladder &&
           ladder.goalId === selectedGoalId && (
             <div className="space-y-2">
-              <GoalProgressBar value={ladder.milestone} />
+              <LadderHeader userRank={ladder.userRank} progress={ladder.progress} />
               <ul className="space-y-0.5">
                 {ladder.rows.map((row) => (
-                  <li
-                    key={`${row.label}-${row.milestoneValue}`}
-                    className={`flex items-center justify-between gap-2 rounded px-1 ${
-                      row.isUser ? "bg-amber-100 text-stone-700" : "text-stone-500"
-                    }`}
-                  >
-                    {row.isUser ? (
-                      <span className="font-medium">你 · {row.milestoneValue}%</span>
-                    ) : (
-                      <>
-                        <span>
-                          <span className="font-medium text-stone-700">{row.label}</span>
-                          {row.note && <span className="ml-1 text-stone-400">{row.note}</span>}
-                        </span>
-                        <span className="shrink-0 text-stone-400">{row.milestoneValue}%</span>
-                      </>
-                    )}
-                  </li>
+                  <LadderRow key={`${row.name}-${row.rank}`} row={row} />
                 ))}
               </ul>
-              <LadderHookLine rows={ladder.rows} userMilestone={ladder.milestone} />
+              <LadderHookLine rows={ladder.rows} />
             </div>
           )
         )}
