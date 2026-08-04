@@ -44,6 +44,20 @@ describe("buildLadderGenerationMessages", () => {
     expect(messages[1]?.content).toContain("（暂无样例）");
     expect(messages[1]?.content).toContain("（无）");
   });
+
+  it("caps domain-famous names at 2 and instructs varied, unexpected figures otherwise (百无禁忌)", () => {
+    const messages = buildLadderGenerationMessages({
+      goalTitle: "x",
+      domainLabelsSample: [],
+      userMilestone: 0,
+      forbiddenDescriptions: [],
+    });
+    const systemPrompt = messages[0]?.content ?? "";
+    expect(systemPrompt).toContain("最多 2 位是该领域家喻户晓的名人");
+    expect(systemPrompt).toContain("意想不到的时代与身份");
+    // An example, not an exhaustive list — the model keeps latitude.
+    expect(systemPrompt).toContain("仅为举例，不必局限于此");
+  });
 });
 
 describe("validateLadderGeneration", () => {
