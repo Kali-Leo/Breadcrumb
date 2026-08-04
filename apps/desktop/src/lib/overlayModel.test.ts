@@ -1,8 +1,8 @@
 /**
- * Purpose: deterministic snapshot-style tests for buildOverlayModel() (spec 017 #2, T4+T6) —
- * lit/dim/target states across three progress scenarios (empty goal / mid progress / near
- * complete) on one constructed graph, next-step flagging, out-of-scope edge exclusion, and
- * pixel-stable layout across repeated calls with identical input.
+ * Purpose: tests for buildOverlayModel() (spec 017 #2, ADR-0013) — lit/dim/target states across
+ * three progress scenarios (empty goal / mid progress / near complete) on one constructed graph,
+ * next-step flagging, and out-of-scope edge exclusion. Layout (positions) is tested separately
+ * in overlayLayout.test.ts — this module only assembles "which nodes/edges, what state".
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { RecommendedRouteStep } from "@breadcrumb/plugin-planner";
@@ -123,20 +123,24 @@ describe("buildOverlayModel across three progress states", () => {
     expect(stateById.get("c")).toBe("lit");
     expect(stateById.get("g")).toBe("target");
   });
-});
 
-describe("buildOverlayModel layered layout", () => {
-  it("lays prerequisites left of their dependents (rankdir LR): x(a) < x(b) < x(c) < x(g)", () => {
-    const model = buildOverlayModel(baseInput(new Map(), null));
-    const xById = new Map(model.nodes.map((n) => [n.id, n.x]));
-    expect(xById.get("a")).toBeLessThan(xById.get("b") as number);
-    expect(xById.get("b")).toBeLessThan(xById.get("c") as number);
-    expect(xById.get("c")).toBeLessThan(xById.get("g") as number);
-  });
-
-  it("is pixel-stable across repeated calls with identical input", () => {
-    const input = baseInput(new Map([["a", 0.9]]), null);
-    expect(buildOverlayModel(input)).toEqual(buildOverlayModel(input));
+  it("the node set (scope) is identical across all three progress states", () => {
+    const empty = buildOverlayModel(baseInput(new Map(), null));
+    const mid = buildOverlayModel(baseInput(new Map([["a", 0.9]]), null));
+    const nearComplete = buildOverlayModel(
+      baseInput(
+        new Map([
+          ["a", 0.9],
+          ["b", 0.9],
+          ["c", 0.9],
+        ]),
+        null,
+      ),
+    );
+    const scopeOf = (model: ReturnType<typeof buildOverlayModel>) =>
+      model.nodes.map((n) => n.id).sort();
+    expect(scopeOf(mid)).toEqual(scopeOf(empty));
+    expect(scopeOf(nearComplete)).toEqual(scopeOf(empty));
   });
 });
 
