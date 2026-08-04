@@ -1,21 +1,53 @@
 /**
- * Purpose: the goal overlay's full-lab-area view (spec 017 #2) — top bar (milestone/band in
- * ranked mode + 已点亮 N / 目标 M), the SVG overlay canvas, a hover tooltip, and a click action
- * bar reusing plannerStore's self-statement actions. Assembles OverlayModelInput from
- * plannerStore's already-loaded state; no data fetching of its own.
+ * Purpose: the goal overlay's full-lab-area view (spec 017 #2, ADR-0013) — top bar (milestone/
+ * band in ranked mode + 已点亮 N / 目标 M), the force-directed graph itself (react-force-graph-2d
+ * painting the ghost/goal underlay + solid/owned overlay per node), the next-step hook line, a
+ * hover tooltip, and a click action bar reusing plannerStore's self-statement actions. Assembles
+ * OverlayModelInput from plannerStore's already-loaded state; no data fetching of its own.
  * Main exports: GoalOverlayView.
  */
 import { DIM_THRESHOLD, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { milestone } from "@breadcrumb/plugin-planner";
-import { useMemo, useState } from "react";
-import { buildOverlayModel } from "../../lib/overlayModel";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ForceGraph2D, { type ForceGraphMethods } from "react-force-graph-2d";
+import { computeOverlayLayout, type OverlayLayoutNode } from "../../lib/overlayLayout";
+import { buildOverlayModel, type OverlayEdge } from "../../lib/overlayModel";
+import {
+  paintOverlayLink,
+  paintOverlayNode,
+  paintOverlayNodePointerArea,
+} from "../../lib/overlayPainters";
 import { masteryAsSeenByGoal } from "../../lib/plannerGapActions";
 import { useLabUiStore } from "../../stores/labUiStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { OverlayCanvas } from "./OverlayCanvas";
 import { OverlayNodeActions } from "./OverlayNodeActions";
 import { OverlayNodeTooltip } from "./OverlayNodeTooltip";
+
+const ZOOM_TO_FIT_DURATION_MS = 400;
+const ZOOM_TO_FIT_PADDING = 40;
+
+/** Tracks the graph container's box so ForceGraph2D always fills it (the library takes explicit
+ * width/height, it doesn't auto-fill a parent). */
+function useContainerSize(): [
+  React.RefObject<HTMLDivElement | null>,
+  { width: number; height: number },
+] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry === undefined) return;
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, size];
+}
 
 export function GoalOverlayView() {
   const closeOverlay = useLabUiStore((state) => state.closeOverlay);
@@ -33,6 +65,8 @@ export function GoalOverlayView() {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [clickedNodeId, setClickedNodeId] = useState<string | null>(null);
+  const [containerRef, containerSize] = useContainerSize();
+  const graphRef = useRef<ForceGraphMethods<OverlayLayoutNode, OverlayEdge> | undefined>(undefined);
 
   const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
   const goalNodeIds = useMemo(
@@ -72,6 +106,49 @@ export function GoalOverlayView() {
     route,
   ]);
 
+  // The node/edge *set* — not node state (mastery/route can change every recompute without the
+  // scope changing). The expensive d3-force layout below is keyed on this, not on `model`
+  // itself, so claiming/skipping a node redraws colors without ever re-running or jittering
+  // positions.
+  const scopeSignature = useMemo(() => {
+    if (model === null) return null;
+    const nodeKey = model.nodes
+      .map((node) => node.id)
+      .sort()
+      .join(",");
+    const edgeKey = model.edges
+      .map((edge) => `${edge.source}>${edge.target}:${edge.type}`)
+      .sort()
+      .join(",");
+    return `${nodeKey}|${edgeKey}`;
+  }, [model]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: layout is frozen by design — it must only recompute when scopeSignature (the node/edge set) changes, never on a state-only model update
+  const frozenPositionById = useMemo(() => {
+    if (model === null) return new Map<string, Pick<OverlayLayoutNode, "x" | "y" | "fx" | "fy">>();
+    const layout = computeOverlayLayout(model.nodes, model.edges);
+    return new Map(
+      layout.nodes.map((node) => [node.id, { x: node.x, y: node.y, fx: node.fx, fy: node.fy }]),
+    );
+  }, [scopeSignature]);
+
+  const graphData = useMemo(() => {
+    if (model === null) return { nodes: [] as OverlayLayoutNode[], links: [] as OverlayEdge[] };
+    const graphNodes: OverlayLayoutNode[] = model.nodes.map((node) => {
+      const position = frozenPositionById.get(node.id) ?? { x: 0, y: 0, fx: 0, fy: 0 };
+      return { ...node, ...position };
+    });
+    return { nodes: graphNodes, links: model.edges };
+  }, [model, frozenPositionById]);
+
+  useEffect(() => {
+    if (scopeSignature === null) return;
+    const frame = requestAnimationFrame(() => {
+      graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION_MS, ZOOM_TO_FIT_PADDING);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scopeSignature]);
+
   if (selectedGoal === null || model === null) {
     closeOverlay();
     return null;
@@ -81,6 +158,7 @@ export function GoalOverlayView() {
   const milestoneValue = milestone(goalNodeIds, goalMasteryByNode, LIT_THRESHOLD, DIM_THRESHOLD);
   const hoveredNode = model.nodes.find((node) => node.id === hoveredNodeId) ?? null;
   const clickedNode = model.nodes.find((node) => node.id === clickedNodeId) ?? null;
+  const nextStepLabel = route?.[0]?.label ?? null;
 
   return (
     <div className="flex h-full flex-col bg-stone-50">
@@ -105,18 +183,46 @@ export function GoalOverlayView() {
         </button>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-auto p-6">
-        <OverlayCanvas
-          model={model}
-          hoveredNodeId={hoveredNodeId}
-          onHoverNode={(nodeId, event) => {
-            setHoveredNodeId(nodeId);
-            setHoverPosition(event === null ? null : { x: event.clientX, y: event.clientY });
-          }}
-          onClickNode={setClickedNodeId}
-        />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: tracks pointer position for the hover tooltip only — node interactivity itself is canvas-drawn (ForceGraph2D's onNodeHover/onNodeClick), not a DOM control this div could semantically become */}
+      <div
+        ref={containerRef}
+        className="relative min-h-0 flex-1"
+        onMouseMove={(event) => setHoverPosition({ x: event.clientX, y: event.clientY })}
+      >
+        {containerSize.width > 0 && containerSize.height > 0 && (
+          <ForceGraph2D<OverlayLayoutNode, OverlayEdge>
+            ref={graphRef}
+            graphData={graphData}
+            width={containerSize.width}
+            height={containerSize.height}
+            backgroundColor="#fafaf9"
+            cooldownTicks={0}
+            autoPauseRedraw={false}
+            nodeCanvasObjectMode="replace"
+            nodeCanvasObject={(node, ctx) => paintOverlayNode(ctx, node, node.id === hoveredNodeId)}
+            nodePointerAreaPaint={(node, color, ctx) =>
+              paintOverlayNodePointerArea(node, color, ctx)
+            }
+            linkCanvasObjectMode="replace"
+            linkCanvasObject={(link, ctx) => {
+              const source = link.source as unknown as OverlayLayoutNode;
+              const target = link.target as unknown as OverlayLayoutNode;
+              paintOverlayLink(ctx, link, source, target);
+            }}
+            onNodeHover={(node) => setHoveredNodeId(node === null ? null : node.id)}
+            onNodeClick={(node) => setClickedNodeId(node.id)}
+            onBackgroundClick={() => setClickedNodeId(null)}
+          />
+        )}
+
         {hoveredNode && hoverPosition && (
           <OverlayNodeTooltip node={hoveredNode} position={hoverPosition} />
+        )}
+
+        {nextStepLabel !== null && (
+          <div className="pointer-events-none absolute bottom-3 left-3 rounded bg-white/90 px-2 py-1 text-stone-600 text-xs shadow-sm">
+            下一步：「{nextStepLabel}」
+          </div>
         )}
       </div>
 
