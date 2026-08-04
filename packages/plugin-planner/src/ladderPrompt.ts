@@ -15,8 +15,9 @@ export const ladderFigureSchema = z.object({
   /** e.g. "24 岁的拿破仑" — a person (historical, archetypal or fictional), plus their
    * age/period. Describes the figure only, never the learner. */
   figureDesc: z.string().min(1).max(60),
-  /** Why they sit at this level — domain-specific, concrete, interesting; still only about
-   * the figure, never an evaluation of the learner. */
+  /** A novelistic character sketch, not a job description — one concrete, domain-relevant
+   * detail (what they're doing, a small hassle, a habit) that raises a smile or surprises;
+   * still only about the figure, never an evaluation of the learner. */
   figureNote: z.string().min(1).max(120),
   // No hard bounds here: a model slip (e.g. a negative milestone when the learner sits
   // near 0) must not reject the whole batch — out-of-range figures are dropped in the
@@ -49,7 +50,8 @@ const SYSTEM_PROMPT = `你是一个学习进度参照榜生成器。给定一个
 规则：
 - 5 位人物中，2 位的里程略高于学习者当前里程、1 位相近、2 位略低于学习者当前里程，高低偏移大致在 3~15 之间；
   所有里程必须落在 0~100 内——学习者在起点附近时，人物可以全部或大多在前方；接近 100 时同理反之
-- 人物必须有趣、多样：同一榜最多 2 位是该领域家喻户晓的名人，其余请选取意想不到的时代与身份——如账房先生、修道院抄写员、国王、水手、乞丐、少年学徒等（仅为举例，不必局限于此），但每人的知识水平画像必须在该领域内站得住脚、令人信服
+- 5 位人物中恰好 2 位是有名有姓的真实名人（任何时代任何领域皆可——帝王、将军、诗人、科学家都行），其余恰好 3 位是无名的普通人（时代与身份不限）；每人的知识水平画像都必须在该领域内站得住脚、令人信服
+- 每个人物都要写得有趣：figureNote 像小说人物速写，给出一个让人会心一笑或出乎意料的具体细节（正在做的事、遇到的小麻烦、小癖好）
 - 5 个里程数必须互不相同
 - figureDesc 绝不能与"历史已用描述清单"中任何一条完全重复（同一人物不同年龄视为不同描述，允许再次使用同一人物的不同年龄）
 - 语气中立平和，figureNote 只描述人物本身，绝不出现对学习者的评价或建议`;

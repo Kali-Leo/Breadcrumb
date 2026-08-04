@@ -45,7 +45,7 @@ describe("buildLadderGenerationMessages", () => {
     expect(messages[1]?.content).toContain("（无）");
   });
 
-  it("caps domain-famous names at 2 and instructs varied, unexpected figures otherwise (百无禁忌)", () => {
+  it("requires exactly 2 named-and-famous figures plus exactly 3 unnamed ordinary ones, each written as an interesting vignette", () => {
     const messages = buildLadderGenerationMessages({
       goalTitle: "x",
       domainLabelsSample: [],
@@ -53,10 +53,12 @@ describe("buildLadderGenerationMessages", () => {
       forbiddenDescriptions: [],
     });
     const systemPrompt = messages[0]?.content ?? "";
-    expect(systemPrompt).toContain("最多 2 位是该领域家喻户晓的名人");
-    expect(systemPrompt).toContain("意想不到的时代与身份");
-    // An example, not an exhaustive list — the model keeps latitude.
-    expect(systemPrompt).toContain("仅为举例，不必局限于此");
+    expect(systemPrompt).toContain("恰好 2 位是有名有姓的真实名人");
+    expect(systemPrompt).toContain("任何时代任何领域");
+    expect(systemPrompt).toContain("恰好 3 位是无名的普通人");
+    expect(systemPrompt).toContain("时代与身份不限");
+    expect(systemPrompt).toContain("小说人物速写");
+    expect(systemPrompt).toContain("会心一笑或出乎意料的具体细节");
   });
 });
 
