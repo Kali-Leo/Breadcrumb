@@ -10,7 +10,7 @@ import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { LabGoalGapActions } from "./LabGoalGapActions";
 import { LabGoalMappingForm } from "./LabGoalMappingForm";
-import { LabGoalRoutes } from "./LabGoalRoutes";
+import { LabGoalRoute } from "./LabGoalRoute";
 
 export function LabGoalSection() {
   const goals = usePlannerStore((state) => state.goals);
@@ -55,7 +55,7 @@ export function LabGoalSection() {
         </div>
       )}
 
-      <LabGoalRoutes />
+      <LabGoalRoute />
       <LabGoalGapActions />
     </section>
   );
