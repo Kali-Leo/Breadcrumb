@@ -23,12 +23,17 @@ import {
 import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
   GOAL_GAP_SCORE_BOOST,
-  LADDER_REGENERATE_DELTA,
   MILESTONE_DIM_DISCOUNT,
   MILESTONE_DIM_WEIGHT,
   MILESTONE_LIT_WEIGHT,
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
+  RANK_ABOVE_RATIOS,
+  RANK_BELOW_RATIOS,
+  RANK_BETA,
+  RANK_PROGRESS_F0_FACTOR,
+  RANK_PROGRESS_F0_MIN,
+  RANK_R0,
   ROUTE_INTEREST_CHIP_THRESHOLD,
 } from "@breadcrumb/plugin-planner";
 import { CLAIM_HALF_LIFE_DAYS, CLAIM_WEIGHT, DIM_THRESHOLD, LIT_THRESHOLD } from "./mastery";
@@ -106,10 +111,17 @@ export const productParams = {
   milestoneLitWeight: MILESTONE_LIT_WEIGHT,
   milestoneDimWeight: MILESTONE_DIM_WEIGHT,
   milestoneDimDiscount: MILESTONE_DIM_DISCOUNT,
-  /** Pseudo-ranked ladder refresh (spec 016): minimum milestone movement (either direction)
-   * before a stored ladder gets regenerated. plugin-planner/ladderRefresh.ts. */
-  ladderRegenerateDelta: LADDER_REGENERATE_DELTA,
   /** Single-route recommendation (spec 017): interest score a route step needs before the
    * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
   routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
+  /** Ranked-ladder rank/fuel curve (spec 018): best-possible rank number, its decay rate, the
+   * progress-softening constant's floor/scale factor, and the above/below neighbor-rank
+   * anchor ratios. Refresh regeneration is derived straight from these (no separate delta
+   * constant) — see plugin-planner/ladderRefresh.ts. plugin-planner/rankEngine.ts. */
+  rankR0: RANK_R0,
+  rankBeta: RANK_BETA,
+  rankProgressF0Min: RANK_PROGRESS_F0_MIN,
+  rankProgressF0Factor: RANK_PROGRESS_F0_FACTOR,
+  rankAboveRatios: RANK_ABOVE_RATIOS,
+  rankBelowRatios: RANK_BELOW_RATIOS,
 } as const;
