@@ -6,7 +6,7 @@
  * Main exports: GoalOverlayView.
  */
 import { DIM_THRESHOLD, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { milestone, milestoneBand } from "@breadcrumb/plugin-planner";
+import { milestone } from "@breadcrumb/plugin-planner";
 import { useMemo, useState } from "react";
 import { buildOverlayModel } from "../../lib/overlayModel";
 import { masteryAsSeenByGoal } from "../../lib/plannerGapActions";
@@ -89,7 +89,7 @@ export function GoalOverlayView() {
           <span className="font-semibold">{selectedGoal.title} · 对照</span>
           {learningMode === "ranked" && (
             <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-700">
-              里程 {milestoneValue} · {milestoneBand(milestoneValue)}
+              目标进度 {milestoneValue}%
             </span>
           )}
           <span className="text-stone-400">
