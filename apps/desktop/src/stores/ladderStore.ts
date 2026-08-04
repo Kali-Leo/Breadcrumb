@@ -1,18 +1,21 @@
 /**
- * Purpose: zustand store driving the pseudo-ranked ladder (spec 016) — fetch-on-view only.
- * viewLadder() decides reuse vs regenerate via planLadderRefresh, calls the ladder-generation
- * LLM only when that decision says "generate", and persists the result. Never auto-refreshes
- * on recompute — the lab panel's 排位 section triggers this itself, once per section mount per
- * goal, treating that render as the user's active viewing (2026-08-04 revision: the old "看看
- * 同行者" button is gone). Band words never leave milestone.ts — this store only carries the
- * raw 0..100 number the UI renders as a progress percentage.
+ * Purpose: zustand store driving the ranked ladder (spec 018) — fetch-on-view only.
+ * viewLadder() computes the learner's own rank via rankEngine, decides reuse vs regenerate via
+ * planLadderRefresh, calls the ladder-generation LLM only when that decision says "generate",
+ * and persists the result. Never auto-refreshes on recompute — the lab panel's 排位 section
+ * triggers this itself, once per section mount per goal, treating that render as the user's
+ * active viewing (2026-08-04 revision: the old "看看同行者" button is gone).
  * Main exports: useLadderStore, LadderView.
  */
 import type { GoalLadderRow } from "@breadcrumb/core-db";
-import { DIM_THRESHOLD, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
-  milestone,
+  domainFuel,
+  goalDomainClosure,
+  neighborRanks,
   planLadderRefresh,
+  progressFromFuel,
+  rankFromProgress,
   type StoredLadder,
   validateLadderGeneration,
 } from "@breadcrumb/plugin-planner";
@@ -31,12 +34,20 @@ import { newId, nowIso } from "../lib/time";
 import { usePlannerStore } from "./plannerStore";
 import { useSettingsStore } from "./settingsStore";
 
-/** Up to 10 lit domain labels ground the generation prompt (spec 016 #3). */
+/** Up to 10 lit domain labels ground the generation prompt (spec 016 #3, unchanged by 018). */
 const DOMAIN_LABEL_SAMPLE_SIZE = 10;
+/** Exactly this many famous figures is the target split (spec 018 #3) — deviation is logged,
+ * never a hard failure. */
+const EXPECTED_FAMOUS_COUNT = 2;
 
 export interface LadderView {
   goalId: string;
-  milestone: number;
+  userRank: number;
+  /** The learner's current progress value m (0..~100, asymptotic) — the exact position the
+   * displayed rank was rounded from. Carried through so the UI progress bar can show a
+   * within-rank fraction (rankProgressFraction in ladderActions.ts) instead of a coarse
+   * "just entered this rank" 0%. */
+  progress: number;
   rows: LadderDisplayRow[];
 }
 
@@ -52,10 +63,7 @@ interface LadderState {
 function toStoredLadder(rows: readonly GoalLadderRow[]): StoredLadder | null {
   const first = rows[0];
   if (first === undefined) return null;
-  return {
-    userMilestoneAtGeneration: first.user_milestone_at_generation,
-    figures: rows.map((row) => ({ figureDesc: row.figure_desc, milestone: row.milestone })),
-  };
+  return { userRankAtGeneration: first.user_rank_at_generation };
 }
 
 export const useLadderStore = create<LadderState>((set) => ({
@@ -77,26 +85,26 @@ export const useLadderStore = create<LadderState>((set) => ({
       }
 
       const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-      // Same goal-view-boosted mastery coverage() uses — milestone must never disagree with it.
+      // Same goal-view-boosted mastery coverage() uses — the ladder must never disagree with it.
       const goalMasteryByNode = masteryAsSeenByGoal(planner.masteryByNode, planner.claims);
-      const currentMilestone = milestone(
-        goalNodeIds,
-        goalMasteryByNode,
-        LIT_THRESHOLD,
-        DIM_THRESHOLD,
-      );
+      const closureNodeIds = goalDomainClosure(planner.edges, goalNodeIds);
+      const fuel = domainFuel(closureNodeIds, goalMasteryByNode);
+      const m = progressFromFuel(fuel, closureNodeIds.length);
+      const currentUserRank = rankFromProgress(m);
 
       const repos = await getRepos();
       const [storedRows, shownRows] = await Promise.all([
         repos.goalLadders.listForGoal(goalId),
-        repos.goalLadders.listShownDescriptions(goalId),
+        repos.goalLadders.listShownIdentities(goalId),
       ]);
 
-      const action = planLadderRefresh(toStoredLadder(storedRows), currentMilestone);
+      const action = planLadderRefresh(toStoredLadder(storedRows), currentUserRank);
       let displayRows: readonly GoalLadderRow[] = storedRows;
 
       if (action === "generate" && settings.networkEnabled && settings.apiConfig) {
-        const forbiddenDescriptions = shownRows.map((row) => row.figure_desc);
+        const forbiddenIdentities = shownRows.map((row) => row.identity);
+        const { above, below } = neighborRanks(currentUserRank);
+        const slotRanks = [...above, ...below];
         const result = await requestLadderGeneration(settings.apiConfig, {
           goalTitle: goal.title,
           domainLabelsSample: pickDomainLabelsSample(
@@ -106,24 +114,33 @@ export const useLadderStore = create<LadderState>((set) => ({
             LIT_THRESHOLD,
             DOMAIN_LABEL_SAMPLE_SIZE,
           ),
-          userMilestone: currentMilestone,
-          forbiddenDescriptions,
+          forbiddenIdentities,
         });
-        const validated = validateLadderGeneration(result, forbiddenDescriptions);
+        const validated = validateLadderGeneration(result, forbiddenIdentities);
         if (validated !== null) {
+          const famousCount = validated.filter((figure) => figure.isFamous).length;
+          if (famousCount !== EXPECTED_FAMOUS_COUNT) {
+            void recordAiFailure(
+              "ladder",
+              new Error(
+                `famous split ${famousCount}/${validated.length - famousCount} (expected ${EXPECTED_FAMOUS_COUNT}/${validated.length - EXPECTED_FAMOUS_COUNT})`,
+              ),
+            );
+          }
           const nextGeneration = (storedRows[0]?.generation ?? 0) + 1;
           const rows = buildLadderRows(
             goalId,
             nextGeneration,
-            currentMilestone,
+            currentUserRank,
             validated,
+            slotRanks,
             newId,
             nowIso,
           );
           await repos.goalLadders.replaceForGoal(goalId, rows);
-          await repos.goalLadders.recordShownDescriptions(
+          await repos.goalLadders.recordShownIdentities(
             goalId,
-            rows.map((row) => row.figure_desc),
+            rows.map((row) => `${row.name}|${row.era}`),
           );
           displayRows = rows;
         }
@@ -136,8 +153,9 @@ export const useLadderStore = create<LadderState>((set) => ({
         failed: false,
         ladder: {
           goalId,
-          milestone: currentMilestone,
-          rows: buildLadderDisplayRows(displayRows, currentMilestone),
+          userRank: currentUserRank,
+          progress: m,
+          rows: buildLadderDisplayRows(displayRows, currentUserRank),
         },
       });
     } catch (error) {
