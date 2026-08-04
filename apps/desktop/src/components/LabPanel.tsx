@@ -16,7 +16,6 @@ import { LabGoalSection } from "./LabGoalSection";
 import { LabLadderSection } from "./LabLadderSection";
 import { LabModeToggle } from "./LabModeToggle";
 import { LabNodeTable } from "./LabNodeTable";
-import { LabSynonymSuspectsSection } from "./LabSynonymSuspectsSection";
 import { GoalOverlayView } from "./overlay/GoalOverlayView";
 
 function SelfReportInput() {
@@ -100,7 +99,6 @@ export function LabPanel() {
         <SelfReportInput />
         <LabGoalSection />
         <LabLadderSection />
-        <LabSynonymSuspectsSection />
         <LabFailuresSection />
       </div>
     </div>

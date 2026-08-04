@@ -1,9 +1,9 @@
 /**
  * Purpose: SQL statements for the knowledge-graph domain — tree nodes, their local
- * embeddings, sightings (footprints), the directed requires/helps edges (spec 010), and
- * node-dedup aliases (spec 015).
- * Main exports: knowledgeNodesRepo, nodeEmbeddingsRepo, nodeSightingsRepo, knowledgeEdgesRepo,
- * nodeAliasesRepo.
+ * embeddings, sightings (footprints), the directed requires/helps edges (spec 010),
+ * node-dedup aliases (spec 015), and the spec-015-#4 duplicate-node merge executor.
+ * Main exports: createKnowledgeNodesRepo, createNodeEmbeddingsRepo, createNodeSightingsRepo,
+ * createKnowledgeEdgesRepo, createNodeAliasesRepo, createNodeMergeRepo.
  */
 import type {
   KnowledgeEdgeRow,
@@ -172,6 +172,80 @@ export function createNodeAliasesRepo(sql: SqlClient) {
     /** Every alias ever recorded — raw material for planNodeChanges' aliasNodeIdByLabel input. */
     async listAll(): Promise<NodeAliasRow[]> {
       return sql.select<NodeAliasRow>("SELECT * FROM node_aliases ORDER BY created_at ASC");
+    },
+  };
+}
+
+/** Executes one real merge (spec 015 #4): folds every trace of `duplicateId` into
+ * `canonicalId` and deletes the duplicate node. Built on top of createKnowledgeEdgesRepo and
+ * createNodeAliasesRepo to reuse their existing conflict rules verbatim rather than
+ * re-implementing them. */
+export function createNodeMergeRepo(sql: SqlClient) {
+  const knowledgeEdges = createKnowledgeEdgesRepo(sql);
+  const nodeAliases = createNodeAliasesRepo(sql);
+  return {
+    /**
+     * Runs, in order:
+     * 1. Reassign node_sightings.node_id, interest_signals.node_id, mastery_claims.node_id
+     *    and node_aliases.node_id from duplicateId to canonicalId (plain bulk UPDATEs — none
+     *    of these tables has a uniqueness constraint that reassignment could violate).
+     * 2. Re-point any child's parent_id from duplicateId to canonicalId.
+     * 3. For every knowledge_edges row touching duplicateId: remove the old row, then, unless
+     *    the reassignment would make it a self-loop (source === target after substitution),
+     *    re-insert it via knowledgeEdgesRepo.upsert — its existing ON CONFLICT(source_id,
+     *    target_id, edge_type) rule keeps whichever judgment has the higher confidence when
+     *    the reassignment collides with an edge canonicalId already has.
+     * 4. Record duplicateLabel as an alias of canonicalId (insert-or-ignore, so a duplicate
+     *    label matching an already-aliased label keeps that alias's original target).
+     * 5. Delete the duplicate's embedding and its knowledge_nodes row.
+     */
+    async mergeNode(
+      canonicalId: string,
+      duplicateId: string,
+      duplicateLabel: string,
+      nowIso: string,
+    ): Promise<void> {
+      await sql.execute("UPDATE node_sightings SET node_id = ? WHERE node_id = ?", [
+        canonicalId,
+        duplicateId,
+      ]);
+      await sql.execute("UPDATE interest_signals SET node_id = ? WHERE node_id = ?", [
+        canonicalId,
+        duplicateId,
+      ]);
+      await sql.execute("UPDATE mastery_claims SET node_id = ? WHERE node_id = ?", [
+        canonicalId,
+        duplicateId,
+      ]);
+      await sql.execute("UPDATE node_aliases SET node_id = ? WHERE node_id = ?", [
+        canonicalId,
+        duplicateId,
+      ]);
+      await sql.execute("UPDATE knowledge_nodes SET parent_id = ? WHERE parent_id = ?", [
+        canonicalId,
+        duplicateId,
+      ]);
+
+      const touchedEdges = await sql.select<KnowledgeEdgeRow>(
+        "SELECT * FROM knowledge_edges WHERE source_id = ? OR target_id = ?",
+        [duplicateId, duplicateId],
+      );
+      for (const edge of touchedEdges) {
+        await knowledgeEdges.remove(edge.id);
+        const newSourceId = edge.source_id === duplicateId ? canonicalId : edge.source_id;
+        const newTargetId = edge.target_id === duplicateId ? canonicalId : edge.target_id;
+        if (newSourceId === newTargetId) continue; // drop: would become a self-loop
+        await knowledgeEdges.upsert({ ...edge, source_id: newSourceId, target_id: newTargetId });
+      }
+
+      await nodeAliases.insert({
+        alias_label: duplicateLabel,
+        node_id: canonicalId,
+        created_at: nowIso,
+      });
+
+      await sql.execute("DELETE FROM node_embeddings WHERE node_id = ?", [duplicateId]);
+      await sql.execute("DELETE FROM knowledge_nodes WHERE id = ?", [duplicateId]);
     },
   };
 }

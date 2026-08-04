@@ -1,9 +1,8 @@
 /**
- * Purpose: read-only "疑似同义节点对" scan for the lab panel (spec 015 T4) — every pair of
- * EXISTING nodes whose embeddings clear SYNONYM_SIMILARITY_THRESHOLD, excluding pairs
- * already formally linked via node_aliases. Never suggests or performs a merge: historical
- * duplicate nodes carry real mastery/edge history, so spec 015 #4 leaves merging them to a
- * future manual action (see specs/backlog.md) — this only surfaces the candidates.
+ * Purpose: every pair of EXISTING nodes whose embeddings clear SYNONYM_SIMILARITY_THRESHOLD,
+ * excluding pairs already formally linked via node_aliases — the candidate list spec 015 #4's
+ * auto-merge sweep hands to the synonym-judge LLM tier (mergePlan.ts's
+ * planSynonymVerdictMerges turns the "同一" verdicts into merge instructions).
  * Main exports: findSuspectSynonymPairs, SuspectSynonymPair.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
