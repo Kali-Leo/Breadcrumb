@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Purpose: double-click launcher for the Breadcrumb dev app. If an instance is already
+# running it raises the existing window instead of starting a second one (the Vite dev
+# port is single-instance). Started from the .desktop shortcut in the repo root.
+set -u
+export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+existing_pid="$(pgrep -f "target/debug/breadcrumb-desktop" | head -1 || true)"
+if [ -n "$existing_pid" ]; then
+  win="$(xdotool search --pid "$existing_pid" 2>/dev/null | tail -1 || true)"
+  if [ -n "$win" ]; then
+    xdotool windowactivate "$win"
+    exit 0
+  fi
+fi
+
+cd "$REPO_DIR/apps/desktop"
+exec pnpm tauri dev
