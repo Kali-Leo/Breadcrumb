@@ -36,8 +36,8 @@ const COLLIDE_GAP = 14;
 /** Visual + hit-test radius for a node's circle, sized from its label so long labels get more
  * breathing room — shared by the layout's collision force, the canvas painter, and the pointer
  * hit area so all three agree on where a node "is". */
-export function overlayNodeRadius(label: string): number {
-  const radius = NODE_BASE_RADIUS + [...label].length * NODE_RADIUS_PER_CHAR;
+export function overlayNodeRadius(label: string | undefined): number {
+  const radius = NODE_BASE_RADIUS + [...(label ?? "")].length * NODE_RADIUS_PER_CHAR;
   return Math.min(radius, NODE_MAX_RADIUS);
 }
 

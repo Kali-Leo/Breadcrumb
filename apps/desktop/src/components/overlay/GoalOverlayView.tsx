@@ -24,6 +24,10 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { OverlayNodeActions } from "./OverlayNodeActions";
 import { OverlayNodeTooltip } from "./OverlayNodeTooltip";
 
+/** String-valued canvas-object-mode props are silently dropped somewhere in the
+ * react-kapsule prop chain (verified live 2026-08-04); a constant accessor fn works. */
+const REPLACE_MODE = () => "replace" as const;
+
 const ZOOM_TO_FIT_DURATION_MS = 400;
 const ZOOM_TO_FIT_PADDING = 40;
 
@@ -198,15 +202,23 @@ export function GoalOverlayView() {
             backgroundColor="#fafaf9"
             cooldownTicks={0}
             autoPauseRedraw={false}
-            nodeCanvasObjectMode="replace"
+            nodeCanvasObjectMode={REPLACE_MODE}
             nodeCanvasObject={(node, ctx) => paintOverlayNode(ctx, node, node.id === hoveredNodeId)}
             nodePointerAreaPaint={(node, color, ctx) =>
               paintOverlayNodePointerArea(node, color, ctx)
             }
-            linkCanvasObjectMode="replace"
+            linkCanvasObjectMode={REPLACE_MODE}
             linkCanvasObject={(link, ctx) => {
-              const source = link.source as unknown as OverlayLayoutNode;
-              const target = link.target as unknown as OverlayLayoutNode;
+              // Before force-graph finishes ingesting graphData, link endpoints are still raw
+              // id strings; resolve either shape and skip the frame when a node isn't ready.
+              const resolve = (end: unknown): OverlayLayoutNode | undefined =>
+                typeof end === "object" && end !== null
+                  ? (end as OverlayLayoutNode)
+                  : graphData.nodes.find((candidate) => candidate.id === end);
+              const source = resolve(link.source);
+              const target = resolve(link.target);
+              if (source === undefined || target === undefined) return;
+              if (source.x === undefined || target.x === undefined) return;
               paintOverlayLink(ctx, link, source, target);
             }}
             onNodeHover={(node) => setHoveredNodeId(node === null ? null : node.id)}
