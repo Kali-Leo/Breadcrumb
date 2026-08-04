@@ -1,13 +1,15 @@
 /**
  * Purpose: lab-panel goal section — free-text goal to LLM mapping (persisted immediately, no
- * calibration step), a goal picker, the single recommended route (spec 017 #1, tunable via two
- * sliders) with a coverage fraction, and per-node self-statement actions for the gap. Copy is
- * suggest-only ("可以学"), never "behind" or "missing" (product principle 1).
+ * calibration step), a goal picker, the read-only goal-decomposition chip list (spec 017 §1),
+ * the single recommended route (spec 017 #1, tunable via two sliders) with a coverage
+ * fraction, and per-node self-statement actions for the gap. Copy is suggest-only ("可以学"),
+ * never "behind" or "missing" (product principle 1).
  * Main exports: LabGoalSection.
  */
 import { useState } from "react";
 import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
+import { LabGoalComposition } from "./LabGoalComposition";
 import { LabGoalGapActions } from "./LabGoalGapActions";
 import { LabGoalMappingForm } from "./LabGoalMappingForm";
 import { LabGoalRoute } from "./LabGoalRoute";
@@ -55,6 +57,7 @@ export function LabGoalSection() {
         </div>
       )}
 
+      <LabGoalComposition />
       <LabGoalRoute />
       <LabGoalGapActions />
     </section>

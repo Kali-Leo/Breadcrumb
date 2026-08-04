@@ -40,6 +40,11 @@ export interface PlannerSnapshot {
   gap: GapAndPathResult | null;
   coverageFraction: number | null;
   route: RecommendedRouteStep[] | null;
+  /** Every node id with at least one real conversation footprint, ever — distinct from mastery
+   * (which self-report claims can also lift). Used only to approximate "this node arrived via
+   * a goal's own suggestion" for the goal-composition chip list (spec 017 §1), since that
+   * provenance isn't persisted at insert time. */
+  sightedNodeIds: Set<string>;
 }
 
 export function computePlannerSnapshot(
@@ -124,5 +129,6 @@ export function computePlannerSnapshot(
     gap,
     coverageFraction,
     route,
+    sightedNodeIds: new Set(sightings.map((sighting) => sighting.node_id)),
   };
 }

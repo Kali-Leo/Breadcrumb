@@ -47,6 +47,9 @@ interface PlannerState {
   /** Single-scalar, embedding-spread interest score — what frontier()/gapAndPath() consume. */
   interestByNode: Map<string, number>;
   frontierCandidates: FrontierCandidate[];
+  /** Every node id with at least one real conversation footprint, ever (spec 017 §1 goal-
+   * composition chip list — see plannerRecompute.ts's PlannerSnapshot doc). */
+  sightedNodeIds: Set<string>;
   goals: GoalRow[];
   selectedGoalId: string | null;
   gap: GapAndPathResult | null;
@@ -80,6 +83,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   interestScoresByNode: new Map(),
   interestByNode: new Map(),
   frontierCandidates: [],
+  sightedNodeIds: new Set(),
   goals: [],
   selectedGoalId: null,
   gap: null,
