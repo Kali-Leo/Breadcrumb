@@ -8,6 +8,7 @@ import {
   createAiFailuresRepo,
   createConversationsRepo,
   createFactcheckRepo,
+  createGoalLaddersRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
@@ -43,6 +44,7 @@ export interface SimlabRepos {
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
   goals: ReturnType<typeof createGoalsRepo>;
+  goalLadders: ReturnType<typeof createGoalLaddersRepo>;
 }
 
 export function createSimlabRepos(sql: SqlClient): SimlabRepos {
@@ -64,5 +66,6 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     interestSignals: createInterestSignalsRepo(sql),
     masteryClaims: createMasteryClaimsRepo(sql),
     goals: createGoalsRepo(sql),
+    goalLadders: createGoalLaddersRepo(sql),
   };
 }

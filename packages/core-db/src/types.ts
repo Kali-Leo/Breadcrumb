@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderRow, LadderShownDescriptionRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderRow, LadderShownIdentityRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -189,28 +189,37 @@ export interface LlmCallRow {
   created_at: string;
 }
 
-/** One reference figure of a goal's pseudo-ranked ladder (spec 016) — one generation is 5 of
- * these rows, sharing the same `generation` and `user_milestone_at_generation`. `position`
- * is the stable display order assigned at generation time (sorted by milestone desc),
- * unchanged by later mastery movement so a reused ladder never reshuffles. */
+/** One reference figure/persona of a goal's ranked ladder (spec 018) — one generation is (up
+ * to) 5 of these rows, sharing the same `generation` and `user_rank_at_generation`. `rank` is
+ * the figure's anchored name-plate rank (fixed at generation time via
+ * plugin-planner/rankEngine's neighborRanks, so it survives the user's own rank moving around
+ * it). `position` is the stable display order assigned at generation time (0-based, in
+ * generation-batch order), unchanged by later rank movement so a reused ladder never
+ * reshuffles. `is_famous` is stored as 0/1 (SQLite has no boolean column type).
+ * `chat_profile_json` is the spec 019 friend-chat foundation — persisted, unused this spec. */
 export interface GoalLadderRow {
   id: string;
   goal_id: string;
-  figure_desc: string;
-  figure_note: string;
-  milestone: number;
+  name: string;
+  age: number;
+  era: string;
+  occupation: string;
+  self_line: string;
+  is_famous: 0 | 1;
+  rank: number;
   position: number;
   generation: number;
-  user_milestone_at_generation: number;
+  user_rank_at_generation: number;
+  chat_profile_json: string;
   created_at: string;
 }
 
-/** One figure_desc ever shown for one goal (spec 016) — the never-repeat backstop; the
- * (goal_id, figure_desc) primary key is what actually enforces uniqueness, not application
- * code. Rows are never deleted, even across ladder regenerations. */
-export interface LadderShownDescriptionRow {
+/** One `${name}|${era}` identity ever shown for one goal (spec 018) — the never-repeat
+ * backstop; the (goal_id, identity) primary key is what actually enforces uniqueness, not
+ * application code. Rows are never deleted, even across ladder regenerations. */
+export interface LadderShownIdentityRow {
   goal_id: string;
-  figure_desc: string;
+  identity: string;
 }
 
 /** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible

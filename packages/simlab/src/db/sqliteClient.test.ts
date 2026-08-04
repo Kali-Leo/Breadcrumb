@@ -1,8 +1,9 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
- * legacy 0005_factcheck -> 0006_factcheck migration-id repair, and knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, both against a real database file instead
- * of the fakes core-db's own tests use.
+ * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
+ * "keep higher confidence" ON CONFLICT semantics, and the ranked-ladder v2 tables (migration
+ * 0014, spec 018) — all against a real database file instead of the fakes core-db's own tests
+ * use.
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
@@ -142,5 +143,64 @@ describe("knowledge_edges upsert (real sqlite ON CONFLICT semantics)", () => {
     // as its content columns are overwritten by the higher-confidence judgment.
     expect(edges[0]?.id).toBe("e1");
     expect(edges[0]?.origin).toBe("user");
+  });
+});
+
+describe("goal_ladders_v2 (real sqlite, migration 0014)", () => {
+  it("drops the old spec-016 ladder tables and persists a full ranked-ladder generation", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-04T10:00:00.000Z";
+    await temp.repos.goals.insert({
+      id: "goal1",
+      title: "学微积分",
+      node_ids_json: "[]",
+      created_at: now,
+      updated_at: now,
+    });
+
+    // The old spec-016 tables must be gone — selecting from them raises.
+    await expect(temp.sql.select("SELECT * FROM goal_ladders", [])).rejects.toThrow(
+      /no such table/,
+    );
+    await expect(temp.sql.select("SELECT * FROM ladder_shown_descriptions", [])).rejects.toThrow(
+      /no such table/,
+    );
+
+    await temp.repos.goalLadders.replaceForGoal("goal1", [
+      {
+        id: "f1",
+        goal_id: "goal1",
+        name: "拿破仑",
+        age: 24,
+        era: "18世纪末",
+        occupation: "军官",
+        self_line: "土伦港的炮位还记得我",
+        is_famous: 1,
+        rank: 450,
+        position: 0,
+        generation: 1,
+        user_rank_at_generation: 600,
+        chat_profile_json: JSON.stringify({
+          personality: "果断",
+          activeHours: "清晨活跃",
+          replyStyle: "简短命令式",
+        }),
+        created_at: now,
+      },
+    ]);
+    await temp.repos.goalLadders.recordShownIdentities("goal1", ["拿破仑|18世纪末"]);
+
+    const rows = await temp.repos.goalLadders.listForGoal("goal1");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.name).toBe("拿破仑");
+    expect(rows[0]?.is_famous).toBe(1);
+
+    const shown = await temp.repos.goalLadders.listShownIdentities("goal1");
+    expect(shown.map((row) => row.identity)).toEqual(["拿破仑|18世纪末"]);
+
+    // The never-repeat backstop's real UNIQUE constraint, not just the fake's simulation.
+    await expect(
+      temp.repos.goalLadders.recordShownIdentities("goal1", ["拿破仑|18世纪末"]),
+    ).rejects.toThrow(/UNIQUE constraint failed/);
   });
 });

@@ -1,10 +1,10 @@
 /**
- * Purpose: SQL statements for the pseudo-ranked ladder tables (spec 016) — one goal's current
- * generation of 5 reference figures, and the permanent never-repeat backstop of every
- * figure_desc ever shown for that goal.
+ * Purpose: SQL statements for the ranked-ladder tables (spec 018) — one goal's current
+ * generation of reference figures (goal_ladders_v2), plus the permanent never-repeat backstop
+ * of every `${name}|${era}` identity ever shown for that goal (ladder_shown_identities).
  * Main exports: createGoalLaddersRepo factory.
  */
-import type { GoalLadderRow, LadderShownDescriptionRow, SqlClient } from "./types";
+import type { GoalLadderRow, LadderShownIdentityRow, SqlClient } from "./types";
 
 export function createGoalLaddersRepo(sql: SqlClient) {
   return {
@@ -12,21 +12,27 @@ export function createGoalLaddersRepo(sql: SqlClient) {
      * then inserts the new ones. Callers pass a freshly-generated (or reused/unchanged) set —
      * this never partially updates a generation. */
     async replaceForGoal(goalId: string, rows: readonly GoalLadderRow[]): Promise<void> {
-      await sql.execute("DELETE FROM goal_ladders WHERE goal_id = ?", [goalId]);
+      await sql.execute("DELETE FROM goal_ladders_v2 WHERE goal_id = ?", [goalId]);
       for (const row of rows) {
         await sql.execute(
-          `INSERT INTO goal_ladders
-             (id, goal_id, figure_desc, figure_note, milestone, position, generation, user_milestone_at_generation, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO goal_ladders_v2
+             (id, goal_id, name, age, era, occupation, self_line, is_famous, rank, position,
+              generation, user_rank_at_generation, chat_profile_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             row.id,
             row.goal_id,
-            row.figure_desc,
-            row.figure_note,
-            row.milestone,
+            row.name,
+            row.age,
+            row.era,
+            row.occupation,
+            row.self_line,
+            row.is_famous,
+            row.rank,
             row.position,
             row.generation,
-            row.user_milestone_at_generation,
+            row.user_rank_at_generation,
+            row.chat_profile_json,
             row.created_at,
           ],
         );
@@ -36,24 +42,25 @@ export function createGoalLaddersRepo(sql: SqlClient) {
      * by the repo, so a reused ladder stays byte-stable. */
     async listForGoal(goalId: string): Promise<GoalLadderRow[]> {
       return sql.select<GoalLadderRow>(
-        "SELECT * FROM goal_ladders WHERE goal_id = ? ORDER BY position ASC",
+        "SELECT * FROM goal_ladders_v2 WHERE goal_id = ? ORDER BY position ASC",
         [goalId],
       );
     },
-    /** Every figure_desc ever shown for this goal — the forbidden list a new generation must
-     * respect. Plain INSERT (never OR IGNORE): a genuine collision means a description that
-     * should have been forbidden slipped through, and that must raise, not silently pass. */
-    async recordShownDescriptions(goalId: string, figureDescs: readonly string[]): Promise<void> {
-      for (const figureDesc of figureDescs) {
-        await sql.execute(
-          "INSERT INTO ladder_shown_descriptions (goal_id, figure_desc) VALUES (?, ?)",
-          [goalId, figureDesc],
-        );
+    /** Every `${name}|${era}` identity ever shown for this goal — the forbidden list a new
+     * generation must respect. Plain INSERT (never OR IGNORE): a genuine collision means an
+     * identity that should have been forbidden slipped through, and that must raise, not
+     * silently pass. */
+    async recordShownIdentities(goalId: string, identities: readonly string[]): Promise<void> {
+      for (const identity of identities) {
+        await sql.execute("INSERT INTO ladder_shown_identities (goal_id, identity) VALUES (?, ?)", [
+          goalId,
+          identity,
+        ]);
       }
     },
-    async listShownDescriptions(goalId: string): Promise<LadderShownDescriptionRow[]> {
-      return sql.select<LadderShownDescriptionRow>(
-        "SELECT * FROM ladder_shown_descriptions WHERE goal_id = ?",
+    async listShownIdentities(goalId: string): Promise<LadderShownIdentityRow[]> {
+      return sql.select<LadderShownIdentityRow>(
+        "SELECT * FROM ladder_shown_identities WHERE goal_id = ?",
         [goalId],
       );
     },

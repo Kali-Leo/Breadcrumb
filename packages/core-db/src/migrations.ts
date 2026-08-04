@@ -294,6 +294,47 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Ranked-ladder v3 (spec 018): the board is rebuilt around actual rank numbers and
+    // player-shaped personas (name/age/era/occupation/selfLine/chatProfile) instead of
+    // milestone-tagged one-liners. goal_ladders and ladder_shown_descriptions are DROPPED
+    // rather than migrated — a board is explicitly ephemeral (Leo's semantics: only the
+    // current generation and its never-repeat history matter, never a historical record), and
+    // there is no lossless way to turn a figure_desc one-liner into a structured identity.
+    // This is a one-time reset of the anti-repeat history at this schema break; acceptable
+    // because the backstop's only job is avoiding repeats going forward, not preserving the
+    // past. The new backstop keys on `${name}|${era}` (ladder_shown_identities) instead of the
+    // old free-text figure_desc.
+    id: "0014_goal_ladders_v2",
+    statements: [
+      `DROP TABLE IF EXISTS ladder_shown_descriptions;`,
+      `DROP TABLE IF EXISTS goal_ladders;`,
+      `CREATE TABLE goal_ladders_v2 (
+        id TEXT PRIMARY KEY,
+        goal_id TEXT NOT NULL REFERENCES goals(id),
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        era TEXT NOT NULL,
+        occupation TEXT NOT NULL,
+        self_line TEXT NOT NULL,
+        is_famous INTEGER NOT NULL,
+        rank INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        generation INTEGER NOT NULL,
+        user_rank_at_generation INTEGER NOT NULL,
+        chat_profile_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_goal_ladders_v2_goal ON goal_ladders_v2(goal_id);`,
+      // The never-repeat backstop (spec 018 #3): a plain INSERT (never OR IGNORE) so a real
+      // identity collision for the same goal raises loudly instead of silently reusing it.
+      `CREATE TABLE ladder_shown_identities (
+        goal_id TEXT NOT NULL REFERENCES goals(id),
+        identity TEXT NOT NULL,
+        PRIMARY KEY (goal_id, identity)
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
