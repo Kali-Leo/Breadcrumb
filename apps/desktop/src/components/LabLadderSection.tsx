@@ -9,10 +9,13 @@
  */
 import { useEffect } from "react";
 import type { LadderDisplayRow } from "../lib/ladderActions";
-import { rankProgressFraction } from "../lib/ladderActions";
 import { useLadderStore } from "../stores/ladderStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
+
+/** How often the mounted section quietly checks whether the board's randomized expiry has
+ * passed, pre-generating it so the next actual view is instant (spec 020 §2). */
+const PREGENERATE_CHECK_MS = 30 * 60 * 1000;
 
 function LadderSkeleton() {
   return (
@@ -24,19 +27,20 @@ function LadderSkeleton() {
   );
 }
 
-/** "第 N 名" large + a thin progress-to-next-rank bar — no percentage label, no jargon, just
- * a log-feel sliver that visibly slows down at higher ranks (rankProgressFraction). */
-function LadderHeader({ userRank, progress }: { userRank: number; progress: number }) {
-  const fraction = rankProgressFraction(progress, userRank);
+/** "第 N 名" large + a plain up/down line since the last look (spec 020) — no progress bar
+ * (a bar implies a top that equals completion, which this number deliberately never claims),
+ * no praise, no alarm color on a slip. */
+function LadderHeader({ userRank, rankDelta }: { userRank: number; rankDelta: number | null }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <p className="text-2xl font-semibold text-stone-700">第 {userRank.toLocaleString()} 名</p>
-      <div className="h-1.5 overflow-hidden rounded bg-stone-100">
-        <div
-          className="h-full rounded bg-amber-500 transition-[width]"
-          style={{ width: `${fraction * 100}%` }}
-        />
-      </div>
+      {rankDelta !== null && rankDelta !== 0 && (
+        <p className="text-stone-400">
+          {rankDelta > 0
+            ? `比上次进了 ${rankDelta.toLocaleString()} 名`
+            : `比上次退了 ${Math.abs(rankDelta).toLocaleString()} 名`}
+        </p>
+      )}
     </div>
   );
 }
@@ -96,6 +100,8 @@ export function LabLadderSection() {
   const failed = useLadderStore((state) => state.failed);
   const viewLadder = useLadderStore((state) => state.viewLadder);
 
+  const pregenerateIfDue = useLadderStore((state) => state.pregenerateIfDue);
+
   // Evaluated once per section mount per goal: selectedGoalId/learningMode are the only
   // triggers, so the frequent store recomputes (mastery/edges/interest events) that don't
   // change either one never re-fire this — no refresh loop.
@@ -103,6 +109,14 @@ export function LabLadderSection() {
     if (learningMode !== "ranked" || selectedGoalId === null) return;
     void viewLadder(selectedGoalId);
   }, [learningMode, selectedGoalId, viewLadder]);
+
+  // Quiet background cadence while the section stays mounted: when the board's randomized
+  // expiry passes, pre-generate it so the next actual look is instant (spec 020 §2).
+  useEffect(() => {
+    if (learningMode !== "ranked" || selectedGoalId === null) return;
+    const timer = setInterval(() => void pregenerateIfDue(selectedGoalId), PREGENERATE_CHECK_MS);
+    return () => clearInterval(timer);
+  }, [learningMode, selectedGoalId, pregenerateIfDue]);
 
   if (learningMode !== "ranked") return null;
 
@@ -126,7 +140,7 @@ export function LabLadderSection() {
           ladder &&
           ladder.goalId === selectedGoalId && (
             <div className="space-y-2">
-              <LadderHeader userRank={ladder.userRank} progress={ladder.progress} />
+              <LadderHeader userRank={ladder.userRank} rankDelta={ladder.rankDelta} />
               <ul className="space-y-0.5">
                 {ladder.rows.map((row) => (
                   <LadderRow key={`${row.name}-${row.rank}`} row={row} />

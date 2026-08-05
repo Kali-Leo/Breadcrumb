@@ -1,60 +1,56 @@
 /**
- * Purpose: unit tests for planLadderRefresh's four decision paths (fresh / reuse /
- * promote-regenerate / demote-reuse-slide, plus the symmetric demote-regenerate edge) and for
- * assembleLadderSlots's six-row ordering.
+ * Purpose: unit tests for the ranked ladder's refresh cadence (spec 020) — due/not-due
+ * decisions, the seeded randomized expiry window, and six-row board assembly ordering.
  */
 import { describe, expect, it } from "vitest";
-import { assembleLadderSlots, planLadderRefresh, type StoredLadder } from "./ladderRefresh";
-import { neighborRanks } from "./rankEngine";
+import {
+  assembleLadderSlots,
+  isRefreshDue,
+  LADDER_REFRESH_MAX_HOURS,
+  LADDER_REFRESH_MIN_HOURS,
+  nextRefreshAtIso,
+} from "./ladderRefresh";
 
-function ladder(userRankAtGeneration: number): StoredLadder {
-  return { userRankAtGeneration };
-}
+const NOW = "2026-08-05T12:00:00.000Z";
 
-describe("planLadderRefresh", () => {
-  it("path: fresh — generates when there is no stored ladder", () => {
-    expect(planLadderRefresh(null, 1000)).toBe("generate");
+describe("isRefreshDue", () => {
+  it("is due with no schedule at all (fresh goal)", () => {
+    expect(isRefreshDue(null, NOW)).toBe(true);
   });
 
-  it("path: reuse — an unchanged or barely-moved rank stays within the anchored band", () => {
-    const stored = ladder(1000);
-    const { above, below } = neighborRanks(1000);
-    expect(planLadderRefresh(stored, 1000)).toBe("reuse");
-    // Right at the 2nd-neighbor boundaries (inclusive) still counts as reuse.
-    expect(planLadderRefresh(stored, above[1])).toBe("reuse");
-    expect(planLadderRefresh(stored, below[1])).toBe("reuse");
+  it("is due once the scheduled moment has passed (or is exactly now)", () => {
+    expect(isRefreshDue("2026-08-05T11:59:59.000Z", NOW)).toBe(true);
+    expect(isRefreshDue(NOW, NOW)).toBe(true);
   });
 
-  it("path: promote-regenerate — improving past the 2nd above-neighbor regenerates", () => {
-    const stored = ladder(1000);
-    const { above } = neighborRanks(1000);
-    expect(planLadderRefresh(stored, (above[1] as number) - 1)).toBe("generate");
-    expect(planLadderRefresh(stored, 1)).toBe("generate");
+  it("is not due before the scheduled moment", () => {
+    expect(isRefreshDue("2026-08-05T12:00:01.000Z", NOW)).toBe(false);
+  });
+});
+
+describe("nextRefreshAtIso", () => {
+  it("schedules inside the randomized window", () => {
+    for (const seed of ["g1:1", "g1:2", "g2:1", "g3:7"]) {
+      const at = Date.parse(nextRefreshAtIso(NOW, seed));
+      const hoursAhead = (at - Date.parse(NOW)) / 3_600_000;
+      expect(hoursAhead).toBeGreaterThanOrEqual(LADDER_REFRESH_MIN_HOURS);
+      expect(hoursAhead).toBeLessThanOrEqual(LADDER_REFRESH_MAX_HOURS);
+    }
   });
 
-  it("path: demote-reuse-slide — worsening a bit still reuses, sliding the user's row down", () => {
-    const stored = ladder(1000);
-    const { below } = neighborRanks(1000);
-    const slightlyWorse = 1000 + Math.floor(((below[1] as number) - 1000) / 2);
-    expect(planLadderRefresh(stored, slightlyWorse)).toBe("reuse");
-  });
-
-  it("symmetric edge: demote-regenerate — falling past the 2nd below-neighbor regenerates", () => {
-    const stored = ladder(1000);
-    const { below } = neighborRanks(1000);
-    expect(planLadderRefresh(stored, (below[1] as number) + 1)).toBe("generate");
-  });
-
-  it("is a pure function of its inputs (no hidden state across calls)", () => {
-    const stored = ladder(1000);
-    expect(planLadderRefresh(stored, 1000)).toBe(planLadderRefresh(stored, 1000));
+  it("is deterministic per seed and varies across generations (有长有短)", () => {
+    expect(nextRefreshAtIso(NOW, "g1:1")).toBe(nextRefreshAtIso(NOW, "g1:1"));
+    const stretches = new Set(
+      ["g1:1", "g1:2", "g1:3", "g1:4", "g1:5"].map((seed) => nextRefreshAtIso(NOW, seed)),
+    );
+    expect(stretches.size).toBeGreaterThan(1);
   });
 });
 
 describe("assembleLadderSlots", () => {
-  it("sorts 3 above + user + 2 below ascending by rank, user always at index 3", () => {
-    const slots = assembleLadderSlots([550, 720, 900], 1000, [1150, 1400]);
-    expect(slots.map((slot) => slot.rank)).toEqual([550, 720, 900, 1000, 1150, 1400]);
+  it("sorts 3 above + user + 2 below ascending by rank, user on the 4th row", () => {
+    const slots = assembleLadderSlots([996, 998, 999], 1000, [1002, 1005]);
+    expect(slots.map((slot) => slot.rank)).toEqual([996, 998, 999, 1000, 1002, 1005]);
     expect(slots.findIndex((slot) => slot.isUser)).toBe(3);
   });
 

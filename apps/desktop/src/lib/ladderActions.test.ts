@@ -1,57 +1,60 @@
 /**
- * Purpose: unit tests for the pure ladder helpers — domain-label sampling, row shaping from a
- * validated generation, and the user-row merge/sort for inline display. No LLM/DB involved
- * (requestLadderGeneration is exercised only via typecheck — it's a thin chatJson +
- * recordMeteredCall wrapper mirroring requestGoalMapping).
+ * Purpose: unit tests for the pure ladder helpers (spec 020) — the concrete knowledge
+ * snapshot, figure-row shaping from a validated generation, and the user-row merge/sort for
+ * inline display. No LLM/DB involved (requestLadderGeneration is exercised only via typecheck —
+ * it's a thin chatJson + recordMeteredCall wrapper mirroring requestGoalMapping).
  */
-import type { GoalLadderRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
-import {
-  progressFromRank,
-  rankFromProgress,
-  type ValidatedLadderFigure,
-} from "@breadcrumb/plugin-planner";
+import type { GoalLadderFigureRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
+import type { ValidatedLadderFigure } from "@breadcrumb/plugin-planner";
 import { describe, expect, it } from "vitest";
 import {
+  buildKnowledgeSnapshot,
   buildLadderDisplayRows,
-  buildLadderRows,
-  pickDomainLabelsSample,
-  rankProgressFraction,
+  buildLadderFigureRows,
 } from "./ladderActions";
 
 function node(id: string, label: string): KnowledgeNodeRow {
   return { id, parent_id: null, label, summary: "", kind: "concept", created_at: "t" };
 }
 
-describe("pickDomainLabelsSample", () => {
-  it("only includes goal nodes at or above the lit threshold", () => {
-    const nodes = [node("a", "极限"), node("b", "导数"), node("c", "积分")];
-    const goalMasteryByNode = new Map([
+describe("buildKnowledgeSnapshot", () => {
+  const nodes = [node("a", "极限"), node("b", "导数"), node("c", "积分"), node("d", "级数")];
+
+  it("splits touched vs not-yet items and words freshness plainly", () => {
+    const mastery = new Map([
       ["a", 0.9],
-      ["b", 0.2],
+      ["b", 0.5],
+      ["c", 0.25],
     ]);
-    const sample = pickDomainLabelsSample(["a", "b"], nodes, goalMasteryByNode, 0.85, 10);
-    expect(sample).toEqual(["极限"]);
+    const snapshot = buildKnowledgeSnapshot(["a", "b", "c", "d"], nodes, mastery, 0.45);
+    expect(snapshot.learnedItems).toEqual([
+      { label: "极限", freshness: "熟" },
+      { label: "导数", freshness: "刚学会" },
+      { label: "积分", freshness: "有点生疏" },
+    ]);
+    expect(snapshot.notYetLabels).toEqual(["级数"]);
   });
 
-  it("excludes nodes outside the goal even if lit", () => {
-    const nodes = [node("a", "极限"), node("outside", "无关知识点")];
-    const goalMasteryByNode = new Map([
-      ["a", 0.9],
-      ["outside", 0.9],
+  it("never uses percentages — freshness is one of the three plain words", () => {
+    const mastery = new Map([
+      ["a", 0.83],
+      ["b", 0.46],
+      ["c", 0.31],
     ]);
-    const sample = pickDomainLabelsSample(["a"], nodes, goalMasteryByNode, 0.85, 10);
-    expect(sample).toEqual(["极限"]);
+    const snapshot = buildKnowledgeSnapshot(["a", "b", "c"], nodes, mastery, 0.45);
+    for (const item of snapshot.learnedItems) {
+      expect(["熟", "刚学会", "有点生疏"]).toContain(item.freshness);
+      expect(item.freshness).not.toMatch(/[%％\d]/);
+    }
   });
 
-  it("caps at the given limit", () => {
-    const nodes = ["a", "b", "c"].map((id) => node(id, id));
-    const goalMasteryByNode = new Map([
-      ["a", 0.9],
-      ["b", 0.9],
-      ["c", 0.9],
-    ]);
-    const sample = pickDomainLabelsSample(["a", "b", "c"], nodes, goalMasteryByNode, 0.85, 2);
-    expect(sample).toHaveLength(2);
+  it("caps both lists and skips ids without a known node", () => {
+    const manyIds = Array.from({ length: 30 }, (_, index) => `n${index}`);
+    const manyNodes = manyIds.map((id) => node(id, `点${id}`));
+    const touched = new Map(manyIds.slice(0, 20).map((id) => [id, 0.9]));
+    const snapshot = buildKnowledgeSnapshot([...manyIds, "ghost"], manyNodes, touched, 0.45);
+    expect(snapshot.learnedItems.length).toBeLessThanOrEqual(12);
+    expect(snapshot.notYetLabels.length).toBeLessThanOrEqual(8);
   });
 });
 
@@ -62,24 +65,22 @@ function validatedFigure(overrides: Partial<ValidatedLadderFigure> = {}): Valida
     era: "18世纪末",
     occupation: "军官",
     selfLine: "土伦港的炮位还记得我",
-    isFamous: true,
     chatProfile: { personality: "果断", activeHours: "清晨活跃", replyStyle: "简短命令式" },
     position: 0,
     ...overrides,
   };
 }
 
-describe("buildLadderRows", () => {
-  it("stamps every row with the same generation and user rank, anchored to its slot rank", () => {
+describe("buildLadderFigureRows", () => {
+  it("stamps every row with the same generation, anchored to its slot rank", () => {
     const validated = [
       validatedFigure({ name: "a", position: 0 }),
-      validatedFigure({ name: "b", position: 1, isFamous: false }),
+      validatedFigure({ name: "b", position: 1 }),
     ];
     let counter = 0;
-    const rows = buildLadderRows(
+    const rows = buildLadderFigureRows(
       "g1",
       3,
-      1000,
       validated,
       [550, 720, 900, 1150, 1400],
       () => `id-${++counter}`,
@@ -89,11 +90,10 @@ describe("buildLadderRows", () => {
     for (const row of rows) {
       expect(row.goal_id).toBe("g1");
       expect(row.generation).toBe(3);
-      expect(row.user_rank_at_generation).toBe(1000);
       expect(row.created_at).toBe("t0");
     }
-    expect(rows[0]).toMatchObject({ name: "a", rank: 550, is_famous: 1, position: 0 });
-    expect(rows[1]).toMatchObject({ name: "b", rank: 720, is_famous: 0, position: 1 });
+    expect(rows[0]).toMatchObject({ name: "a", rank: 550, position: 0 });
+    expect(rows[1]).toMatchObject({ name: "b", rank: 720, position: 1 });
     expect(JSON.parse(rows[0]?.chat_profile_json ?? "{}")).toEqual({
       personality: "果断",
       activeHours: "清晨活跃",
@@ -103,7 +103,7 @@ describe("buildLadderRows", () => {
 });
 
 describe("buildLadderDisplayRows", () => {
-  function figureRow(overrides: Partial<GoalLadderRow> = {}) {
+  function figureRow(overrides: Partial<GoalLadderFigureRow> = {}) {
     return {
       name: "figure",
       age: 30,
@@ -136,45 +136,5 @@ describe("buildLadderDisplayRows", () => {
     expect(userRow?.occupation).toBeNull();
     expect(userRow?.selfLine).toBeNull();
     expect(userRow?.name).toBe("你");
-  });
-});
-
-describe("rankProgressFraction", () => {
-  it("is 0 right at the bottom of the current rank's bracket and 1 right at the top", () => {
-    const userRank = 500;
-    const lower = progressFromRank(userRank);
-    const upper = progressFromRank(userRank - 1);
-    expect(rankProgressFraction(lower, userRank)).toBeCloseTo(0, 5);
-    expect(rankProgressFraction(upper, userRank)).toBeCloseTo(1, 5);
-  });
-
-  it("rises monotonically within a rank bracket", () => {
-    const userRank = 500;
-    const lower = progressFromRank(userRank);
-    const upper = progressFromRank(userRank - 1);
-    const mid = (lower + upper) / 2;
-    expect(rankProgressFraction(mid, userRank)).toBeGreaterThan(
-      rankProgressFraction(lower, userRank),
-    );
-    expect(rankProgressFraction(upper, userRank)).toBeGreaterThan(
-      rankProgressFraction(mid, userRank),
-    );
-  });
-
-  it("never returns outside [0,1] even for out-of-bracket progress", () => {
-    expect(rankProgressFraction(0, 500)).toBeGreaterThanOrEqual(0);
-    expect(rankProgressFraction(1000, 500)).toBeLessThanOrEqual(1);
-  });
-
-  it("is maxed out at rank 1 (no better rank to progress toward)", () => {
-    expect(rankProgressFraction(99, 1)).toBe(1);
-  });
-
-  it("agrees with rankFromProgress: a progress value mapping to a given rank falls in [0,1] for that rank", () => {
-    const m = 55;
-    const rank = rankFromProgress(m);
-    const fraction = rankProgressFraction(m, rank);
-    expect(fraction).toBeGreaterThanOrEqual(0);
-    expect(fraction).toBeLessThanOrEqual(1);
   });
 });

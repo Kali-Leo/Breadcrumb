@@ -1,13 +1,12 @@
 /**
- * Purpose: unit tests for the ranked-ladder persona generation LLM contract — prompt
- * construction (domain sample, forbidden identity list), validateLadderGeneration's
- * AI-reveal tripwire, forbidden/within-batch identity dedup, and minimum-valid-figures
- * failure.
+ * Purpose: unit tests for the ranked-ladder persona generation LLM contract (spec 020) —
+ * prompt construction from the learner's concrete knowledge state, the all-deceased-famous
+ * rules, validateLadderGeneration's AI-reveal tripwire, within-batch identity dedup, and
+ * minimum-valid-figures failure.
  */
 import { describe, expect, it } from "vitest";
 import {
   buildLadderGenerationMessages,
-  figureIdentity,
   type LadderFigureProposal,
   type LadderGenerationResult,
   MIN_VALID_LADDER_FIGURES,
@@ -21,7 +20,6 @@ function figure(overrides: Partial<LadderFigureProposal> = {}): LadderFigureProp
     era: "18世纪末",
     occupation: "军官",
     selfLine: "土伦港的炮位还记得我",
-    isFamous: "名人",
     chatProfile: { personality: "果断", activeHours: "清晨活跃", replyStyle: "简短命令式" },
     ...overrides,
   };
@@ -32,49 +30,51 @@ function resultOf(figures: LadderFigureProposal[]): LadderGenerationResult {
 }
 
 describe("buildLadderGenerationMessages", () => {
-  it("embeds the goal title, domain sample and forbidden identity list", () => {
+  it("embeds the goal title and the learner's concrete knowledge state with freshness", () => {
     const messages = buildLadderGenerationMessages({
       goalTitle: "通过考研数学",
-      domainLabelsSample: ["极限", "导数"],
-      forbiddenIdentities: ["拿破仑|18世纪末"],
+      learnedItems: [
+        { label: "极限", freshness: "熟" },
+        { label: "导数", freshness: "有点生疏" },
+      ],
+      notYetLabels: ["级数"],
     });
     expect(messages).toHaveLength(2);
     expect(messages[1]?.content).toContain("通过考研数学");
-    expect(messages[1]?.content).toContain("极限");
-    expect(messages[1]?.content).toContain("拿破仑|18世纪末");
+    expect(messages[1]?.content).toContain("- 极限（熟）");
+    expect(messages[1]?.content).toContain("- 导数（有点生疏）");
+    expect(messages[1]?.content).toContain("- 级数");
   });
 
-  it("renders empty domain sample and forbidden list as placeholders, not crashing", () => {
+  it("renders empty knowledge lists as placeholders, not crashing", () => {
     const messages = buildLadderGenerationMessages({
       goalTitle: "x",
-      domainLabelsSample: [],
-      forbiddenIdentities: [],
+      learnedItems: [],
+      notYetLabels: [],
     });
-    expect(messages[1]?.content).toContain("（暂无样例）");
-    expect(messages[1]?.content).toContain("（无）");
+    expect(messages[1]?.content).toContain("（还没接触过任何知识点）");
+    expect(messages[1]?.content).toContain("（暂无）");
   });
 
-  it("asks for 2 named figures plus 3 ordinary people, each described only in-character", () => {
+  it("states the all-deceased-famous rules, concrete matching and the selfLine method — with no percentage or progress language", () => {
     const messages = buildLadderGenerationMessages({
       goalTitle: "x",
-      domainLabelsSample: [],
-      forbiddenIdentities: [],
+      learnedItems: [],
+      notYetLabels: [],
     });
     const systemPrompt = messages[0]?.content ?? "";
-    expect(systemPrompt).toContain("2 位真实存在过的名人");
-    expect(systemPrompt).toContain("3 位虚构的普通人");
-    expect(systemPrompt).toContain("把名字留在悬念里");
-    expect(systemPrompt).toContain("生活气");
-    // The AI-reveal tripwire is deliberately a code-level check, never prompt-stuffed: the
-    // prompt must never instruct the model about hiding/avoiding "AI/生成/模拟" wording.
+    expect(systemPrompt).toContain("全部必须是已经去世的真实名人");
+    expect(systemPrompt).toContain("不必与这个知识范围同领域");
+    expect(systemPrompt).toContain("巅峰年龄");
+    expect(systemPrompt).toContain("真实姓名");
+    expect(systemPrompt).toContain("略多一点");
+    expect(systemPrompt).toContain("略少一点");
+    expect(systemPrompt).toContain("如果一定要这个人写一个主页签名，以他的性格，他会写什么");
+    // The rank number is a pure incentive — no completion semantics may leak into generation.
+    expect(systemPrompt).not.toMatch(/[%％]|百分|进度|掌握比/);
+    // The AI-reveal tripwire is deliberately a code-level check, never prompt-stuffed.
     expect(systemPrompt).not.toMatch(/不(要|能|得|可).{0,6}(AI|生成|模拟)/);
     expect(systemPrompt).not.toContain("禁止");
-  });
-});
-
-describe("figureIdentity", () => {
-  it("joins name and era with a pipe", () => {
-    expect(figureIdentity({ name: "拿破仑", era: "18世纪末" })).toBe("拿破仑|18世纪末");
   });
 });
 
@@ -87,32 +87,9 @@ describe("validateLadderGeneration", () => {
       figure({ name: "d", era: "e4" }),
       figure({ name: "e", era: "e5" }),
     ]);
-    const validated = validateLadderGeneration(result, []);
+    const validated = validateLadderGeneration(result);
     expect(validated?.map((f) => f.name)).toEqual(["a", "b", "c", "d", "e"]);
     expect(validated?.map((f) => f.position)).toEqual([0, 1, 2, 3, 4]);
-  });
-
-  it("maps isFamous from the Chinese enum to a boolean", () => {
-    const result = resultOf([
-      figure({ name: "a", era: "e1", isFamous: "名人" }),
-      figure({ name: "b", era: "e2", isFamous: "普通人" }),
-      figure({ name: "c", era: "e3", isFamous: "普通人" }),
-    ]);
-    const validated = validateLadderGeneration(result, []);
-    expect(validated?.find((f) => f.name === "a")?.isFamous).toBe(true);
-    expect(validated?.find((f) => f.name === "b")?.isFamous).toBe(false);
-  });
-
-  it("drops a figure whose identity is in the forbidden list", () => {
-    const result = resultOf([
-      figure({ name: "a", era: "e1" }),
-      figure({ name: "b", era: "e2" }),
-      figure({ name: "c", era: "e3" }),
-      figure({ name: "d", era: "e4" }),
-    ]);
-    const validated = validateLadderGeneration(result, ["b|e2"]);
-    expect(validated?.map((f) => f.name)).not.toContain("b");
-    expect(validated).toHaveLength(3);
   });
 
   it("dedupes figures that repeat the same name+era within the batch, keeping the first", () => {
@@ -122,9 +99,19 @@ describe("validateLadderGeneration", () => {
       figure({ name: "b", era: "e2" }),
       figure({ name: "c", era: "e3" }),
     ]);
-    const validated = validateLadderGeneration(result, []);
+    const validated = validateLadderGeneration(result);
     expect(validated).toHaveLength(3);
     expect(validated?.find((f) => f.name === "a")?.selfLine).toBe("first");
+  });
+
+  it("allows the same person at a different era/age — that is a different description", () => {
+    const result = resultOf([
+      figure({ name: "拿破仑", era: "18世纪末", age: 24 }),
+      figure({ name: "拿破仑", era: "19世纪初", age: 40 }),
+      figure({ name: "b", era: "e2" }),
+    ]);
+    const validated = validateLadderGeneration(result);
+    expect(validated).toHaveLength(3);
   });
 
   it("drops any figure whose selfLine trips the AI-reveal tripwire", () => {
@@ -135,32 +122,18 @@ describe("validateLadderGeneration", () => {
       figure({ name: "d", era: "e4", selfLine: "另一句正常的话" }),
       figure({ name: "e", era: "e5", selfLine: "再一句正常的话" }),
     ]);
-    const validated = validateLadderGeneration(result, []);
+    const validated = validateLadderGeneration(result);
     expect(validated?.map((f) => f.name)).toEqual(["c", "d", "e"]);
   });
 
   it(`treats the whole generation as failed (null) once fewer than ${MIN_VALID_LADDER_FIGURES} figures survive`, () => {
     const result = resultOf([
-      figure({ name: "a", era: "e1" }),
-      figure({ name: "b", era: "e2" }),
-      figure({ name: "c", era: "e3" }),
+      figure({ name: "a", era: "e1", selfLine: "AI在此" }),
+      figure({ name: "b", era: "e2", selfLine: "全是模拟" }),
+      figure({ name: "c", era: "e3", selfLine: "生成中" }),
       figure({ name: "d", era: "e4" }),
       figure({ name: "e", era: "e5" }),
     ]);
-    // Forbid all but 2 -> below MIN_VALID_LADDER_FIGURES.
-    const validated = validateLadderGeneration(result, ["a|e1", "b|e2", "c|e3"]);
-    expect(validated).toBeNull();
-  });
-
-  it("succeeds at exactly the minimum valid figure count", () => {
-    const result = resultOf([
-      figure({ name: "a", era: "e1" }),
-      figure({ name: "b", era: "e2" }),
-      figure({ name: "c", era: "e3" }),
-      figure({ name: "d", era: "e4" }),
-      figure({ name: "e", era: "e5" }),
-    ]);
-    const validated = validateLadderGeneration(result, ["a|e1", "b|e2"]);
-    expect(validated).toHaveLength(MIN_VALID_LADDER_FIGURES);
+    expect(validateLadderGeneration(result)).toBeNull();
   });
 });

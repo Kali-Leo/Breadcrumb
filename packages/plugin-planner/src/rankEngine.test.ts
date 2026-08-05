@@ -1,139 +1,158 @@
 /**
- * Purpose: unit tests for the rank engine's three curve properties (monotonicity, determinism,
- * diminishing marginal rank gain) plus neighbor-rank anchoring (spec 018 #1-#2).
+ * Purpose: unit tests for the pure-incentive rank engine (spec 020) — seeded start rank,
+ * the fuel curve's three properties (monotone, unreachable top, diminishing steps), the
+ * shown-rank rules (never worse while learning, bounded slip after absence), and tight
+ * seeded neighbor ranks.
  */
 import { describe, expect, it } from "vitest";
 import {
   domainFuel,
   goalDomainClosure,
   neighborRanks,
-  progressFromFuel,
-  progressFromRank,
-  rankFromProgress,
+  RANK_FLOOR,
+  RANK_NEIGHBOR_GAP_MAX,
+  RANK_SLIP_MAX_SHARE,
+  RANK_START_MIN,
+  RANK_START_RANGE,
+  rankFromFuel,
+  resolveShownRank,
+  startRank,
 } from "./rankEngine";
 
-describe("domainFuel / progressFromFuel monotonicity", () => {
-  it("grows with more mastery over the closure set", () => {
-    const lowFuel = domainFuel(
+describe("domainFuel", () => {
+  it("grows with more mastery over the closure set and is 0 when empty", () => {
+    const low = domainFuel(
       ["a", "b"],
       new Map([
         ["a", 0.2],
         ["b", 0.1],
       ]),
     );
-    const highFuel = domainFuel(
+    const high = domainFuel(
       ["a", "b"],
       new Map([
         ["a", 0.9],
         ["b", 0.8],
       ]),
     );
-    expect(highFuel).toBeGreaterThan(lowFuel);
-  });
-
-  it("is 0 for an empty closure and rises strictly with fuel", () => {
-    expect(progressFromFuel(0, 10)).toBe(0);
-    const closureSize = 10;
-    let previous = 0;
-    for (const fuel of [1, 3, 6, 10, 20, 50]) {
-      const m = progressFromFuel(fuel, closureSize);
-      expect(m).toBeGreaterThan(previous);
-      previous = m;
-    }
-  });
-
-  it("mathematically approaches but never has a formula-level cap at 100", () => {
-    // The curve is a true asymptote (100 x (1 - e^-x)) that only reaches exactly 100 once
-    // double-precision underflow makes e^-x indistinguishable from 0 — the formula itself has
-    // no ceiling. Moderate fuel stays visibly below 100, which is what "no upper bound, no
-    // finish line" (spec 018 #1) actually cares about: continued progress is always possible.
-    expect(progressFromFuel(30, 10)).toBeLessThan(100);
-    expect(progressFromFuel(300, 10)).toBeGreaterThan(progressFromFuel(30, 10));
+    expect(high).toBeGreaterThan(low);
+    expect(domainFuel([], new Map())).toBe(0);
   });
 });
 
-describe("rankFromProgress monotonicity, determinism and clamping", () => {
-  it("strictly decreases (better rank) as m rises", () => {
+describe("startRank", () => {
+  it("is deterministic per goal and varies across goals", () => {
+    expect(startRank("goal-1")).toBe(startRank("goal-1"));
+    const values = new Set(["g1", "g2", "g3", "g4", "g5"].map((id) => startRank(id)));
+    expect(values.size).toBeGreaterThan(1);
+  });
+
+  it("stays inside the window and never lands on a round thousand", () => {
+    for (const id of ["a", "b", "c", "d", "e", "f", "goal-42"]) {
+      const value = startRank(id);
+      expect(value).toBeGreaterThanOrEqual(RANK_START_MIN);
+      expect(value).toBeLessThanOrEqual(RANK_START_MIN + RANK_START_RANGE + 7);
+      expect(value % 1000).not.toBe(0);
+    }
+  });
+});
+
+describe("rankFromFuel", () => {
+  const start = 137_483;
+
+  it("strictly improves (smaller number) as fuel rises, from exactly the start at zero fuel", () => {
+    expect(rankFromFuel(0, start)).toBe(start);
     let previous = Infinity;
-    for (const m of [0, 10, 30, 50, 70, 90, 99]) {
-      const rank = rankFromProgress(m);
+    for (const fuel of [1, 3, 8, 20, 50, 120]) {
+      const rank = rankFromFuel(fuel, start);
       expect(rank).toBeLessThan(previous);
       previous = rank;
     }
   });
 
-  it("is deterministic — same m always yields the same rank", () => {
-    expect(rankFromProgress(42.5)).toBe(rankFromProgress(42.5));
-    expect(rankFromProgress(0)).toBe(rankFromProgress(0));
+  it("never reaches rank 1 — the top is unclaimable at any fuel", () => {
+    for (const fuel of [0, 10, 100, 1_000, 100_000]) {
+      expect(rankFromFuel(fuel, start)).toBeGreaterThanOrEqual(RANK_FLOOR);
+    }
   });
 
-  it("never returns below 1", () => {
-    expect(rankFromProgress(100)).toBeGreaterThanOrEqual(1);
-    expect(rankFromProgress(1000)).toBeGreaterThanOrEqual(1);
+  it("advances by smaller steps per unit of fuel the closer it is to the top (Leo's 越靠近1越慢)", () => {
+    const earlyStep = rankFromFuel(0, start) - rankFromFuel(5, start);
+    const lateStep = rankFromFuel(100, start) - rankFromFuel(105, start);
+    expect(earlyStep).toBeGreaterThan(lateStep * 10);
   });
 
-  it("returns R0 (the worst rank) at m=0", () => {
-    expect(rankFromProgress(0)).toBe(100_000);
-  });
-});
-
-describe("rankFromProgress diminishing marginal gain", () => {
-  it("moves ranks much faster per unit m early on than late", () => {
-    const earlyDelta = rankFromProgress(10) - rankFromProgress(11);
-    const lateDelta = rankFromProgress(90) - rankFromProgress(91);
-    expect(earlyDelta).toBeGreaterThan(0);
-    expect(lateDelta).toBeGreaterThanOrEqual(0);
-    expect(earlyDelta).toBeGreaterThan(lateDelta * 10);
+  it("is deterministic and never worse than the start rank", () => {
+    expect(rankFromFuel(4.2, start)).toBe(rankFromFuel(4.2, start));
+    expect(rankFromFuel(-3, start)).toBeLessThanOrEqual(start);
   });
 });
 
-describe("progressFromRank inverse curve", () => {
-  it("round-trips through rankFromProgress for interior values", () => {
-    const m = 55;
-    const rank = rankFromProgress(m);
-    // The ceil in rankFromProgress means the inverse only approximately recovers m — assert
-    // it lands within a small tolerance rather than exact equality.
-    expect(progressFromRank(rank)).toBeGreaterThan(m - 1);
-    expect(progressFromRank(rank)).toBeLessThanOrEqual(m + 1);
+describe("resolveShownRank", () => {
+  const start = 137_483;
+
+  it("shows the raw curve value on the first ever view", () => {
+    expect(resolveShownRank(5, start, null)).toBe(rankFromFuel(5, start));
   });
 
-  it("maps rank 1 to m=100 and rank R0 to m=0", () => {
-    expect(progressFromRank(1)).toBeCloseTo(100, 5);
-    expect(progressFromRank(100_000)).toBeCloseTo(0, 5);
+  it("never worsens while the learner keeps learning (fuel did not drop)", () => {
+    const before = resolveShownRank(5, start, null);
+    const after = resolveShownRank(5.4, start, { lastShownRank: before, lastViewFuel: 5 });
+    expect(after).toBeLessThanOrEqual(before);
+    const idle = resolveShownRank(5, start, { lastShownRank: before, lastViewFuel: 5 });
+    expect(idle).toBe(before);
+  });
+
+  it("slips back after a fuel drop, but by at most the bounded share per view", () => {
+    const lastShownRank = rankFromFuel(20, start);
+    const slipped = resolveShownRank(2, start, { lastShownRank, lastViewFuel: 20 });
+    expect(slipped).toBeGreaterThan(lastShownRank);
+    expect(slipped).toBeLessThanOrEqual(Math.round(lastShownRank * (1 + RANK_SLIP_MAX_SHARE)));
+    expect(slipped).toBeLessThanOrEqual(start);
+  });
+
+  it("a tiny fuel drop slips by the curve's own amount when that is within the bound", () => {
+    const lastShownRank = rankFromFuel(20, start);
+    const slipped = resolveShownRank(19.8, start, { lastShownRank, lastViewFuel: 20 });
+    expect(slipped).toBe(rankFromFuel(19.8, start));
   });
 });
 
 describe("neighborRanks", () => {
-  it("keeps the user's rank strictly between the above and below neighbors", () => {
-    const userRank = 1000;
-    const { above, below } = neighborRanks(userRank);
-    for (const rank of above) expect(rank).toBeLessThan(userRank);
-    for (const rank of below) expect(rank).toBeGreaterThan(userRank);
+  it("returns 3 tight above and 2 tight below, every gap within 1..RANK_NEIGHBOR_GAP_MAX", () => {
+    const userRank = 120_431;
+    const { above, below } = neighborRanks(userRank, "goal-1:3");
+    expect(above).toHaveLength(3);
+    expect(below).toHaveLength(2);
+    const ordered = [...above, userRank, ...below];
+    for (let i = 1; i < ordered.length; i++) {
+      const gap = (ordered[i] as number) - (ordered[i - 1] as number);
+      expect(gap).toBeGreaterThanOrEqual(1);
+      expect(gap).toBeLessThanOrEqual(RANK_NEIGHBOR_GAP_MAX);
+    }
+    expect(new Set(ordered).size).toBe(6);
   });
 
-  it("returns 3 above and 2 below ranks, all distinct and >=1", () => {
-    const { above, below } = neighborRanks(500);
-    const all = [...above, ...below];
-    expect(all).toHaveLength(5);
-    expect(new Set(all).size).toBe(5);
-    for (const rank of all) expect(rank).toBeGreaterThanOrEqual(1);
+  it("is deterministic per seed and varies across generations", () => {
+    expect(neighborRanks(1000, "g:1")).toEqual(neighborRanks(1000, "g:1"));
+    const first = neighborRanks(1000, "g:1");
+    const seeds = ["g:2", "g:3", "g:4", "g:5"];
+    expect(
+      seeds.some((seed) => JSON.stringify(neighborRanks(1000, seed)) !== JSON.stringify(first)),
+    ).toBe(true);
   });
 
-  it("keeps above ascending (furthest first) and below ascending (closest first)", () => {
-    const { above, below } = neighborRanks(2000);
-    expect(above[0]).toBeLessThan(above[1]);
-    expect(above[1]).toBeLessThan(above[2]);
-    expect(below[0]).toBeLessThan(below[1]);
-  });
-
-  it("is deterministic for the same user rank", () => {
-    expect(neighborRanks(777)).toEqual(neighborRanks(777));
-  });
-
-  it("degrades gracefully near the best possible rank without throwing", () => {
-    const { above, below } = neighborRanks(1);
-    for (const rank of above) expect(rank).toBeGreaterThanOrEqual(1);
-    for (const rank of below) expect(rank).toBeGreaterThan(1);
+  it("keeps above ranks at or above RANK_FLOOR even for the (practically unreachable) tiny ranks", () => {
+    for (const userRank of [RANK_FLOOR, RANK_FLOOR + 1, RANK_FLOOR + 3, 10]) {
+      const { above, below } = neighborRanks(userRank, "g:1");
+      expect(above.length + below.length).toBe(5);
+      for (const rank of above) {
+        expect(rank).toBeGreaterThanOrEqual(RANK_FLOOR);
+        expect(rank).toBeLessThan(userRank);
+      }
+      for (const rank of below) expect(rank).toBeGreaterThan(userRank);
+      expect(new Set([...above, userRank, ...below]).size).toBe(6);
+    }
   });
 });
 

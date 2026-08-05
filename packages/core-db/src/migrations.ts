@@ -335,6 +335,42 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Ranked-ladder v4 (spec 020, Leo's final form): the rank number becomes a pure incentive
+    // scalar and the board a cast of deceased famous people regenerated on a randomized
+    // schedule. Leo explicitly withdrew all record-keeping ("排行榜本来就会变，根本不需要保存
+    // 任何记录"), so the never-repeat identity backstop and the reuse-anchor columns are
+    // DROPPED, not migrated. The only persisted state is the current board (goal_ladder_figures,
+    // replaced whole on refresh) and one state row per goal (goal_ladder_state).
+    id: "0015_goal_ladder_v4",
+    statements: [
+      `DROP TABLE IF EXISTS ladder_shown_identities;`,
+      `DROP TABLE IF EXISTS goal_ladders_v2;`,
+      `CREATE TABLE goal_ladder_figures (
+        id TEXT PRIMARY KEY,
+        goal_id TEXT NOT NULL REFERENCES goals(id),
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        era TEXT NOT NULL,
+        occupation TEXT NOT NULL,
+        self_line TEXT NOT NULL,
+        rank INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        generation INTEGER NOT NULL,
+        chat_profile_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_goal_ladder_figures_goal ON goal_ladder_figures(goal_id);`,
+      `CREATE TABLE goal_ladder_state (
+        goal_id TEXT PRIMARY KEY REFERENCES goals(id),
+        last_shown_rank INTEGER,
+        last_view_fuel REAL,
+        next_refresh_at TEXT NOT NULL,
+        generation INTEGER NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

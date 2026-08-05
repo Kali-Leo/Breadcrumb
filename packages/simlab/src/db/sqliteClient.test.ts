@@ -1,8 +1,8 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, and the ranked-ladder v2 tables (migration
- * 0014, spec 018) — all against a real database file instead of the fakes core-db's own tests
+ * "keep higher confidence" ON CONFLICT semantics, and the ranked-ladder v4 tables (migration
+ * 0015, spec 020) — all against a real database file instead of the fakes core-db's own tests
  * use.
  */
 import { randomUUID } from "node:crypto";
@@ -146,10 +146,10 @@ describe("knowledge_edges upsert (real sqlite ON CONFLICT semantics)", () => {
   });
 });
 
-describe("goal_ladders_v2 (real sqlite, migration 0014)", () => {
-  it("drops the old spec-016 ladder tables and persists a full ranked-ladder generation", async () => {
+describe("goal_ladder_figures/state (real sqlite, migration 0015)", () => {
+  it("drops the v2/v3 ladder tables and round-trips a board plus its single state row", async () => {
     temp = await createTempDatabase();
-    const now = "2026-08-04T10:00:00.000Z";
+    const now = "2026-08-05T10:00:00.000Z";
     await temp.repos.goals.insert({
       id: "goal1",
       title: "学微积分",
@@ -158,15 +158,19 @@ describe("goal_ladders_v2 (real sqlite, migration 0014)", () => {
       updated_at: now,
     });
 
-    // The old spec-016 tables must be gone — selecting from them raises.
-    await expect(temp.sql.select("SELECT * FROM goal_ladders", [])).rejects.toThrow(
-      /no such table/,
-    );
-    await expect(temp.sql.select("SELECT * FROM ladder_shown_descriptions", [])).rejects.toThrow(
-      /no such table/,
-    );
+    // Every older ladder table must be gone — selecting from them raises.
+    for (const dropped of [
+      "goal_ladders",
+      "ladder_shown_descriptions",
+      "goal_ladders_v2",
+      "ladder_shown_identities",
+    ]) {
+      await expect(temp.sql.select(`SELECT * FROM ${dropped}`, [])).rejects.toThrow(
+        /no such table/,
+      );
+    }
 
-    await temp.repos.goalLadders.replaceForGoal("goal1", [
+    await temp.repos.goalLadders.replaceFigures("goal1", [
       {
         id: "f1",
         goal_id: "goal1",
@@ -175,11 +179,9 @@ describe("goal_ladders_v2 (real sqlite, migration 0014)", () => {
         era: "18世纪末",
         occupation: "军官",
         self_line: "土伦港的炮位还记得我",
-        is_famous: 1,
         rank: 450,
         position: 0,
         generation: 1,
-        user_rank_at_generation: 600,
         chat_profile_json: JSON.stringify({
           personality: "果断",
           activeHours: "清晨活跃",
@@ -188,19 +190,30 @@ describe("goal_ladders_v2 (real sqlite, migration 0014)", () => {
         created_at: now,
       },
     ]);
-    await temp.repos.goalLadders.recordShownIdentities("goal1", ["拿破仑|18世纪末"]);
-
-    const rows = await temp.repos.goalLadders.listForGoal("goal1");
+    const rows = await temp.repos.goalLadders.listFigures("goal1");
     expect(rows).toHaveLength(1);
     expect(rows[0]?.name).toBe("拿破仑");
-    expect(rows[0]?.is_famous).toBe(1);
 
-    const shown = await temp.repos.goalLadders.listShownIdentities("goal1");
-    expect(shown.map((row) => row.identity)).toEqual(["拿破仑|18世纪末"]);
-
-    // The never-repeat backstop's real UNIQUE constraint, not just the fake's simulation.
-    await expect(
-      temp.repos.goalLadders.recordShownIdentities("goal1", ["拿破仑|18世纪末"]),
-    ).rejects.toThrow(/UNIQUE constraint failed/);
+    expect(await temp.repos.goalLadders.getState("goal1")).toBeNull();
+    await temp.repos.goalLadders.upsertState({
+      goal_id: "goal1",
+      last_shown_rank: null,
+      last_view_fuel: null,
+      next_refresh_at: "2026-08-06T08:00:00.000Z",
+      generation: 1,
+      updated_at: now,
+    });
+    await temp.repos.goalLadders.upsertState({
+      goal_id: "goal1",
+      last_shown_rank: 120_431,
+      last_view_fuel: 4.5,
+      next_refresh_at: "2026-08-07T08:00:00.000Z",
+      generation: 2,
+      updated_at: now,
+    });
+    const state = await temp.repos.goalLadders.getState("goal1");
+    expect(state?.last_shown_rank).toBe(120_431);
+    expect(state?.last_view_fuel).toBe(4.5);
+    expect(state?.generation).toBe(2);
   });
 });

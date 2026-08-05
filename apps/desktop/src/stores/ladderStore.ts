@@ -1,32 +1,32 @@
 /**
- * Purpose: zustand store driving the ranked ladder (spec 018) — fetch-on-view only.
- * viewLadder() computes the learner's own rank via rankEngine, decides reuse vs regenerate via
- * planLadderRefresh, calls the ladder-generation LLM only when that decision says "generate",
- * and persists the result. Never auto-refreshes on recompute — the lab panel's 排位 section
- * triggers this itself, once per section mount per goal, treating that render as the user's
- * active viewing (2026-08-04 revision: the old "看看同行者" button is gone).
+ * Purpose: zustand store driving the ranked ladder (spec 020) — viewLadder() resolves the
+ * shown rank (never worse while the learner keeps learning, bounded slip-back after long
+ * absence), reports the plain up/down delta since last view, and regenerates the whole
+ * deceased-famous-neighbor board only when its randomized expiry has passed.
+ * pregenerateIfDue() is the quiet background variant: it refreshes an expired board without
+ * touching the last-seen state, so the next view is instant and the delta stays honest.
  * Main exports: useLadderStore, LadderView.
  */
-import type { GoalLadderRow } from "@breadcrumb/core-db";
+import type { GoalLadderStateRow } from "@breadcrumb/core-db";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
   domainFuel,
   goalDomainClosure,
+  isRefreshDue,
   neighborRanks,
-  planLadderRefresh,
-  progressFromFuel,
-  rankFromProgress,
-  type StoredLadder,
+  nextRefreshAtIso,
+  resolveShownRank,
+  startRank,
   validateLadderGeneration,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
 import {
+  buildKnowledgeSnapshot,
   buildLadderDisplayRows,
-  buildLadderRows,
+  buildLadderFigureRows,
   type LadderDisplayRow,
-  pickDomainLabelsSample,
   requestLadderGeneration,
 } from "../lib/ladderActions";
 import { masteryAsSeenByGoal } from "../lib/plannerGapActions";
@@ -34,36 +34,72 @@ import { newId, nowIso } from "../lib/time";
 import { usePlannerStore } from "./plannerStore";
 import { useSettingsStore } from "./settingsStore";
 
-/** Up to 10 lit domain labels ground the generation prompt (spec 016 #3, unchanged by 018). */
-const DOMAIN_LABEL_SAMPLE_SIZE = 10;
-/** Exactly this many famous figures is the target split (spec 018 #3) — deviation is logged,
- * never a hard failure. */
-const EXPECTED_FAMOUS_COUNT = 2;
-
 export interface LadderView {
   goalId: string;
   userRank: number;
-  /** The learner's current progress value m (0..~100, asymptotic) — the exact position the
-   * displayed rank was rounded from. Carried through so the UI progress bar can show a
-   * within-rank fraction (rankProgressFraction in ladderActions.ts) instead of a coarse
-   * "just entered this rank" 0%. */
-  progress: number;
+  /** Ranks improved since the learner last looked (positive), slipped (negative), or null on
+   * the very first view — drives the plain "up/down since last time" line. */
+  rankDelta: number | null;
   rows: LadderDisplayRow[];
 }
 
 interface LadderState {
   ladder: LadderView | null;
   loading: boolean;
-  /** True when the last viewLadder() call threw — drives the "点一下重试" state, distinct
-   * from "no goal selected yet" and from a still-in-flight load. */
+  /** True when the last viewLadder() call threw — drives the "点一下重试" state. */
   failed: boolean;
   viewLadder(goalId: string): Promise<void>;
+  /** Quiet background check: regenerates an expired board without recording a "view". */
+  pregenerateIfDue(goalId: string): Promise<void>;
 }
 
-function toStoredLadder(rows: readonly GoalLadderRow[]): StoredLadder | null {
-  const first = rows[0];
-  if (first === undefined) return null;
-  return { userRankAtGeneration: first.user_rank_at_generation };
+/** The learner's rank context for one goal, recomputed fresh from planner state every call. */
+function rankContext(goalId: string) {
+  const planner = usePlannerStore.getState();
+  const goal = planner.goals.find((candidate) => candidate.id === goalId);
+  if (goal === undefined) return null;
+  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
+  const goalMasteryByNode = masteryAsSeenByGoal(planner.masteryByNode, planner.claims);
+  const closureNodeIds = goalDomainClosure(planner.edges, goalNodeIds);
+  const fuel = domainFuel(closureNodeIds, goalMasteryByNode);
+  return { planner, goal, closureNodeIds, goalMasteryByNode, fuel };
+}
+
+/** Regenerates the board for one expired goal and returns the fresh figure rows, or null when
+ * the generation failed validation (the caller keeps whatever board it had). */
+async function regenerateBoard(
+  context: NonNullable<ReturnType<typeof rankContext>>,
+  goalId: string,
+  shownRank: number,
+  nextGeneration: number,
+) {
+  const settings = useSettingsStore.getState();
+  if (!settings.networkEnabled || !settings.apiConfig) return null;
+  const { above, below } = neighborRanks(shownRank, `${goalId}:${nextGeneration}`);
+  const snapshot = buildKnowledgeSnapshot(
+    context.closureNodeIds,
+    context.planner.nodes,
+    context.goalMasteryByNode,
+    LIT_THRESHOLD,
+  );
+  const result = await requestLadderGeneration(settings.apiConfig, {
+    goalTitle: context.goal.title,
+    learnedItems: snapshot.learnedItems,
+    notYetLabels: snapshot.notYetLabels,
+  });
+  const validated = validateLadderGeneration(result);
+  if (validated === null) {
+    void recordAiFailure("ladder", new Error("generation failed validation (<3 usable figures)"));
+    return null;
+  }
+  return buildLadderFigureRows(
+    goalId,
+    nextGeneration,
+    validated,
+    [...above, ...below],
+    newId,
+    nowIso,
+  );
 }
 
 export const useLadderStore = create<LadderState>((set) => ({
@@ -77,91 +113,87 @@ export const useLadderStore = create<LadderState>((set) => ({
 
     set({ loading: true, failed: false });
     try {
-      const planner = usePlannerStore.getState();
-      const goal = planner.goals.find((candidate) => candidate.id === goalId);
-      if (goal === undefined) {
+      const context = rankContext(goalId);
+      if (context === null) {
         set({ loading: false });
         return;
       }
-
-      const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-      // Same goal-view-boosted mastery coverage() uses — the ladder must never disagree with it.
-      const goalMasteryByNode = masteryAsSeenByGoal(planner.masteryByNode, planner.claims);
-      const closureNodeIds = goalDomainClosure(planner.edges, goalNodeIds);
-      const fuel = domainFuel(closureNodeIds, goalMasteryByNode);
-      const m = progressFromFuel(fuel, closureNodeIds.length);
-      const currentUserRank = rankFromProgress(m);
-
       const repos = await getRepos();
-      const [storedRows, shownRows] = await Promise.all([
-        repos.goalLadders.listForGoal(goalId),
-        repos.goalLadders.listShownIdentities(goalId),
+      const [state, storedFigures] = await Promise.all([
+        repos.goalLadders.getState(goalId),
+        repos.goalLadders.listFigures(goalId),
       ]);
+      const history =
+        state !== null && state.last_shown_rank !== null && state.last_view_fuel !== null
+          ? { lastShownRank: state.last_shown_rank, lastViewFuel: state.last_view_fuel }
+          : null;
+      const shownRank = resolveShownRank(context.fuel, startRank(goalId), history);
+      const rankDelta = history === null ? null : history.lastShownRank - shownRank;
 
-      const action = planLadderRefresh(toStoredLadder(storedRows), currentUserRank);
-      let displayRows: readonly GoalLadderRow[] = storedRows;
-
-      if (action === "generate" && settings.networkEnabled && settings.apiConfig) {
-        const forbiddenIdentities = shownRows.map((row) => row.identity);
-        const { above, below } = neighborRanks(currentUserRank);
-        const slotRanks = [...above, ...below];
-        const result = await requestLadderGeneration(settings.apiConfig, {
-          goalTitle: goal.title,
-          domainLabelsSample: pickDomainLabelsSample(
-            goalNodeIds,
-            planner.nodes,
-            goalMasteryByNode,
-            LIT_THRESHOLD,
-            DOMAIN_LABEL_SAMPLE_SIZE,
-          ),
-          forbiddenIdentities,
-        });
-        const validated = validateLadderGeneration(result, forbiddenIdentities);
-        if (validated !== null) {
-          const famousCount = validated.filter((figure) => figure.isFamous).length;
-          if (famousCount !== EXPECTED_FAMOUS_COUNT) {
-            void recordAiFailure(
-              "ladder",
-              new Error(
-                `famous split ${famousCount}/${validated.length - famousCount} (expected ${EXPECTED_FAMOUS_COUNT}/${validated.length - EXPECTED_FAMOUS_COUNT})`,
-              ),
-            );
-          }
-          const nextGeneration = (storedRows[0]?.generation ?? 0) + 1;
-          const rows = buildLadderRows(
-            goalId,
-            nextGeneration,
-            currentUserRank,
-            validated,
-            slotRanks,
-            newId,
-            nowIso,
-          );
-          await repos.goalLadders.replaceForGoal(goalId, rows);
-          await repos.goalLadders.recordShownIdentities(
-            goalId,
-            rows.map((row) => `${row.name}|${row.era}`),
-          );
-          displayRows = rows;
+      let generation = state?.generation ?? 0;
+      let nextRefreshAt = state?.next_refresh_at ?? null;
+      let figures = storedFigures;
+      if (isRefreshDue(nextRefreshAt, nowIso()) || figures.length === 0) {
+        const fresh = await regenerateBoard(context, goalId, shownRank, generation + 1);
+        if (fresh !== null) {
+          await repos.goalLadders.replaceFigures(goalId, fresh);
+          generation += 1;
+          nextRefreshAt = nextRefreshAtIso(nowIso(), `${goalId}:${generation}`);
+          figures = fresh;
         }
-        // validated === null: this generation failed validation (<3 usable figures) — fall
-        // back to whatever was already stored (possibly none yet) rather than surface an error.
       }
+
+      const nextState: GoalLadderStateRow = {
+        goal_id: goalId,
+        last_shown_rank: shownRank,
+        last_view_fuel: context.fuel,
+        // No board yet (e.g. offline): stay permanently due so the next opportunity generates.
+        next_refresh_at: nextRefreshAt ?? new Date(0).toISOString(),
+        generation,
+        updated_at: nowIso(),
+      };
+      await repos.goalLadders.upsertState(nextState);
 
       set({
         loading: false,
         failed: false,
         ladder: {
           goalId,
-          userRank: currentUserRank,
-          progress: m,
-          rows: buildLadderDisplayRows(displayRows, currentUserRank),
+          userRank: shownRank,
+          rankDelta,
+          rows: buildLadderDisplayRows(figures, shownRank),
         },
       });
     } catch (error) {
       console.warn("ladder view skipped:", error);
       void recordAiFailure("ladder", error);
       set({ loading: false, failed: true });
+    }
+  },
+
+  async pregenerateIfDue(goalId) {
+    try {
+      const context = rankContext(goalId);
+      if (context === null) return;
+      const repos = await getRepos();
+      const state = await repos.goalLadders.getState(goalId);
+      if (state === null || !isRefreshDue(state.next_refresh_at, nowIso())) return;
+      const history =
+        state.last_shown_rank !== null && state.last_view_fuel !== null
+          ? { lastShownRank: state.last_shown_rank, lastViewFuel: state.last_view_fuel }
+          : null;
+      const shownRank = resolveShownRank(context.fuel, startRank(goalId), history);
+      const fresh = await regenerateBoard(context, goalId, shownRank, state.generation + 1);
+      if (fresh === null) return;
+      await repos.goalLadders.replaceFigures(goalId, fresh);
+      await repos.goalLadders.upsertState({
+        ...state,
+        next_refresh_at: nextRefreshAtIso(nowIso(), `${goalId}:${state.generation + 1}`),
+        generation: state.generation + 1,
+        updated_at: nowIso(),
+      });
+    } catch (error) {
+      void recordAiFailure("ladder", error);
     }
   },
 }));

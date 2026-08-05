@@ -23,17 +23,19 @@ import {
 import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
   GOAL_GAP_SCORE_BOOST,
+  LADDER_REFRESH_MAX_HOURS,
+  LADDER_REFRESH_MIN_HOURS,
   MILESTONE_DIM_DISCOUNT,
   MILESTONE_DIM_WEIGHT,
   MILESTONE_LIT_WEIGHT,
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
-  RANK_ABOVE_RATIOS,
-  RANK_BELOW_RATIOS,
-  RANK_BETA,
-  RANK_PROGRESS_F0_FACTOR,
-  RANK_PROGRESS_F0_MIN,
-  RANK_R0,
+  RANK_FLOOR,
+  RANK_FUEL_DECAY,
+  RANK_NEIGHBOR_GAP_MAX,
+  RANK_SLIP_MAX_SHARE,
+  RANK_START_MIN,
+  RANK_START_RANGE,
   ROUTE_INTEREST_CHIP_THRESHOLD,
 } from "@breadcrumb/plugin-planner";
 import { CLAIM_HALF_LIFE_DAYS, CLAIM_WEIGHT, DIM_THRESHOLD, LIT_THRESHOLD } from "./mastery";
@@ -114,14 +116,18 @@ export const productParams = {
   /** Single-route recommendation (spec 017): interest score a route step needs before the
    * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
   routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
-  /** Ranked-ladder rank/fuel curve (spec 018): best-possible rank number, its decay rate, the
-   * progress-softening constant's floor/scale factor, and the above/below neighbor-rank
-   * anchor ratios. Refresh regeneration is derived straight from these (no separate delta
-   * constant) — see plugin-planner/ladderRefresh.ts. plugin-planner/rankEngine.ts. */
-  rankR0: RANK_R0,
-  rankBeta: RANK_BETA,
-  rankProgressF0Min: RANK_PROGRESS_F0_MIN,
-  rankProgressF0Factor: RANK_PROGRESS_F0_FACTOR,
-  rankAboveRatios: RANK_ABOVE_RATIOS,
-  rankBelowRatios: RANK_BELOW_RATIOS,
+  /** Ranked-ladder pure-incentive rank (spec 020): the seeded start-rank window a fresh goal
+   * lands in, the fuel decay β (each fuel unit multiplies the remaining distance to the top —
+   * harder per rank as you climb), the unreachable-top floor, the bounded slip-back share after
+   * long absence, and the tight neighbor gap cap. plugin-planner/rankEngine.ts. */
+  rankStartMin: RANK_START_MIN,
+  rankStartRange: RANK_START_RANGE,
+  rankFuelDecay: RANK_FUEL_DECAY,
+  rankFloor: RANK_FLOOR,
+  rankSlipMaxShare: RANK_SLIP_MAX_SHARE,
+  rankNeighborGapMax: RANK_NEIGHBOR_GAP_MAX,
+  /** Randomized board-expiry window (spec 020 §2) — a regenerated board lives a uniform-random
+   * stretch inside this range. plugin-planner/ladderRefresh.ts. */
+  ladderRefreshMinHours: LADDER_REFRESH_MIN_HOURS,
+  ladderRefreshMaxHours: LADDER_REFRESH_MAX_HOURS,
 } as const;

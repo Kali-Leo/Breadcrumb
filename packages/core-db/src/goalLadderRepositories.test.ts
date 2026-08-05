@@ -1,45 +1,39 @@
 /**
- * Purpose: unit tests for createGoalLaddersRepo using an in-memory fake SqlClient —
- * generation replace/list ordering, shown-identity recording, and the never-repeat
- * unique-constraint backstop.
+ * Purpose: unit tests for createGoalLaddersRepo using an in-memory fake SqlClient — whole-board
+ * figure replacement with position ordering, and state-row upsert/get round-trips.
  */
 import { describe, expect, it } from "vitest";
 import { createGoalLaddersRepo } from "./goalLadderRepositories";
-import type { GoalLadderRow, SqlClient } from "./types";
+import type { GoalLadderFigureRow, GoalLadderStateRow, SqlClient } from "./types";
 
-/** In-memory fake that actually enforces the (goal_id, identity) primary key, so the
- * "raises on a real duplicate" test exercises the same failure mode sqlite would. */
 function makeFakeSql() {
-  const ladderRows = new Map<string, GoalLadderRow>();
-  const shownKeys = new Set<string>();
+  const figureRows = new Map<string, GoalLadderFigureRow>();
+  const stateRows = new Map<string, GoalLadderStateRow>();
   const client: SqlClient = {
     select: <Row>(sql: string, params?: readonly unknown[]) => {
-      if (sql.includes("FROM goal_ladders_v2")) {
+      if (sql.includes("FROM goal_ladder_figures")) {
         const [goalId] = params as [string];
         return Promise.resolve(
-          [...ladderRows.values()]
+          [...figureRows.values()]
             .filter((row) => row.goal_id === goalId)
             .sort((a, b) => a.position - b.position) as Row[],
         );
       }
-      if (sql.includes("FROM ladder_shown_identities")) {
+      if (sql.includes("FROM goal_ladder_state")) {
         const [goalId] = params as [string];
-        return Promise.resolve(
-          [...shownKeys]
-            .filter((key) => key.startsWith(`${goalId} `))
-            .map((key) => ({ goal_id: goalId, identity: key.split(" ")[1] })) as Row[],
-        );
+        const row = stateRows.get(goalId);
+        return Promise.resolve((row === undefined ? [] : [row]) as Row[]);
       }
       return Promise.resolve([] as Row[]);
     },
     execute: (sql: string, params?: readonly unknown[]) => {
-      if (sql.startsWith("DELETE FROM goal_ladders_v2")) {
+      if (sql.startsWith("DELETE FROM goal_ladder_figures")) {
         const [goalId] = params as [string];
-        for (const [id, row] of ladderRows) {
-          if (row.goal_id === goalId) ladderRows.delete(id);
+        for (const [id, row] of figureRows) {
+          if (row.goal_id === goalId) figureRows.delete(id);
         }
       }
-      if (sql.startsWith("INSERT INTO goal_ladders_v2")) {
+      if (sql.startsWith("INSERT INTO goal_ladder_figures")) {
         const [
           id,
           goal_id,
@@ -48,11 +42,9 @@ function makeFakeSql() {
           era,
           occupation,
           self_line,
-          is_famous,
           rank,
           position,
           generation,
-          user_rank_at_generation,
           chat_profile_json,
           created_at,
         ] = params as [
@@ -63,15 +55,13 @@ function makeFakeSql() {
           string,
           string,
           string,
-          0 | 1,
-          number,
           number,
           number,
           number,
           string,
           string,
         ];
-        ladderRows.set(id, {
+        figureRows.set(id, {
           id,
           goal_id,
           name,
@@ -79,26 +69,24 @@ function makeFakeSql() {
           era,
           occupation,
           self_line,
-          is_famous,
           rank,
           position,
           generation,
-          user_rank_at_generation,
           chat_profile_json,
           created_at,
         });
       }
-      if (sql.startsWith("INSERT INTO ladder_shown_identities")) {
-        const [goalId, identity] = params as [string, string];
-        const key = `${goalId} ${identity}`;
-        if (shownKeys.has(key)) {
-          return Promise.reject(
-            new Error(
-              "UNIQUE constraint failed: ladder_shown_identities.goal_id, ladder_shown_identities.identity",
-            ),
-          );
-        }
-        shownKeys.add(key);
+      if (sql.startsWith("INSERT INTO goal_ladder_state")) {
+        const [goal_id, last_shown_rank, last_view_fuel, next_refresh_at, generation, updated_at] =
+          params as [string, number | null, number | null, string, number, string];
+        stateRows.set(goal_id, {
+          goal_id,
+          last_shown_rank,
+          last_view_fuel,
+          next_refresh_at,
+          generation,
+          updated_at,
+        });
       }
       return Promise.resolve();
     },
@@ -106,7 +94,7 @@ function makeFakeSql() {
   return { client };
 }
 
-function figure(overrides: Partial<GoalLadderRow> = {}): GoalLadderRow {
+function figure(overrides: Partial<GoalLadderFigureRow> = {}): GoalLadderFigureRow {
   return {
     id: "f1",
     goal_id: "g1",
@@ -115,72 +103,80 @@ function figure(overrides: Partial<GoalLadderRow> = {}): GoalLadderRow {
     era: "18世纪末",
     occupation: "军官",
     self_line: "土伦港的炮位还记得我",
-    is_famous: 1,
     rank: 450,
     position: 0,
     generation: 1,
-    user_rank_at_generation: 600,
     chat_profile_json: JSON.stringify({
       personality: "果断",
       activeHours: "清晨活跃",
       replyStyle: "简短命令式",
     }),
-    created_at: "2026-08-04T10:00:00Z",
+    created_at: "2026-08-05T10:00:00Z",
     ...overrides,
   };
 }
 
 describe("createGoalLaddersRepo", () => {
-  it("replaces a goal's generation and lists it back in position order", async () => {
+  it("replaces a goal's board and lists it back in position order", async () => {
     const { client } = makeFakeSql();
     const repo = createGoalLaddersRepo(client);
-    await repo.replaceForGoal("g1", [
+    await repo.replaceFigures("g1", [
       figure({ id: "f2", position: 1, name: "b" }),
       figure({ id: "f1", position: 0, name: "a" }),
     ]);
-    const rows = await repo.listForGoal("g1");
+    const rows = await repo.listFigures("g1");
     expect(rows.map((row) => row.id)).toEqual(["f1", "f2"]);
   });
 
-  it("deletes the previous generation's rows before inserting the new one", async () => {
+  it("deletes the previous board's rows before inserting the new one", async () => {
     const { client } = makeFakeSql();
     const repo = createGoalLaddersRepo(client);
-    await repo.replaceForGoal("g1", [figure({ id: "f1", generation: 1 })]);
-    await repo.replaceForGoal("g1", [figure({ id: "f2", generation: 2 })]);
-    const rows = await repo.listForGoal("g1");
+    await repo.replaceFigures("g1", [figure({ id: "f1", generation: 1 })]);
+    await repo.replaceFigures("g1", [figure({ id: "f2", generation: 2 })]);
+    const rows = await repo.listFigures("g1");
     expect(rows.map((row) => row.id)).toEqual(["f2"]);
   });
 
   it("only lists rows for the requested goal", async () => {
     const { client } = makeFakeSql();
     const repo = createGoalLaddersRepo(client);
-    await repo.replaceForGoal("g1", [figure({ id: "f1", goal_id: "g1" })]);
-    await repo.replaceForGoal("g2", [figure({ id: "f2", goal_id: "g2" })]);
-    expect((await repo.listForGoal("g1")).map((row) => row.id)).toEqual(["f1"]);
-    expect((await repo.listForGoal("g2")).map((row) => row.id)).toEqual(["f2"]);
+    await repo.replaceFigures("g1", [figure({ id: "f1", goal_id: "g1" })]);
+    await repo.replaceFigures("g2", [figure({ id: "f2", goal_id: "g2" })]);
+    expect((await repo.listFigures("g1")).map((row) => row.id)).toEqual(["f1"]);
+    expect((await repo.listFigures("g2")).map((row) => row.id)).toEqual(["f2"]);
   });
 
-  it("records shown identities and lists them back for the goal", async () => {
+  it("returns null state before the first upsert, then round-trips the whole row", async () => {
     const { client } = makeFakeSql();
     const repo = createGoalLaddersRepo(client);
-    await repo.recordShownIdentities("g1", ["拿破仑|18世纪末", "达尔文|19世纪中"]);
-    const shown = await repo.listShownIdentities("g1");
-    expect(shown.map((row) => row.identity).sort()).toEqual(["拿破仑|18世纪末", "达尔文|19世纪中"]);
+    expect(await repo.getState("g1")).toBeNull();
+    const state: GoalLadderStateRow = {
+      goal_id: "g1",
+      last_shown_rank: 120_431,
+      last_view_fuel: 4.5,
+      next_refresh_at: "2026-08-06T08:00:00.000Z",
+      generation: 2,
+      updated_at: "2026-08-05T10:00:00.000Z",
+    };
+    await repo.upsertState(state);
+    expect(await repo.getState("g1")).toEqual(state);
   });
 
-  it("raises on a genuine duplicate identity for the same goal (the never-repeat backstop)", async () => {
+  it("upsert overwrites the previous state (single row per goal, no history)", async () => {
     const { client } = makeFakeSql();
     const repo = createGoalLaddersRepo(client);
-    await repo.recordShownIdentities("g1", ["拿破仑|18世纪末"]);
-    await expect(repo.recordShownIdentities("g1", ["拿破仑|18世纪末"])).rejects.toThrow(
-      /UNIQUE constraint failed/,
-    );
-  });
-
-  it("allows the same identity to be shown again for a different goal", async () => {
-    const { client } = makeFakeSql();
-    const repo = createGoalLaddersRepo(client);
-    await repo.recordShownIdentities("g1", ["拿破仑|18世纪末"]);
-    await expect(repo.recordShownIdentities("g2", ["拿破仑|18世纪末"])).resolves.not.toThrow();
+    const base: GoalLadderStateRow = {
+      goal_id: "g1",
+      last_shown_rank: null,
+      last_view_fuel: null,
+      next_refresh_at: "1970-01-01T00:00:00.000Z",
+      generation: 1,
+      updated_at: "2026-08-05T10:00:00.000Z",
+    };
+    await repo.upsertState(base);
+    await repo.upsertState({ ...base, last_shown_rank: 99_120, generation: 2 });
+    const stored = await repo.getState("g1");
+    expect(stored?.last_shown_rank).toBe(99_120);
+    expect(stored?.generation).toBe(2);
   });
 });

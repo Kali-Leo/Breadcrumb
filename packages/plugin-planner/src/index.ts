@@ -4,8 +4,8 @@
  * Main exports: the no-goal frontier query (frontier.ts, ranked-mode goal-gap boost),
  * goal-driven gap/route/coverage query (gapAndPath.ts), the LLM goal-mapping contract
  * (goalMapping.ts), one-hop reverse interest propagation (propagate.ts), the milestone
- * score/band (milestone.ts), the ranked-ladder rank/fuel curve (rankEngine.ts), and the
- * ranked-ladder LLM contract + refresh decision (ladderPrompt.ts, ladderRefresh.ts).
+ * score/band (milestone.ts), the ranked-ladder pure-incentive rank engine (rankEngine.ts),
+ * and the ranked-ladder LLM contract + refresh cadence (ladderPrompt.ts, ladderRefresh.ts).
  */
 export * from "./frontier";
 export * from "./gapAndPath";

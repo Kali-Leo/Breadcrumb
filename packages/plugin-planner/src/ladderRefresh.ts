@@ -1,45 +1,32 @@
 /**
- * Purpose: pure reuse-vs-regenerate decision plus six-row board assembly for the ranked ladder
- * (spec 018) — evaluated only when the learner actively opens the ladder view, never on a
- * timer. No DB, no I/O, no LLM call here: the caller (desktop ladderStore) owns fetching the
- * stored ladder and, on "generate", calling the LLM contract in ladderPrompt.ts and the rank
- * anchors in rankEngine.ts.
- * Main exports: planLadderRefresh, LadderRefreshAction, StoredLadder, assembleLadderSlots,
- * LadderSlot.
+ * Purpose: pure refresh-cadence decisions and six-row board assembly for the ranked ladder
+ * (spec 020) — a board lives until its randomized expiry passes, then the next view (or a
+ * quiet background check) regenerates the whole neighbor cast. No reuse rules, no anchor
+ * bookkeeping, no history: leaderboards simply change over time (Leo, 08 §五).
+ * Main exports: isRefreshDue, nextRefreshAtIso, assembleLadderSlots, LadderSlot,
+ * LADDER_REFRESH_MIN_HOURS, LADDER_REFRESH_MAX_HOURS.
  */
-import { neighborRanks } from "./rankEngine";
+import { createSeededRandom, hashStringToSeed } from "./seededRandom";
 
-export interface StoredLadder {
-  /** The learner's own rank at the moment this generation was created — the anchor every
-   * later "has the learner moved far enough to regenerate" check compares against. */
-  userRankAtGeneration: number;
+/** A regenerated board schedules its own expiry a uniform-random stretch ahead — sometimes
+ * under a day, sometimes almost three ("间隔时间有长有短，在一个范围内随机"). */
+export const LADDER_REFRESH_MIN_HOURS = 20;
+export const LADDER_REFRESH_MAX_HOURS = 68;
+
+/** True when there is no schedule yet (fresh goal) or the scheduled moment has passed. ISO
+ * strings compare correctly lexicographically only for identical formats, so compare epochs. */
+export function isRefreshDue(nextRefreshAtIso: string | null, nowIso: string): boolean {
+  if (nextRefreshAtIso === null) return true;
+  return Date.parse(nowIso) >= Date.parse(nextRefreshAtIso);
 }
 
-export type LadderRefreshAction = "reuse" | "generate";
-
-/**
- * Decision rules (Leo, spec 018 #2), checked in order:
- * 1. No stored ladder -> generate.
- * 2. The learner's current rank has improved past (become smaller than) the SECOND
- *    above-neighbor's originally-anchored rank -> generate. Passing that far up the board
- *    means the anchored neighbors no longer make sense as "just above".
- * 3. The learner's current rank has fallen past (become larger than) the SECOND
- *    below-neighbor's originally-anchored rank -> generate, symmetric to #2.
- * 4. Otherwise -> reuse: the stored figures and their byte-stable rank anchors are kept; only
- *    the learner's own displayed slot among them moves. This is deliberately simple — no
- *    separate "equivalent progress delta" threshold, just "did the learner cross a real
- *    neighbor's anchor".
- */
-export function planLadderRefresh(
-  stored: StoredLadder | null,
-  currentUserRank: number,
-): LadderRefreshAction {
-  if (stored === null) return "generate";
-
-  const { above, below } = neighborRanks(stored.userRankAtGeneration);
-  if (currentUserRank < (above[1] as number)) return "generate";
-  if (currentUserRank > (below[1] as number)) return "generate";
-  return "reuse";
+/** The next expiry moment, seeded per `${goalId}:${generation}` so a given regeneration always
+ * schedules the same stretch (deterministic, testable) while consecutive generations vary. */
+export function nextRefreshAtIso(nowIso: string, seedInput: string): string {
+  const random = createSeededRandom(hashStringToSeed(`ladder-refresh:${seedInput}`));
+  const hours =
+    LADDER_REFRESH_MIN_HOURS + random() * (LADDER_REFRESH_MAX_HOURS - LADDER_REFRESH_MIN_HOURS);
+  return new Date(Date.parse(nowIso) + Math.round(hours * 3_600_000)).toISOString();
 }
 
 export interface LadderSlot {
@@ -47,11 +34,11 @@ export interface LadderSlot {
   isUser: boolean;
 }
 
-/** Assembles the fixed six-row board (spec 018 #2): 3 above-neighbor ranks, the learner's own
- * rank, and 2 below-neighbor ranks, sorted ascending by rank (a SMALLER rank number is
- * better, so the best-ranked row is first). Since above ranks are always < userRank <
- * below ranks (rankEngine's neighborRanks contract), the learner's row lands at a constant
- * index 3 (the 4th row) whenever exactly 3 above and 2 below ranks are supplied. */
+/** Assembles the six-row board: above-neighbor ranks, the learner's own rank, below-neighbor
+ * ranks, sorted ascending (a SMALLER rank number is better, so the best row is first). With
+ * rankEngine's tight 3-above/2-below neighbors the learner sits on the 4th row at generation
+ * time; between refreshes their own row may drift as their rank moves — that is the
+ * leaderboard living, resolved by the next regeneration. */
 export function assembleLadderSlots(
   aboveRanks: readonly number[],
   userRank: number,

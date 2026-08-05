@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderRow, LadderShownIdentityRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderFigureRow, GoalLadderStateRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -193,11 +193,10 @@ export interface LlmCallRow {
  * to) 5 of these rows, sharing the same `generation` and `user_rank_at_generation`. `rank` is
  * the figure's anchored name-plate rank (fixed at generation time via
  * plugin-planner/rankEngine's neighborRanks, so it survives the user's own rank moving around
- * it). `position` is the stable display order assigned at generation time (0-based, in
- * generation-batch order), unchanged by later rank movement so a reused ladder never
- * reshuffles. `is_famous` is stored as 0/1 (SQLite has no boolean column type).
+ * it until the board expires). `position` is the stable display order assigned at generation
+ * time (0-based, in generation-batch order). All figures are deceased famous people (spec 020).
  * `chat_profile_json` is the spec 019 friend-chat foundation — persisted, unused this spec. */
-export interface GoalLadderRow {
+export interface GoalLadderFigureRow {
   id: string;
   goal_id: string;
   name: string;
@@ -205,21 +204,25 @@ export interface GoalLadderRow {
   era: string;
   occupation: string;
   self_line: string;
-  is_famous: 0 | 1;
   rank: number;
   position: number;
   generation: number;
-  user_rank_at_generation: number;
   chat_profile_json: string;
   created_at: string;
 }
 
-/** One `${name}|${era}` identity ever shown for one goal (spec 018) — the never-repeat
- * backstop; the (goal_id, identity) primary key is what actually enforces uniqueness, not
- * application code. Rows are never deleted, even across ladder regenerations. */
-export interface LadderShownIdentityRow {
+/** The ranked ladder's ONLY per-goal state (spec 020) — deliberately not a history: the last
+ * rank the learner actually saw (for the plain "up/down since last time" line), the domain
+ * fuel at that view (reference for "has the learner learned since"), and when the current
+ * board expires. `last_shown_rank`/`last_view_fuel` are null until the first actual view (a
+ * background pre-generation may create the row first). */
+export interface GoalLadderStateRow {
   goal_id: string;
-  identity: string;
+  last_shown_rank: number | null;
+  last_view_fuel: number | null;
+  next_refresh_at: string;
+  generation: number;
+  updated_at: string;
 }
 
 /** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible
