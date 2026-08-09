@@ -16,7 +16,8 @@ import { useSettingsStore } from "./settingsStore";
 interface CompareState {
   profiles: ComparisonProfileRow[];
   selectedProfileId: string | null;
-  tree: OverlapNode[] | null;
+  /** The profile's overlap tree under one visible root node (the profile itself). */
+  tree: OverlapNode | null;
   /** Keys the user has opened — initial view shows roots only (spec 023 §1). */
   expandedKeys: ReadonlySet<string>;
   /** Node whose match/source details are shown below the tree. */

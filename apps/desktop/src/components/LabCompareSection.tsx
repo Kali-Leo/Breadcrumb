@@ -100,7 +100,7 @@ export function LabCompareSection() {
   }, [labPanelEnabled, load]);
 
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? null;
-  const detailNode = tree !== null && detailKey !== null ? findNode(tree, detailKey) : null;
+  const detailNode = tree !== null && detailKey !== null ? findNode([tree], detailKey) : null;
 
   return (
     <details className="rounded border border-stone-200" open>
@@ -133,7 +133,7 @@ export function LabCompareSection() {
         ) : (
           tree !== null && (
             <CompareTreeView
-              roots={tree}
+              root={tree}
               expandedKeys={expandedKeys}
               detailKey={detailKey}
               onToggle={toggleExpanded}

@@ -120,10 +120,12 @@ async function importBuiltinProfiles(): Promise<void> {
 
 /**
  * Computes one profile's overlap tree against the user's current knowledge state (nodes,
- * judged-identical aliases, mastery from real footprints + self-report claims). Returns
- * null when the profile does not exist. Pure local work — no AI, no network.
+ * judged-identical aliases, mastery from real footprints + self-report claims), wrapped
+ * under ONE visible root carrying the profile's title — the tree reads as a tree, not a
+ * list (Leo, 2026-08-09 feedback #3). Returns null when the profile does not exist. Pure
+ * local work — no AI, no network.
  */
-export async function computeComparisonTree(profileId: string): Promise<OverlapNode[] | null> {
+export async function computeComparisonTree(profileId: string): Promise<OverlapNode | null> {
   const repos = await getRepos();
   const profile = await repos.comparisons.getProfile(profileId);
   if (profile === null) return null;
@@ -137,9 +139,22 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
   const items = profileRowsToDefinitionItems(itemRows);
   const matches = matchProfileLeaves(items, nodes, aliasRows);
   const masteryByNode = computeMastery(sightings, claims, nowIso());
-  return buildOverlapTree(
+  const roots = buildOverlapTree(
     items,
     matches,
     (nodeId) => (masteryByNode.get(nodeId) ?? 0) >= LIT_THRESHOLD,
   );
+  const leafCount = roots.reduce((sum, node) => sum + node.leafCount, 0);
+  const matchedLeafCount = roots.reduce((sum, node) => sum + node.matchedLeafCount, 0);
+  return {
+    key: `root:${profile.id}`,
+    label: profile.title,
+    sourceRef: profile.source_note,
+    isLeaf: false,
+    leafCount,
+    matchedLeafCount,
+    ratio: leafCount === 0 ? 0 : matchedLeafCount / leafCount,
+    match: null,
+    children: roots,
+  };
 }
