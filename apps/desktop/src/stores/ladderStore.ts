@@ -1,22 +1,22 @@
 /**
- * Purpose: zustand store driving the ranked ladder's self-title view (spec 021) — viewLadder()
- * resolves the internal rank scalar (never worse while the learner keeps learning, bounded
- * slip-back after long absence), maps it to the learner's own title, and remembers what was
- * shown so the next view can state a title change plainly. Pure local computation: no LLM,
- * no network, no other people.
+ * Purpose: zustand store driving the ladder's assessment display (spec 022). The ladder IS a
+ * real-time assessment wearing a leaderboard's clothes: viewLadder() serves the cached
+ * three-title board, re-running the LLM assessment only when the board's randomized expiry
+ * has passed (or no board exists yet). pregenerateIfDue() is the quiet background variant so
+ * the next actual view is instant. No ranks, no fuel, no mechanism — display only.
  * Main exports: useLadderStore, LadderView.
  */
+import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
-  domainFuel,
   goalDomainClosure,
-  type LadderTitle,
-  nextTitleLabel,
-  resolveShownRank,
-  startRank,
-  titleFromRank,
+  isRefreshDue,
+  nextRefreshAtIso,
+  validateLadderAssessment,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { recordAiFailure } from "../lib/failureLog";
+import { buildKnowledgeSnapshot, requestLadderAssessment } from "../lib/ladderActions";
 import { masteryAsSeenByGoal } from "../lib/plannerGapActions";
 import { nowIso } from "../lib/time";
 import { usePlannerStore } from "./plannerStore";
@@ -24,72 +24,113 @@ import { useSettingsStore } from "./settingsStore";
 
 export interface LadderView {
   goalId: string;
-  title: LadderTitle;
-  /** The title label the learner saw last view when it differs from the current one, else
-   * null — drives the plain "上次看的时候是 X" line (same sentence up or down). */
-  previousTitleLabel: string | null;
-  /** One step up — the hook line's target; null when already at the top. */
-  nextTitleLabel: string | null;
+  /** The state one small step ahead of the learner's — the row above. */
+  aboveTitle: string;
+  /** The learner's own 称号: a plain AI summary of what they currently grasp. */
+  selfTitle: string;
+  /** The state one small step behind — the row below. */
+  belowTitle: string;
 }
 
 interface LadderState {
   ladder: LadderView | null;
+  loading: boolean;
+  /** True when the last viewLadder() call ended with nothing to show — drives "点一下重试". */
+  failed: boolean;
   viewLadder(goalId: string): Promise<void>;
+  /** Quiet background check: re-assesses an expired board without touching view state. */
+  pregenerateIfDue(goalId: string): Promise<void>;
 }
 
-/** The learner's rank context for one goal, recomputed fresh from planner state every call. */
-function rankContext(goalId: string) {
+/** Runs the assessment for one goal and returns the fresh board row, or null when it can't
+ * run (offline / no API config) or the result failed validation — the caller keeps whatever
+ * board it had. */
+async function assessGoal(goalId: string) {
+  const settings = useSettingsStore.getState();
+  if (!settings.networkEnabled || !settings.apiConfig) return null;
   const planner = usePlannerStore.getState();
   const goal = planner.goals.find((candidate) => candidate.id === goalId);
   if (goal === undefined) return null;
   const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-  const goalMasteryByNode = masteryAsSeenByGoal(planner.masteryByNode, planner.claims);
   const closureNodeIds = goalDomainClosure(planner.edges, goalNodeIds);
-  return domainFuel(closureNodeIds, goalMasteryByNode);
+  const snapshot = buildKnowledgeSnapshot(
+    closureNodeIds,
+    planner.nodes,
+    masteryAsSeenByGoal(planner.masteryByNode, planner.claims),
+    LIT_THRESHOLD,
+  );
+  const result = await requestLadderAssessment(settings.apiConfig, {
+    goalTitle: goal.title,
+    learnedItems: snapshot.learnedItems,
+    notYetLabels: snapshot.notYetLabels,
+  });
+  const validated = validateLadderAssessment(result);
+  if (validated === null) {
+    void recordAiFailure("ladder", new Error("assessment failed validation"));
+    return null;
+  }
+  const now = nowIso();
+  return {
+    goal_id: goalId,
+    above_title: validated.aboveTitle,
+    self_title: validated.selfTitle,
+    below_title: validated.belowTitle,
+    next_refresh_at: nextRefreshAtIso(now, `${goalId}:${now}`),
+    updated_at: now,
+  };
 }
 
 export const useLadderStore = create<LadderState>((set) => ({
   ladder: null,
+  loading: false,
+  failed: false,
 
   async viewLadder(goalId) {
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.labPanel) return; // reuses the lab-panel switch (spec 016)
 
+    set({ loading: true, failed: false });
     try {
-      const fuel = rankContext(goalId);
-      if (fuel === null) return;
       const repos = await getRepos();
-      const state = await repos.goalLadders.getState(goalId);
-      const history =
-        state === null
-          ? null
-          : { lastShownRank: state.last_shown_rank, lastViewFuel: state.last_view_fuel };
-      const goalStartRank = startRank(goalId);
-      const shownRank = resolveShownRank(fuel, goalStartRank, history);
-      const title = titleFromRank(shownRank, goalStartRank);
-      const previousTitle =
-        history === null ? null : titleFromRank(history.lastShownRank, goalStartRank);
-
-      await repos.goalLadders.upsertState({
-        goal_id: goalId,
-        last_shown_rank: shownRank,
-        last_view_fuel: fuel,
-        updated_at: nowIso(),
-      });
-
+      let board = await repos.goalLadders.getBoard(goalId);
+      if (board === null || isRefreshDue(board.next_refresh_at, nowIso())) {
+        const fresh = await assessGoal(goalId);
+        if (fresh !== null) {
+          await repos.goalLadders.upsertBoard(fresh);
+          board = fresh;
+        }
+      }
+      if (board === null) {
+        set({ loading: false, failed: true });
+        return;
+      }
       set({
+        loading: false,
+        failed: false,
         ladder: {
           goalId,
-          title,
-          previousTitleLabel:
-            previousTitle !== null && previousTitle.label !== title.label
-              ? previousTitle.label
-              : null,
-          nextTitleLabel: nextTitleLabel(title),
+          aboveTitle: board.above_title,
+          selfTitle: board.self_title,
+          belowTitle: board.below_title,
         },
       });
     } catch (error) {
       console.warn("ladder view skipped:", error);
+      void recordAiFailure("ladder", error);
+      set({ loading: false, failed: true });
+    }
+  },
+
+  async pregenerateIfDue(goalId) {
+    try {
+      const repos = await getRepos();
+      const board = await repos.goalLadders.getBoard(goalId);
+      if (board !== null && !isRefreshDue(board.next_refresh_at, nowIso())) return;
+      const fresh = await assessGoal(goalId);
+      if (fresh === null) return;
+      await repos.goalLadders.upsertBoard(fresh);
+    } catch (error) {
+      void recordAiFailure("ladder", error);
     }
   },
 }));

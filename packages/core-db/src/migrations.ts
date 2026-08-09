@@ -394,6 +394,25 @@ export const MIGRATIONS: readonly Migration[] = [
       `ALTER TABLE goal_ladder_state_v2 RENAME TO goal_ladder_state;`,
     ],
   },
+  {
+    // Ranked-ladder v6 (spec 022, Leo's correction): the ladder is a real-time assessment
+    // system merely DISPLAYED as a leaderboard — it must carry no mechanism at all. The v5
+    // rank-scalar state (fuel/never-worsen machinery) is dropped without migration; the only
+    // persisted thing is the current three-title board (the learner's own AI summary flanked
+    // by slightly-ahead/slightly-behind states) and its cache expiry.
+    id: "0017_goal_ladder_assessment_board",
+    statements: [
+      `DROP TABLE IF EXISTS goal_ladder_state;`,
+      `CREATE TABLE goal_ladder_board (
+        goal_id TEXT PRIMARY KEY REFERENCES goals(id),
+        above_title TEXT NOT NULL,
+        self_title TEXT NOT NULL,
+        below_title TEXT NOT NULL,
+        next_refresh_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

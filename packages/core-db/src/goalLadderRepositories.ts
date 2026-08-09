@@ -1,33 +1,42 @@
 /**
- * Purpose: SQL statements for the ranked ladder's single per-goal state row (spec 021) — the
- * internal rank scalar and fuel the learner's title was last derived from. No board tables:
- * the pseudo-people cast was removed with spec 021. No history by design.
+ * Purpose: SQL statements for the ladder's per-goal assessment board (spec 022) — the three
+ * currently-displayed titles and their cache expiry. Pure display cache: the ladder carries
+ * no ranking mechanism, so nothing else is ever persisted.
  * Main exports: createGoalLaddersRepo factory.
  */
-import type { GoalLadderStateRow, SqlClient } from "./types";
+import type { GoalLadderBoardRow, SqlClient } from "./types";
 
 export function createGoalLaddersRepo(sql: SqlClient) {
   return {
-    /** The goal's single state row, or null before the first view. */
-    async getState(goalId: string): Promise<GoalLadderStateRow | null> {
-      const rows = await sql.select<GoalLadderStateRow>(
-        "SELECT * FROM goal_ladder_state WHERE goal_id = ?",
+    /** The goal's current board, or null before the first assessment. */
+    async getBoard(goalId: string): Promise<GoalLadderBoardRow | null> {
+      const rows = await sql.select<GoalLadderBoardRow>(
+        "SELECT * FROM goal_ladder_board WHERE goal_id = ?",
         [goalId],
       );
       return rows[0] ?? null;
     },
-    /** Upserts the whole state row — the caller always writes a complete picture; partial
+    /** Upserts the whole board row — the caller always writes a complete picture; partial
      * column updates are deliberately not offered (one writer, no merge semantics needed). */
-    async upsertState(state: GoalLadderStateRow): Promise<void> {
+    async upsertBoard(board: GoalLadderBoardRow): Promise<void> {
       await sql.execute(
-        `INSERT INTO goal_ladder_state
-           (goal_id, last_shown_rank, last_view_fuel, updated_at)
-         VALUES (?, ?, ?, ?)
+        `INSERT INTO goal_ladder_board
+           (goal_id, above_title, self_title, below_title, next_refresh_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(goal_id) DO UPDATE SET
-           last_shown_rank = excluded.last_shown_rank,
-           last_view_fuel = excluded.last_view_fuel,
+           above_title = excluded.above_title,
+           self_title = excluded.self_title,
+           below_title = excluded.below_title,
+           next_refresh_at = excluded.next_refresh_at,
            updated_at = excluded.updated_at`,
-        [state.goal_id, state.last_shown_rank, state.last_view_fuel, state.updated_at],
+        [
+          board.goal_id,
+          board.above_title,
+          board.self_title,
+          board.below_title,
+          board.next_refresh_at,
+          board.updated_at,
+        ],
       );
     },
   };

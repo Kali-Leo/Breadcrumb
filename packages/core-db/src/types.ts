@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderStateRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -189,14 +189,15 @@ export interface LlmCallRow {
   created_at: string;
 }
 
-/** The ranked ladder's ONLY per-goal state (spec 021) — deliberately not a history: the
- * internal rank scalar the learner's title was last derived from (never shown as a number)
- * and the domain fuel at that view (reference for "has the learner learned since"). Written
- * only by actual views, so the row always describes what the learner last saw. */
-export interface GoalLadderStateRow {
+/** The ladder's per-goal display cache (spec 022) — the three assessment titles currently on
+ * the board (the learner's own summary flanked by a slightly-ahead and slightly-behind state)
+ * plus when this board expires. Pure display: no ranks, no progress semantics of any kind. */
+export interface GoalLadderBoardRow {
   goal_id: string;
-  last_shown_rank: number;
-  last_view_fuel: number;
+  above_title: string;
+  self_title: string;
+  below_title: string;
+  next_refresh_at: string;
   updated_at: string;
 }
 

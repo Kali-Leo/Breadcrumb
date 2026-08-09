@@ -23,19 +23,14 @@ import {
 import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
   GOAL_GAP_SCORE_BOOST,
+  LADDER_REFRESH_MAX_HOURS,
+  LADDER_REFRESH_MIN_HOURS,
   MILESTONE_DIM_DISCOUNT,
   MILESTONE_DIM_WEIGHT,
   MILESTONE_LIT_WEIGHT,
   PROPAGATION_INHERIT_FACTOR,
   PROPAGATION_INTEREST_THRESHOLD,
-  RANK_FLOOR,
-  RANK_FUEL_DECAY,
-  RANK_SLIP_MAX_SHARE,
-  RANK_START_MIN,
-  RANK_START_RANGE,
   ROUTE_INTEREST_CHIP_THRESHOLD,
-  TITLE_STEP_COUNT,
-  TITLE_THRESHOLD_GROWTH,
 } from "@breadcrumb/plugin-planner";
 import { CLAIM_HALF_LIFE_DAYS, CLAIM_WEIGHT, DIM_THRESHOLD, LIT_THRESHOLD } from "./mastery";
 
@@ -115,18 +110,9 @@ export const productParams = {
   /** Single-route recommendation (spec 017): interest score a route step needs before the
    * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
   routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
-  /** Ranked-ladder internal rank scalar (spec 020, kept by spec 021): the seeded start-rank
-   * window a fresh goal lands in, the fuel decay β (each fuel unit multiplies the remaining
-   * distance to the top — harder per rank as you climb), the unreachable-top floor, and the
-   * bounded slip-back share after long absence. Never shown as a number since spec 021.
-   * plugin-planner/rankEngine.ts. */
-  rankStartMin: RANK_START_MIN,
-  rankStartRange: RANK_START_RANGE,
-  rankFuelDecay: RANK_FUEL_DECAY,
-  rankFloor: RANK_FLOOR,
-  rankSlipMaxShare: RANK_SLIP_MAX_SHARE,
-  /** Self-title ladder (spec 021): 19 steps, step i unlocking at ln(start/rank) ≥ 1.1^i − 1 —
-   * fast early promotions, slow late ones. plugin-planner/ladderTitles.ts. */
-  titleStepCount: TITLE_STEP_COUNT,
-  titleThresholdGrowth: TITLE_THRESHOLD_GROWTH,
+  /** Ladder assessment-cache expiry window (spec 022) — a stored board lives a uniform-random
+   * stretch inside this range before the next view re-assesses. Cache pacing only: the ladder
+   * carries no ranking mechanism at all. plugin-planner/ladderRefresh.ts. */
+  ladderRefreshMinHours: LADDER_REFRESH_MIN_HOURS,
+  ladderRefreshMaxHours: LADDER_REFRESH_MAX_HOURS,
 } as const;

@@ -1,8 +1,8 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, and the self-title ladder state table
- * (migration 0016, spec 021) — all against a real database file instead of the fakes
+ * "keep higher confidence" ON CONFLICT semantics, and the ladder's assessment board table
+ * (migration 0017, spec 022) — all against a real database file instead of the fakes
  * core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
@@ -146,10 +146,10 @@ describe("knowledge_edges upsert (real sqlite ON CONFLICT semantics)", () => {
   });
 });
 
-describe("goal_ladder_state (real sqlite, migration 0016)", () => {
-  it("drops every board table and round-trips the slim per-goal state row", async () => {
+describe("goal_ladder_board (real sqlite, migration 0017)", () => {
+  it("drops every mechanism-era ladder table and round-trips the three-title board", async () => {
     temp = await createTempDatabase();
-    const now = "2026-08-05T10:00:00.000Z";
+    const now = "2026-08-09T10:00:00.000Z";
     await temp.repos.goals.insert({
       id: "goal1",
       title: "学微积分",
@@ -158,47 +158,39 @@ describe("goal_ladder_state (real sqlite, migration 0016)", () => {
       updated_at: now,
     });
 
-    // Every board/people table from earlier ladder designs must be gone — selecting raises.
+    // Every table from earlier ladder designs (people boards, rank/fuel state) must be gone.
     for (const dropped of [
       "goal_ladders",
       "ladder_shown_descriptions",
       "goal_ladders_v2",
       "ladder_shown_identities",
       "goal_ladder_figures",
+      "goal_ladder_state",
     ]) {
       await expect(temp.sql.select(`SELECT * FROM ${dropped}`, [])).rejects.toThrow(
         /no such table/,
       );
     }
 
-    // The state table carries only the four spec 021 columns — the dropped board-lifecycle
-    // columns must not linger after the rebuild+rename migration.
-    const columns = await temp.sql.select<{ name: string }>(
-      "SELECT name FROM pragma_table_info('goal_ladder_state')",
-      [],
-    );
-    expect(columns.map((column) => column.name).sort()).toEqual([
-      "goal_id",
-      "last_shown_rank",
-      "last_view_fuel",
-      "updated_at",
-    ]);
-
-    expect(await temp.repos.goalLadders.getState("goal1")).toBeNull();
-    await temp.repos.goalLadders.upsertState({
+    expect(await temp.repos.goalLadders.getBoard("goal1")).toBeNull();
+    await temp.repos.goalLadders.upsertBoard({
       goal_id: "goal1",
-      last_shown_rank: 120_431,
-      last_view_fuel: 4.5,
+      above_title: "积分也开始上手的人",
+      self_title: "极限和导数刚点亮",
+      below_title: "极限还有点生疏",
+      next_refresh_at: "2026-08-11T08:00:00.000Z",
       updated_at: now,
     });
-    await temp.repos.goalLadders.upsertState({
+    await temp.repos.goalLadders.upsertBoard({
       goal_id: "goal1",
-      last_shown_rank: 99_120,
-      last_view_fuel: 9.1,
+      above_title: "级数也摸过门道的人",
+      self_title: "积分刚上手",
+      below_title: "导数还在回炉",
+      next_refresh_at: "2026-08-12T08:00:00.000Z",
       updated_at: now,
     });
-    const state = await temp.repos.goalLadders.getState("goal1");
-    expect(state?.last_shown_rank).toBe(99_120);
-    expect(state?.last_view_fuel).toBe(9.1);
+    const stored = await temp.repos.goalLadders.getBoard("goal1");
+    expect(stored?.self_title).toBe("积分刚上手");
+    expect(stored?.next_refresh_at).toBe("2026-08-12T08:00:00.000Z");
   });
 });
