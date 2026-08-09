@@ -21,6 +21,7 @@ const PURPOSE_NAMES: Record<string, string> = {
   "self-report-mapping": "自报映射",
   "goal-planning": "目标规划",
   ladder: "排位榜",
+  "compare-profile": "对比画像",
 };
 
 function renderCost(cost: CostByCurrency): string {

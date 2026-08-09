@@ -2,7 +2,8 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
+ * ComparisonProfileItemRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -210,4 +211,31 @@ export interface AiFailureRow {
   purpose: string;
   message: string;
   created_at: string;
+}
+
+/** A comparison tree's root: an evidence-backed real-world profile the user's own tree can be
+ * measured against (spec 023). 'builtin' ships with the app; 'searched' was found on demand via
+ * an open web search. Standalone module — unrelated to the ladder or the knowledge tree. */
+export interface ComparisonProfileRow {
+  id: string;
+  title: string;
+  origin: "builtin" | "searched";
+  description: string;
+  source_note: string;
+  created_at: string;
+}
+
+/** One node of a comparison profile's tree. AI-invented content is forbidden here, so
+ * source_ref must always be non-empty — it points at where this item's existence was verified
+ * (e.g. a syllabus URL, a book citation). */
+export interface ComparisonProfileItemRow {
+  id: string;
+  profile_id: string;
+  /** null = a root item of the profile's tree. */
+  parent_id: string | null;
+  label: string;
+  /** JSON string array of alternate labels for matching against the user's own tree. */
+  aliases_json: string;
+  source_ref: string;
+  position: number;
 }

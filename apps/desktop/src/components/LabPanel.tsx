@@ -11,6 +11,7 @@ import { useInterestStore } from "../stores/interestStore";
 import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { LabCompareSection } from "./LabCompareSection";
 import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
@@ -104,6 +105,7 @@ export function LabPanel() {
         <SelfReportInput />
         {learningMode === "ranked" && <LabGoalSection />}
         <LabLadderSection />
+        <LabCompareSection />
         <LabFailuresSection />
       </div>
     </div>

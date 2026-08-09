@@ -15,6 +15,7 @@
     "@breadcrumb/core-bus": "workspace:*",
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/plugin-compare": "workspace:*",
     "@breadcrumb/plugin-factcheck": "workspace:*",
     "@breadcrumb/plugin-graph": "workspace:*",
     "@breadcrumb/plugin-interest": "workspace:*",
@@ -31,6 +32,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-sql": "^2.4.0",
     "d3-force": "^3.0.0",
+    "d3-hierarchy": "^3.1.2",
     "pixi.js": "^8.19.0",
     "polygon-offset": "^0.3.2",
     "react": "^19.1.0",
@@ -42,6 +44,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2",
     "@types/d3-force": "^3.0.10",
+    "@types/d3-hierarchy": "^3.1.7",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",

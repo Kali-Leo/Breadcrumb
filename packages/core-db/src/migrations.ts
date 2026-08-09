@@ -413,6 +413,33 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Comparison tree (spec 023): a standalone module, unrelated to the ladder/knowledge tree —
+    // the user's own tree compared against an evidence-backed real-world profile (e.g. a
+    // historical curriculum, a professional skill tree). AI-invented content is forbidden here,
+    // so every item row carries a non-empty source_ref pointing at where it came from.
+    id: "0018_comparison_profiles",
+    statements: [
+      `CREATE TABLE comparison_profiles (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        description TEXT NOT NULL,
+        source_note TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE TABLE comparison_profile_items (
+        id TEXT PRIMARY KEY,
+        profile_id TEXT NOT NULL REFERENCES comparison_profiles(id),
+        parent_id TEXT,
+        label TEXT NOT NULL,
+        aliases_json TEXT NOT NULL,
+        source_ref TEXT NOT NULL,
+        position INTEGER NOT NULL
+      );`,
+      `CREATE INDEX idx_comparison_profile_items_profile ON comparison_profile_items(profile_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

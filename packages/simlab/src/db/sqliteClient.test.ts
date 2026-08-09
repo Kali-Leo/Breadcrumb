@@ -1,8 +1,9 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, and the ladder's assessment board table
- * (migration 0017, spec 022) — all against a real database file instead of the fakes
+ * "keep higher confidence" ON CONFLICT semantics, the ladder's assessment board table
+ * (migration 0017, spec 022), and the comparison tree's whole-replace profile/item tables
+ * (migration 0018, spec 023) — all against a real database file instead of the fakes
  * core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
@@ -192,5 +193,91 @@ describe("goal_ladder_board (real sqlite, migration 0017)", () => {
     const stored = await temp.repos.goalLadders.getBoard("goal1");
     expect(stored?.self_title).toBe("积分刚上手");
     expect(stored?.next_refresh_at).toBe("2026-08-12T08:00:00.000Z");
+  });
+});
+
+describe("comparison_profiles (real sqlite, migration 0018)", () => {
+  it("round-trips a profile tree, overwrites it on replace, and clears it on delete", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-09T10:00:00.000Z";
+
+    await temp.repos.comparisons.replaceProfile(
+      {
+        id: "profile1",
+        title: "计算机科学本科课程",
+        origin: "searched",
+        description: "某校计算机科学系公开的本科培养方案",
+        source_note: "https://example.edu/cs-curriculum",
+        created_at: now,
+      },
+      [
+        {
+          id: "item1",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "数据结构",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#ds",
+          position: 0,
+        },
+        {
+          id: "item2",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "操作系统",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#os",
+          position: 1,
+        },
+        {
+          id: "item3",
+          profile_id: "profile1",
+          parent_id: "item2",
+          label: "进程调度",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#os-scheduling",
+          position: 2,
+        },
+      ],
+    );
+
+    const storedProfile = await temp.repos.comparisons.getProfile("profile1");
+    expect(storedProfile?.title).toBe("计算机科学本科课程");
+    const storedItems = await temp.repos.comparisons.listItems("profile1");
+    expect(storedItems.map((row) => row.label)).toEqual(["数据结构", "操作系统", "进程调度"]);
+    expect(storedItems[2]?.parent_id).toBe("item2");
+
+    // replaceProfile with a different item set overwrites the previous tree entirely.
+    await temp.repos.comparisons.replaceProfile(
+      {
+        id: "profile1",
+        title: "计算机科学本科课程（修订版）",
+        origin: "searched",
+        description: "某校计算机科学系公开的本科培养方案",
+        source_note: "https://example.edu/cs-curriculum",
+        created_at: now,
+      },
+      [
+        {
+          id: "item9",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "编译原理",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#compilers",
+          position: 0,
+        },
+      ],
+    );
+    const afterReplace = await temp.repos.comparisons.listItems("profile1");
+    expect(afterReplace).toHaveLength(1);
+    expect(afterReplace[0]?.label).toBe("编译原理");
+    expect((await temp.repos.comparisons.getProfile("profile1"))?.title).toBe(
+      "计算机科学本科课程（修订版）",
+    );
+
+    await temp.repos.comparisons.deleteProfile("profile1");
+    expect(await temp.repos.comparisons.getProfile("profile1")).toBeNull();
+    expect(await temp.repos.comparisons.listItems("profile1")).toEqual([]);
   });
 });

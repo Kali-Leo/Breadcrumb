@@ -4,6 +4,7 @@
  * Main exports: everything from types, migrations and repositories (core, knowledge, feature).
  */
 export * from "./aiFailureRepositories";
+export * from "./comparisonRepositories";
 export * from "./featureRepositories";
 export * from "./goalLadderRepositories";
 export * from "./goalRepositories";

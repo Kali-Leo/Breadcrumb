@@ -28,6 +28,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "🧪 实验室面板",
     hint: "临时实验面板：看推荐、建目标、比路线、看排位榜；建目标或看排位榜时会额外调用一次 AI（独立计费）",
   },
+  compareProfileBuild: {
+    name: "🌲 对比画像构建（实验功能）",
+    hint: "在对比树里按输入检索构建新画像：AI 提案后逐条核验资料来源，较耗时（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {

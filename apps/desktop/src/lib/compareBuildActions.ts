@@ -1,0 +1,135 @@
+/**
+ * Purpose: the experimental search-build pipeline (spec 023 §5) — one metered LLM proposal
+ * with mandatory per-item citations, a URL verification pass over every unique cited source
+ * (unreachable or off-topic pages kill their whole branch), and a whole-build failure when
+ * too little survives (宁缺毋假). Returns the display facts the UI must show: token usage
+ * and cost. Main exports: runExperimentalProfileBuild, ExperimentalBuildOutcome.
+ */
+import {
+  BUILTIN_MODEL_PRICES,
+  calculateCostMicros,
+  chatJson,
+  formatCost,
+  type TokenUsage,
+} from "@breadcrumb/core-llm";
+import {
+  buildCompareProposalMessages,
+  pruneUnverifiedBranches,
+  type SearchedProposalItem,
+  searchedProfileProposalSchema,
+  survivesThreshold,
+  verifyEvidenceText,
+} from "@breadcrumb/plugin-compare";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import type { ApiConfig } from "../stores/settingsStore";
+import { getRepos } from "./db";
+import { recordAiFailure } from "./failureLog";
+import { recordMeteredCall } from "./metering";
+import { newId, nowIso } from "./time";
+
+export type ExperimentalBuildOutcome =
+  | { ok: true; profileId: string; costLine: string; droppedCount: number }
+  | { ok: false; reason: string; costLine: string | null };
+
+function costLineOf(model: string, usage: TokenUsage): string {
+  const price = BUILTIN_MODEL_PRICES[model];
+  const tokens = usage.inputTokens + usage.outputTokens;
+  const cost = price ? formatCost(calculateCostMicros(usage, price), price.currency) : "未知";
+  return `本次构建用了 ${tokens.toLocaleString()} token（${cost}）`;
+}
+
+/** Fetches one cited URL and checks the page mentions the cited material's title tokens.
+ * Any network error counts as unverified — the branch dies, the build never throws here. */
+async function verifyUrl(url: string, sourceTitles: readonly string[]): Promise<boolean> {
+  try {
+    const response = await tauriFetch(url, { method: "GET" });
+    if (!response.ok) return false;
+    const text = await response.text();
+    return sourceTitles.some((title) => verifyEvidenceText(text, title));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The whole experimental pipeline. The caller has already checked the feature switch,
+ * network switch, and API config; this function does the work and reports plainly.
+ */
+export async function runExperimentalProfileBuild(
+  apiConfig: ApiConfig,
+  input: { topic: string; mainland: boolean },
+): Promise<ExperimentalBuildOutcome> {
+  const config = { ...apiConfig, fetchImpl: tauriFetch };
+  let usage: TokenUsage;
+  let items: readonly SearchedProposalItem[];
+  let title: string;
+  let description: string;
+  try {
+    const result = await chatJson(
+      config,
+      buildCompareProposalMessages(input),
+      searchedProfileProposalSchema,
+    );
+    usage = result.usage;
+    items = result.parsed.items;
+    title = result.parsed.title;
+    description = result.parsed.description;
+    await recordMeteredCall({
+      purpose: "compare-profile",
+      model: config.model,
+      conversationId: null,
+      usage,
+    });
+  } catch (error) {
+    void recordAiFailure("compare-profile", error);
+    return { ok: false, reason: "画像提案这一步没能完成，可以点一下重试", costLine: null };
+  }
+
+  // Verify each unique cited URL once; an item may share a source with its siblings.
+  const titlesByUrl = new Map<string, string[]>();
+  for (const item of items) {
+    const titles = titlesByUrl.get(item.sourceUrl) ?? [];
+    titles.push(item.sourceTitle);
+    titlesByUrl.set(item.sourceUrl, titles);
+  }
+  const verdicts = await Promise.all(
+    [...titlesByUrl.entries()].map(async ([url, titles]) => ({
+      url,
+      ok: await verifyUrl(url, titles),
+    })),
+  );
+  const verifiedUrls = new Set(verdicts.filter((verdict) => verdict.ok).map((v) => v.url));
+
+  const surviving = pruneUnverifiedBranches(items, verifiedUrls);
+  const costLine = costLineOf(config.model, usage);
+  if (!survivesThreshold(items.length, surviving.length)) {
+    void recordAiFailure(
+      "compare-profile",
+      new Error(`build discarded: ${surviving.length}/${items.length} items verified`),
+    );
+    return { ok: false, reason: "引用的资料大多没能核验通过，这次构建整体作废", costLine };
+  }
+
+  const profileId = `searched-${newId()}`;
+  const repos = await getRepos();
+  await repos.comparisons.replaceProfile(
+    {
+      id: profileId,
+      title,
+      origin: "searched",
+      description,
+      source_note: `实验功能：检索构建于 ${nowIso().slice(0, 10)}，逐条来源通过了可达性与标题包含校验`,
+      created_at: nowIso(),
+    },
+    surviving.map((item, index) => ({
+      id: `${profileId}:${item.key}`,
+      profile_id: profileId,
+      parent_id: item.parentKey === null ? null : `${profileId}:${item.parentKey}`,
+      label: item.label,
+      aliases_json: JSON.stringify(item.aliases),
+      source_ref: `${item.sourceTitle} · ${item.sourceUrl}`,
+      position: index,
+    })),
+  );
+  return { ok: true, profileId, costLine, droppedCount: items.length - surviving.length };
+}

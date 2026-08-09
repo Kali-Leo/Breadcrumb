@@ -23,6 +23,8 @@ export interface FeatureSwitches {
   knowledgeEdges: boolean;
   interest: boolean;
   labPanel: boolean;
+  /** Experimental: search-build a comparison profile on demand (spec 023 §5). */
+  compareProfileBuild: boolean;
 }
 
 /** 'casual' = wander by curiosity, the map grows outward on its own (adjacent-concept
@@ -53,6 +55,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeEdges: false,
   interest: false,
   labPanel: false,
+  compareProfileBuild: false,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
