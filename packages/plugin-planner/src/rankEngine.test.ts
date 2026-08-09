@@ -1,16 +1,14 @@
 /**
- * Purpose: unit tests for the pure-incentive rank engine (spec 020) — seeded start rank,
- * the fuel curve's three properties (monotone, unreachable top, diminishing steps), the
- * shown-rank rules (never worse while learning, bounded slip after absence), and tight
- * seeded neighbor ranks.
+ * Purpose: unit tests for the pure-incentive rank engine (spec 020, kept by spec 021) —
+ * seeded start rank, the fuel curve's three properties (monotone, unreachable top,
+ * diminishing steps), and the shown-rank rules (never worse while learning, bounded slip
+ * after absence).
  */
 import { describe, expect, it } from "vitest";
 import {
   domainFuel,
   goalDomainClosure,
-  neighborRanks,
   RANK_FLOOR,
-  RANK_NEIGHBOR_GAP_MAX,
   RANK_SLIP_MAX_SHARE,
   RANK_START_MIN,
   RANK_START_RANGE,
@@ -115,44 +113,6 @@ describe("resolveShownRank", () => {
     const lastShownRank = rankFromFuel(20, start);
     const slipped = resolveShownRank(19.8, start, { lastShownRank, lastViewFuel: 20 });
     expect(slipped).toBe(rankFromFuel(19.8, start));
-  });
-});
-
-describe("neighborRanks", () => {
-  it("returns 3 tight above and 2 tight below, every gap within 1..RANK_NEIGHBOR_GAP_MAX", () => {
-    const userRank = 120_431;
-    const { above, below } = neighborRanks(userRank, "goal-1:3");
-    expect(above).toHaveLength(3);
-    expect(below).toHaveLength(2);
-    const ordered = [...above, userRank, ...below];
-    for (let i = 1; i < ordered.length; i++) {
-      const gap = (ordered[i] as number) - (ordered[i - 1] as number);
-      expect(gap).toBeGreaterThanOrEqual(1);
-      expect(gap).toBeLessThanOrEqual(RANK_NEIGHBOR_GAP_MAX);
-    }
-    expect(new Set(ordered).size).toBe(6);
-  });
-
-  it("is deterministic per seed and varies across generations", () => {
-    expect(neighborRanks(1000, "g:1")).toEqual(neighborRanks(1000, "g:1"));
-    const first = neighborRanks(1000, "g:1");
-    const seeds = ["g:2", "g:3", "g:4", "g:5"];
-    expect(
-      seeds.some((seed) => JSON.stringify(neighborRanks(1000, seed)) !== JSON.stringify(first)),
-    ).toBe(true);
-  });
-
-  it("keeps above ranks at or above RANK_FLOOR even for the (practically unreachable) tiny ranks", () => {
-    for (const userRank of [RANK_FLOOR, RANK_FLOOR + 1, RANK_FLOOR + 3, 10]) {
-      const { above, below } = neighborRanks(userRank, "g:1");
-      expect(above.length + below.length).toBe(5);
-      for (const rank of above) {
-        expect(rank).toBeGreaterThanOrEqual(RANK_FLOOR);
-        expect(rank).toBeLessThan(userRank);
-      }
-      for (const rank of below) expect(rank).toBeGreaterThan(userRank);
-      expect(new Set([...above, userRank, ...below]).size).toBe(6);
-    }
   });
 });
 

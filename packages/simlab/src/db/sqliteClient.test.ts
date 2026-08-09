@@ -1,9 +1,9 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, and the ranked-ladder v4 tables (migration
- * 0015, spec 020) — all against a real database file instead of the fakes core-db's own tests
- * use.
+ * "keep higher confidence" ON CONFLICT semantics, and the self-title ladder state table
+ * (migration 0016, spec 021) — all against a real database file instead of the fakes
+ * core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
@@ -146,8 +146,8 @@ describe("knowledge_edges upsert (real sqlite ON CONFLICT semantics)", () => {
   });
 });
 
-describe("goal_ladder_figures/state (real sqlite, migration 0015)", () => {
-  it("drops the v2/v3 ladder tables and round-trips a board plus its single state row", async () => {
+describe("goal_ladder_state (real sqlite, migration 0016)", () => {
+  it("drops every board table and round-trips the slim per-goal state row", async () => {
     temp = await createTempDatabase();
     const now = "2026-08-05T10:00:00.000Z";
     await temp.repos.goals.insert({
@@ -158,62 +158,47 @@ describe("goal_ladder_figures/state (real sqlite, migration 0015)", () => {
       updated_at: now,
     });
 
-    // Every older ladder table must be gone — selecting from them raises.
+    // Every board/people table from earlier ladder designs must be gone — selecting raises.
     for (const dropped of [
       "goal_ladders",
       "ladder_shown_descriptions",
       "goal_ladders_v2",
       "ladder_shown_identities",
+      "goal_ladder_figures",
     ]) {
       await expect(temp.sql.select(`SELECT * FROM ${dropped}`, [])).rejects.toThrow(
         /no such table/,
       );
     }
 
-    await temp.repos.goalLadders.replaceFigures("goal1", [
-      {
-        id: "f1",
-        goal_id: "goal1",
-        name: "拿破仑",
-        age: 24,
-        era: "18世纪末",
-        occupation: "军官",
-        self_line: "土伦港的炮位还记得我",
-        rank: 450,
-        position: 0,
-        generation: 1,
-        chat_profile_json: JSON.stringify({
-          personality: "果断",
-          activeHours: "清晨活跃",
-          replyStyle: "简短命令式",
-        }),
-        created_at: now,
-      },
+    // The state table carries only the four spec 021 columns — the dropped board-lifecycle
+    // columns must not linger after the rebuild+rename migration.
+    const columns = await temp.sql.select<{ name: string }>(
+      "SELECT name FROM pragma_table_info('goal_ladder_state')",
+      [],
+    );
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      "goal_id",
+      "last_shown_rank",
+      "last_view_fuel",
+      "updated_at",
     ]);
-    const rows = await temp.repos.goalLadders.listFigures("goal1");
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.name).toBe("拿破仑");
 
     expect(await temp.repos.goalLadders.getState("goal1")).toBeNull();
     await temp.repos.goalLadders.upsertState({
       goal_id: "goal1",
-      last_shown_rank: null,
-      last_view_fuel: null,
-      next_refresh_at: "2026-08-06T08:00:00.000Z",
-      generation: 1,
+      last_shown_rank: 120_431,
+      last_view_fuel: 4.5,
       updated_at: now,
     });
     await temp.repos.goalLadders.upsertState({
       goal_id: "goal1",
-      last_shown_rank: 120_431,
-      last_view_fuel: 4.5,
-      next_refresh_at: "2026-08-07T08:00:00.000Z",
-      generation: 2,
+      last_shown_rank: 99_120,
+      last_view_fuel: 9.1,
       updated_at: now,
     });
     const state = await temp.repos.goalLadders.getState("goal1");
-    expect(state?.last_shown_rank).toBe(120_431);
-    expect(state?.last_view_fuel).toBe(4.5);
-    expect(state?.generation).toBe(2);
+    expect(state?.last_shown_rank).toBe(99_120);
+    expect(state?.last_view_fuel).toBe(9.1);
   });
 });

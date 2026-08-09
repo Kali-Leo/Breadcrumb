@@ -1,12 +1,13 @@
 /**
- * Purpose: pure rank engine for the ranked ladder (spec 020) — the rank number is a PURE
- * reward/incentive scalar driven by domain fuel: learning moves it forward, long inactivity
- * lets it slip back a bounded amount, and rank 1 is unreachable (someone is always deeper in).
- * No population, no percentage, no "completion" semantics — the number claims nothing beyond
- * itself, and goal completion is a separate concept entirely (Leo, 08 §五).
+ * Purpose: pure rank engine for the ranked ladder (spec 020, kept by spec 021) — the rank is a
+ * PURE reward/incentive scalar driven by domain fuel: learning moves it forward, long
+ * inactivity lets it slip back a bounded amount, and rank 1 is unreachable (someone is always
+ * deeper in). Since spec 021 the scalar is internal-only: no number is ever shown, it exists
+ * to feed the title ladder (ladderTitles.ts). No population, no percentage, no "completion"
+ * semantics.
  * Main exports: goalDomainClosure, domainFuel, startRank, rankFromFuel, resolveShownRank,
- * ShownRankHistory, neighborRanks, NeighborRanks, RANK_START_MIN, RANK_START_RANGE,
- * RANK_FUEL_DECAY, RANK_SLIP_MAX_SHARE, RANK_FLOOR, RANK_NEIGHBOR_GAP_MAX.
+ * ShownRankHistory, RANK_START_MIN, RANK_START_RANGE, RANK_FUEL_DECAY, RANK_SLIP_MAX_SHARE,
+ * RANK_FLOOR.
  */
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
 import { prerequisiteClosure } from "@breadcrumb/plugin-graph";
@@ -27,9 +28,6 @@ export const RANK_FLOOR = 2;
 /** During a long no-learning stretch the shown rank may slip back, but by at most this share
  * of its previous value per view — "补回也要合理，不要补太多" (Leo). */
 export const RANK_SLIP_MAX_SHARE = 0.1;
-/** Neighbor ranks sit a seeded 1..RANK_NEIGHBOR_GAP_MAX steps apart — "邻近" is literal:
- * the board shows the people right around you, not a spread across the whole field. */
-export const RANK_NEIGHBOR_GAP_MAX = 4;
 
 /**
  * A goal's "domain" for fuel purposes is its requires-closure recomputed fresh every call,
@@ -102,45 +100,4 @@ export function resolveShownRank(
     Math.round(history.lastShownRank * (1 + RANK_SLIP_MAX_SHARE)),
   );
   return Math.min(computed, worstAllowed);
-}
-
-export interface NeighborRanks {
-  /** 3 ranks just better (smaller) than userRank, ascending — furthest-above first. */
-  above: readonly number[];
-  /** 2 ranks just worse (larger) than userRank, ascending — closest-to-user first. */
-  below: readonly number[];
-}
-
-/**
- * Seeded neighbor ranks tight around the user's rank — 3 above, 2 below, every gap an
- * irregular 1..RANK_NEIGHBOR_GAP_MAX steps, all distinct, strictly on their side, above ranks
- * never better than RANK_FLOOR. Seed on `${goalId}:${generation}` so one board's ranks are
- * stable for its whole lifetime and the next regeneration lands on fresh offsets. Ranks carry
- * no population ceiling and the curve keeps the user far from rank 1 in practice, so the user
- * sits mid-board; the aboveCount guard only matters in the mathematically-forced case
- * userRank < RANK_FLOOR+3, where missing above-slots move below instead of duplicating.
- */
-export function neighborRanks(userRank: number, seedInput: string): NeighborRanks {
-  const random = createSeededRandom(hashStringToSeed(`ladder-neighbor:${seedInput}`));
-  const sampleGap = (): number => 1 + Math.floor(random() * RANK_NEIGHBOR_GAP_MAX);
-  const aboveCount = Math.min(3, Math.max(0, userRank - RANK_FLOOR));
-  const belowCount = 5 - aboveCount;
-
-  const closestFirstAbove: number[] = [];
-  let cursor = userRank;
-  for (let i = 0; i < aboveCount; i++) {
-    const reserved = aboveCount - 1 - i;
-    cursor = Math.max(RANK_FLOOR + reserved, cursor - sampleGap());
-    closestFirstAbove.push(cursor);
-  }
-  const above = [...closestFirstAbove].reverse();
-
-  const closestFirstBelow: number[] = [];
-  cursor = userRank;
-  for (let i = 0; i < belowCount; i++) {
-    cursor += sampleGap();
-    closestFirstBelow.push(cursor);
-  }
-
-  return { above, below: closestFirstBelow };
 }

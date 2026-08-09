@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderFigureRow, GoalLadderStateRow.
+ * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderStateRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -189,39 +189,14 @@ export interface LlmCallRow {
   created_at: string;
 }
 
-/** One reference figure/persona of a goal's ranked ladder (spec 018) — one generation is (up
- * to) 5 of these rows, sharing the same `generation` and `user_rank_at_generation`. `rank` is
- * the figure's anchored name-plate rank (fixed at generation time via
- * plugin-planner/rankEngine's neighborRanks, so it survives the user's own rank moving around
- * it until the board expires). `position` is the stable display order assigned at generation
- * time (0-based, in generation-batch order). All figures are deceased famous people (spec 020).
- * `chat_profile_json` is the spec 019 friend-chat foundation — persisted, unused this spec. */
-export interface GoalLadderFigureRow {
-  id: string;
-  goal_id: string;
-  name: string;
-  age: number;
-  era: string;
-  occupation: string;
-  self_line: string;
-  rank: number;
-  position: number;
-  generation: number;
-  chat_profile_json: string;
-  created_at: string;
-}
-
-/** The ranked ladder's ONLY per-goal state (spec 020) — deliberately not a history: the last
- * rank the learner actually saw (for the plain "up/down since last time" line), the domain
- * fuel at that view (reference for "has the learner learned since"), and when the current
- * board expires. `last_shown_rank`/`last_view_fuel` are null until the first actual view (a
- * background pre-generation may create the row first). */
+/** The ranked ladder's ONLY per-goal state (spec 021) — deliberately not a history: the
+ * internal rank scalar the learner's title was last derived from (never shown as a number)
+ * and the domain fuel at that view (reference for "has the learner learned since"). Written
+ * only by actual views, so the row always describes what the learner last saw. */
 export interface GoalLadderStateRow {
   goal_id: string;
-  last_shown_rank: number | null;
-  last_view_fuel: number | null;
-  next_refresh_at: string;
-  generation: number;
+  last_shown_rank: number;
+  last_view_fuel: number;
   updated_at: string;
 }
 

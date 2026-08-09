@@ -371,6 +371,29 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Ranked-ladder v5 (spec 021): Leo withdrew the pseudo-people design entirely — no board
+    // of generated figures, no refresh cadence, only the learner's own title derived from the
+    // internal rank scalar. The figures table (including the spec 019 friend-chat foundation
+    // chat_profile_json) is DROPPED, and goal_ladder_state loses its board-lifecycle columns
+    // (next_refresh_at, generation) while last_shown_rank/last_view_fuel migrate losslessly —
+    // the never-worsen/bounded-slip rank history survives the redesign.
+    id: "0016_goal_ladder_self_title",
+    statements: [
+      `DROP TABLE IF EXISTS goal_ladder_figures;`,
+      `CREATE TABLE goal_ladder_state_v2 (
+        goal_id TEXT PRIMARY KEY REFERENCES goals(id),
+        last_shown_rank INTEGER NOT NULL,
+        last_view_fuel REAL NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+      `INSERT INTO goal_ladder_state_v2 (goal_id, last_shown_rank, last_view_fuel, updated_at)
+        SELECT goal_id, last_shown_rank, last_view_fuel, updated_at FROM goal_ladder_state
+        WHERE last_shown_rank IS NOT NULL AND last_view_fuel IS NOT NULL;`,
+      `DROP TABLE goal_ladder_state;`,
+      `ALTER TABLE goal_ladder_state_v2 RENAME TO goal_ladder_state;`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
