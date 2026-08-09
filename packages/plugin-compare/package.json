@@ -12,6 +12,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/plugin-knowledge-tree": "workspace:*",
     "zod": "^4.1.0"
   },
   "devDependencies": {

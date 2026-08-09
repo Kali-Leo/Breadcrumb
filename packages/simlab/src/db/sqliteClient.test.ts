@@ -2,8 +2,9 @@
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
  * "keep higher confidence" ON CONFLICT semantics, the ladder's assessment board table
- * (migration 0017, spec 022), and the comparison tree's whole-replace profile/item tables
- * (migration 0018, spec 023) — all against a real database file instead of the fakes
+ * (migration 0017, spec 022), the comparison tree's whole-replace profile/item tables
+ * (migration 0018, spec 023), and the comparison tree's semantic-alignment crosswalk table
+ * (migration 0019, spec 024) — all against a real database file instead of the fakes
  * core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
@@ -279,5 +280,121 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
     await temp.repos.comparisons.deleteProfile("profile1");
     expect(await temp.repos.comparisons.getProfile("profile1")).toBeNull();
     expect(await temp.repos.comparisons.listItems("profile1")).toEqual([]);
+  });
+});
+
+describe("comparison_alignments (real sqlite, migration 0019)", () => {
+  it("round-trips verdicts, overwrites on re-judgment, and clears on replaceProfile", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-09T10:00:00.000Z";
+
+    await temp.repos.comparisons.replaceProfile(
+      {
+        id: "profile1",
+        title: "计算机科学本科课程",
+        origin: "searched",
+        description: "某校计算机科学系公开的本科培养方案",
+        source_note: "https://example.edu/cs-curriculum",
+        created_at: now,
+      },
+      [
+        {
+          id: "item1",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "数据结构",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#ds",
+          position: 0,
+        },
+        {
+          id: "item2",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "操作系统",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#os",
+          position: 1,
+        },
+      ],
+    );
+    await temp.repos.knowledgeNodes.insert({
+      id: "node1",
+      parent_id: null,
+      label: "数据结构",
+      summary: "常见数据结构",
+      kind: "concept",
+      created_at: now,
+    });
+
+    await temp.repos.comparisons.upsertAlignments([
+      {
+        item_id: "item1",
+        node_id: "node1",
+        profile_id: "profile1",
+        verdict: "same",
+        confidence: "高",
+        reason: "两者都指代同一个数据结构概念",
+        judged_at: "2026-08-09T11:00:00.000Z",
+      },
+      {
+        item_id: "item2",
+        node_id: "node1",
+        profile_id: "profile1",
+        verdict: "different",
+        confidence: "低",
+        reason: "操作系统与数据结构并非同一概念",
+        judged_at: "2026-08-09T11:00:01.000Z",
+      },
+    ]);
+
+    const stored = await temp.repos.comparisons.listAlignments("profile1");
+    expect(stored.map((row) => `${row.item_id}:${row.node_id}:${row.verdict}`)).toEqual([
+      "item1:node1:same",
+      "item2:node1:different",
+    ]);
+
+    // PRIMARY KEY (item_id, node_id) overwrite semantics: re-judging the same pair replaces
+    // it in place rather than accumulating a second row.
+    await temp.repos.comparisons.upsertAlignments([
+      {
+        item_id: "item1",
+        node_id: "node1",
+        profile_id: "profile1",
+        verdict: "different",
+        confidence: "中",
+        reason: "重新判定为不同概念",
+        judged_at: "2026-08-09T12:00:00.000Z",
+      },
+    ]);
+    const afterRejudge = await temp.repos.comparisons.listAlignments("profile1");
+    expect(afterRejudge).toHaveLength(2);
+    const item1Row = afterRejudge.find((row) => row.item_id === "item1");
+    expect(item1Row?.verdict).toBe("different");
+    expect(item1Row?.confidence).toBe("中");
+
+    // replaceProfile clears every alignment judged against the profile's old item set.
+    await temp.repos.comparisons.replaceProfile(
+      {
+        id: "profile1",
+        title: "计算机科学本科课程（修订版）",
+        origin: "searched",
+        description: "某校计算机科学系公开的本科培养方案",
+        source_note: "https://example.edu/cs-curriculum",
+        created_at: now,
+      },
+      [
+        {
+          id: "item9",
+          profile_id: "profile1",
+          parent_id: null,
+          label: "编译原理",
+          aliases_json: "[]",
+          source_ref: "https://example.edu/cs-curriculum#compilers",
+          position: 0,
+        },
+      ],
+    );
+    expect(await temp.repos.comparisons.listAlignments("profile1")).toEqual([]);
   });
 });

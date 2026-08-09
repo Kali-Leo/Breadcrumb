@@ -3,7 +3,7 @@
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
  * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
- * ComparisonProfileItemRow.
+ * ComparisonProfileItemRow, ComparisonAlignmentRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -238,4 +238,20 @@ export interface ComparisonProfileItemRow {
   aliases_json: string;
   source_ref: string;
   position: number;
+}
+
+export type AlignmentVerdict = "same" | "different";
+export type AlignmentConfidence = "高" | "中" | "低";
+
+/** One crosswalk verdict between a comparison profile item and a user knowledge node (spec
+ * 024). PRIMARY KEY (item_id, node_id) means a pair is judged exactly once — both 'same' and
+ * 'different' verdicts are stored so the LLM is never asked about the same pair twice. */
+export interface ComparisonAlignmentRow {
+  item_id: string;
+  node_id: string;
+  profile_id: string;
+  verdict: AlignmentVerdict;
+  confidence: AlignmentConfidence;
+  reason: string;
+  judged_at: string;
 }

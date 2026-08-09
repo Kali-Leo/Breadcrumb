@@ -32,6 +32,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "🌲 对比画像构建（实验功能）",
     hint: "在对比树里按输入检索构建新画像：AI 提案后逐条核验资料来源，较耗时（独立计费）",
   },
+  compareAlignment: {
+    name: "🌉 对比语义对齐",
+    hint: "对比树里让 AI 判定你的用词与资料用词是否同一概念；判定永久复用，只为新出现的组合花钱（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {

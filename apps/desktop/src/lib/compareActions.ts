@@ -7,8 +7,10 @@
  */
 import type { ComparisonProfileItemRow } from "@breadcrumb/core-db";
 import {
+  alignmentCountsAsOverlap,
   buildOverlapTree,
   findProfileStructureError,
+  type LeafMatch,
   matchProfileLeaves,
   type OverlapNode,
   type ProfileDefinition,
@@ -129,15 +131,34 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
   const repos = await getRepos();
   const profile = await repos.comparisons.getProfile(profileId);
   if (profile === null) return null;
-  const [itemRows, nodes, aliasRows, sightings, claims] = await Promise.all([
+  const [itemRows, nodes, aliasRows, sightings, claims, alignments] = await Promise.all([
     repos.comparisons.listItems(profileId),
     repos.knowledgeNodes.listAll(),
     repos.nodeAliases.listAll(),
     repos.nodeSightings.listAll(),
     repos.masteryClaims.listAll(),
+    repos.comparisons.listAlignments(profileId),
   ]);
   const items = profileRowsToDefinitionItems(itemRows);
   const matches = matchProfileLeaves(items, nodes, aliasRows);
+  // Semantic crosswalk verdicts (spec 024) fill leaves the conservative string pass missed —
+  // first confident "same" per item wins; low-confidence sames never score.
+  const labelByNodeId = new Map(nodes.map((node) => [node.id, node.label]));
+  for (const alignment of alignments) {
+    if (!alignmentCountsAsOverlap(alignment.verdict, alignment.confidence)) continue;
+    if (matches.get(alignment.item_id) ?? null) continue;
+    if (!matches.has(alignment.item_id)) continue; // only leaves live in the match map
+    const nodeLabel = labelByNodeId.get(alignment.node_id);
+    if (nodeLabel === undefined) continue; // node deleted since judgment
+    const semanticMatch: LeafMatch = {
+      itemKey: alignment.item_id,
+      nodeId: alignment.node_id,
+      nodeLabel,
+      via: "semantic",
+      matchedText: alignment.reason,
+    };
+    matches.set(alignment.item_id, semanticMatch);
+  }
   const masteryByNode = computeMastery(sightings, claims, nowIso());
   const roots = buildOverlapTree(
     items,

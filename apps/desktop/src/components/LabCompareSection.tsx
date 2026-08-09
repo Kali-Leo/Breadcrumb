@@ -31,10 +31,16 @@ function NodeDetail({ node }: { node: OverlapNode }) {
       </p>
       {node.isLeaf &&
         (node.match !== null ? (
-          <p className="text-stone-500">
-            对上了你的「{node.match.nodeLabel}」
-            {node.match.via === "alias" && `（经由资料里的「${node.match.matchedText}」）`}
-          </p>
+          node.match.via === "semantic" ? (
+            <p className="text-stone-500">
+              语义对齐到你的「{node.match.nodeLabel}」：{node.match.matchedText}
+            </p>
+          ) : (
+            <p className="text-stone-500">
+              对上了你的「{node.match.nodeLabel}」
+              {node.match.via === "alias" && `（经由资料里的「${node.match.matchedText}」）`}
+            </p>
+          )
         ) : (
           <p className="text-stone-400">还没对上你的知识点</p>
         ))}
@@ -90,6 +96,7 @@ export function LabCompareSection() {
   const expandedKeys = useCompareStore((state) => state.expandedKeys);
   const detailKey = useCompareStore((state) => state.detailKey);
   const loading = useCompareStore((state) => state.loading);
+  const aligning = useCompareStore((state) => state.aligning);
   const load = useCompareStore((state) => state.load);
   const selectProfile = useCompareStore((state) => state.selectProfile);
   const toggleExpanded = useCompareStore((state) => state.toggleExpanded);
@@ -141,6 +148,7 @@ export function LabCompareSection() {
             />
           )
         )}
+        {aligning && <p className="text-stone-400">语义对齐进行中…</p>}
         {detailNode !== null && <NodeDetail node={detailNode} />}
         {selectedProfile !== null && (
           <p className="text-[11px] text-stone-400">资料出处：{selectedProfile.source_note}</p>

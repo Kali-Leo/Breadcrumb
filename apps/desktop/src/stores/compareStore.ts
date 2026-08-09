@@ -9,6 +9,7 @@ import type { ComparisonProfileRow } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { create } from "zustand";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
+import { runAlignmentForProfile } from "../lib/compareAlignActions";
 import { runExperimentalProfileBuild } from "../lib/compareBuildActions";
 import { getRepos } from "../lib/db";
 import { useSettingsStore } from "./settingsStore";
@@ -24,6 +25,9 @@ interface CompareState {
   detailKey: string | null;
   loading: boolean;
   building: boolean;
+  /** True while the background semantic alignment for the selected profile runs — drives the
+   * plain "语义对齐进行中…" note; the string-matched tree shows instantly regardless. */
+  aligning: boolean;
   /** Plain outcome line of the last experimental build (includes the token cost). */
   buildNote: string | null;
   load(): Promise<void>;
@@ -31,6 +35,24 @@ interface CompareState {
   toggleExpanded(key: string): void;
   selectDetail(key: string | null): void;
   buildFromTopic(topic: string): Promise<void>;
+}
+
+/** Fire-and-forget alignment for one profile; when new pairs got judged, quietly recompute
+ * the tree so semantic matches appear without the user doing anything. */
+async function alignInBackground(
+  profileId: string,
+  refresh: (profileId: string) => Promise<void>,
+  setAligning: (aligning: boolean) => void,
+): Promise<void> {
+  setAligning(true);
+  try {
+    const judged = await runAlignmentForProfile(profileId);
+    if (judged !== null && judged > 0) await refresh(profileId);
+  } catch (error) {
+    console.warn("comparison alignment skipped:", error);
+  } finally {
+    setAligning(false);
+  }
 }
 
 export const useCompareStore = create<CompareState>((set, get) => ({
@@ -41,6 +63,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   detailKey: null,
   loading: false,
   building: false,
+  aligning: false,
   buildNote: null,
 
   async load() {
@@ -55,6 +78,19 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       if (current === null && first !== undefined) {
         await get().selectProfile(first.id);
       }
+      // Silent pre-alignment (spec 024 §2): the not-selected profiles build their crosswalk
+      // in the background so a later click lands on ready verdicts. Sequential and fully
+      // deduplicated — when nothing new appeared since last time, this costs zero tokens.
+      void (async () => {
+        for (const profile of profiles) {
+          if (profile.id === get().selectedProfileId) continue;
+          try {
+            await runAlignmentForProfile(profile.id);
+          } catch (error) {
+            console.warn("background alignment skipped:", error);
+          }
+        }
+      })();
     } catch (error) {
       console.warn("comparison profiles load skipped:", error);
       set({ loading: false });
@@ -64,6 +100,8 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   async selectProfile(profileId) {
     set({ loading: true, detailKey: null });
     try {
+      // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
+      // alignment runs behind it and quietly patches the tree when new verdicts land.
       const tree = await computeComparisonTree(profileId);
       set({
         selectedProfileId: profileId,
@@ -71,6 +109,15 @@ export const useCompareStore = create<CompareState>((set, get) => ({
         expandedKeys: new Set<string>(),
         loading: false,
       });
+      void alignInBackground(
+        profileId,
+        async (alignedProfileId) => {
+          if (get().selectedProfileId !== alignedProfileId) return;
+          const refreshed = await computeComparisonTree(alignedProfileId);
+          set({ tree: refreshed });
+        },
+        (aligning) => set({ aligning }),
+      );
     } catch (error) {
       console.warn("comparison tree compute skipped:", error);
       set({ loading: false });

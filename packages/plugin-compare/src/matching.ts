@@ -17,9 +17,10 @@ export interface LeafMatch {
   itemKey: string;
   nodeId: string;
   nodeLabel: string;
-  /** Which side of the profile item matched: its own label or one of its aliases. */
-  via: "label" | "alias";
-  /** The exact profile-side text that matched, for the "对上了哪条" explanation. */
+  /** How the match was made: the item's own label, one of its aliases, or a persisted
+   * semantic-alignment verdict (spec 024). */
+  via: "label" | "alias" | "semantic";
+  /** For label/alias: the profile-side text that matched. For semantic: the judge's reason. */
   matchedText: string;
 }
 

@@ -8,6 +8,11 @@
  * Main exports: userModelParams, productParams.
  */
 import {
+  ALIGNMENT_CANDIDATE_THRESHOLD,
+  ALIGNMENT_JUDGE_BATCH_SIZE,
+  ALIGNMENT_TOP_K,
+} from "@breadcrumb/plugin-compare";
+import {
   ADJACENT_CONCEPT_EDGE_CONFIDENCE,
   DEFAULT_FALLBACK_RECENT_N,
   DEFAULT_TOP_K_SIMILAR,
@@ -115,4 +120,10 @@ export const productParams = {
    * carries no ranking mechanism at all. plugin-planner/ladderRefresh.ts. */
   ladderRefreshMinHours: LADDER_REFRESH_MIN_HOURS,
   ladderRefreshMaxHours: LADDER_REFRESH_MAX_HOURS,
+  /** Comparison-tree semantic alignment (spec 024): local-embedding recall floor (wider than
+   * the synonym gate's 0.85 — the LLM judge restores precision), candidates per profile leaf,
+   * and pairs per batched judge call. plugin-compare/alignment.ts. */
+  alignmentCandidateThreshold: ALIGNMENT_CANDIDATE_THRESHOLD,
+  alignmentTopK: ALIGNMENT_TOP_K,
+  alignmentJudgeBatchSize: ALIGNMENT_JUDGE_BATCH_SIZE,
 } as const;

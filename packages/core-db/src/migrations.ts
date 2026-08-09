@@ -440,6 +440,26 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_comparison_profile_items_profile ON comparison_profile_items(profile_id);`,
     ],
   },
+  {
+    // Comparison tree semantic-alignment crosswalk (spec 024): an LLM-judged verdict on
+    // whether one profile item and one knowledge node denote the same concept, persisted once
+    // and reused forever. Both 'same' AND 'different' verdicts are stored — the point is that a
+    // pair is never re-judged, not just that matches are remembered.
+    id: "0019_comparison_alignments",
+    statements: [
+      `CREATE TABLE comparison_alignments (
+        item_id TEXT NOT NULL REFERENCES comparison_profile_items(id),
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        profile_id TEXT NOT NULL REFERENCES comparison_profiles(id),
+        verdict TEXT NOT NULL CHECK (verdict IN ('same','different')),
+        confidence TEXT NOT NULL CHECK (confidence IN ('高','中','低')),
+        reason TEXT NOT NULL,
+        judged_at TEXT NOT NULL,
+        PRIMARY KEY (item_id, node_id)
+      );`,
+      `CREATE INDEX idx_comparison_alignments_profile ON comparison_alignments(profile_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

@@ -22,6 +22,7 @@ const PURPOSE_NAMES: Record<string, string> = {
   "goal-planning": "目标规划",
   ladder: "排位榜",
   "compare-profile": "对比画像",
+  "compare-align": "对比对齐",
 };
 
 function renderCost(cost: CostByCurrency): string {
