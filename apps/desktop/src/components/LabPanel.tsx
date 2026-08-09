@@ -1,7 +1,8 @@
 /**
  * Purpose: the 🧪 lab view (spec 012) — a temporary, deliberately unpolished full-page
  * surface for validating the planner: node value table, frontier recommendations, a
- * self-report entry point, and the goal/route comparison. It is the debug-grade face of
+ * self-report entry point, and (ranked mode only, spec 021) the goal/route comparison and
+ * ladder title. It is the debug-grade face of
  * the same engine the memory palace will eventually wear; sits beside it in the sidebar.
  * Main exports: LabPanel.
  */
@@ -59,8 +60,10 @@ function SelfReportInput() {
 
 export function LabPanel() {
   const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
+  const learningMode = useSettingsStore((state) => state.learningMode);
   const overlayOpen = useLabUiStore((state) => state.overlayOpen);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: learningMode is a deliberate re-run trigger — recompute() reads it via settingsStore, and the frontier's goal-gap boost ("目标内" tag) is ranked-only, so a mode switch must recompute or casual keeps showing ranked-mode leftovers (spec 021 §1)
   useEffect(() => {
     if (labPanelEnabled) {
       usePlannerStore
@@ -68,7 +71,7 @@ export function LabPanel() {
         .recompute()
         .catch((error: unknown) => console.warn("planner recompute skipped:", error));
     }
-  }, [labPanelEnabled]);
+  }, [labPanelEnabled, learningMode]);
 
   if (!labPanelEnabled) {
     return (
@@ -82,7 +85,9 @@ export function LabPanel() {
     );
   }
 
-  if (overlayOpen) {
+  // Goal-related surfaces exist only in ranked mode (spec 021 §1): casual mode carries no
+  // goal entries at all, so the overlay — reachable only through the goal section — hides too.
+  if (overlayOpen && learningMode === "ranked") {
     return <GoalOverlayView />;
   }
 
@@ -97,7 +102,7 @@ export function LabPanel() {
         <LabNodeTable />
         <LabFrontierList />
         <SelfReportInput />
-        <LabGoalSection />
+        {learningMode === "ranked" && <LabGoalSection />}
         <LabLadderSection />
         <LabFailuresSection />
       </div>
