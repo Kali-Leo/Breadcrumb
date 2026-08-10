@@ -14,9 +14,10 @@ export interface OverlapNode {
   label: string;
   sourceRef: string;
   isLeaf: boolean;
-  /** Leaf typing (spec 026): practice leaves score by the learner's own attestation. */
-  kind: "knowledge" | "practice" | "tool" | "structure";
-  /** Profile leaves under (or at) this node. Always ≥ 1. */
+  /** Leaf typing (spec 026/028): practice AND tool leaves score by the learner's own
+   * attestation; hub leaves are undecomposed big entities that never enter the score. */
+  kind: "knowledge" | "practice" | "tool" | "hub" | "structure";
+  /** Scored profile leaves under (or at) this node. 0 for an undecomposed hub (spec 028). */
   leafCount: number;
   /** Overlap mass under this node — knowledge/tool leaves contribute 0 or 1, practice
    * leaves contribute their attestation value (0 / 0.5 / 1), so this can be fractional. */
@@ -29,11 +30,13 @@ export interface OverlapNode {
 }
 
 /**
- * Builds the root list of the overlap tree in authored item order. A knowledge/tool leaf
- * counts as overlapping when it matched a user node AND that node is currently lit (the
- * isLit predicate keeps mastery semantics injected, not imported); a practice leaf scores
+ * Builds the root list of the overlap tree in authored item order. A knowledge leaf counts
+ * as overlapping when it matched a user node AND that node is currently lit (the isLit
+ * predicate keeps mastery semantics injected, not imported); practice AND tool leaves score
  * whatever the learner attested (practiceValueByKey, 0 / 0.5 / 1 — the user is the only
- * expert on their own experience, spec 026).
+ * expert on their own experience, spec 026/028); an undecomposed hub leaf contributes
+ * nothing to either side of any ratio — its map match survives only as a 线索 for the UI
+ * (spec 028: binary scoring on MATLAB-class entities is meaningless).
  */
 export function buildOverlapTree(
   items: readonly ProfileItemDefinition[],
@@ -52,7 +55,7 @@ export function buildOverlapTree(
   function build(item: ProfileItemDefinition): OverlapNode {
     const kind = item.kind ?? "knowledge";
     if (leafKeys.has(item.key)) {
-      if (kind === "practice") {
+      if (kind === "practice" || kind === "tool") {
         const value = practiceValueByKey.get(item.key) ?? 0;
         return {
           key: item.key,
@@ -63,11 +66,28 @@ export function buildOverlapTree(
           leafCount: 1,
           matchedLeafCount: value,
           ratio: value,
-          match: null,
+          // Tool leaves keep their map match purely as a 线索 line (spec 028).
+          match: matchByKey.get(item.key) ?? null,
           children: [],
         };
       }
       const match = matchByKey.get(item.key) ?? null;
+      if (kind === "hub" || kind === "structure") {
+        // Undecomposed hub (or a structure item that ended up childless): out of every
+        // denominator; the match survives as a 线索 only.
+        return {
+          key: item.key,
+          label: item.label,
+          sourceRef: item.sourceRef,
+          isLeaf: true,
+          kind,
+          leafCount: 0,
+          matchedLeafCount: 0,
+          ratio: 0,
+          match,
+          children: [],
+        };
+      }
       const overlapping = match !== null && isLit(match.nodeId);
       return {
         key: item.key,

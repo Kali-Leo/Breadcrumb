@@ -1,10 +1,13 @@
 /**
- * Purpose: pure builder of the ESCO-derived 知识与技能 branch (spec 027) — essential/optional
- * sections of fine-grained ESCO concepts, with directly-listed broad concepts expanded one
- * narrower level as sub-nodes. Verbatim official data (CC BY 4.0), no LLM anywhere.
+ * Purpose: pure builder of the ESCO-derived 知识与技能 branch (spec 027/028) — essential/
+ * optional sections where knowledge-type concepts become UNSCORED hubs (MATLAB-class
+ * entities never take binary scores; canonical subtrees mount under them where available)
+ * and skill/competence phrases become attestation-scored practice items. Verbatim official
+ * data (CC BY 4.0), no LLM anywhere.
  * Main exports: EscoOccupationEntry, EscoConceptDict, buildEscoKnowledgeBranch.
  */
 import type { ProfileItemDefinition } from "./profileSchema";
+import { type MountableSubtree, mountSubtreeUnder } from "./subtreeMount";
 
 /** One concept reference in an occupation's skill list; children are narrower concept ids
  * that are not themselves directly listed for the occupation (deduped at extraction). */
@@ -29,19 +32,21 @@ function clip(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-function conceptIdOf(label: string): string {
-  return `c:${label.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`;
+function normalized(label: string): string {
+  return label.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
 }
 
 /**
- * Builds the flat item list of the branch (root item key "esco"). Every leaf cites ESCO and
- * the crosswalk path it arrived through, so a wrong-occupation mapping stays inspectable
- * (spec 027 三问). Concepts are deduped across the whole branch — a narrower concept shown
- * under one parent never repeats under another.
+ * Builds the flat item list of the branch (root item key "esco"). Knowledge-type concepts
+ * are hubs: no conceptId, no binary score — their only paths to a number are a mounted
+ * canonical subtree (here) or on-demand decomposition (spec 028 §3). Skill/competence
+ * phrases carry conceptId only for 线索 anchoring; they score by attestation. Every item
+ * cites ESCO and the crosswalk path it arrived through (spec 027 三问).
  */
 export function buildEscoKnowledgeBranch(
   entry: EscoOccupationEntry,
   concepts: EscoConceptDict,
+  mounts: ReadonlyMap<string, MountableSubtree> = new Map(),
 ): ProfileItemDefinition[] {
   const via = entry.via.map((v) => `${v.matchType}→${v.title}`).join("、");
   const source = clip(`ESCO v1.2.1（欧盟，CC BY 4.0）· 官方对照 ${via}`, 200);
@@ -57,22 +62,35 @@ export function buildEscoKnowledgeBranch(
   });
 
   const used = new Set<string>();
-  const leaf = (id: string, parentKey: string, note: string): void => {
+  const mountedSubtrees = new Set<string>();
+
+  const emit = (id: string, parentKey: string, note: string): void => {
     const concept = concepts[id];
     if (concept === undefined || used.has(id)) return;
     used.add(id);
+    const isHub = concept.type === "knowledge";
+    const key = `esco-${id}`;
+    const aliases = concept.aliases.filter((a) => a.length > 0 && a.length <= 60).slice(0, 12);
+    const mount = isHub ? mounts.get(normalized(concept.label)) : undefined;
+    const mountable = mount !== undefined && !mountedSubtrees.has(mount.id);
     items.push({
-      key: `esco-${id}`,
+      key,
       parentKey,
       label: clip(concept.label, 60),
-      aliases: concept.aliases.filter((a) => a.length > 0 && a.length <= 60).slice(0, 12),
+      aliases,
       sourceRef: clip(
-        `${source} · ${concept.type === "knowledge" ? "知识概念" : "技能概念"} · ${note}`,
+        isHub
+          ? `${source} · 知识概念（整域，不做二元计分）· ${note}${mountable ? ` · 已挂载：${mount.note}` : ""}`
+          : `${source} · 技能条目（自陈计分）· ${note}`,
         300,
       ),
-      conceptId: conceptIdOf(concept.label),
-      kind: "knowledge",
+      conceptId: `c:${normalized(concept.label)}`,
+      kind: isHub ? "hub" : "practice",
     });
+    if (mountable) {
+      mountedSubtrees.add(mount.id);
+      items.push(...mountSubtreeUnder(key, mount));
+    }
   };
 
   const section = (
@@ -97,29 +115,22 @@ export function buildEscoKnowledgeBranch(
         (id) => concepts[id] !== undefined && !used.has(id),
       );
       if (parentConcept !== undefined && childIds.length > 0 && !used.has(ref.id)) {
-        // Broad concept with surviving narrower children — becomes a sub-node so the tree
-        // keeps its outline shape instead of one long flat list.
-        used.add(ref.id);
+        // Broad concept with surviving narrower children — its narrower concepts nest
+        // under it, keeping the outline shape (children are hubs/practice themselves).
+        emit(ref.id, key, note);
         const groupKey = `esco-${ref.id}`;
-        items.push({
-          key: groupKey,
-          parentKey: key,
-          label: clip(parentConcept.label, 60),
-          aliases: [],
-          sourceRef: clip(`${source} · ${note} · 下级为 ESCO narrower 概念`, 300),
-          conceptId: null,
-          kind: "structure",
-        });
         for (const childId of childIds) {
-          leaf(childId, groupKey, `「${clip(parentConcept.label, 40)}」的下级概念`);
+          emit(childId, groupKey, `「${clip(parentConcept.label, 40)}」的下级概念`);
         }
       } else {
-        // Plain leaf; if the parent was already shown elsewhere its surviving children
-        // still land here — nothing is silently dropped.
-        leaf(ref.id, key, note);
-        for (const childId of childIds) leaf(childId, key, note);
+        emit(ref.id, key, note);
+        for (const childId of childIds) leafFallback(childId, key, note);
       }
     }
+  };
+  // A child whose parent was already shown elsewhere still lands in the section directly.
+  const leafFallback = (id: string, parentKey: string, note: string): void => {
+    emit(id, parentKey, note);
   };
 
   section("esco-ess", "必备", entry.essential, "ESCO essential（必备）");

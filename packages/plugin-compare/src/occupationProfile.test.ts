@@ -48,7 +48,7 @@ describe("buildOccupationProfile", () => {
     const kinds = new Map(profile.items.map((item) => [item.key, item.kind]));
     expect(kinds.get("task-100")).toBe("practice");
     expect(kinds.get("tech-0")).toBe("tool");
-    expect(kinds.get("know-0")).toBe("knowledge");
+    expect(kinds.get("know-0")).toBe("hub");
   });
 
   it("prefers core tasks and keeps the verbatim text in the sourceRef", () => {
@@ -71,8 +71,8 @@ describe("buildOccupationProfile", () => {
 
   it("dedupes knowledge/skill descriptors by name", () => {
     const profile = buildOccupationProfile(occupation());
-    const knowledgeLeaves = profile.items.filter((item) => item.kind === "knowledge");
-    expect(knowledgeLeaves.map((item) => item.label).sort()).toEqual([
+    const descriptorHubs = profile.items.filter((item) => item.key.startsWith("know-"));
+    expect(descriptorHubs.map((item) => item.label).sort()).toEqual([
       "Computers and Electronics",
       "Programming",
     ]);
@@ -98,42 +98,120 @@ function escoData(): EscoDataForOccupation {
     entry: {
       via: [{ title: "web developer", matchType: "exactMatch" }],
       essential: [{ id: "prog", children: ["haskell", "js"] }],
-      optional: [{ id: "js" }, { id: "jenkins" }],
+      optional: [{ id: "js" }, { id: "debug" }],
     },
     concepts: {
       prog: { label: "computer programming", type: "knowledge", aliases: ["programming"] },
       haskell: { label: "Haskell", type: "knowledge", aliases: [] },
       js: { label: "JavaScript", type: "knowledge", aliases: ["JS"] },
-      jenkins: { label: "Jenkins", type: "tool", aliases: [] },
+      debug: { label: "debug software", type: "skill", aliases: [] },
     },
   };
 }
 
-describe("ESCO knowledge branch (spec 027)", () => {
-  it("replaces coarse descriptors with essential/optional sections and narrower sub-nodes", () => {
+describe("ESCO knowledge branch (spec 027/028)", () => {
+  it("types knowledge concepts as unscored hubs and skill phrases as attested practice", () => {
     const profile = buildOccupationProfile(occupation(), [], escoData());
     expect(profileDefinitionSchema.safeParse(profile).success).toBe(true);
     expect(findProfileStructureError(profile)).toBeNull();
-    // Coarse O*NET descriptors are gone; the ESCO branch stands in their place.
     expect(profile.items.find((item) => item.key === "knowledge")).toBeUndefined();
-    expect(profile.items.find((item) => item.key === "esco")?.label).toBe("知识与技能");
     const byKey = new Map(profile.items.map((item) => [item.key, item]));
-    // Broad concept became a sub-node whose children are its narrower concepts.
-    expect(byKey.get("esco-prog")?.parentKey).toBe("esco-ess");
+    expect(byKey.get("esco-prog")?.kind).toBe("hub");
     expect(byKey.get("esco-haskell")?.parentKey).toBe("esco-prog");
-    expect(byKey.get("esco-haskell")?.kind).toBe("knowledge");
-    expect(byKey.get("esco-haskell")?.sourceRef).toContain("exactMatch");
-    // "js" is claimed by the essential parent's children first, never repeated in 可选.
+    expect(byKey.get("esco-haskell")?.kind).toBe("hub");
     expect(byKey.get("esco-js")?.parentKey).toBe("esco-prog");
-    expect(byKey.get("esco-jenkins")?.parentKey).toBe("esco-opt");
-    expect(byKey.get("esco-jenkins")?.aliases).toEqual([]);
-    expect(byKey.get("esco-js")?.aliases).toEqual(["JS"]);
+    expect(byKey.get("esco-debug")?.kind).toBe("practice");
+    expect(byKey.get("esco-debug")?.parentKey).toBe("esco-opt");
   });
 
-  it("keeps the descriptor fallback for crosswalk-uncovered occupations", () => {
+  it("granularity gate (spec 028): no ESCO concept is ever a binary-scored leaf", () => {
+    const profile = buildOccupationProfile(occupation(), [], escoData());
+    const offenders = profile.items.filter(
+      (item) => item.key.startsWith("esco-") && item.kind === "knowledge",
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("mounts a canonical subtree under the matching hub and aggregates from it", () => {
+    const mounts = new Map([
+      [
+        "javascript",
+        {
+          id: "mdn-js",
+          note: "MDN Curriculum 的 JavaScript 模块",
+          items: [
+            {
+              key: "vars",
+              parentKey: null,
+              label: "变量",
+              aliases: [],
+              sourceRef: "MDN Curriculum · Variables",
+              conceptId: null,
+              kind: "knowledge" as const,
+            },
+          ],
+        },
+      ],
+    ]);
+    const esco = { ...escoData(), mounts };
+    const profile = buildOccupationProfile(occupation(), [], esco);
+    expect(findProfileStructureError(profile)).toBeNull();
+    const mounted = profile.items.find((item) => item.key === "m-mdn-js-vars");
+    expect(mounted?.parentKey).toBe("esco-js");
+    expect(mounted?.kind).toBe("knowledge");
+    const hub = profile.items.find((item) => item.key === "esco-js");
+    expect(hub?.sourceRef).toContain("已挂载");
+    // The mounted knowledge point scores; hubs stay out of every denominator.
+    const matches = new Map([
+      [
+        "m-mdn-js-vars",
+        {
+          itemKey: "m-mdn-js-vars",
+          nodeId: "n1",
+          nodeLabel: "变量",
+          via: "label" as const,
+          matchedText: "变量",
+        },
+      ],
+    ]);
+    // Denominator: the mounted knowledge point + the attested skill phrase; the three
+    // hubs (prog/haskell/js) contribute nothing.
+    const roots = buildOverlapTree(profile.items, matches, () => true);
+    const escoBranch = roots.find((root) => root.key === "esco");
+    expect(escoBranch?.leafCount).toBe(2);
+    expect(escoBranch?.matchedLeafCount).toBe(1);
+  });
+
+  it("keeps the descriptor fallback as unscored hubs for uncovered occupations", () => {
     const profile = buildOccupationProfile(occupation(), [], null);
     expect(profile.items.find((item) => item.key === "esco")).toBeUndefined();
-    expect(profile.items.find((item) => item.key === "knowledge")?.label).toBe("知识领域");
+    const know = profile.items.find((item) => item.key === "know-0");
+    expect(know?.kind).toBe("hub");
+  });
+});
+
+describe("attestation scoring for tools (spec 028)", () => {
+  it("scores tool leaves by the learner's attestation, keeping the map match as 线索", () => {
+    const profile = buildOccupationProfile(occupation());
+    const toolValues = new Map([["tech-0", 0.5]]);
+    const matches = new Map([
+      [
+        "tech-0",
+        {
+          itemKey: "tech-0",
+          nodeId: "n1",
+          nodeLabel: "JavaScript",
+          via: "label" as const,
+          matchedText: "JavaScript",
+        },
+      ],
+    ]);
+    const roots = buildOverlapTree(profile.items, matches, () => true, toolValues);
+    const techBranch = roots.find((root) => root.key === "tech");
+    expect(techBranch?.leafCount).toBe(2);
+    expect(techBranch?.matchedLeafCount).toBeCloseTo(0.5);
+    const jsLeaf = techBranch?.children.find((child) => child.key === "tech-0");
+    expect(jsLeaf?.match?.nodeLabel).toBe("JavaScript");
   });
 });
 

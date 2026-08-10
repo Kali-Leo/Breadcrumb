@@ -13,11 +13,14 @@ import {
   type EscoOccupationEntry,
 } from "./escoKnowledgeBranch";
 import type { ProfileDefinition, ProfileItemDefinition } from "./profileSchema";
+import type { MountableSubtree } from "./subtreeMount";
 
-/** The occupation's slice of the bundled ESCO dataset (spec 027). */
+/** The occupation's slice of the bundled ESCO dataset (spec 027), plus the canonical
+ * subtrees that may mount under matching hubs (spec 028). */
 export interface EscoDataForOccupation {
   entry: EscoOccupationEntry;
   concepts: EscoConceptDict;
+  mounts?: ReadonlyMap<string, MountableSubtree>;
 }
 
 export interface OnetOccupation {
@@ -118,7 +121,10 @@ export function buildOccupationProfile(
 
   // Fine-grained ESCO branch (spec 027); the coarse O*NET descriptors below survive ONLY
   // as fallback for the 76 crosswalk-uncovered occupations (mostly "All Other" aggregates).
-  const escoItems = esco === null ? [] : buildEscoKnowledgeBranch(esco.entry, esco.concepts);
+  const escoItems =
+    esco === null
+      ? []
+      : buildEscoKnowledgeBranch(esco.entry, esco.concepts, esco.mounts ?? new Map());
   for (const entry of escoItems) item(entry);
 
   const descriptors = [...occupation.knowledge, ...occupation.skills];
@@ -145,9 +151,10 @@ export function buildOccupationProfile(
         parentKey: "knowledge",
         label: clip(entry.name, 60),
         aliases: [],
-        sourceRef: `${source} · 重要度 ${entry.importance.toFixed(2)}/5`,
+        sourceRef: `${source} · 重要度 ${entry.importance.toFixed(2)}/5 · 整域描述符，不做二元计分`,
         conceptId: `c:${entry.name.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        kind: "knowledge",
+        // Spec 028: these O*NET descriptors are domain-sized — hubs, never binary-scored.
+        kind: "hub",
       });
     });
   }

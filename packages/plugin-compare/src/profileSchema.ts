@@ -22,9 +22,12 @@ export const profileItemDefinitionSchema = z.object({
   /** The canonical concept this leaf embodies (spec 025) — the join key the anchor layer
    * matches user nodes against. null for structural/coarse items. */
   conceptId: z.string().min(1).max(80).nullable(),
-  /** Leaf typing (spec 026): knowledge/tool leaves match via anchors, practice leaves via the
-   * learner's own attestation, structure = organizational. Missing = knowledge (pre-026 data). */
-  kind: z.enum(["knowledge", "practice", "tool", "structure"]).optional(),
+  /** Leaf typing (spec 026/028): knowledge = fine-grained anchor-matched leaf (the only
+   * binary-scored kind); practice = verb items scored by the learner's attestation;
+   * tool = noun tools, also attestation-scored (spec 028 — binary matching on products is
+   * meaningless); hub = big named entity (MATLAB-class), never scored while undecomposed;
+   * structure = organizational. Missing = knowledge (pre-026 data). */
+  kind: z.enum(["knowledge", "practice", "tool", "hub", "structure"]).optional(),
 });
 
 export const profileDefinitionSchema = z.object({
