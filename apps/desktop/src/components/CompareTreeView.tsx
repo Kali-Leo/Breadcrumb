@@ -140,7 +140,10 @@ export function CompareTreeView({
       style={{
         maxHeight: 420,
         cursor: dragRef.current?.moved ? "grabbing" : "grab",
+        // WebKitGTK (Tauri Linux) ignores the unprefixed property — without the prefix a
+        // drag turns into app-wide text selection instead of panning.
         userSelect: "none",
+        WebkitUserSelect: "none",
       }}
       onPointerDown={(event) => {
         const container = containerRef.current;
@@ -160,11 +163,18 @@ export function CompareTreeView({
         const dx = event.clientX - drag.x;
         const dy = event.clientY - drag.y;
         if (!drag.moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD_PX) return;
+        if (!drag.moved) {
+          // Capture only once the gesture is definitely a pan (plain clicks keep their
+          // normal click flow) so native selection-drag can't steal the move stream.
+          container.setPointerCapture(event.pointerId);
+        }
         drag.moved = true;
+        document.getSelection()?.removeAllRanges();
         container.scrollLeft = drag.left - dx;
         container.scrollTop = drag.top - dy;
       }}
-      onPointerUp={() => {
+      onPointerUp={(event) => {
+        containerRef.current?.releasePointerCapture(event.pointerId);
         suppressClickRef.current = dragRef.current?.moved ?? false;
         dragRef.current = null;
         // Let the click event (which fires right after pointerup) see the flag, then clear.
