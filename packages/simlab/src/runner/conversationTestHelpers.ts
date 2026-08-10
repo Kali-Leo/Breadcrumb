@@ -52,6 +52,7 @@ export async function setupConversation(): Promise<{
     title: "t",
     created_at: now,
     updated_at: now,
+    kind: "chat",
   });
   return { temp: db, conversationId };
 }

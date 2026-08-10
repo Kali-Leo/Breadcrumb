@@ -489,6 +489,26 @@ export const MIGRATIONS: readonly Migration[] = [
       `ALTER TABLE comparison_profile_items ADD COLUMN concept_id TEXT;`,
     ],
   },
+  {
+    // Occupation profiles + practice attestations + practice conversations (spec 026):
+    // comparison_profiles gains a category so the UI can split the 教材/真人 toggle;
+    // comparison_profile_items gains a kind so leaves render as knowledge/practice/tool
+    // (structure = non-leaf organizational node). practice_attestations holds the user's own
+    // self-report of a practice leaf — deliberately never AI-verified, mirroring the
+    // mastery_claims self-report design (spec 011). conversations gains a kind so a practice
+    // discussion opened from a practice item is saved but hidden from the sidebar's chat list.
+    id: "0021_occupation_practice",
+    statements: [
+      `ALTER TABLE comparison_profiles ADD COLUMN category TEXT NOT NULL DEFAULT 'curriculum';`,
+      `ALTER TABLE comparison_profile_items ADD COLUMN item_kind TEXT NOT NULL DEFAULT 'knowledge';`,
+      `CREATE TABLE practice_attestations (
+        item_id TEXT PRIMARY KEY,
+        status TEXT NOT NULL CHECK (status IN ('done','partial','not_yet')),
+        attested_at TEXT NOT NULL
+      );`,
+      `ALTER TABLE conversations ADD COLUMN kind TEXT NOT NULL DEFAULT 'chat';`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

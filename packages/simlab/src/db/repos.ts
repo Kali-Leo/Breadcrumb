@@ -23,6 +23,7 @@ import {
   createNodeEmbeddingsRepo,
   createNodeMergeRepo,
   createNodeSightingsRepo,
+  createPracticeRepo,
   createSettingsRepo,
   createTrailSummariesRepo,
   type SqlClient,
@@ -49,6 +50,7 @@ export interface SimlabRepos {
   goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
+  practice: ReturnType<typeof createPracticeRepo>;
 }
 
 export function createSimlabRepos(sql: SqlClient): SimlabRepos {
@@ -73,5 +75,6 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     goalLadders: createGoalLaddersRepo(sql),
     comparisons: createComparisonRepo(sql),
     canonical: createCanonicalRepo(sql),
+    practice: createPracticeRepo(sql),
   };
 }

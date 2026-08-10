@@ -44,6 +44,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       title: "t",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
     await temp.repos.nodeSightings.record({
       id: "sight-1",

@@ -12,5 +12,6 @@ export * from "./goalRepositories";
 export * from "./interestRepositories";
 export * from "./knowledgeRepositories";
 export * from "./migrations";
+export * from "./practiceRepositories";
 export * from "./repositories";
 export * from "./types";

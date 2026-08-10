@@ -35,6 +35,7 @@ async function setupBase(): Promise<TempDatabase> {
     title: "t",
     created_at: now,
     updated_at: now,
+    kind: "chat",
   });
   return db;
 }

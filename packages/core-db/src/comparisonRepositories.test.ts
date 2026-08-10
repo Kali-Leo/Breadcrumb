@@ -1,7 +1,8 @@
 /**
  * Purpose: unit tests for createComparisonRepo using an in-memory fake SqlClient — the
  * comparison tree's whole-replace round-trip, position ordering, profile isolation (spec 023),
- * and concept_id round-tripping through replaceProfile (spec 025).
+ * concept_id round-tripping through replaceProfile (spec 025), and category/item_kind
+ * round-tripping (spec 026).
  */
 import { describe, expect, it } from "vitest";
 import { createComparisonRepo } from "./comparisonRepositories";
@@ -42,18 +43,38 @@ function makeFakeSql() {
         const [id] = params as [string];
         profileRows.delete(id);
       } else if (sql.startsWith("INSERT OR REPLACE INTO comparison_profiles")) {
-        const [id, title, origin, description, source_note, created_at] = params as [
+        const [id, title, origin, description, source_note, created_at, category] = params as [
           string,
           string,
           "builtin" | "searched",
           string,
           string,
           string,
+          "curriculum" | "occupation",
         ];
-        profileRows.set(id, { id, title, origin, description, source_note, created_at });
+        profileRows.set(id, { id, title, origin, description, source_note, created_at, category });
       } else if (sql.startsWith("INSERT OR REPLACE INTO comparison_profile_items")) {
-        const [id, profile_id, parent_id, label, aliases_json, source_ref, position, concept_id] =
-          params as [string, string, string | null, string, string, string, number, string | null];
+        const [
+          id,
+          profile_id,
+          parent_id,
+          label,
+          aliases_json,
+          source_ref,
+          position,
+          concept_id,
+          item_kind,
+        ] = params as [
+          string,
+          string,
+          string | null,
+          string,
+          string,
+          string,
+          number,
+          string | null,
+          "knowledge" | "practice" | "tool" | "structure",
+        ];
         itemRows.set(id, {
           id,
           profile_id,
@@ -63,6 +84,7 @@ function makeFakeSql() {
           source_ref,
           position,
           concept_id,
+          item_kind,
         });
       }
       return Promise.resolve();
@@ -79,6 +101,7 @@ function profile(overrides: Partial<ComparisonProfileRow> = {}): ComparisonProfi
     description: "某校计算机科学系公开的本科培养方案",
     source_note: "https://example.edu/cs-curriculum",
     created_at: "2026-08-09T10:00:00.000Z",
+    category: "curriculum",
     ...overrides,
   };
 }
@@ -93,6 +116,7 @@ function item(overrides: Partial<ComparisonProfileItemRow> = {}): ComparisonProf
     source_ref: "https://example.edu/cs-curriculum#ds",
     position: 0,
     concept_id: null,
+    item_kind: "knowledge",
     ...overrides,
   };
 }
@@ -104,7 +128,7 @@ describe("createComparisonRepo", () => {
     const items = [
       item({ id: "i2", label: "操作系统", position: 1 }),
       item({ id: "i1", label: "数据结构", position: 0, concept_id: "concept-data-structures" }),
-      item({ id: "i3", label: "计算机网络", parent_id: "i2", position: 2 }),
+      item({ id: "i3", label: "计算机网络", parent_id: "i2", position: 2, item_kind: "structure" }),
     ];
     await repo.replaceProfile(profile(), items);
 
@@ -115,6 +139,26 @@ describe("createComparisonRepo", () => {
     // concept_id round-trips both the null (coarse/searched item) and string case.
     expect(stored[0]?.concept_id).toBe("concept-data-structures");
     expect(stored[1]?.concept_id).toBeNull();
+    // item_kind round-trips per-item (spec 026).
+    expect(stored[0]?.item_kind).toBe("knowledge");
+    expect(stored[2]?.item_kind).toBe("structure");
+  });
+
+  it("round-trips an occupation-category profile with practice/tool item kinds (spec 026)", async () => {
+    const { client } = makeFakeSql();
+    const repo = createComparisonRepo(client);
+    await repo.replaceProfile(
+      profile({ id: "p3", title: "前端工程师·某人", category: "occupation" }),
+      [
+        item({ id: "j1", profile_id: "p3", label: "写过生产级 React 项目", item_kind: "practice" }),
+        item({ id: "j2", profile_id: "p3", label: "Webpack", position: 1, item_kind: "tool" }),
+      ],
+    );
+
+    const storedProfile = await repo.getProfile("p3");
+    expect(storedProfile?.category).toBe("occupation");
+    const storedItems = await repo.listItems("p3");
+    expect(storedItems.map((row) => row.item_kind)).toEqual(["practice", "tool"]);
   });
 
   it("replace overwrites previous items rather than accumulating them", async () => {

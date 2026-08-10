@@ -103,6 +103,7 @@ describe("runRoundPipeline", () => {
       title: "t",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
     await temp.repos.knowledgeNodes.insert({
       id: "existing-1",
@@ -171,6 +172,7 @@ describe("runRoundPipeline", () => {
       title: "t",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
 
     const badFetch = (async () =>

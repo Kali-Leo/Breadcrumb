@@ -1,7 +1,8 @@
 /**
  * Purpose: SQL statements for the comparison tree module (spec 023) — evidence-backed
  * real-world profiles the user's own tree can be measured against, stored and replaced whole.
- * The semantic crosswalk itself now lives in canonicalRepositories.ts (spec 025).
+ * Profiles carry a category and items a kind (spec 026, curriculum vs occupation profiles).
+ * The semantic crosswalk itself lives in canonicalRepositories.ts (spec 025).
  * Main exports: createComparisonRepo factory.
  */
 import type { ComparisonProfileItemRow, ComparisonProfileRow, SqlClient } from "./types";
@@ -39,8 +40,9 @@ export function createComparisonRepo(sql: SqlClient) {
       await sql.execute("DELETE FROM comparison_profile_items WHERE profile_id = ?", [profile.id]);
       await sql.execute("DELETE FROM comparison_profiles WHERE id = ?", [profile.id]);
       await sql.execute(
-        `INSERT OR REPLACE INTO comparison_profiles (id, title, origin, description, source_note, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT OR REPLACE INTO comparison_profiles
+           (id, title, origin, description, source_note, created_at, category)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           profile.id,
           profile.title,
@@ -48,13 +50,14 @@ export function createComparisonRepo(sql: SqlClient) {
           profile.description,
           profile.source_note,
           profile.created_at,
+          profile.category,
         ],
       );
       for (const item of items) {
         await sql.execute(
           `INSERT OR REPLACE INTO comparison_profile_items
-             (id, profile_id, parent_id, label, aliases_json, source_ref, position, concept_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+             (id, profile_id, parent_id, label, aliases_json, source_ref, position, concept_id, item_kind)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             item.id,
             item.profile_id,
@@ -64,6 +67,7 @@ export function createComparisonRepo(sql: SqlClient) {
             item.source_ref,
             item.position,
             item.concept_id,
+            item.item_kind,
           ],
         );
       }

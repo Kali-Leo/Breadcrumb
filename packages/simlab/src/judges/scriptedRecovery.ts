@@ -48,6 +48,7 @@ export async function runScriptedRecovery(
       title: "recovery",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
 
     await runConversation({

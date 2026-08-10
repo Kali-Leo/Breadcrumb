@@ -84,6 +84,7 @@ export async function runJourneyDayConversations(
       title: `journey:${ctx.persona.name}:day${ctx.day}`,
       created_at: nowIso,
       updated_at: nowIso,
+      kind: "chat",
     });
 
     const result = await runConversation({

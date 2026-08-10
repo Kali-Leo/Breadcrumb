@@ -4,6 +4,7 @@
  * Main exports: settingsRepo, conversationsRepo, messagesRepo, llmCallsRepo factories.
  */
 import type {
+  ConversationKind,
   ConversationRow,
   Currency,
   LlmCallRow,
@@ -33,12 +34,21 @@ export function createConversationsRepo(sql: SqlClient) {
   return {
     async create(row: ConversationRow): Promise<void> {
       await sql.execute(
-        "INSERT INTO conversations (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
-        [row.id, row.title, row.created_at, row.updated_at],
+        "INSERT INTO conversations (id, title, created_at, updated_at, kind) VALUES (?, ?, ?, ?, ?)",
+        [row.id, row.title, row.created_at, row.updated_at, row.kind],
       );
     },
+    /** Every conversation regardless of kind, newest first. */
     async listRecentFirst(): Promise<ConversationRow[]> {
       return sql.select<ConversationRow>("SELECT * FROM conversations ORDER BY updated_at DESC");
+    },
+    /** One kind only, newest first — the sidebar uses this with 'chat' so practice discussions
+     * (spec 026) stay out of the standing conversation list while remaining fully saved. */
+    async listByKind(kind: ConversationKind): Promise<ConversationRow[]> {
+      return sql.select<ConversationRow>(
+        "SELECT * FROM conversations WHERE kind = ? ORDER BY updated_at DESC",
+        [kind],
+      );
     },
     async touch(id: string, updatedAtIso: string): Promise<void> {
       await sql.execute("UPDATE conversations SET updated_at = ? WHERE id = ?", [updatedAtIso, id]);

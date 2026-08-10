@@ -48,6 +48,7 @@ describe("runInterestStage retry-once", () => {
       title: "t",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
     await temp.repos.knowledgeNodes.insert({
       id: "n1",
@@ -107,6 +108,7 @@ describe("runInterestStage retry-once", () => {
       title: "t",
       created_at: now,
       updated_at: now,
+      kind: "chat",
     });
     await temp.repos.knowledgeNodes.insert({
       id: "n1",

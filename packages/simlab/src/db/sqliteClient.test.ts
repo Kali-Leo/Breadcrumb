@@ -5,8 +5,9 @@
  * (migration 0017, spec 022), the comparison tree's whole-replace profile/item tables
  * (migration 0018, spec 023), the dropped item-scoped alignment table (migration 0019, spec
  * 024, dropped again by migration 0020), and the canonical-concept crosswalk's node<->concept
- * anchor tables (migration 0020, spec 025) — all against a real database file instead of the
- * fakes core-db's own tests use.
+ * anchor tables (migration 0020, spec 025), and occupation profiles / practice attestations /
+ * practice-kind conversations (migration 0021, spec 026) — all against a real database file
+ * instead of the fakes core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
@@ -211,6 +212,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
         description: "某校计算机科学系公开的本科培养方案",
         source_note: "https://example.edu/cs-curriculum",
         created_at: now,
+        category: "curriculum",
       },
       [
         {
@@ -222,6 +224,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           source_ref: "https://example.edu/cs-curriculum#ds",
           position: 0,
           concept_id: null,
+          item_kind: "knowledge",
         },
         {
           id: "item2",
@@ -232,6 +235,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           source_ref: "https://example.edu/cs-curriculum#os",
           position: 1,
           concept_id: null,
+          item_kind: "knowledge",
         },
         {
           id: "item3",
@@ -242,6 +246,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           source_ref: "https://example.edu/cs-curriculum#os-scheduling",
           position: 2,
           concept_id: null,
+          item_kind: "knowledge",
         },
       ],
     );
@@ -261,6 +266,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
         description: "某校计算机科学系公开的本科培养方案",
         source_note: "https://example.edu/cs-curriculum",
         created_at: now,
+        category: "curriculum",
       },
       [
         {
@@ -272,6 +278,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           source_ref: "https://example.edu/cs-curriculum#compilers",
           position: 0,
           concept_id: null,
+          item_kind: "knowledge",
         },
       ],
     );
@@ -377,6 +384,7 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
         description: "某校计算机科学系公开的本科培养方案",
         source_note: "https://example.edu/cs-curriculum",
         created_at: now,
+        category: "curriculum",
       },
       [
         {
@@ -388,10 +396,115 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
           source_ref: "https://example.edu/cs-curriculum#ds",
           position: 0,
           concept_id: "concept-data-structures",
+          item_kind: "knowledge",
         },
       ],
     );
     const items = await temp.repos.comparisons.listItems("profile1");
     expect(items[0]?.concept_id).toBe("concept-data-structures");
+  });
+});
+
+describe("occupation profiles + practice attestations + practice conversations (real sqlite, migration 0021)", () => {
+  it("round-trips an occupation profile with a practice item, overwrites an attestation, and round-trips a practice-kind conversation", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-10T10:00:00.000Z";
+
+    await temp.repos.comparisons.replaceProfile(
+      {
+        id: "profile-occ1",
+        title: "前端工程师·某人",
+        origin: "searched",
+        description: "一位真人前端工程师的自述职业画像",
+        source_note: "用户自述",
+        created_at: now,
+        category: "occupation",
+      },
+      [
+        {
+          id: "item-occ1",
+          profile_id: "profile-occ1",
+          parent_id: null,
+          label: "独立完成过一个生产级 React 项目",
+          aliases_json: "[]",
+          source_ref: "用户自述",
+          position: 0,
+          concept_id: null,
+          item_kind: "practice",
+        },
+      ],
+    );
+    const storedProfile = await temp.repos.comparisons.getProfile("profile-occ1");
+    expect(storedProfile?.category).toBe("occupation");
+    const storedItems = await temp.repos.comparisons.listItems("profile-occ1");
+    expect(storedItems[0]?.item_kind).toBe("practice");
+
+    // Attestation upsert: done, then overwritten to partial rather than accumulating a row.
+    expect(await temp.repos.practice.listAttestations()).toEqual([]);
+    await temp.repos.practice.upsertAttestation({
+      item_id: "item-occ1",
+      status: "done",
+      attested_at: now,
+    });
+    let attestations = await temp.repos.practice.listAttestations();
+    expect(attestations).toEqual([{ item_id: "item-occ1", status: "done", attested_at: now }]);
+
+    const later = "2026-08-10T11:00:00.000Z";
+    await temp.repos.practice.upsertAttestation({
+      item_id: "item-occ1",
+      status: "partial",
+      attested_at: later,
+    });
+    attestations = await temp.repos.practice.listAttestations();
+    expect(attestations).toEqual([{ item_id: "item-occ1", status: "partial", attested_at: later }]);
+
+    // A practice-kind conversation is saved but excluded from the 'chat' sidebar listing.
+    await temp.repos.conversations.create({
+      id: "conv-chat1",
+      title: "普通对话",
+      created_at: now,
+      updated_at: now,
+      kind: "chat",
+    });
+    await temp.repos.conversations.create({
+      id: "conv-practice1",
+      title: "关于「独立完成过一个生产级 React 项目」的讨论",
+      created_at: now,
+      updated_at: now,
+      kind: "practice",
+    });
+    const chatOnly = await temp.repos.conversations.listByKind("chat");
+    expect(chatOnly.map((row) => row.id)).toEqual(["conv-chat1"]);
+    const all = await temp.repos.conversations.listRecentFirst();
+    expect(all.map((row) => row.id).sort()).toEqual(["conv-chat1", "conv-practice1"]);
+  });
+
+  it("defaults category/item_kind/kind for rows written before migration 0021's columns existed", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-10T10:00:00.000Z";
+
+    // Simulates a pre-migration write: only the columns that existed before spec 026.
+    await temp.sql.execute(
+      `INSERT INTO comparison_profiles (id, title, origin, description, source_note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      ["profile-legacy", "legacy", "builtin", "d", "s", now],
+    );
+    await temp.sql.execute(
+      `INSERT INTO comparison_profile_items
+         (id, profile_id, parent_id, label, aliases_json, source_ref, position)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ["item-legacy", "profile-legacy", null, "l", "[]", "s", 0],
+    );
+    await temp.sql.execute(
+      "INSERT INTO conversations (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
+      ["conv-legacy", "t", now, now],
+    );
+
+    const profile = await temp.repos.comparisons.getProfile("profile-legacy");
+    expect(profile?.category).toBe("curriculum");
+    const items = await temp.repos.comparisons.listItems("profile-legacy");
+    expect(items[0]?.item_kind).toBe("knowledge");
+    const conversations = await temp.repos.conversations.listRecentFirst();
+    expect(conversations.find((row) => row.id === "conv-legacy")?.kind).toBe("chat");
   });
 });

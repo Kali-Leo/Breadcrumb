@@ -3,7 +3,8 @@
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
  * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
- * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow.
+ * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow, PracticeStatus,
+ * PracticeAttestationRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -23,11 +24,18 @@ export interface SettingRow {
   updated_at: string;
 }
 
+/** 'chat' = an ordinary conversation, listed in the sidebar. 'practice' = a discussion opened
+ * from a practice item (spec 026) — saved like any other conversation but hidden from the
+ * sidebar's chat list, since it is a temporary offshoot of one practice leaf, not a standing
+ * learning thread. */
+export type ConversationKind = "chat" | "practice";
+
 export interface ConversationRow {
   id: string;
   title: string;
   created_at: string;
   updated_at: string;
+  kind: ConversationKind;
 }
 
 export interface MessageRow {
@@ -213,6 +221,12 @@ export interface AiFailureRow {
   created_at: string;
 }
 
+/** Which side of the 教材/真人 toggle a comparison profile belongs to (spec 026): 'curriculum'
+ * = a syllabus/skill-tree profile (the original spec 023 shape); 'occupation' = a real person's
+ * self-reported career profile, whose leaves carry practice self-attestations rather than pure
+ * knowledge matching. */
+export type ComparisonProfileCategory = "curriculum" | "occupation";
+
 /** A comparison tree's root: an evidence-backed real-world profile the user's own tree can be
  * measured against (spec 023). 'builtin' ships with the app; 'searched' was found on demand via
  * an open web search. Standalone module — unrelated to the ladder or the knowledge tree. */
@@ -223,7 +237,14 @@ export interface ComparisonProfileRow {
   description: string;
   source_note: string;
   created_at: string;
+  category: ComparisonProfileCategory;
 }
+
+/** A leaf's nature (spec 026): 'knowledge' = matched against the user's knowledge tree as
+ * before; 'practice' = matched against the user's own practice attestation, never AI-verified;
+ * 'tool' = a concrete tool/technology used in the role. 'structure' marks a non-leaf
+ * organizational node (a branch heading), never itself matched or attested. */
+export type ComparisonItemKind = "knowledge" | "practice" | "tool" | "structure";
 
 /** One node of a comparison profile's tree. AI-invented content is forbidden here, so
  * source_ref must always be non-empty — it points at where this item's existence was verified
@@ -241,6 +262,7 @@ export interface ComparisonProfileItemRow {
   /** The canonical concept this item embodies (spec 025); null for coarse/searched items that
    * have not been anchored to a canonical concept. */
   concept_id: string | null;
+  item_kind: ComparisonItemKind;
 }
 
 export type AlignmentVerdict = "same" | "different";
@@ -274,4 +296,16 @@ export interface NodeConceptAnchorRow {
   method: AnchorMethod;
   reason: string;
   anchored_at: string;
+}
+
+/** 'done' = the user states they have done this; 'partial' = partially; 'not_yet' = not yet. */
+export type PracticeStatus = "done" | "partial" | "not_yet";
+
+/** The learner's own statement about a practice item (spec 026) — never AI-verified,
+ * deliberately: the user is the only expert on their own experience. One row per item, keyed
+ * by item_id, overwritten in place as the self-report changes over time. */
+export interface PracticeAttestationRow {
+  item_id: string;
+  status: PracticeStatus;
+  attested_at: string;
 }
