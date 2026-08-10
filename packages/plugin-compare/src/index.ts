@@ -9,6 +9,7 @@
  */
 export * from "./alignment";
 export * from "./matching";
+export * from "./occupationProfile";
 export * from "./overlap";
 export * from "./profileSchema";
 export * from "./searchBuild";

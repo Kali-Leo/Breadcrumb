@@ -22,6 +22,9 @@ export const profileItemDefinitionSchema = z.object({
   /** The canonical concept this leaf embodies (spec 025) — the join key the anchor layer
    * matches user nodes against. null for structural/coarse items. */
   conceptId: z.string().min(1).max(80).nullable(),
+  /** Leaf typing (spec 026): knowledge/tool leaves match via anchors, practice leaves via the
+   * learner's own attestation, structure = organizational. Missing = knowledge (pre-026 data). */
+  kind: z.enum(["knowledge", "practice", "tool", "structure"]).optional(),
 });
 
 export const profileDefinitionSchema = z.object({
@@ -31,6 +34,9 @@ export const profileDefinitionSchema = z.object({
   /** The profile-level statement of what material backs it, with retrieval date. */
   sourceNote: z.string().min(1).max(400),
   items: z.array(profileItemDefinitionSchema).min(1).max(1500),
+  /** Which side of the 教材/真人 toggle this profile belongs to (spec 026). Missing =
+   * curriculum (pre-026 data). */
+  category: z.enum(["curriculum", "occupation"]).optional(),
 });
 
 export type ProfileItemDefinition = z.infer<typeof profileItemDefinitionSchema>;
