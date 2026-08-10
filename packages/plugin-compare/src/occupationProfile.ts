@@ -1,13 +1,24 @@
 /**
  * Purpose: pure builder turning one internalized O*NET occupation record into a comparison
- * profile (spec 026) — three kind-typed branches: 工作任务 (practice leaves, one per core
- * task statement, self-attested), 工具与技术 (tool leaves, anchor-matched), 知识领域
- * (knowledge/skill descriptors, anchor-matched). No LLM anywhere: rows are copied verbatim
- * from the official dataset, so the evidence chain is intrinsic.
+ * profile (spec 026/027) — kind-typed branches: 工作任务 (practice leaves, self-attested),
+ * 工具与技术 (tool leaves), 知识与技能 (fine-grained ESCO concepts via the official
+ * crosswalk; coarse O*NET descriptors remain only as fallback for uncovered occupations).
+ * No LLM anywhere: rows are copied verbatim from official datasets.
  * Main exports: OnetOccupation, buildOccupationProfile, occupationProfileId,
- * TimelinessPatchItem, MAX_PRACTICE_TASKS.
+ * TimelinessPatchItem, EscoDataForOccupation, MAX_PRACTICE_TASKS.
  */
+import {
+  buildEscoKnowledgeBranch,
+  type EscoConceptDict,
+  type EscoOccupationEntry,
+} from "./escoKnowledgeBranch";
 import type { ProfileDefinition, ProfileItemDefinition } from "./profileSchema";
+
+/** The occupation's slice of the bundled ESCO dataset (spec 027). */
+export interface EscoDataForOccupation {
+  entry: EscoOccupationEntry;
+  concepts: EscoConceptDict;
+}
 
 export interface OnetOccupation {
   code: string;
@@ -49,6 +60,7 @@ function clip(text: string, max: number): string {
 export function buildOccupationProfile(
   occupation: OnetOccupation,
   patch: readonly TimelinessPatchItem[] = [],
+  esco: EscoDataForOccupation | null = null,
 ): ProfileDefinition {
   const id = occupationProfileId(occupation.code);
   const source = `O*NET 30.2 · ${occupation.code}`;
@@ -104,6 +116,11 @@ export function buildOccupationProfile(
     });
   }
 
+  // Fine-grained ESCO branch (spec 027); the coarse O*NET descriptors below survive ONLY
+  // as fallback for the 76 crosswalk-uncovered occupations (mostly "All Other" aggregates).
+  const escoItems = esco === null ? [] : buildEscoKnowledgeBranch(esco.entry, esco.concepts);
+  for (const entry of escoItems) item(entry);
+
   const descriptors = [...occupation.knowledge, ...occupation.skills];
   const seen = new Set<string>();
   const unique = descriptors.filter((entry) => {
@@ -112,7 +129,7 @@ export function buildOccupationProfile(
     seen.add(key);
     return true;
   });
-  if (unique.length > 0) {
+  if (escoItems.length === 0 && unique.length > 0) {
     item({
       key: "knowledge",
       parentKey: null,
@@ -166,7 +183,7 @@ export function buildOccupationProfile(
     id,
     title: occupation.title,
     description: clip(occupation.description, 200),
-    sourceNote: `O*NET 30.2 Database（U.S. Department of Labor，CC BY 4.0）· ${occupation.code} · 任务句为在职者调查原文；官方数据存在年级滞后，工具层以时效补丁三角互证`,
+    sourceNote: `O*NET 30.2 Database（U.S. Department of Labor，CC BY 4.0）· ${occupation.code}${esco === null ? "" : " · 知识与技能来自 ESCO v1.2.1（欧盟，CC BY 4.0，经官方对照表）"} · 任务句为在职者调查原文；官方数据存在年级滞后，工具层以时效补丁三角互证`,
     items,
     category: "occupation",
   };

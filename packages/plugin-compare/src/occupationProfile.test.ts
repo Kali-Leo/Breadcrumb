@@ -1,11 +1,13 @@
 /**
- * Purpose: unit tests for the occupation profile builder (spec 026) — branch structure and
- * kind typing, core-task preference and cap, verbatim task text in sourceRef, descriptor
- * dedup, timeliness-patch branch, and schema validity of the result.
+ * Purpose: unit tests for the occupation profile builder (spec 026/027) — branch structure
+ * and kind typing, core-task preference and cap, verbatim task text in sourceRef, the ESCO
+ * knowledge branch (sections, narrower sub-nodes, dedup, descriptor replacement), the
+ * timeliness-patch branch, and schema validity of the result.
  */
 import { describe, expect, it } from "vitest";
 import {
   buildOccupationProfile,
+  type EscoDataForOccupation,
   MAX_PRACTICE_TASKS,
   type OnetOccupation,
   occupationProfileId,
@@ -88,6 +90,50 @@ describe("buildOccupationProfile", () => {
     const patchLeaf = profile.items.find((item) => item.key === "patch-0");
     expect(patchLeaf?.sourceRef).toContain("12 个真实岗位提及");
     expect(patchLeaf?.sourceRef).toContain("React required");
+  });
+});
+
+function escoData(): EscoDataForOccupation {
+  return {
+    entry: {
+      via: [{ title: "web developer", matchType: "exactMatch" }],
+      essential: [{ id: "prog", children: ["haskell", "js"] }],
+      optional: [{ id: "js" }, { id: "jenkins" }],
+    },
+    concepts: {
+      prog: { label: "computer programming", type: "knowledge", aliases: ["programming"] },
+      haskell: { label: "Haskell", type: "knowledge", aliases: [] },
+      js: { label: "JavaScript", type: "knowledge", aliases: ["JS"] },
+      jenkins: { label: "Jenkins", type: "tool", aliases: [] },
+    },
+  };
+}
+
+describe("ESCO knowledge branch (spec 027)", () => {
+  it("replaces coarse descriptors with essential/optional sections and narrower sub-nodes", () => {
+    const profile = buildOccupationProfile(occupation(), [], escoData());
+    expect(profileDefinitionSchema.safeParse(profile).success).toBe(true);
+    expect(findProfileStructureError(profile)).toBeNull();
+    // Coarse O*NET descriptors are gone; the ESCO branch stands in their place.
+    expect(profile.items.find((item) => item.key === "knowledge")).toBeUndefined();
+    expect(profile.items.find((item) => item.key === "esco")?.label).toBe("知识与技能");
+    const byKey = new Map(profile.items.map((item) => [item.key, item]));
+    // Broad concept became a sub-node whose children are its narrower concepts.
+    expect(byKey.get("esco-prog")?.parentKey).toBe("esco-ess");
+    expect(byKey.get("esco-haskell")?.parentKey).toBe("esco-prog");
+    expect(byKey.get("esco-haskell")?.kind).toBe("knowledge");
+    expect(byKey.get("esco-haskell")?.sourceRef).toContain("exactMatch");
+    // "js" is claimed by the essential parent's children first, never repeated in 可选.
+    expect(byKey.get("esco-js")?.parentKey).toBe("esco-prog");
+    expect(byKey.get("esco-jenkins")?.parentKey).toBe("esco-opt");
+    expect(byKey.get("esco-jenkins")?.aliases).toEqual([]);
+    expect(byKey.get("esco-js")?.aliases).toEqual(["JS"]);
+  });
+
+  it("keeps the descriptor fallback for crosswalk-uncovered occupations", () => {
+    const profile = buildOccupationProfile(occupation(), [], null);
+    expect(profile.items.find((item) => item.key === "esco")).toBeUndefined();
+    expect(profile.items.find((item) => item.key === "knowledge")?.label).toBe("知识领域");
   });
 });
 

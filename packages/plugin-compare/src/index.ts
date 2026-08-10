@@ -8,6 +8,7 @@
  * alignment engine (alignment.ts, spec 024).
  */
 export * from "./alignment";
+export * from "./escoKnowledgeBranch";
 export * from "./matching";
 export * from "./occupationProfile";
 export * from "./overlap";
