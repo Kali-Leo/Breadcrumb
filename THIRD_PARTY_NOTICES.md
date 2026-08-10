@@ -33,3 +33,8 @@ poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC �
   **CC BY 4.0** 许可，开发期内化子集随包分发；每条 item 的 source_ref 注明
   SOC 码与数据表。时效补丁层的招聘帖聚合仅在开发期实验采集（限速），
   产物只保留"技能名+频次+单句引文"，不含任何完整帖文或个人信息。
+- **ESCO v1.2.1**（European Union / European Commission，esco.ec.europa.eu）：
+  职业画像「知识与技能」分支的概念名、别名与层级关系，以及 ESCO↔O*NET 官方
+  职业对照表（ESCO Secretariat 与 U.S. Department of Labor 联合发布），
+  **CC BY 4.0** 许可，开发期内化子集随包分发；每条 item 的 source_ref 注明
+  ESCO 版本、经由的对照匹配类型与 ESCO 职业名。

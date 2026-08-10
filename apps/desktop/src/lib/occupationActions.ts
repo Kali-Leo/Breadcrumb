@@ -9,10 +9,13 @@
 import type { CanonicalConceptRow } from "@breadcrumb/core-db";
 import {
   buildOccupationProfile,
+  type EscoConceptDict,
+  type EscoOccupationEntry,
   normalizeLabel,
   type OnetOccupation,
   type TimelinessPatchItem,
 } from "@breadcrumb/plugin-compare";
+import escoDataset from "../data/generated/escoDataset.json";
 import onetDataset from "../data/generated/onetDataset.json";
 import timelinessPatches from "../data/generated/timelinessPatches.json";
 import { definitionToItemRows } from "./compareActions";
@@ -21,6 +24,10 @@ import { newId, nowIso } from "./time";
 
 const OCCUPATIONS = (onetDataset as { occupations: OnetOccupation[] }).occupations;
 const PATCHES = timelinessPatches as Record<string, TimelinessPatchItem[]>;
+const ESCO = escoDataset as unknown as {
+  concepts: EscoConceptDict;
+  occupations: Record<string, EscoOccupationEntry | undefined>;
+};
 
 export interface OccupationHit {
   code: string;
@@ -61,7 +68,12 @@ export async function createOccupationProfile(code: string): Promise<string | nu
   const occupation = OCCUPATIONS.find((candidate) => candidate.code === code);
   if (occupation === undefined) return null;
   const patch = PATCHES[code] ?? [];
-  const definition = buildOccupationProfile(occupation, patch);
+  const escoEntry = ESCO.occupations[code];
+  const definition = buildOccupationProfile(
+    occupation,
+    patch,
+    escoEntry === undefined ? null : { entry: escoEntry, concepts: ESCO.concepts },
+  );
   const repos = await getRepos();
   await repos.comparisons.replaceProfile(
     {
@@ -85,7 +97,9 @@ export async function createOccupationProfile(code: string): Promise<string | nu
     conceptRows.push({
       id: item.conceptId,
       label: item.label,
-      aliases_json: "[]",
+      // ESCO altLabels ride along as aliases (spec 027) — they widen the free string/alias
+      // pass so fewer pairs ever reach the paid semantic judge.
+      aliases_json: JSON.stringify(item.aliases),
       source_ref: item.sourceRef,
       created_at: createdAt,
     });
