@@ -8,7 +8,8 @@
       "!**/node_modules",
       "!docs",
       "!**/*.svg",
-      "!**/src-tauri/gen"
+      "!**/src-tauri/gen",
+      "!**/src/data/generated"
     ]
   },
   "formatter": {

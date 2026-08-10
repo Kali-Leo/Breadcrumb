@@ -1,0 +1,244 @@
+{
+ "15-1254.00": [
+  {
+   "label": "CI/CD",
+   "postings": 36,
+   "sampleQuote": "CI/CD pipelines",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "AWS",
+   "postings": 26,
+   "sampleQuote": "cloud infrastructure like AWS",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "JavaScript",
+   "postings": 25,
+   "sampleQuote": "using modern JavaScript/TypeScript frameworks",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "SQL Server",
+   "postings": 20,
+   "sampleQuote": "database management systems such as MySQL or SQL Server",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Rest APIs",
+   "postings": 19,
+   "sampleQuote": "Experience in developing Rest APIs.",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "CSS",
+   "postings": 18,
+   "sampleQuote": "Strong command of CSS and modern styling approaches, including CSS preprocessors (e.g., Sass/LESS) and CSS-in-JS.",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Azure",
+   "postings": 18,
+   "sampleQuote": "Experience with cloud technologies and services (AWS, Azure).",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "HTML",
+   "postings": 17,
+   "sampleQuote": "Proficient in HTML, CSS, JavaScript",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "OpenAI",
+   "postings": 16,
+   "sampleQuote": "Experience building production applications with LLM APIs (Google Vertex AI /Gemini, OpenAI, Anthropic, or similar)",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Anthropic",
+   "postings": 16,
+   "sampleQuote": "Experience building production applications with LLM APIs (Google Vertex AI /Gemini, OpenAI, Anthropic, or similar)",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": ".Net",
+   "postings": 16,
+   "sampleQuote": "Experience with .Net, JavaScript, HTML5, PHP, JSON, and XML.",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "RBAC",
+   "postings": 16,
+   "sampleQuote": "ensuring security through RBAC",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "SSL/TLS",
+   "postings": 16,
+   "sampleQuote": "SSL/TLS",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "ETL",
+   "postings": 15,
+   "sampleQuote": "Professional Python experience for automation or ETL development.",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Azure OpenAI",
+   "postings": 15,
+   "sampleQuote": "Azure OpenAI",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Google AI",
+   "postings": 15,
+   "sampleQuote": "Google AI",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "OpenID Connect",
+   "postings": 15,
+   "sampleQuote": "OpenID Connect",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "JWT",
+   "postings": 15,
+   "sampleQuote": "JWT",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "SSO",
+   "postings": 15,
+   "sampleQuote": "SSO",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "LLM",
+   "postings": 14,
+   "sampleQuote": "Large Language Model (LLM)",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Vector stores",
+   "postings": 14,
+   "sampleQuote": "vector stores",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "React",
+   "postings": 13,
+   "sampleQuote": "(React, Vue.js, or Angular)",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Database engineering",
+   "postings": 13,
+   "sampleQuote": "database engineering",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Application security",
+   "postings": 13,
+   "sampleQuote": "application security",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Authentication",
+   "postings": 13,
+   "sampleQuote": "authentication",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Enterprise integrations",
+   "postings": 13,
+   "sampleQuote": "enterprise integrations",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Production AI architecture",
+   "postings": 13,
+   "sampleQuote": "production AI architecture",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Java",
+   "postings": 12,
+   "sampleQuote": "using Sprint/Spring Boot, Java, Go",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Cloud architecture",
+   "postings": 12,
+   "sampleQuote": "cloud architecture",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "ASP.NET Core",
+   "postings": 12,
+   "sampleQuote": "ASP.NET Core",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Git",
+   "postings": 11,
+   "sampleQuote": "Git, and CI/CD workflows",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "SQL",
+   "postings": 11,
+   "sampleQuote": "MySQL and SQL",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "TypeScript",
+   "postings": 10,
+   "sampleQuote": "using modern JavaScript/TypeScript frameworks",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Node.js",
+   "postings": 10,
+   "sampleQuote": "TypeScript/Node.js",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "WordPress",
+   "postings": 10,
+   "sampleQuote": "Experience with content management systems, such as WordPress",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Agile",
+   "postings": 10,
+   "sampleQuote": "Familiarity with Agile development methodology",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "Python",
+   "postings": 9,
+   "sampleQuote": "Familiarity with additional programming languages and runtimes such as Python and Node.js.",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "GitHub",
+   "postings": 9,
+   "sampleQuote": "such as Adobe Creative Suite and GitHub",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "RESTful APIs",
+   "postings": 9,
+   "sampleQuote": "Design and implement RESTful APIs",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  },
+  {
+   "label": "C\\#/.NET",
+   "postings": 9,
+   "sampleQuote": "cloud architecture, C\\#/.NET, SQL Server",
+   "fetchedAt": "2026-08-10T13:09:59.227Z"
+  }
+ ]
+}

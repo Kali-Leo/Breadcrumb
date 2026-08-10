@@ -22,6 +22,7 @@ import {
   createNodeEmbeddingsRepo,
   createNodeMergeRepo,
   createNodeSightingsRepo,
+  createPracticeRepo,
   createSettingsRepo,
   createTrailSummariesRepo,
   runMigrations,
@@ -50,6 +51,7 @@ export interface Repos {
   goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
+  practice: ReturnType<typeof createPracticeRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -90,5 +92,6 @@ async function openAndMigrate(): Promise<Repos> {
     goalLadders: createGoalLaddersRepo(sqlClient),
     comparisons: createComparisonRepo(sqlClient),
     canonical: createCanonicalRepo(sqlClient),
+    practice: createPracticeRepo(sqlClient),
   };
 }

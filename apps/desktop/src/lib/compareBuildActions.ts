@@ -120,6 +120,9 @@ export async function runExperimentalProfileBuild(
       description,
       source_note: `实验功能：检索构建于 ${nowIso().slice(0, 10)}，逐条来源通过了可达性与标题包含校验`,
       created_at: nowIso(),
+      // The search-build pipeline only ever proposes curriculum/skill-tree topics (spec 026's
+      // occupation category has its own separate build pipeline).
+      category: "curriculum",
     },
     surviving.map((item, index) => ({
       id: `${profileId}:${item.key}`,
@@ -130,6 +133,7 @@ export async function runExperimentalProfileBuild(
       source_ref: `${item.sourceTitle} · ${item.sourceUrl}`,
       position: index,
       concept_id: null,
+      item_kind: "knowledge",
     })),
   );
   return { ok: true, profileId, costLine, droppedCount: items.length - surviving.length };

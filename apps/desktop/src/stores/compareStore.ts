@@ -5,13 +5,18 @@
  * cost/outcome line. Standalone module: no planner/ladder/goal state anywhere.
  * Main exports: useCompareStore.
  */
-import type { ComparisonProfileRow } from "@breadcrumb/core-db";
+import type { ComparisonProfileRow, PracticeStatus } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { create } from "zustand";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
 import { runAnchorSweep } from "../lib/compareAlignActions";
 import { runExperimentalProfileBuild } from "../lib/compareBuildActions";
 import { getRepos } from "../lib/db";
+import { createOccupationProfile, openPracticeConversation } from "../lib/occupationActions";
+import { persistCalibratedGoal, requestGoalMapping } from "../lib/plannerGoalActions";
+import { nowIso } from "../lib/time";
+import { appEventBus } from "./chatStore";
+import { usePlannerStore } from "./plannerStore";
 import { useSettingsStore } from "./settingsStore";
 
 interface CompareState {
@@ -30,11 +35,24 @@ interface CompareState {
   aligning: boolean;
   /** Plain outcome line of the last experimental build (includes the token cost). */
   buildNote: string | null;
+  /** The learner's own practice statements, item id → status (spec 026). */
+  attestationByItemId: ReadonlyMap<string, PracticeStatus>;
+  /** Plain outcome line of the last 一键生成目标 run. */
+  goalNote: string | null;
+  generatingGoal: boolean;
   load(): Promise<void>;
   selectProfile(profileId: string): Promise<void>;
   toggleExpanded(key: string): void;
   selectDetail(key: string | null): void;
   buildFromTopic(topic: string): Promise<void>;
+  /** Builds the chosen occupation's profile offline and selects it (spec 026). */
+  createOccupation(code: string): Promise<void>;
+  /** Records the learner's own statement about a practice item and rescores locally. */
+  setPracticeStatus(itemId: string, status: PracticeStatus): Promise<void>;
+  /** Opens (or resumes) the saved-but-sidebar-hidden discussion for a practice item. */
+  discussPractice(node: OverlapNode): Promise<void>;
+  /** 一键生成目标 (spec 026 §3): feeds the profile's evidence leaves to goal planning. */
+  generateGoalFromProfile(): Promise<void>;
 }
 
 /** Fire-and-forget anchor sweep (spec 025 — profile-agnostic: anchors are node↔concept, so
@@ -65,6 +83,9 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   building: false,
   aligning: false,
   buildNote: null,
+  attestationByItemId: new Map<string, PracticeStatus>(),
+  goalNote: null,
+  generatingGoal: false,
 
   async load() {
     set({ loading: true });
@@ -89,12 +110,18 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     try {
       // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
       // alignment runs behind it and quietly patches the tree when new verdicts land.
-      const tree = await computeComparisonTree(profileId);
+      const repos = await getRepos();
+      const [tree, attestations] = await Promise.all([
+        computeComparisonTree(profileId),
+        repos.practice.listAttestations(),
+      ]);
       set({
         selectedProfileId: profileId,
         tree,
+        attestationByItemId: new Map(attestations.map((row) => [row.item_id, row.status])),
         expandedKeys: new Set<string>(),
         loading: false,
+        goalNote: null,
       });
       void sweepInBackground(
         async () => {
@@ -146,6 +173,94 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     } else {
       const cost = outcome.costLine === null ? "" : `；${outcome.costLine}`;
       set({ building: false, buildNote: `${outcome.reason}${cost}` });
+    }
+  },
+
+  async createOccupation(code) {
+    set({ loading: true });
+    try {
+      const profileId = await createOccupationProfile(code);
+      await get().load();
+      if (profileId !== null) await get().selectProfile(profileId);
+      else set({ loading: false });
+    } catch (error) {
+      console.warn("occupation profile creation skipped:", error);
+      set({ loading: false });
+    }
+  },
+
+  async setPracticeStatus(itemId, status) {
+    try {
+      const repos = await getRepos();
+      await repos.practice.upsertAttestation({
+        item_id: itemId,
+        status,
+        attested_at: nowIso(),
+      });
+      const next = new Map(get().attestationByItemId);
+      next.set(itemId, status);
+      set({ attestationByItemId: next });
+      const selected = get().selectedProfileId;
+      if (selected !== null) {
+        const tree = await computeComparisonTree(selected);
+        set({ tree });
+      }
+    } catch (error) {
+      console.warn("practice attestation skipped:", error);
+    }
+  },
+
+  async discussPractice(node) {
+    try {
+      const conversationId = await openPracticeConversation(node.label, node.sourceRef);
+      appEventBus.emit("app:navigateChat", { conversationId });
+    } catch (error) {
+      console.warn("practice discussion skipped:", error);
+    }
+  },
+
+  async generateGoalFromProfile() {
+    const settings = useSettingsStore.getState();
+    if (!settings.networkEnabled || settings.apiConfig === null) {
+      set({ goalNote: "需要联网和 API 配置才能生成目标" });
+      return;
+    }
+    const selected = get().selectedProfileId;
+    const profile = get().profiles.find((candidate) => candidate.id === selected);
+    const tree = get().tree;
+    if (selected === null || profile === undefined || tree === null) return;
+    set({ generatingGoal: true, goalNote: null });
+    try {
+      // Evidence-grounded goal text (spec 026 §3): the profile's own leaf list rides along,
+      // so decomposition selects from cited material instead of inventing.
+      const leafLabels: string[] = [];
+      const walk = (node: OverlapNode): void => {
+        if (node.isLeaf && (node.kind === "knowledge" || node.kind === "tool")) {
+          leafLabels.push(node.label);
+        }
+        for (const child of node.children) walk(child);
+      };
+      walk(tree);
+      const goalTitle = `胜任 ${profile.title}`;
+      const goalText = `${goalTitle}。该方向的官方知识与工具清单（${profile.title}，供选取，不必全收）：${leafLabels
+        .slice(0, 60)
+        .join("、")}`;
+      const planner = usePlannerStore.getState();
+      const mapping = await requestGoalMapping(
+        settings.apiConfig,
+        goalText,
+        planner.nodes.map((node) => node.label),
+      );
+      const repos = await getRepos();
+      await persistCalibratedGoal(repos, goalTitle, mapping, planner.nodes);
+      await planner.recompute();
+      set({
+        generatingGoal: false,
+        goalNote: "目标已生成——学习引导交给推荐系统；这里随时可以回来看重合比例",
+      });
+    } catch (error) {
+      console.warn("goal generation from profile skipped:", error);
+      set({ generatingGoal: false, goalNote: "这一步没能完成，可以点一下重试" });
     }
   },
 }));

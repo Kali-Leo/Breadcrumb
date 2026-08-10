@@ -28,3 +28,8 @@ poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC �
 - **《普通高中数学课程标准（2017年版2020年修订）》**（中华人民共和国教育部制定）：
   数学画像的知识点条目名与单句原文引用，逐条注明出处（单元/页码）；
   属规范性官方文件的署名引用。
+- **O*NET 30.2 Database**（U.S. Department of Labor / O*NET Resource Center）：
+  职业画像的职业名录、任务句、Technology Skills 与 Knowledge/Skills 描述符，
+  **CC BY 4.0** 许可，开发期内化子集随包分发；每条 item 的 source_ref 注明
+  SOC 码与数据表。时效补丁层的招聘帖聚合仅在开发期实验采集（限速），
+  产物只保留"技能名+频次+单句引文"，不含任何完整帖文或个人信息。

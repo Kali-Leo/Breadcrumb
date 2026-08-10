@@ -79,6 +79,38 @@ export function CompareTreeView({
   const height = layout.maxX - layout.minX + NODE_HEIGHT + PADDING * 2;
   const offsetY = -layout.minX + PADDING;
 
+  // Enter animation (spec 026: 平滑而非闪现): a node absent from the previous layout starts
+  // at its parent's position for one frame, then transitions to its real spot — children
+  // visually slide out of the node that revealed them.
+  const knownKeysRef = useRef<Set<string>>(new Set());
+  const [bornOverrides, setBornOverrides] = useState<ReadonlyMap<string, { x: number; y: number }>>(
+    new Map(),
+  );
+  useEffect(() => {
+    const known = knownKeysRef.current;
+    const overrides = new Map<string, { x: number; y: number }>();
+    for (const point of layout.visible) {
+      const key = point.data.node.key;
+      if (known.has(key) || point.parent === null) continue;
+      overrides.set(key, { x: point.parent.y ?? 0, y: point.parent.x ?? 0 });
+    }
+    knownKeysRef.current = new Set(layout.visible.map((point) => point.data.node.key));
+    if (overrides.size === 0) return;
+    setBornOverrides(overrides);
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setBornOverrides(new Map()));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [layout]);
+
+  /** Effective drawing position: newborn nodes render at their parent for the first frame. */
+  function positionOf(point: (typeof layout.visible)[number]): { x: number; y: number } {
+    const override = bornOverrides.get(point.data.node.key);
+    return override === undefined
+      ? { x: point.y ?? 0, y: point.x ?? 0 }
+      : { x: override.x, y: override.y };
+  }
+
   // Glide the freshly expanded node (and thus its children column) into view.
   useEffect(() => {
     const container = containerRef.current;
@@ -153,10 +185,12 @@ export function CompareTreeView({
         {layout.visible.map((point) => {
           const parent = point.parent;
           if (parent === null) return null;
-          const x1 = (parent.y ?? 0) + PADDING + NODE_WIDTH;
-          const y1 = (parent.x ?? 0) + offsetY + NODE_HEIGHT / 2;
-          const x2 = (point.y ?? 0) + PADDING;
-          const y2 = (point.x ?? 0) + offsetY + NODE_HEIGHT / 2;
+          const parentPosition = positionOf(parent);
+          const ownPosition = positionOf(point);
+          const x1 = parentPosition.x + PADDING + NODE_WIDTH;
+          const y1 = parentPosition.y + offsetY + NODE_HEIGHT / 2;
+          const x2 = ownPosition.x + PADDING;
+          const y2 = ownPosition.y + offsetY + NODE_HEIGHT / 2;
           const mid = (x1 + x2) / 2;
           return (
             <path
@@ -165,14 +199,19 @@ export function CompareTreeView({
               fill="none"
               stroke="#d6d3d1"
               strokeWidth={1.2}
-              style={{ transition: "all 0.25s ease" }}
+              // Path shape can't CSS-transition, so newborn links fade in instead of popping.
+              style={{
+                opacity: bornOverrides.has(point.data.node.key) ? 0 : 1,
+                transition: "opacity 0.3s ease",
+              }}
             />
           );
         })}
         {layout.visible.map((point) => {
           const node = point.data.node;
-          const x = (point.y ?? 0) + PADDING;
-          const y = (point.x ?? 0) + offsetY;
+          const position = positionOf(point);
+          const x = position.x + PADDING;
+          const y = position.y + offsetY;
           const selected = node.key === detailKey;
           return (
             // biome-ignore lint/a11y/useSemanticElements: SVG nodes cannot be <button> elements

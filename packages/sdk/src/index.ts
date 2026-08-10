@@ -40,6 +40,9 @@ export interface BreadcrumbEventMap {
     freshNodeIds: string[];
     touchedNodeIds: string[];
   };
+  /** Ask the shell to switch to the chat view with a conversation open — used by the
+   * comparison tree's practice discussions (spec 026). */
+  "app:navigateChat": { conversationId: string };
   /** Fired after new knowledge_edges rows land (spec 010); spec 012's experiment panel
    * refreshes on this instead of polling. */
   "knowledge:edgesUpdated": { addedEdgeIds: string[] };

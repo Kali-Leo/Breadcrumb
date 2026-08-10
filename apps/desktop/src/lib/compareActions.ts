@@ -42,8 +42,9 @@ function parseAliases(aliasesJson: string): string[] {
 }
 
 /** Definition items → stable rows: item id = `${profileId}:${key}` so keys stay readable
- * while ids are globally unique. Position preserves authored order. */
-function definitionToItemRows(definition: ProfileDefinition): ComparisonProfileItemRow[] {
+ * while ids are globally unique. Position preserves authored order; kind defaults to
+ * knowledge for pre-026 definitions. */
+export function definitionToItemRows(definition: ProfileDefinition): ComparisonProfileItemRow[] {
   return definition.items.map((item, index) => ({
     id: `${definition.id}:${item.key}`,
     profile_id: definition.id,
@@ -53,6 +54,7 @@ function definitionToItemRows(definition: ProfileDefinition): ComparisonProfileI
     source_ref: item.sourceRef,
     position: index,
     concept_id: item.conceptId,
+    item_kind: item.kind ?? "knowledge",
   }));
 }
 
@@ -68,6 +70,7 @@ export function profileRowsToDefinitionItems(
     aliases: parseAliases(row.aliases_json),
     sourceRef: row.source_ref,
     conceptId: row.concept_id,
+    kind: row.item_kind,
   }));
 }
 
@@ -116,6 +119,9 @@ async function importBuiltinProfiles(): Promise<void> {
         description: definition.description,
         source_note: definition.sourceNote,
         created_at: nowIso(),
+        // Built-in profiles are all curriculum/skill-tree material (spec 026's occupation
+        // category is only ever produced by the occupation-profile pipeline).
+        category: "curriculum",
       },
       definitionToItemRows(definition),
     );
@@ -170,10 +176,19 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
     matches.set(item.key, semanticMatch);
   }
   const masteryByNode = computeMastery(sightings, claims, nowIso());
+  // Practice leaves score by the learner's own attestation (spec 026): 做过=1, 部分=0.5.
+  const attestations = await repos.practice.listAttestations();
+  const practiceValueByKey = new Map(
+    attestations.map((row) => [
+      row.item_id,
+      row.status === "done" ? 1 : row.status === "partial" ? 0.5 : 0,
+    ]),
+  );
   const roots = buildOverlapTree(
     items,
     matches,
     (nodeId) => (masteryByNode.get(nodeId) ?? 0) >= LIT_THRESHOLD,
+    practiceValueByKey,
   );
   const leafCount = roots.reduce((sum, node) => sum + node.leafCount, 0);
   const matchedLeafCount = roots.reduce((sum, node) => sum + node.matchedLeafCount, 0);
@@ -182,6 +197,7 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
     label: profile.title,
     sourceRef: profile.source_note,
     isLeaf: false,
+    kind: "structure",
     leafCount,
     matchedLeafCount,
     ratio: leafCount === 0 ? 0 : matchedLeafCount / leafCount,

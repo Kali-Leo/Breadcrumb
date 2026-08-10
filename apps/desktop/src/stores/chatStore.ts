@@ -46,8 +46,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   async loadFromDatabase() {
     const repos = await getRepos();
+    // Sidebar list only ever shows 'chat' conversations — practice discussions (spec 026)
+    // are saved but deliberately hidden here.
     const [conversations, todayCost] = await Promise.all([
-      repos.conversations.listRecentFirst(),
+      repos.conversations.listByKind("chat"),
       repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
     ]);
     set({ conversations, todayCost });
@@ -88,6 +90,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         title,
         created_at: nowIso(),
         updated_at: nowIso(),
+        kind: "chat",
       });
       set({ activeConversationId: conversationId });
     }
@@ -161,7 +164,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const [conversationCost, todayCost, conversations] = await Promise.all([
         repos.llmCalls.sumCostForConversation(conversationId),
         repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
-        repos.conversations.listRecentFirst(),
+        repos.conversations.listByKind("chat"),
       ]);
       set({
         messages: [...get().messages, assistantMessage],

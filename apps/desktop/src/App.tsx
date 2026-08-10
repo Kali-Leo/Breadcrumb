@@ -14,7 +14,7 @@ import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { runDedupSweep } from "./lib/dedupSweep";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
-import { useChatStore } from "./stores/chatStore";
+import { appEventBus, useChatStore } from "./stores/chatStore";
 // Side-effect only: registers edgeStore's knowledge:nodesExtracted subscription.
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
@@ -53,6 +53,14 @@ export default function App() {
       setView("settings");
     }
   }, [settingsLoaded, apiConfig]);
+
+  // Practice discussions (spec 026) jump from the comparison tree into the chat view.
+  useEffect(() => {
+    return appEventBus.on("app:navigateChat", ({ conversationId }) => {
+      void useChatStore.getState().openConversation(conversationId);
+      setView("chat");
+    });
+  }, []);
 
   return (
     <div className="flex h-screen flex-col text-stone-800">
