@@ -17,3 +17,14 @@ from the following open-source projects.
 poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC 许可证。
 
 注：watabou 的 CompassOS 与 RuneGeneratorOS 仓库无许可证文件，未采用其任何内容。
+
+## 对比树正典层数据来源（spec 025，开发期内化、运行时零网络）
+
+- **Wikidata**（www.wikidata.org）：正典概念的 QID 与中英标签/别名，
+  数据以 **CC0 1.0 公有领域贡献** 发布，允许任何目的的复制与再分发。
+- **MDN Curriculum**（developer.mozilla.org，Mozilla）：前端画像的细粒概念名与
+  用于逐字校验的单句引文，文档内容为 **CC BY-SA** 许可；每条内化条目的
+  source_ref 均附原页 URL 作为署名与出处。
+- **《普通高中数学课程标准（2017年版2020年修订）》**（中华人民共和国教育部制定）：
+  数学画像的知识点条目名与单句原文引用，逐条注明出处（单元/页码）；
+  属规范性官方文件的署名引用。
