@@ -26,6 +26,7 @@ const OK_ITEM = {
   label: "条目",
   aliases: [],
   sourceRef: "某资料 · 表1",
+  conceptId: null,
 };
 
 describe("profileDefinitionSchema", () => {

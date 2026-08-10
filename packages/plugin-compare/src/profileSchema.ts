@@ -19,6 +19,9 @@ export const profileItemDefinitionSchema = z.object({
   aliases: z.array(z.string().min(1).max(60)).max(12),
   /** Where this exact item comes from in the cited material — never empty. */
   sourceRef: z.string().min(1).max(300),
+  /** The canonical concept this leaf embodies (spec 025) — the join key the anchor layer
+   * matches user nodes against. null for structural/coarse items. */
+  conceptId: z.string().min(1).max(80).nullable(),
 });
 
 export const profileDefinitionSchema = z.object({
@@ -27,7 +30,7 @@ export const profileDefinitionSchema = z.object({
   description: z.string().min(1).max(200),
   /** The profile-level statement of what material backs it, with retrieval date. */
   sourceNote: z.string().min(1).max(400),
-  items: z.array(profileItemDefinitionSchema).min(1).max(400),
+  items: z.array(profileItemDefinitionSchema).min(1).max(1500),
 });
 
 export type ProfileItemDefinition = z.infer<typeof profileItemDefinitionSchema>;

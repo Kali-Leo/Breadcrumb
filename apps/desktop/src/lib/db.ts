@@ -5,6 +5,7 @@
  */
 import {
   createAiFailuresRepo,
+  createCanonicalRepo,
   createComparisonRepo,
   createConversationsRepo,
   createFactcheckRepo,
@@ -48,6 +49,7 @@ export interface Repos {
   goals: ReturnType<typeof createGoalsRepo>;
   goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
+  canonical: ReturnType<typeof createCanonicalRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -87,5 +89,6 @@ async function openAndMigrate(): Promise<Repos> {
     goals: createGoalsRepo(sqlClient),
     goalLadders: createGoalLaddersRepo(sqlClient),
     comparisons: createComparisonRepo(sqlClient),
+    canonical: createCanonicalRepo(sqlClient),
   };
 }

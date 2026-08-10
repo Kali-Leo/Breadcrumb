@@ -6,6 +6,7 @@
  */
 import {
   createAiFailuresRepo,
+  createCanonicalRepo,
   createComparisonRepo,
   createConversationsRepo,
   createFactcheckRepo,
@@ -47,6 +48,7 @@ export interface SimlabRepos {
   goals: ReturnType<typeof createGoalsRepo>;
   goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
+  canonical: ReturnType<typeof createCanonicalRepo>;
 }
 
 export function createSimlabRepos(sql: SqlClient): SimlabRepos {
@@ -70,5 +72,6 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     goals: createGoalsRepo(sql),
     goalLadders: createGoalLaddersRepo(sql),
     comparisons: createComparisonRepo(sql),
+    canonical: createCanonicalRepo(sql),
   };
 }

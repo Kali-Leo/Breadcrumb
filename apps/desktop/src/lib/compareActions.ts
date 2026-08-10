@@ -52,6 +52,7 @@ function definitionToItemRows(definition: ProfileDefinition): ComparisonProfileI
     aliases_json: JSON.stringify(item.aliases),
     source_ref: item.sourceRef,
     position: index,
+    concept_id: item.conceptId,
   }));
 }
 
@@ -66,6 +67,7 @@ export function profileRowsToDefinitionItems(
     label: row.label,
     aliases: parseAliases(row.aliases_json),
     sourceRef: row.source_ref,
+    conceptId: row.concept_id,
   }));
 }
 
@@ -131,33 +133,41 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
   const repos = await getRepos();
   const profile = await repos.comparisons.getProfile(profileId);
   if (profile === null) return null;
-  const [itemRows, nodes, aliasRows, sightings, claims, alignments] = await Promise.all([
+  const [itemRows, nodes, aliasRows, sightings, claims, anchors] = await Promise.all([
     repos.comparisons.listItems(profileId),
     repos.knowledgeNodes.listAll(),
     repos.nodeAliases.listAll(),
     repos.nodeSightings.listAll(),
     repos.masteryClaims.listAll(),
-    repos.comparisons.listAlignments(profileId),
+    repos.canonical.listAnchors(),
   ]);
   const items = profileRowsToDefinitionItems(itemRows);
   const matches = matchProfileLeaves(items, nodes, aliasRows);
-  // Semantic crosswalk verdicts (spec 024) fill leaves the conservative string pass missed —
-  // first confident "same" per item wins; low-confidence sames never score.
+  // Anchor join (spec 025): a leaf whose concept a user node is confidently anchored to
+  // counts as matched — pure local lookup, the "一下子看清" path never generates anything.
   const labelByNodeId = new Map(nodes.map((node) => [node.id, node.label]));
-  for (const alignment of alignments) {
-    if (!alignmentCountsAsOverlap(alignment.verdict, alignment.confidence)) continue;
-    if (matches.get(alignment.item_id) ?? null) continue;
-    if (!matches.has(alignment.item_id)) continue; // only leaves live in the match map
-    const nodeLabel = labelByNodeId.get(alignment.node_id);
-    if (nodeLabel === undefined) continue; // node deleted since judgment
+  const anchorByConcept = new Map<string, { nodeId: string; reason: string }>();
+  for (const anchor of anchors) {
+    if (!alignmentCountsAsOverlap(anchor.verdict, anchor.confidence)) continue;
+    if (!labelByNodeId.has(anchor.node_id)) continue; // node deleted since anchoring
+    if (!anchorByConcept.has(anchor.concept_id)) {
+      anchorByConcept.set(anchor.concept_id, { nodeId: anchor.node_id, reason: anchor.reason });
+    }
+  }
+  for (const item of items) {
+    if (item.conceptId === null) continue;
+    if (matches.get(item.key) ?? null) continue;
+    if (!matches.has(item.key)) continue; // only leaves live in the match map
+    const anchored = anchorByConcept.get(item.conceptId);
+    if (anchored === undefined) continue;
     const semanticMatch: LeafMatch = {
-      itemKey: alignment.item_id,
-      nodeId: alignment.node_id,
-      nodeLabel,
+      itemKey: item.key,
+      nodeId: anchored.nodeId,
+      nodeLabel: labelByNodeId.get(anchored.nodeId) as string,
       via: "semantic",
-      matchedText: alignment.reason,
+      matchedText: anchored.reason,
     };
-    matches.set(alignment.item_id, semanticMatch);
+    matches.set(item.key, semanticMatch);
   }
   const masteryByNode = computeMastery(sightings, claims, nowIso());
   const roots = buildOverlapTree(

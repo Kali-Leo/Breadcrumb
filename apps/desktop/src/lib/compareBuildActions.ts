@@ -129,6 +129,7 @@ export async function runExperimentalProfileBuild(
       aliases_json: JSON.stringify(item.aliases),
       source_ref: `${item.sourceTitle} · ${item.sourceUrl}`,
       position: index,
+      concept_id: null,
     })),
   );
   return { ok: true, profileId, costLine, droppedCount: items.length - surviving.length };

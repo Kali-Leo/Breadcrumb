@@ -3,7 +3,7 @@
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
  * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
- * ComparisonProfileItemRow, ComparisonAlignmentRow.
+ * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -238,20 +238,40 @@ export interface ComparisonProfileItemRow {
   aliases_json: string;
   source_ref: string;
   position: number;
+  /** The canonical concept this item embodies (spec 025); null for coarse/searched items that
+   * have not been anchored to a canonical concept. */
+  concept_id: string | null;
 }
 
 export type AlignmentVerdict = "same" | "different";
 export type AlignmentConfidence = "高" | "中" | "低";
 
-/** One crosswalk verdict between a comparison profile item and a user knowledge node (spec
- * 024). PRIMARY KEY (item_id, node_id) means a pair is judged exactly once — both 'same' and
- * 'different' verdicts are stored so the LLM is never asked about the same pair twice. */
-export interface ComparisonAlignmentRow {
-  item_id: string;
+/** A concept-space anchor point, independent of any one comparison profile (spec 025) — the
+ * unit every profile item and every knowledge node ultimately crosswalks against. */
+export interface CanonicalConceptRow {
+  id: string;
+  label: string;
+  /** JSON string array of alternate labels for matching. */
+  aliases_json: string;
+  source_ref: string;
+  created_at: string;
+}
+
+/** How a node<->concept anchor was decided: 'alias' = matched via a known alternate label,
+ * no LLM call needed; 'judge' = an LLM verdict was required. */
+export type AnchorMethod = "alias" | "judge";
+
+/** One crosswalk verdict between a user knowledge node and a canonical concept (spec 025).
+ * PRIMARY KEY (node_id, concept_id) means a pair is judged exactly once — both 'same' and
+ * 'different' verdicts are stored so the LLM is never asked about the same pair twice. Because
+ * this anchors nodes to concepts rather than to one profile's items, every profile that shares
+ * a concept benefits for free. */
+export interface NodeConceptAnchorRow {
   node_id: string;
-  profile_id: string;
+  concept_id: string;
   verdict: AlignmentVerdict;
   confidence: AlignmentConfidence;
+  method: AnchorMethod;
   reason: string;
-  judged_at: string;
+  anchored_at: string;
 }

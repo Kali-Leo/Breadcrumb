@@ -14,6 +14,7 @@ function item(overrides: Partial<ProfileItemDefinition>): ProfileItemDefinition 
     label: "标签",
     aliases: [],
     sourceRef: "某资料 · 第一章",
+    conceptId: null,
     ...overrides,
   };
 }

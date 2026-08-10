@@ -460,6 +460,35 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_comparison_alignments_profile ON comparison_alignments(profile_id);`,
     ],
   },
+  {
+    // Canonical concepts + node anchors (spec 025): the crosswalk moves from
+    // profile-item-scoped verdicts to node<->canonical-concept anchors so every profile joins
+    // for free; old comparison_alignments rows are deliberately dropped, not migrated — concept
+    // ids are unknowable at migration time and re-judging costs cents.
+    id: "0020_canonical_anchors",
+    statements: [
+      `DROP TABLE IF EXISTS comparison_alignments;`,
+      `CREATE TABLE canonical_concepts (
+        id TEXT PRIMARY KEY,
+        label TEXT NOT NULL,
+        aliases_json TEXT NOT NULL,
+        source_ref TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE TABLE node_concept_anchors (
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        concept_id TEXT NOT NULL REFERENCES canonical_concepts(id),
+        verdict TEXT NOT NULL CHECK (verdict IN ('same','different')),
+        confidence TEXT NOT NULL CHECK (confidence IN ('高','中','低')),
+        method TEXT NOT NULL CHECK (method IN ('alias','judge')),
+        reason TEXT NOT NULL,
+        anchored_at TEXT NOT NULL,
+        PRIMARY KEY (node_id, concept_id)
+      );`,
+      `CREATE INDEX idx_node_concept_anchors_node ON node_concept_anchors(node_id);`,
+      `ALTER TABLE comparison_profile_items ADD COLUMN concept_id TEXT;`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

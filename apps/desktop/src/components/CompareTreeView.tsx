@@ -102,7 +102,6 @@ export function CompareTreeView({
   }
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: pointer handlers implement drag-to-pan on the scroll container; keyboard users pan with native scroll keys and activate nodes via their own tab stops
     <div
       ref={containerRef}
       className="overflow-auto rounded border border-stone-200 bg-white"

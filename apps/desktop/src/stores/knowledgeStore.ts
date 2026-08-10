@@ -13,6 +13,7 @@ import {
 } from "@breadcrumb/plugin-knowledge-tree";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
+import { anchorNodesByAlias } from "../lib/compareAlignActions";
 import { getRepos } from "../lib/db";
 import { embedNodes } from "../lib/embeddings";
 import { recordAiFailure } from "../lib/failureLog";
@@ -124,6 +125,9 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
     }
     // Local, zero-cost, and best-effort: powers edge-candidate ranking later, never blocks chat.
     await embedNodes(plan.newNodes);
+    // Entry anchoring (spec 025): newborn nodes try the free alias path against the
+    // canonical inventory right where they are born — fire-and-forget, never blocks chat.
+    void anchorNodesByAlias(plan.newNodes);
 
     const store = useKnowledgeStore.getState();
     const isViewingThisConversation =

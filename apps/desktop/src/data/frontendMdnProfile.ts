@@ -6,6 +6,7 @@
  * in Custom JS objects). Main exports: FRONTEND_MDN_PROFILE.
  */
 import type { ProfileDefinition, ProfileItemDefinition } from "@breadcrumb/plugin-compare";
+import { MDN_FINE_ITEMS } from "./generated/fineItems";
 
 const CURRICULUM = "https://developer.mozilla.org/en-US/curriculum/";
 const JS = `${CURRICULUM}core/javascript-fundamentals/`;
@@ -17,7 +18,7 @@ function item(
   aliases: string[],
   sourceRef: string,
 ): ProfileItemDefinition {
-  return { key, parentKey, label, aliases, sourceRef };
+  return { key, parentKey, label, aliases, sourceRef, conceptId: null };
 }
 
 export const FRONTEND_MDN_PROFILE: ProfileDefinition = {
@@ -192,5 +193,6 @@ export const FRONTEND_MDN_PROFILE: ProfileDefinition = {
       ["Other tooling types"],
       `${CURRICULUM}extensions/other-tooling-types/`,
     ),
+    ...MDN_FINE_ITEMS,
   ],
 };

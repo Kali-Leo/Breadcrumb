@@ -3,9 +3,10 @@
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
  * "keep higher confidence" ON CONFLICT semantics, the ladder's assessment board table
  * (migration 0017, spec 022), the comparison tree's whole-replace profile/item tables
- * (migration 0018, spec 023), and the comparison tree's semantic-alignment crosswalk table
- * (migration 0019, spec 024) — all against a real database file instead of the fakes
- * core-db's own tests use.
+ * (migration 0018, spec 023), the dropped item-scoped alignment table (migration 0019, spec
+ * 024, dropped again by migration 0020), and the canonical-concept crosswalk's node<->concept
+ * anchor tables (migration 0020, spec 025) — all against a real database file instead of the
+ * fakes core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
@@ -220,6 +221,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           aliases_json: "[]",
           source_ref: "https://example.edu/cs-curriculum#ds",
           position: 0,
+          concept_id: null,
         },
         {
           id: "item2",
@@ -229,6 +231,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           aliases_json: "[]",
           source_ref: "https://example.edu/cs-curriculum#os",
           position: 1,
+          concept_id: null,
         },
         {
           id: "item3",
@@ -238,6 +241,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           aliases_json: "[]",
           source_ref: "https://example.edu/cs-curriculum#os-scheduling",
           position: 2,
+          concept_id: null,
         },
       ],
     );
@@ -267,6 +271,7 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
           aliases_json: "[]",
           source_ref: "https://example.edu/cs-curriculum#compilers",
           position: 0,
+          concept_id: null,
         },
       ],
     );
@@ -283,11 +288,87 @@ describe("comparison_profiles (real sqlite, migration 0018)", () => {
   });
 });
 
-describe("comparison_alignments (real sqlite, migration 0019)", () => {
-  it("round-trips verdicts, overwrites on re-judgment, and clears on replaceProfile", async () => {
+describe("comparison_alignments dropped (real sqlite, migration 0020)", () => {
+  it("no longer exists — the crosswalk moved to node_concept_anchors", async () => {
+    temp = await createTempDatabase();
+    await expect(temp.sql.select("SELECT * FROM comparison_alignments", [])).rejects.toThrow(
+      /no such table/,
+    );
+  });
+});
+
+describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020)", () => {
+  it("round-trips concepts and anchors, overwrites on re-anchor, and accepts item concept_id", async () => {
     temp = await createTempDatabase();
     const now = "2026-08-09T10:00:00.000Z";
 
+    await temp.repos.canonical.upsertConcepts([
+      {
+        id: "concept-data-structures",
+        label: "数据结构",
+        aliases_json: "[]",
+        source_ref: "https://example.edu/cs-curriculum#ds",
+        created_at: now,
+      },
+      {
+        id: "concept-operating-systems",
+        label: "操作系统",
+        aliases_json: "[]",
+        source_ref: "https://example.edu/cs-curriculum#os",
+        created_at: now,
+      },
+    ]);
+    const concepts = await temp.repos.canonical.listConcepts();
+    expect(concepts.map((row) => row.id)).toEqual([
+      "concept-data-structures",
+      "concept-operating-systems",
+    ]);
+
+    await temp.repos.knowledgeNodes.insert({
+      id: "node1",
+      parent_id: null,
+      label: "数据结构",
+      summary: "常见数据结构",
+      kind: "concept",
+      created_at: now,
+    });
+
+    await temp.repos.canonical.upsertAnchors([
+      {
+        node_id: "node1",
+        concept_id: "concept-data-structures",
+        verdict: "same",
+        confidence: "高",
+        method: "alias",
+        reason: "标签完全一致",
+        anchored_at: "2026-08-09T11:00:00.000Z",
+      },
+    ]);
+    const anchors = await temp.repos.canonical.listAnchors();
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]?.verdict).toBe("same");
+    expect(anchors[0]?.method).toBe("alias");
+
+    // PRIMARY KEY (node_id, concept_id) overwrite semantics: re-anchoring the same pair
+    // replaces it in place rather than accumulating a second row.
+    await temp.repos.canonical.upsertAnchors([
+      {
+        node_id: "node1",
+        concept_id: "concept-data-structures",
+        verdict: "different",
+        confidence: "中",
+        method: "judge",
+        reason: "重新判定为不同概念",
+        anchored_at: "2026-08-09T12:00:00.000Z",
+      },
+    ]);
+    const afterReanchor = await temp.repos.canonical.listAnchors();
+    expect(afterReanchor).toHaveLength(1);
+    expect(afterReanchor[0]?.verdict).toBe("different");
+    expect(afterReanchor[0]?.confidence).toBe("中");
+    expect(afterReanchor[0]?.method).toBe("judge");
+
+    // comparison_profile_items now carries an optional concept_id column.
     await temp.repos.comparisons.replaceProfile(
       {
         id: "profile1",
@@ -306,95 +387,11 @@ describe("comparison_alignments (real sqlite, migration 0019)", () => {
           aliases_json: "[]",
           source_ref: "https://example.edu/cs-curriculum#ds",
           position: 0,
-        },
-        {
-          id: "item2",
-          profile_id: "profile1",
-          parent_id: null,
-          label: "操作系统",
-          aliases_json: "[]",
-          source_ref: "https://example.edu/cs-curriculum#os",
-          position: 1,
+          concept_id: "concept-data-structures",
         },
       ],
     );
-    await temp.repos.knowledgeNodes.insert({
-      id: "node1",
-      parent_id: null,
-      label: "数据结构",
-      summary: "常见数据结构",
-      kind: "concept",
-      created_at: now,
-    });
-
-    await temp.repos.comparisons.upsertAlignments([
-      {
-        item_id: "item1",
-        node_id: "node1",
-        profile_id: "profile1",
-        verdict: "same",
-        confidence: "高",
-        reason: "两者都指代同一个数据结构概念",
-        judged_at: "2026-08-09T11:00:00.000Z",
-      },
-      {
-        item_id: "item2",
-        node_id: "node1",
-        profile_id: "profile1",
-        verdict: "different",
-        confidence: "低",
-        reason: "操作系统与数据结构并非同一概念",
-        judged_at: "2026-08-09T11:00:01.000Z",
-      },
-    ]);
-
-    const stored = await temp.repos.comparisons.listAlignments("profile1");
-    expect(stored.map((row) => `${row.item_id}:${row.node_id}:${row.verdict}`)).toEqual([
-      "item1:node1:same",
-      "item2:node1:different",
-    ]);
-
-    // PRIMARY KEY (item_id, node_id) overwrite semantics: re-judging the same pair replaces
-    // it in place rather than accumulating a second row.
-    await temp.repos.comparisons.upsertAlignments([
-      {
-        item_id: "item1",
-        node_id: "node1",
-        profile_id: "profile1",
-        verdict: "different",
-        confidence: "中",
-        reason: "重新判定为不同概念",
-        judged_at: "2026-08-09T12:00:00.000Z",
-      },
-    ]);
-    const afterRejudge = await temp.repos.comparisons.listAlignments("profile1");
-    expect(afterRejudge).toHaveLength(2);
-    const item1Row = afterRejudge.find((row) => row.item_id === "item1");
-    expect(item1Row?.verdict).toBe("different");
-    expect(item1Row?.confidence).toBe("中");
-
-    // replaceProfile clears every alignment judged against the profile's old item set.
-    await temp.repos.comparisons.replaceProfile(
-      {
-        id: "profile1",
-        title: "计算机科学本科课程（修订版）",
-        origin: "searched",
-        description: "某校计算机科学系公开的本科培养方案",
-        source_note: "https://example.edu/cs-curriculum",
-        created_at: now,
-      },
-      [
-        {
-          id: "item9",
-          profile_id: "profile1",
-          parent_id: null,
-          label: "编译原理",
-          aliases_json: "[]",
-          source_ref: "https://example.edu/cs-curriculum#compilers",
-          position: 0,
-        },
-      ],
-    );
-    expect(await temp.repos.comparisons.listAlignments("profile1")).toEqual([]);
+    const items = await temp.repos.comparisons.listItems("profile1");
+    expect(items[0]?.concept_id).toBe("concept-data-structures");
   });
 });
