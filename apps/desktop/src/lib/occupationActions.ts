@@ -15,6 +15,7 @@ import {
   type OnetOccupation,
   type TimelinessPatchItem,
 } from "@breadcrumb/plugin-compare";
+import { CANONICAL_MOUNTS } from "../data/canonicalMounts";
 import escoDataset from "../data/generated/escoDataset.json";
 import onetDataset from "../data/generated/onetDataset.json";
 import timelinessPatches from "../data/generated/timelinessPatches.json";
@@ -72,7 +73,9 @@ export async function createOccupationProfile(code: string): Promise<string | nu
   const definition = buildOccupationProfile(
     occupation,
     patch,
-    escoEntry === undefined ? null : { entry: escoEntry, concepts: ESCO.concepts },
+    escoEntry === undefined
+      ? null
+      : { entry: escoEntry, concepts: ESCO.concepts, mounts: CANONICAL_MOUNTS },
   );
   const repos = await getRepos();
   await repos.comparisons.replaceProfile(

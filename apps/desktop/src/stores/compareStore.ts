@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
 import { runAnchorSweep } from "../lib/compareAlignActions";
 import { runExperimentalProfileBuild } from "../lib/compareBuildActions";
+import { runHubDecomposition } from "../lib/compareHubActions";
 import { getRepos } from "../lib/db";
 import { createOccupationProfile, openPracticeConversation } from "../lib/occupationActions";
 import { persistCalibratedGoal, requestGoalMapping } from "../lib/plannerGoalActions";
@@ -53,6 +54,9 @@ interface CompareState {
   discussPractice(node: OverlapNode): Promise<void>;
   /** 一键生成目标 (spec 026 §3): feeds the profile's evidence leaves to goal planning. */
   generateGoalFromProfile(): Promise<void>;
+  /** Hub decomposition (spec 028 §3): verified search-build of a hub's sub-tree, in place. */
+  decomposeHub(node: OverlapNode): Promise<void>;
+  decomposingHub: boolean;
 }
 
 /** Fire-and-forget anchor sweep (spec 025 — profile-agnostic: anchors are node↔concept, so
@@ -86,6 +90,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   attestationByItemId: new Map<string, PracticeStatus>(),
   goalNote: null,
   generatingGoal: false,
+  decomposingHub: false,
 
   async load() {
     set({ loading: true });
@@ -216,6 +221,33 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       appEventBus.emit("app:navigateChat", { conversationId });
     } catch (error) {
       console.warn("practice discussion skipped:", error);
+    }
+  },
+
+  async decomposeHub(node) {
+    const settings = useSettingsStore.getState();
+    if (!settings.featureSwitches.compareProfileBuild) return;
+    if (!settings.networkEnabled || settings.apiConfig === null) {
+      set({ buildNote: "需要联网和 API 配置才能检索构建" });
+      return;
+    }
+    const profileId = get().selectedProfileId;
+    if (profileId === null) return;
+    set({ decomposingHub: true, buildNote: null });
+    const outcome = await runHubDecomposition(settings.apiConfig, {
+      profileId,
+      hubItemId: node.key,
+      topic: node.label,
+      mainland: settings.mainlandNetwork,
+    });
+    if (outcome.ok) {
+      const dropped =
+        outcome.droppedCount > 0 ? `；有 ${outcome.droppedCount} 条因资料没核验通过被丢弃` : "";
+      const tree = await computeComparisonTree(profileId);
+      set({ decomposingHub: false, buildNote: `${outcome.costLine}${dropped}`, tree });
+    } else {
+      const cost = outcome.costLine === null ? "" : `；${outcome.costLine}`;
+      set({ decomposingHub: false, buildNote: `${outcome.reason}${cost}` });
     }
   },
 

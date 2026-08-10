@@ -3,7 +3,8 @@
  * with mandatory per-item citations, a URL verification pass over every unique cited source
  * (unreachable or off-topic pages kill their whole branch), and a whole-build failure when
  * too little survives (宁缺毋假). Returns the display facts the UI must show: token usage
- * and cost. Main exports: runExperimentalProfileBuild, ExperimentalBuildOutcome.
+ * and cost. Main exports: runExperimentalProfileBuild, runProposalPipeline,
+ * ExperimentalBuildOutcome, VerifiedProposal.
  */
 import {
   BUILTIN_MODEL_PRICES,
@@ -51,14 +52,26 @@ async function verifyUrl(url: string, sourceTitles: readonly string[]): Promise<
   }
 }
 
+export type VerifiedProposal =
+  | {
+      ok: true;
+      surviving: readonly SearchedProposalItem[];
+      title: string;
+      description: string;
+      costLine: string;
+      droppedCount: number;
+    }
+  | { ok: false; reason: string; costLine: string | null };
+
 /**
- * The whole experimental pipeline. The caller has already checked the feature switch,
- * network switch, and API config; this function does the work and reports plainly.
+ * Shared proposal pipeline (spec 023 §5 / spec 028 hub decomposition): one metered LLM
+ * proposal with mandatory citations, per-URL verification, whole-run failure when too
+ * little survives. Callers decide where the surviving items land.
  */
-export async function runExperimentalProfileBuild(
+export async function runProposalPipeline(
   apiConfig: ApiConfig,
   input: { topic: string; mainland: boolean },
-): Promise<ExperimentalBuildOutcome> {
+): Promise<VerifiedProposal> {
   const config = { ...apiConfig, fetchImpl: tauriFetch };
   let usage: TokenUsage;
   let items: readonly SearchedProposalItem[];
@@ -109,7 +122,27 @@ export async function runExperimentalProfileBuild(
     );
     return { ok: false, reason: "引用的资料大多没能核验通过，这次构建整体作废", costLine };
   }
+  return {
+    ok: true,
+    surviving,
+    title,
+    description,
+    costLine,
+    droppedCount: items.length - surviving.length,
+  };
+}
 
+/**
+ * The standalone experimental build. The caller has already checked the feature switch,
+ * network switch, and API config; this function does the work and reports plainly.
+ */
+export async function runExperimentalProfileBuild(
+  apiConfig: ApiConfig,
+  input: { topic: string; mainland: boolean },
+): Promise<ExperimentalBuildOutcome> {
+  const proposal = await runProposalPipeline(apiConfig, input);
+  if (!proposal.ok) return proposal;
+  const { surviving, title, description, costLine, droppedCount } = proposal;
   const profileId = `searched-${newId()}`;
   const repos = await getRepos();
   await repos.comparisons.replaceProfile(
@@ -136,5 +169,5 @@ export async function runExperimentalProfileBuild(
       item_kind: "knowledge",
     })),
   );
-  return { ok: true, profileId, costLine, droppedCount: items.length - surviving.length };
+  return { ok: true, profileId, costLine, droppedCount };
 }
