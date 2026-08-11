@@ -73,9 +73,8 @@ export function LabLadderSection() {
           ladder.goalId === selectedGoalId && (
             <ul className="space-y-0.5">
               <li className="rounded px-2 py-1 text-stone-500">{ladder.aboveTitle}</li>
-              <li className="flex items-center gap-2 rounded bg-amber-100 px-2 py-1 text-stone-700">
-                <span className="shrink-0 font-medium">你</span>
-                <span>{ladder.selfTitle}</span>
+              <li className="rounded bg-amber-100 px-2 py-1 font-medium text-stone-700">
+                {ladder.selfTitle}
               </li>
               <li className="rounded px-2 py-1 text-stone-500">{ladder.belowTitle}</li>
             </ul>
