@@ -176,14 +176,9 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
     matches.set(item.key, semanticMatch);
   }
   const masteryByNode = computeMastery(sightings, claims, nowIso());
-  // Practice leaves score by the learner's own attestation (spec 026): 做过=1, 部分=0.5.
-  const attestations = await repos.practice.listAttestations();
-  const practiceValueByKey = new Map(
-    attestations.map((row) => [
-      row.item_id,
-      row.status === "done" ? 1 : row.status === "partial" ? 0.5 : 0,
-    ]),
-  );
+  // Pure experience leaves score by the learner's own 0–10 score (spec 029), 分/10.
+  const scores = await repos.practice.listScores();
+  const practiceValueByKey = new Map(scores.map((row) => [row.item_id, row.score / 10]));
   const roots = buildOverlapTree(
     items,
     matches,

@@ -38,7 +38,7 @@ export async function runHubDecomposition(
     source_ref: `${item.sourceTitle} · ${item.sourceUrl}`,
     position: existing.length + index,
     concept_id: null,
-    item_kind: "knowledge",
+    item_kind: "knowledge" as const,
   }));
   // Idempotence over repeats: a second run for the same hub replaces its old sub-items.
   const kept = existing.filter((row) => !row.id.startsWith(`${input.hubItemId}~`));

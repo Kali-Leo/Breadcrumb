@@ -1,67 +1,69 @@
 /**
- * Purpose: the comparison tree's detail panel (spec 023/026/028) — practice AND tool leaves
- * carry tri-state self-attestation (wording differs: 做过 vs 用过); hub leaves are unscored
- * 整域概念 with a 线索 line and on-demand decomposition; knowledge leaves show their match
- * and evidence; branch nodes report their 待细分 count. Also hosts the experimental build
- * form. Main exports: CompareNodeDetail, ExperimentalBuildForm.
+ * Purpose: the comparison tree's detail panel (spec 023/026/029) — pure experience leaves
+ * carry the learner's own 0–10 score (checkbox shortcut + score strip) with an AI helper
+ * entry decoupled from scoring; hub leaves (entities) are unscored with a 线索 line and
+ * on-demand decomposition; knowledge leaves show their match and evidence; branch nodes
+ * report their 待细分 count. Also hosts the experimental build form.
+ * Main exports: CompareNodeDetail, ExperimentalBuildForm.
  */
-import type { PracticeStatus } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { useState } from "react";
 import { useCompareStore } from "../stores/compareStore";
 import { useSettingsStore } from "../stores/settingsStore";
 
-const VERB_CHOICES: { status: PracticeStatus; label: string }[] = [
-  { status: "done", label: "做过" },
-  { status: "partial", label: "部分做过" },
-  { status: "not_yet", label: "还没做过" },
-];
-const NOUN_CHOICES: { status: PracticeStatus; label: string }[] = [
-  { status: "done", label: "用过" },
-  { status: "partial", label: "用过一点" },
-  { status: "not_yet", label: "没用过" },
-];
+const SCORES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function ClueLine({ node }: { node: OverlapNode }) {
   if (node.match === null) return null;
   return <p className="text-stone-400">线索：你的地图里有「{node.match.nodeLabel}」（不计分）</p>;
 }
 
-function AttestationDetail({ node }: { node: OverlapNode }) {
-  const attestationByItemId = useCompareStore((state) => state.attestationByItemId);
-  const setPracticeStatus = useCompareStore((state) => state.setPracticeStatus);
+function ExperienceDetail({ node }: { node: OverlapNode }) {
+  const scoreByItemId = useCompareStore((state) => state.scoreByItemId);
+  const setPracticeScore = useCompareStore((state) => state.setPracticeScore);
   const discussPractice = useCompareStore((state) => state.discussPractice);
-  const current = attestationByItemId.get(node.key) ?? "not_yet";
-  const choices = node.kind === "tool" ? NOUN_CHOICES : VERB_CHOICES;
+  const score = scoreByItemId.get(node.key) ?? null;
+  const done = score === 10;
   return (
     <div className="space-y-1.5">
       <p className="text-stone-600">{node.sourceRef}</p>
       <div className="flex items-center gap-1">
-        {choices.map((choice) => (
+        <button
+          type="button"
+          onClick={() => void setPracticeScore(node.key, done ? 0 : 10)}
+          className={`rounded px-2 py-0.5 transition-colors ${
+            done ? "bg-amber-500 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+          }`}
+        >
+          {done ? "✓ 已完成" : "勾选为完成"}
+        </button>
+        <span className="text-stone-300">|</span>
+        {SCORES.map((value) => (
           <button
-            key={choice.status}
+            key={value}
             type="button"
-            onClick={() => void setPracticeStatus(node.key, choice.status)}
-            className={`rounded px-2 py-0.5 transition-colors ${
-              current === choice.status
+            onClick={() => void setPracticeScore(node.key, value)}
+            className={`rounded px-1.5 py-0.5 transition-colors ${
+              score === value
                 ? "bg-amber-500 text-white"
                 : "bg-stone-100 text-stone-500 hover:bg-stone-200"
             }`}
           >
-            {choice.label}
+            {value}
           </button>
         ))}
       </div>
+      <p className="text-stone-400">
+        {score === null ? "还没打过分（不计分=0）" : `自评 ${score}/10`}
+      </p>
       <ClueLine node={node} />
-      {node.kind === "practice" && current !== "done" && (
-        <button
-          type="button"
-          onClick={() => void discussPractice(node)}
-          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
-        >
-          和 AI 探讨怎么完成
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => void discussPractice(node)}
+        className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
+      >
+        不知道怎么提高？和 AI 探讨（不影响分数）
+      </button>
     </div>
   );
 }
@@ -94,7 +96,7 @@ function HubDetail({ node }: { node: OverlapNode }) {
 }
 
 function countStubs(node: OverlapNode): number {
-  if (node.isLeaf) return node.kind === "hub" ? 1 : 0;
+  if (node.isLeaf) return node.kind === "hub" || node.kind === "tool" ? 1 : 0;
   return node.children.reduce((sum, child) => sum + countStubs(child), 0);
 }
 
@@ -104,7 +106,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
     <div className="space-y-1 rounded border border-stone-200 bg-stone-50 px-2 py-1.5">
       <p className="font-medium text-stone-700">
         {node.label}
-        {node.isLeaf && node.kind === "hub" ? (
+        {node.isLeaf && (node.kind === "hub" || node.kind === "tool") ? (
           <span className="ml-2 text-stone-400">待细分</span>
         ) : (
           <span className="ml-2 text-stone-400">
@@ -116,9 +118,9 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
           </span>
         )}
       </p>
-      {node.isLeaf && (node.kind === "practice" || node.kind === "tool") ? (
-        <AttestationDetail node={node} />
-      ) : node.isLeaf && node.kind === "hub" ? (
+      {node.isLeaf && node.kind === "practice" ? (
+        <ExperienceDetail node={node} />
+      ) : node.isLeaf && (node.kind === "hub" || node.kind === "tool") ? (
         <HubDetail node={node} />
       ) : (
         <>

@@ -5,7 +5,7 @@
  * cost/outcome line. Standalone module: no planner/ladder/goal state anywhere.
  * Main exports: useCompareStore.
  */
-import type { ComparisonProfileRow, PracticeStatus } from "@breadcrumb/core-db";
+import type { ComparisonProfileRow } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { create } from "zustand";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
@@ -36,8 +36,8 @@ interface CompareState {
   aligning: boolean;
   /** Plain outcome line of the last experimental build (includes the token cost). */
   buildNote: string | null;
-  /** The learner's own practice statements, item id → status (spec 026). */
-  attestationByItemId: ReadonlyMap<string, PracticeStatus>;
+  /** The learner's own 0–10 scores on pure experience leaves, item id → score (spec 029). */
+  scoreByItemId: ReadonlyMap<string, number>;
   /** Plain outcome line of the last 一键生成目标 run. */
   goalNote: string | null;
   generatingGoal: boolean;
@@ -48,8 +48,8 @@ interface CompareState {
   buildFromTopic(topic: string): Promise<void>;
   /** Builds the chosen occupation's profile offline and selects it (spec 026). */
   createOccupation(code: string): Promise<void>;
-  /** Records the learner's own statement about a practice item and rescores locally. */
-  setPracticeStatus(itemId: string, status: PracticeStatus): Promise<void>;
+  /** Records the learner's own 0–10 score for an experience leaf and rescores the tree. */
+  setPracticeScore(itemId: string, score: number): Promise<void>;
   /** Opens (or resumes) the saved-but-sidebar-hidden discussion for a practice item. */
   discussPractice(node: OverlapNode): Promise<void>;
   /** 一键生成目标 (spec 026 §3): feeds the profile's evidence leaves to goal planning. */
@@ -87,7 +87,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   building: false,
   aligning: false,
   buildNote: null,
-  attestationByItemId: new Map<string, PracticeStatus>(),
+  scoreByItemId: new Map<string, number>(),
   goalNote: null,
   generatingGoal: false,
   decomposingHub: false,
@@ -116,14 +116,14 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
       // alignment runs behind it and quietly patches the tree when new verdicts land.
       const repos = await getRepos();
-      const [tree, attestations] = await Promise.all([
+      const [tree, scores] = await Promise.all([
         computeComparisonTree(profileId),
-        repos.practice.listAttestations(),
+        repos.practice.listScores(),
       ]);
       set({
         selectedProfileId: profileId,
         tree,
-        attestationByItemId: new Map(attestations.map((row) => [row.item_id, row.status])),
+        scoreByItemId: new Map(scores.map((row) => [row.item_id, row.score])),
         expandedKeys: new Set<string>(),
         loading: false,
         goalNote: null,
@@ -194,24 +194,24 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     }
   },
 
-  async setPracticeStatus(itemId, status) {
+  async setPracticeScore(itemId, score) {
     try {
       const repos = await getRepos();
-      await repos.practice.upsertAttestation({
+      await repos.practice.upsertScore({
         item_id: itemId,
-        status,
-        attested_at: nowIso(),
+        score,
+        scored_at: nowIso(),
       });
-      const next = new Map(get().attestationByItemId);
-      next.set(itemId, status);
-      set({ attestationByItemId: next });
+      const next = new Map(get().scoreByItemId);
+      next.set(itemId, score);
+      set({ scoreByItemId: next });
       const selected = get().selectedProfileId;
       if (selected !== null) {
         const tree = await computeComparisonTree(selected);
         set({ tree });
       }
     } catch (error) {
-      console.warn("practice attestation skipped:", error);
+      console.warn("practice score skipped:", error);
     }
   },
 
