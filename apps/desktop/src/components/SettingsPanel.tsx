@@ -36,6 +36,10 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
     name: "🌉 对比语义对齐",
     hint: "对比树里让 AI 判定你的用词与资料用词是否同一概念；判定永久复用，只为新出现的组合花钱（独立计费）",
   },
+  mapTopicNaming: {
+    name: "🗺️ 板块 AI 起名（实验）",
+    hint: "记忆宫殿里给聚成一堆的零散兴趣起一个领域名；同一堆只算一次，之后一直复用（独立计费）",
+  },
 };
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {

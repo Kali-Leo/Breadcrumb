@@ -1,6 +1,6 @@
 /**
  * Purpose: draws what one island shows at its own level — a seat building per kingdom plus
- * its name, placed by mapLabelPlacement so realm names never land on a seat or each other.
+ * its name, placed by mapKingdomLabels so realm names never land on a seat or each other.
  * Village settlements, village names and knowledge-point labels were removed 2026-08-11
  * (backup: branch backup/village-town-scene).
  * Main exports: drawIslandSettlements, SettlementsInput, stampSprite.
@@ -8,7 +8,7 @@
 import { averageRetention, type IslandModel, type WorldPoint } from "@breadcrumb/plugin-map";
 import { Container, Sprite, type Texture } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
-import { type KingdomLabelRequest, placeKingdomLabels } from "./mapLabelPlacement";
+import { type KingdomLabelRequest, placeKingdomLabels } from "./mapKingdomLabels";
 import { labelDim, type MapLabel, makeMapLabel } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
 

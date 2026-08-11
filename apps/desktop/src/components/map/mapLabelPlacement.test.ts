@@ -1,18 +1,14 @@
 /**
- * Purpose: pure-geometry checks on cartographic label placement — names that would collide
- * at their preferred anchor must end up disjoint, and the result must be deterministic.
+ * Purpose: pure-geometry checks on cartographic label placement — an island name lies on its
+ * own island by default, names that would collide end up disjoint (with the leader flag set
+ * once one is pushed out to sea), realm names clear every seat, and both are deterministic.
  * Main exports: none (vitest suite).
  */
 import type { WorldPoint } from "@breadcrumb/plugin-map";
 import { describe, expect, it } from "vitest";
-import {
-  type IslandLabelRequest,
-  type KingdomLabelRequest,
-  type LabelBox,
-  labelBoxSize,
-  placeIslandLabels,
-  placeKingdomLabels,
-} from "./mapLabelPlacement";
+import { type IslandLabelRequest, placeIslandLabels } from "./mapIslandLabels";
+import { type KingdomLabelRequest, placeKingdomLabels } from "./mapKingdomLabels";
+import { type LabelBox, labelBoxSize } from "./mapLabelPlacement";
 
 const ISLAND_NAME = "记忆的岛屿";
 const ISLAND_SIZE = 26;
@@ -45,42 +41,54 @@ function islandRequest(nodeId: string, center: WorldPoint, radius: number): Isla
   return { nodeId, content: ISLAND_NAME, center, radius, letterSpacingRatio: ISLAND_SPACING };
 }
 
-/** Where an island name lands when nothing is in its way: centred just under the coast. */
-function preferredCenter(request: IslandLabelRequest): WorldPoint {
-  const box = labelBoxSize(ISLAND_NAME, ISLAND_SPACING, ISLAND_SIZE, SCALE);
-  return { x: request.center.x, y: request.center.y + request.radius + 20 + box.height / 2 };
-}
-
 describe("placeIslandLabels", () => {
   const bigger = islandRequest("big", { x: 0, y: 0 }, 120);
   const smaller = islandRequest("small", { x: 60, y: 0 }, 100);
 
-  it("keeps two names that want the same strip of sea disjoint", () => {
-    const wouldClash = overlapArea(
-      islandBox(preferredCenter(bigger)),
-      islandBox(preferredCenter(smaller)),
-    );
+  it("lays a name across its own island, overlapping that terrain on purpose", () => {
+    const placed = placeIslandLabels([bigger], ISLAND_SIZE, SCALE, []);
+    expect(placed.get("big")?.center).toEqual(bigger.center);
+    expect(placed.get("big")?.outside).toBe(false);
+  });
+
+  it("keeps two names that want the same patch of land disjoint", () => {
+    const wouldClash = overlapArea(islandBox(bigger.center), islandBox(smaller.center));
     expect(wouldClash).toBeGreaterThan(0);
 
     const placed = placeIslandLabels([bigger, smaller], ISLAND_SIZE, SCALE, []);
-    const bigBox = islandBox(placed.get("big") ?? bigger.center);
-    const smallBox = islandBox(placed.get("small") ?? smaller.center);
+    const bigBox = islandBox(placed.get("big")?.center ?? bigger.center);
+    const smallBox = islandBox(placed.get("small")?.center ?? smaller.center);
     expect(overlapArea(bigBox, smallBox)).toBe(0);
   });
 
-  it("lets the bigger island keep the anchor and moves the smaller one", () => {
+  it("lets the bigger island keep its centre and moves the smaller one", () => {
     // Input order is deliberately the reverse of the placement order.
     const placed = placeIslandLabels([smaller, bigger], ISLAND_SIZE, SCALE, []);
-    expect(placed.get("big")).toEqual(preferredCenter(bigger));
-    expect(placed.get("small")).not.toEqual(preferredCenter(smaller));
+    expect(placed.get("big")?.center).toEqual(bigger.center);
+    expect(placed.get("small")?.center).not.toEqual(smaller.center);
   });
 
-  it("moves a name off an anchor a sea decoration already occupies", () => {
-    const decoration: LabelBox = { center: preferredCenter(bigger), width: 300, height: 120 };
+  it("nudges a name along its island's body before giving up and sailing", () => {
+    // A decoration lying exactly over the island's middle: the name slides up its own body.
+    const decoration: LabelBox = { center: bigger.center, width: 300, height: 40 };
     const placed = placeIslandLabels([bigger], ISLAND_SIZE, SCALE, [decoration]);
-    const chosen = placed.get("big") ?? bigger.center;
-    expect(chosen.y).toBeLessThan(0);
-    expect(overlapArea(islandBox(chosen), decoration)).toBe(0);
+    const chosen = placed.get("big");
+    expect(chosen?.outside).toBe(false);
+    expect(Math.abs(chosen?.center.y ?? 0)).toBeLessThanOrEqual(bigger.radius);
+    expect(overlapArea(islandBox(chosen?.center ?? bigger.center), decoration)).toBe(0);
+  });
+
+  it("flags a name as outside and clear of obstacles when its whole island is blocked", () => {
+    // Decor covering the island's entire disc leaves nowhere onshore to stand.
+    const blanket: LabelBox = {
+      center: bigger.center,
+      width: 600,
+      height: bigger.radius * 2 + 60,
+    };
+    const placed = placeIslandLabels([bigger], ISLAND_SIZE, SCALE, [blanket]);
+    const chosen = placed.get("big");
+    expect(chosen?.outside).toBe(true);
+    expect(overlapArea(islandBox(chosen?.center ?? bigger.center), blanket)).toBe(0);
   });
 
   it("returns the same placement for the same input", () => {

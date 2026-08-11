@@ -1,12 +1,12 @@
 /**
  * Purpose: tests for embedding-based topic discovery — cluster separation, medoid labeling,
- * no-embedding ancestor attachment, the all-no-embedding tree-root fallback, the one-member
- * islet split, and the weight/sizeTier quantization shapeTopicIslands derives from it.
+ * no-embedding ancestor attachment, the all-no-embedding tree-root fallback, and the
+ * one-member islet split. (The map itself now derives continents tree-first; see
+ * continents.test.ts.)
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { shapeTopicIslands } from "./topicShape";
-import { discoverTopics, type TopicAssignment } from "./topics";
+import { discoverTopics } from "./topics";
 
 function node(
   id: string,
@@ -144,28 +144,5 @@ describe("discoverTopics", () => {
     expect(assignment.islets.map((islet) => islet.id).sort()).toEqual(["lone1", "lone2"]);
     // Deterministic: the same input yields the same split, islets included.
     expect(discoverTopics(nodes, embeddings, new Map())).toEqual(assignment);
-  });
-});
-
-describe("shapeTopicIslands", () => {
-  it("quantizes island sizeTier 1..6 relative to the max topic weight", () => {
-    const nodes = [node("light", null), node("medium", null), node("heavy", null)];
-    const assignment: TopicAssignment = {
-      topics: [
-        { id: "light", label: "light", memberNodeIds: ["light"], weight: 1 },
-        { id: "medium", label: "medium", memberNodeIds: ["medium"], weight: 3 },
-        { id: "heavy", label: "heavy", memberNodeIds: ["heavy"], weight: 6 },
-      ],
-      islets: [],
-    };
-
-    const islands = shapeTopicIslands(nodes, assignment);
-
-    expect(islands.find((island) => island.label === "heavy")?.sizeTier).toBe(6);
-    expect(islands.find((island) => island.label === "medium")?.sizeTier).toBe(3);
-    expect(islands.find((island) => island.label === "light")?.sizeTier).toBe(1);
-    for (const island of islands) {
-      expect(island.nodeId.startsWith("topic:")).toBe(true);
-    }
   });
 });

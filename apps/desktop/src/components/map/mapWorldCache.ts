@@ -1,23 +1,23 @@
 /**
- * Purpose: memoizes buildWorldModel per (nodes, topicAssignment) pair so re-opening the
- * memory palace or waiting for the async topic assignment to arrive skips the expensive
- * terrain build (identical output, just remembered). Two-level WeakMap: nodes array first,
- * then either the plain (tree-root) slot or a WeakMap keyed by the assignment object.
+ * Purpose: memoizes buildWorldModel per (nodes, continentAssignment) pair so re-opening the
+ * memory palace, waiting for the async assignment, or receiving AI continent names skips the
+ * expensive terrain build (identical output, just remembered). Two-level WeakMap: nodes array
+ * first, then either the plain (tree-root) slot or a WeakMap keyed by the assignment object.
  * Main exports: cachedWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { buildWorldModel, type TopicAssignment, type WorldModel } from "@breadcrumb/plugin-map";
+import { buildWorldModel, type ContinentAssignment, type WorldModel } from "@breadcrumb/plugin-map";
 
 interface WorldCacheEntry {
   plain?: WorldModel;
-  byAssignment?: WeakMap<TopicAssignment, WorldModel>;
+  byAssignment?: WeakMap<ContinentAssignment, WorldModel>;
 }
 
 const worldCache = new WeakMap<readonly KnowledgeNodeRow[], WorldCacheEntry>();
 
 export function cachedWorldModel(
   nodes: readonly KnowledgeNodeRow[],
-  assignment: TopicAssignment | null,
+  assignment: ContinentAssignment | null,
 ): WorldModel {
   let entry = worldCache.get(nodes);
   if (entry === undefined) {

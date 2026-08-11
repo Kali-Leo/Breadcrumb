@@ -1,6 +1,6 @@
 /**
- * Purpose: shapes and places the unnamed islets — interests touched exactly once, which have
- * no topic around them yet — as tiny nameless landmasses scattered in the open sea.
+ * Purpose: shapes and places the unnamed islets — flat roots that carry no subtree and
+ * gathered with nobody — as tiny nameless landmasses scattered in the open sea.
  * Main exports: buildIslets, ISLET_RADIUS.
  */
 import { createSeededRandom, hashStringToSeed } from "./random";
@@ -9,7 +9,7 @@ import { buildLandCells, terrainFor, translatePath } from "./terrainParts";
 import type { TopicSummary } from "./topics";
 import type { IslandModel, IsletModel, WorldPoint } from "./types";
 
-/** Every islet is the same small size — an islet's meaning is "one touch", not "how much". */
+/** Every islet is the same small size — an islet's meaning is "on its own", not "how much". */
 export const ISLET_RADIUS = 90;
 const ISLET_SIZE_TIER = 1;
 /** Keep clear of a continent's hit radius (1.35 r) plus a visible strip of sea. */

@@ -15,7 +15,8 @@
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
     "poisson-disk-sampling": "^2.3.1",
-    "simplex-noise": "^4.0.3"
+    "simplex-noise": "^4.0.3",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@types/d3-delaunay": "^6.0.4",

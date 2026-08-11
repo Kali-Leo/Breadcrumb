@@ -4,8 +4,8 @@
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
+import type { ContinentAssignment } from "./continents";
 import { averageRetention } from "./retention";
-import type { TopicAssignment } from "./topics";
 import { buildWorldModel } from "./world";
 
 function node(
@@ -104,13 +104,18 @@ describe("islets", () => {
     node("kite", null),
     node("bread", null),
   ];
-  const assignment: TopicAssignment = {
-    topics: [
+  const assignment: ContinentAssignment = {
+    continents: [
       {
         id: "math",
         label: "label-math",
         memberNodeIds: ["math", "algebra", "analysis"],
         weight: 3,
+        origin: "tree",
+        kingdoms: [
+          { id: "algebra", label: "label-algebra", memberNodeIds: ["algebra"] },
+          { id: "analysis", label: "label-analysis", memberNodeIds: ["analysis"] },
+        ],
       },
     ],
     islets: [
@@ -126,7 +131,7 @@ describe("islets", () => {
   it("gives every one-touch interest a small landmass in open water, deterministically", () => {
     const world = buildWorldModel(nodes, assignment);
 
-    // Islets keep the order discoverTopics handed over; the seed is order-independent.
+    // Islets keep the order deriveContinents handed over; the seed is order-independent.
     expect(world.islets.map((islet) => islet.nodeId)).toEqual(["kite", "bread"]);
     for (const islet of world.islets) {
       expect(islet.coastLoops.length).toBeGreaterThan(0);
@@ -149,8 +154,8 @@ describe("islets", () => {
     expect(buildWorldModel(nodes, assignment)).toEqual(world);
   });
 
-  it("draws only islets when the assignment found no topic at all", () => {
-    const loners: TopicAssignment = { topics: [], islets: assignment.islets };
+  it("draws only islets when the assignment found no continent at all", () => {
+    const loners: ContinentAssignment = { continents: [], islets: assignment.islets };
     const world = buildWorldModel(nodes, loners);
 
     expect(world.islands).toEqual([]);

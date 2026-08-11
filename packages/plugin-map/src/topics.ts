@@ -1,16 +1,14 @@
 /**
  * Purpose: cluster the user's knowledge nodes into discovered topics (kNN cosine graph +
- * deterministic Louvain community detection), independent of tree structure — one topic
- * becomes one island, while one-member groups leave as islets. Pure: no DB, no UI, no
- * randomness beyond the seeded rng.
+ * deterministic Louvain community detection) ignoring tree structure entirely, one-member
+ * groups leaving as islets. The map itself no longer shapes itself from this — spec 031
+ * made it tree-first (./continents.ts) — but TopicSummary is still the islet's shape and
+ * this whole-corpus view stays available. Pure: no DB, no UI, seeded randomness only.
  * Main exports: discoverTopics, TopicSummary, TopicAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import louvain from "graphology-communities-louvain";
-import { createSeededRandom, hashStringToSeed } from "./random";
+import { clusterEmbeddedNodes, pickMedoid } from "./topicCluster";
 import { buildParentMap, groupByRoot, sumEngagement } from "./topicFallback";
-import { buildKnnGraph, mergeSingletonCommunities } from "./topicGraph";
-import { computeCentroid, cosineSimilarity } from "./topicVectors";
 
 export interface TopicSummary {
   id: string;
@@ -44,33 +42,6 @@ function findEmbeddedAncestorKey(
   return null;
 }
 
-function pickMedoid(
-  embeddedMemberIds: readonly string[],
-  embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
-  nodesById: ReadonlyMap<string, KnowledgeNodeRow>,
-): KnowledgeNodeRow | undefined {
-  const centroid = computeCentroid(embeddedMemberIds, embeddingByNodeId);
-  let best: KnowledgeNodeRow | undefined;
-  let bestSimilarity = -Infinity;
-  for (const id of embeddedMemberIds) {
-    const vector = embeddingByNodeId.get(id);
-    const node = nodesById.get(id);
-    if (vector === undefined || node === undefined) continue;
-    const similarity = cosineSimilarity(vector, centroid);
-    const better =
-      best === undefined ||
-      similarity > bestSimilarity ||
-      (similarity === bestSimilarity &&
-        (node.created_at < best.created_at ||
-          (node.created_at === best.created_at && node.id < best.id)));
-    if (better) {
-      best = node;
-      bestSimilarity = similarity;
-    }
-  }
-  return best;
-}
-
 function orderTopics(topics: readonly TopicSummary[]): TopicSummary[] {
   return [...topics].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
 }
@@ -102,19 +73,7 @@ export function discoverTopics(
 
   const embeddedIds = embeddedNodes.map((node) => node.id);
   const embeddedIdSet = new Set(embeddedIds);
-  const graph = buildKnnGraph(embeddedIds, embeddingByNodeId);
-  const rng = createSeededRandom(hashStringToSeed([...embeddedIds].sort().join(",")));
-  const communityIndexByNode = louvain(graph, { rng, getEdgeWeight: "weight" });
-
-  const initialCommunities = new Map<string, string[]>();
-  for (const id of embeddedIds) {
-    const key = String(communityIndexByNode[id]);
-    const members = initialCommunities.get(key) ?? [];
-    members.push(id);
-    initialCommunities.set(key, members);
-  }
-
-  const mergedCommunities = mergeSingletonCommunities(initialCommunities, embeddingByNodeId, graph);
+  const mergedCommunities = clusterEmbeddedNodes(embeddedIds, embeddingByNodeId);
   const communityKeyByNodeId = new Map<string, string>();
   for (const [key, memberIds] of mergedCommunities) {
     for (const id of memberIds) communityKeyByNodeId.set(id, key);

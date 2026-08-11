@@ -1,11 +1,13 @@
 /**
  * Purpose: pipeline orchestrator — knowledge rows in, fully placed geometric world out.
  * Every island is generated in local coordinates then translated to its fixed slot. Islands
- * are shaped by discovered topics when a TopicAssignment is supplied, else by tree roots;
- * that assignment's one-touch interests become unnamed islets in the open sea.
+ * are shaped by derived continents when a ContinentAssignment is supplied, else by tree
+ * roots; that assignment's unclustered loners become unnamed islets in the open sea.
  * Main exports: buildWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { shapeContinents } from "./continentShape";
+import type { ContinentAssignment } from "./continents";
 import { buildIslets } from "./isletBuild";
 import { islandRadiusForTier, packIslandCenters } from "./layout";
 import { createSeededRandom, hashStringToSeed } from "./random";
@@ -13,8 +15,6 @@ import { partitionKingdoms } from "./regions";
 import { placeVillagePoints, placeVillages } from "./settlements";
 import type { IslandTerrain } from "./terrain";
 import { buildLandCells, buildRivers, terrainFor, translate, translatePath } from "./terrainParts";
-import { shapeTopicIslands } from "./topicShape";
-import type { TopicAssignment } from "./topics";
 import { type ShapedIsland, type ShapedKingdom, shapeTree } from "./treeShape";
 import type { IslandModel, KingdomModel, VillageModel, WorldModel, WorldPoint } from "./types";
 
@@ -142,14 +142,14 @@ function buildIsland(shaped: ShapedIsland, center: WorldPoint): IslandModel {
 
 export function buildWorldModel(
   nodes: readonly KnowledgeNodeRow[],
-  topicAssignment?: TopicAssignment,
+  continentAssignment?: ContinentAssignment,
 ): WorldModel {
-  // An assignment that produced only islets still speaks for the data (nothing has clustered
-  // yet) — falling back to tree roots there would draw continents the topics denied.
+  // An assignment that produced only islets still speaks for the data (nothing has gathered
+  // yet) — falling back to tree roots there would draw continents the derivation denied.
   const shapedIslands =
-    topicAssignment !== undefined &&
-    (topicAssignment.topics.length > 0 || topicAssignment.islets.length > 0)
-      ? shapeTopicIslands(nodes, topicAssignment)
+    continentAssignment !== undefined &&
+    (continentAssignment.continents.length > 0 || continentAssignment.islets.length > 0)
+      ? shapeContinents(nodes, continentAssignment.continents)
       : shapeTree(nodes);
   const centers = packIslandCenters(
     shapedIslands.map((shaped) => islandRadiusForTier(shaped.sizeTier)),
@@ -159,6 +159,7 @@ export function buildWorldModel(
   );
   return {
     islands,
-    islets: topicAssignment === undefined ? [] : buildIslets(topicAssignment.islets, islands),
+    islets:
+      continentAssignment === undefined ? [] : buildIslets(continentAssignment.islets, islands),
   };
 }

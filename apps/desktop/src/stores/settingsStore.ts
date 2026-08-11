@@ -27,6 +27,8 @@ export interface FeatureSwitches {
   compareProfileBuild: boolean;
   /** Semantic alignment between profile items and the user's own vocabulary (spec 024). */
   compareAlignment: boolean;
+  /** Experimental: let the model name the map's clustered continents (spec 031 §3). */
+  mapTopicNaming: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -64,6 +66,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   labPanel: false,
   compareProfileBuild: false,
   compareAlignment: false,
+  mapTopicNaming: false,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

@@ -1,20 +1,23 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
  * jumps (world → island, the deepest view) on the wheel with exact-fit framing, no free
- * zoom or panning. Islands are discovered-topic continents once the async topic
- * assignment loads (embedding clusters, spec 030); until then the tree-root fallback
- * renders, which is fine and intended. The world model is cached per (nodes, assignment)
- * pair so re-opening the palace skips the expensive terrain build (identical output, just
+ * zoom or panning. Islands are derived continents once the async assignment loads (tree
+ * roots first, clustering only for the flat leftovers, spec 031); until then the tree-root
+ * fallback renders, which is fine and intended, and AI continent names (when that switch is
+ * on) patch in a moment later. The world model is cached per (nodes, assignment) pair so
+ * re-opening the palace skips the expensive terrain build (identical output, just
  * remembered). StrictMode-safe; DEV keys 0 demo, 1..2 level jumps.
  * Main exports: MapView.
  */
 
-import type { TopicAssignment } from "@breadcrumb/plugin-map";
+import type { ContinentAssignment } from "@breadcrumb/plugin-map";
 import { Application } from "pixi.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { loadTopicAssignment } from "../../lib/mapTopicActions";
+import { loadContinentAssignment } from "../../lib/mapContinentActions";
+import { applyAiContinentNames } from "../../lib/mapNamingActions";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
+import { useSettingsStore } from "../../stores/settingsStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
 import { findIsland, type MapLevel } from "./levels";
 import { applyReveals, drawFootprintTrail } from "./livingMap";
@@ -38,19 +41,34 @@ export function MapView() {
   const [demoMode, setDemoMode] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
-  const [topicAssignment, setTopicAssignment] = useState<TopicAssignment | null>(null);
+  const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
   useEffect(() => {
     void useMemoryStore.getState().refresh();
   }, []);
 
-  // Discovered-topic islands load asynchronously and re-derive whenever the tree changes;
-  // until the first load resolves, cachedWorldModel's null-assignment fallback renders.
+  // Continents load asynchronously and re-derive whenever the tree changes; until the first
+  // load resolves, cachedWorldModel's null-assignment fallback renders. AI names (spec 031
+  // §3) arrive later still and simply replace the assignment once they do — the medoid-named
+  // map is already on screen by then.
   useEffect(() => {
     let cancelled = false;
-    void loadTopicAssignment(storeNodes).then((assignment) => {
-      if (!cancelled) setTopicAssignment(assignment);
+    void loadContinentAssignment(storeNodes).then((assignment) => {
+      if (cancelled) return;
+      setContinentAssignment(assignment);
+      const settings = useSettingsStore.getState();
+      if (
+        assignment === null ||
+        !settings.featureSwitches.mapTopicNaming ||
+        !settings.networkEnabled ||
+        settings.apiConfig === null
+      ) {
+        return;
+      }
+      void applyAiContinentNames(assignment, settings.apiConfig).then((named) => {
+        if (!cancelled && named !== assignment) setContinentAssignment(named);
+      });
     });
     return () => {
       cancelled = true;
@@ -59,12 +77,12 @@ export function MapView() {
 
   const nodes = demoMode ? demoKnowledgeNodes : storeNodes;
   const retentionByNode = demoMode ? demoRetentionByNode : storeRetention;
-  // Demo nodes never match a real-data topic assignment's member ids, so demo mode always
-  // uses the tree-root fallback.
-  const effectiveTopicAssignment = demoMode ? null : topicAssignment;
+  // Demo nodes never match a real-data assignment's member ids, so demo mode always uses
+  // the tree-root fallback.
+  const effectiveAssignment = demoMode ? null : continentAssignment;
   const world = useMemo(
-    () => cachedWorldModel(nodes, effectiveTopicAssignment),
-    [nodes, effectiveTopicAssignment],
+    () => cachedWorldModel(nodes, effectiveAssignment),
+    [nodes, effectiveAssignment],
   );
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 

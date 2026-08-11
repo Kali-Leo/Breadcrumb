@@ -1,34 +1,34 @@
 /**
- * Purpose: assembles the Pixi world scene — sea/frame, terrain, the two level bands
- * (island names at the world level, kingdom seats and names at the island level), unnamed
- * islets and sea decor in the world band, the hover highlight layer, fog under names,
- * footprints, ink reveals. Names are sized by class and moved apart by mapLabelPlacement.
+ * Purpose: assembles the Pixi world scene — sea/frame, the two level bands (island names at
+ * the world level, kingdom seats and names at the island level), unnamed islets and sea decor
+ * in the world band, the hover highlight layer, fog under names, footprints, ink reveals.
+ * Each continent itself is drawn by sceneIsland.ts; here they are placed and stacked.
  * Main exports: buildWorldScene, WorldScene, ScreenSize.
  */
-import {
-  averageRetention,
-  type IslandModel,
-  type WorldModel,
-  type WorldPoint,
-} from "@breadcrumb/plugin-map";
+import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
 import { Container, Graphics } from "pixi.js";
-import { strokeDashedPath } from "./drawPrimitives";
 import { buildFogLayer } from "./fog";
 import { drawLandmass } from "./islandArt";
 import { frameForLevel } from "./levels";
 import { buildPlacePositions, type RevealTarget } from "./livingMap";
 import type { MapArt } from "./mapArtAssets";
-import { type IslandLabelRequest, type LabelBox, placeIslandLabels } from "./mapLabelPlacement";
-import { labelDim, type MapLabel, makeMapLabel } from "./mapLabels";
+import {
+  type IslandLabelPlacement,
+  type IslandLabelRequest,
+  placeIslandLabels,
+} from "./mapIslandLabels";
+import type { LabelBox } from "./mapLabelPlacement";
+import type { MapLabel } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
-import { drawIslandSettlements } from "./sceneSettlements";
+import {
+  buildIslandScene,
+  ISLAND_LETTER_SPACING,
+  type SceneContext,
+  type SceneParts,
+} from "./sceneIsland";
 import { buildSeaLayer } from "./seaArt";
 import { buildSeaDecorLayer, planSeaDecor, seaDecorObstacles } from "./seaDecor";
 
-/** Island names are set loose enough to read as engraved place names. */
-const ISLAND_LETTER_SPACING = 0.2;
-
-/** Only island names are tappable — they are the one place a tap can travel to. */
 /** The canvas the map draws into — it fixes every level's camera scale, hence placement. */
 export interface ScreenSize {
   width: number;
@@ -51,69 +51,12 @@ export interface WorldScene {
   revealTargets: RevealTarget[];
 }
 
-interface SceneParts {
-  terrain: Container;
-  borders: Container;
-  worldBand: Container;
-  islandBand: Container;
-}
-
-interface SceneContext {
-  world: WorldModel;
-  retentionByNode: ReadonlyMap<string, number>;
-  art: MapArt;
-  newNodeIds: ReadonlySet<string>;
-  screen: ScreenSize;
-  parts: SceneParts;
-  labels: MapLabel[];
-  revealTargets: RevealTarget[];
-}
-
-function buildIsland(island: IslandModel, namePosition: WorldPoint, context: SceneContext): void {
-  context.parts.terrain.addChild(drawLandmass(island));
-
-  const borders = new Graphics();
-  for (const path of island.kingdomBorderPaths) {
-    strokeDashedPath(borders, path, 6, 5, { width: 1.2, color: mapTheme.inkSoft, alpha: 0.8 });
-  }
-  context.parts.borders.addChild(borders);
-
-  const islandDim = labelDim(averageRetention(island.memberNodeIds, context.retentionByNode));
-  const islandLabel = makeMapLabel(island.label, mapTheme.labelSizes.island, islandDim, {
-    letterSpacingRatio: ISLAND_LETTER_SPACING,
-  });
-  islandLabel.text.position.set(namePosition.x, namePosition.y);
-  context.parts.worldBand.addChild(islandLabel.text);
-  context.labels.push(islandLabel);
-
-  const reveal = (object: Container): void => {
-    object.alpha = 0;
-    const delay = context.revealTargets.length * 0.12;
-    context.revealTargets.push({ object, delay, elapsed: 0 });
-  };
-  drawIslandSettlements({
-    island,
-    retentionByNode: context.retentionByNode,
-    art: context.art,
-    newNodeIds: context.newNodeIds,
-    islandBand: context.parts.islandBand,
-    islandScale: frameForLevel(
-      context.world,
-      { kind: "island", islandId: island.nodeId },
-      context.screen.width,
-      context.screen.height,
-    ).scale,
-    labels: context.labels,
-    reveal,
-  });
-}
-
 /** Island names are read at the world level, so they dodge each other at that scale. */
 function islandLabelPositions(
   world: WorldModel,
-  screen: ScreenSize,
+  worldScale: number,
   obstacles: readonly LabelBox[],
-): Map<string, WorldPoint> {
+): Map<string, IslandLabelPlacement> {
   const requests: IslandLabelRequest[] = world.islands.map((island) => ({
     nodeId: island.nodeId,
     content: island.label,
@@ -121,7 +64,6 @@ function islandLabelPositions(
     radius: island.radius,
     letterSpacingRatio: ISLAND_LETTER_SPACING,
   }));
-  const worldScale = frameForLevel(world, { kind: "world" }, screen.width, screen.height).scale;
   return placeIslandLabels(requests, mapTheme.labelSizes.island, worldScale, obstacles);
 }
 
@@ -144,6 +86,7 @@ export function buildWorldScene(
     art,
     newNodeIds,
     screen,
+    worldScale: frameForLevel(world, { kind: "world" }, screen.width, screen.height).scale,
     parts,
     labels: [],
     revealTargets: [],
@@ -156,9 +99,13 @@ export function buildWorldScene(
   // Decor is planned before it is drawn: the same plan tells island names what to dodge.
   const decorPieces = planSeaDecor(world, art);
   parts.worldBand.addChild(buildSeaDecorLayer(decorPieces));
-  const positions = islandLabelPositions(world, screen, seaDecorObstacles(decorPieces));
+  const positions = islandLabelPositions(world, context.worldScale, seaDecorObstacles(decorPieces));
   for (const island of world.islands) {
-    buildIsland(island, positions.get(island.nodeId) ?? island.center, context);
+    buildIslandScene(
+      island,
+      positions.get(island.nodeId) ?? { center: island.center, outside: false },
+      context,
+    );
   }
   const fog = buildFogLayer(world, retentionByNode);
   const footprintLayer = new Graphics();

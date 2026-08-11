@@ -2,7 +2,8 @@
  * Purpose: reshape the flat knowledge tree into the cartographic hierarchy — islands
  * (depth 0), kingdoms (depth 1), villages (depth 2), knowledge points (depth 3+).
  * Main exports: shapeTree, ShapedIsland, ShapedKingdom, ShapedVillage, ShapedPoint; also
- * exports indexChildren/shapeKingdom for topicShape.ts to reuse the same recursion.
+ * exports indexChildren/collectSubtree/shapeKingdom so continentShape.ts and continents.ts
+ * reuse the same root resolution and recursion.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 
@@ -41,8 +42,8 @@ export interface ShapedIsland {
 
 export type ChildrenByParent = Map<string | null, KnowledgeNodeRow[]>;
 
-/** Exported so topicShape.ts can scope this same grouping to a topic's member subset
- * (a dangling/out-of-scope parent degrades a member to a kingdom root within its topic). */
+/** Exported so continentShape.ts can scope this same grouping to a continent's member
+ * subset (an out-of-scope parent degrades a member to a kingdom root within its continent). */
 export function indexChildren(nodes: readonly KnowledgeNodeRow[]): ChildrenByParent {
   const knownIds = new Set(nodes.map((node) => node.id));
   const childrenByParent: ChildrenByParent = new Map();
@@ -64,7 +65,12 @@ export function indexChildren(nodes: readonly KnowledgeNodeRow[]): ChildrenByPar
   return childrenByParent;
 }
 
-function collectSubtree(root: KnowledgeNodeRow, children: ChildrenByParent): KnowledgeNodeRow[] {
+/** Exported so continents.ts can size a continent (root subtree) and its kingdoms (each
+ * direct child's subtree) with exactly this traversal — root first, then breadth-first. */
+export function collectSubtree(
+  root: KnowledgeNodeRow,
+  children: ChildrenByParent,
+): KnowledgeNodeRow[] {
   const collected: KnowledgeNodeRow[] = [];
   const queue: KnowledgeNodeRow[] = [root];
   for (let head = 0; head < queue.length; head += 1) {
@@ -101,7 +107,7 @@ function shapeVillage(node: KnowledgeNodeRow, children: ChildrenByParent): Shape
   };
 }
 
-/** Exported so topicShape.ts can shape kingdoms/villages/points inside a topic island
+/** Exported so continentShape.ts can shape kingdoms/villages/points inside a continent
  * without duplicating this recursion — identical behavior, just a different root set. */
 export function shapeKingdom(node: KnowledgeNodeRow, children: ChildrenByParent): ShapedKingdom {
   const members = collectSubtree(node, children);

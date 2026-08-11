@@ -1,12 +1,12 @@
 /**
- * Purpose: loads everything discoverTopics needs from local SQLite — embeddings, sighting
- * counts, and average curiosity — and turns it into a TopicAssignment for the memory palace.
- * Best-effort: any failure (DB not ready, malformed embedding rows) degrades to null so the
- * caller falls back to tree-root islands instead of throwing.
- * Main exports: loadTopicAssignment.
+ * Purpose: loads everything deriveContinents needs from local SQLite — embeddings, sighting
+ * counts, and average curiosity — and turns it into a ContinentAssignment for the memory
+ * palace (spec 031). Best-effort: any failure (DB not ready, malformed embedding rows)
+ * degrades to null so the caller falls back to tree-root islands instead of throwing.
+ * Main exports: loadContinentAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { discoverTopics, type TopicAssignment } from "@breadcrumb/plugin-map";
+import { type ContinentAssignment, deriveContinents } from "@breadcrumb/plugin-map";
 import { getRepos } from "./db";
 
 function parseEmbeddingVector(vectorJson: string): number[] | null {
@@ -27,9 +27,9 @@ function computeEngagement(sightingCount: number, avgCuriosity: number): number 
   return 1 + Math.log2(1 + sightingCount) + 2 * avgCuriosity;
 }
 
-export async function loadTopicAssignment(
+export async function loadContinentAssignment(
   nodes: readonly KnowledgeNodeRow[],
-): Promise<TopicAssignment | null> {
+): Promise<ContinentAssignment | null> {
   try {
     const repos = await getRepos();
     const [embeddingRows, sightingRows, interestSignalRows] = await Promise.all([
@@ -74,9 +74,9 @@ export async function loadTopicAssignment(
       engagementByNodeId.set(node.id, computeEngagement(sightingCount, avgCuriosity));
     }
 
-    return discoverTopics(nodes, embeddingByNodeId, engagementByNodeId);
+    return deriveContinents(nodes, embeddingByNodeId, engagementByNodeId);
   } catch (error) {
-    console.warn("loadTopicAssignment failed, falling back to tree-root islands", error);
+    console.warn("loadContinentAssignment failed, falling back to tree-root islands", error);
     return null;
   }
 }
