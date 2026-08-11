@@ -1,28 +1,24 @@
 /**
- * Purpose: unit tests for createPracticeRepo using an in-memory fake SqlClient — attestation
- * upsert+list round-trip and overwrite-on-same-item_id semantics (spec 026).
+ * Purpose: unit tests for createPracticeRepo using an in-memory fake SqlClient — score
+ * upsert+list round-trip and overwrite-on-same-item_id semantics (spec 029).
  */
 import { describe, expect, it } from "vitest";
 import { createPracticeRepo } from "./practiceRepositories";
-import type { PracticeAttestationRow, SqlClient } from "./types";
+import type { PracticeScoreRow, SqlClient } from "./types";
 
 function makeFakeSql() {
-  const rows = new Map<string, PracticeAttestationRow>();
+  const rows = new Map<string, PracticeScoreRow>();
   const client: SqlClient = {
     select: <Row>(sql: string) => {
-      if (sql.includes("FROM practice_attestations")) {
+      if (sql.includes("FROM practice_scores")) {
         return Promise.resolve([...rows.values()] as Row[]);
       }
       return Promise.resolve([] as Row[]);
     },
     execute: (sql: string, params?: readonly unknown[]) => {
-      if (sql.startsWith("INSERT OR REPLACE INTO practice_attestations")) {
-        const [item_id, status, attested_at] = params as [
-          string,
-          "done" | "partial" | "not_yet",
-          string,
-        ];
-        rows.set(item_id, { item_id, status, attested_at });
+      if (sql.startsWith("INSERT OR REPLACE INTO practice_scores")) {
+        const [item_id, score, scored_at] = params as [string, number, string];
+        rows.set(item_id, { item_id, score, scored_at });
       }
       return Promise.resolve();
     },
@@ -31,65 +27,27 @@ function makeFakeSql() {
 }
 
 describe("createPracticeRepo", () => {
-  it("round-trips an attestation through upsertAttestation/listAttestations", async () => {
+  it("round-trips a score through upsertScore/listScores", async () => {
     const { client } = makeFakeSql();
     const repo = createPracticeRepo(client);
-    await repo.upsertAttestation({
+    await repo.upsertScore({
       item_id: "item1",
-      status: "done",
-      attested_at: "2026-08-09T10:00:00.000Z",
+      score: 10,
+      scored_at: "2026-08-11T10:00:00.000Z",
     });
-
-    const stored = await repo.listAttestations();
-    expect(stored).toEqual([
-      { item_id: "item1", status: "done", attested_at: "2026-08-09T10:00:00.000Z" },
-    ]);
+    const scores = await repo.listScores();
+    expect(scores).toHaveLength(1);
+    expect(scores[0]?.score).toBe(10);
   });
 
-  it("overwrites the previous status for the same item_id instead of accumulating rows", async () => {
+  it("overwrites the previous score for the same item", async () => {
     const { client } = makeFakeSql();
     const repo = createPracticeRepo(client);
-    await repo.upsertAttestation({
-      item_id: "item1",
-      status: "done",
-      attested_at: "2026-08-09T10:00:00.000Z",
-    });
-    await repo.upsertAttestation({
-      item_id: "item1",
-      status: "partial",
-      attested_at: "2026-08-09T11:00:00.000Z",
-    });
-
-    const stored = await repo.listAttestations();
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toEqual({
-      item_id: "item1",
-      status: "partial",
-      attested_at: "2026-08-09T11:00:00.000Z",
-    });
-  });
-
-  it("keeps distinct items separate", async () => {
-    const { client } = makeFakeSql();
-    const repo = createPracticeRepo(client);
-    await repo.upsertAttestation({
-      item_id: "item1",
-      status: "done",
-      attested_at: "2026-08-09T10:00:00.000Z",
-    });
-    await repo.upsertAttestation({
-      item_id: "item2",
-      status: "not_yet",
-      attested_at: "2026-08-09T10:05:00.000Z",
-    });
-
-    const stored = await repo.listAttestations();
-    expect(stored.map((row) => row.item_id).sort()).toEqual(["item1", "item2"]);
-  });
-
-  it("returns an empty list when nothing has been attested", async () => {
-    const { client } = makeFakeSql();
-    const repo = createPracticeRepo(client);
-    expect(await repo.listAttestations()).toEqual([]);
+    await repo.upsertScore({ item_id: "item1", score: 3, scored_at: "t1" });
+    await repo.upsertScore({ item_id: "item1", score: 7, scored_at: "t2" });
+    const scores = await repo.listScores();
+    expect(scores).toHaveLength(1);
+    expect(scores[0]?.score).toBe(7);
+    expect(scores[0]?.scored_at).toBe("t2");
   });
 });

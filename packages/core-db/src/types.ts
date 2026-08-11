@@ -3,8 +3,8 @@
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
  * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
- * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow, PracticeStatus,
- * PracticeAttestationRow.
+ * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow,
+ * PracticeScoreRow.
  */
 
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
@@ -244,7 +244,7 @@ export interface ComparisonProfileRow {
  * before; 'practice' = matched against the user's own practice attestation, never AI-verified;
  * 'tool' = a concrete tool/technology used in the role. 'structure' marks a non-leaf
  * organizational node (a branch heading), never itself matched or attested. */
-export type ComparisonItemKind = "knowledge" | "practice" | "tool" | "structure";
+export type ComparisonItemKind = "knowledge" | "practice" | "tool" | "hub" | "structure";
 
 /** One node of a comparison profile's tree. AI-invented content is forbidden here, so
  * source_ref must always be non-empty — it points at where this item's existence was verified
@@ -298,14 +298,12 @@ export interface NodeConceptAnchorRow {
   anchored_at: string;
 }
 
-/** 'done' = the user states they have done this; 'partial' = partially; 'not_yet' = not yet. */
-export type PracticeStatus = "done" | "partial" | "not_yet";
-
-/** The learner's own statement about a practice item (spec 026) — never AI-verified,
+/** The learner's own 0–10 score on a pure experience leaf (spec 029) — never AI-verified,
  * deliberately: the user is the only expert on their own experience. One row per item, keyed
  * by item_id, overwritten in place as the self-report changes over time. */
-export interface PracticeAttestationRow {
+export interface PracticeScoreRow {
   item_id: string;
-  status: PracticeStatus;
-  attested_at: string;
+  /** Integer 0–10 (DB CHECK enforced); ratio contribution is score / 10. */
+  score: number;
+  scored_at: string;
 }

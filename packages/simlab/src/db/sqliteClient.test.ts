@@ -405,8 +405,8 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
   });
 });
 
-describe("occupation profiles + practice attestations + practice conversations (real sqlite, migration 0021)", () => {
-  it("round-trips an occupation profile with a practice item, overwrites an attestation, and round-trips a practice-kind conversation", async () => {
+describe("occupation profiles + practice scores + practice conversations (real sqlite, migrations 0021/0022)", () => {
+  it("round-trips an occupation profile with a practice item, overwrites a score, and round-trips a practice-kind conversation", async () => {
     temp = await createTempDatabase();
     const now = "2026-08-10T10:00:00.000Z";
 
@@ -439,24 +439,24 @@ describe("occupation profiles + practice attestations + practice conversations (
     const storedItems = await temp.repos.comparisons.listItems("profile-occ1");
     expect(storedItems[0]?.item_kind).toBe("practice");
 
-    // Attestation upsert: done, then overwritten to partial rather than accumulating a row.
-    expect(await temp.repos.practice.listAttestations()).toEqual([]);
-    await temp.repos.practice.upsertAttestation({
+    // Score upsert (spec 029): 10, then overwritten to 5 rather than accumulating a row.
+    expect(await temp.repos.practice.listScores()).toEqual([]);
+    await temp.repos.practice.upsertScore({
       item_id: "item-occ1",
-      status: "done",
-      attested_at: now,
+      score: 10,
+      scored_at: now,
     });
-    let attestations = await temp.repos.practice.listAttestations();
-    expect(attestations).toEqual([{ item_id: "item-occ1", status: "done", attested_at: now }]);
+    let scores = await temp.repos.practice.listScores();
+    expect(scores).toEqual([{ item_id: "item-occ1", score: 10, scored_at: now }]);
 
     const later = "2026-08-10T11:00:00.000Z";
-    await temp.repos.practice.upsertAttestation({
+    await temp.repos.practice.upsertScore({
       item_id: "item-occ1",
-      status: "partial",
-      attested_at: later,
+      score: 5,
+      scored_at: later,
     });
-    attestations = await temp.repos.practice.listAttestations();
-    expect(attestations).toEqual([{ item_id: "item-occ1", status: "partial", attested_at: later }]);
+    scores = await temp.repos.practice.listScores();
+    expect(scores).toEqual([{ item_id: "item-occ1", score: 5, scored_at: later }]);
 
     // A practice-kind conversation is saved but excluded from the 'chat' sidebar listing.
     await temp.repos.conversations.create({

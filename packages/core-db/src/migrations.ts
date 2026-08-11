@@ -509,6 +509,25 @@ export const MIGRATIONS: readonly Migration[] = [
       `ALTER TABLE conversations ADD COLUMN kind TEXT NOT NULL DEFAULT 'chat';`,
     ],
   },
+  {
+    // Spec 029 leaf contract: the tri-state attestation was an invented middle form — the
+    // user scores pure experience leaves directly (checkbox shortcut or 0–10). Old
+    // tri-state rows convert (done→10, partial→5, not_yet→0); practice_attestations stays
+    // behind unused rather than dropped (cheap, and keeps old builds from crashing).
+    id: "0022_practice_scores",
+    statements: [
+      `CREATE TABLE practice_scores (
+        item_id TEXT PRIMARY KEY,
+        score INTEGER NOT NULL CHECK (score BETWEEN 0 AND 10),
+        scored_at TEXT NOT NULL
+      );`,
+      `INSERT INTO practice_scores (item_id, score, scored_at)
+       SELECT item_id,
+              CASE status WHEN 'done' THEN 10 WHEN 'partial' THEN 5 ELSE 0 END,
+              attested_at
+       FROM practice_attestations;`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

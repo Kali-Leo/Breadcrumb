@@ -1,23 +1,23 @@
 /**
- * Purpose: SQL statements for practice_attestations (spec 026) — the learner's own, never
- * AI-verified statement about a practice item, one row per item, overwritten in place.
+ * Purpose: SQL statements for practice_scores (spec 029) — the learner's own, never
+ * AI-verified 0–10 score on a pure experience leaf, one row per item, overwritten in place.
  * Main exports: createPracticeRepo factory.
  */
-import type { PracticeAttestationRow, SqlClient } from "./types";
+import type { PracticeScoreRow, SqlClient } from "./types";
 
 export function createPracticeRepo(sql: SqlClient) {
   return {
-    /** Every attestation the user has ever recorded. */
-    async listAttestations(): Promise<PracticeAttestationRow[]> {
-      return sql.select<PracticeAttestationRow>("SELECT * FROM practice_attestations");
+    /** Every score the user has ever recorded. */
+    async listScores(): Promise<PracticeScoreRow[]> {
+      return sql.select<PracticeScoreRow>("SELECT * FROM practice_scores");
     },
-    /** Records or overwrites the user's self-report for one item — INSERT OR REPLACE keeps
-     * the write idempotent as the user revises their own statement over time. */
-    async upsertAttestation(row: PracticeAttestationRow): Promise<void> {
+    /** Records or overwrites the user's score for one item — INSERT OR REPLACE keeps the
+     * write idempotent as the user revises their own statement over time. */
+    async upsertScore(row: PracticeScoreRow): Promise<void> {
       await sql.execute(
-        `INSERT OR REPLACE INTO practice_attestations (item_id, status, attested_at)
+        `INSERT OR REPLACE INTO practice_scores (item_id, score, scored_at)
          VALUES (?, ?, ?)`,
-        [row.item_id, row.status, row.attested_at],
+        [row.item_id, row.score, row.scored_at],
       );
     },
   };
