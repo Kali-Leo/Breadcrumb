@@ -1,7 +1,7 @@
 /**
  * Purpose: the map's visual language, replicated from Nortantis official sample #3
  * "The Land of Laham" — ivory sea, uniform sepia land, dark-brown ink, framed border.
- * Every value is a copy of that official style; no invented colors.
+ * Every color is a copy of that official style; the label sizes are ours.
  * Main exports: mapTheme.
  */
 
@@ -18,5 +18,9 @@ export const mapTheme = {
   river: 0x4a3f2f,
   fog: 0xfaf6ec,
   fontFamily: '"LXGW WenKai", Georgia, "Noto Serif CJK SC", "Songti SC", serif',
-  labelSizes: { island: 30, kingdom: 17, village: 12, point: 9 },
+  /** On-screen px range each name may render in; the exact size is fitted to its place. */
+  labelSizes: {
+    island: { min: 14, max: 34 },
+    kingdom: { min: 12, max: 24 },
+  },
 } as const;

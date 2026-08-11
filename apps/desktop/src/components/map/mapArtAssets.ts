@@ -1,7 +1,9 @@
 /**
  * Purpose: loads the Nortantis hand-drawn art (AGPL-3.0, see THIRD_PARTY_NOTICES.md) —
- * settlement icons, kingdom seat illustrations and the sea decorations (compass rose,
- * creatures, ship). Also readies the handwriting font before Pixi rasterizes labels.
+ * kingdom seat illustrations and the sea decorations (compass rose, creatures, ship),
+ * mipmapped so they stay crisp when drawn small. Village settlement icons went away with
+ * the village scene (2026-08-11). Also readies the handwriting font before Pixi rasterizes
+ * labels.
  * Main exports: loadMapArt, resetMapArt, MapArt.
  */
 import { Texture } from "pixi.js";
@@ -13,8 +15,6 @@ const assetUrls = import.meta.glob("../../assets/map-art/**/*.png", {
 }) as Record<string, string>;
 
 export interface MapArt {
-  /** Small settlement icons by village tier (farm → walled city) for the map. */
-  settlementByTier: [Texture, Texture, Texture, Texture];
   /** Kingdom seat illustrations, smallest to grandest — one large building per realm. */
   kingdomSeats: Texture[];
   /** Open-sea fillers: the corner compass rose and the three drifting pieces. */
@@ -53,7 +53,12 @@ async function loadTexture(url: string): Promise<Texture> {
   const image = new Image();
   image.src = url;
   await image.decode();
-  return Texture.from(image);
+  const texture = Texture.from(image);
+  // These stamps are drawn far below their native pixel size; mipmaps (requested before the
+  // first render, while the source is still uploadable) keep the hatching from crawling.
+  texture.source.autoGenerateMipmaps = true;
+  texture.source.scaleMode = "linear";
+  return texture;
 }
 
 export async function loadMapArt(): Promise<MapArt> {
@@ -62,16 +67,14 @@ export async function loadMapArt(): Promise<MapArt> {
   const load = (fragment: string): Promise<Texture> => loadTexture(urlNamed("cities", fragment));
   const loadDecor = (fragment: string): Promise<Texture> =>
     loadTexture(urlNamed("decor", fragment));
-  const [farm, smallVillage, town, walledCity, seatFarm, seatTown, seatCastleTown] =
-    await Promise.all([
-      load("small-farm"),
-      load("small-village"),
-      load("town-width"),
-      load("walled-city"),
-      load("flat-farm"),
-      load("flat-town-width"),
-      load("flat-town-with-castle"),
-    ]);
+  const [smallVillage, town, walledCity, seatFarm, seatTown, seatCastleTown] = await Promise.all([
+    load("small-village"),
+    load("town-width"),
+    load("walled-city"),
+    load("flat-farm"),
+    load("flat-town-width"),
+    load("flat-town-with-castle"),
+  ]);
   const [compassRose, seaSerpent, octopus, ship] = await Promise.all([
     loadDecor("compass-rose-1"),
     loadDecor("sea-serpent"),
@@ -79,7 +82,6 @@ export async function loadMapArt(): Promise<MapArt> {
     loadDecor("ship-6"),
   ]);
   cachedArt = {
-    settlementByTier: [farm, smallVillage, town, walledCity],
     kingdomSeats: [seatFarm, smallVillage, town, seatTown, walledCity, seatCastleTown],
     decor: { compassRose, seaSerpent, octopus, ship },
   };

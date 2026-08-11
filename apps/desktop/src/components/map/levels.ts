@@ -1,25 +1,22 @@
 /**
- * Purpose: the discrete level model — world/island/kingdom (the village dive level was
- * removed 2026-08-11, backed up on branch backup/village-town-scene), exact-fit camera
- * frames per level and pointer hit-tests for wheel dives. Pure functions.
- * Main exports: MapLevel, CameraFrame, frameForLevel, hitIsland, hitIslet, hitKingdom,
- * hitVillage.
+ * Purpose: the discrete level model — world → island only (the kingdom and village dive
+ * levels were removed 2026-08-11, backed up on branch backup/village-town-scene; an
+ * enlarged continent showing its kingdom regions is now the deepest view), exact-fit
+ * camera frames per level and pointer hit-tests.
+ * Main exports: MapLevel, CameraFrame, frameForLevel, findIsland, hitIsland, hitIslet,
+ * hitKingdom.
  */
 import {
   type IslandModel,
   type IsletModel,
   type KingdomModel,
   pointInPolygon,
-  type VillageModel,
   type WorldModel,
   type WorldPoint,
 } from "@breadcrumb/plugin-map";
 import { type Bounds, worldBounds } from "./seaArt";
 
-export type MapLevel =
-  | { kind: "world" }
-  | { kind: "island"; islandId: string }
-  | { kind: "kingdom"; islandId: string; kingdomId: string };
+export type MapLevel = { kind: "world" } | { kind: "island"; islandId: string };
 
 export interface CameraFrame {
   scale: number;
@@ -29,14 +26,6 @@ export interface CameraFrame {
 
 export function findIsland(world: WorldModel, islandId: string): IslandModel | undefined {
   return world.islands.find((island) => island.nodeId === islandId);
-}
-
-export function findKingdom(island: IslandModel, kingdomId: string): KingdomModel | undefined {
-  return island.kingdoms.find((kingdom) => kingdom.nodeId === kingdomId);
-}
-
-export function findVillage(kingdom: KingdomModel, villageId: string): VillageModel | undefined {
-  return kingdom.villages.find((village) => village.nodeId === villageId);
 }
 
 function frameFromBounds(
@@ -57,28 +46,6 @@ function frameFromBounds(
   };
 }
 
-function kingdomBounds(kingdom: KingdomModel): Bounds {
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const polygon of kingdom.cellPolygons) {
-    for (const point of polygon) {
-      minX = Math.min(minX, point.x);
-      minY = Math.min(minY, point.y);
-      maxX = Math.max(maxX, point.x);
-      maxY = Math.max(maxY, point.y);
-    }
-  }
-  if (!Number.isFinite(minX)) {
-    minX = kingdom.labelPosition.x - 150;
-    minY = kingdom.labelPosition.y - 150;
-    maxX = kingdom.labelPosition.x + 150;
-    maxY = kingdom.labelPosition.y + 150;
-  }
-  return { minX: minX - 40, minY: minY - 40, maxX: maxX + 40, maxY: maxY + 40 };
-}
-
 /** Every level frames its region to exactly fill the window (no panning). */
 export function frameForLevel(
   world: WorldModel,
@@ -86,37 +53,22 @@ export function frameForLevel(
   screenWidth: number,
   screenHeight: number,
 ): CameraFrame {
-  if (level.kind === "world") {
-    return frameFromBounds(worldBounds(world), screenWidth, screenHeight, 0.98);
-  }
-  const island = findIsland(world, level.islandId);
+  const island = level.kind === "island" ? findIsland(world, level.islandId) : undefined;
   if (island === undefined) {
     return frameFromBounds(worldBounds(world), screenWidth, screenHeight, 0.98);
   }
-  if (level.kind === "island") {
-    const reach = island.radius * 1.18;
-    return frameFromBounds(
-      {
-        minX: island.center.x - reach,
-        minY: island.center.y - reach,
-        maxX: island.center.x + reach,
-        maxY: island.center.y + reach,
-      },
-      screenWidth,
-      screenHeight,
-      0.94,
-    );
-  }
-  const kingdom = findKingdom(island, level.kingdomId);
-  if (kingdom === undefined) {
-    return frameForLevel(
-      world,
-      { kind: "island", islandId: island.nodeId },
-      screenWidth,
-      screenHeight,
-    );
-  }
-  return frameFromBounds(kingdomBounds(kingdom), screenWidth, screenHeight, 0.92);
+  const reach = island.radius * 1.18;
+  return frameFromBounds(
+    {
+      minX: island.center.x - reach,
+      minY: island.center.y - reach,
+      maxX: island.center.x + reach,
+      maxY: island.center.y + reach,
+    },
+    screenWidth,
+    screenHeight,
+    0.94,
+  );
 }
 
 export function hitIsland(world: WorldModel, point: WorldPoint): IslandModel | null {
@@ -146,6 +98,7 @@ export function hitIslet(world: WorldModel, point: WorldPoint): IsletModel | nul
   return best;
 }
 
+/** Kingdoms answer hovers at the island level — the deepest view, so never a dive target. */
 export function hitKingdom(island: IslandModel, point: WorldPoint): KingdomModel | null {
   for (const kingdom of island.kingdoms) {
     for (const polygon of kingdom.cellPolygons) {
@@ -162,19 +115,6 @@ export function hitKingdom(island: IslandModel, point: WorldPoint): KingdomModel
     if (distance < bestDistance) {
       bestDistance = distance;
       best = kingdom;
-    }
-  }
-  return best;
-}
-
-export function hitVillage(kingdom: KingdomModel, point: WorldPoint): VillageModel | null {
-  let best: VillageModel | null = null;
-  let bestDistance = 110;
-  for (const village of kingdom.villages) {
-    const distance = Math.hypot(point.x - village.position.x, point.y - village.position.y);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      best = village;
     }
   }
   return best;

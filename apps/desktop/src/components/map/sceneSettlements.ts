@@ -1,23 +1,19 @@
 /**
- * Purpose: draws what lives on one island — kingdom seats and names, settlement icons,
- * village names and knowledge-point labels — into the island and kingdom bands.
- * Main exports: drawIslandSettlements, stampSprite, TapTarget.
+ * Purpose: draws what one island shows at its own level — a seat building and a fitted
+ * name per kingdom, into the island band. Village settlements, village names and
+ * knowledge-point labels were removed 2026-08-11 (backup: branch backup/village-town-scene).
+ * Main exports: drawIslandSettlements, stampSprite.
  */
-import { averageRetention, type IslandModel, type WorldPoint } from "@breadcrumb/plugin-map";
-import { Container, Graphics, Sprite, type Texture } from "pixi.js";
+import {
+  averageRetention,
+  type IslandModel,
+  type KingdomModel,
+  type WorldPoint,
+} from "@breadcrumb/plugin-map";
+import { Container, Sprite, type Texture } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
-import { type LabelSets, labelDim, makeLabel } from "./mapLabels";
+import { type FittedLabel, labelDim, makeFittedLabel } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
-
-export interface TapTarget {
-  kind: "island" | "village";
-  nodeId: string;
-}
-
-export interface SettlementBands {
-  islandBand: Container;
-  kingdomBand: Container;
-}
 
 /** Places one art stamp grounded at its position, painter-ordered by y. */
 export function stampSprite(
@@ -52,17 +48,28 @@ function seatTextureFor(art: MapArt, memberCount: number): Texture | undefined {
   return art.kingdomSeats[Math.min(tier, art.kingdomSeats.length - 1)];
 }
 
+/** How wide the realm is on the chart — the room its name has to fit into. */
+function kingdomWidth(kingdom: KingdomModel): number {
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  for (const polygon of kingdom.cellPolygons) {
+    for (const point of polygon) {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+    }
+  }
+  return Number.isFinite(minX) ? Math.max(maxX - minX, 1) : 300;
+}
+
 export function drawIslandSettlements(
   island: IslandModel,
   retentionByNode: ReadonlyMap<string, number>,
   art: MapArt,
   newNodeIds: ReadonlySet<string>,
-  onTap: (target: TapTarget) => void,
-  bands: SettlementBands,
-  labelSets: LabelSets,
+  islandBand: Container,
+  labels: FittedLabel[],
   reveal: (object: Container) => void,
 ): void {
-  const pointDots = new Graphics();
   for (const kingdom of island.kingdoms) {
     const kingdomDim = labelDim(averageRetention(kingdom.memberNodeIds, retentionByNode));
     // Every realm gets one large seat building; its grandeur tracks knowledge size.
@@ -71,48 +78,22 @@ export function drawIslandSettlements(
       const seat = new Container();
       stampSprite(seat, seatTexture, kingdom.labelPosition, 70 + kingdom.memberNodeIds.length * 3);
       seat.alpha = kingdomDim;
-      bands.islandBand.addChild(seat);
+      islandBand.addChild(seat);
+      if (newNodeIds.has(kingdom.nodeId)) reveal(seat);
     }
-    const kingdomLabel = makeLabel(kingdom.label, mapTheme.labelSizes.kingdom, kingdomDim, {
-      letterSpacing: 3,
-    });
-    kingdomLabel.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y + 22);
-    bands.islandBand.addChild(kingdomLabel);
-    labelSets.kingdomLabels.push(kingdomLabel);
-
-    for (const village of kingdom.villages) {
-      // Settlement grows with knowledge: farm -> village -> town -> walled city.
-      const settlementTexture = art.settlementByTier[village.tier - 1];
-      if (settlementTexture !== undefined) {
-        const iconHolder = new Container();
-        stampSprite(iconHolder, settlementTexture, village.position, 15 + village.tier * 5);
-        bands.kingdomBand.addChild(iconHolder);
-        if (newNodeIds.has(village.nodeId)) reveal(iconHolder);
-      }
-      const villageDim = labelDim(averageRetention(village.memberNodeIds, retentionByNode));
-      const villageLabel = makeLabel(village.label, mapTheme.labelSizes.village, villageDim, {
-        letterSpacing: 1,
-        onTap: () => onTap({ kind: "village", nodeId: village.nodeId }),
-      });
-      villageLabel.position.set(village.position.x, village.position.y + 20);
-      bands.kingdomBand.addChild(villageLabel);
-      labelSets.villageLabels.push(villageLabel);
-      if (newNodeIds.has(village.nodeId)) reveal(villageLabel);
-
-      for (const point of village.points) {
-        pointDots.circle(point.position.x, point.position.y, 1.4);
-        const pointDim = labelDim(retentionByNode.get(point.nodeId) ?? 1);
-        const pointLabel = makeLabel(point.label, mapTheme.labelSizes.point, 0.9 * pointDim, {
-          italic: true,
-        });
-        pointLabel.anchor.set(0, 0.5);
-        pointLabel.position.set(point.position.x + 4, point.position.y);
-        bands.kingdomBand.addChild(pointLabel);
-        labelSets.pointLabels.push(pointLabel);
-        if (newNodeIds.has(point.nodeId)) reveal(pointLabel);
-      }
-    }
+    const kingdomLabel = makeFittedLabel(
+      kingdom.label,
+      {
+        availableWorldWidth: kingdomWidth(kingdom) * 0.9,
+        minScreenSize: mapTheme.labelSizes.kingdom.min,
+        maxScreenSize: mapTheme.labelSizes.kingdom.max,
+      },
+      kingdomDim,
+      { letterSpacingRatio: 0.18 },
+    );
+    kingdomLabel.text.position.set(kingdom.labelPosition.x, kingdom.labelPosition.y + 22);
+    islandBand.addChild(kingdomLabel.text);
+    labels.push(kingdomLabel);
+    if (newNodeIds.has(kingdom.nodeId)) reveal(kingdomLabel.text);
   }
-  pointDots.fill({ color: mapTheme.inkSoft, alpha: 0.9 });
-  bands.kingdomBand.addChild(pointDots);
 }

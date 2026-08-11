@@ -2,6 +2,7 @@
  * Purpose: the Nortantis sea decorations (AGPL-3.0, see THIRD_PARTY_NOTICES.md) — a compass
  * rose anchored in the frame's bottom-right corner plus a serpent, an octopus and a ship
  * dropped into open water by the same deterministic rejection sampling the islets use.
+ * Sizes are large enough to read as drawings (mapArtAssets mipmaps them so they stay crisp).
  * Main exports: buildSeaDecorLayer.
  */
 import {
@@ -16,11 +17,11 @@ import { Container, Sprite, type Texture } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
 import { worldBounds } from "./seaArt";
 
-const DECOR_ALPHA = 0.85;
-const COMPASS_WIDTH = 150;
+const DECOR_ALPHA = 0.9;
+const COMPASS_WIDTH = 200;
 const COMPASS_INSET = 60;
 /** The rose owns its corner — pieces keep out of this circle around it. */
-const COMPASS_CLEARANCE = 200;
+const COMPASS_CLEARANCE = 260;
 const FRAME_INSET = 90;
 const LAND_CLEARANCE_FACTOR = 1.35;
 const LAND_CLEARANCE_PADDING = 140;
@@ -81,9 +82,9 @@ export function buildSeaDecorLayer(world: WorldModel, art: MapArt): Container {
   ];
 
   const pieces: { texture: Texture; width: number }[] = [
-    { texture: art.decor.seaSerpent, width: 110 },
-    { texture: art.decor.octopus, width: 90 },
-    { texture: art.decor.ship, width: 100 },
+    { texture: art.decor.seaSerpent, width: 170 },
+    { texture: art.decor.octopus, width: 140 },
+    { texture: art.decor.ship, width: 160 },
   ];
   for (const piece of pieces) {
     // Decor is optional filler: a crowded sea simply gets fewer pieces, never a stranded one.

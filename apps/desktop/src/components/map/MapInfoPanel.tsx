@@ -1,13 +1,15 @@
 /**
  * Purpose: the panel beside the square map — world overview and gentle hints when
  * idle, a knowledge-cluster introduction when hovering a place, one plain line when
- * hovering an unnamed islet (a single touch, nothing to enter). AI-written
+ * hovering an unnamed islet (a single touch, nothing to enter). A hovered kingdom still
+ * lists the names living in it, even though the map itself no longer draws them.
+ * AI-written
  * introductions arrive with the naming feature (switch + metering); until then the
  * panel summarizes from local data only.
  * Main exports: MapInfoPanel.
  */
 import type { WorldModel } from "@breadcrumb/plugin-map";
-import type { HoverInfo } from "./mapController";
+import type { HoverInfo } from "./mapHover";
 
 interface MapInfoPanelProps {
   world: WorldModel;
@@ -15,7 +17,7 @@ interface MapInfoPanelProps {
   levelPath: string[];
 }
 
-const KIND_NAMES = { island: "岛屿", kingdom: "国度", village: "村庄" } as const;
+const KIND_NAMES = { island: "岛屿", kingdom: "国度" } as const;
 
 /** An islet is one node with nothing around it — it gets a plain line, not a place card. */
 function HoverCards({ hover }: { hover: HoverInfo }) {
@@ -33,8 +35,7 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
         <p className="text-xs text-stone-400">{KIND_NAMES[hover.kind]}</p>
         <p className="mt-0.5 text-base font-semibold text-stone-700">{hover.label}</p>
         <p className="mt-1 text-sm text-stone-500">
-          {hover.memberCount} 个知识点
-          {hover.kind !== "village" && ` · ${hover.childCount} 个下辖`}
+          {hover.memberCount} 个知识点 · {hover.childCount} 个下辖
         </p>
       </div>
       <div className="rounded-xl bg-white p-3 shadow-sm">
@@ -58,7 +59,8 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
       <div className="rounded-xl border border-dashed border-stone-200 p-3 text-xs leading-5 text-stone-400">
         AI 简介待接入——开启后，这里会根据这片知识写一段简介。
       </div>
-      <p className="text-xs text-stone-400">滚轮向上，深入这里 →</p>
+      {/* Only an island can be entered — the island view is the deepest one. */}
+      {hover.kind === "island" && <p className="text-xs text-stone-400">滚轮向上，深入这里 →</p>}
     </>
   );
 }

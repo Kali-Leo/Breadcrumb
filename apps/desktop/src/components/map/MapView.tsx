@@ -1,11 +1,11 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
- * jumps (world → island → kingdom) on the wheel with exact-fit framing, no free
+ * jumps (world → island, the deepest view) on the wheel with exact-fit framing, no free
  * zoom or panning. Islands are discovered-topic continents once the async topic
  * assignment loads (embedding clusters, spec 030); until then the tree-root fallback
  * renders, which is fine and intended. The world model is cached per (nodes, assignment)
  * pair so re-opening the palace skips the expensive terrain build (identical output, just
- * remembered). StrictMode-safe; DEV keys 0 demo, 1..3 level jumps.
+ * remembered). StrictMode-safe; DEV keys 0 demo, 1..2 level jumps.
  * Main exports: MapView.
  */
 
@@ -16,11 +16,12 @@ import { loadTopicAssignment } from "../../lib/mapTopicActions";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
-import { findIsland, findKingdom, type MapLevel } from "./levels";
+import { findIsland, type MapLevel } from "./levels";
 import { applyReveals, drawFootprintTrail } from "./livingMap";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { loadMapArt, resetMapArt } from "./mapArtAssets";
-import { createMapController, type HoverInfo, type MapController } from "./mapController";
+import { createMapController, type MapController } from "./mapController";
+import type { HoverInfo } from "./mapHover";
 import { mapTheme } from "./mapTheme";
 import { cachedWorldModel } from "./mapWorldCache";
 
@@ -148,7 +149,7 @@ export function MapView() {
         setDemoMode((value) => !value);
         return;
       }
-      const jump = ["1", "2", "3"].indexOf(event.key);
+      const jump = ["1", "2"].indexOf(event.key);
       if (jump >= 0) controllerRef.current?.devJump(jump);
     };
     window.addEventListener("keydown", onKeyDown);
@@ -165,15 +166,9 @@ export function MapView() {
     );
   }
   const levelPath: string[] = ["世界"];
-  if (level.kind !== "world") {
+  if (level.kind === "island") {
     const island = findIsland(world, level.islandId);
-    if (island !== undefined) {
-      levelPath.push(island.label);
-      if (level.kind === "kingdom") {
-        const kingdom = findKingdom(island, level.kingdomId);
-        if (kingdom !== undefined) levelPath.push(kingdom.label);
-      }
-    }
+    if (island !== undefined) levelPath.push(island.label);
   }
   return (
     <div className="flex h-full w-full overflow-hidden">

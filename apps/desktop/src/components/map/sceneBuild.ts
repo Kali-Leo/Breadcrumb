@@ -1,8 +1,9 @@
 /**
- * Purpose: assembles the Pixi world scene — sea/frame, terrain, level bands
- * (world names / kingdom names / village content), unnamed islets and sea decor in the
- * world band, fog under names, footprints, ink reveals. Levels are driven by MapView;
- * this file only builds containers.
+ * Purpose: assembles the Pixi world scene — sea/frame, terrain, the two level bands
+ * (island names at the world level, kingdom seats and names at the island level), unnamed
+ * islets and sea decor in the world band, the hover highlight layer, fog under names,
+ * footprints, ink reveals. Levels are driven by mapController; this file only builds
+ * containers.
  * Main exports: buildWorldScene, WorldScene, TapTarget.
  */
 import {
@@ -17,25 +18,29 @@ import { buildFogLayer } from "./fog";
 import { drawLandmass } from "./islandArt";
 import { buildPlacePositions, type RevealTarget } from "./livingMap";
 import type { MapArt } from "./mapArtAssets";
-import { type LabelSets, labelDim, makeLabel } from "./mapLabels";
+import { type FittedLabel, labelDim, makeFittedLabel } from "./mapLabels";
 import { mapTheme } from "./mapTheme";
-import { drawIslandSettlements, type TapTarget } from "./sceneSettlements";
+import { drawIslandSettlements } from "./sceneSettlements";
 import { buildSeaLayer } from "./seaArt";
 import { buildSeaDecorLayer } from "./seaDecor";
 
-export type { TapTarget } from "./sceneSettlements";
+/** Only island names are tappable — they are the one place a tap can travel to. */
+export interface TapTarget {
+  kind: "island";
+  nodeId: string;
+}
 
 export interface WorldScene {
   root: Container;
-  /** Island names — the world level's only captions. */
+  /** Island names, islets and sea decor — the world level's own content. */
   worldBand: Container;
-  /** Kingdom names — shown at the island level. */
+  /** Kingdom seats and names — shown at the island level, the deepest view. */
   islandBand: Container;
-  /** Village icons, names and knowledge points — shown at the kingdom level. */
-  kingdomBand: Container;
-  /** Kingdom frontiers — visible from the island level down. */
+  /** Kingdom frontiers — visible at the island level. */
   bordersLayer: Container;
-  labelSets: LabelSets;
+  /** Amber wash under the pointer; repainted by mapHover, never rebuilt. */
+  highlightLayer: Graphics;
+  labels: FittedLabel[];
   footprintLayer: Graphics;
   placePositions: Map<string, WorldPoint>;
   revealTargets: RevealTarget[];
@@ -46,7 +51,6 @@ interface SceneParts {
   borders: Container;
   worldBand: Container;
   islandBand: Container;
-  kingdomBand: Container;
 }
 
 function buildIslandParts(
@@ -57,7 +61,7 @@ function buildIslandParts(
   newNodeIds: ReadonlySet<string>,
   onTap: (target: TapTarget) => void,
   parts: SceneParts,
-  labelSets: LabelSets,
+  labels: FittedLabel[],
   revealTargets: RevealTarget[],
 ): void {
   parts.terrain.addChild(drawLandmass(island));
@@ -69,21 +73,34 @@ function buildIslandParts(
   parts.borders.addChild(borders);
 
   const islandDim = labelDim(averageRetention(island.memberNodeIds, retentionByNode));
-  const islandLabel = makeLabel(island.label, mapTheme.labelSizes.island, islandDim, {
-    letterSpacing: 6,
-    onTap: () => onTap({ kind: "island", nodeId: island.nodeId }),
-  });
+  // The name must stay inside its own island, so it can never reach a neighbour's.
+  const islandLabel = makeFittedLabel(
+    island.label,
+    {
+      availableWorldWidth: island.radius * 2 * 0.9,
+      minScreenSize: mapTheme.labelSizes.island.min,
+      maxScreenSize: mapTheme.labelSizes.island.max,
+    },
+    islandDim,
+    {
+      letterSpacingRatio: 0.2,
+      onTap: () => onTap({ kind: "island", nodeId: island.nodeId }),
+    },
+  );
   // Alternate names above/below neighbouring islands — the cartographer's dodge.
   const labelSide = islandIndex % 2 === 0 ? -1 : 1;
-  islandLabel.position.set(island.center.x, island.center.y + labelSide * (island.radius + 34));
-  parts.worldBand.addChild(islandLabel);
-  labelSets.islandLabels.push(islandLabel);
+  islandLabel.text.position.set(
+    island.center.x,
+    island.center.y + labelSide * (island.radius + 34),
+  );
+  parts.worldBand.addChild(islandLabel.text);
+  labels.push(islandLabel);
 
   const reveal = (object: Container): void => {
     object.alpha = 0;
     revealTargets.push({ object, delay: revealTargets.length * 0.12, elapsed: 0 });
   };
-  drawIslandSettlements(island, retentionByNode, art, newNodeIds, onTap, parts, labelSets, reveal);
+  drawIslandSettlements(island, retentionByNode, art, newNodeIds, parts.islandBand, labels, reveal);
 }
 
 export function buildWorldScene(
@@ -98,14 +115,8 @@ export function buildWorldScene(
     borders: new Container(),
     worldBand: new Container(),
     islandBand: new Container(),
-    kingdomBand: new Container(),
   };
-  const labelSets: LabelSets = {
-    islandLabels: [],
-    kingdomLabels: [],
-    villageLabels: [],
-    pointLabels: [],
-  };
+  const labels: FittedLabel[] = [];
   const revealTargets: RevealTarget[] = [];
   // Islets and sea decor go into the world band first, so island names stay on top of them.
   // Both belong to the world view only and fade away on a dive.
@@ -122,22 +133,24 @@ export function buildWorldScene(
       newNodeIds,
       onTap,
       parts,
-      labelSets,
+      labels,
       revealTargets,
     );
   });
   const fog = buildFogLayer(world, retentionByNode);
   const footprintLayer = new Graphics();
+  const highlightLayer = new Graphics();
 
   const root = new Container();
-  // Fog sits above all drawn content but below every name — names stay readable.
+  // Fog sits above all drawn content but below every name — names stay readable. The hover
+  // wash sits above the terrain it tints and below the seats and names it points at.
   root.addChild(
     buildSeaLayer(world, art),
     parts.terrain,
     parts.borders,
     fog,
     footprintLayer,
-    parts.kingdomBand,
+    highlightLayer,
     parts.islandBand,
     parts.worldBand,
   );
@@ -145,9 +158,9 @@ export function buildWorldScene(
     root,
     worldBand: parts.worldBand,
     islandBand: parts.islandBand,
-    kingdomBand: parts.kingdomBand,
     bordersLayer: parts.borders,
-    labelSets,
+    highlightLayer,
+    labels,
     footprintLayer,
     placePositions: buildPlacePositions(world),
     revealTargets,
