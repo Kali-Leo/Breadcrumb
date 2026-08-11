@@ -95,12 +95,24 @@ export function CompareTreeView({
       overrides.set(key, { x: point.parent.y ?? 0, y: point.parent.x ?? 0 });
     }
     knownKeysRef.current = new Set(layout.visible.map((point) => point.data.node.key));
-    if (overrides.size === 0) return;
+    if (overrides.size === 0) {
+      // A cancelled clear (StrictMode double-effect, rapid layout changes) must never
+      // leave stale overrides behind — that renders the whole tree piled on its parents
+      // ("一团" at the root). Clear defensively on every no-newborn pass.
+      setBornOverrides((previous) => (previous.size === 0 ? previous : new Map()));
+      return undefined;
+    }
     setBornOverrides(overrides);
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => setBornOverrides(new Map()));
     });
-    return () => cancelAnimationFrame(frame);
+    // Belt and braces: even if both animation frames die (cancelled cleanup, hidden
+    // tab), the timeout still snaps nodes to their real positions.
+    const fallback = setTimeout(() => setBornOverrides(new Map()), 120);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(fallback);
+    };
   }, [layout]);
 
   /** Effective drawing position: newborn nodes render at their parent for the first frame. */
