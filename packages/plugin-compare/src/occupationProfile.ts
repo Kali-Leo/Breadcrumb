@@ -114,7 +114,8 @@ export function buildOccupationProfile(
         aliases: [],
         sourceRef: `${source} · Technology Skills${entry.hot ? " · Hot Technology" : ""}`,
         conceptId: `c:${entry.name.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        kind: "tool",
+        // Spec 029: named products are entities — hubs, never scored leaves.
+        kind: "hub",
       });
     });
   }
@@ -181,7 +182,8 @@ export function buildOccupationProfile(
           300,
         ),
         conceptId: `c:${entry.label.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        kind: "tool",
+        // Spec 029: patch entries name entities (Java/LLM/AWS) — hubs, never scored leaves.
+        kind: "hub",
       });
     });
   }

@@ -47,7 +47,7 @@ describe("buildOccupationProfile", () => {
     expect(profile.category).toBe("occupation");
     const kinds = new Map(profile.items.map((item) => [item.key, item.kind]));
     expect(kinds.get("task-100")).toBe("practice");
-    expect(kinds.get("tech-0")).toBe("tool");
+    expect(kinds.get("tech-0")).toBe("hub");
     expect(kinds.get("know-0")).toBe("hub");
   });
 
@@ -190,10 +190,16 @@ describe("ESCO knowledge branch (spec 027/028)", () => {
   });
 });
 
-describe("attestation scoring for tools (spec 028)", () => {
-  it("scores tool leaves by the learner's attestation, keeping the map match as 线索", () => {
-    const profile = buildOccupationProfile(occupation());
-    const toolValues = new Map([["tech-0", 0.5]]);
+describe("entity leaves are never scored (spec 029)", () => {
+  it("keeps tech and patch entities out of every denominator, match surviving as 线索", () => {
+    const profile = buildOccupationProfile(occupation(), [
+      {
+        label: "LLM",
+        postings: 14,
+        sampleQuote: "LLM experience",
+        fetchedAt: "2026-08-10T00:00:00Z",
+      },
+    ]);
     const matches = new Map([
       [
         "tech-0",
@@ -206,12 +212,28 @@ describe("attestation scoring for tools (spec 028)", () => {
         },
       ],
     ]);
-    const roots = buildOverlapTree(profile.items, matches, () => true, toolValues);
+    const roots = buildOverlapTree(profile.items, matches, () => true, new Map([["tech-0", 1]]));
     const techBranch = roots.find((root) => root.key === "tech");
-    expect(techBranch?.leafCount).toBe(2);
-    expect(techBranch?.matchedLeafCount).toBeCloseTo(0.5);
+    expect(techBranch?.leafCount).toBe(0);
+    expect(techBranch?.matchedLeafCount).toBe(0);
     const jsLeaf = techBranch?.children.find((child) => child.key === "tech-0");
+    expect(jsLeaf?.kind).toBe("hub");
     expect(jsLeaf?.match?.nodeLabel).toBe("JavaScript");
+    const patchBranch = roots.find((root) => root.key === "patch");
+    expect(patchBranch?.leafCount).toBe(0);
+    expect(patchBranch?.children[0]?.kind).toBe("hub");
+  });
+
+  it("scores an experience leaf by the 0-10 score normalized to 0-1", () => {
+    const profile = buildOccupationProfile(occupation());
+    const roots = buildOverlapTree(
+      profile.items,
+      new Map(),
+      () => false,
+      new Map([["task-100", 0.7]]),
+    );
+    const tasksBranch = roots.find((root) => root.key === "tasks");
+    expect(tasksBranch?.matchedLeafCount).toBeCloseTo(0.7);
   });
 });
 
