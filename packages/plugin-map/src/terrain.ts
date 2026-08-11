@@ -10,6 +10,7 @@ import { chainEdges, type Edge, polygonArea, undirectedEdgeKey } from "./geometr
 import { generateHeightmap } from "./heightmap";
 import { buildIslandMesh } from "./mesh";
 import { smoothCoastLoop } from "./nortantis/coastCurve";
+import { OCEAN_CAP_END_FRACTION } from "./nortantis/plates";
 import { createSeededRandom } from "./random";
 import { extractRivers, type RiverPath } from "./rivers";
 import type { WorldPoint } from "./types";
@@ -79,6 +80,17 @@ export function generateTerrain(seed: number, radius: number, sizeTier: number):
   const mesh = buildIslandMesh(random, radius, CELL_TARGET_BY_TIER[tierIndex] ?? 2000);
   const sculpted = generateHeightmap(mesh, random, radius, sizeTier);
   const erosion = erodeTerrain(mesh, sculpted, LAND_FRACTION_BY_TIER[tierIndex] ?? 0.33);
+  // Erosion deposits sediment on the masked-out rim (big continental islands push a lot
+  // of material outward) and the quantile sea level then counts those cells as land — the
+  // coast ends up tracing the square Voronoi bound. The rim is ocean by construction.
+  const capEnd = mesh.bound * OCEAN_CAP_END_FRACTION;
+  for (let index = 0; index < erosion.heights.length; index += 1) {
+    const site = mesh.points[index];
+    if (site === undefined) continue;
+    if (mesh.boundaryCells[index] === true || Math.hypot(site.x, site.y) >= capEnd) {
+      erosion.heights[index] = 0;
+    }
+  }
   const rivers = extractRivers(mesh, erosion);
 
   const landCellIndices: number[] = [];

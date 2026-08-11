@@ -6,7 +6,7 @@
  */
 import { createNoise2D } from "simplex-noise";
 import type { IslandMesh } from "./mesh";
-import { plateLandMask } from "./nortantis/plates";
+import { OCEAN_CAP_END_FRACTION, plateLandMask } from "./nortantis/plates";
 import type { SeededRandom } from "./random";
 
 interface SculptContext {
@@ -170,5 +170,21 @@ export function generateHeightmap(
   addFbmDetail(context, radius, 14);
   applyPlateMask(context, sizeTier);
   smooth(context, 2);
+  clampOceanRim(context);
   return context.heights;
+}
+
+/** Smoothing runs after the plate mask and bleeds zeroed rim cells back up wherever a
+ * continental plateau sits beside them (big topic islands) — the coast then traces the
+ * square Voronoi bound. Re-zero the far zone; the 0.72–0.85 soft band keeps coasts organic. */
+function clampOceanRim(context: SculptContext): void {
+  const { mesh, heights } = context;
+  const capEnd = mesh.bound * OCEAN_CAP_END_FRACTION;
+  for (let index = 0; index < heights.length; index += 1) {
+    const point = mesh.points[index];
+    if (point === undefined) continue;
+    if (mesh.boundaryCells[index] === true || Math.hypot(point.x, point.y) >= capEnd) {
+      heights[index] = 0;
+    }
+  }
 }
