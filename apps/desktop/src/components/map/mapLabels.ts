@@ -25,7 +25,6 @@ export interface LabelOptions {
   /** Letter spacing as a fraction of the font size, so it scales with the name. */
   letterSpacingRatio?: number;
   italic?: boolean;
-  onTap?: () => void;
 }
 
 /**
@@ -54,11 +53,6 @@ export function makeMapLabel(
   text.scale.set(1 / LABEL_SUPERSAMPLE);
   text.anchor.set(0.5);
   text.alpha = alpha;
-  if (options?.onTap !== undefined) {
-    text.eventMode = "static";
-    text.cursor = "pointer";
-    text.on("pointertap", options.onTap);
-  }
   return { text, screenSize };
 }
 

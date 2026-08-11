@@ -11,7 +11,7 @@ import { findIsland, frameForLevel, hitIsland, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";
 import { drawHoverHighlight, type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
 import { counterScaleLabels } from "./mapLabels";
-import { buildWorldScene, type TapTarget, type WorldScene } from "./sceneBuild";
+import { buildWorldScene, type WorldScene } from "./sceneBuild";
 
 export interface MapHooks {
   onHover(info: HoverInfo | null): void;
@@ -62,7 +62,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     setWorld(nextWorld, retentionByNode, newNodeIds) {
       world = nextWorld;
       controller.scene?.root.destroy({ children: true });
-      controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, onTap, {
+      controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, {
         width: app.screen.width,
         height: app.screen.height,
       });
@@ -94,6 +94,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     },
     destroy() {
       app.canvas.removeEventListener("wheel", onWheel);
+      app.canvas.removeEventListener("click", onClick);
       app.canvas.removeEventListener("pointermove", onPointerMove);
     },
   };
@@ -138,9 +139,14 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     };
   }
 
-  function onTap(target: TapTarget): void {
-    if (world === null) return;
-    level = { kind: "island", islandId: target.nodeId };
+  /** A click anywhere on an island's region navigates — same hit test as the wheel dive. */
+  function onClick(event: MouseEvent): void {
+    if (world === null || level.kind !== "world") return;
+    const rect = app.canvas.getBoundingClientRect();
+    const point = toWorldPoint(event.clientX - rect.left, event.clientY - rect.top);
+    const island = hitIsland(world, point);
+    if (island === null) return;
+    level = { kind: "island", islandId: island.nodeId };
     applyLevel(false);
   }
 
@@ -179,6 +185,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   }
 
   app.canvas.addEventListener("wheel", onWheel, { passive: false });
+  app.canvas.addEventListener("click", onClick);
   app.canvas.addEventListener("pointermove", onPointerMove);
   app.renderer.on("resize", () => applyLevel(true));
   return controller;

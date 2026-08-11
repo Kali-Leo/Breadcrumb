@@ -3,7 +3,7 @@
  * (island names at the world level, kingdom seats and names at the island level), unnamed
  * islets and sea decor in the world band, the hover highlight layer, fog under names,
  * footprints, ink reveals. Names are sized by class and moved apart by mapLabelPlacement.
- * Main exports: buildWorldScene, WorldScene, TapTarget, ScreenSize.
+ * Main exports: buildWorldScene, WorldScene, ScreenSize.
  */
 import {
   averageRetention,
@@ -29,11 +29,6 @@ import { buildSeaDecorLayer, planSeaDecor, seaDecorObstacles } from "./seaDecor"
 const ISLAND_LETTER_SPACING = 0.2;
 
 /** Only island names are tappable — they are the one place a tap can travel to. */
-export interface TapTarget {
-  kind: "island";
-  nodeId: string;
-}
-
 /** The canvas the map draws into — it fixes every level's camera scale, hence placement. */
 export interface ScreenSize {
   width: number;
@@ -68,7 +63,6 @@ interface SceneContext {
   retentionByNode: ReadonlyMap<string, number>;
   art: MapArt;
   newNodeIds: ReadonlySet<string>;
-  onTap: (target: TapTarget) => void;
   screen: ScreenSize;
   parts: SceneParts;
   labels: MapLabel[];
@@ -87,7 +81,6 @@ function buildIsland(island: IslandModel, namePosition: WorldPoint, context: Sce
   const islandDim = labelDim(averageRetention(island.memberNodeIds, context.retentionByNode));
   const islandLabel = makeMapLabel(island.label, mapTheme.labelSizes.island, islandDim, {
     letterSpacingRatio: ISLAND_LETTER_SPACING,
-    onTap: () => context.onTap({ kind: "island", nodeId: island.nodeId }),
   });
   islandLabel.text.position.set(namePosition.x, namePosition.y);
   context.parts.worldBand.addChild(islandLabel.text);
@@ -137,7 +130,6 @@ export function buildWorldScene(
   retentionByNode: ReadonlyMap<string, number>,
   art: MapArt,
   newNodeIds: ReadonlySet<string>,
-  onTap: (target: TapTarget) => void,
   screen: ScreenSize,
 ): WorldScene {
   const parts: SceneParts = {
@@ -151,7 +143,6 @@ export function buildWorldScene(
     retentionByNode,
     art,
     newNodeIds,
-    onTap,
     screen,
     parts,
     labels: [],
