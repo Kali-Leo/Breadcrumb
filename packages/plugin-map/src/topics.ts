@@ -114,7 +114,7 @@ export function discoverTopics(
     initialCommunities.set(key, members);
   }
 
-  const mergedCommunities = mergeSingletonCommunities(initialCommunities, embeddingByNodeId);
+  const mergedCommunities = mergeSingletonCommunities(initialCommunities, embeddingByNodeId, graph);
   const communityKeyByNodeId = new Map<string, string>();
   for (const [key, memberIds] of mergedCommunities) {
     for (const id of memberIds) communityKeyByNodeId.set(id, key);
