@@ -1,28 +1,19 @@
 /**
- * Purpose: map typography — supersampled handwriting labels with land-toned halos,
- * retention dimming, and adaptive sizing: every name is scaled to fit the width of the
- * place it names (island diameter, kingdom span) within a readable px range.
- * Main exports: makeFittedLabel, labelDim, counterScaleLabels, FittedLabel, LabelFit.
+ * Purpose: map typography — supersampled handwriting names with land-toned halos and
+ * retention dimming, each rendered at the one fixed on-screen size its class was given
+ * (mapLabelPlacement moves names apart instead of shrinking them).
+ * Main exports: makeMapLabel, labelDim, counterScaleLabels, MapLabel.
  */
 import { Text, TextStyle } from "pixi.js";
 import { mapTheme } from "./mapTheme";
 
-/** Names rasterize at 3x their largest on-screen size, then scale down — no soft edges. */
+/** Names rasterize at 3x their on-screen size, then scale down — no soft edges. */
 const LABEL_SUPERSAMPLE = 3;
 
-/** How much room the name has and how big it may render on screen (px). */
-export interface LabelFit {
-  /** World-unit width the rendered name must stay inside. */
-  availableWorldWidth: number;
-  minScreenSize: number;
-  maxScreenSize: number;
-}
-
-export interface FittedLabel {
+export interface MapLabel {
   text: Text;
-  fit: LabelFit;
-  /** Estimated rendered width as a multiple of the font size (letter spacing included). */
-  widthPerFontSize: number;
+  /** On-screen px size this name keeps at every camera scale. */
+  screenSize: number;
 }
 
 /** Fog dims a name through this factor but never below a readable floor. */
@@ -31,44 +22,31 @@ export function labelDim(retention: number): number {
 }
 
 export interface LabelOptions {
-  /** Letter spacing as a fraction of the font size, so it scales with the fitted name. */
+  /** Letter spacing as a fraction of the font size, so it scales with the name. */
   letterSpacingRatio?: number;
   italic?: boolean;
   onTap?: () => void;
 }
 
 /**
- * Width estimate: full-width CJK counts as one em-ish unit, latin/digits/punctuation as
- * 0.55, times the 0.62 average glyph width of the handwriting face, plus letter spacing.
+ * Rasterizes at the supersampled size, so counterScaleLabels only ever scales down — a
+ * name never turns soft.
  */
-function widthPerFontSize(content: string, letterSpacingRatio: number): number {
-  const characters = [...content];
-  const units = characters.reduce(
-    (sum, character) => sum + ((character.codePointAt(0) ?? 0) > 0x2e80 ? 1 : 0.55),
-    0,
-  );
-  return Math.max(0.62 * units + letterSpacingRatio * characters.length, 0.1);
-}
-
-/**
- * Rasterizes at the fit's largest allowed size, so counterScaleLabels only ever scales
- * down — a fitted name never turns soft.
- */
-export function makeFittedLabel(
+export function makeMapLabel(
   content: string,
-  fit: LabelFit,
+  screenSize: number,
   alpha: number,
   options?: LabelOptions,
-): FittedLabel {
+): MapLabel {
   const letterSpacingRatio = options?.letterSpacingRatio ?? 0;
   const text = new Text({
     text: content,
     style: new TextStyle({
       fontFamily: mapTheme.fontFamily,
-      fontSize: fit.maxScreenSize * LABEL_SUPERSAMPLE,
+      fontSize: screenSize * LABEL_SUPERSAMPLE,
       fill: mapTheme.ink,
       fontStyle: options?.italic === true ? "italic" : "normal",
-      letterSpacing: letterSpacingRatio * fit.maxScreenSize * LABEL_SUPERSAMPLE,
+      letterSpacing: letterSpacingRatio * screenSize * LABEL_SUPERSAMPLE,
       // Land-toned halo keeps names legible over any terrain ink.
       stroke: { color: mapTheme.landFill, width: 1.2 * LABEL_SUPERSAMPLE, join: "round" },
     }),
@@ -81,22 +59,16 @@ export function makeFittedLabel(
     text.cursor = "pointer";
     text.on("pointertap", options.onTap);
   }
-  return { text, fit, widthPerFontSize: widthPerFontSize(content, letterSpacingRatio) };
+  return { text, screenSize };
 }
 
 /**
- * Called once per level change. The level's camera scale is fixed (no free zoom), so the
- * fit is exact: the place's world-unit width becomes a screen width, the name takes the
- * largest px size that stays inside it, and the clamp keeps it readable either way.
+ * Called once per level change: the world container's scale is cancelled out so every name
+ * renders at exactly its class's px size, whichever level the camera is at.
  */
-export function counterScaleLabels(labels: readonly FittedLabel[], cameraScale: number): void {
+export function counterScaleLabels(labels: readonly MapLabel[], cameraScale: number): void {
   for (const label of labels) {
-    const availableScreenWidth = label.fit.availableWorldWidth * Math.max(cameraScale, 1e-6);
-    const screenSize = Math.min(
-      Math.max(availableScreenWidth / label.widthPerFontSize, label.fit.minScreenSize),
-      label.fit.maxScreenSize,
-    );
     const renderedSize = label.text.style.fontSize;
-    label.text.scale.set(screenSize / (renderedSize * Math.max(cameraScale, 1e-6)));
+    label.text.scale.set(label.screenSize / (renderedSize * Math.max(cameraScale, 1e-6)));
   }
 }

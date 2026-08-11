@@ -62,7 +62,10 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     setWorld(nextWorld, retentionByNode, newNodeIds) {
       world = nextWorld;
       controller.scene?.root.destroy({ children: true });
-      controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, onTap);
+      controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, onTap, {
+        width: app.screen.width,
+        height: app.screen.height,
+      });
       worldRoot.addChild(controller.scene.root);
       if (level.kind === "island" && findIsland(nextWorld, level.islandId) === undefined) {
         level = { kind: "world" };

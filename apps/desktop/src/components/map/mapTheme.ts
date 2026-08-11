@@ -18,9 +18,9 @@ export const mapTheme = {
   river: 0x4a3f2f,
   fog: 0xfaf6ec,
   fontFamily: '"LXGW WenKai", Georgia, "Noto Serif CJK SC", "Songti SC", serif',
-  /** On-screen px range each name may render in; the exact size is fitted to its place. */
+  /** One fixed on-screen px size per name class — same view, same size, always. */
   labelSizes: {
-    island: { min: 14, max: 34 },
-    kingdom: { min: 12, max: 24 },
+    island: 26,
+    kingdom: 19,
   },
 } as const;
