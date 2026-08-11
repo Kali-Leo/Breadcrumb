@@ -1,16 +1,18 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
  * jumps (world → island → kingdom) on the wheel with exact-fit framing, no free
- * zoom or panning. The world model is cached per nodes-array so re-opening the
- * palace skips the expensive terrain build (identical output, just remembered).
- * StrictMode-safe; DEV keys 0 demo, 1..3 level jumps.
+ * zoom or panning. Islands are discovered-topic continents once the async topic
+ * assignment loads (embedding clusters, spec 030); until then the tree-root fallback
+ * renders, which is fine and intended. The world model is cached per (nodes, assignment)
+ * pair so re-opening the palace skips the expensive terrain build (identical output, just
+ * remembered). StrictMode-safe; DEV keys 0 demo, 1..3 level jumps.
  * Main exports: MapView.
  */
 
-import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { buildWorldModel, type WorldModel } from "@breadcrumb/plugin-map";
+import type { TopicAssignment } from "@breadcrumb/plugin-map";
 import { Application } from "pixi.js";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { loadTopicAssignment } from "../../lib/mapTopicActions";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
@@ -20,18 +22,7 @@ import { MapInfoPanel } from "./MapInfoPanel";
 import { loadMapArt, resetMapArt } from "./mapArtAssets";
 import { createMapController, type HoverInfo, type MapController } from "./mapController";
 import { mapTheme } from "./mapTheme";
-
-/** Same nodes array → same world; the cache turns every re-open after the first into a
- * lookup instead of a multi-second synchronous terrain build (visuals unchanged). */
-const worldCache = new WeakMap<readonly KnowledgeNodeRow[], WorldModel>();
-
-function cachedWorldModel(nodes: readonly KnowledgeNodeRow[]): WorldModel {
-  const cached = worldCache.get(nodes);
-  if (cached !== undefined) return cached;
-  const world = buildWorldModel(nodes);
-  worldCache.set(nodes, world);
-  return world;
-}
+import { cachedWorldModel } from "./mapWorldCache";
 
 export function MapView() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -46,15 +37,34 @@ export function MapView() {
   const [demoMode, setDemoMode] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
+  const [topicAssignment, setTopicAssignment] = useState<TopicAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
   useEffect(() => {
     void useMemoryStore.getState().refresh();
   }, []);
 
+  // Discovered-topic islands load asynchronously and re-derive whenever the tree changes;
+  // until the first load resolves, cachedWorldModel's null-assignment fallback renders.
+  useEffect(() => {
+    let cancelled = false;
+    void loadTopicAssignment(storeNodes).then((assignment) => {
+      if (!cancelled) setTopicAssignment(assignment);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [storeNodes]);
+
   const nodes = demoMode ? demoKnowledgeNodes : storeNodes;
   const retentionByNode = demoMode ? demoRetentionByNode : storeRetention;
-  const world = useMemo(() => cachedWorldModel(nodes), [nodes]);
+  // Demo nodes never match a real-data topic assignment's member ids, so demo mode always
+  // uses the tree-root fallback.
+  const effectiveTopicAssignment = demoMode ? null : topicAssignment;
+  const world = useMemo(
+    () => cachedWorldModel(nodes, effectiveTopicAssignment),
+    [nodes, effectiveTopicAssignment],
+  );
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 
   // One Application for the component's whole life — scenes rebuild, it never does.

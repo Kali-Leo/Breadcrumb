@@ -1,6 +1,7 @@
 /**
  * Purpose: pipeline orchestrator — knowledge rows in, fully placed geometric world out.
- * Every island is generated in local coordinates then translated to its fixed slot.
+ * Every island is generated in local coordinates then translated to its fixed slot. Islands
+ * are shaped by discovered topics when a TopicAssignment is supplied, else by tree roots.
  * Main exports: buildWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -9,6 +10,8 @@ import { createSeededRandom, hashStringToSeed } from "./random";
 import { partitionKingdoms } from "./regions";
 import { placeVillagePoints, placeVillages } from "./settlements";
 import { generateTerrain, type IslandTerrain } from "./terrain";
+import { shapeTopicIslands } from "./topicShape";
+import type { TopicAssignment } from "./topics";
 import { type ShapedIsland, type ShapedKingdom, shapeTree } from "./treeShape";
 import type {
   IslandModel,
@@ -201,8 +204,14 @@ function buildIsland(shaped: ShapedIsland, center: WorldPoint): IslandModel {
   };
 }
 
-export function buildWorldModel(nodes: readonly KnowledgeNodeRow[]): WorldModel {
-  const shapedIslands = shapeTree(nodes);
+export function buildWorldModel(
+  nodes: readonly KnowledgeNodeRow[],
+  topicAssignment?: TopicAssignment,
+): WorldModel {
+  const shapedIslands =
+    topicAssignment !== undefined && topicAssignment.topics.length > 0
+      ? shapeTopicIslands(nodes, topicAssignment)
+      : shapeTree(nodes);
   const centers = packIslandCenters(
     shapedIslands.map((shaped) => islandRadiusForTier(shaped.sizeTier)),
   );
