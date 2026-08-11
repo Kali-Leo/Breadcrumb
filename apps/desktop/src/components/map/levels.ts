@@ -2,10 +2,12 @@
  * Purpose: the discrete level model — world/island/kingdom (the village dive level was
  * removed 2026-08-11, backed up on branch backup/village-town-scene), exact-fit camera
  * frames per level and pointer hit-tests for wheel dives. Pure functions.
- * Main exports: MapLevel, CameraFrame, frameForLevel, hitIsland, hitKingdom, hitVillage.
+ * Main exports: MapLevel, CameraFrame, frameForLevel, hitIsland, hitIslet, hitKingdom,
+ * hitVillage.
  */
 import {
   type IslandModel,
+  type IsletModel,
   type KingdomModel,
   pointInPolygon,
   type VillageModel,
@@ -125,6 +127,20 @@ export function hitIsland(world: WorldModel, point: WorldPoint): IslandModel | n
     if (distance < island.radius * 1.35 && distance < bestDistance) {
       bestDistance = distance;
       best = island;
+    }
+  }
+  return best;
+}
+
+/** Islets answer hovers only — they are never a dive target, so they stay out of hitIsland. */
+export function hitIslet(world: WorldModel, point: WorldPoint): IsletModel | null {
+  let best: IsletModel | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const islet of world.islets) {
+    const distance = Math.hypot(point.x - islet.center.x, point.y - islet.center.y);
+    if (distance < islet.radius * 1.5 && distance < bestDistance) {
+      bestDistance = distance;
+      best = islet;
     }
   }
   return best;

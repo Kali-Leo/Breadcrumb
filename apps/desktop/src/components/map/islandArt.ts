@@ -1,15 +1,21 @@
 /**
- * Purpose: one island's terrain in the Laham style (Nortantis official sample #3) —
+ * Purpose: one landmass' terrain in the Laham style (Nortantis official sample #3) —
  * sepia land with subtle relief shading, official coast shading bands inside and a
- * soft ocean shade outside, clean thin ink coastline, thin ink rivers.
- * Main exports: drawIslandTerrain.
+ * soft ocean shade outside, clean thin ink coastline. Continents and islets share it.
+ * Main exports: drawLandmass, LandmassShape.
  */
-import { type IslandModel, pointInPolygon, type WorldPoint } from "@breadcrumb/plugin-map";
+import { type LandCellModel, pointInPolygon, type WorldPoint } from "@breadcrumb/plugin-map";
 import { Graphics } from "pixi.js";
 import Offset from "polygon-offset";
 import { mapTheme } from "./mapTheme";
 
 const RELIEF_SHADE = 0xb0996e;
+
+/** The only geometry the land drawing needs — an IslandModel or an IsletModel fits it. */
+export interface LandmassShape {
+  coastLoops: WorldPoint[][];
+  landCells: LandCellModel[];
+}
 
 /** Coast loops after the first are lakes when they sit inside the main landmass. */
 function isLake(loop: readonly WorldPoint[], outerLoop: readonly WorldPoint[]): boolean {
@@ -66,7 +72,7 @@ function drawCoastShading(graphics: Graphics, loop: readonly WorldPoint[]): void
   }
 }
 
-function drawLandAndShading(graphics: Graphics, island: IslandModel): void {
+function drawLandAndShading(graphics: Graphics, island: LandmassShape): void {
   const outerLoop = island.coastLoops.at(0) ?? [];
   for (const loop of island.coastLoops) {
     if (loop !== outerLoop && isLake(loop, outerLoop)) continue;
@@ -80,7 +86,7 @@ function drawLandAndShading(graphics: Graphics, island: IslandModel): void {
   }
 }
 
-function drawLakesAndCoast(graphics: Graphics, island: IslandModel): void {
+function drawLakesAndCoast(graphics: Graphics, island: LandmassShape): void {
   const outerLoop = island.coastLoops.at(0) ?? [];
   for (const loop of island.coastLoops) {
     if (loop !== outerLoop && isLake(loop, outerLoop)) {
@@ -98,9 +104,9 @@ function drawLakesAndCoast(graphics: Graphics, island: IslandModel): void {
   }
 }
 
-export function drawIslandTerrain(island: IslandModel): Graphics {
+export function drawLandmass(landmass: LandmassShape): Graphics {
   const graphics = new Graphics();
-  drawLandAndShading(graphics, island);
-  drawLakesAndCoast(graphics, island);
+  drawLandAndShading(graphics, landmass);
+  drawLakesAndCoast(graphics, landmass);
   return graphics;
 }

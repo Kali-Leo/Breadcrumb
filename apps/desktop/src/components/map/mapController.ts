@@ -13,6 +13,7 @@ import {
   findKingdom,
   frameForLevel,
   hitIsland,
+  hitIslet,
   hitKingdom,
   hitVillage,
   type MapLevel,
@@ -22,7 +23,7 @@ import { counterScaleLabels } from "./mapLabels";
 import { buildWorldScene, type TapTarget, type WorldScene } from "./sceneBuild";
 
 export interface HoverInfo {
-  kind: "island" | "kingdom" | "village";
+  kind: "island" | "islet" | "kingdom" | "village";
   nodeId: string;
   label: string;
   memberCount: number;
@@ -212,14 +213,26 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     if (world === null) return null;
     if (level.kind === "world") {
       const island = hitIsland(world, point);
-      if (island === null) return null;
+      if (island !== null) {
+        return {
+          kind: "island",
+          nodeId: island.nodeId,
+          label: island.label,
+          memberCount: island.memberNodeIds.length,
+          childCount: island.kingdoms.length,
+          pointLabels: island.kingdoms.map((kingdom) => kingdom.label),
+        };
+      }
+      // Nothing to dive into on an islet — the hover is the whole story it has.
+      const islet = hitIslet(world, point);
+      if (islet === null) return null;
       return {
-        kind: "island",
-        nodeId: island.nodeId,
-        label: island.label,
-        memberCount: island.memberNodeIds.length,
-        childCount: island.kingdoms.length,
-        pointLabels: island.kingdoms.map((kingdom) => kingdom.label),
+        kind: "islet",
+        nodeId: islet.nodeId,
+        label: islet.label,
+        memberCount: 1,
+        childCount: 0,
+        pointLabels: [islet.label],
       };
     }
     if (level.kind === "island") {

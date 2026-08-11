@@ -1,60 +1,27 @@
 /**
  * Purpose: pipeline orchestrator — knowledge rows in, fully placed geometric world out.
  * Every island is generated in local coordinates then translated to its fixed slot. Islands
- * are shaped by discovered topics when a TopicAssignment is supplied, else by tree roots.
+ * are shaped by discovered topics when a TopicAssignment is supplied, else by tree roots;
+ * that assignment's one-touch interests become unnamed islets in the open sea.
  * Main exports: buildWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { buildIslets } from "./isletBuild";
 import { islandRadiusForTier, packIslandCenters } from "./layout";
 import { createSeededRandom, hashStringToSeed } from "./random";
 import { partitionKingdoms } from "./regions";
 import { placeVillagePoints, placeVillages } from "./settlements";
-import { generateTerrain, type IslandTerrain } from "./terrain";
+import type { IslandTerrain } from "./terrain";
+import { buildLandCells, buildRivers, terrainFor, translate, translatePath } from "./terrainParts";
 import { shapeTopicIslands } from "./topicShape";
 import type { TopicAssignment } from "./topics";
 import { type ShapedIsland, type ShapedKingdom, shapeTree } from "./treeShape";
-import type {
-  IslandModel,
-  KingdomModel,
-  LandCellModel,
-  RiverModel,
-  VillageModel,
-  WorldModel,
-  WorldPoint,
-} from "./types";
-
-/**
- * Terrain generation is the expensive step and deterministic in (seed, radius, tier)
- * — memoized so incremental learning only regenerates islands that changed tier.
- */
-const terrainCache = new Map<string, IslandTerrain>();
-const TERRAIN_CACHE_LIMIT = 96;
-
-function terrainFor(nodeId: string, radius: number, sizeTier: number): IslandTerrain {
-  const key = `${nodeId}:${radius}:${sizeTier}`;
-  const cached = terrainCache.get(key);
-  if (cached !== undefined) return cached;
-  const terrain = generateTerrain(hashStringToSeed(nodeId), radius, sizeTier);
-  if (terrainCache.size >= TERRAIN_CACHE_LIMIT) {
-    const oldestKey = terrainCache.keys().next().value;
-    if (oldestKey !== undefined) terrainCache.delete(oldestKey);
-  }
-  terrainCache.set(key, terrain);
-  return terrain;
-}
+import type { IslandModel, KingdomModel, VillageModel, WorldModel, WorldPoint } from "./types";
 
 const TINT_PALETTE_SIZE = 4;
 const HILL_COUNT_BASE = 3;
 /** Hills keep this far from any village so glyphs never overlap (world units). */
 const HILL_CLEARANCE = 16;
-
-function translate(point: WorldPoint, offset: WorldPoint): WorldPoint {
-  return { x: point.x + offset.x, y: point.y + offset.y };
-}
-
-function translatePath(path: readonly WorldPoint[], offset: WorldPoint): WorldPoint[] {
-  return path.map((point) => translate(point, offset));
-}
 
 function buildKingdom(
   shaped: ShapedKingdom,
@@ -127,37 +94,6 @@ function pickHills(
     .map((cell) => translate(cell.site, center));
 }
 
-function buildLandCells(terrain: IslandTerrain, center: WorldPoint): LandCellModel[] {
-  const landHeights = terrain.landCellIndices
-    .map((cellIndex) => terrain.cells[cellIndex]?.height)
-    .filter((height): height is number => height !== undefined);
-  const minHeight = Math.min(...landHeights);
-  const maxHeight = Math.max(...landHeights);
-  const heightRange = Math.max(maxHeight - minHeight, 1e-6);
-  return terrain.landCellIndices.flatMap((cellIndex) => {
-    const cell = terrain.cells[cellIndex];
-    if (cell === undefined) return [];
-    return [
-      {
-        polygon: translatePath(cell.polygon, center),
-        site: translate(cell.site, center),
-        height01: (cell.height - minHeight) / heightRange,
-        slope01: cell.slope01,
-        flux01: cell.flux01,
-        downhillAngle: cell.downhillAngle,
-      },
-    ];
-  });
-}
-
-function buildRivers(terrain: IslandTerrain, center: WorldPoint): RiverModel[] {
-  return terrain.rivers.map((river) => ({
-    points: translatePath(river.points, center),
-    startWidth: river.startWidth,
-    endWidth: river.endWidth,
-  }));
-}
-
 function buildIsland(shaped: ShapedIsland, center: WorldPoint): IslandModel {
   const radius = islandRadiusForTier(shaped.sizeTier);
   const terrain = terrainFor(shaped.nodeId, radius, shaped.sizeTier);
@@ -208,16 +144,21 @@ export function buildWorldModel(
   nodes: readonly KnowledgeNodeRow[],
   topicAssignment?: TopicAssignment,
 ): WorldModel {
+  // An assignment that produced only islets still speaks for the data (nothing has clustered
+  // yet) — falling back to tree roots there would draw continents the topics denied.
   const shapedIslands =
-    topicAssignment !== undefined && topicAssignment.topics.length > 0
+    topicAssignment !== undefined &&
+    (topicAssignment.topics.length > 0 || topicAssignment.islets.length > 0)
       ? shapeTopicIslands(nodes, topicAssignment)
       : shapeTree(nodes);
   const centers = packIslandCenters(
     shapedIslands.map((shaped) => islandRadiusForTier(shaped.sizeTier)),
   );
+  const islands = shapedIslands.map((shaped, index) =>
+    buildIsland(shaped, centers[index] ?? { x: 0, y: 0 }),
+  );
   return {
-    islands: shapedIslands.map((shaped, index) =>
-      buildIsland(shaped, centers[index] ?? { x: 0, y: 0 }),
-    ),
+    islands,
+    islets: topicAssignment === undefined ? [] : buildIslets(topicAssignment.islets, islands),
   };
 }

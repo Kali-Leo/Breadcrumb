@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for embedding-based topic discovery — cluster separation, medoid labeling,
- * no-embedding ancestor attachment, the all-no-embedding tree-root fallback, and the
- * weight/sizeTier quantization shapeTopicIslands derives from it.
+ * no-embedding ancestor attachment, the all-no-embedding tree-root fallback, the one-member
+ * islet split, and the weight/sizeTier quantization shapeTopicIslands derives from it.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -83,11 +83,12 @@ describe("discoverTopics", () => {
 
     const assignment = discoverTopics(nodes, embeddings, new Map());
 
-    expect(assignment.topics).toHaveLength(2);
+    expect(assignment.topics).toHaveLength(1);
     const rTopic = assignment.topics.find((topic) => topic.memberNodeIds.includes("r"));
     expect(new Set(rTopic?.memberNodeIds)).toEqual(new Set(["r", "c", "g"]));
-    const otherTopic = assignment.topics.find((topic) => topic.id === "other");
-    expect(otherTopic?.memberNodeIds).toEqual(["other"]);
+    // "other" clustered with nobody and has no descendants — a one-touch interest, not a topic.
+    expect(assignment.islets.map((islet) => islet.id)).toEqual(["other"]);
+    expect(assignment.islets[0]?.memberNodeIds).toEqual(["other"]);
   });
 
   it("falls back to grouping by tree root when fewer than two nodes have an embedding", () => {
@@ -101,15 +102,48 @@ describe("discoverTopics", () => {
 
     const assignment = discoverTopics(nodes, new Map(), engagement);
 
-    expect(assignment.topics).toHaveLength(2);
+    expect(assignment.topics).toHaveLength(1);
     const root1Topic = assignment.topics.find((topic) => topic.id === "root1");
-    const root2Topic = assignment.topics.find((topic) => topic.id === "root2");
     expect(new Set(root1Topic?.memberNodeIds)).toEqual(new Set(["root1", "root1-a", "root1-b"]));
     // 1 (root1) + 2 (root1-a override) + 1 (root1-b default) = 4
     expect(root1Topic?.weight).toBe(4);
-    expect(root2Topic?.weight).toBe(1);
-    // Ordered by weight desc: root1 (4) before root2 (1).
-    expect(assignment.topics.map((topic) => topic.id)).toEqual(["root1", "root2"]);
+    // The lone root2 group becomes an islet instead of a one-node continent.
+    expect(assignment.islets.map((islet) => islet.id)).toEqual(["root2"]);
+    expect(assignment.islets[0]?.weight).toBe(1);
+  });
+
+  it("extracts every one-member group as an islet and keeps multi-member ones as topics", () => {
+    // Two tight clusters plus two loners pointing in unrelated directions.
+    const nodes = [
+      node("a1", null),
+      node("a2", null),
+      node("a3", null),
+      node("b1", null),
+      node("b2", null),
+      node("b3", null),
+      node("lone1", null),
+      node("lone2", null),
+    ];
+    const embeddings = new Map<string, readonly number[]>([
+      ["a1", [1, 0, 0, 0]],
+      ["a2", [0.99, 0.02, 0, 0]],
+      ["a3", [0.98, 0.03, 0, 0]],
+      ["b1", [0, 1, 0, 0]],
+      ["b2", [0.02, 0.99, 0, 0]],
+      ["b3", [0.03, 0.98, 0, 0]],
+      ["lone1", [0, 0, 1, 0]],
+      ["lone2", [0, 0, 0, 1]],
+    ]);
+
+    const assignment = discoverTopics(nodes, embeddings, new Map());
+
+    expect(assignment.topics).toHaveLength(2);
+    for (const topic of assignment.topics) {
+      expect(topic.memberNodeIds.length).toBeGreaterThan(1);
+    }
+    expect(assignment.islets.map((islet) => islet.id).sort()).toEqual(["lone1", "lone2"]);
+    // Deterministic: the same input yields the same split, islets included.
+    expect(discoverTopics(nodes, embeddings, new Map())).toEqual(assignment);
   });
 });
 
@@ -122,6 +156,7 @@ describe("shapeTopicIslands", () => {
         { id: "medium", label: "medium", memberNodeIds: ["medium"], weight: 3 },
         { id: "heavy", label: "heavy", memberNodeIds: ["heavy"], weight: 6 },
       ],
+      islets: [],
     };
 
     const islands = shapeTopicIslands(nodes, assignment);

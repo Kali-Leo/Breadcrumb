@@ -1,7 +1,8 @@
 /**
  * Purpose: cluster the user's knowledge nodes into discovered topics (kNN cosine graph +
  * deterministic Louvain community detection), independent of tree structure — one topic
- * becomes one island. Pure: no DB, no UI, no randomness beyond the seeded rng.
+ * becomes one island, while one-member groups leave as islets. Pure: no DB, no UI, no
+ * randomness beyond the seeded rng.
  * Main exports: discoverTopics, TopicSummary, TopicAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -20,6 +21,11 @@ export interface TopicSummary {
 
 export interface TopicAssignment {
   topics: TopicSummary[];
+  /**
+   * Interests that ended up alone — exactly one member node, nothing else clustered with it.
+   * They are not topics yet, so the map draws them as unnamed islets instead of continents.
+   */
+  islets: TopicSummary[];
 }
 
 function findEmbeddedAncestorKey(
@@ -69,6 +75,18 @@ function orderTopics(topics: readonly TopicSummary[]): TopicSummary[] {
   return [...topics].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
 }
 
+/** A one-member group is a single touch, not a topic — it leaves the continents and becomes
+ * an unnamed islet. Multi-member groups are untouched. */
+function splitIslets(summaries: readonly TopicSummary[]): TopicAssignment {
+  const topics: TopicSummary[] = [];
+  const islets: TopicSummary[] = [];
+  for (const summary of summaries) {
+    if (summary.memberNodeIds.length === 1) islets.push(summary);
+    else topics.push(summary);
+  }
+  return { topics: orderTopics(topics), islets: orderTopics(islets) };
+}
+
 export function discoverTopics(
   nodes: readonly KnowledgeNodeRow[],
   embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
@@ -79,7 +97,7 @@ export function discoverTopics(
   const embeddedNodes = nodes.filter((node) => (embeddingByNodeId.get(node.id)?.length ?? 0) > 0);
 
   if (embeddedNodes.length < 2) {
-    return { topics: orderTopics(groupByRoot(nodes, parentByNode, nodesById, engagementByNodeId)) };
+    return splitIslets(groupByRoot(nodes, parentByNode, nodesById, engagementByNodeId));
   }
 
   const embeddedIds = embeddedNodes.map((node) => node.id);
@@ -128,5 +146,5 @@ export function discoverTopics(
   });
 
   const leftoverTopics = groupByRoot(leftoverNodes, parentByNode, nodesById, engagementByNodeId);
-  return { topics: orderTopics([...embeddedTopics, ...leftoverTopics]) };
+  return splitIslets([...embeddedTopics, ...leftoverTopics]);
 }

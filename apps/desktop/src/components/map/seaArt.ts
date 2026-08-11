@@ -23,11 +23,12 @@ export function worldBounds(world: WorldModel): Bounds {
   let minY = -PADDING;
   let maxX = PADDING;
   let maxY = PADDING;
-  for (const island of world.islands) {
-    minX = Math.min(minX, island.center.x - island.radius - PADDING);
-    minY = Math.min(minY, island.center.y - island.radius - PADDING);
-    maxX = Math.max(maxX, island.center.x + island.radius + PADDING);
-    maxY = Math.max(maxY, island.center.y + island.radius + PADDING);
+  // Islets count too — the frame must contain the whole sea, not only the continents.
+  for (const landmass of [...world.islands, ...world.islets]) {
+    minX = Math.min(minX, landmass.center.x - landmass.radius - PADDING);
+    minY = Math.min(minY, landmass.center.y - landmass.radius - PADDING);
+    maxX = Math.max(maxX, landmass.center.x + landmass.radius + PADDING);
+    maxY = Math.max(maxY, landmass.center.y + landmass.radius + PADDING);
   }
   return { minX, minY, maxX, maxY };
 }

@@ -1,7 +1,8 @@
 /**
  * Purpose: pure data contracts of the generated world — everything the renderer needs,
  * nothing about how to draw it. All coordinates are absolute world units.
- * Main exports: WorldModel, IslandModel, KingdomModel, VillageModel, KnowledgePointModel.
+ * Main exports: WorldModel, IslandModel, IsletModel, KingdomModel, VillageModel,
+ * KnowledgePointModel.
  */
 
 export interface WorldPoint {
@@ -81,6 +82,20 @@ export interface IslandModel {
   memberNodeIds: string[];
 }
 
+/**
+ * A single-node interest that has not grown into a topic yet — drawn as a tiny nameless
+ * island in the open sea. No kingdoms, no label, not a dive target.
+ */
+export interface IsletModel {
+  nodeId: string;
+  label: string;
+  center: WorldPoint;
+  radius: number;
+  coastLoops: WorldPoint[][];
+  landCells: LandCellModel[];
+}
+
 export interface WorldModel {
   islands: IslandModel[];
+  islets: IsletModel[];
 }
