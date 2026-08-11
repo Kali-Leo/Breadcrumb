@@ -1,5 +1,6 @@
 /**
- * Purpose: the discrete level model — world/island/kingdom/village, exact-fit camera
+ * Purpose: the discrete level model — world/island/kingdom (the village dive level was
+ * removed 2026-08-11, backed up on branch backup/village-town-scene), exact-fit camera
  * frames per level and pointer hit-tests for wheel dives. Pure functions.
  * Main exports: MapLevel, CameraFrame, frameForLevel, hitIsland, hitKingdom, hitVillage.
  */
@@ -16,8 +17,7 @@ import { type Bounds, worldBounds } from "./seaArt";
 export type MapLevel =
   | { kind: "world" }
   | { kind: "island"; islandId: string }
-  | { kind: "kingdom"; islandId: string; kingdomId: string }
-  | { kind: "village"; islandId: string; kingdomId: string; villageId: string };
+  | { kind: "kingdom"; islandId: string; kingdomId: string };
 
 export interface CameraFrame {
   scale: number;
@@ -114,7 +114,6 @@ export function frameForLevel(
       screenHeight,
     );
   }
-  // Kingdom and village levels share the kingdom frame; the village opens an overlay.
   return frameFromBounds(kingdomBounds(kingdom), screenWidth, screenHeight, 0.92);
 }
 

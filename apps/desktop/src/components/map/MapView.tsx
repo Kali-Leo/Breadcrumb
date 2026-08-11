@@ -1,21 +1,37 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
- * jumps (world → island → kingdom → village) on the wheel with exact-fit framing,
- * no free zoom or panning. StrictMode-safe; DEV keys 0 demo, 1..4 level jumps.
+ * jumps (world → island → kingdom) on the wheel with exact-fit framing, no free
+ * zoom or panning. The world model is cached per nodes-array so re-opening the
+ * palace skips the expensive terrain build (identical output, just remembered).
+ * StrictMode-safe; DEV keys 0 demo, 1..3 level jumps.
  * Main exports: MapView.
  */
-import { buildWorldModel } from "@breadcrumb/plugin-map";
+
+import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { buildWorldModel, type WorldModel } from "@breadcrumb/plugin-map";
 import { Application } from "pixi.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
-import { findIsland, findKingdom, findVillage, type MapLevel } from "./levels";
+import { findIsland, findKingdom, type MapLevel } from "./levels";
 import { applyReveals, drawFootprintTrail } from "./livingMap";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { loadMapArt, resetMapArt } from "./mapArtAssets";
 import { createMapController, type HoverInfo, type MapController } from "./mapController";
 import { mapTheme } from "./mapTheme";
+
+/** Same nodes array → same world; the cache turns every re-open after the first into a
+ * lookup instead of a multi-second synchronous terrain build (visuals unchanged). */
+const worldCache = new WeakMap<readonly KnowledgeNodeRow[], WorldModel>();
+
+function cachedWorldModel(nodes: readonly KnowledgeNodeRow[]): WorldModel {
+  const cached = worldCache.get(nodes);
+  if (cached !== undefined) return cached;
+  const world = buildWorldModel(nodes);
+  worldCache.set(nodes, world);
+  return world;
+}
 
 export function MapView() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -38,7 +54,7 @@ export function MapView() {
 
   const nodes = demoMode ? demoKnowledgeNodes : storeNodes;
   const retentionByNode = demoMode ? demoRetentionByNode : storeRetention;
-  const world = useMemo(() => buildWorldModel(nodes), [nodes]);
+  const world = useMemo(() => cachedWorldModel(nodes), [nodes]);
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 
   // One Application for the component's whole life — scenes rebuild, it never does.
@@ -122,7 +138,7 @@ export function MapView() {
         setDemoMode((value) => !value);
         return;
       }
-      const jump = ["1", "2", "3", "4"].indexOf(event.key);
+      const jump = ["1", "2", "3"].indexOf(event.key);
       if (jump >= 0) controllerRef.current?.devJump(jump);
     };
     window.addEventListener("keydown", onKeyDown);
@@ -143,15 +159,9 @@ export function MapView() {
     const island = findIsland(world, level.islandId);
     if (island !== undefined) {
       levelPath.push(island.label);
-      if (level.kind === "kingdom" || level.kind === "village") {
+      if (level.kind === "kingdom") {
         const kingdom = findKingdom(island, level.kingdomId);
-        if (kingdom !== undefined) {
-          levelPath.push(kingdom.label);
-          if (level.kind === "village") {
-            const village = findVillage(kingdom, level.villageId);
-            if (village !== undefined) levelPath.push(village.label);
-          }
-        }
+        if (kingdom !== undefined) levelPath.push(kingdom.label);
       }
     }
   }

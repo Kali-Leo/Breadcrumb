@@ -65,9 +65,6 @@ importers:
       '@breadcrumb/plugin-planner':
         specifier: workspace:*
         version: link:../../packages/plugin-planner
-      '@breadcrumb/plugin-town':
-        specifier: workspace:*
-        version: link:../../packages/plugin-town
       '@breadcrumb/plugin-trail':
         specifier: workspace:*
         version: link:../../packages/plugin-trail
@@ -367,19 +364,6 @@ importers:
       fast-check:
         specifier: ^4.9.0
         version: 4.9.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.0
-        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
-
-  packages/plugin-town:
-    dependencies:
-      '@breadcrumb/plugin-map':
-        specifier: workspace:*
-        version: link:../plugin-map
-    devDependencies:
       typescript:
         specifier: ^5.9.0
         version: 5.9.3

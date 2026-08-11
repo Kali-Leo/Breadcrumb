@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Breadcrumb
+Name[zh_CN]=Breadcrumb 学习伴侣
+Comment=本地优先的 AI 学习伴侣
+Exec=/home/leo/桌面/breadcrumb/scripts/launch-breadcrumb.sh
+Icon=/home/leo/桌面/breadcrumb/apps/desktop/src-tauri/icons/128x128.png
+Terminal=false
+Categories=Education;

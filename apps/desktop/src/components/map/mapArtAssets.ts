@@ -1,8 +1,7 @@
 /**
  * Purpose: loads the Nortantis hand-drawn building art (AGPL-3.0, see
- * THIRD_PARTY_NOTICES.md) — settlement icons for the map, kingdom seat
- * illustrations, and the village gallery's housing stock. Also readies the
- * handwriting font before Pixi rasterizes labels.
+ * THIRD_PARTY_NOTICES.md) — settlement icons for the map and kingdom seat
+ * illustrations. Also readies the handwriting font before Pixi rasterizes labels.
  * Main exports: loadMapArt, resetMapArt, MapArt.
  */
 import { Assets, type Texture } from "pixi.js";
@@ -18,16 +17,6 @@ export interface MapArt {
   settlementByTier: [Texture, Texture, Texture, Texture];
   /** Kingdom seat illustrations, smallest to grandest — one large building per realm. */
   kingdomSeats: Texture[];
-  /** Every building illustration — the village gallery's housing stock. */
-  buildings: Texture[];
-}
-
-function urlsIn(folder: string): string[] {
-  return Object.entries(assetUrls)
-    .filter(([path]) => path.includes(`/map-art/${folder}/`))
-    .map(([path, url]) => `${path} ${url}`)
-    .sort()
-    .map((joined) => joined.split(" ")[1] ?? "");
 }
 
 function urlNamed(folder: string, nameFragment: string): string {
@@ -64,11 +53,9 @@ export async function loadMapArt(): Promise<MapArt> {
       load("flat-town-width"),
       load("flat-town-with-castle"),
     ]);
-  const buildings = await Promise.all(urlsIn("cities").map((url) => Assets.load<Texture>(url)));
   cachedArt = {
     settlementByTier: [farm, smallVillage, town, walledCity],
     kingdomSeats: [seatFarm, smallVillage, town, seatTown, walledCity, seatCastleTown],
-    buildings,
   };
   return cachedArt;
 }
