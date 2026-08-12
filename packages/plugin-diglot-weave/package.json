@@ -1,0 +1,21 @@
+{
+  "name": "@breadcrumb/plugin-diglot-weave",
+  "version": "0.0.1",
+  "description": "Headless diglot weave plugin (spec 033): language packs, tokenization, FSRS-6 scheduling, deterministic word replacement patches, implicit-signal handling and guess grading.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-db": "workspace:*",
+    "ts-fsrs": "^5.2.1",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
