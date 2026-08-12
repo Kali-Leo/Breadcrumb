@@ -9,7 +9,6 @@ import {
   createComparisonRepo,
   createConversationsRepo,
   createFactcheckRepo,
-  createGoalLaddersRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
@@ -48,7 +47,6 @@ export interface Repos {
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
   goals: ReturnType<typeof createGoalsRepo>;
-  goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
@@ -89,7 +87,6 @@ async function openAndMigrate(): Promise<Repos> {
     interestSignals: createInterestSignalsRepo(sqlClient),
     masteryClaims: createMasteryClaimsRepo(sqlClient),
     goals: createGoalsRepo(sqlClient),
-    goalLadders: createGoalLaddersRepo(sqlClient),
     comparisons: createComparisonRepo(sqlClient),
     canonical: createCanonicalRepo(sqlClient),
     practice: createPracticeRepo(sqlClient),

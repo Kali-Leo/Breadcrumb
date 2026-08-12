@@ -1,5 +1,5 @@
 /**
- * Purpose: pure "milestone" scoring for the pseudo-ranked-ladder view (spec 016) — a single
+ * Purpose: pure "milestone" scoring for a goal's progress readout (spec 016) — a single
  * 0..100 number summarizing progress toward one goal, plus its band word. No DB, no I/O;
  * goalMasteryByNode must already be the SAME goal-view-boosted mastery map coverage() uses
  * (self-report claims believed), so the two numbers never silently disagree.

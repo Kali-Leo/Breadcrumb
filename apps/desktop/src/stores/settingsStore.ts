@@ -36,8 +36,8 @@ export interface FeatureSwitches {
 export type CompareCategory = "occupation" | "curriculum";
 
 /** 'casual' = wander by curiosity, the map grows outward on its own (adjacent-concept
- * proposals). 'ranked' = push toward a chosen goal (frontier weights the goal's gap;
- * unlocks the lab's ladder section). Spec 016 — a mindset switch, not a feature switch. */
+ * proposals). 'ranked' = push toward a chosen goal (frontier weights the goal's gap; the
+ * lab's goal section appears). Spec 016 — a mindset switch, not a feature switch. */
 export type LearningMode = "ranked" | "casual";
 
 /** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as

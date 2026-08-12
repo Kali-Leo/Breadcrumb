@@ -1,8 +1,8 @@
 /**
  * Purpose: the 🧪 lab view (spec 012) — a temporary, deliberately unpolished full-page
  * surface for validating the planner: node value table, frontier recommendations, a
- * self-report entry point, and (ranked mode only, spec 021) the goal/route comparison and
- * ladder title. It is the debug-grade face of
+ * self-report entry point, and (ranked mode only, spec 021) the goal section plus the
+ * comparison tree. It is the debug-grade face of
  * the same engine the memory palace will eventually wear; sits beside it in the sidebar.
  * Main exports: LabPanel.
  */
@@ -15,7 +15,6 @@ import { LabCompareSection } from "./LabCompareSection";
 import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
-import { LabLadderSection } from "./LabLadderSection";
 import { LabModeToggle } from "./LabModeToggle";
 import { LabNodeTable } from "./LabNodeTable";
 import { GoalOverlayView } from "./overlay/GoalOverlayView";
@@ -104,7 +103,6 @@ export function LabPanel() {
         <LabFrontierList />
         <SelfReportInput />
         {learningMode === "ranked" && <LabGoalSection />}
-        <LabLadderSection />
         <LabCompareSection />
         <LabFailuresSection />
       </div>

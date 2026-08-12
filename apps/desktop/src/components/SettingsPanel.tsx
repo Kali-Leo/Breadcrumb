@@ -26,7 +26,7 @@ const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string
   },
   labPanel: {
     name: "🧪 实验室面板",
-    hint: "临时实验面板：看推荐、建目标、比路线、看排位榜；建目标或看排位榜时会额外调用一次 AI（独立计费）",
+    hint: "临时实验面板：看推荐、建目标、比路线；建目标时会额外调用一次 AI（独立计费）",
   },
   compareProfileBuild: {
     name: "🌲 对比画像构建（实验功能）",

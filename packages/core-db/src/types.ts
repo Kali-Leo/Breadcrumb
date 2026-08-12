@@ -2,7 +2,7 @@
  * Purpose: row types for every persisted table (mirrors migrations.ts exactly)
  * plus the SqlClient interface each host app injects.
  * Main exports: SqlClient, SettingRow, ConversationRow, MessageRow, LlmCallRow, KnowledgeEdgeRow,
- * GoalRow, AiFailureRow, NodeAliasRow, GoalLadderBoardRow, ComparisonProfileRow,
+ * GoalRow, AiFailureRow, NodeAliasRow, ComparisonProfileRow,
  * ComparisonProfileItemRow, CanonicalConceptRow, NodeConceptAnchorRow,
  * PracticeScoreRow.
  */
@@ -198,18 +198,6 @@ export interface LlmCallRow {
   created_at: string;
 }
 
-/** The ladder's per-goal display cache (spec 022) — the three assessment titles currently on
- * the board (the learner's own summary flanked by a slightly-ahead and slightly-behind state)
- * plus when this board expires. Pure display: no ranks, no progress semantics of any kind. */
-export interface GoalLadderBoardRow {
-  goal_id: string;
-  above_title: string;
-  self_title: string;
-  below_title: string;
-  next_refresh_at: string;
-  updated_at: string;
-}
-
 /** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible
  * only to the developer via the lab panel's "最近的静默失败" section. Writing this row is
  * itself best-effort: a failure to record a failure must never throw. */
@@ -229,7 +217,7 @@ export type ComparisonProfileCategory = "curriculum" | "occupation";
 
 /** A comparison tree's root: an evidence-backed real-world profile the user's own tree can be
  * measured against (spec 023). 'builtin' ships with the app; 'searched' was found on demand via
- * an open web search. Standalone module — unrelated to the ladder or the knowledge tree. */
+ * an open web search. Standalone module — unrelated to the knowledge tree. */
 export interface ComparisonProfileRow {
   id: string;
   title: string;
@@ -296,17 +284,6 @@ export interface NodeConceptAnchorRow {
   method: AnchorMethod;
   reason: string;
   anchored_at: string;
-}
-
-/** A goal's cached ten-rung title ladder (spec 032) — composed once by a strong model,
- * never rerolled; board titles are recomposed from it as the learner's rung moves. */
-export interface GoalTitleLadderRow {
-  goal_id: string;
-  /** The goal's plain identity noun, appended verbatim after every rung. */
-  identity: string;
-  /** JSON string array of ten prefix-shaped rung phrases, novice first. */
-  rungs_json: string;
-  created_at: string;
 }
 
 /** The learner's own 0–10 score on a pure experience leaf (spec 029) — never AI-verified,

@@ -23,9 +23,9 @@ import {
 /** Goal views believe the user's own word: a node with a 'learned' self-report claim counts
  * as satisfied FOR THE GOAL, while global mastery stays honest (ADR-0009 keeps self-report
  * capped below real-footprint evidence, so review can still gently resurface it later).
- * Exported so ladderStore.ts's milestone computation uses the exact same boosted view as
- * coverage() does here (spec 016 binding decision — milestone must never silently disagree
- * with the coverage percentage shown elsewhere). */
+ * Exported so every other milestone/coverage readout (the goal overlay, the lab's goal
+ * composition chips) uses the exact same boosted view coverage() does here (spec 016 binding
+ * decision — milestone must never silently disagree with the coverage percentage). */
 export function masteryAsSeenByGoal(
   masteryByNode: ReadonlyMap<string, number>,
   claims: readonly MasteryClaimRow[],

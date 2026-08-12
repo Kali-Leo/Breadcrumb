@@ -1,8 +1,8 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
- * "keep higher confidence" ON CONFLICT semantics, the ladder's assessment board table
- * (migration 0017, spec 022), the comparison tree's whole-replace profile/item tables
+ * "keep higher confidence" ON CONFLICT semantics, the comparison tree's whole-replace
+ * profile/item tables
  * (migration 0018, spec 023), the dropped item-scoped alignment table (migration 0019, spec
  * 024, dropped again by migration 0020), and the canonical-concept crosswalk's node<->concept
  * anchor tables (migration 0020, spec 025), and occupation profiles / practice attestations /
@@ -150,19 +150,12 @@ describe("knowledge_edges upsert (real sqlite ON CONFLICT semantics)", () => {
   });
 });
 
-describe("goal_ladder_board (real sqlite, migration 0017)", () => {
-  it("drops every mechanism-era ladder table and round-trips the three-title board", async () => {
+describe("ladder teardown (real sqlite, migration 0024)", () => {
+  it("leaves no ladder table behind after a full migration run", async () => {
     temp = await createTempDatabase();
-    const now = "2026-08-09T10:00:00.000Z";
-    await temp.repos.goals.insert({
-      id: "goal1",
-      title: "学微积分",
-      node_ids_json: "[]",
-      created_at: now,
-      updated_at: now,
-    });
 
-    // Every table from earlier ladder designs (people boards, rank/fuel state) must be gone.
+    // The ladder module was removed by product decision (2026-08-12). Every table any of its
+    // design generations ever created must be absent from a freshly migrated database.
     for (const dropped of [
       "goal_ladders",
       "ladder_shown_descriptions",
@@ -170,32 +163,13 @@ describe("goal_ladder_board (real sqlite, migration 0017)", () => {
       "ladder_shown_identities",
       "goal_ladder_figures",
       "goal_ladder_state",
+      "goal_ladder_board",
+      "goal_title_ladder",
     ]) {
       await expect(temp.sql.select(`SELECT * FROM ${dropped}`, [])).rejects.toThrow(
         /no such table/,
       );
     }
-
-    expect(await temp.repos.goalLadders.getBoard("goal1")).toBeNull();
-    await temp.repos.goalLadders.upsertBoard({
-      goal_id: "goal1",
-      above_title: "积分也开始上手的人",
-      self_title: "极限和导数刚点亮",
-      below_title: "极限还有点生疏",
-      next_refresh_at: "2026-08-11T08:00:00.000Z",
-      updated_at: now,
-    });
-    await temp.repos.goalLadders.upsertBoard({
-      goal_id: "goal1",
-      above_title: "级数也摸过门道的人",
-      self_title: "积分刚上手",
-      below_title: "导数还在回炉",
-      next_refresh_at: "2026-08-12T08:00:00.000Z",
-      updated_at: now,
-    });
-    const stored = await temp.repos.goalLadders.getBoard("goal1");
-    expect(stored?.self_title).toBe("积分刚上手");
-    expect(stored?.next_refresh_at).toBe("2026-08-12T08:00:00.000Z");
   });
 });
 

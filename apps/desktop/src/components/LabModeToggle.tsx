@@ -1,5 +1,5 @@
 /**
- * Purpose: lab-panel top-of-page two-state mindset switch — 排位 (ranked) / 休闲 (casual),
+ * Purpose: lab-panel top-of-page two-state mindset switch — 目标 (ranked) / 休闲 (casual),
  * spec 016. Neutral, zero-pressure copy: one plain sentence per mode, no "you should".
  * Main exports: LabModeToggle.
  */
@@ -7,7 +7,7 @@ import { type LearningMode, useSettingsStore } from "../stores/settingsStore";
 
 const MODES: { value: LearningMode; label: string; hint: string }[] = [
   { value: "casual", label: "休闲", hint: "跟着好奇心走，地图自己往外长" },
-  { value: "ranked", label: "排位", hint: "朝着目标推进" },
+  { value: "ranked", label: "目标", hint: "朝着目标推进" },
 ];
 
 export function LabModeToggle() {

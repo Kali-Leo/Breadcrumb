@@ -542,6 +542,15 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // The ladder module was removed entirely by product decision (2026-08-12): its two
+    // surviving tables are dropped, and nothing replaces them.
+    id: "0024_drop_ladder_tables",
+    statements: [
+      `DROP TABLE IF EXISTS goal_ladder_board;`,
+      `DROP TABLE IF EXISTS goal_title_ladder;`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

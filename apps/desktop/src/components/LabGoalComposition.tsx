@@ -22,7 +22,7 @@ export function LabGoalComposition() {
   const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
   if (goalNodeIds.length === 0) return null;
 
-  // Same goal-view-boosted mastery coverage()/the ladder use — a chip must never disagree
+  // Same goal-view-boosted mastery coverage()/milestone() use — a chip must never disagree
   // with what the rest of the goal UI already calls "lit".
   const goalMasteryByNode = masteryAsSeenByGoal(masteryByNode, claims);
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));

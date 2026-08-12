@@ -10,7 +10,6 @@ import {
   createComparisonRepo,
   createConversationsRepo,
   createFactcheckRepo,
-  createGoalLaddersRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
@@ -47,7 +46,6 @@ export interface SimlabRepos {
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
   goals: ReturnType<typeof createGoalsRepo>;
-  goalLadders: ReturnType<typeof createGoalLaddersRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
@@ -72,7 +70,6 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     interestSignals: createInterestSignalsRepo(sql),
     masteryClaims: createMasteryClaimsRepo(sql),
     goals: createGoalsRepo(sql),
-    goalLadders: createGoalLaddersRepo(sql),
     comparisons: createComparisonRepo(sql),
     canonical: createCanonicalRepo(sql),
     practice: createPracticeRepo(sql),

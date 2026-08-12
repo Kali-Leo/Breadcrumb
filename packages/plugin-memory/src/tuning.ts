@@ -28,8 +28,6 @@ import {
 import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
 import {
   GOAL_GAP_SCORE_BOOST,
-  LADDER_REFRESH_MAX_HOURS,
-  LADDER_REFRESH_MIN_HOURS,
   MILESTONE_DIM_DISCOUNT,
   MILESTONE_DIM_WEIGHT,
   MILESTONE_LIT_WEIGHT,
@@ -115,11 +113,6 @@ export const productParams = {
   /** Single-route recommendation (spec 017): interest score a route step needs before the
    * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
   routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
-  /** Ladder assessment-cache expiry window (spec 022) — a stored board lives a uniform-random
-   * stretch inside this range before the next view re-assesses. Cache pacing only: the ladder
-   * carries no ranking mechanism at all. plugin-planner/ladderRefresh.ts. */
-  ladderRefreshMinHours: LADDER_REFRESH_MIN_HOURS,
-  ladderRefreshMaxHours: LADDER_REFRESH_MAX_HOURS,
   /** Comparison-tree semantic alignment (spec 024): local-embedding recall floor (wider than
    * the synonym gate's 0.85 — the LLM judge restores precision), candidates per profile leaf,
    * and pairs per batched judge call. plugin-compare/alignment.ts. */

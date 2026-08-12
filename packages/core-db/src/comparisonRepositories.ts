@@ -30,7 +30,7 @@ export function createComparisonRepo(sql: SqlClient) {
       );
     },
     /** Whole-replace: deletes the profile's previous row and items, then inserts the given
-     * ones — same style as the old ladder repo's replaceFigures. No partial updates are
+     * ones. No partial updates are
      * offered; a profile is always rewritten as a complete picture. INSERT OR REPLACE keeps the
      * write idempotent even when two callers race (e.g. dev StrictMode double effects). */
     async replaceProfile(
