@@ -217,20 +217,28 @@ export async function runAnchorSweep(): Promise<number | null> {
   let judgedCount = 0;
   for (const batch of chunkPairs<AlignmentCandidatePair>(candidates, ALIGNMENT_JUDGE_BATCH_SIZE)) {
     try {
-      const { parsed, usage } = await chatJson(
-        config,
-        buildAlignmentJudgeMessages(batch),
-        alignmentJudgeSchema,
-      );
-      await recordMeteredCall({
-        purpose: "compare-align",
-        model: config.model,
-        conversationId: null,
-        usage,
-      });
-      const verdicts = validateAlignmentVerdicts(batch.length, parsed);
+      // One retry on a malformed verdict batch: a transient bad completion (ai_failures
+      // 2026-08-10) is far cheaper to re-ask than to postpone the pairs a whole sweep.
+      let verdicts: ReturnType<typeof validateAlignmentVerdicts> = null;
+      for (let attempt = 0; attempt < 2 && verdicts === null; attempt += 1) {
+        const { parsed, usage } = await chatJson(
+          config,
+          buildAlignmentJudgeMessages(batch),
+          alignmentJudgeSchema,
+        );
+        await recordMeteredCall({
+          purpose: "compare-align",
+          model: config.model,
+          conversationId: null,
+          usage,
+        });
+        verdicts = validateAlignmentVerdicts(batch.length, parsed);
+      }
       if (verdicts === null) {
-        void recordAiFailure("compare-align", new Error("verdict batch failed validation"));
+        void recordAiFailure(
+          "compare-align",
+          new Error("verdict batch failed validation twice, batch skipped"),
+        );
         continue;
       }
       const anchoredAt = nowIso();

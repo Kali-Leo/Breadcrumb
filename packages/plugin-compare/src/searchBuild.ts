@@ -100,3 +100,29 @@ export function survivesThreshold(proposedCount: number, survivingCount: number)
   if (survivingCount < MIN_SURVIVING_ITEMS) return false;
   return survivingCount / Math.max(1, proposedCount) >= MIN_SURVIVING_SHARE;
 }
+
+/** One search hit the rescue matcher can inspect (matches factcheck's EvidenceItem). */
+export interface SourceSearchResult {
+  url: string;
+  title: string;
+  snippet: string;
+}
+
+/**
+ * Search rescue for a dead citation (ai_failures 2026-08-10: the model cites deep links
+ * from memory and those rot — three builds died at 0/N verified). If any search result's
+ * title+snippet mentions the cited material, the source demonstrably exists: return that
+ * reachable URL to replace the rotten one. No hit → null, and the branch dies as before.
+ */
+export function findRescueUrl(
+  results: readonly SourceSearchResult[],
+  sourceTitles: readonly string[],
+): string | null {
+  for (const result of results) {
+    const haystack = `${result.title} ${result.snippet}`;
+    if (sourceTitles.some((title) => verifyEvidenceText(haystack, title))) {
+      return result.url;
+    }
+  }
+  return null;
+}

@@ -15,12 +15,14 @@ import {
 } from "@breadcrumb/core-llm";
 import {
   buildCompareProposalMessages,
+  findRescueUrl,
   pruneUnverifiedBranches,
   type SearchedProposalItem,
   searchedProfileProposalSchema,
   survivesThreshold,
   verifyEvidenceText,
 } from "@breadcrumb/plugin-compare";
+import { createBingProvider } from "@breadcrumb/plugin-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
@@ -99,26 +101,49 @@ export async function runProposalPipeline(
   }
 
   // Verify each unique cited URL once; an item may share a source with its siblings.
+  // Dead direct links get one search rescue: the model cites deep links from memory and
+  // those rot (all three 2026-08-10 failures were a single hallucinated/rotted URL taking
+  // the whole build to 0/N). A search hit proving the cited material exists revives the
+  // branch and swaps in the reachable URL; no hit still kills it (宁缺毋假).
   const titlesByUrl = new Map<string, string[]>();
   for (const item of items) {
     const titles = titlesByUrl.get(item.sourceUrl) ?? [];
     titles.push(item.sourceTitle);
     titlesByUrl.set(item.sourceUrl, titles);
   }
+  const bing = createBingProvider({ fetchImpl: tauriFetch });
   const verdicts = await Promise.all(
-    [...titlesByUrl.entries()].map(async ([url, titles]) => ({
-      url,
-      ok: await verifyUrl(url, titles),
-    })),
+    [...titlesByUrl.entries()].map(async ([url, titles]) => {
+      if (await verifyUrl(url, titles)) return { url, ok: true, rescueUrl: null };
+      const results = await bing.search(titles[0] ?? "", 3);
+      const rescueUrl = findRescueUrl(results, titles);
+      return { url, ok: rescueUrl !== null, rescueUrl };
+    }),
   );
   const verifiedUrls = new Set(verdicts.filter((verdict) => verdict.ok).map((v) => v.url));
+  const rescuedUrlByOriginal = new Map(
+    verdicts
+      .filter((verdict) => verdict.rescueUrl !== null)
+      .map((verdict) => [verdict.url, verdict.rescueUrl as string]),
+  );
 
-  const surviving = pruneUnverifiedBranches(items, verifiedUrls);
+  const surviving = pruneUnverifiedBranches(items, verifiedUrls).map((item) => ({
+    ...item,
+    // The rescued URL is the one we actually verified as reachable — cite that.
+    sourceUrl: rescuedUrlByOriginal.get(item.sourceUrl) ?? item.sourceUrl,
+  }));
   const costLine = costLineOf(config.model, usage);
   if (!survivesThreshold(items.length, surviving.length)) {
+    const failedSamples = verdicts
+      .filter((verdict) => !verdict.ok)
+      .slice(0, 3)
+      .map((verdict) => verdict.url)
+      .join(" | ");
     void recordAiFailure(
       "compare-profile",
-      new Error(`build discarded: ${surviving.length}/${items.length} items verified`),
+      new Error(
+        `build discarded: ${surviving.length}/${items.length} items verified; failed sources: ${failedSamples}`,
+      ),
     );
     return { ok: false, reason: "引用的资料大多没能核验通过，这次构建整体作废", costLine };
   }

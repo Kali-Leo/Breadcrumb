@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCompareProposalMessages,
+  findRescueUrl,
   pruneUnverifiedBranches,
   type SearchedProposalItem,
   searchedProfileProposalSchema,
@@ -105,5 +106,29 @@ describe("survivesThreshold", () => {
     expect(survivesThreshold(10, 4)).toBe(false); // under MIN_SURVIVING_ITEMS
     expect(survivesThreshold(20, 8)).toBe(false); // under half
     expect(survivesThreshold(10, 6)).toBe(true);
+  });
+});
+
+describe("findRescueUrl", () => {
+  const results = [
+    { url: "https://a.example/1", title: "别的东西", snippet: "毫无关系的页面" },
+    {
+      url: "https://b.example/std",
+      title: "普通高中生物学课程标准(2017年版2020年修订)",
+      snippet: "官方发布页",
+    },
+  ];
+
+  it("returns the first result that mentions the cited material", () => {
+    expect(findRescueUrl(results, ["普通高中生物学课程标准"])).toBe("https://b.example/std");
+  });
+
+  it("matches via snippet tokens too", () => {
+    expect(findRescueUrl(results, ["官方发布"])).toBe("https://b.example/std");
+  });
+
+  it("returns null when nothing mentions the source", () => {
+    expect(findRescueUrl(results, ["前端框架权威指南"])).toBeNull();
+    expect(findRescueUrl([], ["任何标题"])).toBeNull();
   });
 });
