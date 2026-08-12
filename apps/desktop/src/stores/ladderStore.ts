@@ -8,15 +8,20 @@
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
+  composeLadderTitles,
   goalDomainClosure,
   isRefreshDue,
   nextRefreshAtIso,
-  validateLadderAssessment,
+  validateTitleLadder,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
-import { buildKnowledgeSnapshot, requestLadderAssessment } from "../lib/ladderActions";
+import {
+  buildKnowledgeSnapshot,
+  requestLadderRung,
+  requestTitleLadder,
+} from "../lib/ladderActions";
 import { masteryAsSeenByGoal } from "../lib/plannerGapActions";
 import { nowIso } from "../lib/time";
 import { usePlannerStore } from "./plannerStore";
@@ -59,22 +64,40 @@ async function assessGoal(goalId: string) {
     masteryAsSeenByGoal(planner.masteryByNode, planner.claims),
     LIT_THRESHOLD,
   );
-  const result = await requestLadderAssessment(settings.apiConfig, {
+  // Stage 2 (one-time, cached forever): the goal's composed title ladder.
+  const repos = await getRepos();
+  let ladderRow = await repos.goalLadders.getTitleLadder(goalId);
+  if (ladderRow === null) {
+    const composed = await requestTitleLadder(settings.apiConfig, goal.title);
+    const validated = validateTitleLadder(composed);
+    if (validated === null) {
+      void recordAiFailure("ladder-naming", new Error("title ladder failed validation"));
+      return null;
+    }
+    ladderRow = {
+      goal_id: goalId,
+      identity: validated.identity,
+      rungs_json: JSON.stringify(validated.rungs),
+      created_at: nowIso(),
+    };
+    await repos.goalLadders.upsertTitleLadder(ladderRow);
+  }
+  // Stage 1: abstract rung from the concrete snapshot; stage 3: pure composition.
+  const { rung } = await requestLadderRung(settings.apiConfig, {
     goalTitle: goal.title,
     learnedItems: snapshot.learnedItems,
     notYetLabels: snapshot.notYetLabels,
   });
-  const validated = validateLadderAssessment(result);
-  if (validated === null) {
-    void recordAiFailure("ladder", new Error("assessment failed validation"));
-    return null;
-  }
+  const titles = composeLadderTitles(
+    { identity: ladderRow.identity, rungs: JSON.parse(ladderRow.rungs_json) as string[] },
+    rung,
+  );
   const now = nowIso();
   return {
     goal_id: goalId,
-    above_title: validated.aboveTitle,
-    self_title: validated.selfTitle,
-    below_title: validated.belowTitle,
+    above_title: titles.aboveTitle,
+    self_title: titles.selfTitle,
+    below_title: titles.belowTitle,
     next_refresh_at: nextRefreshAtIso(now, `${goalId}:${now}`),
     updated_at: now,
   };

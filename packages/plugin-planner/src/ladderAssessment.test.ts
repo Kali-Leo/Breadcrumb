@@ -1,117 +1,101 @@
 /**
- * Purpose: unit tests for the ladder assessment contract (spec 022) — schema shape, prompt
- * carrying the concrete knowledge lists, the tripwire/no-digits/distinctness validation, and
- * the domain closure helper.
+ * Purpose: unit tests for the three-stage ladder title contract (spec 032) — rung prompt
+ * carries the snapshot, ladder validation rejects duplicates/forbidden content, the display
+ * window clamps into 2..9, and composition appends the identity verbatim.
  */
 import { describe, expect, it } from "vitest";
 import {
-  buildLadderAssessmentMessages,
-  goalDomainClosure,
-  ladderAssessmentSchema,
-  validateLadderAssessment,
+  buildRungAssessmentMessages,
+  buildTitleLadderMessages,
+  composeLadderTitles,
+  displayWindow,
+  type TitleLadderResult,
+  validateTitleLadder,
 } from "./ladderAssessment";
 
-const VALID = {
-  aboveTitle: "闭包和原型链都摸熟了的人",
-  selfTitle: "刚点亮闭包，原型链还没碰",
-  belowTitle: "还在作用域链门口打转",
-};
+function ladder(overrides: Partial<TitleLadderResult> = {}): TitleLadderResult {
+  return {
+    identity: "厨师",
+    rungs: [
+      "还没进厨房的",
+      "锅都没摸热的",
+      "切了一筐土豆的",
+      "初闻油香的",
+      "掌勺半桌的",
+      "薛定谔火候的",
+      "宴过三巡的",
+      "百菜不重样的",
+      "绝世掌勺",
+      "万宴归一大",
+    ],
+    ...overrides,
+  };
+}
 
-describe("ladderAssessmentSchema", () => {
-  it("accepts three plain titles", () => {
-    expect(ladderAssessmentSchema.safeParse(VALID).success).toBe(true);
-  });
-
-  it("rejects missing or out-of-length titles", () => {
-    expect(ladderAssessmentSchema.safeParse({ ...VALID, selfTitle: "" }).success).toBe(false);
-    expect(
-      ladderAssessmentSchema.safeParse({ ...VALID, aboveTitle: "长".repeat(31) }).success,
-    ).toBe(false);
-    expect(
-      ladderAssessmentSchema.safeParse({ aboveTitle: VALID.aboveTitle, selfTitle: VALID.selfTitle })
-        .success,
-    ).toBe(false);
+describe("buildRungAssessmentMessages", () => {
+  it("carries the goal and both lists, and asks for a bare rung", () => {
+    const messages = buildRungAssessmentMessages({
+      goalTitle: "学会做饭",
+      learnedItems: [{ label: "刀工", freshness: "熟" }],
+      notYetLabels: ["高汤"],
+    });
+    const joined = messages.map((message) => message.content).join("\n");
+    expect(joined).toContain("学会做饭");
+    expect(joined).toContain("刀工");
+    expect(joined).toContain("高汤");
+    expect(joined).toContain('"rung"');
   });
 });
 
-describe("buildLadderAssessmentMessages", () => {
-  it("carries the goal title, learned items with freshness, and not-yet samples", () => {
-    const messages = buildLadderAssessmentMessages({
-      goalTitle: "学微积分",
-      learnedItems: [
-        { label: "极限", freshness: "熟" },
-        { label: "导数", freshness: "刚学会" },
-      ],
-      notYetLabels: ["积分", "级数"],
-    });
-    const user = messages.find((message) => message.role === "user");
-    expect(user?.content).toContain("学微积分");
-    expect(user?.content).toContain("极限（熟）");
-    expect(user?.content).toContain("导数（刚学会）");
-    expect(user?.content).toContain("- 积分");
-    expect(user?.content).toContain("- 级数");
-  });
-
-  it("states an empty knowledge list plainly instead of omitting it", () => {
-    const messages = buildLadderAssessmentMessages({
-      goalTitle: "学微积分",
-      learnedItems: [],
-      notYetLabels: [],
-    });
-    const user = messages.find((message) => message.role === "user");
-    expect(user?.content).toContain("还没有接触过");
-  });
-
-  it("never leaks the tripwire words into the prompt", () => {
-    const messages = buildLadderAssessmentMessages({
-      goalTitle: "学微积分",
-      learnedItems: [{ label: "极限", freshness: "熟" }],
-      notYetLabels: [],
-    });
-    for (const message of messages) {
-      expect(message.content).not.toMatch(/模拟/);
-    }
+describe("buildTitleLadderMessages", () => {
+  it("carries the goal and the style exemplar without leaking learner content", () => {
+    const messages = buildTitleLadderMessages("学会做饭");
+    const joined = messages.map((message) => message.content).join("\n");
+    expect(joined).toContain("学会做饭");
+    expect(joined).toContain("绝世欧皇");
+    expect(joined).not.toContain("刀工");
   });
 });
 
-describe("validateLadderAssessment", () => {
-  it("passes a clean assessment through unchanged", () => {
-    expect(validateLadderAssessment(VALID)).toEqual(VALID);
+describe("validateTitleLadder", () => {
+  it("accepts a clean ladder", () => {
+    expect(validateTitleLadder(ladder())).not.toBeNull();
   });
 
-  it("rejects the AI-reveal tripwire words", () => {
-    for (const bad of ["AI 概括的状态", "生成的称号", "模拟出来的人"]) {
-      expect(validateLadderAssessment({ ...VALID, selfTitle: bad })).toBeNull();
+  it("rejects duplicate rungs", () => {
+    const rungs = [...ladder().rungs];
+    rungs[3] = rungs[7] as string;
+    expect(validateTitleLadder(ladder({ rungs }))).toBeNull();
+  });
+
+  it("rejects forbidden vocabulary — luck memes, game tiers, digits, AI reveal", () => {
+    for (const bad of ["绝世欧皇", "永恒钻石", "第3档的", "AI认证的"]) {
+      const rungs = [...ladder().rungs];
+      rungs[0] = bad;
+      expect(validateTitleLadder(ladder({ rungs }))).toBeNull();
     }
   });
 
-  it("rejects digits and percents (a metric smuggled back in)", () => {
-    for (const bad of ["会 80% 的闭包", "第3档的人", "掌握９成"]) {
-      expect(validateLadderAssessment({ ...VALID, aboveTitle: bad })).toBeNull();
-    }
-  });
-
-  it("rejects duplicate titles", () => {
-    expect(validateLadderAssessment({ ...VALID, belowTitle: VALID.selfTitle })).toBeNull();
+  it("rejects a rung that smuggles the identity noun in", () => {
+    const rungs = [...ladder().rungs];
+    rungs[5] = "厨师中的";
+    expect(validateTitleLadder(ladder({ rungs }))).toBeNull();
   });
 });
 
-describe("goalDomainClosure", () => {
-  it("includes the goal nodes themselves plus their requires-prerequisites", () => {
-    const edges = [
-      {
-        id: "e1",
-        source_id: "prereq",
-        target_id: "goal-node",
-        edge_type: "requires" as const,
-        weight: 1,
-        confidence: 0.9,
-        origin: "user" as const,
-        created_at: "2026-08-09T00:00:00Z",
-      },
-    ];
-    const closure = goalDomainClosure(edges, ["goal-node"]);
-    expect(closure).toContain("goal-node");
-    expect(closure).toContain("prereq");
+describe("displayWindow", () => {
+  it("keeps three distinct rungs at both extremes", () => {
+    expect(displayWindow(1)).toEqual({ above: 3, self: 2, below: 1 });
+    expect(displayWindow(10)).toEqual({ above: 10, self: 9, below: 8 });
+    expect(displayWindow(5)).toEqual({ above: 6, self: 5, below: 4 });
+  });
+});
+
+describe("composeLadderTitles", () => {
+  it("appends the identity verbatim to the windowed rungs", () => {
+    const titles = composeLadderTitles(ladder(), 5);
+    expect(titles.selfTitle).toBe("掌勺半桌的厨师");
+    expect(titles.aboveTitle).toBe("薛定谔火候的厨师");
+    expect(titles.belowTitle).toBe("初闻油香的厨师");
   });
 });

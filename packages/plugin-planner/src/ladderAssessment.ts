@@ -1,13 +1,12 @@
 /**
- * Purpose: the ladder's real-time assessment LLM contract (spec 022). The ladder IS an
- * assessment system wearing a leaderboard's clothes: given the learner's CONCRETE knowledge
- * state over a goal's domain (learned items with freshness + not-yet samples — the only
- * matching basis, as always), the model writes three 称号: the learner's own (a plain AI
- * summary of what they currently grasp), one for a state slightly ahead, one slightly behind.
- * No ranks, no numbers, no mechanism anywhere. Plus pure post-parse validation: anti-"AI
- * reveal" tripwire, no digits/percent, three distinct lines.
- * Main exports: ladderAssessmentSchema, buildLadderAssessmentMessages, LadderAssessmentInput,
- * LadderKnowledgeItem, LadderAssessmentResult, validateLadderAssessment, goalDomainClosure.
+ * Purpose: the ladder's three-stage title contract (spec 032, final form). Stage 1 assesses
+ * the learner into an ABSTRACT rung 1..10 (no content leaves this stage); stage 2 has a
+ * strong model compose a whole ten-rung comedy ladder for the GOAL once (cached by the
+ * caller, never rerolled); stage 3 mechanically appends the goal's identity noun. Pure
+ * prompts, schemas, validation and window math — no IO here.
+ * Main exports: rungAssessmentSchema, buildRungAssessmentMessages, titleLadderSchema,
+ * buildTitleLadderMessages, validateTitleLadder, displayWindow, composeLadderTitles,
+ * goalDomainClosure, LadderKnowledgeItem, LadderAssessmentInput.
  */
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
@@ -27,19 +26,6 @@ export function goalDomainClosure(
   return [...new Set([...closure, ...goalNodeIds])];
 }
 
-const titleSchema = z.string().min(2).max(30);
-
-export const ladderAssessmentSchema = z.object({
-  /** The state one step ahead of the learner's — the neighbor above. */
-  aboveTitle: titleSchema,
-  /** The learner's own 称号: a plain summary of what they currently grasp. */
-  selfTitle: titleSchema,
-  /** The state one step behind — the neighbor below. */
-  belowTitle: titleSchema,
-});
-
-export type LadderAssessmentResult = z.infer<typeof ladderAssessmentSchema>;
-
 export interface LadderKnowledgeItem {
   label: string;
   /** Plain freshness word, e.g. "熟" / "刚学会" / "有点生疏". */
@@ -49,23 +35,29 @@ export interface LadderKnowledgeItem {
 export interface LadderAssessmentInput {
   goalTitle: string;
   /** What the learner has actually touched in this knowledge range, with freshness — the ONLY
-   * basis for the assessment. Never percentages, never "progress". */
+   * basis for the rung. Never percentages, never "progress". */
   learnedItems: readonly LadderKnowledgeItem[];
   /** A few items in the range the learner has not touched yet. */
   notYetLabels: readonly string[];
 }
 
-const SYSTEM_PROMPT = `你是一个排行榜片段生成器。所有人都会在任何知识范围内被自动排位并得到一个头衔——像游戏里的称号那样：名词性、有画面感、让人一眼记住，同时如实反映此刻在这个知识范围内实际掌握了什么。给定一位学习者的具体接触情况，写出榜上相邻三行的头衔，以 JSON 返回：
-{"aboveTitle":"紧挨在上方那一档状态的头衔","selfTitle":"这位学习者本人的头衔","belowTitle":"紧挨在下方那一档状态的头衔"}
-请遵循：
-- 头衔是名词短语而非状态句（好例：「闭包点灯人」「原型链门外的访客」「递归迷宫初行者」；坏例：「刚点亮闭包，原型链还没碰」——这是句子，不是头衔）
-- 每个头衔 2~14 字，必须贴着下面列出的具体知识点造词——只依据给出的清单，不猜测
-- 禁止青铜/白银/黄金/大师/王者/新手/大神这类通用等级词；禁止任何数字、百分比、名次
-- aboveTitle 对应比这位学习者略多会一点点的状态（往未学清单里最近的一步靠）；belowTitle 对应略少会一点点的状态——"略"是字面义，相邻档位差距很小
-- 有趣但不评价：不夸赞、不贬低、不催促——趣味来自具体的画面，不来自褒贬
-- 三个头衔必须互不相同`;
+// ---------------------------------------------------------------------------
+// Stage 1 — rung assessment: concrete knowledge in, ONE abstract number out.
+// ---------------------------------------------------------------------------
 
-export function buildLadderAssessmentMessages(input: LadderAssessmentInput): ChatMessage[] {
+export const rungAssessmentSchema = z.object({
+  /** 1 = 还没上路, 10 = 目标在握. The only thing this stage may say about the learner. */
+  rung: z.number().int().min(1).max(10),
+});
+
+export type RungAssessmentResult = z.infer<typeof rungAssessmentSchema>;
+
+const RUNG_SYSTEM_PROMPT = `你是一个学习进度评估器。给定一个学习目标、学习者在该范围内接触过的内容清单和尚未接触的样例，判断这位学习者在通往目标的路上大约走到了十分之几。
+- 1 表示还没上路，10 表示目标在握；只依据清单事实，不猜测
+- 平实判断，不奖励也不惩罚
+以 JSON 返回：{"rung": 1到10的整数}`;
+
+export function buildRungAssessmentMessages(input: LadderAssessmentInput): ChatMessage[] {
   const learnedLines =
     input.learnedItems.length > 0
       ? input.learnedItems.map((item) => `- ${item.label}（${item.freshness}）`).join("\n")
@@ -75,28 +67,94 @@ export function buildLadderAssessmentMessages(input: LadderAssessmentInput): Cha
       ? input.notYetLabels.map((label) => `- ${label}`).join("\n")
       : "（暂无样例）";
   return [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: RUNG_SYSTEM_PROMPT },
     {
       role: "user",
-      content: `知识范围：${input.goalTitle}\n\n这位学习者接触过的：\n${learnedLines}\n\n这个范围内还没接触的（样例）：\n${notYetLines}`,
+      content: `学习目标：${input.goalTitle}\n\n接触过的：\n${learnedLines}\n\n还没接触的（样例）：\n${notYetLines}`,
     },
   ];
 }
 
-/** Anti-"AI reveal" tripwire (never fed to the prompt) plus the no-numbers rule — a title
- * carrying any of these would break the leaderboard disguise or smuggle a metric back in. */
-const FORBIDDEN_PATTERN = /生成|AI|模拟|[0-9０-９%％]/;
+// ---------------------------------------------------------------------------
+// Stage 2 — whole-ladder composition: goal in, ten flavor rungs + identity out.
+// ---------------------------------------------------------------------------
+
+export const titleLadderSchema = z.object({
+  /** The goal's plain identity noun (做饭→厨师), appended verbatim after every rung. */
+  identity: z.string().min(2).max(8),
+  /** Ten prefix-shaped flavor phrases, most novice (index 0) to most masterful (index 9). */
+  rungs: z.array(z.string().min(2).max(12)).length(10),
+});
+
+export type TitleLadderResult = z.infer<typeof titleLadderSchema>;
+
+const LADDER_SYSTEM_PROMPT = `你是一位为排行榜设计段位头衔的命名师。给定一个学习目标，创作一条从最生疏（第1档）到最精通（第10档）的十档趣味段位梯，并给出该目标对应的身份名词。
+
+规则：
+- 用这个目标所用语言的互联网社区里最地道的"搞笑段位梯"传统来写——整条梯子读起来像一部连贯的作品，不是十个孤立的词
+- 每一档是 2~12 字的修饰性短语，末尾能自然接身份名词（例：某档「双层至尊」接「厨师」成「双层至尊厨师」）
+- 手法要多样：最高级堆叠、荒诞量词、叙事感、学术梗、成语改造、双关……相邻档不用同一种手法
+- 第10档神话化；第4~7档留给最机灵的梗——过渡态、暧昧态最值得写；第1~2档夸张滑稽但温柔，是"还没出发"的可爱，绝不许有"无可救药"式的嘲讽
+- 头衔中禁止出现：具体学科或领域词、数字、百分比、真实游戏的段位词、运气梗词汇
+- 身份名词取目标最平实的对应身份（做饭→厨师），2~6 字
+
+风格参考（一条抽卡圈的运气段位梯，只学它的结构与幽默节奏，禁止套用其词汇与题材）：
+绝世欧皇／双层至尊欧皇／传说级欧皇／歪打正着的欧皇／薛定谔的欧洲人／脱欧入非／面目全非／非入骨髓／绝世非酋／万劫不复大非酋
+
+以 JSON 返回：{"identity":"身份名词","rungs":["第1档","第2档","...","第10档"]}（rungs 从最生疏到最精通）`;
+
+export function buildTitleLadderMessages(goalTitle: string): ChatMessage[] {
+  return [
+    { role: "system", content: LADDER_SYSTEM_PROMPT },
+    { role: "user", content: `学习目标：${goalTitle}` },
+  ];
+}
+
+/** Anti-reveal, no metrics, no real-game tiers, no luck-meme vocabulary (the style exemplar
+ * must be imitated in craft, never in content), and rungs must not smuggle the identity in. */
+const FORBIDDEN_PATTERN =
+  /生成|AI|模拟|[0-9０-９%％]|青铜|白银|黄金|铂金|钻石|星耀|王者|欧皇|非酋|欧洲|非洲|脱欧/;
 
 /**
- * Pure post-parse validation: all three titles present (schema already enforced), none
- * tripping the forbidden pattern, all three distinct. Returns null when the whole assessment
- * must be discarded — the caller keeps whatever board it had.
+ * Pure post-parse validation for the composed ladder: ten distinct rungs, none tripping the
+ * forbidden pattern, identity clean and never embedded in a rung. Null = discard whole
+ * ladder (the caller records the failure and keeps whatever board it had).
  */
-export function validateLadderAssessment(
-  result: LadderAssessmentResult,
-): LadderAssessmentResult | null {
-  const titles = [result.aboveTitle, result.selfTitle, result.belowTitle];
-  if (titles.some((title) => FORBIDDEN_PATTERN.test(title))) return null;
-  if (new Set(titles).size !== titles.length) return null;
+export function validateTitleLadder(result: TitleLadderResult): TitleLadderResult | null {
+  if (FORBIDDEN_PATTERN.test(result.identity)) return null;
+  if (new Set(result.rungs).size !== result.rungs.length) return null;
+  for (const rung of result.rungs) {
+    if (FORBIDDEN_PATTERN.test(rung)) return null;
+    if (rung.includes(result.identity)) return null;
+  }
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// Stage 3 — pure math + concatenation. No model anywhere.
+// ---------------------------------------------------------------------------
+
+/** The board shows three adjacent rungs; the window keeps three DISTINCT rungs by clamping
+ * the centre into 2..9, so the very top and bottom still show real neighbours. */
+export function displayWindow(rung: number): { above: number; self: number; below: number } {
+  const centre = Math.min(9, Math.max(2, Math.trunc(rung)));
+  return { above: centre + 1, self: centre, below: centre - 1 };
+}
+
+export interface LadderBoardTitles {
+  aboveTitle: string;
+  selfTitle: string;
+  belowTitle: string;
+}
+
+/** rungs are novice-first (index 0); a board line is simply rung text + identity noun —
+ * the goal is appended verbatim, never blended (spec 032 §3). */
+export function composeLadderTitles(ladder: TitleLadderResult, rung: number): LadderBoardTitles {
+  const window = displayWindow(rung);
+  const lineOf = (index: number): string => `${ladder.rungs[index - 1] ?? ""}${ladder.identity}`;
+  return {
+    aboveTitle: lineOf(window.above),
+    selfTitle: lineOf(window.self),
+    belowTitle: lineOf(window.below),
+  };
 }

@@ -528,6 +528,20 @@ export const MIGRATIONS: readonly Migration[] = [
        FROM practice_attestations;`,
     ],
   },
+  {
+    // Spec 032: the goal's ten-rung flavor ladder is composed once by a strong model and
+    // cached forever (no reroll — the board positions the learner, the learner does not
+    // position themself). Titles are recomposed from it as the rung moves.
+    id: "0023_goal_title_ladder",
+    statements: [
+      `CREATE TABLE goal_title_ladder (
+        goal_id TEXT PRIMARY KEY,
+        identity TEXT NOT NULL,
+        rungs_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

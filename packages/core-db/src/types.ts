@@ -298,6 +298,17 @@ export interface NodeConceptAnchorRow {
   anchored_at: string;
 }
 
+/** A goal's cached ten-rung title ladder (spec 032) — composed once by a strong model,
+ * never rerolled; board titles are recomposed from it as the learner's rung moves. */
+export interface GoalTitleLadderRow {
+  goal_id: string;
+  /** The goal's plain identity noun, appended verbatim after every rung. */
+  identity: string;
+  /** JSON string array of ten prefix-shaped rung phrases, novice first. */
+  rungs_json: string;
+  created_at: string;
+}
+
 /** The learner's own 0–10 score on a pure experience leaf (spec 029) — never AI-verified,
  * deliberately: the user is the only expert on their own experience. One row per item, keyed
  * by item_id, overwritten in place as the self-report changes over time. */

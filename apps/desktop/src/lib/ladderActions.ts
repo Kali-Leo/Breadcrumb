@@ -1,17 +1,21 @@
 /**
- * Purpose: pure knowledge-snapshot builder plus the metered LLM call for the ladder's
- * real-time assessment (spec 022) — split out of ladderStore.ts to keep the store lean and
- * this logic independently testable. No React/zustand here.
- * Main exports: buildKnowledgeSnapshot, requestLadderAssessment, LadderKnowledgeSnapshot.
+ * Purpose: pure knowledge-snapshot builder plus the metered LLM calls of the three-stage
+ * ladder pipeline (spec 032) — rung assessment on the configured model, one-time whole-
+ * ladder composition on the strongest available model. No React/zustand here.
+ * Main exports: buildKnowledgeSnapshot, requestLadderRung, requestTitleLadder,
+ * LadderKnowledgeSnapshot.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
-  buildLadderAssessmentMessages,
+  buildRungAssessmentMessages,
+  buildTitleLadderMessages,
   type LadderAssessmentInput,
-  type LadderAssessmentResult,
   type LadderKnowledgeItem,
-  ladderAssessmentSchema,
+  type RungAssessmentResult,
+  rungAssessmentSchema,
+  type TitleLadderResult,
+  titleLadderSchema,
 } from "@breadcrumb/plugin-planner";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
@@ -61,18 +65,41 @@ export function buildKnowledgeSnapshot(
   return { learnedItems, notYetLabels };
 }
 
-/** Calls the ladder-assessment LLM and meters it under purpose "ladder". Throws on failure —
- * the caller (ladderStore) decides how to degrade. */
-export async function requestLadderAssessment(
+/** Stage 1: the rung assessment on the configured model — a low-variance judgement call.
+ * Throws on failure; the caller decides how to degrade. */
+export async function requestLadderRung(
   apiConfig: ApiConfig,
   input: LadderAssessmentInput,
-): Promise<LadderAssessmentResult> {
+): Promise<RungAssessmentResult> {
   const config = { ...apiConfig, fetchImpl: tauriFetch };
   const { parsed, usage } = await chatJson(
     config,
-    buildLadderAssessmentMessages(input),
-    ladderAssessmentSchema,
+    buildRungAssessmentMessages(input),
+    rungAssessmentSchema,
   );
   await recordMeteredCall({ purpose: "ladder", model: config.model, conversationId: null, usage });
+  return parsed;
+}
+
+/** Creative work is model-tier sensitive: on a DeepSeek endpoint the one-time ladder
+ * composition upgrades itself to the pro model; other providers keep the configured one. */
+function strongestModelOf(apiConfig: ApiConfig): string {
+  return apiConfig.model.startsWith("deepseek") ? "deepseek-v4-pro" : apiConfig.model;
+}
+
+/** Stage 2: the one-time whole-ladder composition (spec 032) — metered as "ladder-naming".
+ * Throws on failure; the caller records it and keeps whatever board it had. */
+export async function requestTitleLadder(
+  apiConfig: ApiConfig,
+  goalTitle: string,
+): Promise<TitleLadderResult> {
+  const model = strongestModelOf(apiConfig);
+  const config = { ...apiConfig, model, fetchImpl: tauriFetch };
+  const { parsed, usage } = await chatJson(
+    config,
+    buildTitleLadderMessages(goalTitle),
+    titleLadderSchema,
+  );
+  await recordMeteredCall({ purpose: "ladder-naming", model, conversationId: null, usage });
   return parsed;
 }

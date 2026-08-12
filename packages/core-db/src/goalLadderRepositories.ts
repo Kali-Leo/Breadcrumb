@@ -1,10 +1,10 @@
 /**
- * Purpose: SQL statements for the ladder's per-goal assessment board (spec 022) — the three
- * currently-displayed titles and their cache expiry. Pure display cache: the ladder carries
- * no ranking mechanism, so nothing else is ever persisted.
+ * Purpose: SQL statements for the ladder's per-goal display cache (spec 022/032) — the three
+ * currently-displayed titles with their expiry, plus the goal's ten-rung title ladder
+ * composed once and never rerolled. Pure display data: no ranking mechanism anywhere.
  * Main exports: createGoalLaddersRepo factory.
  */
-import type { GoalLadderBoardRow, SqlClient } from "./types";
+import type { GoalLadderBoardRow, GoalTitleLadderRow, SqlClient } from "./types";
 
 export function createGoalLaddersRepo(sql: SqlClient) {
   return {
@@ -37,6 +37,23 @@ export function createGoalLaddersRepo(sql: SqlClient) {
           board.next_refresh_at,
           board.updated_at,
         ],
+      );
+    },
+    /** The goal's composed title ladder, or null before its one-time composition. */
+    async getTitleLadder(goalId: string): Promise<GoalTitleLadderRow | null> {
+      const rows = await sql.select<GoalTitleLadderRow>(
+        "SELECT * FROM goal_title_ladder WHERE goal_id = ?",
+        [goalId],
+      );
+      return rows[0] ?? null;
+    },
+    /** Writes the composed ladder — INSERT only in spirit (no reroll), REPLACE kept so a
+     * goal whose title was edited can be recomposed by explicitly deleting first. */
+    async upsertTitleLadder(row: GoalTitleLadderRow): Promise<void> {
+      await sql.execute(
+        `INSERT OR REPLACE INTO goal_title_ladder (goal_id, identity, rungs_json, created_at)
+         VALUES (?, ?, ?, ?)`,
+        [row.goal_id, row.identity, row.rungs_json, row.created_at],
       );
     },
   };
