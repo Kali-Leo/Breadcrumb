@@ -28,7 +28,7 @@ export interface SettingRow {
  * from a practice item (spec 026) — saved like any other conversation but hidden from the
  * sidebar's chat list, since it is a temporary offshoot of one practice leaf, not a standing
  * learning thread. */
-export type ConversationKind = "chat" | "practice";
+export type ConversationKind = "chat" | "practice" | "teach";
 
 export interface ConversationRow {
   id: string;

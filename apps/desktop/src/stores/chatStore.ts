@@ -4,7 +4,7 @@
  * Main exports: useChatStore, appEventBus.
  */
 import { createEventBus } from "@breadcrumb/core-bus";
-import type { ConversationRow, Currency, MessageRow } from "@breadcrumb/core-db";
+import type { ConversationKind, ConversationRow, Currency, MessageRow } from "@breadcrumb/core-db";
 import {
   BUILTIN_MODEL_PRICES,
   type ChatMessage,
@@ -14,6 +14,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { buildTeachSystemPrompt, teachTopicFromTitle } from "../lib/teachActions";
 import { newId, nowIso, todayLocalMidnightIso } from "../lib/time";
 import { useSettingsStore } from "./settingsStore";
 
@@ -24,6 +25,8 @@ export type CostByCurrency = ReadonlyMap<Currency, number>;
 interface ChatState {
   conversations: ConversationRow[];
   activeConversationId: string | null;
+  /** Kind of the open conversation — 'teach' switches the system prompt (spec 034). */
+  activeKind: ConversationKind;
   messages: MessageRow[];
   streamingText: string | null;
   errorText: string | null;
@@ -38,6 +41,7 @@ interface ChatState {
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   activeConversationId: null,
+  activeKind: "chat",
   messages: [],
   streamingText: null,
   errorText: null,
@@ -57,15 +61,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   async openConversation(id) {
     const repos = await getRepos();
-    const [messages, conversationCost] = await Promise.all([
+    const [messages, conversationCost, conversation] = await Promise.all([
       repos.messages.listByConversation(id),
       repos.llmCalls.sumCostForConversation(id),
+      repos.conversations.getById(id),
     ]);
-    set({ activeConversationId: id, messages, conversationCost, errorText: null });
+    set({
+      activeConversationId: id,
+      activeKind: conversation?.kind ?? "chat",
+      messages,
+      conversationCost,
+      errorText: null,
+    });
   },
 
   startNewConversation() {
-    set({ activeConversationId: null, messages: [], conversationCost: new Map(), errorText: null });
+    set({
+      activeConversationId: null,
+      activeKind: "chat",
+      messages: [],
+      conversationCost: new Map(),
+      errorText: null,
+    });
   },
 
   async sendMessage(content) {
@@ -118,12 +135,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       // Standing tone contract (Leo 2026-08-02): plain and matter-of-fact — one short
       // positive instruction, no stacked prohibitions (they degrade the model's real work).
-      history.unshift({
-        role: "system",
-        content:
-          "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
-          "讲解清楚、循序，从对方当前的理解出发。",
-      });
+      // Teach-back conversations (spec 034) flip the roles: the model is the novice.
+      if (get().activeKind === "teach") {
+        // Teach conversations are absent from the sidebar list — fetch the title directly.
+        const row = await repos.conversations.getById(conversationId);
+        const topic = teachTopicFromTitle(row?.title ?? "");
+        history.unshift({ role: "system", content: buildTeachSystemPrompt(topic) });
+      } else {
+        history.unshift({
+          role: "system",
+          content:
+            "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
+            "讲解清楚、循序，从对方当前的理解出发。",
+        });
+      }
       // Anchored knowledge node (if any) steers this round without polluting stored history.
       const { useKnowledgeStore } = await import("./knowledgeStore");
       const knowledge = useKnowledgeStore.getState();

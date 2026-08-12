@@ -14,6 +14,7 @@ import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { DiglotText } from "./DiglotText";
+import { MermaidBlock } from "./MermaidBlock";
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 
@@ -106,6 +107,9 @@ function renderNode(
         </code>
       );
     case "code":
+      if (node.lang === "mermaid") {
+        return <MermaidBlock key={key} code={node.value ?? ""} />;
+      }
       return (
         <pre key={key} className="my-1.5 overflow-x-auto rounded-lg bg-stone-100 p-3">
           <code className="font-mono text-[13px]">{node.value}</code>

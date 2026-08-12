@@ -42,6 +42,14 @@ export function createConversationsRepo(sql: SqlClient) {
     async listRecentFirst(): Promise<ConversationRow[]> {
       return sql.select<ConversationRow>("SELECT * FROM conversations ORDER BY updated_at DESC");
     },
+    /** One conversation by id, or null — the chat flow branches on kind (spec 034). */
+    async getById(id: string): Promise<ConversationRow | null> {
+      const rows = await sql.select<ConversationRow>(
+        "SELECT * FROM conversations WHERE id = ? LIMIT 1",
+        [id],
+      );
+      return rows[0] ?? null;
+    },
     /** One kind only, newest first — the sidebar uses this with 'chat' so practice discussions
      * (spec 026) stay out of the standing conversation list while remaining fully saved. */
     async listByKind(kind: ConversationKind): Promise<ConversationRow[]> {

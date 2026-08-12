@@ -17,6 +17,7 @@ import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
 import { LabModeToggle } from "./LabModeToggle";
 import { LabNodeTable } from "./LabNodeTable";
+import { LabTeachSection } from "./LabTeachSection";
 import { GoalOverlayView } from "./overlay/GoalOverlayView";
 
 function SelfReportInput() {
@@ -99,6 +100,7 @@ export function LabPanel() {
           实验室是知识网络引擎的临时调试界面，数据和交互都是原始形态；它验证过的能力最终会长进记忆宫殿里。
         </p>
         <LabModeToggle />
+        <LabTeachSection />
         <LabNodeTable />
         <LabFrontierList />
         <SelfReportInput />
