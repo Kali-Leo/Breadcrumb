@@ -44,6 +44,9 @@ importers:
       '@breadcrumb/plugin-compare':
         specifier: workspace:*
         version: link:../../packages/plugin-compare
+      '@breadcrumb/plugin-diglot-weave':
+        specifier: workspace:*
+        version: link:../../packages/plugin-diglot-weave
       '@breadcrumb/plugin-factcheck':
         specifier: workspace:*
         version: link:../../packages/plugin-factcheck
@@ -110,6 +113,9 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
+      ts-fsrs:
+        specifier: ^5.2.1
+        version: 5.4.1
       zustand:
         specifier: ^5.0.14
         version: 5.0.14(@types/react@19.2.17)(react@19.2.8)

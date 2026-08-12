@@ -54,7 +54,8 @@ export function computeGuessProbability(input: GuessPolicyInput): number {
     return 0;
   }
   const damp = input.recentConsecutiveAbandons >= 3 ? 0.5 : 1;
-  if (input.card === null) {
+  // reps === 0 means the card was created by this very weave: still a first encounter.
+  if (input.card === null || input.card.reps === 0) {
     return Math.min(NEW_WORD_PROBABILITY * damp, PROBABILITY_CEILING);
   }
   const base = GUESS_LEVEL_BASE[input.level];

@@ -1,0 +1,199 @@
+/**
+ * Purpose: zustand store for the diglot weave (spec 033) — persisted settings, session
+ * caches (pack, cards, per-message patches), signal ingestion and the guess-card session
+ * state. Side effect on import: subscribes productive-use detection to chat:messageSent.
+ * Main exports: useDiglotStore, DiglotSettings.
+ */
+import type { DiglotEventKind } from "@breadcrumb/core-db";
+import {
+  computeGuessProbability,
+  type GuessLevel,
+  type LoadedLanguagePack,
+  type ReplacementPatch,
+} from "@breadcrumb/plugin-diglot-weave";
+import type { Card } from "ts-fsrs";
+import { create } from "zustand";
+import { getRepos } from "../lib/db";
+import {
+  applyDiglotSignal,
+  findProductiveUses,
+  loadBundledPack,
+  loadCards,
+  weaveAssistantMessage,
+} from "../lib/diglotWeave";
+import { nowIso } from "../lib/time";
+import { appEventBus, useChatStore } from "./chatStore";
+
+export interface DiglotSettings {
+  enabled: boolean;
+  pairId: string;
+  /** Fraction of word tokens replaced, (0, 0.05]. */
+  density: number;
+  /** Guess-card frequency level; "off" intentionally does not exist (Leo 2026-08-12). */
+  guessLevel: GuessLevel;
+  /** Base daily new-word cap before the review-debt throttle. */
+  newWordDailyBase: number;
+  ttsEnabled: boolean;
+  piperPath: string;
+  piperModelPath: string;
+}
+
+const SETTINGS_KEY = "diglotSettings";
+const DEFAULT_SETTINGS: DiglotSettings = {
+  enabled: false,
+  pairId: "zh:en",
+  density: 0.02,
+  guessLevel: "standard",
+  newWordDailyBase: 5,
+  ttsEnabled: true,
+  piperPath: "",
+  piperModelPath: "",
+};
+
+interface DiglotState {
+  settings: DiglotSettings;
+  loaded: LoadedLanguagePack | null;
+  cardsByLemma: Map<string, Card>;
+  patchesByMessage: Map<string, ReplacementPatch[]>;
+  newWordsIntroducedToday: number;
+  recentConsecutiveAbandons: number;
+  lastGlossSeenAt: Map<string, Date>;
+  lemmasWithExplicitSignal: Set<string>;
+  loadFromDatabase(): Promise<void>;
+  saveSettings(partial: Partial<DiglotSettings>): Promise<void>;
+  ensureWoven(messageId: string, content: string): Promise<void>;
+  recordSignal(
+    lemma: string,
+    kind: DiglotEventKind,
+    messageId: string | null,
+    context: string | null,
+    latencyMs: number | null,
+  ): Promise<void>;
+  shouldAskGuess(lemma: string): boolean;
+  noteGlossSeen(lemma: string): void;
+  noteGuessOutcome(abandoned: boolean): void;
+}
+
+export const useDiglotStore = create<DiglotState>((set, get) => ({
+  settings: DEFAULT_SETTINGS,
+  loaded: null,
+  cardsByLemma: new Map(),
+  patchesByMessage: new Map(),
+  newWordsIntroducedToday: 0,
+  recentConsecutiveAbandons: 0,
+  lastGlossSeenAt: new Map(),
+  lemmasWithExplicitSignal: new Set(),
+
+  async loadFromDatabase() {
+    const repos = await getRepos();
+    const stored = await repos.settings.get<DiglotSettings>(SETTINGS_KEY);
+    const settings = { ...DEFAULT_SETTINGS, ...stored };
+    set({ settings });
+    if (!settings.enabled) return;
+    const loaded = await loadBundledPack(settings.pairId);
+    const cardsByLemma = await loadCards(settings.pairId);
+    const states = await repos.diglot.listStates(settings.pairId);
+    const today = nowIso().slice(0, 10);
+    set({
+      loaded,
+      cardsByLemma,
+      newWordsIntroducedToday: states.filter((s) => s.introduced_at.startsWith(today)).length,
+      lemmasWithExplicitSignal: new Set(
+        await repos.diglot.listLemmasWithExplicitSignal(settings.pairId),
+      ),
+    });
+    await repos.diglot.upsertPack({
+      id: loaded.pack.id,
+      source_lang: loaded.pack.sourceLang,
+      target_lang: loaded.pack.targetLang,
+      version: loaded.pack.version,
+      meta_json: JSON.stringify(loaded.pack.capabilities),
+      installed_at: nowIso(),
+    });
+  },
+
+  async saveSettings(partial) {
+    const settings = { ...get().settings, ...partial };
+    const repos = await getRepos();
+    await repos.settings.set(SETTINGS_KEY, settings, nowIso());
+    // Any setting change invalidates woven output; re-enable reloads pack and cards.
+    set({ settings, patchesByMessage: new Map() });
+    if (settings.enabled && get().loaded === null) await get().loadFromDatabase();
+  },
+
+  async ensureWoven(messageId, content) {
+    const { settings, loaded, patchesByMessage, cardsByLemma } = get();
+    if (!settings.enabled || loaded === null) return;
+    if (patchesByMessage.has(messageId)) return;
+    patchesByMessage.set(messageId, []); // reserve to keep the weave single-flight
+    const result = await weaveAssistantMessage({
+      loaded,
+      content,
+      density: settings.density,
+      newWordDailyBase: settings.newWordDailyBase,
+      cardsByLemma,
+      newWordsIntroducedToday: get().newWordsIntroducedToday,
+    });
+    set({
+      patchesByMessage: new Map(get().patchesByMessage).set(messageId, result.patches),
+      newWordsIntroducedToday: get().newWordsIntroducedToday + result.introducedLemmas.length,
+    });
+  },
+
+  async recordSignal(lemma, kind, messageId, context, latencyMs) {
+    const { settings, cardsByLemma } = get();
+    const card = cardsByLemma.get(lemma);
+    if (card === undefined) return;
+    const updated = await applyDiglotSignal({
+      pair: settings.pairId,
+      lemma,
+      kind,
+      card,
+      messageId,
+      context,
+      latencyMs,
+    });
+    const explicit = new Set(get().lemmasWithExplicitSignal);
+    if (kind.startsWith("guess_") || kind === "productive_use") explicit.add(lemma);
+    set({
+      cardsByLemma: new Map(get().cardsByLemma).set(lemma, updated),
+      lemmasWithExplicitSignal: explicit,
+    });
+  },
+
+  shouldAskGuess(lemma) {
+    const state = get();
+    const probability = computeGuessProbability({
+      card: state.cardsByLemma.get(lemma) ?? null,
+      now: new Date(),
+      level: state.settings.guessLevel,
+      hasExplicitSignal: state.lemmasWithExplicitSignal.has(lemma),
+      lastGlossSeenAt: state.lastGlossSeenAt.get(lemma) ?? null,
+      recentConsecutiveAbandons: state.recentConsecutiveAbandons,
+    });
+    return Math.random() < probability;
+  },
+
+  noteGlossSeen(lemma) {
+    set({ lastGlossSeenAt: new Map(get().lastGlossSeenAt).set(lemma, new Date()) });
+  },
+
+  noteGuessOutcome(abandoned) {
+    set({
+      recentConsecutiveAbandons: abandoned ? get().recentConsecutiveAbandons + 1 : 0,
+    });
+  },
+}));
+
+// Productive use (spec 033 signal table): when the user's own message contains a target
+// word they are learning, record the strongest signal — once per lemma per message.
+appEventBus.on("chat:messageSent", ({ messageId }) => {
+  const { settings, loaded, cardsByLemma, recordSignal } = useDiglotStore.getState();
+  if (!settings.enabled || loaded === null) return;
+  const message = useChatStore.getState().messages.find((m) => m.id === messageId);
+  if (message === undefined) return;
+  const used = findProductiveUses(loaded, new Set(cardsByLemma.keys()), message.content);
+  for (const lemma of used) {
+    void recordSignal(lemma, "productive_use", messageId, message.content, null);
+  }
+});

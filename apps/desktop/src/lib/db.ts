@@ -8,6 +8,7 @@ import {
   createCanonicalRepo,
   createComparisonRepo,
   createConversationsRepo,
+  createDiglotRepo,
   createFactcheckRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
@@ -50,6 +51,7 @@ export interface Repos {
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
+  diglot: ReturnType<typeof createDiglotRepo>;
 }
 
 let reposPromise: Promise<Repos> | null = null;
@@ -90,5 +92,6 @@ async function openAndMigrate(): Promise<Repos> {
     comparisons: createComparisonRepo(sqlClient),
     canonical: createCanonicalRepo(sqlClient),
     practice: createPracticeRepo(sqlClient),
+    diglot: createDiglotRepo(sqlClient),
   };
 }

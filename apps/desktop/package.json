@@ -16,6 +16,7 @@
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/plugin-compare": "workspace:*",
+    "@breadcrumb/plugin-diglot-weave": "workspace:*",
     "@breadcrumb/plugin-factcheck": "workspace:*",
     "@breadcrumb/plugin-graph": "workspace:*",
     "@breadcrumb/plugin-interest": "workspace:*",
@@ -38,6 +39,7 @@
     "react-dom": "^19.1.0",
     "react-force-graph-2d": "^1.29.1",
     "tailwindcss": "^4.3.3",
+    "ts-fsrs": "^5.2.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

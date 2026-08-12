@@ -73,3 +73,13 @@ export interface DiglotLanguagePackRow {
   meta_json: string;
   installed_at: string;
 }
+
+/** One stored context vector for a woven word (spec 033) — the sentence the word appeared
+ * in, embedded locally; drives the scheduler's contextual-diversity discount. */
+export interface DiglotContextEmbeddingRow {
+  lemma: string;
+  pair: DiglotPairId;
+  context_hash: string;
+  vector_json: string;
+  created_at: string;
+}

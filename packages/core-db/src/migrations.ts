@@ -603,6 +603,22 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Spec 033 contextual diversity: one local-embedding vector per (lemma, pair, context)
+    // a woven word appeared in. The scheduler discounts re-encounters in near-identical
+    // contexts (novel contexts teach more). Rows are pruned to a small per-word cap.
+    id: "0026_diglot_context_embeddings",
+    statements: [
+      `CREATE TABLE diglot_context_embeddings (
+        lemma TEXT NOT NULL,
+        pair TEXT NOT NULL,
+        context_hash TEXT NOT NULL,
+        vector_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (lemma, pair, context_hash)
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

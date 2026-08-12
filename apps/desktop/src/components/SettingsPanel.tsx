@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { type FeatureSwitches, useSettingsStore } from "../stores/settingsStore";
+import { DiglotSettingsSection } from "./DiglotSettingsSection";
 
 const FEATURE_LABELS: Record<keyof FeatureSwitches, { name: string; hint: string }> = {
   knowledgeTree: {
@@ -162,6 +163,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         ))}
       </section>
+
+      <DiglotSettingsSection />
 
       <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
         <div>

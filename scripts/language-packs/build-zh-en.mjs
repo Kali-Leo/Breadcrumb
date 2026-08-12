@@ -7,8 +7,8 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
+import zlib from "node:zlib";
 import { buildEntryForLemma } from "./entry-builder.mjs";
 import { downloadCached, parseCedict, parseCmudict, parseFrequencyList } from "./parsers.mjs";
 
@@ -25,14 +25,12 @@ const OUTPUT_PATH = path.join(
   "language-packs",
   "zh-en.json",
 );
-const CEDICT_URL =
-  "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz";
+const CEDICT_URL = "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz";
 const ZH_FREQ_URL =
   "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/zh_cn/zh_cn_50k.txt";
 const EN_FREQ_URL =
   "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_50k.txt";
-const CMUDICT_URL =
-  "https://raw.githubusercontent.com/cmusphinx/cmudict/master/cmudict.dict";
+const CMUDICT_URL = "https://raw.githubusercontent.com/cmusphinx/cmudict/master/cmudict.dict";
 
 const MIN_T1SAFE = 2000;
 const DEFAULT_EN_CUTOFF = 20000;

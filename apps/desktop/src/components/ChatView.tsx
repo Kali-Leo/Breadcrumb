@@ -41,7 +41,7 @@ export function ChatView() {
         )}
         {messages.map((message) => (
           <div key={message.id} className="space-y-1">
-            <MessageBubble author={message.role} content={message.content} />
+            <MessageBubble author={message.role} content={message.content} messageId={message.id} />
             {message.role === "assistant" && <FactcheckBadge messageId={message.id} />}
           </div>
         ))}

@@ -19,6 +19,7 @@ import { appEventBus, useChatStore } from "./stores/chatStore";
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
 import "./stores/interestStore";
+import { useDiglotStore } from "./stores/diglotStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";
@@ -32,6 +33,7 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       await useSettingsStore.getState().loadFromDatabase();
+      await useDiglotStore.getState().loadFromDatabase();
       await useChatStore.getState().loadFromDatabase();
       await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();

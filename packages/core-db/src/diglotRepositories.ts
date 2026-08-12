@@ -4,6 +4,7 @@
  * Main exports: createDiglotRepo factory.
  */
 import type {
+  DiglotContextEmbeddingRow,
   DiglotLanguagePackRow,
   DiglotPairId,
   DiglotWordEventRow,
@@ -29,6 +30,20 @@ export function createDiglotRepo(sql: SqlClient) {
       return sql.select<DiglotWordStateRow>(
         "SELECT * FROM diglot_word_states WHERE pair = ? ORDER BY lemma",
         [pair],
+      );
+    },
+    /** Updates only the card fields of an existing state — introduced_at is immutable. */
+    async updateStateCard(
+      lemma: string,
+      pair: DiglotPairId,
+      fsrsJson: string,
+      due: string,
+      lastEventAt: string,
+    ): Promise<void> {
+      await sql.execute(
+        `UPDATE diglot_word_states SET fsrs_json = ?, due = ?, last_event_at = ?
+         WHERE lemma = ? AND pair = ?`,
+        [fsrsJson, due, lastEventAt, lemma, pair],
       );
     },
     /** Words due for a re-encounter, oldest due first — the review-debt queue. */
@@ -74,6 +89,16 @@ export function createDiglotRepo(sql: SqlClient) {
         [pair, lemma, limit],
       );
     },
+    /** Lemmas that have ever produced an explicit signal (guess or productive use) — the
+     * guess policy asks signal-starved words more often. */
+    async listLemmasWithExplicitSignal(pair: DiglotPairId): Promise<string[]> {
+      const rows = await sql.select<{ lemma: string }>(
+        `SELECT DISTINCT lemma FROM diglot_word_events WHERE pair = ? AND kind IN
+           ('guess_correct','guess_close','guess_wrong','productive_use')`,
+        [pair],
+      );
+      return rows.map((row) => row.lemma);
+    },
     /** Appends one verbatim guess (append-only; raw text kept for confusion mining). */
     async insertGuess(row: DiglotWordGuessRow): Promise<void> {
       await sql.execute(
@@ -116,6 +141,34 @@ export function createDiglotRepo(sql: SqlClient) {
      * the pack must not lose learning history. */
     async deletePack(id: DiglotPairId): Promise<void> {
       await sql.execute("DELETE FROM diglot_language_packs WHERE id = ?", [id]);
+    },
+    /** Stores one context vector and prunes the word's oldest rows beyond a small cap —
+     * a handful of distinct contexts is plenty for the diversity discount. */
+    async upsertContextEmbedding(row: DiglotContextEmbeddingRow): Promise<void> {
+      await sql.execute(
+        `INSERT OR REPLACE INTO diglot_context_embeddings
+           (lemma, pair, context_hash, vector_json, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [row.lemma, row.pair, row.context_hash, row.vector_json, row.created_at],
+      );
+      await sql.execute(
+        `DELETE FROM diglot_context_embeddings
+         WHERE lemma = ? AND pair = ? AND context_hash NOT IN (
+           SELECT context_hash FROM diglot_context_embeddings
+           WHERE lemma = ? AND pair = ? ORDER BY created_at DESC LIMIT 12)`,
+        [row.lemma, row.pair, row.lemma, row.pair],
+      );
+    },
+    /** Every stored context vector of one word, newest first. */
+    async listContextEmbeddings(
+      pair: DiglotPairId,
+      lemma: string,
+    ): Promise<DiglotContextEmbeddingRow[]> {
+      return sql.select<DiglotContextEmbeddingRow>(
+        `SELECT * FROM diglot_context_embeddings WHERE pair = ? AND lemma = ?
+         ORDER BY created_at DESC`,
+        [pair, lemma],
+      );
     },
   };
 }
