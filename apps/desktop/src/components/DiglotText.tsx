@@ -42,10 +42,16 @@ export function DiglotText({
   messageId,
   content,
   patches,
+  rangeStart,
+  rangeEnd,
 }: {
   messageId: string;
   content: string;
   patches: ReplacementPatch[];
+  /** When set, only content[rangeStart, rangeEnd) is rendered (markdown text nodes);
+   * patch offsets stay absolute into `content`. */
+  rangeStart?: number;
+  rangeEnd?: number;
 }) {
   const [openCard, setOpenCard] = useState<OpenCard | null>(null);
   const hoverTimer = useRef<number | null>(null);
@@ -56,18 +62,21 @@ export function DiglotText({
   const recordSignal = useDiglotStore((state) => state.recordSignal);
   const noteGuessOutcome = useDiglotStore((state) => state.noteGuessOutcome);
 
-  // Exposure: fires once per message per session after the bubble stays ≥50% visible ~1s.
+  // One markdown message may render several DiglotText runs — dedupe exposure per run.
+  const exposureKey = `${messageId}:${rangeStart ?? 0}`;
+
+  // Exposure: fires once per run per session after the bubble stays ≥50% visible ~1s.
   useEffect(() => {
     const element = containerRef.current;
-    if (element === null || exposedMessages.has(messageId)) return;
+    if (element === null || exposedMessages.has(exposureKey)) return;
     let dwellTimer: number | null = null;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting && dwellTimer === null) {
             dwellTimer = window.setTimeout(() => {
-              if (exposedMessages.has(messageId)) return;
-              exposedMessages.add(messageId);
+              if (exposedMessages.has(exposureKey)) return;
+              exposedMessages.add(exposureKey);
               for (const patch of patches) {
                 void recordSignal(
                   patch.lemma,
@@ -91,11 +100,12 @@ export function DiglotText({
       if (dwellTimer !== null) window.clearTimeout(dwellTimer);
       observer.disconnect();
     };
-  }, [messageId, content, patches, recordSignal]);
+  }, [exposureKey, messageId, content, patches, recordSignal]);
 
   const closeCard = (card: OpenCard) => {
     if (card.guessFirst && !card.guessResolved) {
-      const patch = patches.find((p) => p.start === card.patchStart);
+      // card.patchStart is slice-local; patches keep absolute offsets.
+      const patch = patches.find((p) => p.start - (rangeStart ?? 0) === card.patchStart);
       if (patch !== undefined) {
         noteGuessOutcome(true);
         void recordSignal(
@@ -110,8 +120,15 @@ export function DiglotText({
     setOpenCard(null);
   };
 
-  const segments = applyPatches(content, patches);
-  if (segments === null || loaded === null) return <>{content}</>;
+  const base = rangeStart ?? 0;
+  const slice = rangeEnd === undefined ? content.slice(base) : content.slice(base, rangeEnd);
+  const localPatches = patches.map((patch) => ({
+    ...patch,
+    start: patch.start - base,
+    end: patch.end - base,
+  }));
+  const segments = applyPatches(slice, localPatches);
+  if (segments === null || loaded === null) return <>{slice}</>;
 
   const openFor = (patchStart: number, lemma: string, anchor: HTMLElement, isPhrase: boolean) => {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
@@ -202,7 +219,11 @@ export function DiglotText({
                 <DiglotWordCard
                   patch={segment.patch}
                   entry={loaded.pack.entries[segment.patch.lemma] ?? null}
-                  context={contextSentenceFor(content, segment.patch)}
+                  context={contextSentenceFor(content, {
+                    ...segment.patch,
+                    start: segment.patch.start + base,
+                    end: segment.patch.end + base,
+                  })}
                   messageId={messageId}
                   guessFirst={openCard.guessFirst}
                   onGuessResolved={() =>
