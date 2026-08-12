@@ -14,6 +14,7 @@ import {
 import type { Card } from "ts-fsrs";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { refineWeavePatches } from "../lib/diglotRefine";
 import {
   applyDiglotSignal,
   findProductiveUses,
@@ -23,6 +24,7 @@ import {
 } from "../lib/diglotWeave";
 import { nowIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
+import { useSettingsStore } from "./settingsStore";
 
 export interface DiglotSettings {
   enabled: boolean;
@@ -36,6 +38,10 @@ export interface DiglotSettings {
   ttsEnabled: boolean;
   piperPath: string;
   piperModelPath: string;
+  /** The LLM refinement tier (spec 033 T13): in-context disambiguation + phrase-level
+   * weaving. Metered separately (purpose "diglot-weave"); on by default — metering exists
+   * so features can run boldly (Leo 2026-08-12), and it only fires while weaving is on. */
+  llmRefineEnabled: boolean;
 }
 
 const SETTINGS_KEY = "diglotSettings";
@@ -48,6 +54,7 @@ const DEFAULT_SETTINGS: DiglotSettings = {
   ttsEnabled: true,
   piperPath: "",
   piperModelPath: "",
+  llmRefineEnabled: true,
 };
 
 interface DiglotState {
@@ -134,8 +141,14 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
       cardsByLemma,
       newWordsIntroducedToday: get().newWordsIntroducedToday,
     });
+    let patches = result.patches;
+    // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
+    const { apiConfig, networkEnabled } = useSettingsStore.getState();
+    if (settings.llmRefineEnabled && networkEnabled && apiConfig !== null && patches.length > 0) {
+      patches = await refineWeavePatches(apiConfig, loaded, content, patches);
+    }
     set({
-      patchesByMessage: new Map(get().patchesByMessage).set(messageId, result.patches),
+      patchesByMessage: new Map(get().patchesByMessage).set(messageId, patches),
       newWordsIntroducedToday: get().newWordsIntroducedToday + result.introducedLemmas.length,
     });
   },

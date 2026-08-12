@@ -10,13 +10,18 @@ import type { LoadedLanguagePack } from "./packSchema";
 import type { ScheduledReplacement } from "./scheduler";
 
 /** One display-layer replacement: message[start, end) === original, rendered as
- * `replacement`. The chat store and LLM context never see patches (ADR-0019). */
+ * `replacement`. The chat store and LLM context never see patches (ADR-0019).
+ * kind "word" = dictionary lemma with FSRS state; "phrase" = an LLM-woven idiomatic
+ * expression (spec 033 T13) — display and gloss only, no memory tracking. */
 export const ReplacementPatchSchema = z.object({
   start: z.number().int().nonnegative(),
   end: z.number().int().positive(),
   original: z.string().min(1),
   replacement: z.string().min(1),
   lemma: z.string().min(1),
+  kind: z.enum(["word", "phrase"]).default("word"),
+  /** Short source-language gloss, only present on phrase patches. */
+  gloss: z.string().optional(),
 });
 
 export type ReplacementPatch = z.infer<typeof ReplacementPatchSchema>;
@@ -39,6 +44,7 @@ export function buildPatches(
       original: item.surface,
       replacement: entry.target,
       lemma: item.lemma,
+      kind: "word",
     });
   }
   return patches.sort((a, b) => a.start - b.start);

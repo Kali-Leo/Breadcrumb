@@ -113,7 +113,7 @@ export function DiglotText({
   const segments = applyPatches(content, patches);
   if (segments === null || loaded === null) return <>{content}</>;
 
-  const openFor = (patchStart: number, lemma: string, anchor: HTMLElement) => {
+  const openFor = (patchStart: number, lemma: string, anchor: HTMLElement, isPhrase: boolean) => {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
     const rect = anchor.getBoundingClientRect();
     const scroller = anchor.closest(".overflow-y-auto")?.getBoundingClientRect();
@@ -128,7 +128,8 @@ export function DiglotText({
         ? card
         : {
             patchStart,
-            guessFirst: shouldAskGuess(lemma),
+            // Phrase weaves have no memory state — the guess gate never applies to them.
+            guessFirst: isPhrase ? false : shouldAskGuess(lemma),
             guessResolved: false,
             left,
             top,
@@ -155,7 +156,13 @@ export function DiglotText({
               onMouseEnter={(event) => {
                 const anchor = event.currentTarget;
                 hoverTimer.current = window.setTimeout(
-                  () => openFor(segment.patch.start, segment.patch.lemma, anchor),
+                  () =>
+                    openFor(
+                      segment.patch.start,
+                      segment.patch.lemma,
+                      anchor,
+                      segment.patch.kind === "phrase",
+                    ),
                   250,
                 );
               }}
@@ -164,7 +171,12 @@ export function DiglotText({
                 if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);
               }}
               onClick={(event) =>
-                openFor(segment.patch.start, segment.patch.lemma, event.currentTarget)
+                openFor(
+                  segment.patch.start,
+                  segment.patch.lemma,
+                  event.currentTarget,
+                  segment.patch.kind === "phrase",
+                )
               }
               onBlur={() => {
                 if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);

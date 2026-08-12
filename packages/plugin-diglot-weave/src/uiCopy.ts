@@ -13,7 +13,8 @@ export const DIGLOT_UI_COPY = {
   guessSubmit: "提交",
   alsoTranslatedAs: "也作",
   settingsTitle: "语言织入(学外语)",
-  settingsHint: "对话里少量词语显示为目标语言;原文不变,随时可关。全程本地,零 token。",
+  settingsHint:
+    "对话里少量词语显示为目标语言;原文不变,随时可关。基础织入全本地零 token;「智能替换」进阶层在开关与计价页单独开关、单独看账。",
   densityLabel: "替换密度",
   newWordCapLabel: "每日新词上限",
   guessLevelLabel: "猜测频率",

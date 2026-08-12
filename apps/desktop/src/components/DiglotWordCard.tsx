@@ -74,6 +74,36 @@ export function DiglotWordCard({
     setGuessDone(true);
   };
 
+  // Phrase weaves (spec 033 T13) have no dictionary entry and no memory state — a plain
+  // gloss card: expression, original, gloss, audio. The guess gate never applies.
+  if (patch.kind === "phrase") {
+    return (
+      <div className="w-64 space-y-1.5 p-3 text-sm text-stone-700">
+        <div className="flex items-baseline gap-2">
+          <span className="text-base font-medium">{patch.replacement}</span>
+          {settings.ttsEnabled && (
+            <button
+              type="button"
+              className="ml-auto rounded px-1 text-base hover:bg-stone-100"
+              onClick={() =>
+                void speakWord(
+                  patch.replacement,
+                  loaded?.pack.targetLang ?? "en",
+                  settings.piperPath,
+                  settings.piperModelPath,
+                )
+              }
+            >
+              🔊
+            </button>
+          )}
+        </div>
+        <p>{patch.original}</p>
+        {patch.gloss !== undefined && <p className="text-xs text-stone-400">{patch.gloss}</p>}
+      </div>
+    );
+  }
+
   if (entry === null) return null;
 
   if (!guessDone) {

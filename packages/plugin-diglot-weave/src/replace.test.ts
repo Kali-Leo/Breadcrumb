@@ -56,7 +56,14 @@ describe("buildPatches / applyPatches", () => {
   });
 
   it("rejects overlapping spans", () => {
-    const patch = { start: 0, end: 3, original: MESSAGE.slice(0, 3), replacement: "x", lemma: "a" };
+    const patch = {
+      start: 0,
+      end: 3,
+      original: MESSAGE.slice(0, 3),
+      replacement: "x",
+      lemma: "a",
+      kind: "word" as const,
+    };
     const overlapping = { ...patch, start: 2, end: 5, original: MESSAGE.slice(2, 5) };
     expect(verifyPatches(MESSAGE, [patch, overlapping])).toBe(false);
   });
