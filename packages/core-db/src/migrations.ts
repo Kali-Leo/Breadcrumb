@@ -551,6 +551,58 @@ export const MIGRATIONS: readonly Migration[] = [
       `DROP TABLE IF EXISTS goal_title_ladder;`,
     ],
   },
+  {
+    // Spec 033 diglot weave: display-layer word replacement for language learning. States
+    // hold one FSRS card per (lemma, pair); events are the append-only implicit-signal log
+    // that drives scheduling; guesses keep the raw guess text (future confusion mining);
+    // packs registers installed language packs. Chat storage is never touched (ADR-0019).
+    id: "0025_diglot_weave",
+    statements: [
+      `CREATE TABLE diglot_word_states (
+        lemma TEXT NOT NULL,
+        pair TEXT NOT NULL,
+        fsrs_json TEXT NOT NULL,
+        due TEXT NOT NULL,
+        introduced_at TEXT NOT NULL,
+        last_event_at TEXT,
+        PRIMARY KEY (lemma, pair)
+      );`,
+      `CREATE INDEX idx_diglot_states_due ON diglot_word_states(pair, due);`,
+      `CREATE TABLE diglot_word_events (
+        id TEXT PRIMARY KEY,
+        lemma TEXT NOT NULL,
+        pair TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN (
+          'exposure','hover','audio',
+          'guess_correct','guess_close','guess_wrong','guess_abandoned',
+          'productive_use')),
+        message_id TEXT,
+        context_hash TEXT,
+        latency_ms INTEGER,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_diglot_events_lemma ON diglot_word_events(pair, lemma, created_at);`,
+      `CREATE TABLE diglot_word_guesses (
+        id TEXT PRIMARY KEY,
+        lemma TEXT NOT NULL,
+        pair TEXT NOT NULL,
+        guess TEXT NOT NULL,
+        grade TEXT NOT NULL CHECK (grade IN ('correct','close','wrong')),
+        context TEXT NOT NULL,
+        latency_ms INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_diglot_guesses_lemma ON diglot_word_guesses(pair, lemma);`,
+      `CREATE TABLE diglot_language_packs (
+        id TEXT PRIMARY KEY,
+        source_lang TEXT NOT NULL,
+        target_lang TEXT NOT NULL,
+        version TEXT NOT NULL,
+        meta_json TEXT NOT NULL,
+        installed_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
