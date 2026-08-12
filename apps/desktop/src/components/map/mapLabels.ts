@@ -11,9 +11,13 @@ import { mapTheme } from "./mapTheme";
 const LABEL_SUPERSAMPLE = 3;
 
 export interface MapLabel {
+  /** Which island/kingdom this name belongs to — hover emphasis looks names up by it. */
+  nodeId: string;
   text: Text;
   /** On-screen px size this name keeps at every camera scale. */
   screenSize: number;
+  /** The retention-dimmed alpha the name returns to when hover emphasis leaves it. */
+  baseAlpha: number;
 }
 
 /** Fog dims a name through this factor but never below a readable floor. */
@@ -32,6 +36,7 @@ export interface LabelOptions {
  * name never turns soft.
  */
 export function makeMapLabel(
+  nodeId: string,
   content: string,
   screenSize: number,
   alpha: number,
@@ -53,7 +58,7 @@ export function makeMapLabel(
   text.scale.set(1 / LABEL_SUPERSAMPLE);
   text.anchor.set(0.5);
   text.alpha = alpha;
-  return { text, screenSize };
+  return { nodeId, text, screenSize, baseAlpha: alpha };
 }
 
 /**
@@ -64,5 +69,15 @@ export function counterScaleLabels(labels: readonly MapLabel[], cameraScale: num
   for (const label of labels) {
     const renderedSize = label.text.style.fontSize;
     label.text.scale.set(label.screenSize / (renderedSize * Math.max(cameraScale, 1e-6)));
+  }
+}
+
+/** Hover emphasis: the hovered feature's name flips to the accent ink so a name that had
+ * to drift into open water still points back at its land unmistakably. */
+export function setLabelEmphasis(labels: readonly MapLabel[], nodeId: string | null): void {
+  for (const label of labels) {
+    const emphasized = label.nodeId === nodeId;
+    label.text.style.fill = emphasized ? mapTheme.labelEmphasis : mapTheme.ink;
+    label.text.alpha = emphasized ? 1 : label.baseAlpha;
   }
 }

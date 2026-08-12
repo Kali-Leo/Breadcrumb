@@ -82,9 +82,15 @@ export function drawIslandSettlements(input: SettlementsInput): void {
       islandBand.addChild(seat);
       if (newNodeIds.has(kingdom.nodeId)) reveal(seat);
     }
-    const kingdomLabel = makeMapLabel(kingdom.label, mapTheme.labelSizes.kingdom, kingdomDim, {
-      letterSpacingRatio: KINGDOM_LETTER_SPACING,
-    });
+    const kingdomLabel = makeMapLabel(
+      kingdom.nodeId,
+      kingdom.label,
+      mapTheme.labelSizes.kingdom,
+      kingdomDim,
+      {
+        letterSpacingRatio: KINGDOM_LETTER_SPACING,
+      },
+    );
     const position = positions.get(kingdom.nodeId) ?? kingdom.labelPosition;
     kingdomLabel.text.position.set(position.x, position.y);
     islandBand.addChild(kingdomLabel.text);

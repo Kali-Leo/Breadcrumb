@@ -57,9 +57,15 @@ export function buildIslandScene(
   context.parts.borders.addChild(borders);
 
   const islandDim = labelDim(averageRetention(island.memberNodeIds, context.retentionByNode));
-  const islandLabel = makeMapLabel(island.label, mapTheme.labelSizes.island, islandDim, {
-    letterSpacingRatio: ISLAND_LETTER_SPACING,
-  });
+  const islandLabel = makeMapLabel(
+    island.nodeId,
+    island.label,
+    mapTheme.labelSizes.island,
+    islandDim,
+    {
+      letterSpacingRatio: ISLAND_LETTER_SPACING,
+    },
+  );
   islandLabel.text.position.set(placement.center.x, placement.center.y);
   // A name that had to sail is tied back to its own coast, else nobody can tell whose it is.
   if (placement.outside) {

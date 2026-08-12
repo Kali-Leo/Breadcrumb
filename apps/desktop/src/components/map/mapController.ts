@@ -10,7 +10,7 @@ import { type Application, Container } from "pixi.js";
 import { findIsland, frameForLevel, hitIsland, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";
 import { drawHoverHighlight, type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
-import { counterScaleLabels } from "./mapLabels";
+import { counterScaleLabels, setLabelEmphasis } from "./mapLabels";
 import { buildWorldScene, type WorldScene } from "./sceneBuild";
 
 export interface MapHooks {
@@ -116,7 +116,12 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
 
   function showHover(hover: HoverResult | null): void {
     lastHoverId = hover === null ? null : `${hover.info.kind}:${hover.info.nodeId}`;
-    if (controller.scene !== null) drawHoverHighlight(controller.scene.highlightLayer, hover);
+    if (controller.scene !== null) {
+      drawHoverHighlight(controller.scene.highlightLayer, hover);
+      // The hovered land's name lights up with it — a name that drifted to open water
+      // still snaps back to its owner in the reader's eye.
+      setLabelEmphasis(controller.scene.labels, hover === null ? null : hover.info.nodeId);
+    }
     hooks.onHover(hover === null ? null : hover.info);
   }
 

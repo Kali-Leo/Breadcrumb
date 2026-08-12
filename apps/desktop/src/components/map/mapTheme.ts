@@ -12,6 +12,8 @@ export const mapTheme = {
   landFill: 0xd8ccae,
   /** Laham dark-brown ink (coasts, labels, marks). */
   ink: 0x3a3226,
+  /** Hovered name's ink — the same amber family as the region highlight. */
+  labelEmphasis: 0xb45309,
   /** Laham secondary ink for soft shading. */
   inkSoft: 0x77684f,
   /** Rivers are thin ink lines in Laham — never blue. */
