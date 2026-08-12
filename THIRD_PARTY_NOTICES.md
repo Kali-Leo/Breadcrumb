@@ -38,3 +38,13 @@ poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC �
   职业对照表（ESCO Secretariat 与 U.S. Department of Labor 联合发布），
   **CC BY 4.0** 许可，开发期内化子集随包分发；每条 item 的 source_ref 注明
   ESCO 版本、经由的对照匹配类型与 ESCO 职业名。
+
+## 语言织入数据来源(spec 033,开发期构建语言包、运行时零网络)
+
+- **CC-CEDICT**(MDBG,cc-cedict.org):zh→en 语言包的词条、繁简形与释义来源,
+  **CC BY-SA 4.0** 许可;由 `scripts/language-packs/build-zh-en.mjs` 在开发期
+  构建为 `apps/desktop/src/assets/language-packs/zh-en.json` 随包分发。
+- **FrequencyWords**(Hermit Dave,基于 OpenSubtitles 2018 语料):中英词频表,
+  驱动新词引入顺序与常用词过滤,**CC BY-SA 4.0** 许可。
+- **CMUdict**(Carnegie Mellon University):英语发音词典(ARPABET→IPA 转换后
+  作为释义卡读音),**BSD-2-Clause** 许可。

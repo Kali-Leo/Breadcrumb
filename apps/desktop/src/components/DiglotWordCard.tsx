@@ -37,6 +37,9 @@ export function DiglotWordCard({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [guessText, setGuessText] = useState("");
   const openedAt = useRef(Date.now());
+  /** One hover signal per card-open — guards against StrictMode double effects and
+   * re-renders (double-counting was caught in the real-app walkthrough). */
+  const hoverSignaled = useRef(false);
   const loaded = useDiglotStore((state) => state.loaded);
   const settings = useDiglotStore((state) => state.settings);
   const recordSignal = useDiglotStore((state) => state.recordSignal);
@@ -45,7 +48,8 @@ export function DiglotWordCard({
 
   // The gloss reveal is itself the "hover" lookup signal — but only after any guess gate.
   useEffect(() => {
-    if (!guessDone) return;
+    if (!guessDone || hoverSignaled.current) return;
+    hoverSignaled.current = true;
     noteGlossSeen(patch.lemma);
     if (!guessFirst) {
       void recordSignal(patch.lemma, "hover", messageId, context, null);

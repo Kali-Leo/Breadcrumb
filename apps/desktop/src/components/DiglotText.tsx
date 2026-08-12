@@ -23,10 +23,19 @@ function contextSentenceFor(content: string, patch: ReplacementPatch): string {
   return content.slice(start, Math.min(end + 1, content.length)).trim();
 }
 
+/** Rendered card width (Tailwind w-64) — used for horizontal clamping. */
+const CARD_WIDTH = 256;
+
 interface OpenCard {
   patchStart: number;
   guessFirst: boolean;
   guessResolved: boolean;
+  /** Fixed-position anchor, clamped inside the chat scroll container — absolute
+   * positioning got clipped by overflow-y-auto in narrow layouts (real-app walkthrough).
+   * Exactly one of top/bottom is set: cards flip below the word near the viewport top. */
+  left: number;
+  top: number | null;
+  bottom: number | null;
 }
 
 export function DiglotText({
@@ -104,12 +113,27 @@ export function DiglotText({
   const segments = applyPatches(content, patches);
   if (segments === null || loaded === null) return <>{content}</>;
 
-  const openFor = (patchStart: number, lemma: string) => {
+  const openFor = (patchStart: number, lemma: string, anchor: HTMLElement) => {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    const rect = anchor.getBoundingClientRect();
+    const scroller = anchor.closest(".overflow-y-auto")?.getBoundingClientRect();
+    const minLeft = (scroller?.left ?? 0) + 8;
+    const maxLeft = (scroller?.right ?? window.innerWidth) - CARD_WIDTH - 8;
+    const left = Math.min(Math.max(rect.left, minLeft), Math.max(maxLeft, minLeft));
+    const flipBelow = rect.top < 220;
+    const top = flipBelow ? rect.bottom + 4 : null;
+    const bottom = flipBelow ? null : window.innerHeight - rect.top + 4;
     setOpenCard((card) =>
       card?.patchStart === patchStart
         ? card
-        : { patchStart, guessFirst: shouldAskGuess(lemma), guessResolved: false },
+        : {
+            patchStart,
+            guessFirst: shouldAskGuess(lemma),
+            guessResolved: false,
+            left,
+            top,
+            bottom,
+          },
     );
   };
   // A short grace period bridges the gap between the word and its card.
@@ -128,9 +152,10 @@ export function DiglotText({
             <button
               type="button"
               className="cursor-help rounded bg-teal-50 px-0.5 text-teal-800 underline decoration-teal-300 decoration-dotted underline-offset-2"
-              onMouseEnter={() => {
+              onMouseEnter={(event) => {
+                const anchor = event.currentTarget;
                 hoverTimer.current = window.setTimeout(
-                  () => openFor(segment.patch.start, segment.patch.lemma),
+                  () => openFor(segment.patch.start, segment.patch.lemma, anchor),
                   250,
                 );
               }}
@@ -138,7 +163,9 @@ export function DiglotText({
                 if (hoverTimer.current !== null) window.clearTimeout(hoverTimer.current);
                 if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);
               }}
-              onClick={() => openFor(segment.patch.start, segment.patch.lemma)}
+              onClick={(event) =>
+                openFor(segment.patch.start, segment.patch.lemma, event.currentTarget)
+              }
               onBlur={() => {
                 if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);
               }}
@@ -148,7 +175,13 @@ export function DiglotText({
             {openCard?.patchStart === segment.patch.start && (
               <span
                 role="tooltip"
-                className="absolute bottom-full left-0 z-20 mb-1 block rounded-xl border border-stone-200 bg-white shadow-lg"
+                style={{
+                  position: "fixed",
+                  left: openCard.left,
+                  top: openCard.top ?? undefined,
+                  bottom: openCard.bottom ?? undefined,
+                }}
+                className="z-20 block rounded-xl border border-stone-200 bg-white shadow-lg"
                 onMouseEnter={() => {
                   if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
                 }}

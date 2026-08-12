@@ -63,7 +63,12 @@ function reviewScore(card: Card, now: Date, novelty: number): number {
   const urgency = Math.max(0, DESIRED_RETENTION - recall);
   const nextStability = reviewCard(card, now, Rating.Good).stability;
   const currentStability = Math.max(card.stability, 0.01);
-  const relativeGain = Math.max(0, (nextStability - currentStability) / currentStability);
+  // Capped: brand-new cards (stability ≈ 0) would otherwise produce absurd gains and
+  // crowd out genuinely due mature words for days (real-app walkthrough observation).
+  const relativeGain = Math.min(
+    3,
+    Math.max(0, (nextStability - currentStability) / currentStability),
+  );
   const overdueDays = Math.max(0, (now.getTime() - card.due.getTime()) / 86400000);
   const rescue = Math.min(overdueDays / 14, 1) * 0.4;
   return (0.25 + urgency) * relativeGain * novelty + rescue;
