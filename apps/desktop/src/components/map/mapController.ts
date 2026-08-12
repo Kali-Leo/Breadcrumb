@@ -55,18 +55,28 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   let lastWheelAt = 0;
   let lastHoverId: string | null = null;
   const pointer = { x: 0, y: 0 };
+  let lastRetention: ReadonlyMap<string, number> = new Map();
+  let lastNewNodeIds: ReadonlySet<string> = new Set();
+  let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function rebuildScene(): void {
+    if (world === null) return;
+    controller.scene?.root.destroy({ children: true });
+    controller.scene = buildWorldScene(world, lastRetention, art, lastNewNodeIds, {
+      width: app.screen.width,
+      height: app.screen.height,
+    });
+    worldRoot.addChild(controller.scene.root);
+  }
 
   const controller: MapController = {
     scene: null,
     footprintPhase: 0,
     setWorld(nextWorld, retentionByNode, newNodeIds) {
       world = nextWorld;
-      controller.scene?.root.destroy({ children: true });
-      controller.scene = buildWorldScene(nextWorld, retentionByNode, art, newNodeIds, {
-        width: app.screen.width,
-        height: app.screen.height,
-      });
-      worldRoot.addChild(controller.scene.root);
+      lastRetention = retentionByNode;
+      lastNewNodeIds = newNodeIds;
+      rebuildScene();
       if (level.kind === "island" && findIsland(nextWorld, level.islandId) === undefined) {
         level = { kind: "world" };
       }
@@ -187,6 +197,15 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   app.canvas.addEventListener("wheel", onWheel, { passive: false });
   app.canvas.addEventListener("click", onClick);
   app.canvas.addEventListener("pointermove", onPointerMove);
-  app.renderer.on("resize", () => applyLevel(true));
+  // Label placement is computed against the screen size, so a resize must re-place the
+  // names (debounced) — stale positions are how names end up lying on each other.
+  app.renderer.on("resize", () => {
+    applyLevel(true);
+    if (resizeTimer !== null) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      rebuildScene();
+      applyLevel(true);
+    }, 200);
+  });
   return controller;
 }
