@@ -12,9 +12,15 @@ import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
  * and replayable in tests and simlab. */
 const scheduler = fsrs({ enable_fuzz: false });
 
-/** Every 3rd passive exposure without a lookup converts into one Good review — passive
- * exposure works (Broccoli RQ2) but must weigh far less than explicit retrieval. */
-export const EXPOSURES_PER_GOOD = 3;
+/** Every 2nd passive exposure without a lookup converts into one Good review — passive
+ * exposure works (Broccoli RQ2: retention without any clicking) but should weigh less
+ * than explicit retrieval. (3 starved throughput: words never graduated and review debt
+ * saturated the whole vocabulary — 30-day journey sim.) */
+export const EXPOSURES_PER_GOOD = 2;
+
+/** A word's first few lookups are the teaching moment, not retrieval failure — punishing
+ * them with Again traps fresh words in a permanent short-interval loop (journey sim). */
+const HOVER_GRACE_REVIEWS = 3;
 
 /** A guess counted as Easy needs to be exact-grade and faster than this (spec 033). */
 const FAST_GUESS_MS = 5000;
@@ -54,7 +60,9 @@ export function retrievabilityOf(card: Card, now: Date): number {
  * `priorEvents` are the word's events newest-first, BEFORE the current one.
  * - exposure: every EXPOSURES_PER_GOODth consecutive exposure since the last
  *   non-exposure event rates Good, others rate nothing;
- * - hover: Again (the reader needed the meaning);
+ * - hover: Again (the reader needed the meaning) — except during a young card's first
+ *   few reviews (`cardReps < HOVER_GRACE_REVIEWS`), where looking up is expected and
+ *   rates nothing;
  * - audio: no extra rating — the hover that opened the card already carried the failure
  *   signal, double-punishing would bias the model (the event is still logged);
  * - guesses: correct = Good (Easy when fast), close = Hard (partial retrieval),
@@ -65,6 +73,7 @@ export function ratingForSignal(
   kind: DiglotEventKind,
   priorEventKinds: readonly DiglotEventKind[],
   guessLatencyMs?: number,
+  cardReps?: number,
 ): Grade | null {
   switch (kind) {
     case "exposure": {
@@ -76,6 +85,7 @@ export function ratingForSignal(
       return (consecutiveExposures + 1) % EXPOSURES_PER_GOOD === 0 ? Rating.Good : null;
     }
     case "hover":
+      if (cardReps !== undefined && cardReps < HOVER_GRACE_REVIEWS) return null;
       return Rating.Again;
     case "audio":
       return null;

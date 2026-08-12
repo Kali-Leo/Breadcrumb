@@ -152,6 +152,7 @@ export async function applyDiglotSignal(input: {
     input.kind,
     recent.map((event) => event.kind),
     input.latencyMs ?? undefined,
+    input.card.reps,
   );
   await repos.diglot.insertEvent({
     id: crypto.randomUUID(),

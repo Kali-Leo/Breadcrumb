@@ -438,6 +438,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/plugin-diglot-weave':
+        specifier: workspace:*
+        version: link:../plugin-diglot-weave
       '@breadcrumb/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -459,6 +462,9 @@ importers:
       better-sqlite3:
         specifier: ^13.0.2
         version: 13.0.2
+      ts-fsrs:
+        specifier: ^5.2.1
+        version: 5.4.1
       zod:
         specifier: ^4.1.0
         version: 4.4.3

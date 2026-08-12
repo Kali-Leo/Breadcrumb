@@ -111,6 +111,26 @@ describe("scheduleReplacements", () => {
     expect(chosen[0]?.lemma).toBe("due");
   });
 
+  it("reserves one slot for growth when the budget allows two", () => {
+    const candidates = [
+      candidate("due1", 0, 0),
+      candidate("due2", 1, 10),
+      candidate("novel", 2, 20),
+    ];
+    const input = baseInput({
+      candidates,
+      cardsByLemma: new Map([
+        ["due1", agedCard(60)],
+        ["due2", agedCard(50)],
+      ]),
+      introductionRank: new Map([["novel", 3]]),
+      totalWordCount: 100, // floor(100 × 0.02) = 2 slots
+    });
+    const kinds = scheduleReplacements(input).map((item) => item.kind);
+    expect(kinds).toContain("new");
+    expect(kinds).toContain("review");
+  });
+
   it("is deterministic for identical input", () => {
     const candidates = [0, 1, 2, 3].map((n) => candidate(`w${n}`, n, n * 10));
     const cards = new Map(candidates.map((c) => [c.lemma, agedCard(30)]));
@@ -122,7 +142,7 @@ describe("scheduleReplacements", () => {
 describe("adaptiveNewWordCap", () => {
   it("tightens with review debt and floors at zero", () => {
     expect(adaptiveNewWordCap(5, 0)).toBe(5);
-    expect(adaptiveNewWordCap(5, 25)).toBe(3);
+    expect(adaptiveNewWordCap(5, 10)).toBe(3);
     expect(adaptiveNewWordCap(5, 200)).toBe(0);
   });
 });

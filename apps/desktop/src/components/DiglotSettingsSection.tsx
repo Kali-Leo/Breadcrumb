@@ -4,13 +4,13 @@
  * mechanism), TTS config. All local, zero token cost.
  * Main exports: DiglotSettingsSection.
  */
-import { GUESS_LEVEL_BASE, type GuessLevel } from "@breadcrumb/plugin-diglot-weave";
+import { DIGLOT_UI_COPY, GUESS_LEVEL_BASE, type GuessLevel } from "@breadcrumb/plugin-diglot-weave";
 import { useDiglotStore } from "../stores/diglotStore";
 
 const GUESS_LEVEL_LABELS: Record<GuessLevel, string> = {
-  low: "少",
-  standard: "标准",
-  high: "多",
+  low: DIGLOT_UI_COPY.guessLevelLow,
+  standard: DIGLOT_UI_COPY.guessLevelStandard,
+  high: DIGLOT_UI_COPY.guessLevelHigh,
 };
 
 export function DiglotSettingsSection() {
@@ -26,10 +26,8 @@ export function DiglotSettingsSection() {
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium text-stone-700">语言织入(学外语)</h3>
-          <p className="text-xs text-stone-400">
-            对话里少量词语显示为目标语言;原文不变,随时可关。全程本地,零 token。
-          </p>
+          <h3 className="font-medium text-stone-700">{DIGLOT_UI_COPY.settingsTitle}</h3>
+          <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.settingsHint}</p>
         </div>
         <button
           type="button"
@@ -48,7 +46,7 @@ export function DiglotSettingsSection() {
             语对:中文 → English · 学习中 {cardsByLemma.size} 词 · 今日新词 {newToday}
           </p>
           <label className="block space-y-1">
-            替换密度 {(settings.density * 100).toFixed(0)}%
+            {DIGLOT_UI_COPY.densityLabel} {(settings.density * 100).toFixed(0)}%
             <input
               type="range"
               min={1}
@@ -60,7 +58,7 @@ export function DiglotSettingsSection() {
             />
           </label>
           <label className="block space-y-1">
-            每日新词上限 {settings.newWordDailyBase}
+            {DIGLOT_UI_COPY.newWordCapLabel} {settings.newWordDailyBase}
             <input
               type="range"
               min={0}
@@ -72,7 +70,7 @@ export function DiglotSettingsSection() {
             />
           </label>
           <div className="space-y-1">
-            <span>猜测频率</span>
+            <span>{DIGLOT_UI_COPY.guessLevelLabel}</span>
             <div className="flex gap-2">
               {(Object.keys(GUESS_LEVEL_BASE) as GuessLevel[]).map((level) => (
                 <button
@@ -91,7 +89,7 @@ export function DiglotSettingsSection() {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span>发音(本地 TTS)</span>
+            <span>{DIGLOT_UI_COPY.ttsLabel}</span>
             <button
               type="button"
               aria-label="发音开关"
@@ -105,10 +103,10 @@ export function DiglotSettingsSection() {
           </div>
           {settings.ttsEnabled && (
             <details className="text-xs text-stone-500">
-              <summary className="cursor-pointer">Piper 高质量发音(可选)</summary>
+              <summary className="cursor-pointer">{DIGLOT_UI_COPY.piperSection}</summary>
               <div className="mt-2 space-y-2">
                 <label className="block space-y-1">
-                  piper 可执行文件路径
+                  {DIGLOT_UI_COPY.piperPathLabel}
                   <input
                     value={settings.piperPath}
                     onChange={(e) => void saveSettings({ piperPath: e.target.value })}
@@ -117,7 +115,7 @@ export function DiglotSettingsSection() {
                   />
                 </label>
                 <label className="block space-y-1">
-                  voice 模型路径(.onnx)
+                  {DIGLOT_UI_COPY.piperModelLabel}
                   <input
                     value={settings.piperModelPath}
                     onChange={(e) => void saveSettings({ piperModelPath: e.target.value })}

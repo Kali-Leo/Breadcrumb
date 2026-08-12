@@ -14,6 +14,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/plugin-diglot-weave": "workspace:*",
     "@breadcrumb/plugin-graph": "workspace:*",
     "@breadcrumb/plugin-interest": "workspace:*",
     "@breadcrumb/plugin-knowledge-tree": "workspace:*",
@@ -21,6 +22,7 @@
     "@breadcrumb/plugin-planner": "workspace:*",
     "@breadcrumb/plugin-trail": "workspace:*",
     "better-sqlite3": "^13.0.2",
+    "ts-fsrs": "^5.2.1",
     "zod": "^4.1.0"
   },
   "devDependencies": {

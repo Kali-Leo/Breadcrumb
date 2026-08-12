@@ -16,16 +16,17 @@ import {
 const NOW = new Date("2026-08-12T12:00:00.000Z");
 
 describe("ratingForSignal", () => {
-  it("rates only every third consecutive exposure as Good", () => {
+  it("rates only every second consecutive exposure as Good", () => {
     expect(ratingForSignal("exposure", [])).toBeNull();
-    expect(ratingForSignal("exposure", ["exposure"])).toBeNull();
-    expect(ratingForSignal("exposure", ["exposure", "exposure"])).toBe(Rating.Good);
+    expect(ratingForSignal("exposure", ["exposure"])).toBe(Rating.Good);
     // A non-exposure event resets the streak.
-    expect(ratingForSignal("exposure", ["hover", "exposure", "exposure"])).toBeNull();
+    expect(ratingForSignal("exposure", ["hover", "exposure"])).toBeNull();
   });
 
-  it("maps lookups and failed guesses to Again", () => {
+  it("maps lookups and failed guesses to Again, with a grace window for young cards", () => {
     expect(ratingForSignal("hover", [])).toBe(Rating.Again);
+    expect(ratingForSignal("hover", [], undefined, 1)).toBeNull();
+    expect(ratingForSignal("hover", [], undefined, 5)).toBe(Rating.Again);
     expect(ratingForSignal("guess_wrong", [])).toBe(Rating.Again);
     expect(ratingForSignal("guess_abandoned", [])).toBe(Rating.Again);
   });

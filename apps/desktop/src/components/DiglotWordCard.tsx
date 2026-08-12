@@ -3,7 +3,11 @@
  * (no skip path, Leo 2026-08-12), otherwise the gloss: original word, reading, audio.
  * Main exports: DiglotWordCard.
  */
-import type { PackEntry, ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
+import {
+  DIGLOT_UI_COPY,
+  type PackEntry,
+  type ReplacementPatch,
+} from "@breadcrumb/plugin-diglot-weave";
 import { useEffect, useRef, useState } from "react";
 import { speakWord } from "../lib/diglotAudio";
 import { feedbackTextFor, submitDiglotGuess } from "../lib/diglotGuess";
@@ -71,7 +75,7 @@ export function DiglotWordCard({
   if (!guessDone) {
     return (
       <div className="w-64 space-y-2 p-3 text-sm text-stone-700">
-        <p className="text-xs text-stone-400">这个词是什么意思?先猜一次,再看释义。</p>
+        <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.guessPrompt}</p>
         <p className="rounded bg-stone-50 px-2 py-1 text-xs leading-relaxed">{context}</p>
         <form
           className="flex gap-1.5"
@@ -86,14 +90,14 @@ export function DiglotWordCard({
             value={guessText}
             onChange={(event) => setGuessText(event.target.value)}
             className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm"
-            placeholder="你的猜测"
+            placeholder={DIGLOT_UI_COPY.guessPlaceholder}
           />
           <button
             type="submit"
             disabled={guessText.trim().length === 0}
             className="rounded bg-amber-100 px-2 py-1 text-xs text-stone-700 disabled:opacity-40"
           >
-            提交
+            {DIGLOT_UI_COPY.guessSubmit}
           </button>
         </form>
       </div>
@@ -128,7 +132,10 @@ export function DiglotWordCard({
       <p>
         {patch.original}
         {entry.altTargets.length > 0 && (
-          <span className="text-xs text-stone-400"> · 也作 {entry.altTargets.join(", ")}</span>
+          <span className="text-xs text-stone-400">
+            {" "}
+            · {DIGLOT_UI_COPY.alsoTranslatedAs} {entry.altTargets.join(", ")}
+          </span>
         )}
       </p>
     </div>
