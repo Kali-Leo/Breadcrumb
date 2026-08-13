@@ -42,6 +42,7 @@ function buildMessages(
     role: index % 2 === 0 ? "user" : "assistant",
     content,
     created_at: timestamps[index] ?? timestamps[timestamps.length - 1] ?? new Date().toISOString(),
+    teaching_mode: null,
   }));
 }
 

@@ -65,6 +65,7 @@ export async function startTeachSession(topic: string): Promise<string> {
     role: "assistant",
     content: TEACH_COPY.opener(topic),
     created_at: createdAt,
+    teaching_mode: null,
   });
   return conversationId;
 }

@@ -128,6 +128,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       role: "user",
       content,
       created_at: nowIso(),
+      teaching_mode: null,
     };
     await repos.messages.append(userMessage);
     set({ messages: [...get().messages, userMessage], streamingText: "", errorText: null });
@@ -143,7 +144,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: m.role,
         content: m.content,
       }));
-      // Tone contract (Leo 2026-08-02) lives in each prompt builder below; teach (spec 034)
+      // Teaching contract v2 (spec 038) lives in each prompt builder below; teach (spec 034)
       // and companion_id-bearing conversations (spec 037) branch inside buildRoundSystemMessages.
       const crisisActive =
         (activeKind === "companion" || activeKind === "teach") &&
@@ -179,6 +180,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: "assistant",
         content: result.content,
         created_at: nowIso(),
+        // Spec 038 §2.5: only plain 'chat' rounds are steered by the teaching mode toggle, so
+        // only those replies record which mode produced them.
+        teaching_mode: activeKind === "chat" ? settings.teachingMode : null,
       };
       await repos.messages.append(assistantMessage);
       await repos.conversations.touch(conversationId, assistantMessage.created_at);

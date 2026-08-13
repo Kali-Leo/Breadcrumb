@@ -85,18 +85,33 @@ export function createConversationsRepo(sql: SqlClient) {
   };
 }
 
+export interface TeachingModeCountRow {
+  teaching_mode: string;
+  count: number;
+}
+
 export function createMessagesRepo(sql: SqlClient) {
   return {
     async append(row: MessageRow): Promise<void> {
       await sql.execute(
-        "INSERT INTO messages (id, conversation_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
-        [row.id, row.conversation_id, row.role, row.content, row.created_at],
+        `INSERT INTO messages (id, conversation_id, role, content, created_at, teaching_mode)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [row.id, row.conversation_id, row.role, row.content, row.created_at, row.teaching_mode],
       );
     },
     async listByConversation(conversationId: string): Promise<MessageRow[]> {
       return sql.select<MessageRow>(
         "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
         [conversationId],
+      );
+    },
+    /** Plain per-mode usage facts for the feedback lab (spec 038 §2.5) — assistant replies
+     * only, grouped by the teaching mode that produced them. */
+    async countByTeachingMode(): Promise<TeachingModeCountRow[]> {
+      return sql.select<TeachingModeCountRow>(
+        `SELECT teaching_mode, COUNT(*) AS count FROM messages
+         WHERE role = 'assistant' AND teaching_mode IS NOT NULL
+         GROUP BY teaching_mode ORDER BY teaching_mode`,
       );
     },
   };

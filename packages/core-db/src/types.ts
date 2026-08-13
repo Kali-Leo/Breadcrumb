@@ -49,6 +49,10 @@ export interface MessageRow {
   role: MessageRole;
   content: string;
   created_at: string;
+  /** Teaching mode that produced an assistant reply in a plain chat — "adaptive" | "direct" |
+   * "guided" — NULL otherwise (spec 038). Kept as string here: core-db does not depend on
+   * core-teaching. */
+  teaching_mode: string | null;
 }
 
 /** 'concept' = a topic in the taxonomy tree; 'method' = a learning technique (e.g. Feynman

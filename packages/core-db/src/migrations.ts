@@ -702,6 +702,15 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Spec 038 §2.5: assistant replies in plain 'chat' conversations record which teaching
+    // mode (adaptive/direct/guided) produced them, so the feedback lab can show plain
+    // per-mode usage facts. NULL for user messages, non-chat kinds, and all history.
+    // No CHECK constraint — the value set is validated in TypeScript, same as
+    // conversations.kind (see 0029's precedent note).
+    id: "0030_message_teaching_mode",
+    statements: [`ALTER TABLE messages ADD COLUMN teaching_mode TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
