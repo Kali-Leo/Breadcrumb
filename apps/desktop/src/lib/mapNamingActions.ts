@@ -1,8 +1,9 @@
 /**
  * Purpose: spec 031 §3's optional naming stage — one batched LLM call names every clustered
  * continent that has no name yet, keyed by its member set so the same heap is never paid for
- * twice. Tree continents are never touched (a root already carries its own name), and any
- * failure keeps the medoid name, so the map always draws.
+ * twice; the renamed assignment is memoized per input object so reopening the palace gets a
+ * stable identity back. Tree continents are never touched (a root already carries its own
+ * name), and any failure keeps the medoid name, so the map always draws.
  * Main exports: applyAiContinentNames.
  * Side effects: reads/writes the "mapTopicNameCache" settings row, meters the call, and logs
  * silent failures. The caller decides whether to call at all (switch + network + apiConfig).
@@ -81,9 +82,28 @@ async function fetchMissingNames(
 
 /**
  * Returns the assignment with clustered continents renamed. The object identity only changes
- * when at least one name actually changed, so callers can compare by reference.
+ * when at least one name actually changed, so callers can compare by reference. Memoized per
+ * assignment object: the renamed result must keep a stable identity across palace reopens,
+ * or cachedWorldModel misses and rebuilds the world on every open. An unchanged result
+ * (nothing to name, or a failed call) is not kept, so the next open retries cheaply.
  */
-export async function applyAiContinentNames(
+export function applyAiContinentNames(
+  assignment: ContinentAssignment,
+  apiConfig: ApiConfig,
+): Promise<ContinentAssignment> {
+  const cached = namedAssignmentCache.get(assignment);
+  if (cached !== undefined) return cached;
+  const naming = applyNamesOnce(assignment, apiConfig).then((named) => {
+    if (named === assignment) namedAssignmentCache.delete(assignment);
+    return named;
+  });
+  namedAssignmentCache.set(assignment, naming);
+  return naming;
+}
+
+const namedAssignmentCache = new WeakMap<ContinentAssignment, Promise<ContinentAssignment>>();
+
+async function applyNamesOnce(
   assignment: ContinentAssignment,
   apiConfig: ApiConfig,
 ): Promise<ContinentAssignment> {

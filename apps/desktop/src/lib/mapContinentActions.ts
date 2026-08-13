@@ -1,8 +1,10 @@
 /**
  * Purpose: loads everything deriveContinents needs from local SQLite — embeddings, sighting
  * counts, and average curiosity — and turns it into a ContinentAssignment for the memory
- * palace (spec 031). Best-effort: any failure (DB not ready, malformed embedding rows)
- * degrades to null so the caller falls back to tree-root islands instead of throwing.
+ * palace (spec 031), memoized per nodes array so palace reopens hand cachedWorldModel the
+ * same object back (identity is the cache key downstream). Best-effort: any failure (DB not
+ * ready, malformed embedding rows) degrades to null so the caller falls back to tree-root
+ * islands instead of throwing.
  * Main exports: loadContinentAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -27,7 +29,30 @@ function computeEngagement(sightingCount: number, avgCuriosity: number): number 
   return 1 + Math.log2(1 + sightingCount) + 2 * avgCuriosity;
 }
 
-export async function loadContinentAssignment(
+/** Memoized per nodes array identity: without this, every palace mount produced a fresh
+ * assignment object, cachedWorldModel missed every time, and the expensive world rebuild
+ * blocked the main thread on each open. Freshness rides on the same signal the world cache
+ * uses — a reloaded tree is a new nodes array. A null (failed) load is not kept, so the
+ * next open retries; caching the promise also dedupes StrictMode's double effect run. */
+const assignmentCache = new WeakMap<
+  readonly KnowledgeNodeRow[],
+  Promise<ContinentAssignment | null>
+>();
+
+export function loadContinentAssignment(
+  nodes: readonly KnowledgeNodeRow[],
+): Promise<ContinentAssignment | null> {
+  const cached = assignmentCache.get(nodes);
+  if (cached !== undefined) return cached;
+  const loading = computeContinentAssignment(nodes).then((assignment) => {
+    if (assignment === null) assignmentCache.delete(nodes);
+    return assignment;
+  });
+  assignmentCache.set(nodes, loading);
+  return loading;
+}
+
+async function computeContinentAssignment(
   nodes: readonly KnowledgeNodeRow[],
 ): Promise<ContinentAssignment | null> {
   try {
