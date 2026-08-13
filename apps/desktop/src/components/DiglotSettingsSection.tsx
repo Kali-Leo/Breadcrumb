@@ -6,6 +6,7 @@
  */
 import { DIGLOT_UI_COPY, GUESS_LEVEL_BASE, type GuessLevel } from "@breadcrumb/plugin-diglot-weave";
 import { useDiglotStore } from "../stores/diglotStore";
+import { DiglotCalibration } from "./DiglotCalibration";
 
 const GUESS_LEVEL_LABELS: Record<GuessLevel, string> = {
   low: DIGLOT_UI_COPY.guessLevelLow,
@@ -88,6 +89,7 @@ export function DiglotSettingsSection() {
               ))}
             </div>
           </div>
+          <DiglotCalibration />
           <div className="flex items-center justify-between">
             <span>{DIGLOT_UI_COPY.ttsLabel}</span>
             <button

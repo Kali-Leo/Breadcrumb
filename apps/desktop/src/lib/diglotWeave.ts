@@ -61,6 +61,8 @@ export async function weaveAssistantMessage(input: {
   content: string;
   density: number;
   newWordDailyBase: number;
+  /** Introduction-queue ranks below this are treated as already known (calibration). */
+  introductionRankFloor: number;
   cardsByLemma: Map<string, Card>;
   newWordsIntroducedToday: number;
 }): Promise<WeaveResult> {
@@ -92,7 +94,11 @@ export async function weaveAssistantMessage(input: {
     }
   }
 
-  const introductionRank = new Map(loaded.introductionQueue.map((lemma, rank) => [lemma, rank]));
+  const introductionRank = new Map(
+    loaded.introductionQueue
+      .map((lemma, rank) => [lemma, rank] as const)
+      .filter(([, rank]) => rank >= input.introductionRankFloor),
+  );
   const scheduled = scheduleReplacements({
     candidates,
     cardsByLemma: input.cardsByLemma,

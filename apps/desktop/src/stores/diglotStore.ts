@@ -42,6 +42,11 @@ export interface DiglotSettings {
    * weaving. Metered separately (purpose "diglot-weave"); on by default — metering exists
    * so features can run boldly (Leo 2026-08-12), and it only fires while weaving is on. */
   llmRefineEnabled: boolean;
+  /** New-word introduction starts at this introduction-queue rank — set by the optional
+   * vocabulary calibration (i+1: start where the learner's knowledge ends). */
+  introductionRankFloor: number;
+  /** Rough known-word estimate from the last calibration, for plain display; null = 未校准. */
+  estimatedVocabulary: number | null;
 }
 
 const SETTINGS_KEY = "diglotSettings";
@@ -55,6 +60,8 @@ const DEFAULT_SETTINGS: DiglotSettings = {
   piperPath: "",
   piperModelPath: "",
   llmRefineEnabled: true,
+  introductionRankFloor: 0,
+  estimatedVocabulary: null,
 };
 
 interface DiglotState {
@@ -138,6 +145,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
       content,
       density: settings.density,
       newWordDailyBase: settings.newWordDailyBase,
+      introductionRankFloor: settings.introductionRankFloor,
       cardsByLemma,
       newWordsIntroducedToday: get().newWordsIntroducedToday,
     });
