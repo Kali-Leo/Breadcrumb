@@ -54,19 +54,20 @@ const COMPARE_CATEGORY_KEY = "compareCategory";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
  * learner tunes from the middle (spec 017 #1). */
 const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
-/** Fact-check, knowledge-edges, interest and the experimental lab panel default off: they
- * spend tokens (or, for labPanel, expose debug-grade numbers), so the user opts in
- * (spec 009, spec 010, spec 011, spec 012). */
+/** Metered features default ON: metering exists so features can run boldly — every
+ * switch and its real spend live on the 开关与计价 page, and silent signal collection is
+ * a core product value (Leo 2026-08-13). Only labPanel stays off: it exposes debug-grade
+ * numbers, which is a UI choice, not a spending one. */
 const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
   trail: true,
-  factcheck: false,
-  knowledgeEdges: false,
-  interest: false,
+  factcheck: true,
+  knowledgeEdges: true,
+  interest: true,
   labPanel: false,
-  compareProfileBuild: false,
-  compareAlignment: false,
-  mapTopicNaming: false,
+  compareProfileBuild: true,
+  compareAlignment: true,
+  mapTopicNaming: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
