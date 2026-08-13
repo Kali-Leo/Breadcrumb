@@ -50,25 +50,31 @@ export function FeedbackSettledSection() {
   const settled = useFeedbackStore((state) => state.settled);
   const isEmpty = settled.nodes.length === 0 && settled.words.length === 0;
 
+  // Archive-drawer form (Leo 2026-08-13): a factual roster, not a headline — collapsed
+  // by default at the bottom of the panel, same disclosure pattern as LabFailuresSection.
   return (
-    <section className="rounded border border-stone-200 bg-white p-3">
-      <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.settledTitle}</h3>
-      <p className="mt-1 text-stone-400">{FEEDBACK_COPY.settledHint}</p>
-      {isEmpty ? (
-        <p className="mt-2 text-stone-400">{FEEDBACK_COPY.settledEmpty}</p>
-      ) : (
-        <div className="mt-2 space-y-2">
-          <PillGroup
-            label={FEEDBACK_COPY.settledNodesLabel}
-            items={settled.nodes.map((node) => node.title)}
-          />
-          <PillGroup
-            label={FEEDBACK_COPY.settledWordsLabel}
-            items={settled.words.map((word) => word.lemma)}
-          />
-        </div>
-      )}
-      <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.settledBasis}</p>
-    </section>
+    <details className="rounded border border-stone-200 bg-white">
+      <summary className="cursor-pointer px-3 py-2 font-semibold text-stone-600">
+        {FEEDBACK_COPY.settledTitle}
+      </summary>
+      <div className="border-t border-stone-100 p-3 pt-2">
+        <p className="text-stone-400">{FEEDBACK_COPY.settledHint}</p>
+        {isEmpty ? (
+          <p className="mt-2 text-stone-400">{FEEDBACK_COPY.settledEmpty}</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            <PillGroup
+              label={FEEDBACK_COPY.settledNodesLabel}
+              items={settled.nodes.map((node) => node.title)}
+            />
+            <PillGroup
+              label={FEEDBACK_COPY.settledWordsLabel}
+              items={settled.words.map((word) => word.lemma)}
+            />
+          </div>
+        )}
+        <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.settledBasis}</p>
+      </div>
+    </details>
   );
 }
