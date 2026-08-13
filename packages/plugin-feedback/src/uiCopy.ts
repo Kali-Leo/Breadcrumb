@@ -71,9 +71,15 @@ export const FEEDBACK_COPY = {
   trendsBasis:
     "依据:累计量与可提取概率总和是文献与 Anki 社区验证的纵向形态;不做逐日正确率——当下表现不是长期学习的好指标(Soderstrom & Bjork 2015)。",
   trendsEmpty: "线条会随学习慢慢出现。",
-  trendConceptsLabel: "知识网络节点数",
-  trendKnowledgeLabel: "估计此刻还记得的概念数(按记忆模型)",
-  trendWordsSeenLabel: "接触过的词",
+  trendLayersTitle: "记忆 · 理解 · 直觉(估算)",
+  trendLayersMemoryLabel: "记忆",
+  trendLayersUnderstandingLabel: "理解",
+  trendLayersIntuitionLabel: "直觉转化",
+  trendLayersNote:
+    "三条都是模型估算,按遗忘曲线随时间消退。记忆=估计还能想起的概念量;理解=有讲解或自报证据支撑的部分;直觉转化最粗略——长期稳定、且你在对话里自己用过的部分。",
+  trendLayersBasis:
+    "依据:Fitts & Posner 三阶段(认知/联结/自动化)+ ACT-R 陈述性→程序性;证据来自相遇足迹、回讲判读、自报与你自己的用词。",
+  trendWordsTitle: "词汇(按记忆模型)",
   trendWordsSettledLabel: "稳定期超过一个月的词",
   trendWordsColdStartNote: "新词的稳定期长到一个月需要时间,这条线前段为 0 是正常的。",
 } as const;

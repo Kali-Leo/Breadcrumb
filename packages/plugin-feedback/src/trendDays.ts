@@ -1,7 +1,7 @@
 /**
- * Purpose: local-day bucketing shared by the feedback lab's trend series (spec 035 T6) —
+ * Purpose: local-day bucketing shared by the feedback lab's trend series (spec 035 T7a) —
  * turns a day count plus "now" into the local calendar date sequence each series samples.
- * Main exports: dateKeyRange, localDayEndIso, cumulativeByDay.
+ * Main exports: dateKeyRange, localDayEndIso.
  */
 
 /** Local calendar date key for an ISO instant, matching activity.ts's day-cutting rule. */
@@ -34,26 +34,4 @@ export function dateKeyRange(days: number, todayIso: string): string[] {
     keys.push(`${shiftedYear}-${shiftedMonth}-${shiftedDay}`);
   }
   return keys;
-}
-
-/** Cumulative count of `sortedInstantMs` at-or-before each local day's end — the shared
- * shape behind every never-decreasing trend series (concepts met, words seen). */
-export function cumulativeByDay(
-  sortedInstantMs: readonly number[],
-  dateKeys: readonly string[],
-): number[] {
-  const counts: number[] = [];
-  let pointer = 0;
-  let cumulative = 0;
-  for (const dateKey of dateKeys) {
-    const dayEndMs = Date.parse(localDayEndIso(dateKey));
-    let nextInstantMs = sortedInstantMs[pointer];
-    while (nextInstantMs !== undefined && nextInstantMs <= dayEndMs) {
-      cumulative += 1;
-      pointer += 1;
-      nextInstantMs = sortedInstantMs[pointer];
-    }
-    counts.push(cumulative);
-  }
-  return counts;
 }
