@@ -14,6 +14,7 @@ import { FeedbackReunionSection } from "./FeedbackReunionSection";
 import { FeedbackSettledSection } from "./FeedbackSettledSection";
 import { FeedbackSmallWinsSection } from "./FeedbackSmallWinsSection";
 import { FeedbackSystemGaugeSection } from "./FeedbackSystemGaugeSection";
+import { FeedbackTeachingModeSection } from "./FeedbackTeachingModeSection";
 import { FeedbackTotalsSection } from "./FeedbackTotalsSection";
 import { FeedbackTrendsSection } from "./FeedbackTrendsSection";
 
@@ -52,6 +53,7 @@ export function FeedbackPanel() {
             <FeedbackTotalsSection />
             <FeedbackTrendsSection />
             <FeedbackReunionSection />
+            <FeedbackTeachingModeSection />
             <FeedbackDailyBiteSection />
             <FeedbackSystemGaugeSection />
             <FeedbackSettledSection />

@@ -3,7 +3,8 @@
  * statements only (product principle 1: no praise, no performed warmth, no pressure);
  * simlab scans this module against the pressure lexicon and a praise-word blacklist.
  * Main exports: FEEDBACK_COPY, continuityLine, reunionLine, dailyBiteLine, gaugeLine,
- * newConceptLabel, reencounterLabel, wordGuessLabel, teachSessionLabel, evidenceClaimLabel.
+ * newConceptLabel, reencounterLabel, wordGuessLabel, teachSessionLabel, teachingModeLine,
+ * evidenceClaimLabel.
  */
 import type { MasteryClaimLevel } from "@breadcrumb/core-db";
 
@@ -82,6 +83,10 @@ export const FEEDBACK_COPY = {
   trendWordsTitle: "词汇(按记忆模型)",
   trendWordsSettledLabel: "稳定期超过一个月的词",
   trendWordsColdStartNote: "新词的稳定期长到一个月需要时间,这条线前段为 0 是正常的。",
+  teachingModeTitle: "讲解模式记录",
+  teachingModeEmpty: "还没有讲解模式的记录。在对话输入框上方可以切换讲法。",
+  teachingModeBasis:
+    "只是记录,不是评分。不同时间聊的内容不同,模式之间不能直接比出优劣;等积累够了,会在这里帮你一起看。",
 } as const;
 
 /** Continuity line for the heatmap: active-day and longest-run counts, plus the current
@@ -147,6 +152,12 @@ export function wordGuessLabel(lemma: string, isClose: boolean): string {
 /** Small-wins label: a teach-back conversation held inside the window. */
 export function teachSessionLabel(title: string): string {
   return `回讲了一次:${title}`;
+}
+
+/** Teaching-mode usage line: how many assistant turns used a given mode — a plain count,
+ * never framed as one mode outperforming another. */
+export function teachingModeLine(label: string, count: number): string {
+  return `「${label}」讲了 ${count} 轮`;
 }
 
 /** Evidence section's per-claim label — which source produced the mastery claim. */

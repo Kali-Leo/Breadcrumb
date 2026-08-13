@@ -21,6 +21,7 @@ import {
   computeSettled,
   computeSmallWins,
   computeSystemGauge,
+  computeTeachingModeUsage,
   computeWordSettledSeries,
   type DailyActivityCell,
   type DailyBiteResult,
@@ -31,6 +32,7 @@ import {
   type SettledResult,
   type SmallWin,
   type SystemGaugeResult,
+  type TeachingModeUsage,
   TREND_WINDOW_DAYS,
   type TrendPoint,
 } from "@breadcrumb/plugin-feedback";
@@ -63,6 +65,7 @@ export interface FeedbackData {
   dailyBite: DailyBiteResult;
   systemGauge: SystemGaugeResult;
   settled: SettledResult;
+  teachingModeUsage: TeachingModeUsage;
   evidenceCandidates: EvidenceCandidate[];
   trends: {
     layers: LayerTrendPoint[];
@@ -76,8 +79,9 @@ export interface FeedbackData {
   masteryClaims: MasteryClaimRow[];
 }
 
-/** Fetches sightings, the node tree, conversations, mastery claims and every installed
- * diglot pack's word states/guesses, then computes all eight modules' view models. Frequent
+/** Fetches sightings, the node tree, conversations, mastery claims, teaching-mode counts
+ * and every installed diglot pack's word states/guesses, then computes all nine modules'
+ * view models. Frequent
  * full pulls of sightings match the 🧪 lab panel's existing scale (spec 035 §架构). */
 export async function loadFeedbackData(): Promise<FeedbackData> {
   const repos = await getRepos();
@@ -85,13 +89,15 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
   const todayMidnight = todayLocalMidnightIso();
   const weekAgo = new Date(Date.parse(todayMidnight) - 6 * MS_PER_DAY).toISOString();
 
-  const [sightings, nodes, conversations, masteryClaims, packs] = await Promise.all([
-    repos.nodeSightings.listAll(),
-    repos.knowledgeNodes.listAll(),
-    repos.conversations.listRecentFirst(),
-    repos.masteryClaims.listAll(),
-    repos.diglot.listPacks(),
-  ]);
+  const [sightings, nodes, conversations, masteryClaims, packs, teachingModeCounts] =
+    await Promise.all([
+      repos.nodeSightings.listAll(),
+      repos.knowledgeNodes.listAll(),
+      repos.conversations.listRecentFirst(),
+      repos.masteryClaims.listAll(),
+      repos.diglot.listPacks(),
+      repos.messages.countByTeachingMode(),
+    ]);
   const statesByPack = await Promise.all(packs.map((pack) => repos.diglot.listStates(pack.id)));
   const guessesByPack = await Promise.all(packs.map((pack) => repos.diglot.listGuesses(pack.id)));
   const eventsByPack = await Promise.all(packs.map((pack) => repos.diglot.listAllEvents(pack.id)));
@@ -148,6 +154,8 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
 
   const settled = computeSettled({ sightings, nodeTitleById, retentionByNode, wordStates });
 
+  const teachingModeUsage = computeTeachingModeUsage(teachingModeCounts);
+
   const productiveUseTimesByNode = await buildProductiveUseTimesByNode(repos, sightings);
   const trendWindow = { days: TREND_WINDOW_DAYS, todayIso: now };
   const trends = {
@@ -185,6 +193,7 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
     dailyBite,
     systemGauge,
     settled,
+    teachingModeUsage,
     evidenceCandidates,
     trends,
     sightings,
