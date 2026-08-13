@@ -22,6 +22,7 @@
     "@breadcrumb/plugin-graph": "workspace:*",
     "@breadcrumb/plugin-interest": "workspace:*",
     "@breadcrumb/plugin-knowledge-tree": "workspace:*",
+    "@breadcrumb/plugin-companion": "workspace:*",
     "@breadcrumb/plugin-map": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",
     "@breadcrumb/plugin-planner": "workspace:*",

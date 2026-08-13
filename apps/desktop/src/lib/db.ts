@@ -7,6 +7,9 @@
 import {
   createAiFailuresRepo,
   createCanonicalRepo,
+  createCompanionKnowledgeStateRepo,
+  createCompanionMemoriesRepo,
+  createCompanionProposalsRepo,
   createComparisonRepo,
   createConversationsRepo,
   createDiglotRepo,
@@ -55,6 +58,9 @@ export interface Repos {
   practice: ReturnType<typeof createPracticeRepo>;
   diglot: ReturnType<typeof createDiglotRepo>;
   research: ReturnType<typeof createResearchRepo>;
+  companionMemories: ReturnType<typeof createCompanionMemoriesRepo>;
+  companionProposals: ReturnType<typeof createCompanionProposalsRepo>;
+  companionKnowledgeState: ReturnType<typeof createCompanionKnowledgeStateRepo>;
 }
 
 let sqlClientPromise: Promise<SqlClient> | null = null;
@@ -97,6 +103,9 @@ async function buildRepos(): Promise<Repos> {
     practice: createPracticeRepo(sqlClient),
     diglot: createDiglotRepo(sqlClient),
     research: createResearchRepo(sqlClient),
+    companionMemories: createCompanionMemoriesRepo(sqlClient),
+    companionProposals: createCompanionProposalsRepo(sqlClient),
+    companionKnowledgeState: createCompanionKnowledgeStateRepo(sqlClient),
   };
 }
 

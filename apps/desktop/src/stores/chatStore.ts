@@ -5,16 +5,14 @@
  */
 import { createEventBus } from "@breadcrumb/core-bus";
 import type { ConversationKind, ConversationRow, Currency, MessageRow } from "@breadcrumb/core-db";
-import {
-  BUILTIN_MODEL_PRICES,
-  type ChatMessage,
-  calculateCostMicros,
-  createLlmClient,
-} from "@breadcrumb/core-llm";
+import { type ChatMessage, createLlmClient } from "@breadcrumb/core-llm";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
+import { buildAnchoredNodeSystemMessage, ensureChatConversationId } from "../lib/chatRoundContext";
+import { recordRoundCost } from "../lib/chatRoundMetering";
+import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
+import { buildRoundSystemMessages } from "../lib/companionChatPrompt";
 import { getRepos } from "../lib/db";
-import { buildTeachSystemPrompt, teachTopicFromTitle } from "../lib/teachActions";
 import { newId, nowIso, todayLocalMidnightIso } from "../lib/time";
 import { useSettingsStore } from "./settingsStore";
 
@@ -27,6 +25,9 @@ interface ChatState {
   activeConversationId: string | null;
   /** Kind of the open conversation — 'teach' switches the system prompt (spec 034). */
   activeKind: ConversationKind;
+  /** companion_id of the open conversation, or null — 'companion' chats and companion-played
+   * 'teach' sessions alike (spec 037). */
+  activeCompanionId: string | null;
   messages: MessageRow[];
   streamingText: string | null;
   errorText: string | null;
@@ -42,6 +43,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   activeConversationId: null,
   activeKind: "chat",
+  activeCompanionId: null,
   messages: [],
   streamingText: null,
   errorText: null,
@@ -69,6 +71,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({
       activeConversationId: id,
       activeKind: conversation?.kind ?? "chat",
+      activeCompanionId: conversation?.companion_id ?? null,
       messages,
       conversationCost,
       errorText: null,
@@ -79,6 +82,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({
       activeConversationId: null,
       activeKind: "chat",
+      activeCompanionId: null,
       messages: [],
       conversationCost: new Map(),
       errorText: null,
@@ -95,21 +99,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ errorText: "还没有配置 API。去设置页填写服务地址和密钥" });
       return;
     }
+    const activeKind = get().activeKind;
+    if (activeKind === "companion" && !settings.featureSwitches.companionChat) {
+      set({ errorText: COMPANION_DESKTOP_COPY.chatDisabled });
+      return;
+    }
     const repos = await getRepos();
-
-    // Ensure a conversation exists (created lazily on first message).
-    let conversationId = get().activeConversationId;
-    if (conversationId === null) {
-      conversationId = newId();
-      const title = content.length > 20 ? `${content.slice(0, 20)}…` : content;
-      await repos.conversations.create({
-        id: conversationId,
-        title,
-        created_at: nowIso(),
-        updated_at: nowIso(),
-        kind: "chat",
-      });
+    const conversationId = await ensureChatConversationId(
+      repos,
+      get().activeConversationId,
+      content,
+    );
+    if (conversationId !== get().activeConversationId)
       set({ activeConversationId: conversationId });
+
+    const { useCompanionStore } = await import("./companionStore");
+    if (activeKind === "companion" || activeKind === "teach") {
+      useCompanionStore.getState().checkUserMessageForCrisis(content);
     }
 
     const userMessage: MessageRow = {
@@ -133,32 +139,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: m.role,
         content: m.content,
       }));
-      // Standing tone contract (Leo 2026-08-02): plain and matter-of-fact — one short
-      // positive instruction, no stacked prohibitions (they degrade the model's real work).
-      // Teach-back conversations (spec 034) flip the roles: the model is the novice.
-      if (get().activeKind === "teach") {
-        // Teach conversations are absent from the sidebar list — fetch the title directly.
-        const row = await repos.conversations.getById(conversationId);
-        const topic = teachTopicFromTitle(row?.title ?? "");
-        history.unshift({ role: "system", content: buildTeachSystemPrompt(topic) });
-      } else {
-        history.unshift({
-          role: "system",
-          content:
-            "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
-            "讲解清楚、循序，从对方当前的理解出发。",
-        });
-      }
+      // Tone contract (Leo 2026-08-02) lives in each prompt builder below; teach (spec 034)
+      // and companion_id-bearing conversations (spec 037) branch inside buildRoundSystemMessages.
+      const crisisActive =
+        (activeKind === "companion" || activeKind === "teach") &&
+        useCompanionStore.getState().crisisActive;
+      const systemMessages = await buildRoundSystemMessages({
+        repos,
+        activeKind,
+        conversationId,
+        content,
+        apiConfig: settings.apiConfig,
+        companionScriptEnabled: settings.featureSwitches.companionScript,
+        companionMemoryEnabled: settings.featureSwitches.companionMemory,
+        crisisActive,
+      });
+      history.unshift(...systemMessages);
       // Anchored knowledge node (if any) steers this round without polluting stored history.
-      const { useKnowledgeStore } = await import("./knowledgeStore");
-      const knowledge = useKnowledgeStore.getState();
-      const anchoredNode = knowledge.nodes.find((node) => node.id === knowledge.anchoredNodeId);
-      if (anchoredNode) {
-        history.unshift({
-          role: "system",
-          content: `学习者当前锚定的知识点：「${anchoredNode.label}」（${anchoredNode.summary}）。请围绕这个知识点展开回答。`,
-        });
-      }
+      const anchoredMessage = await buildAnchoredNodeSystemMessage();
+      if (anchoredMessage) history.unshift(anchoredMessage);
       const result = await client.chatStream(history, (delta) => {
         set({ streamingText: (get().streamingText ?? "") + delta });
       });
@@ -173,24 +172,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       await repos.messages.append(assistantMessage);
       await repos.conversations.touch(conversationId, assistantMessage.created_at);
 
-      const price = BUILTIN_MODEL_PRICES[settings.apiConfig.model];
-      await repos.llmCalls.record({
-        id: newId(),
-        conversation_id: conversationId,
-        purpose: "chat",
+      const { conversationCost, todayCost, conversations } = await recordRoundCost(repos, {
+        conversationId,
+        purpose: activeKind === "companion" ? "companion-chat" : "chat",
         model: settings.apiConfig.model,
-        input_tokens: result.usage.inputTokens,
-        output_tokens: result.usage.outputTokens,
-        cost_micros: price ? calculateCostMicros(result.usage, price) : 0,
-        currency: price?.currency ?? "CNY",
-        created_at: nowIso(),
+        usage: result.usage,
       });
-
-      const [conversationCost, todayCost, conversations] = await Promise.all([
-        repos.llmCalls.sumCostForConversation(conversationId),
-        repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
-        repos.conversations.listByKind("chat"),
-      ]);
       set({
         messages: [...get().messages, assistantMessage],
         streamingText: null,

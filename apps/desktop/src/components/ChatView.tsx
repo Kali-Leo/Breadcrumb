@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { useChatStore } from "../stores/chatStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
+import { CompanionChatBanners } from "./CompanionChatBanners";
 import { Composer } from "./Composer";
 import { FactcheckBadge } from "./FactcheckBadge";
 import { MessageBubble } from "./MessageBubble";
@@ -32,6 +33,7 @@ export function ChatView() {
 
   return (
     <div className="flex h-full flex-col bg-stone-50">
+      <CompanionChatBanners />
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && !isStreaming && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">

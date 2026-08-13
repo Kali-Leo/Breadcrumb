@@ -4,6 +4,7 @@
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
+import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { DiglotSettingsSection } from "./DiglotSettingsSection";
@@ -154,6 +155,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </section>
         </>
       )}
+
+      <p className="text-center text-[11px] text-stone-300">{COMPANION_DESKTOP_COPY.credits}</p>
     </div>
   );
 }

@@ -23,6 +23,7 @@ import "./stores/edgeStore";
 import "./stores/interestStore";
 // Side-effect only: teach-back quality judgment on finished teach rounds (vision/09 #2).
 import "./lib/teachQuality";
+import { useCompanionStore } from "./stores/companionStore";
 import { useDiglotStore } from "./stores/diglotStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useResearchStore } from "./stores/researchStore";
@@ -50,6 +51,7 @@ export default function App() {
       await useKnowledgeStore.getState().loadTree();
       await useTrailStore.getState().refreshToday();
       await useTrailStore.getState().ensureYesterdaySummary();
+      await useCompanionStore.getState().initialize();
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
       void backfillMissingEmbeddings().then(() => runDedupSweep());

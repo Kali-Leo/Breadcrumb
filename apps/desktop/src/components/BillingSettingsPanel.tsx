@@ -86,6 +86,24 @@ const FEATURE_ROWS: Array<{
     hint: "反馈形式试验场:全部由本地数据计算,零 token",
     purposes: [],
   },
+  {
+    feature: "companionChat",
+    name: "🎭 伙伴会话",
+    hint: "侧边栏三位 AI 学习伙伴:打开对话、主动发起回讲提议",
+    purposes: ["companion-chat"],
+  },
+  {
+    feature: "companionMemory",
+    name: "🧠 伙伴记忆",
+    hint: "伙伴对话轮次结束后记一条观察,累计到阈值再归纳一次洞察",
+    purposes: ["companion-memory"],
+  },
+  {
+    feature: "companionScript",
+    name: "📜 回讲脚本",
+    hint: "接受回讲提议时先生成脚本(期望点/预置误解),回讲中每轮做一次状态合并",
+    purposes: ["companion-script"],
+  },
 ];
 
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */

@@ -21,4 +21,7 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "map-naming": "板块起名",
   "diglot-weave": "织入·智能替换",
   "teach-quality": "回讲判读",
+  "companion-chat": "伙伴会话",
+  "companion-memory": "伙伴记忆",
+  "companion-script": "回讲脚本",
 };

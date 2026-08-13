@@ -5,6 +5,7 @@
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
+import { CompanionSection } from "./CompanionSection";
 import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
@@ -72,6 +73,7 @@ export function Sidebar({
         ))}
       </nav>
       <TrailPanel />
+      <CompanionSection onOpenChat={onOpenChat} />
       <div className="m-3 space-y-1">
         <button type="button" onClick={onOpenMap} className={viewButtonClass(activeView === "map")}>
           🏛️ 记忆宫殿

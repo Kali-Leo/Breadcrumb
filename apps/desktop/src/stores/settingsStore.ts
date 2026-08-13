@@ -39,6 +39,16 @@ export interface FeatureSwitches {
    * computation stays on-device and the real consent point is the (not-yet-built) upload
    * step; turning it off shows a one-time plain explanation, then never asks again. */
   researchTasks: boolean;
+  /** Companion cast (spec 037): opening/continuing a chat with one of the three companion
+   * cards. Off hides the sidebar's 伙伴 section entirely and blocks sending in an open
+   * companion conversation. */
+  companionChat: boolean;
+  /** Companion cast: writes/retrieves the per-companion memory stream (importance scoring +
+   * periodic reflection). Off means companions still chat, just without long-term memory. */
+  companionMemory: boolean;
+  /** Companion cast: generates the teach-back script (expectations/misconceptions/gaps) and
+   * runs Reflect-Respond each round. Off falls back to spec-034's generic teach prompt. */
+  companionScript: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -83,6 +93,9 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   teachQuality: true,
   feedbackLab: true,
   researchTasks: true,
+  companionChat: true,
+  companionMemory: true,
+  companionScript: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

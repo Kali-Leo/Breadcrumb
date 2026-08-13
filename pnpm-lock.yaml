@@ -41,6 +41,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/plugin-companion':
+        specifier: workspace:*
+        version: link:../../packages/plugin-companion
       '@breadcrumb/plugin-compare':
         specifier: workspace:*
         version: link:../../packages/plugin-compare
