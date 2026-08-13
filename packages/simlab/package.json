@@ -9,7 +9,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "sim": "tsx src/cli/sim.ts"
+    "sim": "tsx src/cli/sim.ts",
+    "seed-demo": "tsx src/cli/seedDemo.ts"
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",

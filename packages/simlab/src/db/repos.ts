@@ -9,6 +9,7 @@ import {
   createCanonicalRepo,
   createComparisonRepo,
   createConversationsRepo,
+  createDiglotRepo,
   createFactcheckRepo,
   createGoalsRepo,
   createInterestSignalsRepo,
@@ -49,6 +50,7 @@ export interface SimlabRepos {
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
+  diglot: ReturnType<typeof createDiglotRepo>;
 }
 
 export function createSimlabRepos(sql: SqlClient): SimlabRepos {
@@ -73,5 +75,6 @@ export function createSimlabRepos(sql: SqlClient): SimlabRepos {
     comparisons: createComparisonRepo(sql),
     canonical: createCanonicalRepo(sql),
     practice: createPracticeRepo(sql),
+    diglot: createDiglotRepo(sql),
   };
 }
