@@ -91,6 +91,9 @@ function crossCuttingSection(metrics: RunMetrics): string {
     `- digestReconciliationViolationCount: ${metrics.crossCutting.digestReconciliationViolationCount}`,
     `- frontierStalenessWarnJourneyCount (WARN, not a gate): ${metrics.crossCutting.frontierStalenessWarnJourneyCount}`,
     `- duplicateGoalTitleCount: ${metrics.crossCutting.duplicateGoalTitleCount}`,
+    `- teachingDiscipline: ${metrics.crossCutting.teachingDiscipline.multiQuestionReplies} multi-question / ` +
+      `${metrics.crossCutting.teachingDiscipline.overlongReplies} overlong of ` +
+      `${metrics.crossCutting.teachingDiscipline.totalReplies} tutor replies`,
   ].join("\n");
 }
 

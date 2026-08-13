@@ -31,6 +31,7 @@ function makeMetrics(overrides: Partial<RunMetrics> = {}): RunMetrics {
       digestReconciliationViolationCount: 0,
       frontierStalenessWarnJourneyCount: 0,
       duplicateGoalTitleCount: 0,
+      teachingDiscipline: { totalReplies: 4, multiQuestionReplies: 1, overlongReplies: 0 },
     },
     journeys: [
       {
@@ -68,6 +69,13 @@ describe("buildSummaryMarkdown", () => {
   it("reports the planner hard-gate count with its must-be-0 annotation", () => {
     const markdown = buildSummaryMarkdown(makeMetrics(), []);
     expect(markdown).toContain("hardGateViolationCount (must be 0): 0");
+  });
+
+  it("reports the teaching-discipline counts", () => {
+    const markdown = buildSummaryMarkdown(makeMetrics(), []);
+    expect(markdown).toContain(
+      "teachingDiscipline: 1 multi-question / 0 overlong of 4 tutor replies",
+    );
   });
 
   it("caps flagged-sample excerpts and notes the remainder", () => {

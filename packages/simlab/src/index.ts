@@ -18,6 +18,7 @@ export * from "./judges/metrics";
 export * from "./judges/pressureLexicon";
 export * from "./judges/scriptedRecovery";
 export * from "./judges/targetConceptsRecall";
+export * from "./judges/teachingDiscipline";
 export * from "./judges/telemetry";
 export * from "./persona/perturb";
 export * from "./persona/schema";

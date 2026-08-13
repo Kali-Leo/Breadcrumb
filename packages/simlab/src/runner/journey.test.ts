@@ -259,6 +259,7 @@ describe("runJourney", () => {
         ledger,
         pressureLexicon: loadPressureLexicon(),
         onPressureHit: (sample) => pressureHits.push(sample),
+        onTeachingDisciplineCheck: () => {},
       },
     });
 

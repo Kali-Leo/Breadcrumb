@@ -13,6 +13,7 @@ import { checkDigestReconciliation, checkFrontierStaleness } from "./digestTripw
 import type { Violation } from "./invariants";
 import { checkMasteryTripwires } from "./masteryTripwire";
 import { computeTargetConceptsRecall } from "./targetConceptsRecall";
+import type { TeachingDisciplineResult } from "./teachingDiscipline";
 import type { PressureHitSample } from "./telemetry";
 
 /** Day boundaries where the frontier stayed byte-identical while nodes kept growing (>=2
@@ -62,6 +63,9 @@ export interface RunMetrics {
     digestReconciliationViolationCount: number;
     frontierStalenessWarnJourneyCount: number;
     duplicateGoalTitleCount: number;
+    /** Teaching contract v2's one-question-per-turn and brevity discipline (spec 038 §2.6),
+     * aggregated live from every tutor reply across the run — see teachingDiscipline.ts. */
+    teachingDiscipline: TeachingDisciplineResult;
   };
   journeys: JourneySummary[];
 }
@@ -83,6 +87,9 @@ export interface BuildRunMetricsInput {
   degenerateTurnCount: number;
   usageContractViolationCount: number;
   parentLabelViolationCount: number;
+  /** Accumulated live over the run via RunTelemetry.onTeachingDisciplineCheck (spec 038 §2.6) —
+   * not re-derived from the log, unlike the three counts above. */
+  teachingDiscipline: TeachingDisciplineResult;
 }
 
 export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
@@ -158,6 +165,7 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
       digestReconciliationViolationCount,
       frontierStalenessWarnJourneyCount,
       duplicateGoalTitleCount,
+      teachingDiscipline: input.teachingDiscipline,
     },
     journeys,
   };

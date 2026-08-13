@@ -10,6 +10,7 @@ import type { ChatMessage, LlmClientConfig } from "@breadcrumb/core-llm";
 import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
 import type { SimlabRepos } from "../db/repos";
 import { findPressureLexiconHits } from "../judges/pressureLexicon";
+import { checkTeachingDiscipline } from "../judges/teachingDiscipline";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";
 import type { JourneyLogWriter } from "./artifacts";
@@ -100,6 +101,7 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       role: "user",
       content: studentReply.content,
       created_at: nowIso,
+      teaching_mode: null,
     });
     transcript.push({ role: "user", content: studentReply.content });
 
@@ -130,6 +132,7 @@ export async function runConversation(options: ConversationOptions): Promise<Con
           hits,
         });
       }
+      options.telemetry.onTeachingDisciplineCheck(checkTeachingDiscipline([tutorReply.content]));
     }
 
     nowIso = new Date(Date.parse(nowIso) + ROUND_STEP_MS).toISOString();
@@ -140,6 +143,7 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       role: "assistant",
       content: tutorReply.content,
       created_at: nowIso,
+      teaching_mode: null,
     });
     transcript.push({ role: "assistant", content: tutorReply.content });
 

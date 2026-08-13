@@ -41,6 +41,7 @@ describe("summarizeCommand", () => {
       crossCutting: {
         zodFailureRateByPurpose: {},
         pressureLexiconHits: { tutor: 0, trailSummary: 0 },
+        teachingDiscipline: { totalReplies: 0, multiQuestionReplies: 0, overlongReplies: 0 },
       },
       journeys: [],
     });

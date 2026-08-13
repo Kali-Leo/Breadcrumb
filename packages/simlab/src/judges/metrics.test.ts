@@ -71,6 +71,7 @@ function baseInput(overrides: Partial<BuildRunMetricsInput> = {}): BuildRunMetri
     degenerateTurnCount: 0,
     usageContractViolationCount: 0,
     parentLabelViolationCount: 0,
+    teachingDiscipline: { totalReplies: 0, multiQuestionReplies: 0, overlongReplies: 0 },
     ...overrides,
   };
 }
@@ -87,6 +88,19 @@ describe("buildRunMetrics crossCutting: new tripwires", () => {
     expect(metrics.crossCutting.degenerateTurnCount).toBe(3);
     expect(metrics.crossCutting.usageContractViolationCount).toBe(2);
     expect(metrics.crossCutting.parentLabelViolationCount).toBe(5);
+  });
+
+  it("passes the live-accumulated teachingDiscipline counts straight through", () => {
+    const metrics = buildRunMetrics(
+      baseInput({
+        teachingDiscipline: { totalReplies: 10, multiQuestionReplies: 2, overlongReplies: 1 },
+      }),
+    );
+    expect(metrics.crossCutting.teachingDiscipline).toEqual({
+      totalReplies: 10,
+      multiQuestionReplies: 2,
+      overlongReplies: 1,
+    });
   });
 
   it("is zero across the board for a clean run (no false positives)", () => {
