@@ -49,11 +49,21 @@ const CRISIS_KEYWORDS_ZH: readonly string[] = [
 ];
 const CRISIS_KEYWORDS_EN: readonly string[] = [
   "suicide",
+  "suicidal",
   "kill myself",
+  "killing myself",
   "self-harm",
   "end my life",
+  "ending my life",
   "hurt myself",
+  "hurting myself",
+  "harm myself",
+  "harming myself",
+  "cut myself",
+  "cutting myself",
   "take my own life",
+  "want to die",
+  "better off dead",
 ];
 
 /** Case-insensitive keyword match for self-harm/suicide expressions (zh + en). A hit must

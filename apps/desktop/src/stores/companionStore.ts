@@ -35,6 +35,10 @@ import { useSettingsStore } from "./settingsStore";
 
 const PROPOSAL_LOOKBACK_MS = 30 * 24 * 3_600_000;
 
+/** Serializes overlapping gate evaluations (React StrictMode double-mount, bus bursts) —
+ * without this, two concurrent runs can both see "no pending" and insert duplicates. */
+let proposalGateEvaluationInFlight = false;
+
 interface CompanionState extends BreakReminderState {
   cards: CompanionCard[];
   activeProposal: CompanionProposalRow | null;
@@ -42,6 +46,8 @@ interface CompanionState extends BreakReminderState {
   crisisActive: boolean;
   initialize(): Promise<void>;
   evaluateProposalGate(): Promise<void>;
+  /** Internal single-run body of the gate — call evaluateProposalGate, which serializes. */
+  runProposalGateOnce(): Promise<void>;
   acceptProposal(): Promise<void>;
   declineProposal(): Promise<void>;
   /** Returns whether THIS call detected a crisis (not the sticky crisisActive flag) — the
@@ -78,6 +84,16 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       set({ activeProposal: null });
       return;
     }
+    if (proposalGateEvaluationInFlight) return;
+    proposalGateEvaluationInFlight = true;
+    try {
+      await get().runProposalGateOnce();
+    } finally {
+      proposalGateEvaluationInFlight = false;
+    }
+  },
+
+  async runProposalGateOnce() {
     const repos = await getRepos();
     const now = nowIso();
     const sinceIso = new Date(Date.parse(now) - PROPOSAL_LOOKBACK_MS).toISOString();

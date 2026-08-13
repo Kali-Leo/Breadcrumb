@@ -39,6 +39,12 @@ describe("detectCrisis", () => {
     expect(detectCrisis("I want to KILL MYSELF")).toBe(true);
   });
 
+  it("matches progressive/inflected forms (real-app regression, 2026-08-13)", () => {
+    expect(detectCrisis("some nights I think about hurting myself")).toBe(true);
+    expect(detectCrisis("I've been harming myself")).toBe(true);
+    expect(detectCrisis("feeling suicidal lately")).toBe(true);
+  });
+
   it("does not match unrelated words containing similar characters", () => {
     expect(detectCrisis("我在图书馆自习")).toBe(false);
     expect(detectCrisis("电影已经杀青了")).toBe(false);
