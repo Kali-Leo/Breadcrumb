@@ -3,6 +3,7 @@
  * a real chat, zero LLM calls at creation time (spec 035 #4, "最小重启").
  * Main exports: startReunionSession.
  */
+import { REUNION_TITLE_PREFIX } from "@breadcrumb/core-teaching";
 import { reunionOpener } from "@breadcrumb/plugin-feedback";
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
@@ -16,7 +17,7 @@ export async function startReunionSession(conceptTitle: string): Promise<string>
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,
-    title: `重逢:${conceptTitle}`,
+    title: `${REUNION_TITLE_PREFIX}${conceptTitle}`,
     created_at: createdAt,
     updated_at: createdAt,
     kind: "chat",
