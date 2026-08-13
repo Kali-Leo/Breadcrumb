@@ -32,10 +32,14 @@ export function createSettingsRepo(sql: SqlClient) {
 
 export function createConversationsRepo(sql: SqlClient) {
   return {
-    async create(row: ConversationRow): Promise<void> {
+    /** companion_id is optional here (defaults to null) so every caller predating spec 037's
+     * companion cast keeps typechecking without touching every call site. */
+    async create(
+      row: Omit<ConversationRow, "companion_id"> & { companion_id?: string | null },
+    ): Promise<void> {
       await sql.execute(
-        "INSERT INTO conversations (id, title, created_at, updated_at, kind) VALUES (?, ?, ?, ?, ?)",
-        [row.id, row.title, row.created_at, row.updated_at, row.kind],
+        "INSERT INTO conversations (id, title, created_at, updated_at, kind, companion_id) VALUES (?, ?, ?, ?, ?, ?)",
+        [row.id, row.title, row.created_at, row.updated_at, row.kind, row.companion_id ?? null],
       );
     },
     /** Every conversation regardless of kind, newest first. */
@@ -57,6 +61,20 @@ export function createConversationsRepo(sql: SqlClient) {
         "SELECT * FROM conversations WHERE kind = ? ORDER BY updated_at DESC",
         [kind],
       );
+    },
+    /** The most recently updated conversation of one kind belonging to one companion card
+     * (spec 037) — reopening a companion from the sidebar continues this thread instead of
+     * starting a new one. */
+    async findLatestByCompanion(
+      companionId: string,
+      kind: ConversationKind,
+    ): Promise<ConversationRow | null> {
+      const rows = await sql.select<ConversationRow>(
+        `SELECT * FROM conversations WHERE companion_id = ? AND kind = ?
+         ORDER BY updated_at DESC LIMIT 1`,
+        [companionId, kind],
+      );
+      return rows[0] ?? null;
     },
     async touch(id: string, updatedAtIso: string): Promise<void> {
       await sql.execute("UPDATE conversations SET updated_at = ? WHERE id = ?", [updatedAtIso, id]);

@@ -661,6 +661,47 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Spec 037 companion cast: conversations gain an optional companion_id (an existing
+    // 'teach' conversation with a companion_id is played by the Shichimi card instead of the
+    // generic teach prompt; a new 'companion' kind is added at the type layer only — no CHECK
+    // constraint here since ConversationRow.kind is validated in TypeScript, matching 0021's
+    // precedent of not constraining the kind column in SQL). companion_memories is the
+    // Stanford-generative-agents-style memory stream (importance-scored observations plus
+    // periodic reflections). companion_proposals records the proactive teach-back gate's
+    // decisions (accept/decline/expire) so the exponential backoff can read the recent streak.
+    // companion_knowledge_state holds one JSON snapshot per teach-back conversation — the
+    // Reflect-Respond student model the companion is only ever allowed to answer from.
+    id: "0029_companion_cast",
+    statements: [
+      `ALTER TABLE conversations ADD COLUMN companion_id TEXT;`,
+      `CREATE TABLE companion_memories (
+        id TEXT PRIMARY KEY,
+        companion_id TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('observation','reflection')),
+        content TEXT NOT NULL,
+        importance INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        last_accessed_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_companion_memories_companion ON companion_memories(companion_id, created_at);`,
+      `CREATE TABLE companion_proposals (
+        id TEXT PRIMARY KEY,
+        companion_id TEXT NOT NULL,
+        node_id TEXT,
+        topic TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending','accepted','declined','expired')),
+        created_at TEXT NOT NULL,
+        resolved_at TEXT
+      );`,
+      `CREATE INDEX idx_companion_proposals_companion ON companion_proposals(companion_id, created_at);`,
+      `CREATE TABLE companion_knowledge_state (
+        conversation_id TEXT PRIMARY KEY REFERENCES conversations(id),
+        state_json TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

@@ -5,6 +5,8 @@
  */
 export * from "./aiFailureRepositories";
 export * from "./canonicalRepositories";
+export * from "./companionRepositories";
+export * from "./companionTypes";
 export * from "./comparisonRepositories";
 export * from "./diglotRepositories";
 export * from "./diglotTypes";

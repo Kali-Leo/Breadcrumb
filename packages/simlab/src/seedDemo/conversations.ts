@@ -59,6 +59,7 @@ function conversationRow(
     kind,
     created_at: first?.created_at ?? new Date().toISOString(),
     updated_at: last?.created_at ?? first?.created_at ?? new Date().toISOString(),
+    companion_id: null,
   };
 }
 

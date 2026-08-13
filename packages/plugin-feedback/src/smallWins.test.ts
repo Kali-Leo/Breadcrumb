@@ -42,7 +42,7 @@ function teachConversation(
   createdAt: string,
   kind: ConversationRow["kind"] = "teach",
 ): ConversationRow {
-  return { id, title, created_at: createdAt, updated_at: createdAt, kind };
+  return { id, title, created_at: createdAt, updated_at: createdAt, kind, companion_id: null };
 }
 
 const nodeTitleById = new Map([

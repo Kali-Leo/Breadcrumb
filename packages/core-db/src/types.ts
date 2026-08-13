@@ -27,8 +27,10 @@ export interface SettingRow {
 /** 'chat' = an ordinary conversation, listed in the sidebar. 'practice' = a discussion opened
  * from a practice item (spec 026) — saved like any other conversation but hidden from the
  * sidebar's chat list, since it is a temporary offshoot of one practice leaf, not a standing
- * learning thread. */
-export type ConversationKind = "chat" | "practice" | "teach";
+ * learning thread. 'teach' = a teach-back session (spec 034); when its companion_id is set
+ * the student side is played by the Shichimi companion card (spec 037) instead of the
+ * generic teach prompt. 'companion' = a chat opened with one of the three companion cards. */
+export type ConversationKind = "chat" | "practice" | "teach" | "companion";
 
 export interface ConversationRow {
   id: string;
@@ -36,6 +38,9 @@ export interface ConversationRow {
   created_at: string;
   updated_at: string;
   kind: ConversationKind;
+  /** Which companion card (e.g. "shichimi", "pepper", "cumin") owns this conversation —
+   * null for ordinary chat/practice threads that have no companion attached (spec 037). */
+  companion_id: string | null;
 }
 
 export interface MessageRow {
