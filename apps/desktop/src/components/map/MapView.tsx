@@ -6,12 +6,12 @@
  * fallback renders, which is fine and intended, and AI continent names (when that switch is
  * on) patch in a moment later. The world model is cached per (nodes, assignment) pair so
  * re-opening the palace skips the expensive terrain build (identical output, just
- * remembered). StrictMode-safe; DEV keys 0 demo, 1..2 level jumps.
+ * remembered). The Pixi lifecycle lives in useMapApplication; if its init fails the page
+ * says so in place instead of staying blank. StrictMode-safe; DEV keys 0 demo, 1..2 jumps.
  * Main exports: MapView.
  */
 
 import type { ContinentAssignment } from "@breadcrumb/plugin-map";
-import { Application } from "pixi.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/mapNamingActions";
@@ -20,20 +20,13 @@ import { useMemoryStore } from "../../stores/memoryStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
 import { findIsland, type MapLevel } from "./levels";
-import { applyReveals, drawFootprintTrail } from "./livingMap";
 import { MapInfoPanel } from "./MapInfoPanel";
-import { loadMapArt, resetMapArt } from "./mapArtAssets";
-import { createMapController, type MapController } from "./mapController";
 import type { HoverInfo } from "./mapHover";
-import { mapTheme } from "./mapTheme";
 import { cachedWorldModel } from "./mapWorldCache";
+import { useMapApplication } from "./useMapApplication";
 
 export function MapView() {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const controllerRef = useRef<MapController | null>(null);
-  const trailIdsRef = useRef<readonly string[]>([]);
   const previousIdsRef = useRef(new Map<string, ReadonlySet<string>>());
-  const [ready, setReady] = useState(false);
 
   const storeNodes = useKnowledgeStore((state) => state.nodes);
   const storeSessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
@@ -84,61 +77,11 @@ export function MapView() {
     () => cachedWorldModel(nodes, effectiveAssignment),
     [nodes, effectiveAssignment],
   );
+  const { containerRef, controllerRef, trailIdsRef, ready, initFailed } = useMapApplication({
+    onHover: setHover,
+    onLevel: setLevel,
+  });
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
-
-  // One Application for the component's whole life — scenes rebuild, it never does.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container === null) return undefined;
-    let cancelled = false;
-    let app: Application | null = null;
-    void (async () => {
-      const created = new Application();
-      await created.init({
-        background: mapTheme.parchment,
-        antialias: true,
-        resizeTo: container,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-      });
-      const art = await loadMapArt();
-      if (cancelled) {
-        created.destroy(true, { children: true });
-        return;
-      }
-      app = created;
-      container.appendChild(created.canvas);
-      const controller = createMapController(created, art, {
-        onHover: setHover,
-        onLevel: setLevel,
-      });
-      controllerRef.current = controller;
-
-      created.ticker.add((ticker) => {
-        const deltaSeconds = ticker.deltaMS / 1000;
-        controller.tick(deltaSeconds);
-        const scene = controller.scene;
-        if (scene !== null) {
-          scene.revealTargets = applyReveals(scene.revealTargets, deltaSeconds);
-          controller.footprintPhase += deltaSeconds * 14;
-          const trailPath = trailIdsRef.current
-            .map((nodeId) => scene.placePositions.get(nodeId))
-            .filter((point): point is NonNullable<typeof point> => point !== undefined);
-          drawFootprintTrail(scene.footprintLayer, trailPath, controller.footprintPhase);
-        }
-      });
-      setReady(true);
-    })();
-    return () => {
-      cancelled = true;
-      setReady(false);
-      controllerRef.current?.destroy();
-      controllerRef.current = null;
-      app?.destroy(true, { children: true });
-      app = null;
-      resetMapArt();
-    };
-  }, []);
 
   // Scene rebuilds on data changes; the renderer and camera model stay alive.
   useEffect(() => {
@@ -158,7 +101,7 @@ export function MapView() {
           : new Set([...currentIds].filter((id) => !previousIds.has(id)));
       })(),
     );
-  }, [ready, world, retentionByNode, demoMode]);
+  }, [ready, world, retentionByNode, demoMode, controllerRef]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;
@@ -172,8 +115,16 @@ export function MapView() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [controllerRef]);
 
+  if (initFailed) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
+        <span className="text-4xl">🏛️</span>
+        <p className="text-sm">地图没有加载成功。离开这一页再回来，会重新尝试。</p>
+      </div>
+    );
+  }
   if (world.islands.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
