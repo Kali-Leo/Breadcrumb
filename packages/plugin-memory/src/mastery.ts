@@ -3,7 +3,7 @@
  * by self-report claims that decay if never revisited. Self-report can never outweigh real
  * evidence; it only fills the gap real evidence hasn't covered yet.
  * Main exports: computeMastery, LIT_THRESHOLD, DIM_THRESHOLD, masteryTier, MasteryTier,
- * CLAIM_WEIGHT, CLAIM_HALF_LIFE_DAYS.
+ * CLAIM_WEIGHT, CLAIM_HALF_LIFE_DAYS, computeClaimScore.
  */
 import type { MasteryClaimLevel, MasteryClaimRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { computeRetentionByNode } from "./retention";
@@ -63,8 +63,10 @@ function groupClaimsByNode(claims: readonly MasteryClaimRow[]): Map<string, Mast
   return byNode;
 }
 
-/** The strongest still-relevant claim wins; multiple stale claims don't stack indefinitely. */
-function computeClaimScore(claims: readonly MasteryClaimRow[], nowIso: string): number {
+/** The strongest still-relevant claim wins; multiple stale claims don't stack indefinitely.
+ * Exported so other consumers (e.g. the three-layer trend series in layers.ts) reuse the
+ * exact same decay formula instead of reimplementing it. */
+export function computeClaimScore(claims: readonly MasteryClaimRow[], nowIso: string): number {
   const now = Date.parse(nowIso);
   let best = 0;
   for (const claim of claims) {
