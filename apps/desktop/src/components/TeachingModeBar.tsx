@@ -31,14 +31,14 @@ export function TeachingModeBar() {
 
   return (
     <div className="flex items-center gap-2 border-t border-stone-100 bg-white px-4 py-1 text-xs">
-      <span className="text-stone-400">讲解</span>
-      <div className="flex overflow-hidden rounded-full border border-stone-200">
+      <span className="shrink-0 text-stone-400">讲解</span>
+      <div className="flex shrink-0 overflow-hidden rounded-full border border-stone-200">
         {MODES.map((mode) => (
           <button
             key={mode.value}
             type="button"
             onClick={() => void setTeachingMode(mode.value)}
-            className={`px-2 py-0.5 transition-colors ${
+            className={`whitespace-nowrap px-2 py-0.5 transition-colors ${
               teachingMode === mode.value
                 ? "bg-amber-500 text-white"
                 : "bg-white text-stone-500 hover:bg-stone-50"
