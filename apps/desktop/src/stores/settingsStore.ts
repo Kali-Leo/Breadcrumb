@@ -31,6 +31,9 @@ export interface FeatureSwitches {
   mapTopicNaming: boolean;
   /** Teach-back explanation quality judgment → mastery evidence (vision/09 #2). */
   teachQuality: boolean;
+  /** The 🪞 feedback-lab full-page view (spec 035): candidate forms for "making learning
+   * visible", all computed from existing local data. */
+  feedbackLab: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -59,7 +62,9 @@ const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
 /** Metered features default ON: metering exists so features can run boldly — every
  * switch and its real spend live on the 开关与计价 page, and silent signal collection is
  * a core product value (Leo 2026-08-13). Only labPanel stays off: it exposes debug-grade
- * numbers, which is a UI choice, not a spending one. */
+ * numbers, which is a UI choice, not a spending one. feedbackLab defaults ON too: it costs
+ * zero tokens and, unlike labPanel's debug numbers, only ever shows plain facts — exactly
+ * the "make learning visible" prototype the product is for (spec 035). */
 const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
   trail: true,
@@ -71,6 +76,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   compareAlignment: true,
   mapTopicNaming: true,
   teachQuality: true,
+  feedbackLab: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

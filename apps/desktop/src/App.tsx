@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
+import { FeedbackPanel } from "./components/FeedbackPanel";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
 import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
@@ -27,7 +28,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map" | "lab">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "lab" | "feedback">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -75,12 +76,14 @@ export default function App() {
           onOpenSettings={() => setView("settings")}
           onOpenMap={() => setView("map")}
           onOpenLab={() => setView("lab")}
+          onOpenFeedback={() => setView("feedback")}
         />
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
           {view === "lab" && <LabPanel />}
+          {view === "feedback" && <FeedbackPanel />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>

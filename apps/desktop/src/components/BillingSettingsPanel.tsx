@@ -78,6 +78,12 @@ const FEATURE_ROWS: Array<{
     hint: "记忆宫殿里给聚成一堆的零散兴趣起领域名;同一堆只算一次",
     purposes: ["map-naming"],
   },
+  {
+    feature: "feedbackLab",
+    name: "🪞 反馈实验室",
+    hint: "反馈形式试验场:全部由本地数据计算,零 token",
+    purposes: [],
+  },
 ];
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
