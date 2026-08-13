@@ -1,9 +1,11 @@
 /**
  * Purpose: one-shot fetch of every table the 🪞 feedback lab reads (spec 035) plus assembly
- * of all eight modules' view models via @breadcrumb/plugin-feedback's pure functions.
+ * of all module view models — including the T6 trend series — via @breadcrumb/plugin-feedback's
+ * pure functions.
  * Main exports: FeedbackData, EvidenceCandidate, loadFeedbackData.
  */
 import type {
+  DiglotWordEventRow,
   DiglotWordGuessRow,
   DiglotWordStateRow,
   MasteryClaimRow,
@@ -12,12 +14,16 @@ import type {
 import {
   type CumulativeTotals,
   computeContinuity,
+  computeCumulativeConceptSeries,
   computeCumulativeTotals,
   computeDailyActivity,
   computeDailyBite,
+  computeKnowledgeSumSeries,
   computeSettled,
   computeSmallWins,
   computeSystemGauge,
+  computeWordSeenSeries,
+  computeWordSettledSeries,
   type DailyActivityCell,
   type DailyBiteResult,
   DEFAULT_REUNION_WAITING_THRESHOLD,
@@ -26,6 +32,8 @@ import {
   type SettledResult,
   type SmallWin,
   type SystemGaugeResult,
+  TREND_WINDOW_DAYS,
+  type TrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { computeRetentionByNode } from "@breadcrumb/plugin-memory";
 import { getRepos } from "./db";
@@ -56,6 +64,12 @@ export interface FeedbackData {
   systemGauge: SystemGaugeResult;
   settled: SettledResult;
   evidenceCandidates: EvidenceCandidate[];
+  trends: {
+    concepts: TrendPoint[];
+    knowledge: TrendPoint[];
+    wordsSeen: TrendPoint[];
+    wordsSettled: TrendPoint[];
+  };
   // Raw rows kept around so the evidence section can call buildNodeEvidence on demand
   // without a second round-trip — it is pure and cheap given data already in memory.
   sightings: NodeSightingRow[];
@@ -82,8 +96,10 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
   ]);
   const statesByPack = await Promise.all(packs.map((pack) => repos.diglot.listStates(pack.id)));
   const guessesByPack = await Promise.all(packs.map((pack) => repos.diglot.listGuesses(pack.id)));
+  const eventsByPack = await Promise.all(packs.map((pack) => repos.diglot.listAllEvents(pack.id)));
   const wordStates: DiglotWordStateRow[] = statesByPack.flat();
   const guesses: DiglotWordGuessRow[] = guessesByPack.flat();
+  const wordEvents: DiglotWordEventRow[] = eventsByPack.flat();
 
   const nodeTitleById = new Map(nodes.map((node) => [node.id, node.label]));
   const conversationTitlesById = new Map(conversations.map((c) => [c.id, c.title]));
@@ -134,6 +150,14 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
 
   const settled = computeSettled({ sightings, nodeTitleById, retentionByNode, wordStates });
 
+  const trendWindow = { days: TREND_WINDOW_DAYS, todayIso: now };
+  const trends = {
+    concepts: computeCumulativeConceptSeries(sightings, trendWindow),
+    knowledge: computeKnowledgeSumSeries(sightings, trendWindow),
+    wordsSeen: computeWordSeenSeries(wordStates, trendWindow),
+    wordsSettled: computeWordSettledSeries(wordEvents, wordStates, trendWindow),
+  };
+
   const lastSeenByNode = new Map<string, string>();
   for (const sighting of sightings) {
     const current = lastSeenByNode.get(sighting.node_id);
@@ -160,6 +184,7 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
     systemGauge,
     settled,
     evidenceCandidates,
+    trends,
     sightings,
     conversationTitlesById,
     retentionByNode,

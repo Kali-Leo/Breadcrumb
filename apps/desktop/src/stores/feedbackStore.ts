@@ -1,7 +1,7 @@
 /**
  * Purpose: zustand store for the 🪞 feedback lab (spec 035) — loads every source table once
- * and holds the eight modules' view models, plus the on-demand evidence lookup and the
- * reunion invite's "start a chat" side effect.
+ * and holds every module's view models, including the T6 trend series, plus the on-demand
+ * evidence lookup and the reunion invite's "start a chat" side effect.
  * Main exports: useFeedbackStore.
  */
 import type {
@@ -13,6 +13,7 @@ import type {
   SettledResult,
   SmallWin,
   SystemGaugeResult,
+  TrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { buildNodeEvidence } from "@breadcrumb/plugin-feedback";
 import { create } from "zustand";
@@ -39,6 +40,12 @@ interface FeedbackState {
   systemGauge: SystemGaugeResult | null;
   settled: SettledResult;
   evidenceCandidates: EvidenceCandidate[];
+  trends: {
+    concepts: TrendPoint[];
+    knowledge: TrendPoint[];
+    wordsSeen: TrendPoint[];
+    wordsSettled: TrendPoint[];
+  };
   selectedEvidenceNodeId: string | null;
   evidence: NodeEvidence | null;
   loadAll(): Promise<void>;
@@ -58,6 +65,7 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   systemGauge: null,
   settled: { nodes: [], words: [] },
   evidenceCandidates: [],
+  trends: { concepts: [], knowledge: [], wordsSeen: [], wordsSettled: [] },
   selectedEvidenceNodeId: null,
   evidence: null,
 
@@ -79,6 +87,7 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
       systemGauge: data.systemGauge,
       settled: data.settled,
       evidenceCandidates: data.evidenceCandidates,
+      trends: data.trends,
     });
   },
 

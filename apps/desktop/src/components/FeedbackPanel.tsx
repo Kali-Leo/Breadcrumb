@@ -1,6 +1,6 @@
 /**
- * Purpose: the 🪞 feedback lab full-page view (spec 035) — eight candidate modules for
- * "making learning visible", every one computed from local data at zero token cost.
+ * Purpose: the 🪞 feedback lab full-page view (spec 035) — candidate modules for "making
+ * learning visible", every one computed from local data at zero token cost.
  * Main exports: FeedbackPanel.
  */
 import { FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
@@ -15,6 +15,7 @@ import { FeedbackSettledSection } from "./FeedbackSettledSection";
 import { FeedbackSmallWinsSection } from "./FeedbackSmallWinsSection";
 import { FeedbackSystemGaugeSection } from "./FeedbackSystemGaugeSection";
 import { FeedbackTotalsSection } from "./FeedbackTotalsSection";
+import { FeedbackTrendsSection } from "./FeedbackTrendsSection";
 
 export function FeedbackPanel() {
   const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
@@ -49,6 +50,7 @@ export function FeedbackPanel() {
             <FeedbackHeatmapSection />
             <FeedbackSmallWinsSection />
             <FeedbackTotalsSection />
+            <FeedbackTrendsSection />
             <FeedbackReunionSection />
             <FeedbackDailyBiteSection />
             <FeedbackSystemGaugeSection />
