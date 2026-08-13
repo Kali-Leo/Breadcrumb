@@ -11,6 +11,7 @@ import {
   newConceptLabel,
   reencounterLabel,
   reunionLine,
+  reunionOpener,
   teachSessionLabel,
   wordGuessLabel,
 } from "@breadcrumb/plugin-feedback";
@@ -29,6 +30,8 @@ describe("feedback lab copy gates", () => {
     // reunionLine: representative waiting/invite counts.
     reunionLine(7, 3),
     reunionLine(0, 0),
+    // reunionOpener: the zero-LLM opener seeded into reunion chats.
+    reunionOpener("黑洞"),
     // dailyBiteLine: zero progress, partial progress, complete.
     dailyBiteLine(0, 0, 3, 1),
     dailyBiteLine(1, 0, 3, 1),

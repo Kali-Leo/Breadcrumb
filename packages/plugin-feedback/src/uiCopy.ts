@@ -85,6 +85,13 @@ export function reunionLine(waitingCount: number, inviteCount: number): string {
   return `有 ${waitingCount} 个概念到了重逢的时候,从这 ${inviteCount} 个开始即可。`;
 }
 
+/** Reunion session opener — composed locally at creation time (zero LLM). Seeding the chat
+ * with this assistant turn gives the model and the learner the same context: a purposeful
+ * entry point must never land in a context-less conversation (Leo 2026-08-13). */
+export function reunionOpener(title: string): string {
+  return `这次来重逢「${title}」。先用自己的话说说你对它还有什么印象,从记得的部分开始就好;剩下的我来补。`;
+}
+
 /** Daily-bite progress line: complete state wins outright; zero progress states the
  * whole day's target; partial progress states what's done and what's left. */
 export function dailyBiteLine(
