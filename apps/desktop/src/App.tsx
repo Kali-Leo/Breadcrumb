@@ -10,6 +10,7 @@ import { FeedbackPanel } from "./components/FeedbackPanel";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
 import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
+import { ResearchPanel } from "./components/ResearchPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -24,11 +25,19 @@ import "./stores/interestStore";
 import "./lib/teachQuality";
 import { useDiglotStore } from "./stores/diglotStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
+import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useTrailStore } from "./stores/trailStore";
 
+/** Idle delay before the research task platform's v1 "idle execution" kicks in — no real
+ * OS-level idle detection yet, just a fixed wait after startup (spec 036 §3, noted as a v1
+ * simplification). */
+const RESEARCH_IDLE_DELAY_MS = 10_000;
+
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map" | "lab" | "feedback">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "lab" | "feedback" | "research">(
+    "chat",
+  );
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -45,6 +54,19 @@ export default function App() {
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
       void backfillMissingEmbeddings().then(() => runDedupSweep());
     })();
+  }, []);
+
+  // Research task platform (spec 036 §3): v1's "idle execution" is a fixed delay after
+  // startup rather than real OS idle detection — enough to stay out of the critical path
+  // while still running within the session. Re-checks the switch at fire time, not at
+  // mount time, so a user who disables it in the first 10s is respected.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (useSettingsStore.getState().featureSwitches.researchTasks) {
+        void useResearchStore.getState().runPending();
+      }
+    }, RESEARCH_IDLE_DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
 
   // Keep the session trail in sync with the open conversation.
@@ -77,6 +99,7 @@ export default function App() {
           onOpenMap={() => setView("map")}
           onOpenLab={() => setView("lab")}
           onOpenFeedback={() => setView("feedback")}
+          onOpenResearch={() => setView("research")}
         />
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
@@ -84,6 +107,7 @@ export default function App() {
           {view === "map" && <MapView />}
           {view === "lab" && <LabPanel />}
           {view === "feedback" && <FeedbackPanel />}
+          {view === "research" && <ResearchPanel />}
         </main>
         {view === "chat" && <KnowledgeTreePanel />}
       </div>

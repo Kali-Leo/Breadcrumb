@@ -25,6 +25,7 @@
     "@breadcrumb/plugin-map": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",
     "@breadcrumb/plugin-planner": "workspace:*",
+    "@breadcrumb/plugin-research": "workspace:*",
     "@breadcrumb/plugin-trail": "workspace:*",
     "@breadcrumb/sdk": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",

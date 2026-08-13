@@ -10,6 +10,8 @@ import { getRepos } from "../lib/db";
 import { todayLocalMidnightIso } from "../lib/time";
 import { useDiglotStore } from "../stores/diglotStore";
 import { type FeatureSwitches, useSettingsStore } from "../stores/settingsStore";
+import { ResearchTasksSettingsRow } from "./ResearchTasksSettingsRow";
+import { Toggle } from "./SettingsToggle";
 
 /** Switchable metered features: switch key → display copy and metering purposes. */
 const FEATURE_ROWS: Array<{
@@ -86,21 +88,6 @@ const FEATURE_ROWS: Array<{
   },
 ];
 
-function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={`h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors ${on ? "bg-amber-500" : "bg-stone-300"}`}
-    >
-      <span
-        className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-6" : "translate-x-0"}`}
-      />
-    </button>
-  );
-}
-
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */
 function spendLine(
   today: Map<string, string>,
@@ -165,6 +152,7 @@ export function BillingSettingsPanel() {
             />
           </div>
         ))}
+        <ResearchTasksSettingsRow />
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm text-stone-700">🧵 织入·智能替换</p>

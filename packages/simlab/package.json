@@ -22,6 +22,7 @@
     "@breadcrumb/plugin-knowledge-tree": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",
     "@breadcrumb/plugin-planner": "workspace:*",
+    "@breadcrumb/plugin-research": "workspace:*",
     "@breadcrumb/plugin-trail": "workspace:*",
     "better-sqlite3": "^13.0.2",
     "ts-fsrs": "^5.2.1",

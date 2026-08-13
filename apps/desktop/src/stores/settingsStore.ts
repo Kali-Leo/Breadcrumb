@@ -34,6 +34,11 @@ export interface FeatureSwitches {
   /** The 🪞 feedback-lab full-page view (spec 035): candidate forms for "making learning
    * visible", all computed from existing local data. */
   feedbackLab: boolean;
+  /** The 🔬 research task platform (spec 036): runs vetted, project-signed research tasks
+   * locally and shows the aggregate results. Default on, no reminder (Leo 2026-08-13) —
+   * computation stays on-device and the real consent point is the (not-yet-built) upload
+   * step; turning it off shows a one-time plain explanation, then never asks again. */
+  researchTasks: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -77,6 +82,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   mapTopicNaming: true,
   teachQuality: true,
   feedbackLab: true,
+  researchTasks: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

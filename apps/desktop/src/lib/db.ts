@@ -1,7 +1,8 @@
 /**
  * Purpose: opens the local SQLite database via tauri-plugin-sql, runs migrations,
- * and exposes ready-to-use repositories. Side effect: creates breadcrumb.db on first call.
- * Main exports: getRepos() (memoized async singleton), Repos.
+ * and exposes ready-to-use repositories plus the raw SQL client. Side effect: creates
+ * breadcrumb.db on first call.
+ * Main exports: getRepos(), getSqlClient() (both memoized async singletons), Repos.
  */
 import {
   createAiFailuresRepo,
@@ -23,6 +24,7 @@ import {
   createNodeMergeRepo,
   createNodeSightingsRepo,
   createPracticeRepo,
+  createResearchRepo,
   createSettingsRepo,
   createTrailSummariesRepo,
   runMigrations,
@@ -52,25 +54,26 @@ export interface Repos {
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
   diglot: ReturnType<typeof createDiglotRepo>;
+  research: ReturnType<typeof createResearchRepo>;
 }
 
+let sqlClientPromise: Promise<SqlClient> | null = null;
 let reposPromise: Promise<Repos> | null = null;
 
+/** The raw SQL client — needed by @breadcrumb/plugin-research's executor, which takes a
+ * SqlClient directly rather than a Repos bundle (it builds its own research repo). */
+export function getSqlClient(): Promise<SqlClient> {
+  sqlClientPromise ??= openAndMigrate();
+  return sqlClientPromise;
+}
+
 export function getRepos(): Promise<Repos> {
-  reposPromise ??= openAndMigrate();
+  reposPromise ??= buildRepos();
   return reposPromise;
 }
 
-async function openAndMigrate(): Promise<Repos> {
-  const database = await Database.load("sqlite:breadcrumb.db");
-  const sqlClient: SqlClient = {
-    select: <Row>(sql: string, params?: readonly unknown[]) =>
-      database.select<Row[]>(sql, params ? [...params] : []),
-    execute: async (sql: string, params?: readonly unknown[]) => {
-      await database.execute(sql, params ? [...params] : []);
-    },
-  };
-  await runMigrations(sqlClient);
+async function buildRepos(): Promise<Repos> {
+  const sqlClient = await getSqlClient();
   return {
     aiFailures: createAiFailuresRepo(sqlClient),
     settings: createSettingsRepo(sqlClient),
@@ -93,5 +96,19 @@ async function openAndMigrate(): Promise<Repos> {
     canonical: createCanonicalRepo(sqlClient),
     practice: createPracticeRepo(sqlClient),
     diglot: createDiglotRepo(sqlClient),
+    research: createResearchRepo(sqlClient),
   };
+}
+
+async function openAndMigrate(): Promise<SqlClient> {
+  const database = await Database.load("sqlite:breadcrumb.db");
+  const sqlClient: SqlClient = {
+    select: <Row>(sql: string, params?: readonly unknown[]) =>
+      database.select<Row[]>(sql, params ? [...params] : []),
+    execute: async (sql: string, params?: readonly unknown[]) => {
+      await database.execute(sql, params ? [...params] : []);
+    },
+  };
+  await runMigrations(sqlClient);
+  return sqlClient;
 }

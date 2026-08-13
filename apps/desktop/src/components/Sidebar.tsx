@@ -8,12 +8,13 @@ import { useChatStore } from "../stores/chatStore";
 import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "lab" | "feedback";
+  activeView: "chat" | "settings" | "map" | "lab" | "feedback" | "research";
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenLab(): void;
   onOpenFeedback(): void;
+  onOpenResearch(): void;
 }
 
 export function Sidebar({
@@ -23,6 +24,7 @@ export function Sidebar({
   onOpenMap,
   onOpenLab,
   onOpenFeedback,
+  onOpenResearch,
 }: SidebarProps) {
   const conversations = useChatStore((state) => state.conversations);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -83,6 +85,13 @@ export function Sidebar({
           className={viewButtonClass(activeView === "feedback")}
         >
           🪞 反馈实验室
+        </button>
+        <button
+          type="button"
+          onClick={onOpenResearch}
+          className={viewButtonClass(activeView === "research")}
+        >
+          🔬 研究课题平台
         </button>
         <button
           type="button"
