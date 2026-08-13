@@ -1,7 +1,7 @@
 /**
  * Purpose: one-shot fetch of every table the 🪞 feedback lab reads (spec 035) plus assembly
- * of all module view models — including the T6 trend series — via @breadcrumb/plugin-feedback's
- * pure functions.
+ * of all module view models — including the T7a three-layer trend series — via
+ * @breadcrumb/plugin-feedback's pure functions.
  * Main exports: FeedbackData, EvidenceCandidate, loadFeedbackData.
  */
 import type {
@@ -14,19 +14,18 @@ import type {
 import {
   type CumulativeTotals,
   computeContinuity,
-  computeCumulativeConceptSeries,
   computeCumulativeTotals,
   computeDailyActivity,
   computeDailyBite,
-  computeKnowledgeSumSeries,
+  computeLayerTrendSeries,
   computeSettled,
   computeSmallWins,
   computeSystemGauge,
-  computeWordSeenSeries,
   computeWordSettledSeries,
   type DailyActivityCell,
   type DailyBiteResult,
   DEFAULT_REUNION_WAITING_THRESHOLD,
+  type LayerTrendPoint,
   pickReunionInvites,
   type ReunionInvite,
   type SettledResult,
@@ -37,6 +36,7 @@ import {
 } from "@breadcrumb/plugin-feedback";
 import { computeRetentionByNode } from "@breadcrumb/plugin-memory";
 import { getRepos } from "./db";
+import { buildProductiveUseTimesByNode } from "./productiveUseTimes";
 import { nowIso, todayLocalMidnightIso } from "./time";
 
 /** 365 days of heatmap history, three reunions and one new concept a day, three reunion
@@ -65,9 +65,7 @@ export interface FeedbackData {
   settled: SettledResult;
   evidenceCandidates: EvidenceCandidate[];
   trends: {
-    concepts: TrendPoint[];
-    knowledge: TrendPoint[];
-    wordsSeen: TrendPoint[];
+    layers: LayerTrendPoint[];
     wordsSettled: TrendPoint[];
   };
   // Raw rows kept around so the evidence section can call buildNodeEvidence on demand
@@ -150,11 +148,15 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
 
   const settled = computeSettled({ sightings, nodeTitleById, retentionByNode, wordStates });
 
+  const productiveUseTimesByNode = await buildProductiveUseTimesByNode(repos, sightings);
   const trendWindow = { days: TREND_WINDOW_DAYS, todayIso: now };
   const trends = {
-    concepts: computeCumulativeConceptSeries(sightings, trendWindow),
-    knowledge: computeKnowledgeSumSeries(sightings, trendWindow),
-    wordsSeen: computeWordSeenSeries(wordStates, trendWindow),
+    layers: computeLayerTrendSeries({
+      sightings,
+      claims: masteryClaims,
+      productiveUseTimesByNode,
+      ...trendWindow,
+    }),
     wordsSettled: computeWordSettledSeries(wordEvents, wordStates, trendWindow),
   };
 

@@ -1,13 +1,14 @@
 /**
  * Purpose: zustand store for the 🪞 feedback lab (spec 035) — loads every source table once
- * and holds every module's view models, including the T6 trend series, plus the on-demand
- * evidence lookup and the reunion invite's "start a chat" side effect.
+ * and holds every module's view models, including the T7a three-layer trend series, plus the
+ * on-demand evidence lookup and the reunion invite's "start a chat" side effect.
  * Main exports: useFeedbackStore.
  */
 import type {
   CumulativeTotals,
   DailyActivityCell,
   DailyBiteResult,
+  LayerTrendPoint,
   NodeEvidence,
   ReunionInvite,
   SettledResult,
@@ -41,9 +42,7 @@ interface FeedbackState {
   settled: SettledResult;
   evidenceCandidates: EvidenceCandidate[];
   trends: {
-    concepts: TrendPoint[];
-    knowledge: TrendPoint[];
-    wordsSeen: TrendPoint[];
+    layers: LayerTrendPoint[];
     wordsSettled: TrendPoint[];
   };
   selectedEvidenceNodeId: string | null;
@@ -65,7 +64,7 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   systemGauge: null,
   settled: { nodes: [], words: [] },
   evidenceCandidates: [],
-  trends: { concepts: [], knowledge: [], wordsSeen: [], wordsSettled: [] },
+  trends: { layers: [], wordsSettled: [] },
   selectedEvidenceNodeId: null,
   evidence: null,
 

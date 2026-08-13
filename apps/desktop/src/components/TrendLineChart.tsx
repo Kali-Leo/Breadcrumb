@@ -1,5 +1,5 @@
 /**
- * Purpose: the minimal line chart shared by the feedback lab's "趋势" cards (spec 035 T6) —
+ * Purpose: the minimal line chart shared by the feedback lab's "趋势" cards (spec 035 T7a) —
  * one Y axis, thin lines, sparse date ticks, and a plain date+value tooltip; no target line.
  * Main exports: TrendSeries, TrendLineChart.
  */
@@ -71,19 +71,22 @@ function TrendTooltip({ active, payload, label }: TooltipContentProps) {
 }
 
 /** `valueDecimals` controls Y-axis tick formatting only (data values are already rounded by
- * the pure trend functions upstream). */
+ * the pure trend functions upstream). `height` overrides the default chart height for cards
+ * that need more vertical room (e.g. a three-series legend). */
 export function TrendLineChart({
   series,
   valueDecimals = 0,
+  height = CHART_HEIGHT,
 }: {
   series: readonly TrendSeries[];
   valueDecimals?: number;
+  height?: number;
 }) {
   const data = mergeSeries(series);
   const dates = data.map((row) => row.date as string);
 
   return (
-    <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="#e7e5e4" vertical={false} />
         <XAxis
