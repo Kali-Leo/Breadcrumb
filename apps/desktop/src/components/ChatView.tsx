@@ -10,6 +10,7 @@ import { CompanionChatBanners } from "./CompanionChatBanners";
 import { Composer } from "./Composer";
 import { FactcheckBadge } from "./FactcheckBadge";
 import { MessageBubble } from "./MessageBubble";
+import { TeachingModeBar } from "./TeachingModeBar";
 
 export function ChatView() {
   const messages = useChatStore((state) => state.messages);
@@ -56,6 +57,7 @@ export function ChatView() {
         <div ref={scrollAnchor} />
       </div>
       <AnchorBanner />
+      <TeachingModeBar />
       <Composer disabled={isStreaming} onSend={(content) => void sendMessage(content)} />
     </div>
   );

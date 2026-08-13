@@ -8,7 +8,11 @@ import type { ConversationKind, ConversationRow, Currency, MessageRow } from "@b
 import { type ChatMessage, createLlmClient } from "@breadcrumb/core-llm";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
-import { buildAnchoredNodeSystemMessage, ensureChatConversationId } from "../lib/chatRoundContext";
+import {
+  buildAnchoredNodeSystemMessage,
+  buildLearnerContextSystemMessage,
+  ensureChatConversationId,
+} from "../lib/chatRoundContext";
 import { recordRoundCost } from "../lib/chatRoundMetering";
 import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { buildRoundSystemMessages } from "../lib/companionChatPrompt";
@@ -150,6 +154,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversationId,
         content,
         apiConfig: settings.apiConfig,
+        teachingMode: settings.teachingMode,
         companionScriptEnabled: settings.featureSwitches.companionScript,
         companionMemoryEnabled: settings.featureSwitches.companionMemory,
         crisisActive,
@@ -158,6 +163,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Anchored knowledge node (if any) steers this round without polluting stored history.
       const anchoredMessage = await buildAnchoredNodeSystemMessage();
       if (anchoredMessage) history.unshift(anchoredMessage);
+      // Learner context (spec 038 §2.3): retention stance, style preferences, confusion
+      // downshift — plain 'chat' rounds only, same not-persisted pattern as anchoring.
+      if (activeKind === "chat") {
+        const learnerContextMessage = await buildLearnerContextSystemMessage(content);
+        if (learnerContextMessage) history.unshift(learnerContextMessage);
+      }
       const result = await client.chatStream(history, (delta) => {
         set({ streamingText: (get().streamingText ?? "") + delta });
       });
