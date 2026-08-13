@@ -66,6 +66,16 @@ export const FEEDBACK_COPY = {
   evidenceClaimFamiliar: "自报:熟悉",
   evidenceClaimTaughtPrincipled: "回讲:讲到了原理",
   evidenceClaimTaughtSurface: "回讲:复述层面",
+  trendsTitle: "趋势",
+  trendsHint: "只与过去的自己比;不设目标线。",
+  trendsBasis:
+    "依据:累计量与可提取概率总和是文献与 Anki 社区验证的纵向形态;不做逐日正确率——当下表现不是长期学习的好指标(Soderstrom & Bjork 2015)。",
+  trendsEmpty: "线条会随学习慢慢出现。",
+  trendConceptsLabel: "知识网络节点数",
+  trendKnowledgeLabel: "估计此刻还记得的概念数(按记忆模型)",
+  trendWordsSeenLabel: "接触过的词",
+  trendWordsSettledLabel: "稳定期超过一个月的词",
+  trendWordsColdStartNote: "新词的稳定期长到一个月需要时间,这条线前段为 0 是正常的。",
 } as const;
 
 /** Continuity line for the heatmap: active-day and longest-run counts, plus the current
