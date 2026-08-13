@@ -8,8 +8,10 @@ import type { DiglotEventKind } from "@breadcrumb/core-db";
 import {
   computeGuessProbability,
   type GuessLevel,
+  INITIAL_PLACEMENT_STEP,
   type LoadedLanguagePack,
   type ReplacementPatch,
+  updatePlacement,
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { create } from "zustand";
@@ -42,11 +44,11 @@ export interface DiglotSettings {
    * weaving. Metered separately (purpose "diglot-weave"); on by default — metering exists
    * so features can run boldly (Leo 2026-08-12), and it only fires while weaving is on. */
   llmRefineEnabled: boolean;
-  /** New-word introduction starts at this introduction-queue rank — set by the optional
-   * vocabulary calibration (i+1: start where the learner's knowledge ends). */
+  /** New-word introduction starts at this introduction-queue rank — maintained by the
+   * behavioral placement (clean first reads move it up; no self-report by design). */
   introductionRankFloor: number;
-  /** Rough known-word estimate from the last calibration, for plain display; null = 未校准. */
-  estimatedVocabulary: number | null;
+  /** Current placement jump size (see plugin placement.ts). */
+  placementStep: number;
 }
 
 const SETTINGS_KEY = "diglotSettings";
@@ -61,7 +63,7 @@ const DEFAULT_SETTINGS: DiglotSettings = {
   piperModelPath: "",
   llmRefineEnabled: true,
   introductionRankFloor: 0,
-  estimatedVocabulary: null,
+  placementStep: INITIAL_PLACEMENT_STEP,
 };
 
 interface DiglotState {
@@ -162,9 +164,32 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   },
 
   async recordSignal(lemma, kind, messageId, context, latencyMs) {
-    const { settings, cardsByLemma } = get();
+    const { settings, cardsByLemma, loaded } = get();
     const card = cardsByLemma.get(lemma);
     if (card === undefined) return;
+    // Behavioral placement: a word's first encounter is objective vocabulary evidence
+    // (clean read = known on sight). Persisted quietly — no weave invalidation needed,
+    // the floor only affects FUTURE new-word picks.
+    if (card.reps === 0 && loaded !== null) {
+      const rank = loaded.introductionQueue.indexOf(lemma);
+      const placed = updatePlacement(
+        {
+          introductionRankFloor: settings.introductionRankFloor,
+          placementStep: settings.placementStep,
+        },
+        { kind, cardReps: card.reps, wordRank: rank === -1 ? null : rank },
+        loaded.introductionQueue.length,
+      );
+      if (
+        placed.introductionRankFloor !== settings.introductionRankFloor ||
+        placed.placementStep !== settings.placementStep
+      ) {
+        const nextSettings = { ...settings, ...placed };
+        const repos = await getRepos();
+        await repos.settings.set(SETTINGS_KEY, nextSettings, nowIso());
+        set({ settings: nextSettings });
+      }
+    }
     const updated = await applyDiglotSignal({
       pair: settings.pairId,
       lemma,

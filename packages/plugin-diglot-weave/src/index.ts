@@ -3,7 +3,7 @@
  * tokenization, candidate extraction, FSRS scheduling, patching, signals, guess logic.
  * Main exports: everything from the module files below.
  */
-export * from "./calibration";
+
 export * from "./candidates";
 export * from "./contextNovelty";
 export * from "./guessGrading";
@@ -11,6 +11,7 @@ export * from "./guessPolicy";
 export * from "./llmRefine";
 export * from "./memoryState";
 export * from "./packSchema";
+export * from "./placement";
 export * from "./replace";
 export * from "./scheduler";
 export * from "./tokenize";
