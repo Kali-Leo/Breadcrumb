@@ -638,6 +638,29 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_mastery_claims_node ON mastery_claims(node_id);`,
     ],
   },
+  {
+    // Spec 036 research tasks: runs are recorded independently of results so that deleting
+    // a result (user's right to withdraw) or toggling the feature never re-runs a task.
+    // display_json/results_json are snapshotted so rendering survives task expiry.
+    id: "0028_research_tasks",
+    statements: [
+      `CREATE TABLE research_task_runs (
+        task_id TEXT PRIMARY KEY,
+        ran_at TEXT NOT NULL
+      );`,
+      `CREATE TABLE research_results (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL UNIQUE,
+        institution TEXT NOT NULL,
+        title TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        ethics_note TEXT,
+        display_json TEXT NOT NULL,
+        results_json TEXT NOT NULL,
+        computed_at TEXT NOT NULL
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

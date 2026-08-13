@@ -15,4 +15,5 @@ export * from "./knowledgeRepositories";
 export * from "./migrations";
 export * from "./practiceRepositories";
 export * from "./repositories";
+export * from "./researchRepositories";
 export * from "./types";
