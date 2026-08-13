@@ -15,6 +15,7 @@
     "@breadcrumb/core-bus": "workspace:*",
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-teaching": "workspace:*",
     "@breadcrumb/plugin-compare": "workspace:*",
     "@breadcrumb/plugin-diglot-weave": "workspace:*",
     "@breadcrumb/plugin-factcheck": "workspace:*",

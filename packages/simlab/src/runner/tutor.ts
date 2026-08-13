@@ -1,8 +1,8 @@
 /**
- * Purpose: the tutor half of a simulated round. Mirrors apps/desktop/src/stores/chatStore.ts's
- * sendMessage exactly: unshifts the SAME standing tone system prompt (plain, matter-of-fact,
- * no praise — CLAUDE.md 产品原则 1, 2026-08-02 修订) before every call. Falls back to a
- * non-streaming completion if chatStream's async body iteration fails.
+ * Purpose: the tutor half of a simulated round. Mirrors the desktop send pipeline: unshifts
+ * the same teaching contract (adaptive mode) the product uses — both sides import it from
+ * @breadcrumb/core-teaching, so simlab always tests the shipped prompt (spec 038 T2).
+ * Falls back to a non-streaming completion if chatStream's async body iteration fails.
  * Main exports: getTutorReply, TutorReply, STANDING_SYSTEM_PROMPT.
  */
 import {
@@ -11,13 +11,10 @@ import {
   type LlmClientConfig,
   type TokenUsage,
 } from "@breadcrumb/core-llm";
+import { TEACHING_CONTRACT_BASE } from "@breadcrumb/core-teaching";
 import { nonStreamingChat } from "./nonStreamingChat";
 
-// MUST MATCH apps/desktop/src/stores/chatStore.ts's standing system prompt string, verbatim.
-// If you edit the tone contract, edit both and keep them identical.
-export const STANDING_SYSTEM_PROMPT =
-  "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
-  "讲解清楚、循序，从对方当前的理解出发。";
+export const STANDING_SYSTEM_PROMPT: string = TEACHING_CONTRACT_BASE;
 
 export interface TutorReply {
   content: string;

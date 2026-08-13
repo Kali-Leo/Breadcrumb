@@ -41,6 +41,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/core-teaching':
+        specifier: workspace:*
+        version: link:../../packages/core-teaching
       '@breadcrumb/plugin-companion':
         specifier: workspace:*
         version: link:../../packages/plugin-companion
@@ -546,6 +549,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-teaching':
+        specifier: workspace:*
+        version: link:../core-teaching
       '@breadcrumb/plugin-diglot-weave':
         specifier: workspace:*
         version: link:../plugin-diglot-weave

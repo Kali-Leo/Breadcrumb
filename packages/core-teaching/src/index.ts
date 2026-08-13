@@ -11,3 +11,9 @@ export {
   type TeachingMode,
 } from "./contract";
 export { formatLearnerContextMessage, type LearnerContext } from "./learnerContext";
+export {
+  buildReunionSystemLine,
+  isReunionTitle,
+  REUNION_TITLE_PREFIX,
+  reunionTopicFromTitle,
+} from "./reunion";

@@ -10,6 +10,13 @@ import type { ConversationKind, ConversationRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
+  buildReunionSystemLine,
+  buildTeachingSystemPrompt,
+  isReunionTitle,
+  reunionTopicFromTitle,
+  type TeachingMode,
+} from "@breadcrumb/core-teaching";
+import {
   applyReflection,
   buildReflectUserMessage,
   buildStudentSystemPrompt,
@@ -31,10 +38,6 @@ import { recordAiFailure } from "./failureLog";
 import { recordMeteredCall } from "./metering";
 import { buildTeachSystemPrompt, teachTopicFromTitle } from "./teachActions";
 import { nowIso } from "./time";
-
-const DEFAULT_CHAT_SYSTEM_PROMPT =
-  "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
-  "讲解清楚、循序，从对方当前的理解出发。";
 
 /** kind 'companion': card identity + top-5 retrieved memories (when the memory switch is on).
  * A retrieval failure degrades to no memories rather than blocking the chat. */
@@ -126,15 +129,15 @@ export async function buildRoundSystemMessages(params: {
   conversationId: string;
   content: string;
   apiConfig: ApiConfig;
+  /** Teaching contract mode for plain 'chat' rounds (spec 038 §2.2). */
+  teachingMode: TeachingMode;
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
 }): Promise<ChatMessage[]> {
   const { repos, activeKind, conversationId, content, apiConfig } = params;
-  const row =
-    activeKind === "teach" || activeKind === "companion"
-      ? await repos.conversations.getById(conversationId)
-      : null;
+  // Fetched for every kind now: chat needs the title to spot reunion sessions (spec 038 §2.4).
+  const row = await repos.conversations.getById(conversationId);
 
   const messages: ChatMessage[] = [];
   if (activeKind === "teach") {
@@ -153,7 +156,13 @@ export async function buildRoundSystemMessages(params: {
       await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
     );
   } else {
-    messages.push({ role: "system", content: DEFAULT_CHAT_SYSTEM_PROMPT });
+    messages.push({ role: "system", content: buildTeachingSystemPrompt(params.teachingMode) });
+    if (row !== null && isReunionTitle(row.title)) {
+      messages.push({
+        role: "system",
+        content: buildReunionSystemLine(reunionTopicFromTitle(row.title)),
+      });
+    }
   }
   if (params.crisisActive) {
     messages.push({ role: "system", content: COMPANION_DESKTOP_COPY.crisisInterruptSystemLine });
