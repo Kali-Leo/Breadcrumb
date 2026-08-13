@@ -5,6 +5,7 @@
  * Main exports: FeedbackHeatmapSection.
  */
 import { continuityLine, FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
+import { useEffect, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
 import { useFeedbackStore } from "../stores/feedbackStore";
 
@@ -21,15 +22,42 @@ function levelForCount(count: number): number {
 // Amber scale (product's accent color): empty cell, then four deepening steps.
 const AMBER_THEME = { light: ["#f5f5f4", "#fde68a", "#fbbf24", "#d97706", "#92400e"] };
 
+const MONTH_LABELS = [
+  "1月",
+  "2月",
+  "3月",
+  "4月",
+  "5月",
+  "6月",
+  "7月",
+  "8月",
+  "9月",
+  "10月",
+  "11月",
+  "12月",
+];
+
 export function FeedbackHeatmapSection() {
   const cells = useFeedbackStore((state) => state.cells);
   const continuity = useFeedbackStore((state) => state.continuity);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const activities: Activity[] = cells.map((cell) => ({
     date: cell.date,
     count: cell.count,
     level: levelForCount(cell.count),
   }));
+
+  // The rightmost column is today — land there, not on last year's left edge. The library
+  // scrolls inside its own container, so sweep every horizontally overflowing descendant.
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (container === null) return;
+    const candidates = [container, ...Array.from(container.querySelectorAll("div"))];
+    for (const element of candidates) {
+      if (element.scrollWidth > element.clientWidth) element.scrollLeft = element.scrollWidth;
+    }
+  }, []);
 
   return (
     <section className="rounded border border-stone-200 bg-white p-3">
@@ -39,7 +67,7 @@ export function FeedbackHeatmapSection() {
         <p className="mt-2 text-stone-400">{FEEDBACK_COPY.heatmapEmpty}</p>
       ) : (
         <>
-          <div className="mt-2 overflow-x-auto">
+          <div ref={scrollRef} className="mt-2 overflow-x-auto">
             <ActivityCalendar
               data={activities}
               theme={AMBER_THEME}
@@ -47,6 +75,7 @@ export function FeedbackHeatmapSection() {
               blockSize={10}
               blockMargin={3}
               fontSize={10}
+              labels={{ months: MONTH_LABELS }}
               showColorLegend={false}
               showTotalCount={false}
               showWeekdayLabels={false}
