@@ -88,6 +88,13 @@ export function createNodeSightingsRepo(sql: SqlClient) {
         [conversationId],
       );
     },
+    /** Footprints attributed to one message — message-level re-encounters (vision/09). */
+    async listByMessage(messageId: string): Promise<NodeSightingRow[]> {
+      return sql.select<NodeSightingRow>(
+        "SELECT * FROM node_sightings WHERE message_id = ? ORDER BY created_at ASC, id ASC",
+        [messageId],
+      );
+    },
   };
 }
 

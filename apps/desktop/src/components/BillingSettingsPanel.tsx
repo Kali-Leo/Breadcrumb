@@ -67,6 +67,12 @@ const FEATURE_ROWS: Array<{
     purposes: ["compare-align"],
   },
   {
+    feature: "teachQuality",
+    name: "🎓 回讲判读",
+    hint: "回讲结束后判一次讲解质量(原理级/复述级/有误),好的讲解直接成为掌握度证据",
+    purposes: ["teach-quality"],
+  },
+  {
     feature: "mapTopicNaming",
     name: "🗺️ 板块 AI 起名(实验)",
     hint: "记忆宫殿里给聚成一堆的零散兴趣起领域名;同一堆只算一次",

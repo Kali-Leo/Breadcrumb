@@ -1,23 +1,30 @@
 /**
- * Purpose: silent re-encounter capture (核心价值:静默收集) — re-reading an old
- * conversation IS a re-encounter with its knowledge nodes, so a dwelled-on conversation
- * re-sights its distinct nodes and lifts their FSRS retention. Previously this signal was
- * simply lost. Throttled per conversation. Side effects: DB writes, memory refresh.
- * Main exports: recordConversationReencounter, REENCOUNTER_THROTTLE_MS.
+ * Purpose: silent re-encounter capture (核心价值:静默收集) — dwelling on a rendered
+ * assistant message re-sights the nodes attributed to it, so rereading old ground lifts
+ * FSRS retention at message granularity. Throttled per message (DB) and per node
+ * (session). Side effects: DB writes, memory refresh.
+ * Main exports: recordMessageReencounter, REENCOUNTER_THROTTLE_MS.
  */
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
 
-/** A conversation only yields one re-encounter round per this window — rereading twice in
- * an afternoon is one study event, not two reviews. */
+/** One re-encounter round per message per this window — rereading twice in an afternoon
+ * is one study event, not two reviews. */
 export const REENCOUNTER_THROTTLE_MS = 6 * 60 * 60 * 1000;
 
-/** Records a re-sighting for every distinct node of the conversation, unless the
- * conversation already produced sightings inside the throttle window. Returns how many
- * nodes were re-sighted (0 = throttled or nothing to re-sight). */
-export async function recordConversationReencounter(conversationId: string): Promise<number> {
+/** Session-level per-node throttle: several messages mentioning the same node during one
+ * reading session yield one review, not many. */
+const nodeResightAtMs = new Map<string, number>();
+
+/** Re-sights the message's nodes unless the message (or the node) was sighted within the
+ * throttle window. Fresh messages are naturally excluded: their extraction sightings are
+ * seconds old. Returns how many nodes were re-sighted. */
+export async function recordMessageReencounter(
+  messageId: string,
+  conversationId: string,
+): Promise<number> {
   const repos = await getRepos();
-  const sightings = await repos.nodeSightings.listByConversation(conversationId);
+  const sightings = await repos.nodeSightings.listByMessage(messageId);
   if (sightings.length === 0) return 0;
   const latest = sightings[sightings.length - 1];
   if (
@@ -26,19 +33,25 @@ export async function recordConversationReencounter(conversationId: string): Pro
   ) {
     return 0;
   }
-  const distinctNodeIds = [...new Set(sightings.map((sighting) => sighting.node_id))];
   const createdAt = nowIso();
-  for (const nodeId of distinctNodeIds) {
+  let resighted = 0;
+  for (const nodeId of new Set(sightings.map((sighting) => sighting.node_id))) {
+    const lastMs = nodeResightAtMs.get(nodeId) ?? 0;
+    if (Date.now() - lastMs < REENCOUNTER_THROTTLE_MS) continue;
+    nodeResightAtMs.set(nodeId, Date.now());
     await repos.nodeSightings.record({
       id: newId(),
       node_id: nodeId,
       conversation_id: conversationId,
-      message_id: null,
+      message_id: messageId,
       created_at: createdAt,
     });
+    resighted += 1;
   }
-  // Lift the fog right away — the map should reflect the re-encounter.
-  const { useMemoryStore } = await import("../stores/memoryStore");
-  void useMemoryStore.getState().refresh();
-  return distinctNodeIds.length;
+  if (resighted > 0) {
+    // Lift the fog right away — the map should reflect the re-encounter.
+    const { useMemoryStore } = await import("../stores/memoryStore");
+    void useMemoryStore.getState().refresh();
+  }
+  return resighted;
 }

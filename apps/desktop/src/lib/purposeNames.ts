@@ -20,4 +20,5 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "compare-align": "对比对齐",
   "map-naming": "板块起名",
   "diglot-weave": "织入·智能替换",
+  "teach-quality": "回讲判读",
 };

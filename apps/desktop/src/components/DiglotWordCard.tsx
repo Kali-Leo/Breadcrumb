@@ -45,6 +45,7 @@ export function DiglotWordCard({
   const recordSignal = useDiglotStore((state) => state.recordSignal);
   const noteGlossSeen = useDiglotStore((state) => state.noteGlossSeen);
   const noteGuessOutcome = useDiglotStore((state) => state.noteGuessOutcome);
+  const confusion = useDiglotStore((state) => state.confusionByLemma.get(patch.lemma));
 
   // The gloss reveal is itself the "hover" lookup signal — but only after any guess gate.
   useEffect(() => {
@@ -69,6 +70,7 @@ export function DiglotWordCard({
     });
     noteGuessOutcome(false);
     onGuessResolved();
+    void useDiglotStore.getState().refreshConfusions();
     void recordSignal(patch.lemma, eventKind, messageId, context, latencyMs);
     setFeedback(feedbackTextFor(grade, patch.original));
     setGuessDone(true);
@@ -163,6 +165,11 @@ export function DiglotWordCard({
           </button>
         )}
       </div>
+      {confusion !== undefined && (
+        <p className="text-stone-400 text-xs">
+          {DIGLOT_UI_COPY.contrastLabel}:「{confusion.lemma}」是 {confusion.target}
+        </p>
+      )}
       <p>
         {patch.original}
         {entry.altTargets.length > 0 && (

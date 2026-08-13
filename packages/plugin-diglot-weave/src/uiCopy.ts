@@ -22,6 +22,7 @@ export const DIGLOT_UI_COPY = {
   guessLevelStandard: "标准",
   guessLevelHigh: "多",
   ttsLabel: "发音(本地 TTS)",
+  contrastLabel: "易混对比",
   placementStatus: "新词起点",
   placementNote: "随阅读自动校准:首次相遇没查词,起点会自动前移",
   piperSection: "Piper 高质量发音(可选)",

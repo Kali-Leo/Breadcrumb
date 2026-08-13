@@ -89,6 +89,13 @@ export function createDiglotRepo(sql: SqlClient) {
         [pair, lemma, limit],
       );
     },
+    /** Every event of one pair, oldest first — the FSRS fitting corpus (vision/09 #1). */
+    async listAllEvents(pair: DiglotPairId): Promise<DiglotWordEventRow[]> {
+      return sql.select<DiglotWordEventRow>(
+        "SELECT * FROM diglot_word_events WHERE pair = ? ORDER BY created_at ASC, id ASC",
+        [pair],
+      );
+    },
     /** Lemmas that have ever produced an explicit signal (guess or productive use) — the
      * guess policy asks signal-starved words more often. */
     async listLemmasWithExplicitSignal(pair: DiglotPairId): Promise<string[]> {

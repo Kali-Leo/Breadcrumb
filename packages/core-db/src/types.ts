@@ -160,9 +160,10 @@ export interface InterestSignalRow {
   created_at: string;
 }
 
-/** 'learned' outweighs 'familiar' when computeMastery folds claims into the base retention. */
-export type MasteryClaimLevel = "learned" | "familiar";
-export type MasteryClaimSource = "self-report";
+/** 'learned' outweighs 'familiar'; taught_* levels come from teach-back explanation
+ * quality judgments (vision/09 #2) — behavioral evidence, weighted above self-report. */
+export type MasteryClaimLevel = "learned" | "familiar" | "taught_principled" | "taught_surface";
+export type MasteryClaimSource = "self-report" | "teach-back";
 
 /** A user's self-reported prior knowledge of a node — cold-start evidence, weighted below
  * real footprints (spec 011). */

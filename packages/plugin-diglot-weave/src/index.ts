@@ -5,6 +5,7 @@
  */
 
 export * from "./candidates";
+export * from "./confusionMining";
 export * from "./contextNovelty";
 export * from "./guessGrading";
 export * from "./guessPolicy";
@@ -15,4 +16,5 @@ export * from "./placement";
 export * from "./replace";
 export * from "./scheduler";
 export * from "./tokenize";
+export * from "./trainingLog";
 export * from "./uiCopy";

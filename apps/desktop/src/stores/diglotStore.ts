@@ -6,10 +6,13 @@
  */
 import type { DiglotEventKind } from "@breadcrumb/core-db";
 import {
+  type ConfusionPartner,
   computeGuessProbability,
+  configureDiglotScheduler,
   type GuessLevel,
   INITIAL_PLACEMENT_STEP,
   type LoadedLanguagePack,
+  mineConfusionPairs,
   type ReplacementPatch,
   updatePlacement,
 } from "@breadcrumb/plugin-diglot-weave";
@@ -49,6 +52,10 @@ export interface DiglotSettings {
   introductionRankFloor: number;
   /** Current placement jump size (see plugin placement.ts). */
   placementStep: number;
+  /** Personally fitted FSRS parameters (vision/09 #1); null = library defaults. */
+  fsrsParams: number[] | null;
+  /** Review count at the last successful fitting — gates refits. */
+  fsrsFittedReviewCount: number;
 }
 
 const SETTINGS_KEY = "diglotSettings";
@@ -64,6 +71,8 @@ const DEFAULT_SETTINGS: DiglotSettings = {
   llmRefineEnabled: true,
   introductionRankFloor: 0,
   placementStep: INITIAL_PLACEMENT_STEP,
+  fsrsParams: null,
+  fsrsFittedReviewCount: 0,
 };
 
 interface DiglotState {
@@ -75,6 +84,9 @@ interface DiglotState {
   recentConsecutiveAbandons: number;
   lastGlossSeenAt: Map<string, Date>;
   lemmasWithExplicitSignal: Set<string>;
+  /** Systematic mix-ups mined from the guess log — drives contrast lines (vision/09). */
+  confusionByLemma: Map<string, ConfusionPartner>;
+  refreshConfusions(): Promise<void>;
   loadFromDatabase(): Promise<void>;
   saveSettings(partial: Partial<DiglotSettings>): Promise<void>;
   ensureWoven(messageId: string, content: string): Promise<void>;
@@ -99,6 +111,15 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   recentConsecutiveAbandons: 0,
   lastGlossSeenAt: new Map(),
   lemmasWithExplicitSignal: new Set(),
+  confusionByLemma: new Map(),
+
+  async refreshConfusions() {
+    const { settings, loaded } = get();
+    if (loaded === null) return;
+    const repos = await getRepos();
+    const guesses = await repos.diglot.listGuesses(settings.pairId);
+    set({ confusionByLemma: mineConfusionPairs(guesses, loaded) });
+  },
 
   async loadFromDatabase() {
     const repos = await getRepos();
@@ -118,6 +139,22 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
         await repos.diglot.listLemmasWithExplicitSignal(settings.pairId),
       ),
     });
+    void get().refreshConfusions();
+    // Personal memory model (vision/09 #1): apply fitted parameters, refit in background.
+    configureDiglotScheduler(settings.fsrsParams ?? undefined);
+    void (async () => {
+      const { maybeFitFsrsParameters } = await import("../lib/fsrsFit");
+      const fitted = await maybeFitFsrsParameters(settings.pairId, settings.fsrsFittedReviewCount);
+      if (fitted !== null) {
+        const nextSettings = {
+          ...get().settings,
+          fsrsParams: fitted.params,
+          fsrsFittedReviewCount: fitted.reviewCount,
+        };
+        await repos.settings.set(SETTINGS_KEY, nextSettings, nowIso());
+        set({ settings: nextSettings });
+      }
+    })();
     await repos.diglot.upsertPack({
       id: loaded.pack.id,
       source_lang: loaded.pack.sourceLang,

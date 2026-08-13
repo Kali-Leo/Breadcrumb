@@ -9,8 +9,14 @@ import type { DiglotEventKind } from "@breadcrumb/core-db";
 import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
 
 /** One scheduler for the whole plugin; fuzz disabled so scheduling stays deterministic
- * and replayable in tests and simlab. */
-const scheduler = fsrs({ enable_fuzz: false });
+ * and replayable in tests and simlab. Reconfigured with personally fitted parameters
+ * once the review log is large enough (vision/09 #1). */
+let scheduler = fsrs({ enable_fuzz: false });
+
+/** Swaps in personally fitted FSRS parameters (21 weights); no argument restores defaults. */
+export function configureDiglotScheduler(w?: readonly number[]): void {
+  scheduler = fsrs(w === undefined ? { enable_fuzz: false } : { enable_fuzz: false, w: [...w] });
+}
 
 /** Every 2nd passive exposure without a lookup converts into one Good review — passive
  * exposure works (Broccoli RQ2: retention without any clicking) but should weigh less

@@ -619,6 +619,25 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Vision/09 #2: teach-back explanation quality becomes mastery evidence. SQLite CHECK
+    // constraints cannot be altered, so the claims table is rebuilt with the wider enums
+    // (levels taught_principled/taught_surface, source teach-back). Data copied verbatim.
+    id: "0027_teach_quality_claims",
+    statements: [
+      `ALTER TABLE mastery_claims RENAME TO mastery_claims_old;`,
+      `CREATE TABLE mastery_claims (
+        id TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        level TEXT NOT NULL CHECK (level IN ('learned','familiar','taught_principled','taught_surface')),
+        source TEXT NOT NULL CHECK (source IN ('self-report','teach-back')),
+        created_at TEXT NOT NULL
+      );`,
+      `INSERT INTO mastery_claims SELECT * FROM mastery_claims_old;`,
+      `DROP TABLE mastery_claims_old;`,
+      `CREATE INDEX idx_mastery_claims_node ON mastery_claims(node_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

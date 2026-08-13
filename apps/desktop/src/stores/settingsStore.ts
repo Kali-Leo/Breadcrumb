@@ -29,6 +29,8 @@ export interface FeatureSwitches {
   compareAlignment: boolean;
   /** Experimental: let the model name the map's clustered continents (spec 031 §3). */
   mapTopicNaming: boolean;
+  /** Teach-back explanation quality judgment → mastery evidence (vision/09 #2). */
+  teachQuality: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -68,6 +70,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   compareProfileBuild: true,
   compareAlignment: true,
   mapTopicNaming: true,
+  teachQuality: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

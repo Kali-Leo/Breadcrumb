@@ -3,6 +3,7 @@
 // in TS packages.
 
 mod embeddings;
+mod fsrs_optim;
 mod tts;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,6 +14,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
+            fsrs_optim::optimize_fsrs_parameters,
             tts::piper_synthesize
         ])
         .run(tauri::generate_context!())

@@ -5,8 +5,10 @@
  * match the screen. Storage and LLM context keep the original text untouched.
  * Main exports: MessageBubble.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { normalizeMathDelimiters } from "../lib/markdownMath";
+import { recordMessageReencounter } from "../lib/reencounter";
+import { useChatStore } from "../stores/chatStore";
 import { useDiglotStore } from "../stores/diglotStore";
 import { MarkdownContent } from "./MarkdownContent";
 
@@ -19,6 +21,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ author, content, messageId }: MessageBubbleProps) {
   const isUser = author === "user";
+  const bubbleRef = useRef<HTMLDivElement>(null);
   const diglotEnabled = useDiglotStore((state) => state.settings.enabled);
   const patches = useDiglotStore((state) =>
     messageId === undefined ? undefined : state.patchesByMessage.get(messageId),
@@ -38,10 +41,41 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
     }
   }, [shouldWeave, messageId, displaySource]);
 
+  // Silent re-encounter (vision/09): an assistant message dwelled on ≥50%-visible for 2s
+  // re-sights its attributed nodes — rereading old ground is a review, at message grain.
+  useEffect(() => {
+    const element = bubbleRef.current;
+    if (element === null || isUser || messageId === undefined) return;
+    let dwellTimer: number | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && dwellTimer === null) {
+            dwellTimer = window.setTimeout(() => {
+              const conversationId = useChatStore.getState().activeConversationId;
+              if (conversationId !== null) {
+                void recordMessageReencounter(messageId, conversationId);
+              }
+            }, 2000);
+          } else if (!entry.isIntersecting && dwellTimer !== null) {
+            window.clearTimeout(dwellTimer);
+            dwellTimer = null;
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(element);
+    return () => {
+      if (dwellTimer !== null) window.clearTimeout(dwellTimer);
+      observer.disconnect();
+    };
+  }, [isUser, messageId]);
+
   const woven =
     shouldWeave && messageId !== undefined && patches !== undefined && patches.length > 0;
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div ref={bubbleRef} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[76%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
           isUser

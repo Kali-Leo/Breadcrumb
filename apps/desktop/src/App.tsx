@@ -19,6 +19,8 @@ import { appEventBus, useChatStore } from "./stores/chatStore";
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
 import "./stores/interestStore";
+// Side-effect only: teach-back quality judgment on finished teach rounds (vision/09 #2).
+import "./lib/teachQuality";
 import { useDiglotStore } from "./stores/diglotStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useSettingsStore } from "./stores/settingsStore";

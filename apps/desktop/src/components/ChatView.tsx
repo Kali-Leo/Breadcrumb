@@ -3,7 +3,6 @@
  * Main exports: ChatView.
  */
 import { useEffect, useRef } from "react";
-import { recordConversationReencounter } from "../lib/reencounter";
 import { useChatStore } from "../stores/chatStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
@@ -23,16 +22,6 @@ export function ChatView() {
   useEffect(() => {
     void loadFactchecks(activeConversationId);
   }, [activeConversationId, loadFactchecks]);
-
-  // Silent re-encounter (静默收集): dwelling on a reopened conversation re-sights its
-  // nodes — rereading old ground is a review and the memory model should know.
-  useEffect(() => {
-    if (activeConversationId === null) return;
-    const dwellTimer = window.setTimeout(() => {
-      void recordConversationReencounter(activeConversationId);
-    }, 20_000);
-    return () => window.clearTimeout(dwellTimer);
-  }, [activeConversationId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll whenever a message or stream delta arrives
   useEffect(() => {

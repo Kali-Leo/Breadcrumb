@@ -21,7 +21,14 @@ export function masteryTier(value: number): MasteryTier {
 }
 
 /** "learned" ("我学过") is stronger self-report evidence than "familiar" ("我听过"). */
-export const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = { learned: 0.6, familiar: 0.4 };
+export const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = {
+  learned: 0.6,
+  familiar: 0.4,
+  // Teach-back quality judgments (vision/09 #2): explaining well is behavioral evidence,
+  // stronger than any self-report; a surface-level retelling still beats a bare claim.
+  taught_principled: 0.85,
+  taught_surface: 0.5,
+};
 /** A never-revisited self-report claim itself fades — cold-start evidence isn't permanent. */
 export const CLAIM_HALF_LIFE_DAYS = 30;
 
