@@ -30,11 +30,6 @@ export function Sidebar({
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
-  const viewButtonClass = (active: boolean) =>
-    `block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-      active ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"
-    }`;
-
   return (
     <aside className="flex h-full w-60 flex-col border-r border-stone-200 bg-white">
       <div className="flex items-center gap-2 p-3">
@@ -54,36 +49,39 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto px-2">
         <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
       </nav>
-      <TrailPanel />
-      <CompanionSection onOpenChat={onOpenChat} />
-      <div className="m-3 space-y-1">
-        <button type="button" onClick={onOpenMap} className={viewButtonClass(activeView === "map")}>
-          🏛️ 记忆宫殿
-        </button>
-        <button type="button" onClick={onOpenLab} className={viewButtonClass(activeView === "lab")}>
-          🧪 实验室
-        </button>
-        <button
-          type="button"
-          onClick={onOpenFeedback}
-          className={viewButtonClass(activeView === "feedback")}
-        >
-          🪞 反馈实验室
-        </button>
-        <button
-          type="button"
-          onClick={onOpenResearch}
-          className={viewButtonClass(activeView === "research")}
-        >
-          🔬 研究课题平台
-        </button>
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          className={viewButtonClass(activeView === "settings")}
-        >
-          ⚙️ 设置
-        </button>
+      {/* Temporarily collapsed so trail cards keep the room (Leo 2026-08-14) — these
+          sections are due for their own rework and live one click away meanwhile. */}
+      <details className="border-t border-stone-100 px-3 py-1.5">
+        <summary className="cursor-pointer list-none text-xs text-stone-400">🍞 面包屑轨迹</summary>
+        <TrailPanel />
+      </details>
+      <details className="border-t border-stone-100 px-3 py-1.5">
+        <summary className="cursor-pointer list-none text-xs text-stone-400">👥 伙伴</summary>
+        <CompanionSection onOpenChat={onOpenChat} />
+      </details>
+      <div className="flex items-center justify-between border-t border-stone-100 px-3 py-2">
+        {(
+          [
+            ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],
+            ["🧪", "实验室", onOpenLab, activeView === "lab"],
+            ["🪞", "反馈实验室", onOpenFeedback, activeView === "feedback"],
+            ["🔬", "研究课题平台", onOpenResearch, activeView === "research"],
+            ["⚙️", "设置", onOpenSettings, activeView === "settings"],
+          ] as const
+        ).map(([icon, name, onClick, active]) => (
+          <button
+            key={name}
+            type="button"
+            onClick={onClick}
+            title={name}
+            aria-label={name}
+            className={`rounded-lg px-2 py-1 text-base transition-colors ${
+              active ? "bg-amber-100" : "hover:bg-stone-100"
+            }`}
+          >
+            {icon}
+          </button>
+        ))}
       </div>
     </aside>
   );
