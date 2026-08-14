@@ -35,6 +35,10 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [hint, setHint] = useState<SelectionHint | null>(null);
+  // Mirrors hint so the keydown handler acts OUTSIDE a state updater — side effects inside
+  // updaters get double-invoked by React's dev purity check (one Enter made two stations).
+  const hintRef = useRef<SelectionHint | null>(null);
+  hintRef.current = hint;
   const [doors, setDoors] = useState<DoorCandidate[]>([]);
 
   useEffect(() => {
@@ -74,16 +78,15 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
       setHint({ text, left: rect.left, top: rect.top - 32 });
     }
     function onKeyDown(event: KeyboardEvent) {
-      setHint((current) => {
-        if (current === null) return current;
-        if (event.key === "Enter") {
-          void selectWord(current.text);
-          window.getSelection()?.removeAllRanges();
-          return null;
-        }
-        if (event.key === "Escape") return null;
-        return current;
-      });
+      const current = hintRef.current;
+      if (current === null) return;
+      if (event.key === "Enter") {
+        void selectWord(current.text);
+        window.getSelection()?.removeAllRanges();
+        setHint(null);
+      } else if (event.key === "Escape") {
+        setHint(null);
+      }
     }
     document.addEventListener("mouseup", onMouseUp);
     document.addEventListener("keydown", onKeyDown);
