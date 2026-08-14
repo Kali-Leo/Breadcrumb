@@ -158,6 +158,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     try {
+      // Captured NOW: provenance stamping runs after async extraction, when the store's
+      // anchor may long since have changed or cleared (spec 040 §7).
+      const { useKnowledgeStore } = await import("./knowledgeStore");
+      const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
       const baseMessages: ChatMessage[] = get().messages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -189,6 +193,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversationId,
         messageId: assistantMessage.id,
         finishedAt: assistantMessage.created_at,
+        anchoredNodeId: roundAnchoredNodeId,
       });
     } catch (error) {
       set({

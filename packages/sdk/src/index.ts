@@ -29,7 +29,14 @@ export interface PluginManifest {
 export interface BreadcrumbEventMap {
   "app:launched": { launchedAt: string };
   "chat:messageSent": { conversationId: string; messageId: string; sentAt: string };
-  "chat:responseFinished": { conversationId: string; messageId: string; finishedAt: string };
+  "chat:responseFinished": {
+    conversationId: string;
+    messageId: string;
+    finishedAt: string;
+    /** Anchored node captured at send time — extraction stamps sighting provenance with it
+     * (spec 040 §7); reading the store minutes later races against anchor changes. */
+    anchoredNodeId: string | null;
+  };
   "factcheck:finished": { conversationId: string; messageId: string; runId: string };
   /** Fired after knowledge-tree extraction lands new nodes (and their embeddings); the
    * edge pipeline (spec 010) keys off this instead of racing a fixed timer.

@@ -67,7 +67,10 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
 }));
 
 /** Extracts knowledge from the finished round; failures degrade silently (spec 002). */
-async function extractFromFinishedRound(conversationId: string): Promise<void> {
+async function extractFromFinishedRound(
+  conversationId: string,
+  roundAnchoredNodeId: string | null,
+): Promise<void> {
   const settings = useSettingsStore.getState();
   if (!settings.featureSwitches.knowledgeTree || !settings.networkEnabled || !settings.apiConfig) {
     return;
@@ -119,9 +122,10 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
       await repos.knowledgeNodes.insert(node);
     }
     // Provenance (spec 040 §7): every station born this round grew from the round's
-    // anchored node — the concept the user pointed at before asking. A sighting whose own
-    // node IS the anchor has no parent to record (it IS the anchor).
-    const anchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
+    // anchored node — captured at SEND time and carried in the event, because by now the
+    // live anchor may have changed or cleared. A sighting whose own node IS the anchor has
+    // no parent to record (it IS the anchor).
+    const anchoredNodeId = roundAnchoredNodeId;
     for (const sighting of plan.sightings) {
       await repos.nodeSightings.record({
         ...sighting,
@@ -171,6 +175,6 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
   }
 }
 
-appEventBus.on("chat:responseFinished", ({ conversationId }) => {
-  void extractFromFinishedRound(conversationId);
+appEventBus.on("chat:responseFinished", ({ conversationId, anchoredNodeId }) => {
+  void extractFromFinishedRound(conversationId, anchoredNodeId);
 });
