@@ -1,7 +1,9 @@
 /**
  * Purpose: pure derivation of one conversation's station map (spec 040 §3) — the active path's
  * stations, each unvisited branch's stub (dropped when it has no stations), and a capped
- * frontier — from message rows, node sightings, labels, and retention. No rendering, no I/O.
+ * frontier — from message rows, node sightings, labels, and retention. Also marks "transfer"
+ * stations whose node also has a sighting in another conversation (spec 041 §3). No rendering,
+ * no I/O.
  * Main exports: Station, BranchStub, FrontierStop, StationMapModel, buildStationMapModel.
  */
 import type { MessageRow, NodeSightingRow } from "@breadcrumb/core-db";
@@ -15,6 +17,9 @@ export interface Station {
   index: number;
   onActivePath: boolean;
   stale: boolean;
+  /** This node also has a sighting in at least one other conversation (spec 041 §3) — renders
+   * as a double ring and offers a jump to those other trails. */
+  transfer: boolean;
 }
 
 export interface BranchStub {
@@ -49,6 +54,9 @@ export interface BuildStationMapModelInput {
   /** Below this retention a visited station renders desaturated. Default 0.6 (matches
    * plugin-explore's STALE_RETENTION_THRESHOLD). */
   staleThreshold?: number;
+  /** Node ids that have at least one sighting outside this conversation (spec 041 §3) — drives
+   * each station's `transfer` flag. Defaults to empty (no transfers marked). */
+  nodeIdsInOtherTrails?: ReadonlySet<string>;
 }
 
 const DEFAULT_STALE_THRESHOLD = 0.6;
@@ -80,6 +88,7 @@ function buildStationsForSegment(
   retentionByNode: ReadonlyMap<string, number>,
   threshold: number,
   onActivePath: boolean,
+  nodeIdsInOtherTrails: ReadonlySet<string>,
 ): Station[] {
   const positionByMessageId = new Map(segmentMessageIds.map((id, position) => [id, position]));
   const relevant = sightings
@@ -106,6 +115,7 @@ function buildStationsForSegment(
       index: stations.length,
       onActivePath,
       stale: isStale(sighting.node_id, retentionByNode, threshold),
+      transfer: nodeIdsInOtherTrails.has(sighting.node_id),
     });
   }
   return stations;
@@ -153,8 +163,11 @@ function findBranchCandidates(
   return candidates;
 }
 
+const NO_TRANSFERS: ReadonlySet<string> = new Set();
+
 export function buildStationMapModel(input: BuildStationMapModelInput): StationMapModel {
   const threshold = input.staleThreshold ?? DEFAULT_STALE_THRESHOLD;
+  const nodeIdsInOtherTrails = input.nodeIdsInOtherTrails ?? NO_TRANSFERS;
   const activeLeafId = input.currentLeafId ?? newestLeafId(input.rows);
   const activePathIds =
     activeLeafId === null ? [] : pathToLeaf(input.rows, activeLeafId).map((row) => row.id);
@@ -168,6 +181,7 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
     input.retentionByNode,
     threshold,
     true,
+    nodeIdsInOtherTrails,
   );
 
   const candidates = findBranchCandidates(input.rows, activePathIds, activeLeafId);
@@ -181,6 +195,7 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
       input.retentionByNode,
       threshold,
       false,
+      nodeIdsInOtherTrails,
     );
     if (stations.length === 0) continue; // stationless branch, ignored (spec 040 §3)
     branches.push({ forkMessageId: candidate.forkMessageId, stations, leafId: candidate.leafId });

@@ -14,6 +14,7 @@ import {
 import { aggregateStyles } from "@breadcrumb/plugin-interest";
 import { getRepos, type Repos } from "./db";
 import { newId, nowIso } from "./time";
+import { computeInitialTitle } from "./trailNaming";
 
 /** Returns `existingId` unchanged, or creates a new plain 'chat' conversation and returns its
  * id — companion/teach sessions are always pre-created elsewhere and never hit this path. */
@@ -24,7 +25,7 @@ export async function ensureChatConversationId(
 ): Promise<string> {
   if (existingId !== null) return existingId;
   const conversationId = newId();
-  const title = content.length > 20 ? `${content.slice(0, 20)}…` : content;
+  const title = computeInitialTitle(content);
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,

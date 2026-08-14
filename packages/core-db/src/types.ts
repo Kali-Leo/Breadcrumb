@@ -41,6 +41,11 @@ export interface ConversationRow {
   /** Which companion card (e.g. "shichimi", "pepper", "cumin") owns this conversation —
    * null for ordinary chat/practice threads that have no companion attached (spec 037). */
   companion_id: string | null;
+  /** System-maintained trail-card name, "first station -> last station" (spec 041 §1) — null
+   * until the conversation has any knowledge-node sighting. Display order is `auto_title ??
+   * title`: once the user renames a conversation this column is cleared and stops updating,
+   * so the rename always wins. */
+  auto_title: string | null;
 }
 
 export interface MessageRow {

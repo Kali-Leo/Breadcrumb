@@ -202,6 +202,40 @@ describe("buildStationMapModel — frontier", () => {
   });
 });
 
+describe("buildStationMapModel — transfer (spec 041 §3)", () => {
+  const rows = [row("m1", "2026-08-14T10:00:00Z", null)];
+  const sightings = [
+    sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+    sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+  ];
+
+  it("marks only the station whose node appears in another conversation", () => {
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+      nodeIdsInOtherTrails: new Set(["a"]),
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "a")?.transfer).toBe(true);
+    expect(model.mainLine.find((s) => s.nodeId === "b")?.transfer).toBe(false);
+  });
+
+  it("defaults to no transfers when the set is omitted", () => {
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.every((s) => !s.transfer)).toBe(true);
+  });
+});
+
 describe("buildStationMapModel — empty input", () => {
   it("returns an empty model with no current message", () => {
     const model = buildStationMapModel({

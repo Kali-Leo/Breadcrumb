@@ -7,7 +7,15 @@ import { layoutStationMap, MAIN_X, ROW_HEIGHT, TOP_MARGIN } from "./stationMapLa
 import type { StationMapModel } from "./stationMapModel";
 
 function station(nodeId: string, messageId: string, onActivePath: boolean) {
-  return { nodeId, label: nodeId, messageId, index: 0, onActivePath, stale: false };
+  return {
+    nodeId,
+    label: nodeId,
+    messageId,
+    index: 0,
+    onActivePath,
+    stale: false,
+    transfer: false,
+  };
 }
 
 describe("layoutStationMap", () => {

@@ -11,6 +11,7 @@ import {
   guessFeedbackLine,
   selectionDiscussPrefill,
   selectionExplainPrefill,
+  transferListTitle,
 } from "@breadcrumb/plugin-explore";
 import { describe, expect, it } from "vitest";
 import { findPressureLexiconHits, loadPressureLexicon } from "./pressureLexicon";
@@ -29,6 +30,7 @@ describe("explore doors + selection bar copy gates", () => {
     guessFeedbackLine("close", "闭包是函数与其词法环境的绑定。"),
     guessFeedbackLine("wrong", "闭包是函数与其词法环境的绑定。"),
     frontierStopPrefill("词法环境"),
+    transferListTitle("闭包"),
   ];
 
   it("hits zero pressure-lexicon entries", () => {

@@ -2,7 +2,9 @@
  * Purpose: one conversation's station map (spec 040 §3) — fetches sightings + the exploration
  * atlas, builds the model and its pixel layout, and renders the SVG frame; per-mark rendering
  * lives in StationMapMarks.tsx. Click a visited station to locate it in chat, "续" to resume
- * from it, click an unvisited frontier stop to prefill a question about it.
+ * from it, click an unvisited frontier stop to prefill a question about it. A transfer station
+ * (its node also sighted in another conversation, spec 041 §3) additionally opens
+ * TransferPopover's other-trail listing.
  * Main exports: StationMap.
  */
 import type { NodeSightingRow } from "@breadcrumb/core-db";
@@ -18,6 +20,7 @@ import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useMemoryStore } from "../stores/memoryStore";
 import { BranchStubMark, FrontierStopMark, VisitedStationMark } from "./StationMapMarks";
+import { TransferPopover } from "./TransferPopover";
 
 const SVG_WIDTH = 232;
 const LINE_STROKE = "#d6d3d1";
@@ -29,23 +32,29 @@ export function StationMap() {
   const nodes = useKnowledgeStore((state) => state.nodes);
   const retentionByNode = useMemoryStore((state) => state.retentionByNode);
   const [sightings, setSightings] = useState<readonly NodeSightingRow[]>([]);
+  const [allSightings, setAllSightings] = useState<readonly NodeSightingRow[]>([]);
   const [atlas, setAtlas] = useState<ExplorationAtlas | null>(null);
+  const [transferNodeId, setTransferNodeId] = useState<string | null>(null);
 
   useEffect(() => {
+    setTransferNodeId(null);
     if (conversationId === null) {
       setSightings([]);
+      setAllSightings([]);
       setAtlas(null);
       return;
     }
     let cancelled = false;
     async function refresh(id: string) {
       const repos = await getRepos();
-      const [rows, loadedAtlas] = await Promise.all([
+      const [rows, everySighting, loadedAtlas] = await Promise.all([
         repos.nodeSightings.listByConversation(id),
+        repos.nodeSightings.listAll(),
         loadAtlas(id),
       ]);
       if (cancelled) return;
       setSightings(rows);
+      setAllSightings(everySighting);
       setAtlas(loadedAtlas);
     }
     void refresh(conversationId);
@@ -60,6 +69,16 @@ export function StationMap() {
 
   const labelsByNode = useMemo(() => new Map(nodes.map((node) => [node.id, node.label])), [nodes]);
 
+  const nodeIdsInOtherTrails = useMemo(
+    () =>
+      new Set(
+        allSightings
+          .filter((sighting) => sighting.conversation_id !== conversationId)
+          .map((sighting) => sighting.node_id),
+      ),
+    [allSightings, conversationId],
+  );
+
   const model = useMemo(
     () =>
       buildStationMapModel({
@@ -69,8 +88,17 @@ export function StationMap() {
         labelsByNode,
         retentionByNode,
         frontier: atlas?.frontier ?? [],
+        nodeIdsInOtherTrails,
       }),
-    [allMessages, currentLeafId, sightings, labelsByNode, retentionByNode, atlas],
+    [
+      allMessages,
+      currentLeafId,
+      sightings,
+      labelsByNode,
+      retentionByNode,
+      atlas,
+      nodeIdsInOtherTrails,
+    ],
   );
 
   const activePathIds = useMemo(() => {
@@ -94,6 +122,9 @@ export function StationMap() {
   }
   function askAbout(label: string) {
     appEventBus.emit("composer:prefill", { text: frontierStopPrefill(label) });
+  }
+  function openTransfer(nodeId: string) {
+    setTransferNodeId(nodeId);
   }
 
   const mainLineTopY = layout.mainLine[0]?.y ?? TOP_MARGIN;
@@ -130,6 +161,7 @@ export function StationMap() {
             laidOutBranch={laidOutBranch}
             onLocate={locate}
             onResume={resume}
+            onTransferClick={openTransfer}
           />
         ))}
         {layout.mainLine.map((laidOutStation, index) => (
@@ -139,6 +171,7 @@ export function StationMap() {
             isCurrent={index === layout.mainLine.length - 1}
             onLocate={locate}
             onResume={resume}
+            onTransferClick={openTransfer}
           />
         ))}
         {layout.frontier.map(({ stop, x, y }) => (
@@ -151,6 +184,15 @@ export function StationMap() {
           />
         ))}
       </svg>
+      {transferNodeId !== null && conversationId !== null && (
+        <TransferPopover
+          nodeId={transferNodeId}
+          nodeLabel={labelsByNode.get(transferNodeId) ?? transferNodeId}
+          currentConversationId={conversationId}
+          allSightings={allSightings}
+          onClose={() => setTransferNodeId(null)}
+        />
+      )}
     </div>
   );
 }

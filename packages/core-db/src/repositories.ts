@@ -33,9 +33,11 @@ export function createSettingsRepo(sql: SqlClient) {
 export function createConversationsRepo(sql: SqlClient) {
   return {
     /** companion_id is optional here (defaults to null) so every caller predating spec 037's
-     * companion cast keeps typechecking without touching every call site. */
+     * companion cast keeps typechecking without touching every call site. auto_title is never
+     * set at creation (spec 041 §1) — it starts NULL and is filled in once the trail has
+     * stations, via setAutoTitle. */
     async create(
-      row: Omit<ConversationRow, "companion_id"> & { companion_id?: string | null },
+      row: Omit<ConversationRow, "companion_id" | "auto_title"> & { companion_id?: string | null },
     ): Promise<void> {
       await sql.execute(
         "INSERT INTO conversations (id, title, created_at, updated_at, kind, companion_id) VALUES (?, ?, ?, ?, ?, ?)",
@@ -79,8 +81,19 @@ export function createConversationsRepo(sql: SqlClient) {
     async touch(id: string, updatedAtIso: string): Promise<void> {
       await sql.execute("UPDATE conversations SET updated_at = ? WHERE id = ?", [updatedAtIso, id]);
     },
+    /** A user rename always wins and freezes auto-naming (spec 041 §1): title changes and
+     * auto_title is cleared in the same statement, so the trail-card display (`auto_title ??
+     * title`) falls back to this title and future auto-naming passes leave it alone. */
     async rename(id: string, title: string): Promise<void> {
-      await sql.execute("UPDATE conversations SET title = ? WHERE id = ?", [title, id]);
+      await sql.execute("UPDATE conversations SET title = ?, auto_title = NULL WHERE id = ?", [
+        title,
+        id,
+      ]);
+    },
+    /** Recomputed after every new station on the trail (spec 041 §1) — only ever touches
+     * auto_title, never updated_at, so a fresh name never reshuffles the sidebar's order. */
+    async setAutoTitle(id: string, autoTitle: string | null): Promise<void> {
+      await sql.execute("UPDATE conversations SET auto_title = ? WHERE id = ?", [autoTitle, id]);
     },
   };
 }

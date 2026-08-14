@@ -96,7 +96,15 @@ function makeFakeSql() {
           ConversationRow["kind"],
           string | null,
         ];
-        conversations.set(id, { id, title, created_at, updated_at, kind, companion_id });
+        conversations.set(id, {
+          id,
+          title,
+          created_at,
+          updated_at,
+          kind,
+          companion_id,
+          auto_title: null,
+        });
       } else if (sql.includes("INTO companion_memories")) {
         const [id, companion_id, kind, content, importance, created_at, last_accessed_at] = p as [
           string,

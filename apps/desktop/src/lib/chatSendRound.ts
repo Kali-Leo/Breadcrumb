@@ -18,6 +18,7 @@ import { resolveSendParentId, type TreeSlice } from "./chatTreeActions";
 import { buildRoundSystemMessages } from "./companionChatPrompt";
 import type { Repos } from "./db";
 import { newId, nowIso } from "./time";
+import { refreshConversationAutoTitle } from "./trailNamingActions";
 
 export interface SendRoundResult {
   assistantMessage: MessageRow;
@@ -97,6 +98,14 @@ export async function runSendRound(params: {
   };
   await repos.messages.append(assistantMessage);
   await repos.conversations.touch(conversationId, assistantMessage.created_at);
+
+  // Trail-card auto-naming (spec 041 §1) — reads whatever stations already exist; the round's
+  // own stations (if any) land a moment later via knowledge:nodesExtracted's own refresh.
+  const { useKnowledgeStore } = await import("../stores/knowledgeStore");
+  const labelsByNode = new Map(
+    useKnowledgeStore.getState().nodes.map((node) => [node.id, node.label]),
+  );
+  await refreshConversationAutoTitle(repos, conversationId, labelsByNode);
 
   const cost = await recordRoundCost(repos, {
     conversationId,

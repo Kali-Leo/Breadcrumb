@@ -1,11 +1,12 @@
 /**
- * Purpose: left column — new-chat button, conversation list, trail, and the view switcher
- * (memory palace / lab / settings). Opening or creating a conversation always returns to
- * the chat view so navigation never dead-ends in another view.
+ * Purpose: left column — new-chat button, trail cards (spec 041), the breadcrumb trail, and
+ * the view switcher (memory palace / lab / settings). Opening or creating a conversation
+ * always returns to the chat view so navigation never dead-ends in another view.
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
 import { CompanionSection } from "./CompanionSection";
+import { TrailList } from "./TrailList";
 import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
@@ -27,9 +28,6 @@ export function Sidebar({
   onOpenFeedback,
   onOpenResearch,
 }: SidebarProps) {
-  const conversations = useChatStore((state) => state.conversations);
-  const activeConversationId = useChatStore((state) => state.activeConversationId);
-  const openConversation = useChatStore((state) => state.openConversation);
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
   const viewButtonClass = (active: boolean) =>
@@ -53,24 +51,8 @@ export function Sidebar({
       >
         ＋ 新的学习对话
       </button>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2">
-        {conversations.map((conversation) => (
-          <button
-            type="button"
-            key={conversation.id}
-            onClick={() => {
-              void openConversation(conversation.id);
-              onOpenChat();
-            }}
-            className={`block w-full truncate rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-              conversation.id === activeConversationId && activeView === "chat"
-                ? "bg-amber-100 text-stone-800"
-                : "text-stone-600 hover:bg-stone-100"
-            }`}
-          >
-            {conversation.title}
-          </button>
-        ))}
+      <nav className="flex-1 overflow-y-auto px-2">
+        <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
       </nav>
       <TrailPanel />
       <CompanionSection onOpenChat={onOpenChat} />

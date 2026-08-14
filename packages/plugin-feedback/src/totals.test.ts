@@ -47,6 +47,7 @@ function conversation(id: string, kind: ConversationRow["kind"]): ConversationRo
     updated_at: "2026-08-01T00:00:00.000Z",
     kind,
     companion_id: null,
+    auto_title: null,
   };
 }
 

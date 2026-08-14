@@ -719,6 +719,12 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0031_message_parent",
     statements: [`ALTER TABLE messages ADD COLUMN parent_id TEXT;`],
   },
+  {
+    // Spec 041 §1: system-maintained trail-card name ("first station -> last station"). The
+    // user-edited `title` column always wins for display and is never overwritten by this one.
+    id: "0032_conversation_auto_title",
+    statements: [`ALTER TABLE conversations ADD COLUMN auto_title TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

@@ -20,6 +20,7 @@ import { recordAiFailure } from "../lib/failureLog";
 import { recordMeteredCall } from "../lib/metering";
 import { runSynonymGate } from "../lib/synonymGate";
 import { newId, nowIso } from "../lib/time";
+import { refreshConversationAutoTitle } from "../lib/trailNamingActions";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
@@ -132,8 +133,9 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
     const store = useKnowledgeStore.getState();
     const isViewingThisConversation =
       useChatStore.getState().activeConversationId === conversationId;
+    const refreshedNodes = await repos.knowledgeNodes.listAll();
     useKnowledgeStore.setState({
-      nodes: await repos.knowledgeNodes.listAll(),
+      nodes: refreshedNodes,
       freshNodeIds: new Set(plan.newNodes.map((node) => node.id)),
       sessionNodeIds: isViewingThisConversation
         ? [
@@ -150,6 +152,11 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
         freshNodeIds: plan.newNodes.map((node) => node.id),
         touchedNodeIds: plan.sightings.map((sighting) => sighting.node_id),
       });
+      // Trail-card auto-naming (spec 041 §1): this round's new stations, if any, may move the
+      // "first -> last" name; refresh the one card, then reload the sidebar's list to show it.
+      const labelsByNode = new Map(refreshedNodes.map((node) => [node.id, node.label]));
+      await refreshConversationAutoTitle(repos, conversationId, labelsByNode);
+      await useChatStore.getState().loadFromDatabase();
     }
   } catch (error) {
     console.warn("knowledge extraction skipped:", error);

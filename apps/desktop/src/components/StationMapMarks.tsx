@@ -30,26 +30,40 @@ export function VisitedStationMark({
   isCurrent,
   onLocate,
   onResume,
+  onTransferClick,
 }: {
   laidOut: LaidOutStation;
   isCurrent: boolean;
   onLocate(messageId: string): void;
   onResume(messageId: string): void;
+  /** Called in addition to onLocate when a transfer station is clicked (spec 041 §3) — opens
+   * the shared node's other-trail listing. Locating still happens; this never replaces it. */
+  onTransferClick(nodeId: string): void;
 }) {
   const fill = station.stale ? "#d6d3d1" : station.onActivePath ? "#f59e0b" : "#78716c";
+  const activate = () => {
+    onLocate(station.messageId);
+    if (station.transfer) onTransferClick(station.nodeId);
+  };
+  const ariaLabel = station.transfer
+    ? `定位到「${station.label}」（${EXPLORE_UI_COPY.transferBadge}）`
+    : `定位到「${station.label}」`;
   return (
     <g>
       {isCurrent && (
         <circle cx={x} cy={y} r={DOT_RADIUS + 3} fill="none" stroke="#f59e0b" strokeWidth={1.2} />
       )}
+      {station.transfer && (
+        <circle cx={x} cy={y} r={DOT_RADIUS + 3} fill="none" stroke={fill} strokeWidth={1} />
+      )}
       {/* biome-ignore lint/a11y/useSemanticElements: SVG nodes cannot be <button> elements */}
       <g
         role="button"
         tabIndex={0}
-        aria-label={`定位到「${station.label}」`}
+        aria-label={ariaLabel}
         style={{ cursor: "pointer" }}
-        onClick={() => onLocate(station.messageId)}
-        onKeyDown={(event) => activateOnKey(event, () => onLocate(station.messageId))}
+        onClick={activate}
+        onKeyDown={(event) => activateOnKey(event, activate)}
       >
         <circle cx={x} cy={y} r={DOT_RADIUS} fill={fill} stroke="white" strokeWidth={1} />
         <text x={x + 16} y={y + 4} fontSize={11} fill="#57534e">
@@ -80,10 +94,12 @@ export function BranchStubMark({
   laidOutBranch,
   onLocate,
   onResume,
+  onTransferClick,
 }: {
   laidOutBranch: LaidOutBranch;
   onLocate(messageId: string): void;
   onResume(messageId: string): void;
+  onTransferClick(nodeId: string): void;
 }) {
   const firstStation = laidOutBranch.stations[0];
   const branchBottomY = laidOutBranch.stations.at(-1)?.y ?? laidOutBranch.originY;
@@ -116,6 +132,7 @@ export function BranchStubMark({
           isCurrent={false}
           onLocate={onLocate}
           onResume={onResume}
+          onTransferClick={onTransferClick}
         />
       ))}
     </g>
