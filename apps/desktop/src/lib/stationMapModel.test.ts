@@ -1,8 +1,10 @@
 /**
  * Purpose: unit tests for buildStationMapModel — linear/branching trees, stationless-branch
- * dropping, cross-line dedup, frontier truncation, staleness, and the empty-input edge case.
+ * dropping, cross-line dedup, frontier truncation, staleness, the empty-input edge case, and
+ * spec 040 §7's provenance-tree parentage (delegated to stationMapProvenance.ts, covered in
+ * its own test file for the rule-by-rule detail).
  */
-import type { MessageRow, NodeSightingRow } from "@breadcrumb/core-db";
+import type { KnowledgeEdgeRow, MessageRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
 import { buildStationMapModel } from "./stationMapModel";
 
@@ -23,6 +25,7 @@ function sighting(
   nodeId: string,
   messageId: string | null,
   createdAt: string,
+  originNodeId: string | null = null,
 ): NodeSightingRow {
   return {
     id,
@@ -30,6 +33,20 @@ function sighting(
     conversation_id: "c1",
     message_id: messageId,
     created_at: createdAt,
+    origin_node_id: originNodeId,
+  };
+}
+
+function edge(sourceId: string, targetId: string): KnowledgeEdgeRow {
+  return {
+    id: `e-${sourceId}-${targetId}`,
+    source_id: sourceId,
+    target_id: targetId,
+    edge_type: "requires",
+    weight: 1,
+    confidence: 1,
+    origin: "llm",
+    created_at: "2026-08-14T00:00:00Z",
   };
 }
 
@@ -56,6 +73,7 @@ describe("buildStationMapModel — linear, no branches", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -65,6 +83,21 @@ describe("buildStationMapModel — linear, no branches", () => {
     expect(model.mainLine.every((s) => s.onActivePath)).toBe(true);
     expect(model.branches).toEqual([]);
     expect(model.currentMessageId).toBe("m3");
+  });
+
+  it("degenerates to a flat trunk with no edges and no origin (spec 040 §7 fallback)", () => {
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.map((s) => s.parentNodeId)).toEqual([null, null]);
+    expect(model.mainLine.map((s) => s.depth)).toEqual([0, 0]);
+    expect(model.mainLine.map((s) => s.order)).toEqual([1, 2]);
   });
 });
 
@@ -87,6 +120,7 @@ describe("buildStationMapModel — with a branch", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -99,11 +133,28 @@ describe("buildStationMapModel — with a branch", () => {
     expect(model.branches[0]?.stations[0]?.onActivePath).toBe(false);
   });
 
+  it("a branch station keeps the flat spec 040 §3 shape (never parent-resolved)", () => {
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      // An edge between the branch station and the main line exists, but branches are never
+      // parent-resolved — only the main line is (spec 040 §7 scope).
+      edges: [edge("a", "c")],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.branches[0]?.stations[0]?.parentNodeId).toBeNull();
+    expect(model.branches[0]?.stations[0]?.depth).toBe(0);
+  });
+
   it("a stationless branch is dropped entirely", () => {
     const model = buildStationMapModel({
       rows,
       currentLeafId: null,
       sightings: sightings.filter((s) => s.node_id !== "c"), // branch m3 gets no sighting
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -116,6 +167,7 @@ describe("buildStationMapModel — with a branch", () => {
       rows,
       currentLeafId: null,
       sightings: [...sightings, sighting("s4", "a", "m3", "2026-08-14T10:02:02Z")],
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -137,6 +189,7 @@ describe("buildStationMapModel — dedup within one line", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -158,6 +211,7 @@ describe("buildStationMapModel — staleness", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map([["a", 0.2]]),
       frontier: [],
@@ -171,6 +225,7 @@ describe("buildStationMapModel — staleness", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map([["a", 0.7]]),
       frontier: [],
@@ -188,6 +243,7 @@ describe("buildStationMapModel — frontier", () => {
       rows,
       currentLeafId: null,
       sightings: [],
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [
@@ -214,6 +270,7 @@ describe("buildStationMapModel — transfer (spec 041 §3)", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
@@ -228,11 +285,130 @@ describe("buildStationMapModel — transfer (spec 041 §3)", () => {
       rows,
       currentLeafId: null,
       sightings,
+      edges: [],
       labelsByNode,
       retentionByNode: new Map(),
       frontier: [],
     });
     expect(model.mainLine.every((s) => !s.transfer)).toBe(true);
+  });
+});
+
+describe("buildStationMapModel — provenance parentage (spec 040 §7)", () => {
+  // Four stations on one message, first-touched in order a, b, c, d.
+  const rows = [row("m1", "2026-08-14T10:00:00Z", null)];
+
+  it("rule ① origin wins over an available edge to a nearer station", () => {
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+      sighting("s3", "c", "m1", "2026-08-14T10:00:03Z", "a"), // origin a, not adjacent b
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [edge("b", "c")], // would win rule ② if origin didn't take priority
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "c")?.parentNodeId).toBe("a");
+  });
+
+  it("rule ② falls back to an edge with the immediately preceding station", () => {
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+      sighting("s3", "c", "m1", "2026-08-14T10:00:03Z"), // no origin
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [edge("c", "b")], // reverse direction still counts
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "c")?.parentNodeId).toBe("b");
+  });
+
+  it("rule ③ falls back to the nearest earlier station with an edge, when the immediate predecessor has none", () => {
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+      sighting("s3", "c", "m1", "2026-08-14T10:00:03Z"), // no origin, no edge to b
+      sighting("s4", "d", "m1", "2026-08-14T10:00:04Z"), // no origin, edges to both a and b
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [edge("a", "c"), edge("a", "d"), edge("b", "d")],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "c")?.parentNodeId).toBe("a");
+    // d has an edge to both a (order 1) and b (order 2) — nearest (highest order) wins.
+    expect(model.mainLine.find((s) => s.nodeId === "d")?.parentNodeId).toBe("b");
+  });
+
+  it("rule ④ new trunk root when nothing matches", () => {
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "b")?.parentNodeId).toBeNull();
+    expect(model.mainLine.find((s) => s.nodeId === "b")?.depth).toBe(0);
+  });
+
+  it("depth is the parent chain length, growing one level per origin hop", () => {
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z", "a"),
+      sighting("s3", "c", "m1", "2026-08-14T10:00:03Z", "b"),
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.map((s) => s.depth)).toEqual([0, 1, 2]);
+  });
+
+  it("cycle safety: an origin pointing at a later station is ignored, never producing a forward parent", () => {
+    // a's origin points at b, which is only touched afterward — a cannot adopt a not-yet-seen
+    // parent, so it falls through rules ②③④ same as if it had no origin at all.
+    const sightings = [
+      sighting("s1", "a", "m1", "2026-08-14T10:00:01Z", "b"),
+      sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
+    ];
+    const model = buildStationMapModel({
+      rows,
+      currentLeafId: null,
+      sightings,
+      edges: [],
+      labelsByNode,
+      retentionByNode: new Map(),
+      frontier: [],
+    });
+    expect(model.mainLine.find((s) => s.nodeId === "a")?.parentNodeId).toBeNull();
+    expect(model.mainLine.find((s) => s.nodeId === "a")?.depth).toBe(0);
   });
 });
 
@@ -242,6 +418,7 @@ describe("buildStationMapModel — empty input", () => {
       rows: [],
       currentLeafId: null,
       sightings: [],
+      edges: [],
       labelsByNode: new Map(),
       retentionByNode: new Map(),
       frontier: [],

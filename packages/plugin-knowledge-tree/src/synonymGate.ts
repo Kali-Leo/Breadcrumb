@@ -186,6 +186,8 @@ export function planSynonymGateResult(input: SynonymGatePlanInput): SynonymGateP
       conversation_id: input.conversationId,
       message_id: input.sourceMessageId,
       created_at: input.nowIso(),
+      // Filled in by the caller (knowledgeStore.ts) with the round's anchored node (spec 040 §7).
+      origin_node_id: null,
     });
   }
 

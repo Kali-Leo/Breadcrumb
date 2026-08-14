@@ -13,7 +13,14 @@ function localIso(year: number, month: number, day: number, hour = 12): string {
 const TODAY = localIso(2026, 8, 13);
 
 function sighting(nodeId: string, iso: string, id: string): NodeSightingRow {
-  return { id, node_id: nodeId, conversation_id: "c1", message_id: null, created_at: iso };
+  return {
+    id,
+    node_id: nodeId,
+    conversation_id: "c1",
+    message_id: null,
+    created_at: iso,
+    origin_node_id: null,
+  };
 }
 
 function claim(nodeId: string, level: MasteryClaimRow["level"], iso: string): MasteryClaimRow {

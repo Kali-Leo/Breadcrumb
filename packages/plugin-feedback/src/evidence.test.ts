@@ -14,6 +14,7 @@ function sighting(nodeId: string, conversationId: string, createdAt: string): No
     conversation_id: conversationId,
     message_id: null,
     created_at: createdAt,
+    origin_node_id: null,
   };
 }
 

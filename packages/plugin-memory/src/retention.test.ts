@@ -49,6 +49,7 @@ describe("computeRetentionByNode", () => {
       conversation_id: "c1",
       message_id: null,
       created_at: createdAt,
+      origin_node_id: null,
     });
     const retention = computeRetentionByNode(
       [sighting("a", daysAgo(0)), sighting("b", daysAgo(60))],

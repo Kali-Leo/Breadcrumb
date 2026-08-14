@@ -52,6 +52,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       conversation_id: "conv-1",
       message_id: null,
       created_at: now,
+      origin_node_id: null,
     });
     await temp.repos.interestSignals.insert({
       id: "signal-1",

@@ -1,13 +1,15 @@
 /**
- * Purpose: pure derivation of one conversation's station map (spec 040 §3) — the active path's
- * stations, each unvisited branch's stub (dropped when it has no stations), and a capped
- * frontier — from message rows, node sightings, labels, and retention. Also marks "transfer"
- * stations whose node also has a sighting in another conversation (spec 041 §3). No rendering,
- * no I/O.
+ * Purpose: pure derivation of one conversation's station map (spec 040 §3, provenance-tree'd
+ * by §7) — the active path's stations arranged as an origin tree (station drafting and parent
+ * resolution live in stationMapProvenance.ts), each unvisited branch's stub (dropped when it
+ * has no stations, and never parent-resolved — fork stubs keep spec 040 §3's flat shape), and
+ * a capped frontier. Also marks "transfer" stations sighted in another conversation too (spec
+ * 041 §3). No rendering, no I/O.
  * Main exports: Station, BranchStub, FrontierStop, StationMapModel, buildStationMapModel.
  */
-import type { MessageRow, NodeSightingRow } from "@breadcrumb/core-db";
+import type { KnowledgeEdgeRow, MessageRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { effectiveParentById, newestLeafId, pathToLeaf } from "./messageTree";
+import { buildStationDrafts, labelFor, resolveMainLineParentage } from "./stationMapProvenance";
 
 export interface Station {
   nodeId: string;
@@ -20,6 +22,15 @@ export interface Station {
   /** This node also has a sighting in at least one other conversation (spec 041 §3) — renders
    * as a double ring and offers a jump to those other trails. */
   transfer: boolean;
+  /** Spec 040 §7: the earlier station this one grew out of. Always null on a branch (fork
+   * stubs keep their flat spec-040 §3 shape — see module doc). Null on the main line means
+   * "new trunk root": no origin sighting and no edge tied it to any earlier main-line station. */
+  parentNodeId: string | null;
+  /** Length of the parentNodeId chain back to a trunk root (root itself = 0). Always 0 on a
+   * branch. */
+  depth: number;
+  /** 1-based first-touch sequence number within this station's own line. */
+  order: number;
 }
 
 export interface BranchStub {
@@ -48,6 +59,11 @@ export interface BuildStationMapModelInput {
   currentLeafId: string | null;
   /** listByConversation order: time ascending. */
   sightings: readonly NodeSightingRow[];
+  /** Edges among nodes touched by this conversation (e.g. atlas.structure) — direction is
+   * ignored, only "is there any requires/helps edge between these two nodes" matters (spec
+   * 040 §7 rules ②③). A wider edge set (the whole library) works too: only edges between two
+   * of this map's stations can ever match. */
+  edges: readonly KnowledgeEdgeRow[];
   labelsByNode: ReadonlyMap<string, string>;
   retentionByNode: ReadonlyMap<string, number>;
   frontier: readonly { nodeId: string; label: string; viaNodeId: string }[];
@@ -61,65 +77,6 @@ export interface BuildStationMapModelInput {
 
 const DEFAULT_STALE_THRESHOLD = 0.6;
 const MAX_FRONTIER_STOPS = 3;
-
-function labelFor(nodeId: string, labelsByNode: ReadonlyMap<string, string>): string {
-  return labelsByNode.get(nodeId) ?? nodeId;
-}
-
-/** Missing retention (never tracked) reads as fresh, not stale — silence must never look like
- * a warning (product principle 1). */
-function isStale(
-  nodeId: string,
-  retentionByNode: ReadonlyMap<string, number>,
-  threshold: number,
-): boolean {
-  const retention = retentionByNode.get(nodeId);
-  return retention !== undefined && retention < threshold;
-}
-
-/** Builds one line's stations from the sightings whose message lands in `segmentMessageIds`,
- * in path order (ties broken by sighting time), first-touch deduplicated against `usedNodeIds`
- * (shared across the whole map, so a node stations only once anywhere). */
-function buildStationsForSegment(
-  segmentMessageIds: readonly string[],
-  sightings: readonly NodeSightingRow[],
-  usedNodeIds: Set<string>,
-  labelsByNode: ReadonlyMap<string, string>,
-  retentionByNode: ReadonlyMap<string, number>,
-  threshold: number,
-  onActivePath: boolean,
-  nodeIdsInOtherTrails: ReadonlySet<string>,
-): Station[] {
-  const positionByMessageId = new Map(segmentMessageIds.map((id, position) => [id, position]));
-  const relevant = sightings
-    .filter(
-      (sighting) => sighting.message_id !== null && positionByMessageId.has(sighting.message_id),
-    )
-    .slice()
-    .sort((a, b) => {
-      const positionA = positionByMessageId.get(a.message_id as string) as number;
-      const positionB = positionByMessageId.get(b.message_id as string) as number;
-      if (positionA !== positionB) return positionA - positionB;
-      if (a.created_at !== b.created_at) return a.created_at < b.created_at ? -1 : 1;
-      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-    });
-
-  const stations: Station[] = [];
-  for (const sighting of relevant) {
-    if (usedNodeIds.has(sighting.node_id)) continue;
-    usedNodeIds.add(sighting.node_id);
-    stations.push({
-      nodeId: sighting.node_id,
-      label: labelFor(sighting.node_id, labelsByNode),
-      messageId: sighting.message_id as string,
-      index: stations.length,
-      onActivePath,
-      stale: isStale(sighting.node_id, retentionByNode, threshold),
-      transfer: nodeIdsInOtherTrails.has(sighting.node_id),
-    });
-  }
-  return stations;
-}
 
 interface BranchCandidate {
   forkMessageId: string;
@@ -173,7 +130,7 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
     activeLeafId === null ? [] : pathToLeaf(input.rows, activeLeafId).map((row) => row.id);
 
   const usedNodeIds = new Set<string>();
-  const mainLine = buildStationsForSegment(
+  const mainLineDrafts = buildStationDrafts(
     activePathIds,
     input.sightings,
     usedNodeIds,
@@ -183,11 +140,13 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
     true,
     nodeIdsInOtherTrails,
   );
+  resolveMainLineParentage(mainLineDrafts, input.edges);
+  const mainLine = mainLineDrafts.map((draft) => draft.station);
 
   const candidates = findBranchCandidates(input.rows, activePathIds, activeLeafId);
   const branches: BranchStub[] = [];
   for (const candidate of candidates) {
-    const stations = buildStationsForSegment(
+    const stations = buildStationDrafts(
       candidate.segment,
       input.sightings,
       usedNodeIds,
@@ -196,7 +155,7 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
       threshold,
       false,
       nodeIdsInOtherTrails,
-    );
+    ).map((draft) => draft.station);
     if (stations.length === 0) continue; // stationless branch, ignored (spec 040 §3)
     branches.push({ forkMessageId: candidate.forkMessageId, stations, leafId: candidate.leafId });
   }

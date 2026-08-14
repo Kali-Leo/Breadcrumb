@@ -15,6 +15,7 @@ function sighting(nodeId: string, id: string): NodeSightingRow {
     conversation_id: "c1",
     message_id: null,
     created_at: "2026-08-01T00:00:00.000Z",
+    origin_node_id: null,
   };
 }
 

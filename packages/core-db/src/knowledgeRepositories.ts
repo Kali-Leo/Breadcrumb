@@ -83,8 +83,15 @@ export function createNodeSightingsRepo(sql: SqlClient) {
   return {
     async record(row: NodeSightingRow): Promise<void> {
       await sql.execute(
-        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at) VALUES (?, ?, ?, ?, ?)",
-        [row.id, row.node_id, row.conversation_id, row.message_id, row.created_at],
+        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at, origin_node_id) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          row.id,
+          row.node_id,
+          row.conversation_id,
+          row.message_id,
+          row.created_at,
+          row.origin_node_id,
+        ],
       );
     },
     /** Every footprint ever — raw material for the memory (fog) engine. */

@@ -121,6 +121,9 @@ export interface NodeSightingRow {
   conversation_id: string;
   message_id: string | null;
   created_at: string;
+  /** Spec 040 §7 provenance: the station this node grew from (the round's anchored node, or a
+   * door's host station). NULL = unknown/legacy — the station map falls back to edge inference. */
+  origin_node_id: string | null;
 }
 
 /** A label the node-dedup synonym gate (spec 015) judged identical to an existing node —

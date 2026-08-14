@@ -725,6 +725,12 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0032_conversation_auto_title",
     statements: [`ALTER TABLE conversations ADD COLUMN auto_title TEXT;`],
   },
+  {
+    // Spec 040 §7 provenance — the station this node grew from: the round's anchored node or
+    // a door's host station; NULL = unknown/legacy, model falls back to edge inference.
+    id: "0033_sighting_origin",
+    statements: [`ALTER TABLE node_sightings ADD COLUMN origin_node_id TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

@@ -118,8 +118,15 @@ async function extractFromFinishedRound(conversationId: string): Promise<void> {
     for (const node of plan.newNodes) {
       await repos.knowledgeNodes.insert(node);
     }
+    // Provenance (spec 040 §7): every station born this round grew from the round's
+    // anchored node — the concept the user pointed at before asking. A sighting whose own
+    // node IS the anchor has no parent to record (it IS the anchor).
+    const anchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
     for (const sighting of plan.sightings) {
-      await repos.nodeSightings.record(sighting);
+      await repos.nodeSightings.record({
+        ...sighting,
+        origin_node_id: sighting.node_id === anchoredNodeId ? null : anchoredNodeId,
+      });
     }
     for (const alias of plan.aliasesToInsert) {
       await repos.nodeAliases.insert(alias);

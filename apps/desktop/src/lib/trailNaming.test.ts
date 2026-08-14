@@ -18,7 +18,14 @@ function sighting(
   createdAt: string,
   id = `s-${nodeId}-${createdAt}`,
 ): NodeSightingRow {
-  return { id, node_id: nodeId, conversation_id: "c1", message_id: null, created_at: createdAt };
+  return {
+    id,
+    node_id: nodeId,
+    conversation_id: "c1",
+    message_id: null,
+    created_at: createdAt,
+    origin_node_id: null,
+  };
 }
 
 describe("computeInitialTitle", () => {

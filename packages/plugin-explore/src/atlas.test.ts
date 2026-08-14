@@ -15,6 +15,7 @@ function sighting(nodeId: string, secondsOffset: number): NodeSightingRow {
     conversation_id: "c1",
     message_id: null,
     created_at: new Date(2026, 0, 1, 0, 0, secondsOffset).toISOString(),
+    origin_node_id: null,
   };
 }
 

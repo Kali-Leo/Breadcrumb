@@ -56,6 +56,7 @@ export function buildConceptSeed(
         conversation_id: conversationId,
         message_id: ref?.messageId ?? null,
         created_at: createdAt,
+        origin_node_id: null,
       });
       const earliest = earliestByLabel.get(spec.label);
       if (earliest === undefined || createdAt < earliest) {

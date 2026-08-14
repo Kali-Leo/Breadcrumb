@@ -96,6 +96,7 @@ describe("runSynonymGateStage", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: now,
+          origin_node_id: null,
         },
       ],
     };
@@ -134,6 +135,7 @@ describe("runSynonymGateStage", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: now,
+          origin_node_id: null,
         },
       ],
     };
@@ -183,6 +185,7 @@ describe("runSynonymGateStage", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: now,
+          origin_node_id: null,
         },
       ],
     };
@@ -228,6 +231,7 @@ describe("runSynonymGateStage", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: now,
+          origin_node_id: null,
         },
       ],
     };

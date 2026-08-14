@@ -21,6 +21,7 @@ function sighting(nodeId: string, offsetDays: number, index: number): NodeSighti
     conversation_id: "c1",
     message_id: null,
     created_at: isoAt(offsetDays),
+    origin_node_id: null,
   };
 }
 

@@ -85,6 +85,10 @@ export function StationMap() {
         rows: allMessages,
         currentLeafId,
         sightings,
+        // atlas.structure is exactly "edges between nodes this conversation has visited"
+        // (spec 039 §2.4) — a superset of what a station-parent lookup (spec 040 §7 rules
+        // ②③) could ever match, so it needs no further filtering here.
+        edges: atlas?.structure ?? [],
         labelsByNode,
         retentionByNode,
         frontier: atlas?.frontier ?? [],
@@ -127,23 +131,21 @@ export function StationMap() {
     setTransferNodeId(nodeId);
   }
 
-  const mainLineTopY = layout.mainLine[0]?.y ?? TOP_MARGIN;
   const mainLineBottomY = layout.mainLine.at(-1)?.y ?? TOP_MARGIN;
   const frontierBottomY = layout.frontier.at(-1)?.y ?? mainLineBottomY;
 
   return (
     <div className="overflow-y-auto">
       <svg width={SVG_WIDTH} height={layout.height} role="img" aria-label="站点图">
-        {layout.mainLine.length > 1 && (
-          <line
-            x1={MAIN_X}
-            y1={mainLineTopY}
-            x2={MAIN_X}
-            y2={mainLineBottomY}
+        {layout.mainLineConnectors.map((connector) => (
+          <polyline
+            key={`${connector.x1},${connector.y1}-${connector.x2},${connector.y2}`}
+            points={`${connector.x1},${connector.y1} ${connector.x1},${connector.elbowY} ${connector.x2},${connector.elbowY} ${connector.x2},${connector.y2}`}
+            fill="none"
             stroke={LINE_STROKE}
             strokeWidth={1.2}
           />
-        )}
+        ))}
         {layout.frontier.length > 0 && (
           <line
             x1={MAIN_X}

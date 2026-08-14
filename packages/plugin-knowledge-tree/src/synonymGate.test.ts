@@ -90,6 +90,7 @@ describe("planSynonymGateResult", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: "t",
+          origin_node_id: null,
         },
       ],
     };
@@ -108,6 +109,7 @@ describe("planSynonymGateResult", () => {
         conversation_id: "conv-1",
         message_id: "msg-1",
         created_at: "2026-08-03T10:00:00Z",
+        origin_node_id: null,
       },
     ]);
     expect(result.aliasesToInsert).toEqual([
@@ -125,6 +127,7 @@ describe("planSynonymGateResult", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: "t",
+          origin_node_id: null,
         },
       ],
     };
@@ -150,6 +153,7 @@ describe("planSynonymGateResult", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: "t",
+          origin_node_id: null,
         },
         {
           id: "s2",
@@ -157,6 +161,7 @@ describe("planSynonymGateResult", () => {
           conversation_id: "conv-1",
           message_id: "msg-1",
           created_at: "t",
+          origin_node_id: null,
         },
       ],
     };

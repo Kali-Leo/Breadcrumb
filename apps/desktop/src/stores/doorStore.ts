@@ -123,12 +123,18 @@ export const useDoorStore = create<DoorState>((set, get) => ({
         (grade === "correct" || grade === "close") &&
         !get().sightingRecordedNodeIds.has(nodeId)
       ) {
+        // Provenance (spec 040 §7): a door's host station is the first other node already
+        // sighted on this message — the concept the guessed node grew out of. None found
+        // (e.g. the door opened off the message's own newborn node) means unknown parentage.
+        const messageSightings = await repos.nodeSightings.listByMessage(messageId);
+        const hostSighting = messageSightings.find((sighting) => sighting.node_id !== nodeId);
         await repos.nodeSightings.record({
           id: newId(),
           node_id: nodeId,
           conversation_id: conversationId,
           message_id: messageId,
           created_at: nowIso(),
+          origin_node_id: hostSighting?.node_id ?? null,
         });
         set({ sightingRecordedNodeIds: new Set(get().sightingRecordedNodeIds).add(nodeId) });
         void useMemoryStore.getState().refresh();
