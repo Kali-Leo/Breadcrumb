@@ -104,6 +104,12 @@ const FEATURE_ROWS: Array<{
     hint: "接受回讲提议时先生成脚本(期望点/预置误解),回讲中每轮做一次状态合并",
     purposes: ["companion-script"],
   },
+  {
+    feature: "focusExplain",
+    name: "🔎 专注解释",
+    hint: "专注模式里选词或提问,每一站生成一次讲解",
+    purposes: ["focus-explain"],
+  },
 ];
 
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */

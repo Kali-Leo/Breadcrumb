@@ -317,3 +317,35 @@ export interface PracticeScoreRow {
   score: number;
   scored_at: string;
 }
+
+/** One full-screen focus (explain-word) session — a subway-map-v2 exploration rooted at a
+ * word picked from an ordinary reply (spec 042 §1, §5). entry_message_id is NULL while the
+ * session is in progress; it is filled in on exit with the id of the assistant message that
+ * carries the session's record text into the host conversation. */
+export interface FocusSessionRow {
+  id: string;
+  conversation_id: string;
+  entry_message_id: string | null;
+  root_label: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 'word' = solid-line child station opened by picking a word inside the parent's answer;
+ * 'question' = dashed diagonal station opened by the free-text prompt box (spec 042 §4). */
+export type FocusNodeKind = "word" | "question";
+
+/** One station of a focus session's subway map (spec 042 §1). parent_id NULL = the session's
+ * root station. question_text is set only for kind='question'; answer_text is always the
+ * node's full reply and is what descendant nodes quote as prompt context (§2). kind is
+ * validated in TypeScript, not a DB CHECK — same precedent as conversations.kind (0029). */
+export interface FocusNodeRow {
+  id: string;
+  session_id: string;
+  parent_id: string | null;
+  kind: FocusNodeKind;
+  label: string;
+  question_text: string | null;
+  answer_text: string;
+  created_at: string;
+}

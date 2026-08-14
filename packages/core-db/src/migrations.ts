@@ -731,6 +731,40 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0033_sighting_origin",
     statements: [`ALTER TABLE node_sightings ADD COLUMN origin_node_id TEXT;`],
   },
+  {
+    // Spec 042 §1 — one full-screen focus (explain-word) session per subway-map-v2 view.
+    // focus_sessions.entry_message_id stays NULL while the session is in progress and is
+    // filled in on exit (§5), when the session's record text lands as a real assistant
+    // message in the host conversation. focus_nodes.parent_id NULL = the session's root; kind
+    // is 'word' (solid-line child station, opened by picking a word) or 'question' (dashed
+    // diagonal station, opened by the free-text prompt box) — validated in TypeScript rather
+    // than a CHECK constraint, matching 0029's precedent for enum-like text columns.
+    // question_text is only set for kind='question'; answer_text always holds the node's
+    // full reply, which is what downstream nodes quote as their prompt context (§2).
+    id: "0034_focus_sessions",
+    statements: [
+      `CREATE TABLE focus_sessions (
+        id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL REFERENCES conversations(id),
+        entry_message_id TEXT,
+        root_label TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_focus_sessions_conversation ON focus_sessions(conversation_id);`,
+      `CREATE TABLE focus_nodes (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES focus_sessions(id),
+        parent_id TEXT,
+        kind TEXT NOT NULL,
+        label TEXT NOT NULL,
+        question_text TEXT,
+        answer_text TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_focus_nodes_session ON focus_nodes(session_id, created_at);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

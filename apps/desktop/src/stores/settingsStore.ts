@@ -49,6 +49,10 @@ export interface FeatureSwitches {
   /** Companion cast: generates the teach-back script (expectations/misconceptions/gaps) and
    * runs Reflect-Respond each round. Off falls back to spec-034's generic teach prompt. */
   companionScript: boolean;
+  /** Focus mode (spec 042): a picked word's full-screen explain session — each station's
+   * streamed answer. Off leaves the rest of focus mode (entry, subway map, exit record)
+   * working, just with no way to generate a new station's content. */
+  focusExplain: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -96,6 +100,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   companionChat: true,
   companionMemory: true,
   companionScript: true,
+  focusExplain: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

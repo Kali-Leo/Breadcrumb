@@ -11,6 +11,7 @@ export * from "./comparisonRepositories";
 export * from "./diglotRepositories";
 export * from "./diglotTypes";
 export * from "./featureRepositories";
+export * from "./focusRepositories";
 export * from "./goalRepositories";
 export * from "./interestRepositories";
 export * from "./knowledgeRepositories";

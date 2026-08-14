@@ -24,4 +24,5 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "companion-chat": "伙伴会话",
   "companion-memory": "伙伴记忆",
   "companion-script": "回讲脚本",
+  "focus-explain": "专注解释",
 };
