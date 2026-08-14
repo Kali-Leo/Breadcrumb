@@ -53,6 +53,9 @@ importers:
       '@breadcrumb/plugin-diglot-weave':
         specifier: workspace:*
         version: link:../../packages/plugin-diglot-weave
+      '@breadcrumb/plugin-explore':
+        specifier: workspace:*
+        version: link:../../packages/plugin-explore
       '@breadcrumb/plugin-factcheck':
         specifier: workspace:*
         version: link:../../packages/plugin-factcheck

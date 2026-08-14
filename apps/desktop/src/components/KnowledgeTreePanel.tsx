@@ -1,101 +1,55 @@
 /**
- * Purpose: right column with two tabs — 本次足迹 (this conversation's trail, walking
- * order) and 我的知识树 (the user's whole tree, hierarchical). Click any node to anchor.
+ * Purpose: right column — 探索 (this session's chain plus 收线 into the exploration atlas)
+ * and 全部 (whole tree, capped list) tabs. Click any node to anchor.
  * Main exports: KnowledgeTreePanel.
  */
-import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { useState } from "react";
+import { capTreeItems, flattenTree } from "../lib/knowledgeNavModel";
+import { useChatStore } from "../stores/chatStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
-
-interface TreeItem {
-  node: KnowledgeNodeRow;
-  depth: number;
-}
-
-/** Flattens the parent-child forest into a depth-annotated list (creation order). */
-function flattenTree(nodes: readonly KnowledgeNodeRow[]): TreeItem[] {
-  const childrenByParent = new Map<string | null, KnowledgeNodeRow[]>();
-  for (const node of nodes) {
-    const siblings = childrenByParent.get(node.parent_id) ?? [];
-    siblings.push(node);
-    childrenByParent.set(node.parent_id, siblings);
-  }
-  const items: TreeItem[] = [];
-  function visit(parentId: string | null, depth: number) {
-    for (const node of childrenByParent.get(parentId) ?? []) {
-      items.push({ node, depth });
-      visit(node.id, depth + 1);
-    }
-  }
-  visit(null, 0);
-  return items;
-}
-
-function NodeButton({ node, depth }: { node: KnowledgeNodeRow; depth: number }) {
-  const freshNodeIds = useKnowledgeStore((state) => state.freshNodeIds);
-  const anchoredNodeId = useKnowledgeStore((state) => state.anchoredNodeId);
-  const toggleAnchor = useKnowledgeStore((state) => state.toggleAnchor);
-  return (
-    <button
-      type="button"
-      onClick={() => toggleAnchor(node.id)}
-      title={node.summary}
-      style={{ paddingLeft: `${8 + depth * 16}px` }}
-      className={`block w-full truncate rounded-lg py-1.5 pr-2 text-left text-sm transition-colors ${
-        node.id === anchoredNodeId
-          ? "bg-amber-100 text-stone-800"
-          : freshNodeIds.has(node.id)
-            ? "bg-amber-50 text-stone-700"
-            : "text-stone-600 hover:bg-stone-50"
-      }`}
-    >
-      {depth > 0 && <span className="text-stone-300">└ </span>}
-      {node.label}
-      {node.id === anchoredNodeId && <span className="ml-1">📍</span>}
-    </button>
-  );
-}
+import { AtlasView } from "./AtlasView";
+import { ExploreTabView } from "./ExploreTabView";
+import { NodeButton } from "./NodeButton";
 
 export function KnowledgeTreePanel() {
-  const [view, setView] = useState<"trail" | "tree">("trail");
+  const [view, setView] = useState<"explore" | "tree">("explore");
+  const [atlasOpen, setAtlasOpen] = useState(false);
   const nodes = useKnowledgeStore((state) => state.nodes);
-  const sessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
+  const conversationId = useChatStore((state) => state.activeConversationId);
 
-  const nodeById = new Map(nodes.map((node) => [node.id, node]));
-  const sessionNodes = sessionNodeIds
-    .map((nodeId) => nodeById.get(nodeId))
-    .filter((node): node is KnowledgeNodeRow => node !== undefined);
+  if (atlasOpen && conversationId !== null) {
+    return (
+      <aside className="flex h-full w-64 flex-col border-l border-stone-200 bg-white">
+        <AtlasView conversationId={conversationId} onBack={() => setAtlasOpen(false)} />
+      </aside>
+    );
+  }
 
   const tabClass = (active: boolean) =>
     `flex-1 rounded-lg px-2 py-1 text-xs transition-colors ${
       active ? "bg-amber-100 text-stone-700" : "text-stone-400 hover:bg-stone-50"
     }`;
 
+  const { visible: visibleTreeItems, totalCount, isCapped } = capTreeItems(flattenTree(nodes));
+
   return (
     <aside className="flex h-full w-64 flex-col border-l border-stone-200 bg-white">
       <div className="flex gap-1 border-b border-stone-100 p-2">
         <button
           type="button"
-          onClick={() => setView("trail")}
-          className={tabClass(view === "trail")}
+          onClick={() => setView("explore")}
+          className={tabClass(view === "explore")}
         >
-          🍞 本次足迹
+          🧭 探索
         </button>
         <button type="button" onClick={() => setView("tree")} className={tabClass(view === "tree")}>
-          🧭 知识导航
+          🌳 全部
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
-        {view === "trail" &&
-          (sessionNodes.length === 0 ? (
-            <p className="px-2 py-6 text-center text-xs leading-relaxed text-stone-400">
-              这次对话踩过的知识点
-              <br />
-              会按脚步顺序出现在这里
-            </p>
-          ) : (
-            sessionNodes.map((node) => <NodeButton key={node.id} node={node} depth={0} />)
-          ))}
+        {view === "explore" && (
+          <ExploreTabView conversationId={conversationId} onOpenAtlas={() => setAtlasOpen(true)} />
+        )}
         {view === "tree" &&
           (nodes.length === 0 ? (
             <p className="px-2 py-6 text-center text-xs leading-relaxed text-stone-400">
@@ -104,9 +58,16 @@ export function KnowledgeTreePanel() {
               会在这里形成一份可导航的目录
             </p>
           ) : (
-            flattenTree(nodes).map(({ node, depth }) => (
-              <NodeButton key={node.id} node={node} depth={depth} />
-            ))
+            <>
+              {isCapped && (
+                <p className="px-2 pb-1 text-[11px] text-stone-400">
+                  共 {totalCount} 个，显示最近 {visibleTreeItems.length} 个
+                </p>
+              )}
+              {visibleTreeItems.map(({ node, depth }) => (
+                <NodeButton key={node.id} node={node} depth={depth} />
+              ))}
+            </>
           ))}
       </div>
       <p className="border-t border-stone-100 px-3 py-2 text-[11px] leading-relaxed text-stone-400">
