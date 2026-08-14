@@ -73,7 +73,7 @@ function renderNode(
       return <del key={key}>{children()}</del>;
     case "inlineCode":
       return (
-        <code key={key} className="rounded bg-stone-100 px-1 font-mono text-[13px]">
+        <code key={key} className="font-mono text-[13px]">
           {node.value}
         </code>
       );
