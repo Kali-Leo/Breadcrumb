@@ -11,6 +11,7 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import {
   buildAnchoredNodeSystemMessage,
+  buildFocusContextSystemMessage,
   buildLearnerContextSystemMessage,
 } from "./chatRoundContext";
 import { type RoundCostSnapshot, recordRoundCost } from "./chatRoundMetering";
@@ -78,6 +79,10 @@ export async function runSendRound(params: {
   const anchoredMessage = await buildAnchoredNodeSystemMessage();
   if (anchoredMessage) history.unshift(anchoredMessage);
   if (activeKind === "chat") {
+    // Neither is persisted (spec 038 §2.3 precedent): both are assembled fresh every round and
+    // only ever live in this round's outgoing history.
+    const focusContextMessage = await buildFocusContextSystemMessage(conversationId);
+    if (focusContextMessage) history.unshift(focusContextMessage);
     const learnerContextMessage = await buildLearnerContextSystemMessage(userMessage.content);
     if (learnerContextMessage) history.unshift(learnerContextMessage);
   }

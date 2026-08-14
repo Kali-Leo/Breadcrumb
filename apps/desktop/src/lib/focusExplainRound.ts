@@ -11,11 +11,14 @@ import { getRepos } from "./db";
 import { streamFocusAnswer } from "./focusExplain";
 import { newId, nowIso } from "./time";
 
-/** Creates a session shell — entry_message_id stays NULL until the exit-record flow (spec
- * 042 §5, a later task) fills it in. */
+/** Creates a session shell — entry_message_id is a retired legacy column (Leo 2026-08-14
+ * revision to spec 042 §5) and always stays NULL now; source_message_id anchors the session's
+ * in-place badge to the reply it was born from (null for the streaming-preview root, which in
+ * practice never reaches this path). */
 export async function insertFocusSession(
   conversationId: string,
   rootLabel: string,
+  sourceMessageId: string | null,
 ): Promise<FocusSessionRow> {
   const createdAt = nowIso();
   const session: FocusSessionRow = {
@@ -25,6 +28,7 @@ export async function insertFocusSession(
     root_label: rootLabel,
     created_at: createdAt,
     updated_at: createdAt,
+    source_message_id: sourceMessageId,
   };
   const repos = await getRepos();
   await repos.focusSessions.insert(session);

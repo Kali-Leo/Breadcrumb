@@ -1,8 +1,10 @@
 /**
- * Purpose: renders a completed focus session's subway map as the plain record text that lands
- * in the host conversation on exit (spec 042 §5) — a preorder walk of every station, root
- * first, so branches and dashed question stops are both fully represented.
- * Main exports: buildFocusRecordText, FocusRecordNode.
+ * Purpose: renders a focus session's subway map as plain text — a preorder walk of every
+ * station, root first, so branches and dashed question stops are both fully represented.
+ * buildFocusRecordText is the full multi-line record (spec 042 §5, pre-2026-08-14: used to land
+ * in the host conversation on exit); buildFocusContextLine is the one-line, truncated form the
+ * silent per-round context uses instead (Leo 2026-08-14 revision).
+ * Main exports: buildFocusRecordText, buildFocusContextLine, FocusRecordNode.
  */
 
 export interface FocusRecordNode {
@@ -54,4 +56,23 @@ export function buildFocusRecordText(rootLabel: string, nodes: readonly FocusRec
   const headerLine = `刚才就「${rootLabel}」做了一次专注探索（${nodes.length} 站）。`;
   const walkLine = `走过：${walk.join(" → ")}`;
   return `${headerLine}\n${walkLine}`;
+}
+
+/** Default station cap for buildFocusContextLine — enough to name the shape of a session
+ * without dumping every branch into the prompt. */
+const DEFAULT_MAX_CONTEXT_STATIONS = 6;
+
+/** One-line, truncated form of the same preorder walk (Leo 2026-08-14 revision to spec 042
+ * §5) — the silent per-round context line for one past focus session: `「root」：station →
+ * station → …`, capped at `maxStations`. Used instead of buildFocusRecordText now that a
+ * session's exit no longer writes a message into the conversation. */
+export function buildFocusContextLine(
+  rootLabel: string,
+  nodes: readonly FocusRecordNode[],
+  maxStations: number = DEFAULT_MAX_CONTEXT_STATIONS,
+): string {
+  const childrenByParent = groupByParent(nodes);
+  const walk: string[] = [];
+  walkPreorder(childrenByParent, null, walk);
+  return `「${rootLabel}」：${walk.slice(0, maxStations).join(" → ")}`;
 }

@@ -3,7 +3,7 @@
  * full-screen overlay, walks the guess gate before a picked word becomes a new station, and
  * delegates every station's DB write + stream to lib/focusSessionActions so this file stays a
  * thin set()-only orchestrator.
- * Main exports: useFocusStore, FocusGuessState.
+ * Main exports: useFocusStore.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@breadcrumb/plugin-explore";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
-import { buildAncestorChain, rollConceptGate } from "../lib/focusActions";
+import { buildAncestorChain, type FocusGuessState, rollConceptGate } from "../lib/focusActions";
 import { insertFocusNode, insertFocusSession } from "../lib/focusExplainRound";
 import { recordMatchedGuess } from "../lib/focusGuessGrading";
 import {
@@ -26,12 +26,6 @@ import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
 import { useSettingsStore } from "./settingsStore";
-
-export interface FocusGuessState {
-  word: string;
-  /** The word's matching knowledge node, or null when it isn't one (ungraded reveal). */
-  matchedNodeId: string | null;
-}
 
 interface FocusState {
   open: boolean;
@@ -49,7 +43,12 @@ interface FocusState {
   /** Node ids already opened as a station this session — computeFocusDoorPatches never
    * re-marks them (mirrors doorStore.openedNodeIds, but session-scoped). */
   openedDoorNodeIds: ReadonlySet<string>;
-  startFromWord(conversationId: string, word: string, parentAnswerText: string): Promise<void>;
+  startFromWord(
+    conversationId: string,
+    word: string,
+    parentAnswerText: string,
+    sourceMessageId: string | null,
+  ): Promise<void>;
   selectWord(word: string): Promise<void>;
   submitGuess(guessText: string): Promise<void>;
   skipGuess(): void;
@@ -84,10 +83,10 @@ export const useFocusStore = create<FocusState>((set, get) => ({
   errorText: null,
   ...RESET_SESSION_FIELDS,
 
-  async startFromWord(conversationId, word, parentAnswerText) {
+  async startFromWord(conversationId, word, parentAnswerText, sourceMessageId) {
     if (!useSettingsStore.getState().featureSwitches.focusExplain) return;
     rootParentText = parentAnswerText;
-    const session = await insertFocusSession(conversationId, word);
+    const session = await insertFocusSession(conversationId, word, sourceMessageId);
     const rootNode = await insertFocusNode({
       sessionId: session.id,
       parentId: null,

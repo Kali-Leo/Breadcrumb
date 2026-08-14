@@ -319,9 +319,12 @@ export interface PracticeScoreRow {
 }
 
 /** One full-screen focus (explain-word) session — a subway-map-v2 exploration rooted at a
- * word picked from an ordinary reply (spec 042 §1, §5). entry_message_id is NULL while the
- * session is in progress; it is filled in on exit with the id of the assistant message that
- * carries the session's record text into the host conversation. */
+ * word picked from an ordinary reply (spec 042 §1, §5). entry_message_id is a legacy column:
+ * pre-2026-08-14 sessions filled it in on exit with the id of the assistant message their exit
+ * record was appended as; that no longer happens, so it stays NULL on every session created from
+ * 0035 onward. source_message_id (0035) replaces it — the reply the session was born from, set
+ * at creation time and never rewritten; it anchors the session's in-place badge and is NULL for
+ * legacy/pre-0035 sessions. */
 export interface FocusSessionRow {
   id: string;
   conversation_id: string;
@@ -329,6 +332,7 @@ export interface FocusSessionRow {
   root_label: string;
   created_at: string;
   updated_at: string;
+  source_message_id: string | null;
 }
 
 /** 'word' = solid-line child station opened by picking a word inside the parent's answer;

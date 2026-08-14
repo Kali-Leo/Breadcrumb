@@ -765,6 +765,14 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_focus_nodes_session ON focus_nodes(session_id, created_at);`,
     ],
   },
+  {
+    // Leo 2026-08-14 ruling: a focus session's exit no longer writes a message into the host
+    // conversation (spec 042 §5 revision) — entry_message_id is retired. source_message_id is
+    // the reply the session was born from instead: its in-place badge anchor, set once at
+    // session creation and never rewritten. NULL for legacy/pre-0035 sessions.
+    id: "0035_focus_session_source_message",
+    statements: [`ALTER TABLE focus_sessions ADD COLUMN source_message_id TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

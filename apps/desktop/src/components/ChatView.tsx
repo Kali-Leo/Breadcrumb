@@ -10,11 +10,13 @@ import { newestLeafId } from "../lib/messageTree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useDoorStore } from "../stores/doorStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
-import { useFocusEntryStore } from "../stores/focusEntryStore";
+import { useFocusSessionsStore } from "../stores/focusSessionsStore";
 import { CompanionChatBanners } from "./CompanionChatBanners";
 import { Composer } from "./Composer";
 import { FactcheckBadge } from "./FactcheckBadge";
 import { FocusEntryCard } from "./FocusEntryCard";
+import { FocusSessionBadge } from "./FocusSessionBadge";
+import { FocusSessionsBar } from "./FocusSessionsBar";
 import { MessageBubble } from "./MessageBubble";
 
 /** How long a located message stays highlighted (Slack-style: highlight + center, spec 040 §3). */
@@ -27,7 +29,7 @@ export function ChatView() {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const loadFactchecks = useFactcheckStore((state) => state.loadForConversation);
-  const entrySessionByMessageId = useFocusEntryStore((state) => state.entrySessionByMessageId);
+  const entrySessionByMessageId = useFocusSessionsStore((state) => state.entrySessionByMessageId);
   const scrollAnchor = useRef<HTMLDivElement>(null);
   const [locatedMessageId, setLocatedMessageId] = useState<string | null>(null);
 
@@ -75,6 +77,7 @@ export function ChatView() {
   return (
     <div className="flex h-full flex-col bg-stone-50">
       <CompanionChatBanners />
+      <FocusSessionsBar />
       <ContinuationBanner />
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && !isStreaming && (
@@ -102,7 +105,12 @@ export function ChatView() {
                     content={message.content}
                     messageId={message.id}
                   />
-                  {message.role === "assistant" && <FactcheckBadge messageId={message.id} />}
+                  {message.role === "assistant" && (
+                    <>
+                      <FactcheckBadge messageId={message.id} />
+                      <FocusSessionBadge messageId={message.id} />
+                    </>
+                  )}
                 </>
               )}
             </div>

@@ -37,8 +37,15 @@ function makeFakeSql() {
     },
     execute: (sql: string, params?: readonly unknown[]) => {
       if (sql.startsWith("INSERT INTO focus_sessions")) {
-        const [id, conversation_id, entry_message_id, root_label, created_at, updated_at] =
-          params as [string, string, string | null, string, string, string];
+        const [
+          id,
+          conversation_id,
+          entry_message_id,
+          root_label,
+          created_at,
+          updated_at,
+          source_message_id,
+        ] = params as [string, string, string | null, string, string, string, string | null];
         sessionRows.push({
           id,
           conversation_id,
@@ -46,6 +53,7 @@ function makeFakeSql() {
           root_label,
           created_at,
           updated_at,
+          source_message_id,
         });
       }
       if (sql.startsWith("UPDATE focus_sessions SET entry_message_id")) {
@@ -54,6 +62,17 @@ function makeFakeSql() {
         if (row) {
           row.entry_message_id = messageId;
           row.updated_at = updatedAt;
+        }
+      }
+      if (sql.startsWith("DELETE FROM focus_sessions")) {
+        const [id] = params as [string];
+        const index = sessionRows.findIndex((r) => r.id === id);
+        if (index !== -1) sessionRows.splice(index, 1);
+      }
+      if (sql.startsWith("DELETE FROM focus_nodes")) {
+        const [sessionId] = params as [string];
+        for (let i = nodeRows.length - 1; i >= 0; i -= 1) {
+          if (nodeRows[i]?.session_id === sessionId) nodeRows.splice(i, 1);
         }
       }
       if (sql.startsWith("INSERT INTO focus_nodes")) {
@@ -106,15 +125,38 @@ describe("createFocusSessionsRepo", () => {
       root_label: "闭包",
       created_at: "2026-08-14T10:00:00Z",
       updated_at: "2026-08-14T10:00:00Z",
+      source_message_id: "m0",
     });
 
-    expect(await repo.getById("s1")).toMatchObject({ root_label: "闭包" });
+    expect(await repo.getById("s1")).toMatchObject({
+      root_label: "闭包",
+      source_message_id: "m0",
+    });
     expect(await repo.getByEntryMessage("m1")).toBeNull();
 
     await repo.setEntryMessage("s1", "m1", "2026-08-14T10:05:00Z");
     expect(await repo.getByEntryMessage("m1")).toMatchObject({ id: "s1" });
     expect(await repo.listByConversation("c1")).toHaveLength(1);
     expect(await repo.listByConversation("other")).toHaveLength(0);
+  });
+
+  it("deletes a session outright (zero-substance-session cleanup on exit)", async () => {
+    const { client } = makeFakeSql();
+    const repo = createFocusSessionsRepo(client);
+    await repo.insert({
+      id: "s1",
+      conversation_id: "c1",
+      entry_message_id: null,
+      root_label: "闭包",
+      created_at: "2026-08-14T10:00:00Z",
+      updated_at: "2026-08-14T10:00:00Z",
+      source_message_id: null,
+    });
+
+    await repo.remove("s1");
+
+    expect(await repo.getById("s1")).toBeNull();
+    expect(await repo.listByConversation("c1")).toHaveLength(0);
   });
 });
 
@@ -168,5 +210,35 @@ describe("createFocusNodesRepo", () => {
     await repo.updateLabel("n1", "短名");
     const nodes = await repo.listBySession("s1");
     expect(nodes[0]?.label).toBe("短名");
+  });
+
+  it("deletes every station of a session, leaving other sessions untouched", async () => {
+    const { client } = makeFakeSql();
+    const repo = createFocusNodesRepo(client);
+    await repo.insert({
+      id: "n1",
+      session_id: "s1",
+      parent_id: null,
+      kind: "word",
+      label: "闭包",
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:00:00Z",
+    });
+    await repo.insert({
+      id: "n2",
+      session_id: "s2",
+      parent_id: null,
+      kind: "word",
+      label: "递归",
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:00:00Z",
+    });
+
+    await repo.removeBySession("s1");
+
+    expect(await repo.listBySession("s1")).toHaveLength(0);
+    expect(await repo.listBySession("s2")).toHaveLength(1);
   });
 });

@@ -4,7 +4,7 @@
  * plain statements only (product principle 1: no praise, no performed warmth); simlab scans
  * this module against the pressure lexicon.
  * Main exports: EXPLORE_UI_COPY, conceptDirectRevealLine, doorExpandPrefill, focusSelectHint,
- * focusErrorLine.
+ * focusErrorLine, focusBadgeLine, focusBarTitle.
  */
 
 /** Static UI strings (door card, sidebar trail cards, focus overlay). Keys exist so the simlab
@@ -55,4 +55,17 @@ export function focusSelectHint(quotedText: string): string {
 /** Plain-statement error banner for a failed focus-session station (spec 042 §2). */
 export function focusErrorLine(message: string): string {
   return `这一站没有生成成功：${message}。可以重试，或退出专注。`;
+}
+
+/** In-place badge line under the message a focus session grew from — one per session with at
+ * least one answered station (Leo 2026-08-14 revision to spec 042 §5, replacing the old
+ * exit-record chat message). */
+export function focusBadgeLine(rootLabel: string, stationCount: number): string {
+  return `🔎 探索过：${rootLabel} · ${stationCount} 站`;
+}
+
+/** Top-of-chat collapsible bar's folded title — sessionCount counts only sessions with at
+ * least one answered station (Leo 2026-08-14 revision to spec 042 §5). */
+export function focusBarTitle(sessionCount: number): string {
+  return `🔎 本对话的专注探索（${sessionCount}）`;
 }

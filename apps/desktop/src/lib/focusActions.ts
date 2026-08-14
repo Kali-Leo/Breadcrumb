@@ -1,10 +1,17 @@
 /**
- * Purpose: pure helpers behind focusStore (spec 042 §2-3) — the ancestor-answer chain a
- * question node's prompt quotes, the question node's short station label, and the guess-gate
- * dice roll — kept here, unit-tested, so focusStore.ts stays a thin orchestrator.
- * Main exports: buildAncestorChain, truncateQuestionLabel, rollConceptGate.
+ * Purpose: pure helpers and shared types behind focusStore (spec 042 §2-3) — the ancestor-answer
+ * chain a question node's prompt quotes, the question node's short station label, the guess-gate
+ * dice roll, and the FocusGuessState shape (kept here rather than in focusStore.ts to stay under
+ * the file-size cap) — unit-tested, so focusStore.ts stays a thin orchestrator.
+ * Main exports: buildAncestorChain, truncateQuestionLabel, rollConceptGate, FocusGuessState.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
+
+export interface FocusGuessState {
+  word: string;
+  /** The word's matching knowledge node, or null when it isn't one (ungraded reveal). */
+  matchedNodeId: string | null;
+}
 
 /** A question node's station label is the free-text question, truncated (spec 042 §1 label). */
 const QUESTION_LABEL_MAX_CHARS = 12;

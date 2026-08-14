@@ -10,6 +10,8 @@ import {
   doorExpandPrefill,
   EXPLORE_UI_COPY,
   FOCUS_SYSTEM_PROMPT,
+  focusBadgeLine,
+  focusBarTitle,
   focusErrorLine,
   focusSelectHint,
   guessFeedbackLine,
@@ -36,6 +38,8 @@ describe("explore doors + focus session copy gates", () => {
     ]),
     focusSelectHint("词法环境"),
     focusErrorLine("网络请求超时"),
+    focusBadgeLine("闭包", 3),
+    focusBarTitle(2),
   ];
 
   it("hits zero pressure-lexicon entries", () => {

@@ -1,9 +1,10 @@
 /**
  * Purpose: non-companion send-round helpers split out of chatStore.ts to keep sendMessage
  * under the file-size cap — lazy 'chat' conversation creation, the anchored-node system
- * line, and the learner-context injection (spec 038 §2.3). No companion-specific logic here.
+ * line, the learner-context injection (spec 038 §2.3), and the silent focus-session context
+ * line (Leo 2026-08-14 revision to spec 042 §5). No companion-specific logic here.
  * Main exports: ensureChatConversationId, buildAnchoredNodeSystemMessage,
- * buildLearnerContextSystemMessage.
+ * buildLearnerContextSystemMessage, buildFocusContextSystemMessage.
  */
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import {
@@ -11,6 +12,7 @@ import {
   formatLearnerContextMessage,
   type LearnerContext,
 } from "@breadcrumb/core-teaching";
+import { buildFocusContextLine } from "@breadcrumb/plugin-explore";
 import { aggregateStyles } from "@breadcrumb/plugin-interest";
 import { getRepos, type Repos } from "./db";
 import { newId, nowIso } from "./time";
@@ -87,4 +89,51 @@ export async function buildLearnerContextSystemMessage(
   }
   const content = formatLearnerContextMessage(context);
   return content === null ? null : { role: "system", content };
+}
+
+/** Most recent focus sessions the silent context line quotes (Leo 2026-08-14 revision to spec
+ * 042 §5) — enough to remind the model without dumping the learner's whole exploration history
+ * into every round. */
+const MAX_FOCUS_CONTEXT_SESSIONS = 3;
+/** Stations per session line, matching buildFocusContextLine's own default — named here so the
+ * cap is visible next to the session cap it pairs with. */
+const MAX_FOCUS_CONTEXT_STATIONS = 6;
+
+/** The silent focus-session context line for this round (Leo 2026-08-14 revision to spec 042
+ * §5: a session's exit no longer writes a message into the conversation, so the model needs
+ * another way to know what the learner already explored). Reads this conversation's most
+ * recent ≤3 focus sessions that have at least one answered station, oldest of the three first,
+ * one line each via buildFocusContextLine. Returns null when there is nothing to quote. */
+export async function buildFocusContextSystemMessage(
+  conversationId: string,
+): Promise<ChatMessage | null> {
+  const repos = await getRepos();
+  const sessions = await repos.focusSessions.listByConversation(conversationId);
+  const lines: string[] = [];
+  // listByConversation is oldest-first; walk newest-first so recency wins under the cap, then
+  // reverse back to chronological order below.
+  for (let i = sessions.length - 1; i >= 0 && lines.length < MAX_FOCUS_CONTEXT_SESSIONS; i -= 1) {
+    const session = sessions[i];
+    if (session === undefined) continue;
+    const nodes = await repos.focusNodes.listBySession(session.id);
+    if (!nodes.some((node) => node.answer_text.length > 0)) continue;
+    lines.push(
+      buildFocusContextLine(
+        session.root_label,
+        nodes.map((node) => ({
+          id: node.id,
+          parentId: node.parent_id,
+          kind: node.kind,
+          label: node.label,
+        })),
+        MAX_FOCUS_CONTEXT_STATIONS,
+      ),
+    );
+  }
+  if (lines.length === 0) return null;
+  lines.reverse();
+  return {
+    role: "system",
+    content: `学习者此前在本对话里的专注探索（供你衔接，不必复述）：\n${lines.join("\n")}`,
+  };
 }

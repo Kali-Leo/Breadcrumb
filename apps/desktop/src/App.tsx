@@ -25,7 +25,7 @@ import "./stores/interestStore";
 import "./lib/teachQuality";
 import { useCompanionStore } from "./stores/companionStore";
 import { useDiglotStore } from "./stores/diglotStore";
-import { useFocusEntryStore } from "./stores/focusEntryStore";
+import { useFocusSessionsStore } from "./stores/focusSessionsStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -77,9 +77,10 @@ export default function App() {
     void useKnowledgeStore.getState().loadSessionTrail(activeConversationId);
   }, [activeConversationId]);
 
-  // Keep the focus-entry-card lookup in sync with the open conversation (spec 042 §5).
+  // Keep the focus-session badge/bar lookups in sync with the open conversation (spec 042 §5,
+  // Leo 2026-08-14 revision).
   useEffect(() => {
-    void useFocusEntryStore.getState().loadForConversation(activeConversationId);
+    void useFocusSessionsStore.getState().loadForConversation(activeConversationId);
   }, [activeConversationId]);
 
   // First run: no API configured yet -> open settings so the user can start in one step.

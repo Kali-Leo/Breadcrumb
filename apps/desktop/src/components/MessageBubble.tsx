@@ -3,7 +3,8 @@
  * neutral). Assistant messages render as markdown with KaTeX math; the diglot weave
  * (spec 033) and explore doors (spec 039) both apply to the same normalized display
  * source, so patch offsets always match the screen. A door click or a selection+Enter both
- * open a focus session directly — no guess, no popover (spec 042 §5). Storage and LLM
+ * open a focus session directly — no guess, no popover (spec 042 §5) — anchored to this
+ * message's id so its in-place badge (Leo 2026-08-14) can find its way back. Storage and LLM
  * context keep the original text untouched.
  * Main exports: MessageBubble.
  */
@@ -100,7 +101,9 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
   const openFocus = (rootLabel: string) => {
     if (conversationId === null) return;
     if (!useSettingsStore.getState().featureSwitches.focusExplain) return;
-    void useFocusStore.getState().startFromWord(conversationId, rootLabel, displaySource);
+    void useFocusStore
+      .getState()
+      .startFromWord(conversationId, rootLabel, displaySource, messageId ?? null);
   };
   const openFocusFromDoor = (word: string, nodeId: string) => {
     useDoorStore.getState().markOpened(nodeId);
