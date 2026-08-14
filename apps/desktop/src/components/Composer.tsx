@@ -1,9 +1,12 @@
 /**
  * Purpose: the message input area — textarea + send button, Enter to send,
- * Shift+Enter for newline; disabled while a reply is streaming.
+ * Shift+Enter for newline; disabled while a reply is streaming. Also listens for
+ * composer:prefill (spec 039: explore doors' "展开聊聊", the selection quote bar) and loads
+ * the given text into the draft without sending — the user still presses send.
  * Main exports: Composer.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { appEventBus } from "../stores/chatStore";
 
 interface ComposerProps {
   disabled: boolean;
@@ -12,6 +15,16 @@ interface ComposerProps {
 
 export function Composer({ disabled, onSend }: ComposerProps) {
   const [draft, setDraft] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(
+    () =>
+      appEventBus.on("composer:prefill", ({ text }) => {
+        setDraft(text);
+        textareaRef.current?.focus();
+      }),
+    [],
+  );
 
   function submit() {
     const content = draft.trim();
@@ -23,6 +36,7 @@ export function Composer({ disabled, onSend }: ComposerProps) {
   return (
     <div className="flex items-end gap-2 border-t border-stone-200 bg-white p-3">
       <textarea
+        ref={textareaRef}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {

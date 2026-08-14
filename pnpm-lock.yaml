@@ -571,6 +571,9 @@ importers:
       '@breadcrumb/plugin-diglot-weave':
         specifier: workspace:*
         version: link:../plugin-diglot-weave
+      '@breadcrumb/plugin-explore':
+        specifier: workspace:*
+        version: link:../plugin-explore
       '@breadcrumb/plugin-feedback':
         specifier: workspace:*
         version: link:../plugin-feedback

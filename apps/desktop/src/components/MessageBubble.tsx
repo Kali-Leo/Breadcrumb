@@ -1,8 +1,9 @@
 /**
  * Purpose: renders one chat message (user right-aligned amber, assistant left-aligned
  * neutral). Assistant messages render as markdown with KaTeX math; the diglot weave
- * (spec 033) applies to the same normalized display source, so patch offsets always
- * match the screen. Storage and LLM context keep the original text untouched.
+ * (spec 033) and explore doors (spec 039) both apply to the same normalized display
+ * source, so patch offsets always match the screen. Storage and LLM context keep the
+ * original text untouched.
  * Main exports: MessageBubble.
  */
 import { useEffect, useMemo, useRef } from "react";
@@ -10,7 +11,9 @@ import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { recordMessageReencounter } from "../lib/reencounter";
 import { useChatStore } from "../stores/chatStore";
 import { useDiglotStore } from "../stores/diglotStore";
+import { useDoorStore } from "../stores/doorStore";
 import { MarkdownContent } from "./MarkdownContent";
+import { SelectionQuoteBar } from "./SelectionQuoteBar";
 
 interface MessageBubbleProps {
   author: "user" | "assistant" | "system";
@@ -40,6 +43,18 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
       void useDiglotStore.getState().ensureWoven(messageId, displaySource);
     }
   }, [shouldWeave, messageId, displaySource]);
+
+  // Explore doors (spec 039 §2.1): zero-LLM, so no settings gate. Waits for the diglot weave
+  // to reserve its spans first (when weaving is on) so reservedSpans reflects the truth —
+  // `patches` is undefined until ensureWoven's single-flight reservation lands, even as [].
+  const doorsForMessage = useDoorStore((state) =>
+    messageId === undefined ? undefined : state.doorsByMessage.get(messageId),
+  );
+  useEffect(() => {
+    if (author !== "assistant" || messageId === undefined) return;
+    if (diglotEnabled && patches === undefined) return;
+    void useDoorStore.getState().ensureDoors(messageId, displaySource);
+  }, [author, messageId, diglotEnabled, patches, displaySource]);
 
   // Silent re-encounter (vision/09): an assistant message dwelled on ≥50%-visible for 2s
   // re-sights its attributed nodes — rereading old ground is a review, at message grain.
@@ -86,12 +101,21 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
         {isUser ? (
           content
         ) : (
-          <MarkdownContent
-            source={displaySource}
-            diglot={
-              woven && messageId !== undefined ? { messageId, patches: patches ?? [] } : undefined
-            }
-          />
+          <SelectionQuoteBar>
+            <MarkdownContent
+              source={displaySource}
+              diglot={
+                woven && messageId !== undefined ? { messageId, patches: patches ?? [] } : undefined
+              }
+              doors={
+                messageId !== undefined &&
+                doorsForMessage !== undefined &&
+                doorsForMessage.length > 0
+                  ? { messageId, patches: doorsForMessage }
+                  : undefined
+              }
+            />
+          </SelectionQuoteBar>
         )}
       </div>
     </div>

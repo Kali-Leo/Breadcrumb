@@ -50,6 +50,10 @@ export interface BreadcrumbEventMap {
   "interest:updated": { nodeIds: string[] };
   /** Fired after mastery_claims rows land, e.g. from the self-report action (spec 011). */
   "mastery:updated": { changedNodeIds: string[] };
+  /** Prefills the composer's draft without sending — used by the explore door "展开聊聊"
+   * action and the assistant-message selection quote bar (spec 039); the user still presses
+   * send themselves. */
+  "composer:prefill": { text: string };
 }
 
 export type BreadcrumbEventName = keyof BreadcrumbEventMap;

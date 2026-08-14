@@ -7,21 +7,12 @@
 import type { ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
 import { applyPatches } from "@breadcrumb/plugin-diglot-weave";
 import { useEffect, useRef, useState } from "react";
+import { contextSentenceFor } from "../lib/contextSentence";
 import { useDiglotStore } from "../stores/diglotStore";
 import { DiglotWordCard } from "./DiglotWordCard";
 
 /** Messages whose exposure signals already fired this session. */
 const exposedMessages = new Set<string>();
-
-/** The sentence around a patch — guess cards always show real context. */
-function contextSentenceFor(content: string, patch: ReplacementPatch): string {
-  const boundary = /[。!?.!?\n]/;
-  let start = patch.start;
-  while (start > 0 && !boundary.test(content[start - 1] ?? "")) start -= 1;
-  let end = patch.end;
-  while (end < content.length && !boundary.test(content[end] ?? "")) end += 1;
-  return content.slice(start, Math.min(end + 1, content.length)).trim();
-}
 
 /** Rendered card width (Tailwind w-64) — used for horizontal clamping. */
 const CARD_WIDTH = 256;

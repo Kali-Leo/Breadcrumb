@@ -2,7 +2,8 @@
  * Purpose: SQL statements for the knowledge-graph domain — tree nodes, their local
  * embeddings, sightings (footprints), the directed requires/helps edges (spec 010),
  * node-dedup aliases (spec 015), and the spec-015-#4 duplicate-node merge executor.
- * Main exports: createKnowledgeNodesRepo, createNodeEmbeddingsRepo, createNodeSightingsRepo,
+ * Main exports: createKnowledgeNodesRepo, createNodeEmbeddingsRepo (incl. getByNode, used by
+ * the explore door concept-guess grading, spec 039), createNodeSightingsRepo,
  * createKnowledgeEdgesRepo, createNodeAliasesRepo, createNodeMergeRepo.
  */
 import type {
@@ -57,6 +58,15 @@ export function createNodeEmbeddingsRepo(sql: SqlClient) {
     },
     async listAll(): Promise<NodeEmbeddingRow[]> {
       return sql.select<NodeEmbeddingRow>("SELECT * FROM node_embeddings");
+    },
+    /** One node's embedding, or null when it has none yet — used to grade a concept guess
+     * against a single door's node (spec 039) without loading the whole table. */
+    async getByNode(nodeId: string): Promise<NodeEmbeddingRow | null> {
+      const rows = await sql.select<NodeEmbeddingRow>(
+        "SELECT * FROM node_embeddings WHERE node_id = ? LIMIT 1",
+        [nodeId],
+      );
+      return rows[0] ?? null;
     },
     /** Nodes that still lack an embedding — the backfill queue. */
     async listNodesMissingEmbedding(): Promise<KnowledgeNodeRow[]> {

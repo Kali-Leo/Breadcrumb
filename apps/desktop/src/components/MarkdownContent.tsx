@@ -1,10 +1,12 @@
 /**
  * Purpose: chat markdown renderer — a small mdast→React walk (remark-parse + remark-gfm +
- * remark-math, KaTeX for formulas) that keeps source offsets, so diglot patches can be
- * woven into exactly the text nodes they belong to (math/code are never woven).
+ * remark-math, KaTeX for formulas) that keeps source offsets, so diglot patches and explore
+ * doors (spec 039) can both be woven into exactly the text nodes they belong to (math/code
+ * are never touched); overlapping spans give the diglot weave priority.
  * Main exports: MarkdownContent.
  */
 import type { ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
+import type { DoorCandidate } from "@breadcrumb/plugin-explore";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import type { Node, Parent } from "mdast";
@@ -13,6 +15,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+import { mergeTextRuns } from "../lib/messagePatchMerge";
+import { ConceptDoorText } from "./ConceptDoorText";
 import { DiglotText } from "./DiglotText";
 import { MermaidBlock } from "./MermaidBlock";
 
@@ -21,6 +25,11 @@ const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 interface DiglotContext {
   messageId: string;
   patches: ReplacementPatch[];
+}
+
+interface DoorContext {
+  messageId: string;
+  patches: DoorCandidate[];
 }
 
 interface AnyNode extends Node {
@@ -51,30 +60,72 @@ function renderMath(value: string, displayMode: boolean, key: string): ReactNode
   );
 }
 
-function renderText(node: AnyNode, source: string, diglot: DiglotContext | null, key: string) {
-  const { start, end } = offsetsOf(node);
-  const inRange =
-    diglot === null
-      ? []
-      : diglot.patches.filter((patch) => patch.start >= start && patch.end <= end);
-  if (diglot === null || inRange.length === 0) {
-    return <span key={key}>{node.value ?? ""}</span>;
+/** Renders one merged run: plain text, a diglot-woven cluster, or a door cluster. The
+ * diglot/door branches are only ever reached when their context is non-null, because
+ * mergeTextRuns only produces that run kind from a non-empty in-range patch list. */
+function renderRun(
+  run: ReturnType<typeof mergeTextRuns>[number],
+  source: string,
+  diglot: DiglotContext | null,
+  doors: DoorContext | null,
+): ReactNode {
+  if (run.kind === "plain") {
+    return <span key={`plain-${run.start}`}>{source.slice(run.start, run.end)}</span>;
   }
-  return (
-    <DiglotText
-      key={key}
-      messageId={diglot.messageId}
-      content={source}
-      patches={inRange}
-      rangeStart={start}
-      rangeEnd={end}
-    />
-  );
+  if (run.kind === "diglot" && diglot !== null) {
+    return (
+      <DiglotText
+        key={`diglot-${run.start}`}
+        messageId={diglot.messageId}
+        content={source}
+        patches={run.patches}
+        rangeStart={run.start}
+        rangeEnd={run.end}
+      />
+    );
+  }
+  if (run.kind === "door" && doors !== null) {
+    return (
+      <ConceptDoorText
+        key={`door-${run.start}`}
+        messageId={doors.messageId}
+        content={source}
+        patches={run.patches}
+        rangeStart={run.start}
+        rangeEnd={run.end}
+      />
+    );
+  }
+  return null;
 }
 
-function renderChildren(node: AnyNode, source: string, diglot: DiglotContext | null): ReactNode[] {
+function renderText(
+  node: AnyNode,
+  source: string,
+  diglot: DiglotContext | null,
+  doors: DoorContext | null,
+  key: string,
+) {
+  const { start, end } = offsetsOf(node);
+  const inRange = (start2: number, end2: number) => start2 >= start && end2 <= end;
+  const diglotInRange =
+    diglot === null ? [] : diglot.patches.filter((p) => inRange(p.start, p.end));
+  const doorInRange = doors === null ? [] : doors.patches.filter((p) => inRange(p.start, p.end));
+  if (diglotInRange.length === 0 && doorInRange.length === 0) {
+    return <span key={key}>{node.value ?? ""}</span>;
+  }
+  const runs = mergeTextRuns(start, end, diglotInRange, doorInRange);
+  return <span key={key}>{runs.map((run) => renderRun(run, source, diglot, doors))}</span>;
+}
+
+function renderChildren(
+  node: AnyNode,
+  source: string,
+  diglot: DiglotContext | null,
+  doors: DoorContext | null,
+): ReactNode[] {
   return (node.children ?? []).map((child, index) =>
-    renderNode(child, source, diglot, `${child.type}-${index}-${offsetsOf(child).start}`),
+    renderNode(child, source, diglot, doors, `${child.type}-${index}-${offsetsOf(child).start}`),
   );
 }
 
@@ -82,12 +133,13 @@ function renderNode(
   node: AnyNode,
   source: string,
   diglot: DiglotContext | null,
+  doors: DoorContext | null,
   key: string,
 ): ReactNode {
-  const children = () => renderChildren(node, source, diglot);
+  const children = () => renderChildren(node, source, diglot, doors);
   switch (node.type) {
     case "text":
-      return renderText(node, source, diglot, key);
+      return renderText(node, source, diglot, doors, key);
     case "paragraph":
       return (
         <p key={key} className="my-1 first:mt-0 last:mb-0">
@@ -189,13 +241,21 @@ function renderNode(
 }
 
 /** Renders one chat message body. `source` must be the normalized display source (see
- * normalizeMathDelimiters); diglot patch offsets must reference the same string. */
-export function MarkdownContent({ source, diglot }: { source: string; diglot?: DiglotContext }) {
+ * normalizeMathDelimiters); diglot patch and door offsets must reference the same string. */
+export function MarkdownContent({
+  source,
+  diglot,
+  doors,
+}: {
+  source: string;
+  diglot?: DiglotContext;
+  doors?: DoorContext;
+}) {
   const tree = parser.parse(source) as Parent;
   return (
     <div className="leading-relaxed">
       {(tree.children as AnyNode[]).map((child, index) =>
-        renderNode(child, source, diglot ?? null, `${child.type}-${index}`),
+        renderNode(child, source, diglot ?? null, doors ?? null, `${child.type}-${index}`),
       )}
     </div>
   );

@@ -4,6 +4,7 @@
  */
 import { useEffect, useRef } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { useDoorStore } from "../stores/doorStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { CompanionChatBanners } from "./CompanionChatBanners";
@@ -23,6 +24,13 @@ export function ChatView() {
   useEffect(() => {
     void loadFactchecks(activeConversationId);
   }, [activeConversationId, loadFactchecks]);
+
+  // Explore doors are session-scoped (spec 039 §2.2): a fresh conversation starts with no
+  // opened doors, no reveal cooldowns, no guess history.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed on the conversation switch, not on resetForConversation's identity
+  useEffect(() => {
+    useDoorStore.getState().resetForConversation();
+  }, [activeConversationId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll whenever a message or stream delta arrives
   useEffect(() => {
