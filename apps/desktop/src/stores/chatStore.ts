@@ -135,6 +135,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ errorText: COMPANION_DESKTOP_COPY.chatDisabled });
       return;
     }
+    // Captured before anything can shift it: creating/switching the conversation below
+    // triggers session reloads that clear the anchor, and extraction stamps provenance
+    // with this value much later (spec 040 §7).
+    const { useKnowledgeStore } = await import("./knowledgeStore");
+    const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
     const repos = await getRepos();
     const conversationId = await ensureChatConversationId(
       repos,
@@ -158,10 +163,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     try {
-      // Captured NOW: provenance stamping runs after async extraction, when the store's
-      // anchor may long since have changed or cleared (spec 040 §7).
-      const { useKnowledgeStore } = await import("./knowledgeStore");
-      const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
       const baseMessages: ChatMessage[] = get().messages.map((m) => ({
         role: m.role,
         content: m.content,
