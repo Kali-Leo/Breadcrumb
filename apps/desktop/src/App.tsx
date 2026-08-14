@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { FeedbackPanel } from "./components/FeedbackPanel";
+import { FocusOverlay } from "./components/FocusOverlay";
 import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
 import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
@@ -114,6 +115,7 @@ export default function App() {
         {view === "chat" && <KnowledgeTreePanel />}
       </div>
       <StatusBar />
+      <FocusOverlay />
     </div>
   );
 }

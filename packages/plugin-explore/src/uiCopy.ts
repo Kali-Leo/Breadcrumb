@@ -1,10 +1,12 @@
 /**
  * Purpose: every user-visible string of explore doors, the selection quote bar, the station
- * map, and the sidebar's trail cards/groups/transfer list (spec 039 §2.2, §2.3; spec 040 §3;
- * spec 041) in one place — plain statements only (product principle 1: no praise, no performed
- * warmth); simlab scans this module against the pressure lexicon.
+ * map, the sidebar's trail cards/groups/transfer list, and the focus (explain-word) overlay
+ * (spec 039 §2.2, §2.3; spec 040 §3; spec 041; spec 042 §3) in one place — plain statements
+ * only (product principle 1: no praise, no performed warmth); simlab scans this module against
+ * the pressure lexicon.
  * Main exports: EXPLORE_UI_COPY, conceptDirectRevealLine, doorExpandPrefill,
- * selectionExplainPrefill, selectionDiscussPrefill, frontierStopPrefill, transferListTitle.
+ * selectionExplainPrefill, selectionDiscussPrefill, frontierStopPrefill, transferListTitle,
+ * focusSelectHint, focusErrorLine.
  */
 
 /** Static UI strings (door card, selection bar, station map, sidebar trail cards). Keys exist
@@ -31,6 +33,11 @@ export const EXPLORE_UI_COPY = {
   timelineCollapseLabel: "收起",
   /** Marks a transfer station's other-trail listing entry point (spec 041 §3). */
   transferBadge: "换乘",
+  /** Focus overlay header (spec 042 §3). */
+  focusExitButton: "退出专注",
+  focusAskPlaceholder: "对当前内容提问…",
+  /** Guess card's skip action — still opens the explanation, just without a scored guess. */
+  focusGuessSkipButton: "直接看解释",
 } as const;
 
 /** Ungraded reveal line: embedding grading was unavailable, so the door opens straight to
@@ -63,4 +70,15 @@ export function frontierStopPrefill(label: string): string {
  * plainly, no framing about "重逢"/"惊喜" (product principle 1). */
 export function transferListTitle(nodeLabel: string): string {
   return `「${nodeLabel}」也在别的对话出现过`;
+}
+
+/** Selection-confirm hint floated over a focus overlay's main pane (spec 042 §3) — the word
+ * is already truncated by the caller (selection text can be long). */
+export function focusSelectHint(quotedText: string): string {
+  return `按 Enter 解释「${quotedText}」`;
+}
+
+/** Plain-statement error banner for a failed focus-session station (spec 042 §2). */
+export function focusErrorLine(message: string): string {
+  return `这一站没有生成成功：${message}。可以重试，或退出专注。`;
 }

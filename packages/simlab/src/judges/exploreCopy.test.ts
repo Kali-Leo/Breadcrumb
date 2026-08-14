@@ -10,6 +10,8 @@ import {
   doorExpandPrefill,
   EXPLORE_UI_COPY,
   FOCUS_SYSTEM_PROMPT,
+  focusErrorLine,
+  focusSelectHint,
   frontierStopPrefill,
   guessFeedbackLine,
   selectionDiscussPrefill,
@@ -40,6 +42,8 @@ describe("explore doors + selection bar copy gates", () => {
       { id: "n2", parentId: "root", kind: "word", label: "词法环境" },
       { id: "n3", parentId: "n2", kind: "question", label: "为什么会内存泄漏" },
     ]),
+    focusSelectHint("词法环境"),
+    focusErrorLine("网络请求超时"),
   ];
 
   it("hits zero pressure-lexicon entries", () => {

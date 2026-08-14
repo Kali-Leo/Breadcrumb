@@ -3,7 +3,7 @@
  * DiglotText twin, simpler: no exposure tracking (doors only react to an explicit open),
  * dashed-underline styling distinct from the weave's teal, guess-gate decided at open,
  * abandonment recorded on close when a guess was never submitted.
- * Main exports: ConceptDoorText.
+ * Main exports: ConceptDoorText, splitDoorSegments (also used by FocusDoorText).
  */
 import type { DoorCandidate } from "@breadcrumb/plugin-explore";
 import { useRef, useState } from "react";
@@ -23,12 +23,12 @@ interface OpenDoorCard {
   bottom: number | null;
 }
 
-type DoorSegment = { kind: "text"; text: string } | { kind: "door"; patch: DoorCandidate };
+export type DoorSegment = { kind: "text"; text: string } | { kind: "door"; patch: DoorCandidate };
 
 /** Splits `slice` into plain-text runs and door spans (local offsets). pickDoors already
  * guarantees non-overlapping, original-matching spans; any mismatch degrades that one span
  * back to plain text instead of rendering a wrong button. */
-function splitDoorSegments(slice: string, patches: readonly DoorCandidate[]): DoorSegment[] {
+export function splitDoorSegments(slice: string, patches: readonly DoorCandidate[]): DoorSegment[] {
   const segments: DoorSegment[] = [];
   let cursor = 0;
   for (const patch of patches) {

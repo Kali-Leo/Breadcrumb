@@ -63,6 +63,9 @@ export interface BreadcrumbEventMap {
   "composer:prefill": { text: string };
   /** Station map click -> scroll chat to that round (spec 040 §3). */
   "chat:locateMessage": { messageId: string };
+  /** Fired when a focus (explain-word) overlay closes (spec 042 §3) — the exit-record entry
+   * flow (spec 042 §5) listens for this instead of the store reaching into it directly. */
+  "focus:exited": { sessionId: string };
 }
 
 export type BreadcrumbEventName = keyof BreadcrumbEventMap;
