@@ -391,9 +391,9 @@ describe("buildStationMapModel — provenance parentage (spec 040 §7)", () => {
     expect(model.mainLine.map((s) => s.depth)).toEqual([0, 1, 2]);
   });
 
-  it("cycle safety: an origin pointing at a later station is ignored, never producing a forward parent", () => {
-    // a's origin points at b, which is only touched afterward — a cannot adopt a not-yet-seen
-    // parent, so it falls through rules ②③④ same as if it had no origin at all.
+  it("forward origin reparents and reorders: the anchor moves ahead of the child it grew", () => {
+    // a's origin points at b, touched afterward in the same round (anchor landed second) —
+    // structure-first ordering places b as root before a, its child.
     const sightings = [
       sighting("s1", "a", "m1", "2026-08-14T10:00:01Z", "b"),
       sighting("s2", "b", "m1", "2026-08-14T10:00:02Z"),
@@ -407,8 +407,9 @@ describe("buildStationMapModel — provenance parentage (spec 040 §7)", () => {
       retentionByNode: new Map(),
       frontier: [],
     });
-    expect(model.mainLine.find((s) => s.nodeId === "a")?.parentNodeId).toBeNull();
-    expect(model.mainLine.find((s) => s.nodeId === "a")?.depth).toBe(0);
+    expect(model.mainLine.map((s) => s.nodeId)).toEqual(["b", "a"]);
+    expect(model.mainLine.find((s) => s.nodeId === "a")?.parentNodeId).toBe("b");
+    expect(model.mainLine.find((s) => s.nodeId === "a")?.depth).toBe(1);
   });
 });
 

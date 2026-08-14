@@ -125,9 +125,21 @@ describe("resolveMainLineParentage", () => {
     expect(drafts.map((d) => d.station.depth)).toEqual([0, 1, 2]);
   });
 
-  it("cycle safety: an origin naming a not-yet-seen (later) station is ignored", () => {
+  it("a forward origin reparents and reorders — the parent moves ahead of its child", () => {
+    // Extraction can land the anchor after its child in the same round: a's origin names b,
+    // touched later. Structure-first ordering puts b (root) before a (its child).
     const drafts = [draft("a", "b"), draft("b", null)];
-    resolveMainLineParentage(drafts, []);
-    expect(drafts[0]?.station.parentNodeId).toBeNull();
+    const ordered = resolveMainLineParentage(drafts, []);
+    expect(ordered.map((d) => d.station.nodeId)).toEqual(["b", "a"]);
+    expect(ordered[1]?.station.parentNodeId).toBe("b");
+    expect(ordered[1]?.station.depth).toBe(1);
+  });
+
+  it("cycle safety: a true origin cycle breaks at its earliest-touched member", () => {
+    const drafts = [draft("a", "b"), draft("b", "a")];
+    const ordered = resolveMainLineParentage(drafts, []);
+    expect(ordered[0]?.station.nodeId).toBe("a");
+    expect(ordered[0]?.station.parentNodeId).toBeNull(); // a roots the broken cycle
+    expect(ordered[1]?.station.parentNodeId).toBe("a"); // b stays a's child
   });
 });

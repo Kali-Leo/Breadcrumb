@@ -140,8 +140,8 @@ export function buildStationMapModel(input: BuildStationMapModelInput): StationM
     true,
     nodeIdsInOtherTrails,
   );
-  resolveMainLineParentage(mainLineDrafts, input.edges);
-  const mainLine = mainLineDrafts.map((draft) => draft.station);
+  const orderedDrafts = resolveMainLineParentage(mainLineDrafts, input.edges);
+  const mainLine = orderedDrafts.map((draft) => draft.station);
 
   const candidates = findBranchCandidates(input.rows, activePathIds, activeLeafId);
   const branches: BranchStub[] = [];

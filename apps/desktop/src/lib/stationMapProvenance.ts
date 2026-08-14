@@ -96,25 +96,27 @@ function edgeConnects(pairSet: ReadonlySet<string>, a: string, b: string): boole
   return pairSet.has(`${a}|${b}`);
 }
 
-/** Spec 040 §7: resolves each main-line station's parent in first-touch order — ① its
- * sighting's origin, when that origin is an earlier main-line station; else ② an edge to the
- * immediately preceding station; else ③ an edge to the nearest (highest-order) earlier
- * station with one; else ④ null (a new trunk root). depth is the resolved parent's depth + 1,
- * or 0 at a root. Mutates each draft's station in place. An origin pointing at a later station
- * (or at no station on this line at all) simply doesn't satisfy ①, falling through to ②③④ —
- * this is also spec 040 §7's cycle-safety case, since ②③④ can never look forward. */
+/** Spec 040 §7 (revised 2026-08-14 late): resolves each main-line station's parent — ① its
+ * sighting's origin, when that origin is ANY station on this line (extraction may land the
+ * anchor after its children in the same round, so "earlier only" was wrong); else ② an edge
+ * to the first-touch-preceding station; else ③ an edge to the nearest earlier station; else
+ * ④ null (a new trunk root). Origin cycles are broken at the earliest-touched member, which
+ * becomes a root. Returns the drafts in STRUCTURE-FIRST order — parents before children
+ * (DFS pre-order; roots and siblings keep first-touch order) — with index/order/depth
+ * rewritten to match: the tree's geometry follows structure, time survives as the order tag. */
 export function resolveMainLineParentage(
   drafts: readonly StationDraft[],
   edges: readonly KnowledgeEdgeRow[],
-): void {
+): StationDraft[] {
   const edgePairSet = buildEdgePairSet(edges);
-  const depthByNodeId = new Map<string, number>();
+  const nodeIds = new Set(drafts.map((draft) => draft.station.nodeId));
+  const parentByNodeId = new Map<string, string | null>();
+
   drafts.forEach((draft, index) => {
     const { station, originNodeId } = draft;
     let parentNodeId: string | null = null;
-
-    if (originNodeId !== null && depthByNodeId.has(originNodeId)) {
-      parentNodeId = originNodeId; // rule ①
+    if (originNodeId !== null && originNodeId !== station.nodeId && nodeIds.has(originNodeId)) {
+      parentNodeId = originNodeId; // rule ① — any station on this line
     } else {
       const previous = drafts[index - 1];
       if (
@@ -132,9 +134,49 @@ export function resolveMainLineParentage(
         }
       }
     }
-
-    station.parentNodeId = parentNodeId; // rule ④ default: stays null
-    station.depth = parentNodeId === null ? 0 : (depthByNodeId.get(parentNodeId) as number) + 1;
-    depthByNodeId.set(station.nodeId, station.depth);
+    parentByNodeId.set(station.nodeId, parentNodeId); // rule ④ default: null
   });
+
+  // Cycle safety: walk each parent chain; on revisiting a node within one walk, root the
+  // cycle at its earliest-touched member (first-touch order = draft order).
+  const touchOrder = new Map(drafts.map((draft, index) => [draft.station.nodeId, index]));
+  for (const draft of drafts) {
+    const seen = new Set<string>();
+    let current: string | null = draft.station.nodeId;
+    while (current !== null && !seen.has(current)) {
+      seen.add(current);
+      current = parentByNodeId.get(current) ?? null;
+    }
+    if (current !== null) {
+      const cycleMembers = [...seen];
+      const earliest = cycleMembers.reduce((a, b) =>
+        (touchOrder.get(a) as number) <= (touchOrder.get(b) as number) ? a : b,
+      );
+      parentByNodeId.set(earliest, null);
+    }
+  }
+
+  // Structure-first reorder: DFS pre-order from roots, siblings in first-touch order.
+  const draftByNodeId = new Map(drafts.map((draft) => [draft.station.nodeId, draft]));
+  const childrenByParent = new Map<string | null, StationDraft[]>();
+  for (const draft of drafts) {
+    const parent = parentByNodeId.get(draft.station.nodeId) ?? null;
+    const bucket = childrenByParent.get(parent) ?? [];
+    bucket.push(draft);
+    childrenByParent.set(parent, bucket);
+  }
+  const ordered: StationDraft[] = [];
+  const visit = (draft: StationDraft, depth: number) => {
+    draft.station.parentNodeId = parentByNodeId.get(draft.station.nodeId) ?? null;
+    draft.station.depth = depth;
+    draft.station.index = ordered.length;
+    draft.station.order = ordered.length + 1;
+    ordered.push(draft);
+    for (const child of childrenByParent.get(draft.station.nodeId) ?? []) visit(child, depth + 1);
+  };
+  for (const root of childrenByParent.get(null) ?? []) visit(root, 0);
+  // Unreachable leftovers (should not happen) keep the map total rather than vanishing.
+  for (const draft of drafts) if (!ordered.includes(draft)) visit(draft, 0);
+  void draftByNodeId;
+  return ordered;
 }
