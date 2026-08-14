@@ -1,12 +1,14 @@
 /**
- * Purpose: every user-visible string of explore doors and the selection quote bar in one
- * place (spec 039 §2.2, §2.3) — plain statements only (product principle 1: no praise, no
- * performed warmth); simlab scans this module against the pressure lexicon.
+ * Purpose: every user-visible string of explore doors, the selection quote bar, and the
+ * station map in one place (spec 039 §2.2, §2.3; spec 040 §3) — plain statements only (product
+ * principle 1: no praise, no performed warmth); simlab scans this module against the pressure
+ * lexicon.
  * Main exports: EXPLORE_UI_COPY, conceptDirectRevealLine, doorExpandPrefill,
- * selectionExplainPrefill, selectionDiscussPrefill.
+ * selectionExplainPrefill, selectionDiscussPrefill, frontierStopPrefill.
  */
 
-/** Static UI strings (door card, selection bar). Keys exist so the simlab scan can name a hit. */
+/** Static UI strings (door card, selection bar, station map). Keys exist so the simlab scan
+ * can name a hit. */
 export const EXPLORE_UI_COPY = {
   doorGuessPrompt: "先猜猜：一句话说它是什么？",
   doorGuessPlaceholder: "你的猜测",
@@ -14,6 +16,9 @@ export const EXPLORE_UI_COPY = {
   doorExpandButton: "展开聊聊",
   selectionExplainButton: "解释一下",
   selectionDiscussButton: "展开聊聊",
+  stationMapEmptyLine: "这条线还没有站点。",
+  stationResumeButton: "续",
+  atlasEntryButton: "收线 · 文字详单",
 } as const;
 
 /** Ungraded reveal line: embedding grading was unavailable, so the door opens straight to
@@ -35,4 +40,9 @@ export function selectionExplainPrefill(quotedText: string): string {
 /** Composer prefill for the selection bar's "展开聊聊" action. */
 export function selectionDiscussPrefill(quotedText: string): string {
   return `「${quotedText}」这里我想再聊聊：`;
+}
+
+/** Composer prefill for clicking an unvisited station map frontier stop (spec 040 §3). */
+export function frontierStopPrefill(label: string): string {
+  return `想聊聊「${label}」`;
 }

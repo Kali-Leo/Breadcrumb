@@ -7,6 +7,7 @@ import {
   conceptDirectRevealLine,
   doorExpandPrefill,
   EXPLORE_UI_COPY,
+  frontierStopPrefill,
   guessFeedbackLine,
   selectionDiscussPrefill,
   selectionExplainPrefill,
@@ -27,6 +28,7 @@ describe("explore doors + selection bar copy gates", () => {
     guessFeedbackLine("correct", "闭包是函数与其词法环境的绑定。"),
     guessFeedbackLine("close", "闭包是函数与其词法环境的绑定。"),
     guessFeedbackLine("wrong", "闭包是函数与其词法环境的绑定。"),
+    frontierStopPrefill("词法环境"),
   ];
 
   it("hits zero pressure-lexicon entries", () => {
