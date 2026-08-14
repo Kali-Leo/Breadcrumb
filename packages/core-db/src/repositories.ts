@@ -89,9 +89,17 @@ export function createMessagesRepo(sql: SqlClient) {
   return {
     async append(row: MessageRow): Promise<void> {
       await sql.execute(
-        `INSERT INTO messages (id, conversation_id, role, content, created_at, teaching_mode)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [row.id, row.conversation_id, row.role, row.content, row.created_at, row.teaching_mode],
+        `INSERT INTO messages (id, conversation_id, role, content, created_at, teaching_mode, parent_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          row.id,
+          row.conversation_id,
+          row.role,
+          row.content,
+          row.created_at,
+          row.teaching_mode,
+          row.parent_id,
+        ],
       );
     },
     async listByConversation(conversationId: string): Promise<MessageRow[]> {

@@ -138,6 +138,7 @@ export async function openPracticeConversation(label: string, sourceRef: string)
     content: `这里探讨怎么完成这条实践——${sourceRef}。先说说你目前做到哪一步，或者手头有什么环境，从那里开始。`,
     created_at: nowIso(),
     teaching_mode: null,
+    parent_id: null,
   });
   return conversationId;
 }

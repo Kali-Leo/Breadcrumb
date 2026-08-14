@@ -29,6 +29,7 @@ export async function startReunionSession(conceptTitle: string): Promise<string>
     content: reunionOpener(conceptTitle),
     created_at: createdAt,
     teaching_mode: null,
+    parent_id: null,
   });
   return conversationId;
 }

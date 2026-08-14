@@ -120,6 +120,7 @@ describe("runRoundPipeline", () => {
       content: "闭包是函数记住定义时作用域的能力。",
       created_at: now,
       teaching_mode: null,
+      parent_id: null,
     });
 
     const calls: { purpose: string; model: string }[] = [];

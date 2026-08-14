@@ -711,6 +711,14 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0030_message_teaching_mode",
     statements: [`ALTER TABLE messages ADD COLUMN teaching_mode TEXT;`],
   },
+  {
+    // Spec 040 §1: messages form a tree — parent_id points at the message this one replies
+    // to (user msg -> current leaf, assistant msg -> its triggering user msg). NULL rows are
+    // legacy-linear: the previous message by created_at is the implicit parent. No FK/CHECK —
+    // validated in TypeScript, same as conversations.kind (0029 precedent).
+    id: "0031_message_parent",
+    statements: [`ALTER TABLE messages ADD COLUMN parent_id TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

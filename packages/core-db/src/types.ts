@@ -53,6 +53,10 @@ export interface MessageRow {
    * "guided" — NULL otherwise (spec 038). Kept as string here: core-db does not depend on
    * core-teaching. */
   teaching_mode: string | null;
+  /** Tree parent (spec 040): the message this one replies to (user msg -> current leaf,
+   * assistant msg -> its triggering user msg). NULL means "legacy-linear" — the implicit
+   * parent is the previous row by created_at within the same conversation. */
+  parent_id: string | null;
 }
 
 /** 'concept' = a topic in the taxonomy tree; 'method' = a learning technique (e.g. Feynman

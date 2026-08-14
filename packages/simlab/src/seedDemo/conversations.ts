@@ -43,6 +43,7 @@ function buildMessages(
     content,
     created_at: timestamps[index] ?? timestamps[timestamps.length - 1] ?? new Date().toISOString(),
     teaching_mode: null,
+    parent_id: null,
   }));
 }
 

@@ -102,6 +102,7 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       content: studentReply.content,
       created_at: nowIso,
       teaching_mode: null,
+      parent_id: null,
     });
     transcript.push({ role: "user", content: studentReply.content });
 
@@ -144,6 +145,7 @@ export async function runConversation(options: ConversationOptions): Promise<Con
       content: tutorReply.content,
       created_at: nowIso,
       teaching_mode: null,
+      parent_id: null,
     });
     transcript.push({ role: "assistant", content: tutorReply.content });
 

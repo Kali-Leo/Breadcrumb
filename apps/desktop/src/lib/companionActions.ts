@@ -79,6 +79,7 @@ export async function openCompanionConversation(companionId: string): Promise<st
     content: card.data.first_mes,
     created_at: createdAt,
     teaching_mode: null,
+    parent_id: null,
   });
   return conversationId;
 }
@@ -140,6 +141,7 @@ export async function startCompanionTeachSession(
     content: TEACH_OPENER("Shichimi", topic),
     created_at: nowIso(),
     teaching_mode: null,
+    parent_id: null,
   });
   return conversationId;
 }

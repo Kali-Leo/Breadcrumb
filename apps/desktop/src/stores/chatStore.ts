@@ -129,6 +129,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       content,
       created_at: nowIso(),
       teaching_mode: null,
+      // Tree wiring (spec 040 §2 resumeFromMessage/currentLeafId) lands in a later task; this
+      // task only adds the column and keeps existing behavior legacy-linear (NULL).
+      parent_id: null,
     };
     await repos.messages.append(userMessage);
     set({ messages: [...get().messages, userMessage], streamingText: "", errorText: null });
@@ -181,6 +184,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         created_at: nowIso(),
         // Column kept dormant for future silent experiments (spec 038 revision 2026-08-14).
         teaching_mode: null,
+        // See userMessage above: tree wiring is a later task, so this stays legacy-linear (NULL).
+        parent_id: null,
       };
       await repos.messages.append(assistantMessage);
       await repos.conversations.touch(conversationId, assistantMessage.created_at);
