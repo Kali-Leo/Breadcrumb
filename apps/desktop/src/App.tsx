@@ -8,7 +8,6 @@ import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { FeedbackPanel } from "./components/FeedbackPanel";
 import { FocusOverlay } from "./components/FocusOverlay";
-import { KnowledgeTreePanel } from "./components/KnowledgeTreePanel";
 import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
 import { ResearchPanel } from "./components/ResearchPanel";
@@ -26,6 +25,7 @@ import "./stores/interestStore";
 import "./lib/teachQuality";
 import { useCompanionStore } from "./stores/companionStore";
 import { useDiglotStore } from "./stores/diglotStore";
+import { useFocusEntryStore } from "./stores/focusEntryStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -77,6 +77,11 @@ export default function App() {
     void useKnowledgeStore.getState().loadSessionTrail(activeConversationId);
   }, [activeConversationId]);
 
+  // Keep the focus-entry-card lookup in sync with the open conversation (spec 042 §5).
+  useEffect(() => {
+    void useFocusEntryStore.getState().loadForConversation(activeConversationId);
+  }, [activeConversationId]);
+
   // First run: no API configured yet -> open settings so the user can start in one step.
   useEffect(() => {
     if (settingsLoaded && apiConfig === null) {
@@ -112,7 +117,6 @@ export default function App() {
           {view === "feedback" && <FeedbackPanel />}
           {view === "research" && <ResearchPanel />}
         </main>
-        {view === "chat" && <KnowledgeTreePanel />}
       </div>
       <StatusBar />
       <FocusOverlay />

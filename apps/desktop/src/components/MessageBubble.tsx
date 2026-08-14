@@ -2,8 +2,9 @@
  * Purpose: renders one chat message (user right-aligned amber, assistant left-aligned
  * neutral). Assistant messages render as markdown with KaTeX math; the diglot weave
  * (spec 033) and explore doors (spec 039) both apply to the same normalized display
- * source, so patch offsets always match the screen. Storage and LLM context keep the
- * original text untouched.
+ * source, so patch offsets always match the screen. A door click or a selection+Enter both
+ * open a focus session directly — no guess, no popover (spec 042 §5). Storage and LLM
+ * context keep the original text untouched.
  * Main exports: MessageBubble.
  */
 import { useEffect, useMemo, useRef } from "react";
@@ -12,8 +13,10 @@ import { recordMessageReencounter } from "../lib/reencounter";
 import { useChatStore } from "../stores/chatStore";
 import { useDiglotStore } from "../stores/diglotStore";
 import { useDoorStore } from "../stores/doorStore";
+import { useFocusStore } from "../stores/focusStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { MarkdownContent } from "./MarkdownContent";
-import { SelectionQuoteBar } from "./SelectionQuoteBar";
+import { SelectionFocusCatcher } from "./SelectionFocusCatcher";
 
 interface MessageBubbleProps {
   author: "user" | "assistant" | "system";
@@ -25,6 +28,7 @@ interface MessageBubbleProps {
 export function MessageBubble({ author, content, messageId }: MessageBubbleProps) {
   const isUser = author === "user";
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const conversationId = useChatStore((state) => state.activeConversationId);
   const diglotEnabled = useDiglotStore((state) => state.settings.enabled);
   const patches = useDiglotStore((state) =>
     messageId === undefined ? undefined : state.patchesByMessage.get(messageId),
@@ -90,6 +94,19 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
     };
   }, [isUser, messageId]);
 
+  // A marked word or a selection both open a focus session directly — no guess, no popover
+  // (spec 042 §5). Silently does nothing while the switch is off or no conversation is open;
+  // the marks/selection hint themselves stay visible either way.
+  const openFocus = (rootLabel: string) => {
+    if (conversationId === null) return;
+    if (!useSettingsStore.getState().featureSwitches.focusExplain) return;
+    void useFocusStore.getState().startFromWord(conversationId, rootLabel, displaySource);
+  };
+  const openFocusFromDoor = (word: string, nodeId: string) => {
+    useDoorStore.getState().markOpened(nodeId);
+    openFocus(word);
+  };
+
   const woven =
     shouldWeave && messageId !== undefined && patches !== undefined && patches.length > 0;
   return (
@@ -104,21 +121,19 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
         {isUser ? (
           content
         ) : (
-          <SelectionQuoteBar>
+          <SelectionFocusCatcher onConfirm={openFocus}>
             <MarkdownContent
               source={displaySource}
               diglot={
                 woven && messageId !== undefined ? { messageId, patches: patches ?? [] } : undefined
               }
               doors={
-                messageId !== undefined &&
-                doorsForMessage !== undefined &&
-                doorsForMessage.length > 0
-                  ? { messageId, patches: doorsForMessage }
+                doorsForMessage !== undefined && doorsForMessage.length > 0
+                  ? { patches: doorsForMessage, onSelect: openFocusFromDoor }
                   : undefined
               }
             />
-          </SelectionQuoteBar>
+          </SelectionFocusCatcher>
         )}
       </div>
     </div>

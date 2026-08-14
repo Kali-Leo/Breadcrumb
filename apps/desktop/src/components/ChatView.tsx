@@ -10,10 +10,11 @@ import { newestLeafId } from "../lib/messageTree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useDoorStore } from "../stores/doorStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
-import { useKnowledgeStore } from "../stores/knowledgeStore";
+import { useFocusEntryStore } from "../stores/focusEntryStore";
 import { CompanionChatBanners } from "./CompanionChatBanners";
 import { Composer } from "./Composer";
 import { FactcheckBadge } from "./FactcheckBadge";
+import { FocusEntryCard } from "./FocusEntryCard";
 import { MessageBubble } from "./MessageBubble";
 
 /** How long a located message stays highlighted (Slack-style: highlight + center, spec 040 §3). */
@@ -26,6 +27,7 @@ export function ChatView() {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const loadFactchecks = useFactcheckStore((state) => state.loadForConversation);
+  const entrySessionByMessageId = useFocusEntryStore((state) => state.entrySessionByMessageId);
   const scrollAnchor = useRef<HTMLDivElement>(null);
   const [locatedMessageId, setLocatedMessageId] = useState<string | null>(null);
 
@@ -81,18 +83,31 @@ export function ChatView() {
             <p>每一次对话，都会留下一枚面包屑。</p>
           </div>
         )}
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            data-message-id={message.id}
-            className={`space-y-1 rounded-2xl transition ${
-              message.id === locatedMessageId ? "ring-2 ring-amber-300" : ""
-            }`}
-          >
-            <MessageBubble author={message.role} content={message.content} messageId={message.id} />
-            {message.role === "assistant" && <FactcheckBadge messageId={message.id} />}
-          </div>
-        ))}
+        {messages.map((message) => {
+          const focusSessionId = entrySessionByMessageId.get(message.id);
+          return (
+            <div
+              key={message.id}
+              data-message-id={message.id}
+              className={`space-y-1 rounded-2xl transition ${
+                message.id === locatedMessageId ? "ring-2 ring-amber-300" : ""
+              }`}
+            >
+              {focusSessionId !== undefined ? (
+                <FocusEntryCard content={message.content} sessionId={focusSessionId} />
+              ) : (
+                <>
+                  <MessageBubble
+                    author={message.role}
+                    content={message.content}
+                    messageId={message.id}
+                  />
+                  {message.role === "assistant" && <FactcheckBadge messageId={message.id} />}
+                </>
+              )}
+            </div>
+          );
+        })}
         {isStreaming && <MessageBubble author="assistant" content={streamingText || "…"} />}
         {errorText && (
           <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
@@ -101,7 +116,6 @@ export function ChatView() {
         )}
         <div ref={scrollAnchor} />
       </div>
-      <AnchorBanner />
       <Composer disabled={isStreaming} onSend={(content) => void sendMessage(content)} />
     </div>
   );
@@ -123,27 +137,6 @@ function ContinuationBanner() {
         className="ml-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
       >
         回到最新
-      </button>
-    </div>
-  );
-}
-
-/** Shows which knowledge node is anchored; one click releases it. */
-function AnchorBanner() {
-  const nodes = useKnowledgeStore((state) => state.nodes);
-  const anchoredNodeId = useKnowledgeStore((state) => state.anchoredNodeId);
-  const toggleAnchor = useKnowledgeStore((state) => state.toggleAnchor);
-  const anchoredNode = nodes.find((node) => node.id === anchoredNodeId);
-  if (!anchoredNode) return null;
-  return (
-    <div className="flex items-center gap-2 border-t border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-stone-600">
-      <span>📍 正在围绕「{anchoredNode.label}」讨论</span>
-      <button
-        type="button"
-        onClick={() => toggleAnchor(anchoredNode.id)}
-        className="ml-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
-      >
-        取消锚定
       </button>
     </div>
   );

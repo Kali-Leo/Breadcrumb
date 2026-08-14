@@ -1,7 +1,8 @@
 /**
  * Purpose: one focus session's subway map (spec 042 §4) — every station and link always drawn
  * (nothing hides), the current line amber, the rest grey; clicking a station jumps to it, no
- * other affordance. Visual vocabulary matches StationMap (dot r5, current ring, dashed = 3 3).
+ * other affordance. Visual vocabulary matches the old station map's (dot r5, current ring,
+ * dashed = 3 3), spec 040's provenance-tree view that spec 042 §6 retired.
  * Main exports: FocusMap.
  */
 import { layoutFocusMap } from "../lib/focusMapLayout";

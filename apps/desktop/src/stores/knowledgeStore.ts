@@ -30,13 +30,17 @@ interface KnowledgeState {
   /** Node ids this conversation walked past, in walking order (session trail). */
   sessionNodeIds: string[];
   freshNodeIds: ReadonlySet<string>;
+  /** Steers the round's system prompt (chatRoundContext.ts) and stamps sighting provenance
+   * (spec 040 §7). Always null now that the ordinary-chat UI entries that used to set it
+   * (the explore door card, the station map) are gone (spec 042 §6) — kept as read-only state
+   * rather than removed outright, since both of those consumers still degrade correctly on
+   * null and a future entry point may want it again. */
   anchoredNodeId: string | null;
   loadTree(): Promise<void>;
   loadSessionTrail(conversationId: string | null): Promise<void>;
-  toggleAnchor(nodeId: string): void;
 }
 
-export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
+export const useKnowledgeStore = create<KnowledgeState>((set) => ({
   nodes: [],
   sessionNodeIds: [],
   freshNodeIds: new Set(),
@@ -59,10 +63,6 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
       freshNodeIds: new Set(),
       anchoredNodeId: null,
     });
-  },
-
-  toggleAnchor(nodeId) {
-    set({ anchoredNodeId: get().anchoredNodeId === nodeId ? null : nodeId });
   },
 }));
 

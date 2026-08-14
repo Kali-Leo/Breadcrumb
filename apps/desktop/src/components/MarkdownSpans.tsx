@@ -9,7 +9,6 @@ import type { DoorCandidate } from "@breadcrumb/plugin-explore";
 import type { Node } from "mdast";
 import type { ReactNode } from "react";
 import { mergeTextRuns } from "../lib/messagePatchMerge";
-import { ConceptDoorText } from "./ConceptDoorText";
 import { DiglotText } from "./DiglotText";
 import { FocusDoorText } from "./FocusDoorText";
 
@@ -19,11 +18,11 @@ export interface DiglotContext {
 }
 
 export interface DoorContext {
-  messageId: string;
   patches: DoorCandidate[];
-  /** When set, a door word calls this directly instead of opening ConceptDoorCard's
-   * hover/click popover — the focus overlay's click-to-select behavior (spec 042 §3). */
-  onSelect?: (word: string) => void;
+  /** A door word click-to-select handler — an ordinary reply opens a focus session directly,
+   * the focus overlay's own doors select a new station (spec 042 §5). Every caller supplies
+   * one now: the old hover/click popover (spec 039 §2.2) is gone. */
+  onSelect: (word: string, nodeId: string) => void;
 }
 
 export interface AnyNode extends Node {
@@ -67,7 +66,7 @@ function renderRun(
     );
   }
   if (run.kind === "door" && doors !== null) {
-    return doors.onSelect ? (
+    return (
       <FocusDoorText
         key={`door-${run.start}`}
         content={source}
@@ -75,15 +74,6 @@ function renderRun(
         rangeStart={run.start}
         rangeEnd={run.end}
         onSelect={doors.onSelect}
-      />
-    ) : (
-      <ConceptDoorText
-        key={`door-${run.start}`}
-        messageId={doors.messageId}
-        content={source}
-        patches={run.patches}
-        rangeStart={run.start}
-        rangeEnd={run.end}
       />
     );
   }

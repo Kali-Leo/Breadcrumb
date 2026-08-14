@@ -102,11 +102,7 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
         {currentNode !== null && currentNode.answer_text.length > 0 && (
           <MarkdownContent
             source={currentNode.answer_text}
-            doors={{
-              messageId: currentNode.id,
-              patches: doors,
-              onSelect: (word) => void selectWord(word),
-            }}
+            doors={{ patches: doors, onSelect: (word) => void selectWord(word) }}
           />
         )}
         {streamingText !== null && (

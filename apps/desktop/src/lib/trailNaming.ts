@@ -21,7 +21,7 @@ export function computeInitialTitle(firstMessageContent: string): string {
 }
 
 /** Auto-title's own label truncation — shorter than the initial-title one because two labels
- * share one line ("A → B"), matching StationMapMarks' station-label truncation width. */
+ * share one line ("A → B"). */
 const STATION_LABEL_MAX_CHARS = 8;
 
 function truncateStationLabel(label: string): string {
@@ -41,9 +41,9 @@ export function computeAutoTitle(stationLabels: readonly string[]): string | nul
   return `${first} → ${last}`;
 }
 
-/** One conversation's stations in walking order, first-touch deduplicated by node — the same
- * dedup rule stationMapModel.ts uses for the main line, but flattened across the whole
- * conversation (no branch/active-path distinction; auto-naming just needs first and last). */
+/** One conversation's stations in walking order, first-touch deduplicated by node — flattened
+ * across the whole conversation (no branch/active-path distinction; auto-naming just needs
+ * first and last). */
 export function stationLabelsFromSightings(
   sightings: readonly NodeSightingRow[],
   labelsByNode: ReadonlyMap<string, string>,
