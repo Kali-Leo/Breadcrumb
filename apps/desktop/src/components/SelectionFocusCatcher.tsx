@@ -32,10 +32,14 @@ export function SelectionFocusCatcher({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hint, setHint] = useState<SelectionHint | null>(null);
-  // Ref, not a deps entry: onConfirm is a fresh closure every render, and this effect should
-  // register its document listeners once, not on every parent re-render.
+  // Refs, not deps entries: onConfirm is a fresh closure every render, and the listeners
+  // must register once. hintRef mirrors hint so the keydown handler can read-and-act
+  // OUTSIDE a state updater — side effects inside updaters get double-invoked by React's
+  // dev-mode purity check (this exact bug once created two sessions per Enter).
   const onConfirmRef = useRef(onConfirm);
   onConfirmRef.current = onConfirm;
+  const hintRef = useRef<SelectionHint | null>(null);
+  hintRef.current = hint;
 
   useEffect(() => {
     function handleSelectionEnd() {
@@ -64,16 +68,15 @@ export function SelectionFocusCatcher({
       setHint(null);
     }
     function handleKeyDown(event: KeyboardEvent) {
-      setHint((current) => {
-        if (current === null) return current;
-        if (event.key === "Enter") {
-          onConfirmRef.current(current.quotedText);
-          window.getSelection()?.removeAllRanges();
-          return null;
-        }
-        if (event.key === "Escape") return null;
-        return current;
-      });
+      const current = hintRef.current;
+      if (current === null) return;
+      if (event.key === "Enter") {
+        onConfirmRef.current(current.quotedText);
+        window.getSelection()?.removeAllRanges();
+        setHint(null);
+      } else if (event.key === "Escape") {
+        setHint(null);
+      }
     }
     document.addEventListener("mouseup", handleSelectionEnd);
     document.addEventListener("mousedown", handlePointerDown);
