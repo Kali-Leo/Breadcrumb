@@ -30,12 +30,16 @@ export function VisitedStationMark({
   isCurrent,
   onLocate,
   onResume,
+  onAnchor,
   onTransferClick,
 }: {
   laidOut: LaidOutStation;
   isCurrent: boolean;
   onLocate(messageId: string): void;
   onResume(messageId: string): void;
+  /** Anchors the station's node so following rounds revolve around it — the whole-tree tab
+   * this used to live on is gone (Leo 2026-08-14). */
+  onAnchor(nodeId: string): void;
   /** Called in addition to onLocate when a transfer station is clicked (spec 041 §3) — opens
    * the shared node's other-trail listing. Locating still happens; this never replaces it. */
   onTransferClick(nodeId: string): void;
@@ -74,6 +78,22 @@ export function VisitedStationMark({
       <text
         role="button"
         tabIndex={0}
+        aria-label={`锚定「${station.label}」`}
+        x={RESUME_X - 18}
+        y={y + 4}
+        fontSize={11}
+        fill="#a8a29e"
+        textAnchor="end"
+        style={{ cursor: "pointer" }}
+        onClick={() => onAnchor(station.nodeId)}
+        onKeyDown={(event) => activateOnKey(event, () => onAnchor(station.nodeId))}
+      >
+        {EXPLORE_UI_COPY.stationAnchorButton}
+      </text>
+      {/* biome-ignore lint/a11y/useSemanticElements: SVG nodes cannot be <button> elements */}
+      <text
+        role="button"
+        tabIndex={0}
         aria-label={`从「${station.label}」继续`}
         x={RESUME_X}
         y={y + 4}
@@ -94,11 +114,13 @@ export function BranchStubMark({
   laidOutBranch,
   onLocate,
   onResume,
+  onAnchor,
   onTransferClick,
 }: {
   laidOutBranch: LaidOutBranch;
   onLocate(messageId: string): void;
   onResume(messageId: string): void;
+  onAnchor(nodeId: string): void;
   onTransferClick(nodeId: string): void;
 }) {
   const firstStation = laidOutBranch.stations[0];
@@ -132,6 +154,7 @@ export function BranchStubMark({
           isCurrent={false}
           onLocate={onLocate}
           onResume={onResume}
+          onAnchor={onAnchor}
           onTransferClick={onTransferClick}
         />
       ))}

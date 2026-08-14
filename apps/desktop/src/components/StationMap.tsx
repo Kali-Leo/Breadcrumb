@@ -124,6 +124,9 @@ export function StationMap() {
   function resume(messageId: string) {
     useChatStore.getState().resumeFromMessage(messageId);
   }
+  function anchor(nodeId: string) {
+    useKnowledgeStore.getState().toggleAnchor(nodeId);
+  }
   function askAbout(label: string) {
     appEventBus.emit("composer:prefill", { text: frontierStopPrefill(label) });
   }
@@ -163,6 +166,7 @@ export function StationMap() {
             laidOutBranch={laidOutBranch}
             onLocate={locate}
             onResume={resume}
+            onAnchor={anchor}
             onTransferClick={openTransfer}
           />
         ))}
@@ -173,6 +177,7 @@ export function StationMap() {
             isCurrent={index === layout.mainLine.length - 1}
             onLocate={locate}
             onResume={resume}
+            onAnchor={anchor}
             onTransferClick={openTransfer}
           />
         ))}

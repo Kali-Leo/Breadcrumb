@@ -7,7 +7,16 @@ export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-existing_pid="$(pgrep -f "target/debug/breadcrumb-desktop" | head -1 || true)"
+# Only treat an instance on THIS display as "already running" — invisible test instances
+# on Xvfb (:99) must not swallow the launch (2026-08-14).
+existing_pid=""
+for pid in $(pgrep -f "target/debug/breadcrumb-desktop" || true); do
+  pid_display="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep '^DISPLAY=' | cut -d= -f2 || true)"
+  if [ "$pid_display" = "${DISPLAY:-}" ]; then
+    existing_pid="$pid"
+    break
+  fi
+done
 if [ -n "$existing_pid" ]; then
   win="$(xdotool search --pid "$existing_pid" 2>/dev/null | tail -1 || true)"
   if [ -n "$win" ]; then

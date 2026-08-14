@@ -18,6 +18,8 @@ export const EXPLORE_UI_COPY = {
   selectionDiscussButton: "展开聊聊",
   stationMapEmptyLine: "这条线还没有站点。",
   stationResumeButton: "续",
+  /** Anchors a station's node so following rounds revolve around it (spec 040). */
+  stationAnchorButton: "锚",
   atlasEntryButton: "收线 · 文字详单",
   /** Sidebar "正在进行" section header (spec 041 §2) — today's active trails, a preview. */
   ongoingSectionLabel: "正在进行",
