@@ -1,6 +1,7 @@
 /**
  * Purpose: SQL statements for a focus (explain-word) session's two tables (spec 042 §1) — the
- * session shell and its subway-map stations.
+ * session shell and its subway-map stations, including the LLM short-name overwrite (spec 042
+ * §4) that keeps long labels legible on the map.
  * Main exports: createFocusSessionsRepo, createFocusNodesRepo factories.
  */
 import type { FocusNodeRow, FocusSessionRow, SqlClient } from "./types";
@@ -82,6 +83,12 @@ export function createFocusNodesRepo(sql: SqlClient) {
     /** Not used on the normal insert-only path; kept for a future edit/retry affordance. */
     async updateAnswer(id: string, answerText: string): Promise<void> {
       await sql.execute("UPDATE focus_nodes SET answer_text = ? WHERE id = ?", [answerText, id]);
+    },
+    /** Overwrites a station's label with an LLM-summarized short name once one lands (spec 042
+     * §4 legibility fix) — fire-and-forget from the desktop store, so the map redraws with the
+     * shorter name; nothing else about the row changes. */
+    async updateLabel(id: string, label: string): Promise<void> {
+      await sql.execute("UPDATE focus_nodes SET label = ? WHERE id = ?", [label, id]);
     },
   };
 }

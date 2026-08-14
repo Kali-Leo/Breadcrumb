@@ -1,9 +1,10 @@
 /**
- * Purpose: pure pixel-layout math for a focus session's subway map (spec 042 §4) — one row per
- * node in preorder, one column per line: a node's first word child stays on the parent's
- * column (straight vertical), every other child (any question child, or any word child past
- * the first) forks a brand-new column with a diagonal connector, dashed only for question
- * children. No rendering.
+ * Purpose: pure pixel-layout math for a focus session's subway map (spec 042 §4) — a vertical
+ * tidy tree, mind-map style: every node's children are peers, laid out side by side on the
+ * next row, with the parent centered above them (Leo: "a 下挂 (b,c)" — a single child falls
+ * straight down, no fork). Classic post-order subtree-width tidy tree: a leaf claims one
+ * column, a parent's column span is the sum of its children's, so sibling subtrees never
+ * overlap. No rendering.
  * Main exports: layoutFocusMap, FocusMapNode, FocusMapStation, FocusMapLink, FocusMapLayout,
  * STATION_X, COLUMN_WIDTH, ROW_HEIGHT, TOP_MARGIN.
  */
@@ -25,11 +26,12 @@ export interface FocusMapStation {
   isCurrent: boolean;
 }
 
+/** One child's connector: a subway-style right-angle fork — down from the parent to
+ * mid-height, across to the child's column, down into the child. points[0] is the parent end,
+ * points[3] the child end; a single child's fork collapses to a straight vertical line because
+ * both x's already match. */
 export interface FocusMapLink {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  points: readonly { x: number; y: number }[];
   dashed: boolean;
 }
 
@@ -41,12 +43,12 @@ export interface FocusMapLayout {
 }
 
 export const STATION_X = 24;
-export const COLUMN_WIDTH = 84;
+export const COLUMN_WIDTH = 96;
 export const ROW_HEIGHT = 34;
 export const TOP_MARGIN = 20;
 const BOTTOM_MARGIN = 20;
-/** Room to the right of a station's dot for its truncated label (11px, up to 8 chars). */
-const LABEL_ALLOWANCE = 80;
+/** Room to the right of a station's dot for its truncated label (11px, up to 12 chars). */
+const LABEL_ALLOWANCE = 120;
 
 function groupByParent(nodes: readonly FocusMapNode[]): Map<string | null, FocusMapNode[]> {
   const groups = new Map<string | null, FocusMapNode[]>();
@@ -75,9 +77,28 @@ function ancestorPath(
   return path;
 }
 
+/** The midpoint elbow between a parent and one child (spec 042 §4's "U 形" fork). */
+function buildLink(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  dashed: boolean,
+): FocusMapLink {
+  const midY = (from.y + to.y) / 2;
+  return {
+    points: [
+      { x: from.x, y: from.y },
+      { x: from.x, y: midY },
+      { x: to.x, y: midY },
+      { x: to.x, y: to.y },
+    ],
+    dashed,
+  };
+}
+
 /** Lays out one focus session's whole map (spec 042 §4): every station and connector always
- * present (nothing collapses or hides), positioned by a preorder walk that hands each line its
- * own column. */
+ * present (nothing collapses or hides). Same-parent stations are peers — they lay out side by
+ * side on the next row; the parent centers over its children's x-span (one child means the
+ * center equals that child's own x, so it falls straight down). */
 export function layoutFocusMap(
   nodes: readonly FocusMapNode[],
   currentId: string | null,
@@ -86,15 +107,22 @@ export function layoutFocusMap(
   const onPath = ancestorPath(nodes, currentId);
   const positions = new Map<string, { x: number; y: number }>();
   const stations: FocusMapStation[] = [];
+  let nextLeafColumn = 0;
 
-  let nextRow = 0;
-  let nextColumn = 1; // column 0 belongs to the root's own line
-
-  // Pass 1 (preorder): assign every station's row/column and build the station list.
-  function visit(node: FocusMapNode, column: number): void {
-    const x = STATION_X + column * COLUMN_WIDTH;
-    const y = TOP_MARGIN + nextRow * ROW_HEIGHT;
-    nextRow += 1;
+  // Post-order (tidy tree): a leaf claims the next free column; an internal node centers over
+  // the x-span its children just claimed. Every subtree owns a private, contiguous block of
+  // columns, so sibling subtrees can never overlap.
+  function place(node: FocusMapNode, depth: number): number {
+    const children = childrenByParent.get(node.id) ?? [];
+    const y = TOP_MARGIN + depth * ROW_HEIGHT;
+    let x: number;
+    if (children.length === 0) {
+      x = STATION_X + nextLeafColumn * COLUMN_WIDTH;
+      nextLeafColumn += 1;
+    } else {
+      const childXs = children.map((child) => place(child, depth + 1));
+      x = (Math.min(...childXs) + Math.max(...childXs)) / 2;
+    }
     positions.set(node.id, { x, y });
     stations.push({
       id: node.id,
@@ -105,24 +133,18 @@ export function layoutFocusMap(
       onCurrentPath: onPath.has(node.id),
       isCurrent: node.id === currentId,
     });
-
-    (childrenByParent.get(node.id) ?? []).forEach((child, index) => {
-      const inherits = index === 0 && child.kind === "word";
-      visit(child, inherits ? column : nextColumn++);
-    });
+    return x;
   }
-  for (const root of childrenByParent.get(null) ?? []) {
-    visit(root, 0);
-  }
+  for (const root of childrenByParent.get(null) ?? []) place(root, 0);
 
-  // Pass 2: one link per non-root node, in input order — every position is already known.
+  // One link per non-root node, in input order — every position is already known.
   const links: FocusMapLink[] = [];
   for (const node of nodes) {
     if (node.parentId === null) continue;
     const from = positions.get(node.parentId);
     const to = positions.get(node.id);
     if (from === undefined || to === undefined) continue;
-    links.push({ x1: from.x, y1: from.y, x2: to.x, y2: to.y, dashed: node.kind === "question" });
+    links.push(buildLink(from, to, node.kind === "question"));
   }
 
   const maxX = Math.max(STATION_X, ...stations.map((station) => station.x));

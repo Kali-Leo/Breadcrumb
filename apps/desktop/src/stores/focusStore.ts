@@ -13,10 +13,15 @@ import {
 } from "@breadcrumb/plugin-explore";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
-import { buildAncestorChain, rollConceptGate, truncateQuestionLabel } from "../lib/focusActions";
+import { buildAncestorChain, rollConceptGate } from "../lib/focusActions";
 import { insertFocusNode, insertFocusSession } from "../lib/focusExplainRound";
 import { recordMatchedGuess } from "../lib/focusGuessGrading";
-import { createWordChild, retryCurrentNode, runExplain } from "../lib/focusSessionActions";
+import {
+  createQuestionChild,
+  createWordChild,
+  retryCurrentNode,
+  runExplain,
+} from "../lib/focusSessionActions";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
@@ -149,27 +154,7 @@ export const useFocusStore = create<FocusState>((set, get) => ({
     void createWordChild(set, get, pending.word, pending.matchedNodeId);
   },
 
-  async askQuestion(question) {
-    const state = get();
-    const trimmed = question.trim();
-    if (state.sessionId === null || state.currentNodeId === null || trimmed.length === 0) return;
-    const ancestorChain = buildAncestorChain(state.nodes, state.currentNodeId);
-    const newNode = await insertFocusNode({
-      sessionId: state.sessionId,
-      parentId: state.currentNodeId,
-      kind: "question",
-      label: truncateQuestionLabel(trimmed),
-      questionText: trimmed,
-    });
-    set({
-      nodes: [...get().nodes, newNode],
-      currentNodeId: newNode.id,
-      streamingText: "",
-      errorText: null,
-      pendingGuess: null,
-    });
-    await runExplain(set, get, newNode.id, buildQuestionMessages(ancestorChain, trimmed));
-  },
+  askQuestion: (question) => createQuestionChild(set, get, question),
 
   jumpTo(nodeId) {
     if (get().streamingText !== null || !get().nodes.some((node) => node.id === nodeId)) return;

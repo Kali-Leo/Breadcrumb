@@ -29,6 +29,10 @@ export const EXPLORE_UI_COPY = {
   focusRetryButton: "重试",
   /** Exit-record card's reopen action (spec 042 §5). */
   focusEntryReturnButton: "回到专注",
+  /** Header's back-to-parent action (spec 042 §4 nav fix) — hidden at the root station. */
+  focusUpButton: "← 上一级",
+  /** One-line operation hint under the subway map (spec 042 §4). */
+  focusMapHint: "点站跳转 · 实线=文中选词 · 虚线=提问",
 } as const;
 
 /** Ungraded reveal line: embedding grading was unavailable, so the door opens straight to

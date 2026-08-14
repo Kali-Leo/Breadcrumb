@@ -1,19 +1,23 @@
 /**
- * Purpose: focusStore's two DB+stream orchestrators — creating a word station under the
- * current one, and the stream+persist+error-banner cycle any new station runs through (spec
- * 042 §2-3). Split out of focusStore.ts to stay under the file-size cap; not pure (talks to the
- * DB and the LLM), so it lives here rather than in focusActions.ts.
- * Main exports: createWordChild, runExplain, FocusSessionRuntimeState, FocusSessionSet,
- * FocusSessionGet.
+ * Purpose: focusStore's station orchestrators — creating a word or question station under the
+ * current one, the stream+persist+error-banner cycle any new station runs through, and the
+ * fire-and-forget LLM short-name request every new station schedules (spec 042 §2-4). Split out
+ * of focusStore.ts to stay under the file-size cap; not pure (talks to the DB and the LLM), so
+ * it lives here rather than in focusActions.ts.
+ * Main exports: createWordChild, createQuestionChild, runExplain, scheduleFocusLabelSummary,
+ * FocusSessionRuntimeState, FocusSessionSet, FocusSessionGet.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import {
+  buildQuestionMessages,
   buildWordExplainMessages,
   type FocusPromptMessage,
   focusErrorLine,
 } from "@breadcrumb/plugin-explore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { buildAncestorChain, truncateQuestionLabel } from "./focusActions";
 import { insertFocusNode, streamFocusNodeAnswer } from "./focusExplainRound";
 
 /** The slice of focusStore's state these orchestrators read and write — narrower than the
@@ -67,7 +71,64 @@ export async function createWordChild(
         ? get().openedDoorNodeIds
         : new Set(get().openedDoorNodeIds).add(matchedNodeId),
   });
+  scheduleFocusLabelSummary(set, get, newNode);
   await runExplain(set, get, newNode.id, buildWordExplainMessages(parentNode.answer_text, word));
+}
+
+/** Creates a question station under the current one and streams its answer — the ask-bar's
+ * counterpart to createWordChild (spec 042 §3). */
+export async function createQuestionChild(
+  set: FocusSessionSet,
+  get: FocusSessionGet,
+  question: string,
+): Promise<void> {
+  const state = get();
+  const trimmed = question.trim();
+  if (state.sessionId === null || state.currentNodeId === null || trimmed.length === 0) return;
+  const ancestorChain = buildAncestorChain(state.nodes, state.currentNodeId);
+  const newNode = await insertFocusNode({
+    sessionId: state.sessionId,
+    parentId: state.currentNodeId,
+    kind: "question",
+    label: truncateQuestionLabel(trimmed),
+    questionText: trimmed,
+  });
+  set({
+    nodes: [...get().nodes, newNode],
+    currentNodeId: newNode.id,
+    streamingText: "",
+    errorText: null,
+    pendingGuess: null,
+  });
+  scheduleFocusLabelSummary(set, get, newNode);
+  await runExplain(set, get, newNode.id, buildQuestionMessages(ancestorChain, trimmed));
+}
+
+/** Fire-and-forget short-name request for a freshly created station (spec 042 §4) — the raw
+ * label stays on the map until (if ever) the model's short name lands, so this never blocks the
+ * streamed explanation. A missing API config or conversation just skips the request; a failed
+ * or unusable response leaves the raw label in place (summarizeFocusLabel already logs it). The
+ * dynamic import keeps this side path off this module's static dependency graph. */
+export function scheduleFocusLabelSummary(
+  set: FocusSessionSet,
+  get: FocusSessionGet,
+  node: FocusNodeRow,
+): void {
+  const apiConfig = useSettingsStore.getState().apiConfig;
+  const conversationId = get().conversationId;
+  if (apiConfig === null || conversationId === null) return;
+  void (async () => {
+    const { summarizeFocusLabel } = await import("./focusLabelSummary");
+    const shortLabel = await summarizeFocusLabel(node.label, apiConfig, conversationId);
+    if (shortLabel === null) return;
+    const repos = await getRepos();
+    await repos.focusNodes.updateLabel(node.id, shortLabel);
+    set({
+      nodes: get().nodes.map((candidate) =>
+        candidate.id === node.id ? { ...candidate, label: shortLabel } : candidate,
+      ),
+    });
+  })();
 }
 
 /** Streams and persists one station's answer, degrading to a plain error banner on failure

@@ -1,6 +1,7 @@
 /**
  * Purpose: unit tests for createFocusSessionsRepo and createFocusNodesRepo using an in-memory
- * fake SqlClient — confirms session lookup by id/entry-message and node ordering.
+ * fake SqlClient — confirms session lookup by id/entry-message, node ordering, and the
+ * answer/label in-place overwrites.
  */
 import { describe, expect, it } from "vitest";
 import { createFocusNodesRepo, createFocusSessionsRepo } from "./focusRepositories";
@@ -83,6 +84,11 @@ function makeFakeSql() {
         const row = nodeRows.find((r) => r.id === id);
         if (row) row.answer_text = answerText;
       }
+      if (sql.startsWith("UPDATE focus_nodes SET label")) {
+        const [label, id] = params as [string, string];
+        const row = nodeRows.find((r) => r.id === id);
+        if (row) row.label = label;
+      }
       return Promise.resolve();
     },
   };
@@ -143,5 +149,24 @@ describe("createFocusNodesRepo", () => {
     await repo.updateAnswer("n1", "修订后的解释。");
     const updated = await repo.listBySession("s1");
     expect(updated[0]?.answer_text).toBe("修订后的解释。");
+  });
+
+  it("overwrites a station's label in place (LLM short-name summary)", async () => {
+    const { client } = makeFakeSql();
+    const repo = createFocusNodesRepo(client);
+    await repo.insert({
+      id: "n1",
+      session_id: "s1",
+      parent_id: null,
+      kind: "word",
+      label: "这是一段很长的原始标签文字",
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:00:00Z",
+    });
+
+    await repo.updateLabel("n1", "短名");
+    const nodes = await repo.listBySession("s1");
+    expect(nodes[0]?.label).toBe("短名");
   });
 });
