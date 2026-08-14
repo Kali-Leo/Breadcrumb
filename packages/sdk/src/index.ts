@@ -54,6 +54,8 @@ export interface BreadcrumbEventMap {
    * action and the assistant-message selection quote bar (spec 039); the user still presses
    * send themselves. */
   "composer:prefill": { text: string };
+  /** Station map click -> scroll chat to that round (spec 040 §3). */
+  "chat:locateMessage": { messageId: string };
 }
 
 export type BreadcrumbEventName = keyof BreadcrumbEventMap;
