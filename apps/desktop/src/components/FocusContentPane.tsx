@@ -7,7 +7,7 @@
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import type { DoorCandidate } from "@breadcrumb/plugin-explore";
-import { focusSelectHint } from "@breadcrumb/plugin-explore";
+import { EXPLORE_UI_COPY, focusSelectHint } from "@breadcrumb/plugin-explore";
 import { useEffect, useRef, useState } from "react";
 import { computeFocusDoorPatches } from "../lib/focusDoors";
 import { useFocusStore } from "../stores/focusStore";
@@ -114,6 +114,13 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
         {errorText !== null && (
           <div className="mx-auto mt-3 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
             {errorText}
+            <button
+              type="button"
+              onClick={() => void useFocusStore.getState().retryCurrent()}
+              className="ml-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
+            >
+              {EXPLORE_UI_COPY.focusRetryButton}
+            </button>
           </div>
         )}
       </div>

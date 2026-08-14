@@ -106,3 +106,34 @@ export async function runExplain(
     });
   }
 }
+
+/** Re-runs the CURRENT station's explanation after a failure or watchdog timeout (2026-08-14:
+ * a stalled upstream used to leave "…" forever). Word stations rebuild from their parent's
+ * answer (the root falls back to `rootParentText`, which reopened sessions no longer have —
+ * an empty parent context degrades to a plain word explanation); question stations rebuild
+ * from their ancestor chain. No-op while a stream is in flight or the answer already landed. */
+export async function retryCurrentNode(
+  set: FocusSessionSet,
+  get: FocusSessionGet,
+  deps: {
+    rootParentText: string | null;
+    buildWordMessages(parentAnswerText: string, word: string): readonly FocusPromptMessage[];
+    buildQuestionMessagesFor(node: FocusNodeRow): readonly FocusPromptMessage[];
+  },
+): Promise<void> {
+  const state = get();
+  if (state.currentNodeId === null || state.streamingText !== null) return;
+  const node = state.nodes.find((candidate) => candidate.id === state.currentNodeId);
+  if (node === undefined || node.answer_text.length > 0) return;
+  set({ streamingText: "", errorText: null });
+  const messages =
+    node.kind === "question"
+      ? deps.buildQuestionMessagesFor(node)
+      : deps.buildWordMessages(
+          node.parent_id === null
+            ? (deps.rootParentText ?? "")
+            : (state.nodes.find((candidate) => candidate.id === node.parent_id)?.answer_text ?? ""),
+          node.label,
+        );
+  await runExplain(set, get, node.id, messages);
+}

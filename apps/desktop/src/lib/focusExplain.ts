@@ -21,20 +21,47 @@ export interface StreamFocusAnswerResult {
   usage: TokenUsage;
 }
 
-/** Streams a focus node's answer and records its cost. Throws on failure — the caller (the
- * focus overlay) is responsible for recordAiFailure and showing a plain error line. */
+/** A stalled upstream once left the overlay on "…" forever (2026-08-14): the SSE promise
+ * never settles, so nothing errors and nothing recovers. The watchdog turns silence into a
+ * plain, retryable failure. */
+const FIRST_DELTA_TIMEOUT_MS = 30_000;
+const STREAM_TOTAL_TIMEOUT_MS = 180_000;
+
+/** Streams a focus node's answer and records its cost. Throws on failure or on watchdog
+ * timeout — the caller (the focus overlay) owns recordAiFailure and the plain error line.
+ * After a timeout, late deltas from the abandoned stream are dropped, never rendered. */
 export async function streamFocusAnswer(
   input: StreamFocusAnswerInput,
 ): Promise<StreamFocusAnswerResult> {
   const client = createLlmClient({ ...input.apiConfig, fetchImpl: tauriFetch });
-  const result = await client.chatStream(input.messages, input.onDelta);
-
-  await recordMeteredCall({
-    purpose: "focus-explain",
-    conversationId: input.conversationId,
-    model: input.apiConfig.model,
-    usage: result.usage,
+  let abandoned = false;
+  let sawDelta = false;
+  const stream = client.chatStream(input.messages, (delta) => {
+    if (abandoned) return;
+    sawDelta = true;
+    input.onDelta(delta);
   });
-
-  return { content: result.content, usage: result.usage };
+  const timers: number[] = [];
+  const watchdog = new Promise<never>((_, reject) => {
+    timers.push(
+      window.setTimeout(() => {
+        if (!sawDelta) reject(new Error("一直没有收到响应"));
+      }, FIRST_DELTA_TIMEOUT_MS),
+      window.setTimeout(() => reject(new Error("响应超时")), STREAM_TOTAL_TIMEOUT_MS),
+    );
+  });
+  try {
+    const result = await Promise.race([stream, watchdog]);
+    await recordMeteredCall({
+      purpose: "focus-explain",
+      conversationId: input.conversationId,
+      model: input.apiConfig.model,
+      usage: result.usage,
+    });
+    return { content: result.content, usage: result.usage };
+  } finally {
+    abandoned = true;
+    for (const timer of timers) window.clearTimeout(timer);
+    stream.catch(() => undefined); // the abandoned stream's own rejection must not go unhandled
+  }
 }

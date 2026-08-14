@@ -25,6 +25,8 @@ export const EXPLORE_UI_COPY = {
   focusAskPlaceholder: "对当前内容提问…",
   /** Guess card's skip action — still opens the explanation, just without a scored guess. */
   focusGuessSkipButton: "直接看解释",
+  /** Retries the current focus station after a failure or watchdog timeout (2026-08-14). */
+  focusRetryButton: "重试",
   /** Exit-record card's reopen action (spec 042 §5). */
   focusEntryReturnButton: "回到专注",
 } as const;

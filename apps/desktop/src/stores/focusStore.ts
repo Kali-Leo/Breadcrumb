@@ -16,7 +16,7 @@ import { getRepos } from "../lib/db";
 import { buildAncestorChain, rollConceptGate, truncateQuestionLabel } from "../lib/focusActions";
 import { insertFocusNode, insertFocusSession } from "../lib/focusExplainRound";
 import { recordMatchedGuess } from "../lib/focusGuessGrading";
-import { createWordChild, runExplain } from "../lib/focusSessionActions";
+import { createWordChild, retryCurrentNode, runExplain } from "../lib/focusSessionActions";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
@@ -52,7 +52,13 @@ interface FocusState {
   jumpTo(nodeId: string): void;
   exitFocus(): void;
   reopen(sessionId: string): Promise<void>;
+  /** Re-runs the current station after a failure/timeout (watchdog, 2026-08-14). */
+  retryCurrent(): Promise<void>;
 }
+
+/** The root station's parent context (the chat reply it was selected from) — kept only for
+ * in-session retries; reopened sessions fall back to a plain word explanation. */
+let rootParentText: string | null = null;
 
 const RESET_SESSION_FIELDS = {
   pendingGuess: null,
@@ -75,6 +81,7 @@ export const useFocusStore = create<FocusState>((set, get) => ({
 
   async startFromWord(conversationId, word, parentAnswerText) {
     if (!useSettingsStore.getState().featureSwitches.focusExplain) return;
+    rootParentText = parentAnswerText;
     const session = await insertFocusSession(conversationId, word);
     const rootNode = await insertFocusNode({
       sessionId: session.id,
@@ -175,7 +182,20 @@ export const useFocusStore = create<FocusState>((set, get) => ({
     if (sessionId !== null) appEventBus.emit("focus:exited", { sessionId });
   },
 
+  async retryCurrent() {
+    await retryCurrentNode(set, get, {
+      rootParentText,
+      buildWordMessages: buildWordExplainMessages,
+      buildQuestionMessagesFor: (node) =>
+        buildQuestionMessages(
+          buildAncestorChain(get().nodes, node.parent_id),
+          node.question_text ?? node.label,
+        ),
+    });
+  },
+
   async reopen(sessionId) {
+    rootParentText = null;
     const repos = await getRepos();
     const session = await repos.focusSessions.getById(sessionId);
     if (session === null) return;
