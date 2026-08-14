@@ -40,19 +40,35 @@ function spansOverlap(
   return a.start < b.end && b.start < a.end;
 }
 
-/** Finds the first case-insensitive occurrence of `label` in `text`, returning the original
- * (case-preserving) slice, or null when there is no match. */
+/** Canonical labels rarely appear verbatim in prose («闭包与作用域链» vs the text's «闭包»),
+ * so a label also matches through its significant parts, split on common CJK connectives.
+ * The full label is tried first; parts follow in reading order. */
+const LABEL_CONNECTIVE_SPLITTER = /[与和的、之/（）()\s]+/;
+
+function matchKeysFor(label: string): string[] {
+  const parts = label
+    .split(LABEL_CONNECTIVE_SPLITTER)
+    .filter((part) => part.length >= MIN_LABEL_LENGTH);
+  return [label, ...parts];
+}
+
+/** Finds the first case-insensitive occurrence of the label (or one of its significant
+ * parts) in `text`, returning the original (case-preserving) slice, or null. */
 function findFirstMatch(
   text: string,
   label: string,
 ): { start: number; end: number; original: string } | null {
-  const index = text.toLowerCase().indexOf(label.toLowerCase());
-  if (index === -1) return null;
-  return {
-    start: index,
-    end: index + label.length,
-    original: text.slice(index, index + label.length),
-  };
+  const haystack = text.toLowerCase();
+  for (const key of matchKeysFor(label)) {
+    const index = haystack.indexOf(key.toLowerCase());
+    if (index === -1) continue;
+    return {
+      start: index,
+      end: index + key.length,
+      original: text.slice(index, index + key.length),
+    };
+  }
+  return null;
 }
 
 /** Selects up to MAX_DOORS_PER_MESSAGE door candidates from a message's sighted nodes.

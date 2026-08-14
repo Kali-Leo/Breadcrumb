@@ -53,8 +53,11 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
   useEffect(() => {
     if (author !== "assistant" || messageId === undefined) return;
     if (diglotEnabled && patches === undefined) return;
+    // doorsForMessage is a dep on purpose: the nodesExtracted invalidation clears empty
+    // entries, and this effect re-running is what recomputes them with real sightings.
+    if (doorsForMessage !== undefined) return;
     void useDoorStore.getState().ensureDoors(messageId, displaySource);
-  }, [author, messageId, diglotEnabled, patches, displaySource]);
+  }, [author, messageId, diglotEnabled, patches, displaySource, doorsForMessage]);
 
   // Silent re-encounter (vision/09): an assistant message dwelled on ≥50%-visible for 2s
   // re-sights its attributed nodes — rereading old ground is a review, at message grain.

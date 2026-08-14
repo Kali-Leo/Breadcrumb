@@ -18,6 +18,7 @@ import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { embedTexts } from "../lib/embeddings";
 import { newId, nowIso } from "../lib/time";
+import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
 
@@ -150,3 +151,12 @@ export const useDoorStore = create<DoorState>((set, get) => ({
     });
   },
 }));
+
+// Extraction attributes sightings seconds AFTER a fresh reply first renders, so its doors
+// were computed against an empty sighting list and cached as []. Dropping the empty entries
+// here lets MessageBubble's effect (which depends on the entry) recompute with real data.
+appEventBus.on("knowledge:nodesExtracted", () => {
+  const doors = useDoorStore.getState().doorsByMessage;
+  const kept = new Map([...doors].filter(([, candidates]) => candidates.length > 0));
+  if (kept.size !== doors.size) useDoorStore.setState({ doorsByMessage: kept });
+});
