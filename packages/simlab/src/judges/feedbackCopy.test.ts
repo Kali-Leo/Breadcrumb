@@ -12,7 +12,6 @@ import {
   reencounterLabel,
   reunionLine,
   reunionOpener,
-  teachingModeLine,
   teachSessionLabel,
   wordGuessLabel,
 } from "@breadcrumb/plugin-feedback";
@@ -46,8 +45,6 @@ describe("feedback lab copy gates", () => {
     wordGuessLabel("book", false),
     wordGuessLabel("book", true),
     teachSessionLabel("闭包入门"),
-    // teachingModeLine: a representative mode/count pair.
-    teachingModeLine("自动", 3),
   ];
 
   it("hits zero pressure-lexicon entries", () => {

@@ -14,7 +14,6 @@ import {
   buildTeachingSystemPrompt,
   isReunionTitle,
   reunionTopicFromTitle,
-  type TeachingMode,
 } from "@breadcrumb/core-teaching";
 import {
   applyReflection,
@@ -129,8 +128,6 @@ export async function buildRoundSystemMessages(params: {
   conversationId: string;
   content: string;
   apiConfig: ApiConfig;
-  /** Teaching contract mode for plain 'chat' rounds (spec 038 §2.2). */
-  teachingMode: TeachingMode;
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
@@ -156,7 +153,7 @@ export async function buildRoundSystemMessages(params: {
       await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
     );
   } else {
-    messages.push({ role: "system", content: buildTeachingSystemPrompt(params.teachingMode) });
+    messages.push({ role: "system", content: buildTeachingSystemPrompt() });
     if (row !== null && isReunionTitle(row.title)) {
       messages.push({
         role: "system",

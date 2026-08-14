@@ -4,7 +4,6 @@
  * startup; changes write through.
  * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, LearningMode, RouteParams.
  */
-import type { TeachingMode } from "@breadcrumb/core-teaching";
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
@@ -70,7 +69,6 @@ const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 const LEARNING_MODE_KEY = "learningMode";
-const TEACHING_MODE_KEY = "teachingMode";
 const ROUTE_PARAMS_KEY = "routeParams";
 const COMPARE_CATEGORY_KEY = "compareCategory";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
@@ -114,10 +112,6 @@ interface SettingsState {
   mainlandNetwork: boolean;
   /** casual by default (spec 016) — a new user wanders before they have a goal to rank against. */
   learningMode: LearningMode;
-  /** How the chat explains things (spec 038): adaptive routes tell/elicit itself; direct and
-   * guided are user overrides. Shared control — the default carries the pedagogy, the switch
-   * carries autonomy. */
-  teachingMode: TeachingMode;
   /** recommendRoute()'s pace/interestWeight sliders (spec 017 #1), 0.5/0.5 by default. */
   routeParams: RouteParams;
   /** 教材/真人 display filter for the comparison tree — occupation (真人) by default. */
@@ -128,7 +122,6 @@ interface SettingsState {
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
   setLearningMode(mode: LearningMode): Promise<void>;
-  setTeachingMode(mode: TeachingMode): Promise<void>;
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
 }
@@ -140,7 +133,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
   learningMode: "casual",
-  teachingMode: "adaptive",
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
 
@@ -152,7 +144,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       featureSwitches,
       mainlandNetwork,
       learningMode,
-      teachingMode,
       routeParams,
       compareCategory,
     ] = await Promise.all([
@@ -161,7 +152,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
       repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
       repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
-      repos.settings.get<TeachingMode>(TEACHING_MODE_KEY),
       repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
     ]);
@@ -172,7 +162,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
       mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
       learningMode: learningMode ?? "casual",
-      teachingMode: teachingMode ?? "adaptive",
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
     });
@@ -207,12 +196,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(LEARNING_MODE_KEY, mode, nowIso());
     set({ learningMode: mode });
-  },
-
-  async setTeachingMode(mode) {
-    const repos = await getRepos();
-    await repos.settings.set(TEACHING_MODE_KEY, mode, nowIso());
-    set({ teachingMode: mode });
   },
 
   async setRouteParams(params) {

@@ -155,7 +155,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversationId,
         content,
         apiConfig: settings.apiConfig,
-        teachingMode: settings.teachingMode,
         companionScriptEnabled: settings.featureSwitches.companionScript,
         companionMemoryEnabled: settings.featureSwitches.companionMemory,
         crisisActive,
@@ -180,9 +179,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: "assistant",
         content: result.content,
         created_at: nowIso(),
-        // Spec 038 §2.5: only plain 'chat' rounds are steered by the teaching mode toggle, so
-        // only those replies record which mode produced them.
-        teaching_mode: activeKind === "chat" ? settings.teachingMode : null,
+        // Column kept dormant for future silent experiments (spec 038 revision 2026-08-14).
+        teaching_mode: null,
       };
       await repos.messages.append(assistantMessage);
       await repos.conversations.touch(conversationId, assistantMessage.created_at);

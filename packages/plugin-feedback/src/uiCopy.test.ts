@@ -13,7 +13,6 @@ import {
   newConceptLabel,
   reencounterLabel,
   reunionLine,
-  teachingModeLine,
   teachSessionLabel,
   wordGuessLabel,
 } from "./uiCopy";
@@ -81,11 +80,5 @@ describe("small-wins labels", () => {
 
   it("labels a teach session", () => {
     expect(teachSessionLabel("闭包入门")).toBe("回讲了一次:闭包入门");
-  });
-});
-
-describe("teachingModeLine", () => {
-  it("states the mode label and its turn count", () => {
-    expect(teachingModeLine("自动", 3)).toBe("「自动」讲了 3 轮");
   });
 });

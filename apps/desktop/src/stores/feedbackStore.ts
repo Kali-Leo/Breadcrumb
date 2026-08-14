@@ -14,7 +14,6 @@ import type {
   SettledResult,
   SmallWin,
   SystemGaugeResult,
-  TeachingModeUsage,
   TrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { buildNodeEvidence } from "@breadcrumb/plugin-feedback";
@@ -41,7 +40,6 @@ interface FeedbackState {
   dailyBite: DailyBiteResult | null;
   systemGauge: SystemGaugeResult | null;
   settled: SettledResult;
-  teachingModeUsage: TeachingModeUsage;
   evidenceCandidates: EvidenceCandidate[];
   trends: {
     layers: LayerTrendPoint[];
@@ -65,7 +63,6 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   dailyBite: null,
   systemGauge: null,
   settled: { nodes: [], words: [] },
-  teachingModeUsage: { adaptive: 0, direct: 0, guided: 0, total: 0 },
   evidenceCandidates: [],
   trends: { layers: [], wordsSettled: [] },
   selectedEvidenceNodeId: null,
@@ -88,7 +85,6 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
       dailyBite: data.dailyBite,
       systemGauge: data.systemGauge,
       settled: data.settled,
-      teachingModeUsage: data.teachingModeUsage,
       evidenceCandidates: data.evidenceCandidates,
       trends: data.trends,
     });

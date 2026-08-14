@@ -85,11 +85,6 @@ export function createConversationsRepo(sql: SqlClient) {
   };
 }
 
-export interface TeachingModeCountRow {
-  teaching_mode: string;
-  count: number;
-}
-
 export function createMessagesRepo(sql: SqlClient) {
   return {
     async append(row: MessageRow): Promise<void> {
@@ -103,15 +98,6 @@ export function createMessagesRepo(sql: SqlClient) {
       return sql.select<MessageRow>(
         "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
         [conversationId],
-      );
-    },
-    /** Plain per-mode usage facts for the feedback lab (spec 038 §2.5) — assistant replies
-     * only, grouped by the teaching mode that produced them. */
-    async countByTeachingMode(): Promise<TeachingModeCountRow[]> {
-      return sql.select<TeachingModeCountRow>(
-        `SELECT teaching_mode, COUNT(*) AS count FROM messages
-         WHERE role = 'assistant' AND teaching_mode IS NOT NULL
-         GROUP BY teaching_mode ORDER BY teaching_mode`,
       );
     },
   };
