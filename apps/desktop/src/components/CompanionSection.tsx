@@ -1,9 +1,9 @@
 /**
- * Purpose: sidebar "伙伴" section (spec 037) — three companion rows to open/continue a chat.
- * A pending teach-back invitation (delivered as her own chat message) shows only as a small
- * unread dot by her name, cleared on opening the chat (Leo 2026-08-15). Hidden entirely when
- * the companion chat switch is off (product principle 3 — every metered environment is fully
- * removable). Main exports: CompanionSection.
+ * Purpose: the pinned companion group at the top of the sidebar conversation list
+ * (spec 037; spec 044 moved it out of the collapsed drawer — companions are just
+ * conversations). A pending teach-back invitation shows only as a small unread dot,
+ * cleared on opening the chat (Leo 2026-08-15). Hidden entirely when the companion
+ * chat switch is off (product principle 3). Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { COMPANION_DESKTOP_COPY, openCompanionConversation } from "../lib/companionActions";
@@ -31,8 +31,8 @@ export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
   };
 
   return (
-    <section className="mx-3 mb-2">
-      <h3 className="mb-1 font-semibold text-stone-600">{COMPANION_COPY.sectionTitle}</h3>
+    <section className="mb-2">
+      <h3 className="mb-1 px-3 text-[11px] text-stone-400">{COMPANION_COPY.sectionTitle}</h3>
       <ul className="space-y-1">
         {cards.map((card) => {
           const companionId = card.data.name.toLowerCase();

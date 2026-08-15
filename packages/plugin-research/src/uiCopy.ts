@@ -8,7 +8,7 @@
 export const RESEARCH_COPY = {
   panelTitle: "🔬 研究课题平台",
   panelIntro:
-    "这里展示的统计结果,来自经审查的机构提交、项目方签名、在本地计算的研究任务;数据不会自动离开这台设备,零 token。",
+    "这里的统计结果都是这台电脑自己算出来的;研究任务经过审查、来源可查,数据不会自动离开这台设备,也不产生任何费用。",
   offNotice: "研究任务已关闭:不会再运行新的任务。已有结果仍然保留,可以逐条查看或删除。",
   loading: "加载中…",
   emptyTitle: "还没有研究结果",
@@ -25,7 +25,7 @@ export const RESEARCH_COPY = {
   deleteCancelAction: "取消",
 
   settingsRowTitle: "🔬 研究课题平台",
-  settingsRowHint: "在本地运行经审查的研究任务并展示结果;数据不会自动离开设备,零 token",
+  settingsRowHint: "在本地运行经审查的研究任务并展示结果;数据不会自动离开设备,也不产生费用",
 
   /** Shown once, the moment the user turns the switch off — spec 036's four required
    * elements (what it does / data never leaves automatically / value to research / what

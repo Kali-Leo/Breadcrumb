@@ -1,6 +1,7 @@
 /**
  * Purpose: application root — loads persisted state once, lays out the shell
- * (sidebar / chat, settings, map or lab view / knowledge navigation) plus the status bar.
+ * (sidebar / chat, settings, map, lab or feedback view; spec 044 retired the status bar
+ * and folded the research platform into settings).
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
@@ -10,10 +11,8 @@ import { FeedbackPanel } from "./components/FeedbackPanel";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
-import { ResearchPanel } from "./components/ResearchPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
-import { StatusBar } from "./components/StatusBar";
 import { runDedupSweep } from "./lib/dedupSweep";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { appEventBus, useChatStore } from "./stores/chatStore";
@@ -36,9 +35,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map" | "lab" | "feedback" | "research">(
-    "chat",
-  );
+  const [view, setView] = useState<"chat" | "settings" | "map" | "lab" | "feedback">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -105,7 +102,6 @@ export default function App() {
           onOpenMap={() => setView("map")}
           onOpenLab={() => setView("lab")}
           onOpenFeedback={() => setView("feedback")}
-          onOpenResearch={() => setView("research")}
         />
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
@@ -113,10 +109,8 @@ export default function App() {
           {view === "map" && <MapView />}
           {view === "lab" && <LabPanel />}
           {view === "feedback" && <FeedbackPanel />}
-          {view === "research" && <ResearchPanel />}
         </main>
       </div>
-      <StatusBar />
       <FocusOverlay />
     </div>
   );

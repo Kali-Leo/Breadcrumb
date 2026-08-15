@@ -1,21 +1,33 @@
 /**
- * Purpose: left column — new-chat button, trail cards (spec 041), and the view switcher
- * (memory palace / lab / settings). Opening or creating a conversation always returns to
- * the chat view so navigation never dead-ends in another view.
+ * Purpose: left column — new-chat button, companion rows pinned above the trail cards
+ * (spec 044: the companion drawer is gone, companions are just conversations), the
+ * icon-only view switcher, and the connectivity dot that replaced the status bar.
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { CompanionSection } from "./CompanionSection";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "lab" | "feedback" | "research";
+  activeView: "chat" | "settings" | "map" | "lab" | "feedback";
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenLab(): void;
   onOpenFeedback(): void;
-  onOpenResearch(): void;
+}
+
+/** The status bar's network indicator, shrunk to a dot (spec 044): connectivity is
+ * peripheral information — visible at a glance, explained on hover, never in the way. */
+function ConnectivityDot() {
+  const networkEnabled = useSettingsStore((state) => state.networkEnabled);
+  return (
+    <span
+      title={networkEnabled ? "联网中" : "已离线,联网功能安静停下,学习不受影响"}
+      className={`h-2 w-2 cursor-help rounded-full ${networkEnabled ? "bg-amber-400" : "bg-stone-300"}`}
+    />
+  );
 }
 
 export function Sidebar({
@@ -25,7 +37,6 @@ export function Sidebar({
   onOpenMap,
   onOpenLab,
   onOpenFeedback,
-  onOpenResearch,
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
@@ -46,21 +57,17 @@ export function Sidebar({
         ＋ 新的学习对话
       </button>
       <nav className="flex-1 overflow-y-auto px-2">
+        <CompanionSection onOpenChat={onOpenChat} />
         <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
       </nav>
-      {/* Temporarily collapsed so trail cards keep the room (Leo 2026-08-14) — due for its
-          own rework and lives one click away meanwhile. */}
-      <details className="border-t border-stone-100 px-3 py-1.5">
-        <summary className="cursor-pointer list-none text-xs text-stone-400">👥 伙伴</summary>
-        <CompanionSection onOpenChat={onOpenChat} />
-      </details>
-      <div className="flex items-center justify-between border-t border-stone-100 px-3 py-2">
+      <div className="flex items-center gap-1 border-t border-stone-100 px-3 py-2">
+        <ConnectivityDot />
+        <span className="flex-1" />
         {(
           [
             ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],
             ["🧪", "实验室", onOpenLab, activeView === "lab"],
             ["🪞", "反馈实验室", onOpenFeedback, activeView === "feedback"],
-            ["🔬", "研究课题平台", onOpenResearch, activeView === "research"],
             ["⚙️", "设置", onOpenSettings, activeView === "settings"],
           ] as const
         ).map(([icon, name, onClick, active]) => (

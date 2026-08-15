@@ -1,6 +1,7 @@
 /**
- * Purpose: settings view with two pages — 通用 (API config, network, diglot core,
- * mainland mode) and 开关与计价 (the dedicated per-feature billing page, Leo 2026-08-12).
+ * Purpose: settings view with three pages — 通用 (API config, network, diglot core,
+ * mainland mode), 开关与计价 (the per-feature billing page, Leo 2026-08-12), and 研究课题
+ * (the research task platform, moved here from the top level by spec 044).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { DiglotSettingsSection } from "./DiglotSettingsSection";
+import { ResearchPanel } from "./ResearchPanel";
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
   return (
@@ -28,7 +30,7 @@ interface SettingsPanelProps {
   onClose(): void;
 }
 
-type SettingsPage = "general" | "billing";
+type SettingsPage = "general" | "billing" | "research";
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const apiConfig = useSettingsStore((state) => state.apiConfig);
@@ -75,6 +77,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         </button>
         <button
           type="button"
+          onClick={() => setPage("research")}
+          className={tabClass(page === "research")}
+        >
+          研究课题
+        </button>
+        <button
+          type="button"
           onClick={onClose}
           className="ml-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
         >
@@ -83,6 +92,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       </div>
 
       {page === "billing" && <BillingSettingsPanel />}
+      {page === "research" && <ResearchPanel />}
 
       {page === "general" && (
         <>

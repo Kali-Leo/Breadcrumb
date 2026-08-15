@@ -124,9 +124,32 @@ function spendLine(
   return `今日 ${todayText ?? "0"} · 累计 ${totalText ?? "0"}`;
 }
 
-function useSpendMaps(): { today: Map<string, string>; total: Map<string, string> } {
+/** All purposes summed per currency, formatted — "" when nothing was ever spent. */
+function grandTotalOf(
+  rows: Array<{ currency: "USD" | "CNY"; total_micros: number | null }>,
+): string {
+  const microsByCurrency = new Map<"USD" | "CNY", number>();
+  for (const row of rows) {
+    microsByCurrency.set(
+      row.currency,
+      (microsByCurrency.get(row.currency) ?? 0) + (row.total_micros ?? 0),
+    );
+  }
+  return [...microsByCurrency.entries()]
+    .map(([currency, micros]) => formatCost(micros, currency))
+    .join(" + ");
+}
+
+function useSpendMaps(): {
+  today: Map<string, string>;
+  total: Map<string, string>;
+  todayGrandTotal: string;
+  allTimeGrandTotal: string;
+} {
   const [today, setToday] = useState(new Map<string, string>());
   const [total, setTotal] = useState(new Map<string, string>());
+  const [todayGrandTotal, setTodayGrandTotal] = useState("");
+  const [allTimeGrandTotal, setAllTimeGrandTotal] = useState("");
   useEffect(() => {
     void (async () => {
       const repos = await getRepos();
@@ -142,11 +165,15 @@ function useSpendMaps(): { today: Map<string, string>; total: Map<string, string
         }
         return map;
       };
-      setToday(toMap(await repos.llmCalls.sumCostSinceByPurpose(todayLocalMidnightIso())));
-      setTotal(toMap(await repos.llmCalls.sumCostSinceByPurpose("1970-01-01T00:00:00.000Z")));
+      const todayRows = await repos.llmCalls.sumCostSinceByPurpose(todayLocalMidnightIso());
+      const allRows = await repos.llmCalls.sumCostSinceByPurpose("1970-01-01T00:00:00.000Z");
+      setToday(toMap(todayRows));
+      setTotal(toMap(allRows));
+      setTodayGrandTotal(grandTotalOf(todayRows));
+      setAllTimeGrandTotal(grandTotalOf(allRows));
     })();
   }, []);
-  return { today, total };
+  return { today, total, todayGrandTotal, allTimeGrandTotal };
 }
 
 export function BillingSettingsPanel() {
@@ -154,12 +181,16 @@ export function BillingSettingsPanel() {
   const setFeatureSwitch = useSettingsStore((state) => state.setFeatureSwitch);
   const diglotSettings = useDiglotStore((state) => state.settings);
   const saveDiglotSettings = useDiglotStore((state) => state.saveSettings);
-  const { today, total } = useSpendMaps();
+  const { today, total, todayGrandTotal, allTimeGrandTotal } = useSpendMaps();
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-500">
         每个会花钱的环节在这里独立开关、独立看账。放心打开——花了多少,这一页永远说实话。
+      </p>
+      <p className="text-sm text-stone-600">
+        今日合计 {todayGrandTotal === "" ? "还没花钱" : todayGrandTotal} · 累计{" "}
+        {allTimeGrandTotal === "" ? "还没花钱" : allTimeGrandTotal}
       </p>
       <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
         {FEATURE_ROWS.map((row) => (
