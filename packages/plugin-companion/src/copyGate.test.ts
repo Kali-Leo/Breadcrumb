@@ -79,7 +79,7 @@ describe("companion copy gates", () => {
   const allCopy: string[] = [
     COMPANION_COPY.sectionTitle,
     COMPANION_COPY.aiLabel,
-    COMPANION_COPY.proposal("Shichimi", "二分查找"),
+    COMPANION_COPY.proposalPreview("二分查找"),
     COMPANION_COPY.accept,
     COMPANION_COPY.decline,
     COMPANION_COPY.declineResponse,

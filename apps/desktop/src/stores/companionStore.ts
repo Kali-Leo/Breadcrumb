@@ -42,6 +42,9 @@ let proposalGateEvaluationInFlight = false;
 interface CompanionState extends BreakReminderState {
   cards: CompanionCard[];
   activeProposal: CompanionProposalRow | null;
+  /** WeChat-style unread state for the pending proposal: false until the learner has had
+   * the companion's chat open with the proposal bubble in view, then true. */
+  proposalSeen: boolean;
   declineEcho: string | null;
   crisisActive: boolean;
   initialize(): Promise<void>;
@@ -53,6 +56,7 @@ interface CompanionState extends BreakReminderState {
   /** Returns whether THIS call detected a crisis (not the sticky crisisActive flag) — the
    * caller uses that to decide whether to add this round's out-of-persona interrupt line. */
   checkUserMessageForCrisis(content: string): boolean;
+  markProposalSeen(): void;
   dismissCrisis(): void;
   recordActivity(): void;
   dismissBreakReminder(): void;
@@ -69,6 +73,7 @@ function breakReminderSlice(state: BreakReminderState): BreakReminderState {
 export const useCompanionStore = create<CompanionState>((set, get) => ({
   cards: [],
   activeProposal: null,
+  proposalSeen: false,
   declineEcho: null,
   crisisActive: false,
   ...INITIAL_BREAK_REMINDER_STATE,
@@ -105,7 +110,10 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
 
     const pending = sweep.updatedRows.find((row) => row.status === "pending") ?? null;
     if (pending !== null) {
-      set({ activeProposal: pending });
+      // A different proposal than the one on screen is unread again; the same one keeps
+      // whatever seen-state it had (gate re-runs after every chat round).
+      if (get().activeProposal?.id !== pending.id)
+        set({ activeProposal: pending, proposalSeen: false });
       return;
     }
 
@@ -138,7 +146,11 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       resolved_at: null,
     };
     await repos.companionProposals.insert(row);
-    set({ activeProposal: row });
+    set({ activeProposal: row, proposalSeen: false });
+  },
+
+  markProposalSeen() {
+    if (!get().proposalSeen) set({ proposalSeen: true });
   },
 
   async acceptProposal() {

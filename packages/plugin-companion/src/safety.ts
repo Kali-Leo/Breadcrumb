@@ -116,7 +116,9 @@ export const BREAK_REMINDER_COPY = "伙伴对话已经持续两小时。可以�
 export const COMPANION_COPY = {
   sectionTitle: "伙伴",
   aiLabel: "AI 学习伙伴",
-  proposal: (name: string, topic: string): string => `${name} 想请你讲讲「${topic}」`,
+  /** The proposal as the companion's own chat line — doubles as the sidebar's last-message
+   * preview (WeChat-style chat-list row, Leo 2026-08-15), so it carries no speaker name. */
+  proposalPreview: (topic: string): string => `想请你讲讲「${topic}」`,
   accept: "现在讲",
   decline: "改天",
   declineResponse: "好,我先自己再看看。",
