@@ -49,10 +49,7 @@ export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
                 onClick={() => void open(companionId)}
                 className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-stone-600 hover:bg-stone-100"
               >
-                <span className="flex items-center justify-between">
-                  <span>{card.data.name}</span>
-                  <span className="text-[10px] text-stone-400">{COMPANION_COPY.aiLabel}</span>
-                </span>
+                <span className="block">{card.data.name}</span>
                 {proposal !== null && (
                   <span className="mt-0.5 flex items-center gap-1.5">
                     {!proposalSeen && (
