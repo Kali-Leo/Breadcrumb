@@ -35,7 +35,9 @@ export type CompanionId = (typeof COMPANION_IDS)[number];
 /** Desktop-only companion copy — everything plugin-companion's COMPANION_COPY does not already
  * cover. Plain statements only; scanned by companionActions.test.ts's copy gate. */
 export const COMPANION_DESKTOP_COPY = {
-  sectionHint: "三位 AI 学习伙伴。",
+  /** Per-row AI-disclosure tag: each companion's own positioning (Leo 2026-08-15),
+   * keyed by the card's extensions.breadcrumb.role. */
+  roleLabels: { student: "AI 学生", peer: "AI 同窗", mentor: "AI 导师" } as Record<string, string>,
   chatDisabled: "伙伴会话开关已关闭。想继续,去设置里打开「伙伴会话」",
   crisisInterruptSystemLine:
     "学习者提到了伤害自己。放下角色,用一两句平实的话回应:说明你是 AI、帮不上这件事,值得找真的人聊,不展开、不扮演。",

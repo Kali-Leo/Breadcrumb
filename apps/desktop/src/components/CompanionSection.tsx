@@ -33,7 +33,6 @@ export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
   return (
     <section className="mx-3 mb-2">
       <h3 className="mb-1 font-semibold text-stone-600">{COMPANION_COPY.sectionTitle}</h3>
-      <p className="mb-2 text-stone-400 text-xs">{COMPANION_DESKTOP_COPY.sectionHint}</p>
       <ul className="space-y-1">
         {cards.map((card) => {
           const companionId = card.data.name.toLowerCase();
@@ -53,6 +52,10 @@ export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
                   {proposal !== null && !proposalSeen && (
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
                   )}
+                  <span className="ml-auto text-[10px] text-stone-400">
+                    {COMPANION_DESKTOP_COPY.roleLabels[card.data.extensions.breadcrumb.role] ??
+                      COMPANION_COPY.aiLabel}
+                  </span>
                 </span>
               </button>
             </li>

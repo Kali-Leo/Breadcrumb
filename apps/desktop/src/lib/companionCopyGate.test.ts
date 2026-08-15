@@ -41,7 +41,7 @@ const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不�
 describe("desktop companion copy gate", () => {
   const pressureLexicon = loadSharedPressureLexicon();
   const allCopy: string[] = [
-    COMPANION_DESKTOP_COPY.sectionHint,
+    ...Object.values(COMPANION_DESKTOP_COPY.roleLabels),
     COMPANION_DESKTOP_COPY.chatDisabled,
     COMPANION_DESKTOP_COPY.crisisInterruptSystemLine,
     COMPANION_DESKTOP_COPY.dismiss,
