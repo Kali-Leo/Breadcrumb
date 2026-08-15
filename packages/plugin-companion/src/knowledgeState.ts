@@ -6,7 +6,7 @@
  * capability-constrained to only what the state says it has been taught.
  * Main exports: KnowledgeStateSchema, KnowledgeState, SCRIPT_PROMPT, ScriptResultSchema,
  * buildScriptUserMessage, initialKnowledgeState, REFLECT_PROMPT, ReflectResultSchema,
- * buildReflectUserMessage, applyReflection, buildStudentSystemPrompt, TEACH_OPENER.
+ * buildReflectUserMessage, applyReflection, buildStudentSystemPrompt.
  */
 import { z } from "zod";
 
@@ -120,9 +120,4 @@ export function buildStudentSystemPrompt(
     `只能使用「已被教过的内容」清单里的知识作答,已被教过的内容:${knownText}。` +
     `${misconceptionsLine}${gapsLine}`
   ).trim();
-}
-
-/** Local zero-LLM opener for a companion teach session — mirrors spec 034's opener. */
-export function TEACH_OPENER(name: string, topic: string): string {
-  return `我是${name}。我正在学「${topic}」,还没真正弄懂。可以请你用自己的话给我讲讲吗?从它是什么讲起就好。`;
 }

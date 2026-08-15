@@ -1,6 +1,7 @@
 /**
  * Purpose: zustand store for the companion cast (spec 037) — loaded cards, the proactive
- * teach-back proposal gate, accept/decline flow, crisis detection, and the break reminder.
+ * teach-back proposal gate (invitation delivered as her own chat message; replying accepts,
+ * Leo 2026-08-15), crisis detection, and the break reminder.
  * Subscribes to chat:responseFinished (gate re-evaluation + memory recording) and
  * chat:messageSent (break-reminder activity tracking) at module load, mirroring
  * knowledgeStore/memoryStore's own subscription pattern.
@@ -9,14 +10,13 @@
 import type { CompanionProposalRow } from "@breadcrumb/core-db";
 import type { CompanionCard } from "@breadcrumb/plugin-companion";
 import {
-  COMPANION_COPY,
   DEFAULT_QUIET_HOURS,
   decideProposal,
   detectCrisis,
   loadCompanionCards,
 } from "@breadcrumb/plugin-companion";
 import { create } from "zustand";
-import { startCompanionTeachSession } from "../lib/companionActions";
+import { appendCompanionInvitation, seedTeachScriptForConversation } from "../lib/companionActions";
 import {
   type BreakReminderState,
   dismissBreakReminder as dismissBreakReminderState,
@@ -42,17 +42,17 @@ let proposalGateEvaluationInFlight = false;
 interface CompanionState extends BreakReminderState {
   cards: CompanionCard[];
   activeProposal: CompanionProposalRow | null;
-  /** WeChat-style unread state for the pending proposal: false until the learner has had
-   * the companion's chat open with the proposal bubble in view, then true. */
+  /** Unread state for the pending proposal (the sidebar dot): false until the learner has
+   * opened the companion conversation holding the invitation message, then true. */
   proposalSeen: boolean;
-  declineEcho: string | null;
   crisisActive: boolean;
   initialize(): Promise<void>;
   evaluateProposalGate(): Promise<void>;
   /** Internal single-run body of the gate — call evaluateProposalGate, which serializes. */
   runProposalGateOnce(): Promise<void>;
-  acceptProposal(): Promise<void>;
-  declineProposal(): Promise<void>;
+  /** Replying in the companion's chat IS accepting (Leo 2026-08-15, no buttons): resolves the
+   * pending proposal and seeds this conversation's teach script before the round runs. */
+  acceptProposalByReply(conversationId: string, companionId: string): Promise<void>;
   /** Returns whether THIS call detected a crisis (not the sticky crisisActive flag) — the
    * caller uses that to decide whether to add this round's out-of-persona interrupt line. */
   checkUserMessageForCrisis(content: string): boolean;
@@ -74,7 +74,6 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   cards: [],
   activeProposal: null,
   proposalSeen: false,
-  declineEcho: null,
   crisisActive: false,
   ...INITIAL_BREAK_REMINDER_STATE,
 
@@ -146,6 +145,8 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       resolved_at: null,
     };
     await repos.companionProposals.insert(row);
+    // The invitation is delivered as her own chat message — the sidebar dot marks it unread.
+    await appendCompanionInvitation(row.companion_id, row.topic);
     set({ activeProposal: row, proposalSeen: false });
   },
 
@@ -153,28 +154,14 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     if (!get().proposalSeen) set({ proposalSeen: true });
   },
 
-  async acceptProposal() {
+  async acceptProposalByReply(conversationId, companionId) {
     const proposal = get().activeProposal;
-    if (proposal === null) return;
+    if (proposal === null || proposal.companion_id !== companionId) return;
     const repos = await getRepos();
     await repos.companionProposals.resolve(proposal.id, "accepted", nowIso());
+    set({ activeProposal: null, proposalSeen: true });
     const knownNodeLabels = useKnowledgeStore.getState().nodes.map((node) => node.label);
-    const conversationId = await startCompanionTeachSession(proposal.topic, proposal.node_id, {
-      knownNodeLabels,
-    });
-    set({ activeProposal: null });
-    // Matches LabTeachSection's own navigation: the app shell's app:navigateChat listener
-    // opens the conversation and switches the view in one place.
-    appEventBus.emit("app:navigateChat", { conversationId });
-  },
-
-  async declineProposal() {
-    const proposal = get().activeProposal;
-    if (proposal === null) return;
-    const repos = await getRepos();
-    await repos.companionProposals.resolve(proposal.id, "declined", nowIso());
-    set({ activeProposal: null, declineEcho: COMPANION_COPY.declineResponse });
-    setTimeout(() => set({ declineEcho: null }), 6000);
+    await seedTeachScriptForConversation(conversationId, proposal.topic, knownNodeLabels);
   },
 
   checkUserMessageForCrisis(content) {

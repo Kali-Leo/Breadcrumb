@@ -149,10 +149,10 @@ describe("decideProposal", () => {
     expect(result).toEqual({ verdict: "propose", topic: "递归", nodeId: "n1" });
   });
 
-  it("ignores expired proposals when counting the decline streak", () => {
+  it("counts expired proposals toward the decline streak (ignoring is the learner's no)", () => {
     const result = decideProposal(
       baseInput({
-        nowIso: localIso(2026, 8, 10, 13), // ~49h after the newest decline (Aug8 noon)
+        nowIso: localIso(2026, 8, 10, 13),
         recentProposals: [
           { status: "expired", created_at: localIso(2026, 8, 9, 18) },
           { status: "declined", created_at: localIso(2026, 8, 8, 12) },
@@ -161,7 +161,19 @@ describe("decideProposal", () => {
         ],
       }),
     );
-    // Two real declines (expired entries skipped) -> 48h wait, satisfied here.
+    // Four consecutive not-taken-up proposals -> 8-day backoff from the newest (Aug 9 18:00);
+    // less than a day has passed, so the gate stays silent.
+    expect(result).toEqual({ verdict: "silent", reason: "backoff" });
+  });
+
+  it("lets a proposal through once the expiry-driven backoff window has passed", () => {
+    const result = decideProposal(
+      baseInput({
+        nowIso: localIso(2026, 8, 10, 13), // ~49h after the single expired proposal
+        recentProposals: [{ status: "expired", created_at: localIso(2026, 8, 8, 12) }],
+      }),
+    );
+    // One not-taken-up proposal -> 1-day backoff, long since satisfied.
     expect(result).toEqual({ verdict: "propose", topic: "递归", nodeId: "n1" });
   });
 });

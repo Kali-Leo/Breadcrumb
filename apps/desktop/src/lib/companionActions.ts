@@ -1,25 +1,30 @@
 /**
  * Purpose: companion cast desktop actions (spec 037) — card lookup, opening or continuing a
- * companion chat, creating a script-first teach-back session, and the companion chat system
- * prompt. Desktop-only copy not already covered by plugin-companion's COMPANION_COPY lives here.
- * Side effects: DB writes on openCompanionConversation / startCompanionTeachSession.
+ * companion chat, delivering a teach-back invitation as her own chat message, seeding the
+ * teach script for a conversation, and the companion chat system prompt (Leo 2026-08-15:
+ * the invitation lives in the chat like any message; replying starts the teach-back there).
+ * Side effects: DB writes on openCompanionConversation / appendCompanionInvitation /
+ * seedTeachScriptForConversation.
  * Main exports: COMPANION_IDS, COMPANION_DESKTOP_COPY, getCompanionCardById,
- * openCompanionConversation, startCompanionTeachSession, buildCompanionChatSystemPrompt.
+ * openCompanionConversation, appendCompanionInvitation, seedTeachScriptForConversation,
+ * buildCompanionChatSystemPrompt.
  */
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildScriptUserMessage,
+  COMPANION_COPY,
   type CompanionCard,
   initialKnowledgeState,
   loadCompanionCards,
   SCRIPT_PROMPT,
   ScriptResultSchema,
-  TEACH_OPENER,
 } from "@breadcrumb/plugin-companion";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { useSettingsStore } from "../stores/settingsStore";
+import { foldAppendedMessage } from "./chatTreeActions";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { newestLeafId } from "./messageTree";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -84,66 +89,65 @@ export async function openCompanionConversation(companionId: string): Promise<st
   return conversationId;
 }
 
-/** Creates a Shichimi teach-back session. When the script switch is on, network is up, and an
- * API is configured: generates the script and seeds the conversation's knowledge state first.
- * On any failure, or when that condition isn't met, the session is still created — just
- * without state — so chatStore's teach branch falls back to spec-034's generic prompt. */
-export async function startCompanionTeachSession(
-  topic: string,
-  // Kept for API symmetry with the proposal row this session originates from (companion
-  // teach-back is always node-anchored) — not read here. teachQuality.ts already resolves the
-  // matching node by topic label for both plain and companion teach sessions, so no separate
-  // node-linking step is needed at creation time.
-  _nodeId: string | null,
-  opts: { knownNodeLabels: readonly string[] },
-): Promise<string> {
+/** Delivers a teach-back invitation as the companion's own chat message: reuses (or creates)
+ * her companion conversation and appends the invitation at the newest leaf. If that
+ * conversation happens to be open on screen, the message is folded into the live view too. */
+export async function appendCompanionInvitation(companionId: string, topic: string): Promise<void> {
   const repos = await getRepos();
-  const conversationId = newId();
-  const createdAt = nowIso();
-  await repos.conversations.create({
-    id: conversationId,
-    title: `回讲·${topic}`,
-    created_at: createdAt,
-    updated_at: createdAt,
-    kind: "teach",
-    companion_id: "shichimi",
-  });
-
-  const settings = useSettingsStore.getState();
-  if (settings.featureSwitches.companionScript && settings.networkEnabled && settings.apiConfig) {
-    try {
-      const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
-      const { parsed, usage } = await chatJson(
-        config,
-        [
-          { role: "system", content: SCRIPT_PROMPT },
-          { role: "user", content: buildScriptUserMessage(topic, opts.knownNodeLabels) },
-        ],
-        ScriptResultSchema,
-      );
-      await recordMeteredCall({
-        purpose: "companion-script",
-        model: config.model,
-        conversationId,
-        usage,
-      });
-      const state = initialKnowledgeState(topic, parsed);
-      await repos.companionKnowledgeState.upsert(conversationId, JSON.stringify(state), nowIso());
-    } catch (error) {
-      await recordAiFailure("companion-script", error);
-    }
-  }
-
-  await repos.messages.append({
+  const conversationId = await openCompanionConversation(companionId);
+  const allMessages = await repos.messages.listByConversation(conversationId);
+  const invitation = {
     id: newId(),
     conversation_id: conversationId,
-    role: "assistant",
-    content: TEACH_OPENER("Shichimi", topic),
+    role: "assistant" as const,
+    content: COMPANION_COPY.invitation(topic),
     created_at: nowIso(),
     teaching_mode: null,
-    parent_id: null,
-  });
-  return conversationId;
+    parent_id: newestLeafId(allMessages),
+  };
+  await repos.messages.append(invitation);
+  await repos.conversations.touch(conversationId, invitation.created_at);
+  const { useChatStore } = await import("../stores/chatStore");
+  const chat = useChatStore.getState();
+  if (chat.activeConversationId === conversationId) {
+    useChatStore.setState(foldAppendedMessage(chat, invitation));
+  }
+}
+
+/** Generates the teach-back script and seeds this conversation's knowledge state (spec 037's
+ * script-first machinery, now running inside the companion chat). Silent no-op when the
+ * script switch is off / offline / unconfigured; a generation failure is recorded and the
+ * teach-back proceeds stateless (plain companion chat). */
+export async function seedTeachScriptForConversation(
+  conversationId: string,
+  topic: string,
+  knownNodeLabels: readonly string[],
+): Promise<void> {
+  const settings = useSettingsStore.getState();
+  if (!settings.featureSwitches.companionScript || !settings.networkEnabled || !settings.apiConfig)
+    return;
+  try {
+    const repos = await getRepos();
+    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const { parsed, usage } = await chatJson(
+      config,
+      [
+        { role: "system", content: SCRIPT_PROMPT },
+        { role: "user", content: buildScriptUserMessage(topic, knownNodeLabels) },
+      ],
+      ScriptResultSchema,
+    );
+    await recordMeteredCall({
+      purpose: "companion-script",
+      model: config.model,
+      conversationId,
+      usage,
+    });
+    const state = initialKnowledgeState(topic, parsed);
+    await repos.companionKnowledgeState.upsert(conversationId, JSON.stringify(state), nowIso());
+  } catch (error) {
+    await recordAiFailure("companion-script", error);
+  }
 }
 
 /** Companion chat system prompt: identity + explicit AI disclosure, the tone contract, then

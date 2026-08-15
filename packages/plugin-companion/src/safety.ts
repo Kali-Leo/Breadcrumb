@@ -116,10 +116,9 @@ export const BREAK_REMINDER_COPY = "伙伴对话已经持续两小时。可以�
 export const COMPANION_COPY = {
   sectionTitle: "伙伴",
   aiLabel: "AI 学习伙伴",
-  /** The proposal as the companion's own chat line — doubles as the sidebar's last-message
-   * preview (WeChat-style chat-list row, Leo 2026-08-15), so it carries no speaker name. */
-  proposalPreview: (topic: string): string => `想请你讲讲「${topic}」`,
-  accept: "现在讲",
-  decline: "改天",
-  declineResponse: "好,我先自己再看看。",
+  /** The teach-back invitation as the companion's own ordinary chat message (Leo 2026-08-15:
+   * no cards, no buttons — replying starts the teach-back, ignoring lets it expire).
+   * Zero-LLM template; mirrors the plain teach opener's register. */
+  invitation: (topic: string): string =>
+    `「${topic}」这部分我还没弄懂。你有空的时候,能用你自己的话给我讲讲吗?从它是什么讲起就好。`,
 } as const;

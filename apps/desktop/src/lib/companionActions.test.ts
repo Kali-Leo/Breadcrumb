@@ -1,8 +1,8 @@
 /**
  * Purpose: unit tests for companion desktop actions (spec 037) — opening/reusing a companion
- * conversation, creating a teach-back session with the script switch off (stateless fallback),
- * and the chat system prompt's card/memory inclusion. The copy-safety gate lives in
- * companionCopyGate.test.ts, split out to keep this file under the line-count cap.
+ * conversation, delivering the teach-back invitation as her own chat message, the script
+ * seeding's switch-off no-op, and the chat system prompt's card/memory inclusion. The
+ * copy-safety gate lives in companionCopyGate.test.ts, split out for the line-count cap.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -37,11 +37,14 @@ vi.mock("./db", () => ({
       create: async (row: FakeConversationRow) => {
         conversationRows.push(row);
       },
+      touch: async () => {},
     },
     messages: {
       append: async (row: FakeMessageRow) => {
         messageRows.push(row);
       },
+      listByConversation: async (conversationId: string) =>
+        messageRows.filter((row) => row.conversation_id === conversationId),
     },
     companionKnowledgeState: {
       upsert: async (conversationId: string, stateJson: string) => {
@@ -51,8 +54,12 @@ vi.mock("./db", () => ({
   })),
 }));
 
-const { openCompanionConversation, startCompanionTeachSession, buildCompanionChatSystemPrompt } =
-  await import("./companionActions");
+const {
+  openCompanionConversation,
+  appendCompanionInvitation,
+  seedTeachScriptForConversation,
+  buildCompanionChatSystemPrompt,
+} = await import("./companionActions");
 
 afterEach(() => {
   conversationRows.length = 0;
@@ -79,26 +86,28 @@ describe("openCompanionConversation", () => {
   });
 });
 
-describe("startCompanionTeachSession", () => {
-  it("creates a stateless session when the script switch is off", async () => {
+describe("appendCompanionInvitation", () => {
+  it("reuses her conversation and appends the invitation at the newest leaf", async () => {
+    const conversationId = await openCompanionConversation("shichimi");
+    await appendCompanionInvitation("shichimi", "闭包");
+
+    expect(conversationRows).toHaveLength(1);
+    expect(messageRows).toHaveLength(2);
+    const invitation = messageRows[1] as FakeMessageRow & { parent_id?: string | null };
+    expect(invitation.conversation_id).toBe(conversationId);
+    expect(invitation.role).toBe("assistant");
+    expect(invitation.content).toContain("闭包");
+    expect(invitation.parent_id).toBe(messageRows[0]?.id);
+  });
+});
+
+describe("seedTeachScriptForConversation", () => {
+  it("is a silent no-op when the script switch is off", async () => {
     useSettingsStore.setState({
       featureSwitches: { ...useSettingsStore.getState().featureSwitches, companionScript: false },
     });
-
-    const conversationId = await startCompanionTeachSession("闭包", "node-1", {
-      knownNodeLabels: ["函数"],
-    });
-
-    expect(conversationRows).toHaveLength(1);
-    expect(conversationRows[0]).toMatchObject({
-      id: conversationId,
-      kind: "teach",
-      companion_id: "shichimi",
-      title: "回讲·闭包",
-    });
+    await seedTeachScriptForConversation("conv-1", "闭包", ["函数"]);
     expect(knowledgeStateUpserts).toHaveLength(0);
-    expect(messageRows).toHaveLength(1);
-    expect(messageRows[0]?.content).toContain("闭包");
   });
 });
 

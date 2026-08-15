@@ -1,10 +1,9 @@
 /**
- * Purpose: sidebar "伙伴" section (spec 037) — three companion rows to open/continue a chat,
- * chat-list style (Leo 2026-08-15): a pending teach-back proposal shows as that companion's
- * last-message preview with an unread dot, like WeChat/QQ; the invitation itself lives inside
- * the chat (CompanionProposalBubble). Hidden entirely when the companion chat switch is off
- * (product principle 3 — every metered environment is fully removable).
- * Main exports: CompanionSection.
+ * Purpose: sidebar "伙伴" section (spec 037) — three companion rows to open/continue a chat.
+ * A pending teach-back invitation (delivered as her own chat message) shows only as a small
+ * unread dot by her name, cleared on opening the chat (Leo 2026-08-15). Hidden entirely when
+ * the companion chat switch is off (product principle 3 — every metered environment is fully
+ * removable). Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { COMPANION_DESKTOP_COPY, openCompanionConversation } from "../lib/companionActions";

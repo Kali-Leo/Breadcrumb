@@ -12,7 +12,6 @@ import { useDoorStore } from "../stores/doorStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
 import { useFocusSessionsStore } from "../stores/focusSessionsStore";
 import { CompanionChatBanners } from "./CompanionChatBanners";
-import { CompanionProposalBubble } from "./CompanionProposalBubble";
 import { Composer } from "./Composer";
 import { FactcheckBadge } from "./FactcheckBadge";
 import { FocusEntryCard } from "./FocusEntryCard";
@@ -117,7 +116,6 @@ export function ChatView() {
             </div>
           );
         })}
-        <CompanionProposalBubble />
         {isStreaming && <MessageBubble author="assistant" content={streamingText || "…"} />}
         {errorText && (
           <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">

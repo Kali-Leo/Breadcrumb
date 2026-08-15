@@ -1,9 +1,11 @@
 /**
  * Purpose: builds the system-prompt messages for companion-flavored chat and teach-back
- * sessions inside chatStore's send pipeline — memory retrieval, Reflect-Respond, and the
- * companion identity prompt all live here so chatStore.ts stays under the file-size cap.
+ * sessions inside chatStore's send pipeline — memory retrieval, Reflect-Respond (both in
+ * dedicated teach sessions and live teach-back episodes inside the companion's own chat),
+ * and the companion identity prompt, so chatStore.ts stays under the file-size cap.
  * Side effects: touches companion_memories.last_accessed_at; may write companion_knowledge_state.
- * Main exports: buildCompanionChatSystemMessage, buildCompanionTeachSystemMessages.
+ * Main exports: buildCompanionChatSystemMessage, buildCompanionTeachBackIfActive,
+ * buildCompanionTeachSystemMessages, buildRoundSystemMessages.
  */
 
 import type { ConversationKind, ConversationRow } from "@breadcrumb/core-db";
@@ -69,6 +71,38 @@ export async function buildCompanionChatSystemMessage(
   return { role: "system", content: buildCompanionChatSystemPrompt(card, retrievedContents) };
 }
 
+/** How long a companion conversation's knowledge state keeps the chat in teach-back mode
+ * after its last update. Reflection refreshes the timestamp every round, so an active
+ * teach-back keeps extending; after this much quiet the companion returns to ordinary chat
+ * (the invitation flow can start a fresh episode any time). */
+const TEACH_EPISODE_IDLE_HOURS = 6;
+
+/** kind 'companion' with a live teach-back: the same Reflect-Respond student mode, or null
+ * when there is no fresh knowledge state (the caller then builds the plain chat prompt). */
+export async function buildCompanionTeachBackIfActive(
+  conversation: ConversationRow,
+  userContent: string,
+  apiConfig: ApiConfig,
+  companionScriptEnabled: boolean,
+): Promise<ChatMessage[] | null> {
+  const companionId = conversation.companion_id;
+  if (companionId === null || !companionScriptEnabled) return null;
+  const card = getCompanionCardById(companionId);
+  if (card === undefined) return null;
+  const repos = await getRepos();
+  const stateRow = await repos.companionKnowledgeState.getByConversation(conversation.id);
+  if (stateRow === null) return null;
+  const idleHours = (Date.parse(nowIso()) - Date.parse(stateRow.updated_at)) / 3_600_000;
+  if (idleHours > TEACH_EPISODE_IDLE_HOURS) return null;
+  return reflectAndBuildStudentMessage(
+    conversation,
+    card,
+    stateRow.state_json,
+    userContent,
+    apiConfig,
+  );
+}
+
 /** kind 'teach' — with a companion_id, runs Reflect-Respond (merging this round's user
  * explanation into the stored knowledge state) before answering only from that state; without
  * a knowledge state, a disabled script switch, or an unknown card, falls back unchanged to
@@ -92,8 +126,26 @@ export async function buildCompanionTeachSystemMessages(
   const repos = await getRepos();
   const stateRow = await repos.companionKnowledgeState.getByConversation(conversation.id);
   if (stateRow === null) return fallback();
+  return reflectAndBuildStudentMessage(
+    conversation,
+    card,
+    stateRow.state_json,
+    userContent,
+    apiConfig,
+  );
+}
 
-  let state = KnowledgeStateSchema.parse(JSON.parse(stateRow.state_json));
+/** The shared Reflect-Respond core: merge this round's explanation into the stored state,
+ * then constrain the student's reply to that state. */
+async function reflectAndBuildStudentMessage(
+  conversation: ConversationRow,
+  card: NonNullable<ReturnType<typeof getCompanionCardById>>,
+  stateJson: string,
+  userContent: string,
+  apiConfig: ApiConfig,
+): Promise<ChatMessage[]> {
+  const repos = await getRepos();
+  let state = KnowledgeStateSchema.parse(JSON.parse(stateJson));
   try {
     const config = { ...apiConfig, fetchImpl: tauriFetch };
     const { parsed, usage } = await chatJson(
@@ -149,9 +201,19 @@ export async function buildRoundSystemMessages(params: {
     messages.push(...teachMessages);
   } else if (activeKind === "companion") {
     if (row === null) throw new Error("companion conversation missing");
-    messages.push(
-      await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
+    // A live teach-back episode inside her own chat (Leo 2026-08-15) takes precedence;
+    // otherwise — no fresh state, script switch off — she is simply herself.
+    const teachBackMessages = await buildCompanionTeachBackIfActive(
+      row,
+      content,
+      apiConfig,
+      params.companionScriptEnabled,
     );
+    if (teachBackMessages !== null) messages.push(...teachBackMessages);
+    else
+      messages.push(
+        await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
+      );
   } else {
     messages.push({ role: "system", content: buildTeachingSystemPrompt() });
     if (row !== null && isReunionTitle(row.title)) {

@@ -42,7 +42,9 @@ export type GateDecision =
     };
 
 /** A pending proposal older than this should be marked 'expired' by the caller before the
- * next gate run — expiry is neutral, never counted as a decline in the backoff streak. */
+ * next gate run. Since the invitation became an ordinary chat message with no decline button
+ * (Leo 2026-08-15), letting it expire IS the learner's "no" — expired proposals join the
+ * decline streak and drive the same backoff ladder. */
 export const PROPOSAL_EXPIRY_HOURS = 48;
 
 export function isProposalExpired(proposal: ProposalLike, nowIso: string): boolean {
@@ -67,14 +69,13 @@ function isWithinQuietHours(
   return hour >= startHour || hour < endHour;
 }
 
-/** Consecutive 'declined' proposals at the head of `recentProposals` (newest first),
- * skipping over 'expired' entries and stopping at the first 'accepted' (by rule 1 above, a
+/** Consecutive not-taken-up proposals ('declined' or quietly 'expired') at the head of
+ * `recentProposals` (newest first), stopping at the first 'accepted' (by rule 1 above, a
  * 'pending' entry can never appear here — its presence would already have short-circuited). */
 function countConsecutiveDeclines(recentProposals: readonly ProposalLike[]): number {
   let count = 0;
   for (const proposal of recentProposals) {
-    if (proposal.status === "expired") continue;
-    if (proposal.status === "declined") {
+    if (proposal.status === "declined" || proposal.status === "expired") {
       count += 1;
       continue;
     }
@@ -114,7 +115,9 @@ export function decideProposal(input: GateInput): GateDecision {
 
   const consecutiveDeclines = countConsecutiveDeclines(input.recentProposals);
   if (consecutiveDeclines > 0) {
-    const newestDeclined = input.recentProposals.find((proposal) => proposal.status === "declined");
+    const newestDeclined = input.recentProposals.find(
+      (proposal) => proposal.status === "declined" || proposal.status === "expired",
+    );
     if (newestDeclined !== undefined) {
       const hoursSinceDeclined =
         (now.getTime() - Date.parse(newestDeclined.created_at)) / 3_600_000;

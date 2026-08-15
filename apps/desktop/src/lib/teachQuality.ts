@@ -25,16 +25,28 @@ const verdictSchema = z.object({
   reason: z.string().max(200),
 });
 
-/** Judges the learner's latest explanation in a teach conversation and records mastery
- * evidence for the matching node (exact label match; no node → no spend). */
+/** Judges the learner's latest explanation in a teach-back round and records mastery
+ * evidence for the matching node (exact label match; no node → no spend). Covers both
+ * dedicated teach conversations and teach-back episodes living inside a companion chat
+ * (Leo 2026-08-15) — the latter identified by the conversation's knowledge state. */
 export async function judgeTeachRound(conversationId: string): Promise<void> {
   const settings = useSettingsStore.getState();
   if (!settings.featureSwitches.teachQuality || !settings.networkEnabled) return;
   if (settings.apiConfig === null) return;
   const repos = await getRepos();
   const conversation = await repos.conversations.getById(conversationId);
-  if (conversation === null || conversation.kind !== "teach") return;
-  const topic = teachTopicFromTitle(conversation.title);
+  if (conversation === null) return;
+  let topic: string;
+  if (conversation.kind === "teach") {
+    topic = teachTopicFromTitle(conversation.title);
+  } else if (conversation.kind === "companion") {
+    const stateRow = await repos.companionKnowledgeState.getByConversation(conversationId);
+    if (stateRow === null) return;
+    topic = (JSON.parse(stateRow.state_json) as { topic?: string }).topic ?? "";
+    if (topic === "") return;
+  } else {
+    return;
+  }
   const node = useKnowledgeStore.getState().nodes.find((n) => n.label === topic);
   if (node === undefined) return;
   const explanation = [...useChatStore.getState().messages]
