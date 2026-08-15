@@ -1,24 +1,17 @@
 /**
- * Purpose: the 🧪 lab view (spec 012) — a temporary, deliberately unpolished full-page
- * surface for validating the planner: node value table, frontier recommendations, a
- * self-report entry point, and (ranked mode only, spec 021) the goal section plus the
- * comparison tree. It is the debug-grade face of
- * the same engine the memory palace will eventually wear; sits beside it in the sidebar.
+ * Purpose: the 🧪 lab view — the remaining experimental surfaces awaiting their palace
+ * homes (specs 046/047): frontier recommendations, self-report, the goal section, and the
+ * comparison tree. Spec 045 retired the mode toggle, node table, teach section, failures
+ * list, and the ghost-overlay comparison graph.
  * Main exports: LabPanel.
  */
 import { useEffect, useState } from "react";
 import { useInterestStore } from "../stores/interestStore";
-import { useLabUiStore } from "../stores/labUiStore";
 import { usePlannerStore } from "../stores/plannerStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { LabCompareSection } from "./LabCompareSection";
-import { LabFailuresSection } from "./LabFailuresSection";
 import { LabFrontierList } from "./LabFrontierList";
 import { LabGoalSection } from "./LabGoalSection";
-import { LabModeToggle } from "./LabModeToggle";
-import { LabNodeTable } from "./LabNodeTable";
-import { LabTeachSection } from "./LabTeachSection";
-import { GoalOverlayView } from "./overlay/GoalOverlayView";
 
 function SelfReportInput() {
   const [text, setText] = useState("");
@@ -61,10 +54,7 @@ function SelfReportInput() {
 
 export function LabPanel() {
   const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
-  const learningMode = useSettingsStore((state) => state.learningMode);
-  const overlayOpen = useLabUiStore((state) => state.overlayOpen);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: learningMode is a deliberate re-run trigger — recompute() reads it via settingsStore, and the frontier's goal-gap boost ("目标内" tag) is ranked-only, so a mode switch must recompute or casual keeps showing ranked-mode leftovers (spec 021 §1)
   useEffect(() => {
     if (labPanelEnabled) {
       usePlannerStore
@@ -72,7 +62,7 @@ export function LabPanel() {
         .recompute()
         .catch((error: unknown) => console.warn("planner recompute skipped:", error));
     }
-  }, [labPanelEnabled, learningMode]);
+  }, [labPanelEnabled]);
 
   if (!labPanelEnabled) {
     return (
@@ -86,27 +76,13 @@ export function LabPanel() {
     );
   }
 
-  // Goal-related surfaces exist only in ranked mode (spec 021 §1): casual mode carries no
-  // goal entries at all, so the overlay — reachable only through the goal section — hides too.
-  if (overlayOpen && learningMode === "ranked") {
-    return <GoalOverlayView />;
-  }
-
   return (
     <div className="h-full overflow-y-auto bg-stone-50">
       <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4 text-xs">
-        <p className="text-[11px] text-stone-400">
-          🧪
-          实验室是知识网络引擎的临时调试界面，数据和交互都是原始形态；它验证过的能力最终会长进记忆宫殿里。
-        </p>
-        <LabModeToggle />
-        <LabTeachSection />
-        <LabNodeTable />
         <LabFrontierList />
         <SelfReportInput />
-        {learningMode === "ranked" && <LabGoalSection />}
+        <LabGoalSection />
         <LabCompareSection />
-        <LabFailuresSection />
       </div>
     </div>
   );

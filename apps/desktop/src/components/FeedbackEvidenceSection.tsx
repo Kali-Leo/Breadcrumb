@@ -31,7 +31,7 @@ export function FeedbackEvidenceSection() {
   const selectedTitle = candidates.find((c) => c.nodeId === selectedNodeId)?.title ?? "";
 
   // Archive-drawer form (Leo 2026-08-13): inspection tooling, not daily reading —
-  // collapsed by default at the bottom of the panel, same pattern as LabFailuresSection.
+  // collapsed by default at the bottom of the panel, a quiet disclosure by default.
   return (
     <details className="rounded border border-stone-200 bg-white">
       <summary className="cursor-pointer px-3 py-2 font-semibold text-stone-600">

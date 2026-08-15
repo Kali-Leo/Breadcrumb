@@ -74,10 +74,11 @@ async function extractEdgesFromFinishedRound(
 
   try {
     const repos = await getRepos();
-    const [allNodes, embeddings, existingEdges] = await Promise.all([
+    const [allNodes, embeddings, existingEdges, allGoals] = await Promise.all([
       repos.knowledgeNodes.listAll(),
       repos.nodeEmbeddings.listAll(),
       repos.knowledgeEdges.listAll(),
+      repos.goals.listAll(),
     ]);
 
     const ranked = rankCandidatePairs(embeddings, newNodeIds, DEFAULT_TOP_K_SIMILAR);
@@ -102,7 +103,9 @@ async function extractEdgesFromFinishedRound(
     const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
     const { parsed, usage } = await chatJson(
       config,
-      buildEdgeJudgeMessages(judgeCandidates, { casual: settings.learningMode === "casual" }),
+      // No goals yet = wandering by curiosity — the judge keeps its relaxed register (the
+      // old "casual mode"; spec 045 made goals an object instead of a mode switch).
+      buildEdgeJudgeMessages(judgeCandidates, { casual: allGoals.length === 0 }),
       edgeJudgeSchema,
     );
     await recordMeteredCall({

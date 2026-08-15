@@ -111,7 +111,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       embeddings,
       goals,
       get().selectedGoalId,
-      useSettingsStore.getState().learningMode === "ranked",
+      goals.length > 0,
       useSettingsStore.getState().routeParams,
       nowIso(),
     );

@@ -10,6 +10,7 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { DiglotSettingsSection } from "./DiglotSettingsSection";
 import { ResearchPanel } from "./ResearchPanel";
+import { SettingsQuietIssues } from "./SettingsQuietIssues";
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick(): void; label: string }) {
   return (
@@ -163,6 +164,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               label="大陆网络模式"
             />
           </section>
+
+          <SettingsQuietIssues />
         </>
       )}
 

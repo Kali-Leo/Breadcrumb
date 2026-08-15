@@ -1,8 +1,8 @@
 /**
  * Purpose: zustand store for user settings (API config, network switch, per-feature
- * switches, learning mode, route params), persisted in the settings table. Load once at
- * startup; changes write through.
- * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, LearningMode, RouteParams.
+ * switches, route params), persisted in the settings table. Load once at startup;
+ * changes write through. (Learning mode was retired by spec 045 — goals are objects now.)
+ * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams.
  */
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
@@ -62,11 +62,6 @@ export interface FeatureSwitches {
  * curriculum material (教材). A display filter, not a feature switch. */
 export type CompareCategory = "occupation" | "curriculum";
 
-/** 'casual' = wander by curiosity, the map grows outward on its own (adjacent-concept
- * proposals). 'ranked' = push toward a chosen goal (frontier weights the goal's gap; the
- * lab's goal section appears). Spec 016 — a mindset switch, not a feature switch. */
-export type LearningMode = "ranked" | "casual";
-
 /** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as
  * plugin-planner's RecommendRouteParams, re-exported here so components import one name. */
 export type RouteParams = RecommendRouteParams;
@@ -75,7 +70,6 @@ const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
-const LEARNING_MODE_KEY = "learningMode";
 const ROUTE_PARAMS_KEY = "routeParams";
 const COMPARE_CATEGORY_KEY = "compareCategory";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
@@ -118,8 +112,6 @@ interface SettingsState {
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
-  /** casual by default (spec 016) — a new user wanders before they have a goal to rank against. */
-  learningMode: LearningMode;
   /** recommendRoute()'s pace/interestWeight sliders (spec 017 #1), 0.5/0.5 by default. */
   routeParams: RouteParams;
   /** 教材/真人 display filter for the comparison tree — occupation (真人) by default. */
@@ -129,7 +121,6 @@ interface SettingsState {
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
-  setLearningMode(mode: LearningMode): Promise<void>;
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
 }
@@ -140,7 +131,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   networkEnabled: true,
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
-  learningMode: "casual",
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
 
@@ -151,7 +141,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       networkEnabled,
       featureSwitches,
       mainlandNetwork,
-      learningMode,
       routeParams,
       compareCategory,
     ] = await Promise.all([
@@ -159,7 +148,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
       repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
       repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
-      repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
       repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
     ]);
@@ -169,7 +157,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       networkEnabled: networkEnabled ?? true,
       featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
       mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
-      learningMode: learningMode ?? "casual",
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
     });
@@ -198,12 +185,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(MAINLAND_NETWORK_KEY, enabled, nowIso());
     set({ mainlandNetwork: enabled });
-  },
-
-  async setLearningMode(mode) {
-    const repos = await getRepos();
-    await repos.settings.set(LEARNING_MODE_KEY, mode, nowIso());
-    set({ learningMode: mode });
   },
 
   async setRouteParams(params) {
