@@ -73,11 +73,15 @@ export function counterScaleLabels(labels: readonly MapLabel[], cameraScale: num
 }
 
 /** Hover emphasis: the hovered feature's name flips to the accent ink so a name that had
- * to drift into open water still points back at its land unmistakably. */
+ * to drift into open water still points back at its land unmistakably. Writes are guarded:
+ * assigning style.fill dirties the Text even with an unchanged value, and re-rasterizing
+ * all supersampled names on every hover change is a visible frame hitch. */
 export function setLabelEmphasis(labels: readonly MapLabel[], nodeId: string | null): void {
   for (const label of labels) {
     const emphasized = label.nodeId === nodeId;
-    label.text.style.fill = emphasized ? mapTheme.labelEmphasis : mapTheme.ink;
-    label.text.alpha = emphasized ? 1 : label.baseAlpha;
+    const fill = emphasized ? mapTheme.labelEmphasis : mapTheme.ink;
+    if (label.text.style.fill !== fill) label.text.style.fill = fill;
+    const alpha = emphasized ? 1 : label.baseAlpha;
+    if (label.text.alpha !== alpha) label.text.alpha = alpha;
   }
 }

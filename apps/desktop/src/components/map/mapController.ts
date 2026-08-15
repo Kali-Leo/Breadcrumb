@@ -31,17 +31,23 @@ export interface MapController {
   destroy(): void;
 }
 
-interface BandTargets {
-  world: number;
-  island: number;
-  borders: number;
-}
-
 const WHEEL_COOLDOWN_MS = 380;
 
-function bandsFor(level: MapLevel): BandTargets {
-  if (level.kind === "world") return { world: 1, island: 0, borders: 0 };
-  return { world: 0, island: 1, borders: 1 };
+/** The camera counts as arrived once its scale is within this fraction of the target —
+ * that is when the level's content starts appearing (Leo 2026-08-15: zoom first, then
+ * names in order; no crossfade during the move). */
+const SETTLE_SCALE_RATIO = 0.04;
+const APPEAR_STAGGER_SECONDS = 0.07;
+const APPEAR_FADE_SECONDS = 0.3;
+
+/** One level-transition in flight: the incoming band's children, revealed in draw order
+ * once the camera settles, each fading up to the alpha it had (retention dim etc.). */
+interface PendingAppear {
+  band: Container;
+  showBorders: boolean;
+  items: { object: Container; baseAlpha: number }[];
+  started: boolean;
+  elapsed: number;
 }
 
 export function createMapController(app: Application, art: MapArt, hooks: MapHooks): MapController {
@@ -51,7 +57,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   let world: WorldModel | null = null;
   let level: MapLevel = { kind: "world" };
   let cameraTarget = { scale: 1, x: 0, y: 0 };
-  let bandTargets: BandTargets = bandsFor(level);
+  let pendingAppear: PendingAppear | null = null;
   let lastWheelAt = 0;
   let lastHoverId: string | null = null;
   const pointer = { x: 0, y: 0 };
@@ -95,12 +101,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       worldRoot.scale.y = worldRoot.scale.x;
       worldRoot.position.x += (cameraTarget.x - worldRoot.position.x) * ease;
       worldRoot.position.y += (cameraTarget.y - worldRoot.position.y) * ease;
-      const scene = controller.scene;
-      if (scene !== null) {
-        fadeTo(scene.worldBand, bandTargets.world, ease);
-        fadeTo(scene.islandBand, bandTargets.island, ease);
-        fadeTo(scene.bordersLayer, bandTargets.borders, ease);
-      }
+      advancePendingAppear(deltaSeconds);
     },
     destroy() {
       app.canvas.removeEventListener("wheel", onWheel);
@@ -109,9 +110,70 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     },
   };
 
-  function fadeTo(container: Container, target: number, ease: number): void {
-    container.alpha += (target - container.alpha) * ease;
-    container.visible = container.alpha > 0.02 || target > 0;
+  /** Abandons an in-flight appear, restoring every item's own alpha so nothing is left
+   * half-faded when the next transition (or a scene rebuild) takes over. */
+  function cancelPendingAppear(): void {
+    if (pendingAppear === null) return;
+    for (const item of pendingAppear.items) item.object.alpha = item.baseAlpha;
+    pendingAppear = null;
+  }
+
+  /** Snap path: both bands and the borders jump straight to the level's end state. */
+  function applyBandsInstant(scene: WorldScene): void {
+    const atIsland = level.kind === "island";
+    scene.worldBand.visible = !atIsland;
+    scene.worldBand.alpha = atIsland ? 0 : 1;
+    scene.islandBand.visible = atIsland;
+    scene.islandBand.alpha = atIsland ? 1 : 0;
+    scene.bordersLayer.visible = atIsland;
+    scene.bordersLayer.alpha = atIsland ? 1 : 0;
+  }
+
+  /** Animated path: everything level-bound hides for the ride; the incoming band's
+   * children are queued to appear in draw order once the camera lands. */
+  function beginAppearTransition(scene: WorldScene): void {
+    const atIsland = level.kind === "island";
+    scene.worldBand.visible = false;
+    scene.islandBand.visible = false;
+    scene.bordersLayer.visible = false;
+    const band = atIsland ? scene.islandBand : scene.worldBand;
+    pendingAppear = {
+      band,
+      showBorders: atIsland,
+      items: band.children.map((object) => ({ object, baseAlpha: object.alpha })),
+      started: false,
+      elapsed: 0,
+    };
+    for (const item of pendingAppear.items) item.object.alpha = 0;
+  }
+
+  function advancePendingAppear(deltaSeconds: number): void {
+    const pending = pendingAppear;
+    const scene = controller.scene;
+    if (pending === null || scene === null) return;
+    if (!pending.started) {
+      const settled =
+        Math.abs(worldRoot.scale.x - cameraTarget.scale) <= cameraTarget.scale * SETTLE_SCALE_RATIO;
+      if (!settled) return;
+      pending.started = true;
+      pending.band.visible = true;
+      pending.band.alpha = 1;
+      if (pending.showBorders) {
+        scene.bordersLayer.visible = true;
+        scene.bordersLayer.alpha = 1;
+      }
+    }
+    pending.elapsed += deltaSeconds;
+    let allDone = true;
+    for (const [index, item] of pending.items.entries()) {
+      const t = Math.min(
+        Math.max((pending.elapsed - index * APPEAR_STAGGER_SECONDS) / APPEAR_FADE_SECONDS, 0),
+        1,
+      );
+      item.object.alpha = t * t * (3 - 2 * t) * item.baseAlpha;
+      if (t < 1) allDone = false;
+    }
+    if (allDone) pendingAppear = null;
   }
 
   function showHover(hover: HoverResult | null): void {
@@ -128,21 +190,18 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   function applyLevel(snap: boolean): void {
     if (world === null) return;
     cameraTarget = frameForLevel(world, level, app.screen.width, app.screen.height);
-    bandTargets = bandsFor(level);
     // What the pointer was over belongs to the level we just left.
     showHover(null);
-    if (controller.scene !== null) {
-      counterScaleLabels(controller.scene.labels, cameraTarget.scale);
+    const scene = controller.scene;
+    if (scene !== null) {
+      counterScaleLabels(scene.labels, cameraTarget.scale);
+      cancelPendingAppear();
+      if (snap) applyBandsInstant(scene);
+      else beginAppearTransition(scene);
     }
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);
       worldRoot.position.set(cameraTarget.x, cameraTarget.y);
-      const scene = controller.scene;
-      if (scene !== null) {
-        scene.worldBand.alpha = bandTargets.world;
-        scene.islandBand.alpha = bandTargets.island;
-        scene.bordersLayer.alpha = bandTargets.borders;
-      }
     }
     hooks.onLevel(level);
   }
