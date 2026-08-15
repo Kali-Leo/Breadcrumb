@@ -1,19 +1,19 @@
 /**
- * Purpose: the panel beside the square map — world overview and gentle hints when
- * idle, a knowledge-cluster introduction when hovering a place, one plain line when
- * hovering an unnamed islet (a single touch, nothing to enter). A hovered kingdom still
- * lists the names living in it, even though the map itself no longer draws them.
- * AI-written
- * introductions arrive with the naming feature (switch + metering); until then the
- * panel summarizes from local data only.
+ * Purpose: the palace's context stack (spec 046) — what the right panel shows follows what
+ * the learner is pointing at: a knowledge-cluster introduction when hovering a place, one
+ * plain line for an unnamed islet, and at the idle world level the world overview plus the
+ * graduated mirror modules (MirrorStack).
  * Main exports: MapInfoPanel.
  */
 import type { WorldModel } from "@breadcrumb/plugin-map";
+import type { MapLevel } from "./levels";
+import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
 
 interface MapInfoPanelProps {
   world: WorldModel;
   hover: HoverInfo | null;
+  level: MapLevel;
   levelPath: string[];
 }
 
@@ -34,9 +34,7 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
       <div className="rounded-xl bg-white p-3 shadow-sm">
         <p className="text-xs text-stone-400">{KIND_NAMES[hover.kind]}</p>
         <p className="mt-0.5 text-base font-semibold text-stone-700">{hover.label}</p>
-        <p className="mt-1 text-sm text-stone-500">
-          {hover.memberCount} 个知识点 · {hover.childCount} 个下辖
-        </p>
+        <p className="mt-1 text-sm text-stone-500">{hover.memberCount} 个知识点</p>
       </div>
       <div className="rounded-xl bg-white p-3 shadow-sm">
         <p className="mb-1.5 text-xs font-medium text-stone-600">这里住着</p>
@@ -56,16 +54,13 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
           )}
         </div>
       </div>
-      <div className="rounded-xl border border-dashed border-stone-200 p-3 text-xs leading-5 text-stone-400">
-        AI 简介待接入——开启后，这里会根据这片知识写一段简介。
-      </div>
       {/* Only an island can be entered — the island view is the deepest one. */}
       {hover.kind === "island" && <p className="text-xs text-stone-400">滚轮向上，深入这里 →</p>}
     </>
   );
 }
 
-export function MapInfoPanel({ world, hover, levelPath }: MapInfoPanelProps) {
+export function MapInfoPanel({ world, hover, level, levelPath }: MapInfoPanelProps) {
   const islandCount = world.islands.length;
   const kingdomCount = world.islands.reduce((sum, island) => sum + island.kingdoms.length, 0);
   const pointCount = world.islands.reduce((sum, island) => sum + island.memberNodeIds.length, 0);
@@ -91,6 +86,7 @@ export function MapInfoPanel({ world, hover, levelPath }: MapInfoPanelProps) {
             <p>滚轮向下：返回上一层</p>
             <p>点击地名：直接前往</p>
           </div>
+          {level.kind === "world" && <MirrorStack />}
         </>
       ) : (
         <HoverCards hover={hover} />

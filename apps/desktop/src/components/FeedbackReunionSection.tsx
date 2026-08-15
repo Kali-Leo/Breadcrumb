@@ -3,7 +3,7 @@
  * framed as a minimal restart (Marlatt); clicking starts a fresh chat and jumps into it.
  * Main exports: FeedbackReunionSection.
  */
-import { FEEDBACK_COPY, reunionLine } from "@breadcrumb/plugin-feedback";
+import { FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
 import { useState } from "react";
 import { useFeedbackStore } from "../stores/feedbackStore";
 
@@ -27,9 +27,7 @@ export function FeedbackReunionSection() {
         <p className="mt-1 text-stone-400">{FEEDBACK_COPY.reunionEmpty}</p>
       ) : (
         <>
-          <p className="mt-1 text-stone-500">
-            {reunionLine(reunion.waitingCount, reunion.invites.length)}
-          </p>
+          <p className="mt-1 text-stone-500">{FEEDBACK_COPY.reunionIntro}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {reunion.invites.map((invite) => (
               <li key={invite.nodeId}>
@@ -51,7 +49,6 @@ export function FeedbackReunionSection() {
           </ul>
         </>
       )}
-      <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.reunionBasis}</p>
     </section>
   );
 }

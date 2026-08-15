@@ -73,7 +73,6 @@ export function FeedbackSettledSection() {
             />
           </div>
         )}
-        <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.settledBasis}</p>
       </div>
     </details>
   );

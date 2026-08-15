@@ -76,8 +76,8 @@ const FEATURE_ROWS: Array<{
   },
   {
     feature: "feedbackLab",
-    name: "🪞 反馈实验室",
-    hint: "反馈形式试验场:全部由本地数据计算,零 token",
+    name: "🪞 这段时间",
+    hint: "记忆宫殿右栏的回顾内容:全部由本地数据算出,不花钱",
     purposes: [],
   },
   {

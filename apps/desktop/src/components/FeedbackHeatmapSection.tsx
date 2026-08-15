@@ -4,7 +4,7 @@
  * target line, no comparison to anyone else.
  * Main exports: FeedbackHeatmapSection.
  */
-import { continuityLine, FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
+import { activityLine, FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
 import { useEffect, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
 import { useFeedbackStore } from "../stores/feedbackStore";
@@ -81,16 +81,9 @@ export function FeedbackHeatmapSection() {
               showWeekdayLabels={false}
             />
           </div>
-          <p className="mt-2 text-stone-500">
-            {continuityLine(
-              continuity.activeDays,
-              continuity.longestRunDays,
-              continuity.currentRunDays,
-            )}
-          </p>
+          <p className="mt-2 text-stone-500">{activityLine(continuity.activeDays)}</p>
         </>
       )}
-      <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.heatmapBasis}</p>
     </section>
   );
 }

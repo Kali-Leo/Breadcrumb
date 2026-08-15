@@ -72,12 +72,6 @@ export function FeedbackEvidenceSection() {
             ) : (
               <div className="mt-3 space-y-2">
                 <p className="font-medium text-stone-700">{selectedTitle}</p>
-                <p className="text-stone-600">
-                  {FEEDBACK_COPY.evidenceRetentionLabel}:{" "}
-                  {evidence.retention === null
-                    ? FEEDBACK_COPY.evidenceRetentionUnknown
-                    : `${Math.round(evidence.retention * 100)}%`}
-                </p>
                 <div>
                   <p className="text-stone-500">{FEEDBACK_COPY.evidenceEncountersLabel}</p>
                   <ul className="mt-1 space-y-0.5">
@@ -112,7 +106,6 @@ export function FeedbackEvidenceSection() {
             )}
           </div>
         )}
-        <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.evidenceBasis}</p>
       </div>
     </details>
   );

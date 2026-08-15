@@ -10,12 +10,11 @@ import { CompanionSection } from "./CompanionSection";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "lab" | "feedback";
+  activeView: "chat" | "settings" | "map" | "lab";
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenLab(): void;
-  onOpenFeedback(): void;
 }
 
 /** The status bar's network indicator, shrunk to a dot (spec 044): connectivity is
@@ -36,7 +35,6 @@ export function Sidebar({
   onOpenSettings,
   onOpenMap,
   onOpenLab,
-  onOpenFeedback,
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
@@ -67,7 +65,6 @@ export function Sidebar({
           [
             ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],
             ["🧪", "实验室", onOpenLab, activeView === "lab"],
-            ["🪞", "反馈实验室", onOpenFeedback, activeView === "feedback"],
             ["⚙️", "设置", onOpenSettings, activeView === "settings"],
           ] as const
         ).map(([icon, name, onClick, active]) => (

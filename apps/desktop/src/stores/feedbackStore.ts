@@ -1,20 +1,16 @@
 /**
- * Purpose: zustand store for the 🪞 feedback lab (spec 035) — loads every source table once
- * and holds every module's view models, including the T7a three-layer trend series, plus the
+ * Purpose: zustand store for the mirror modules (spec 035; graduated into the palace by
+ * spec 046) — loads every source table once and holds the surviving view models, plus the
  * on-demand evidence lookup and the reunion invite's "start a chat" side effect.
  * Main exports: useFeedbackStore.
  */
 import type {
   CumulativeTotals,
   DailyActivityCell,
-  DailyBiteResult,
-  LayerTrendPoint,
   NodeEvidence,
   ReunionInvite,
   SettledResult,
   SmallWin,
-  SystemGaugeResult,
-  TrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { buildNodeEvidence } from "@breadcrumb/plugin-feedback";
 import { create } from "zustand";
@@ -37,14 +33,8 @@ interface FeedbackState {
   smallWinsWeek: SmallWin[];
   totals: CumulativeTotals | null;
   reunion: { waitingCount: number; invites: ReunionInvite[] };
-  dailyBite: DailyBiteResult | null;
-  systemGauge: SystemGaugeResult | null;
   settled: SettledResult;
   evidenceCandidates: EvidenceCandidate[];
-  trends: {
-    layers: LayerTrendPoint[];
-    wordsSettled: TrendPoint[];
-  };
   selectedEvidenceNodeId: string | null;
   evidence: NodeEvidence | null;
   loadAll(): Promise<void>;
@@ -60,11 +50,8 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   smallWinsWeek: [],
   totals: null,
   reunion: { waitingCount: 0, invites: [] },
-  dailyBite: null,
-  systemGauge: null,
   settled: { nodes: [], words: [] },
   evidenceCandidates: [],
-  trends: { layers: [], wordsSettled: [] },
   selectedEvidenceNodeId: null,
   evidence: null,
 
@@ -82,11 +69,8 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
       smallWinsWeek: data.smallWinsWeek,
       totals: data.totals,
       reunion: data.reunion,
-      dailyBite: data.dailyBite,
-      systemGauge: data.systemGauge,
       settled: data.settled,
       evidenceCandidates: data.evidenceCandidates,
-      trends: data.trends,
     });
   },
 

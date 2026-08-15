@@ -15,6 +15,7 @@ import type { ContinentAssignment } from "@breadcrumb/plugin-map";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/mapNamingActions";
+import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -40,6 +41,12 @@ export function MapView() {
   useEffect(() => {
     void useMemoryStore.getState().refresh();
   }, []);
+
+  // Mirror modules (spec 046): one load per palace visit feeds the whole context stack.
+  const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
+  useEffect(() => {
+    if (feedbackLabEnabled) void useFeedbackStore.getState().loadAll();
+  }, [feedbackLabEnabled]);
 
   // Continents load asynchronously and re-derive whenever the tree changes; until the first
   // load resolves, cachedWorldModel's null-assignment fallback renders. AI names (spec 031
@@ -144,7 +151,7 @@ export function MapView() {
       {/* Square map hugging the left; the info panel takes the rest. */}
       <div ref={containerRef} className="aspect-square h-full shrink-0 overflow-hidden" />
       <div className="min-w-0 flex-1">
-        <MapInfoPanel world={world} hover={hover} levelPath={levelPath} />
+        <MapInfoPanel world={world} hover={hover} level={level} levelPath={levelPath} />
       </div>
     </div>
   );

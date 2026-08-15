@@ -42,7 +42,6 @@ export function FeedbackSmallWinsSection() {
           <SmallWinList wins={week} />
         </div>
       </div>
-      <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.smallWinsBasis}</p>
     </section>
   );
 }

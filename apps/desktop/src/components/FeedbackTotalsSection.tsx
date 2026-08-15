@@ -31,7 +31,6 @@ export function FeedbackTotalsSection() {
           <TotalCard value={totals.conversationCount} label={FEEDBACK_COPY.totalsConversations} />
         </div>
       )}
-      <p className="mt-2 text-[10px] text-stone-400">{FEEDBACK_COPY.totalsBasis}</p>
     </section>
   );
 }
