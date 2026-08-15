@@ -49,17 +49,12 @@ export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
                 onClick={() => void open(companionId)}
                 className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-stone-600 hover:bg-stone-100"
               >
-                <span className="block">{card.data.name}</span>
-                {proposal !== null && (
-                  <span className="mt-0.5 flex items-center gap-1.5">
-                    {!proposalSeen && (
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
-                    )}
-                    <span className="truncate text-stone-400 text-xs">
-                      {COMPANION_COPY.proposalPreview(proposal.topic)}
-                    </span>
-                  </span>
-                )}
+                <span className="flex items-center gap-2">
+                  <span>{card.data.name}</span>
+                  {proposal !== null && !proposalSeen && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                  )}
+                </span>
               </button>
             </li>
           );
