@@ -28,3 +28,6 @@ apps/desktop/src-tauri/gen/
 
 # simlab run artifacts (spec 013)
 packages/simlab/artifacts/
+
+# Claude Code local settings (per-machine, not shared)
+.claude/settings.local.json
