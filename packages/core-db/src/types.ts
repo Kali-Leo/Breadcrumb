@@ -353,3 +353,19 @@ export interface FocusNodeRow {
   answer_text: string;
   created_at: string;
 }
+
+/** Which kind of answer a term-marking pass was run against (spec 043 §5). Validated in
+ * TypeScript, not a DB CHECK — same precedent as conversations.kind (0029). */
+export type TermMarkTargetKind = "message" | "focus_node";
+
+/** One cached term-marking verdict, keyed uniquely by (target_kind, target_id) — a second
+ * lookup for the same target reuses this row instead of paying for another LLM call (spec 043
+ * §5). terms_json is a JSON array of the ordered (obstruction-descending), already-clipped term
+ * strings that shipped as doors. */
+export interface TermMarkRow {
+  id: string;
+  target_kind: TermMarkTargetKind;
+  target_id: string;
+  terms_json: string;
+  created_at: string;
+}

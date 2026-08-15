@@ -92,6 +92,15 @@ export function createFocusNodesRepo(sql: SqlClient) {
         [sessionId],
       );
     },
+    /** Every distinct 'word' station label ever created, across every session (spec 043 §2's
+     * "查词史": a word became a station because the learner picked it, i.e. didn't already know
+     * it). Order is incidental (GROUP BY, not a ranking) — callers cap and use as-is. */
+    async listDistinctWordLabels(): Promise<string[]> {
+      const rows = await sql.select<{ label: string }>(
+        "SELECT DISTINCT label FROM focus_nodes WHERE kind = 'word'",
+      );
+      return rows.map((row) => row.label);
+    },
     /** Not used on the normal insert-only path; kept for a future edit/retry affordance. */
     async updateAnswer(id: string, answerText: string): Promise<void> {
       await sql.execute("UPDATE focus_nodes SET answer_text = ? WHERE id = ?", [answerText, id]);

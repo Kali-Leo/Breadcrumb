@@ -25,4 +25,5 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "companion-memory": "伙伴记忆",
   "companion-script": "回讲脚本",
   "focus-explain": "专注解释",
+  "term-marking": "生词标注",
 };

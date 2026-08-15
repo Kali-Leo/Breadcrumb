@@ -110,6 +110,12 @@ const FEATURE_ROWS: Array<{
     hint: "专注模式里选词或提问,每一站生成一次讲解",
     purposes: ["focus-explain"],
   },
+  {
+    feature: "termMarking",
+    name: "🖊️ 生词标注",
+    hint: "每条回答/专注解释生成后调用一次,标出可能读不懂的词;同一条只标一次",
+    purposes: ["term-marking"],
+  },
 ];
 
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */

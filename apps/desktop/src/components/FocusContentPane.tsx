@@ -28,6 +28,7 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
   const errorText = useFocusStore((state) => state.errorText);
   const pendingGuess = useFocusStore((state) => state.pendingGuess);
   const openedDoorNodeIds = useFocusStore((state) => state.openedDoorNodeIds);
+  const conversationId = useFocusStore((state) => state.conversationId);
   const selectWord = useFocusStore((state) => state.selectWord);
   const submitGuess = useFocusStore((state) => state.submitGuess);
   const skipGuess = useFocusStore((state) => state.skipGuess);
@@ -43,17 +44,22 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
 
   useEffect(() => {
     let cancelled = false;
-    if (currentNode === null || currentNode.answer_text.length === 0) {
+    if (currentNode === null || currentNode.answer_text.length === 0 || conversationId === null) {
       setDoors([]);
       return;
     }
-    void computeFocusDoorPatches(currentNode.answer_text, openedDoorNodeIds).then((result) => {
+    void computeFocusDoorPatches(
+      currentNode.answer_text,
+      openedDoorNodeIds,
+      currentNode.id,
+      conversationId,
+    ).then((result) => {
       if (!cancelled) setDoors(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [currentNode, openedDoorNodeIds]);
+  }, [currentNode, openedDoorNodeIds, conversationId]);
 
   useEffect(() => {
     function onMouseUp() {

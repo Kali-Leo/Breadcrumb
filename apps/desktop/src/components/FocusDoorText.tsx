@@ -37,10 +37,10 @@ export function FocusDoorText({
   patches: DoorCandidate[];
   rangeStart?: number;
   rangeEnd?: number;
-  /** nodeId is the door's matching knowledge node — always present (pickDoors only ever
-   * offers doors for nodes that exist). Ordinary replies use it to mark the node "opened"
-   * (spec 039 §2.1's alreadyOpenedNodeIds); the focus overlay's own doors ignore it. */
-  onSelect: (word: string, nodeId: string) => void;
+  /** nodeId is the door's matching knowledge node, or null for a term-marked word with no
+   * known node (spec 043 §6). Ordinary replies use a non-null id to mark the node "opened"
+   * (spec 039 §2.1's alreadyOpenedNodeIds); the focus overlay's own doors ignore it either way. */
+  onSelect: (word: string, nodeId: string | null) => void;
 }) {
   const base = rangeStart ?? 0;
   const slice = rangeEnd === undefined ? content.slice(base) : content.slice(base, rangeEnd);

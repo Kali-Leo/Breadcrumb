@@ -13,4 +13,6 @@ export * from "./focusPrompts";
 export * from "./focusRecord";
 export * from "./gatePolicy";
 export * from "./guessGrading";
+export * from "./hubNodes";
+export * from "./termAnnotator";
 export * from "./uiCopy";

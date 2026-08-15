@@ -773,6 +773,25 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0035_focus_session_source_message",
     statements: [`ALTER TABLE focus_sessions ADD COLUMN source_message_id TEXT;`],
   },
+  {
+    // Spec 043 §5: caches one term-marking LLM call's verdict per (target_kind, target_id) so
+    // a message or focus-node answer is ever marked at most once — a second door-picking pass
+    // over the same target reads this row instead of paying for another call. target_kind is
+    // 'message' | 'focus_node', validated in TypeScript (same precedent as conversations.kind,
+    // 0029). terms_json holds the ordered (obstruction-descending) term list exactly as clipped
+    // before insert, i.e. what actually shipped as doors.
+    id: "0036_term_marks",
+    statements: [
+      `CREATE TABLE term_marks (
+        id TEXT PRIMARY KEY,
+        target_kind TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        terms_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE UNIQUE INDEX idx_term_marks_target ON term_marks(target_kind, target_id);`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

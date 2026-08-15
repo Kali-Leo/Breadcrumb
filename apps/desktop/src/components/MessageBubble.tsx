@@ -56,13 +56,13 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
     messageId === undefined ? undefined : state.doorsByMessage.get(messageId),
   );
   useEffect(() => {
-    if (author !== "assistant" || messageId === undefined) return;
+    if (author !== "assistant" || messageId === undefined || conversationId === null) return;
     if (diglotEnabled && patches === undefined) return;
     // doorsForMessage is a dep on purpose: the nodesExtracted invalidation clears empty
     // entries, and this effect re-running is what recomputes them with real sightings.
     if (doorsForMessage !== undefined) return;
-    void useDoorStore.getState().ensureDoors(messageId, displaySource);
-  }, [author, messageId, diglotEnabled, patches, displaySource, doorsForMessage]);
+    void useDoorStore.getState().ensureDoors(messageId, displaySource, conversationId);
+  }, [author, messageId, diglotEnabled, patches, displaySource, doorsForMessage, conversationId]);
 
   // Silent re-encounter (vision/09): an assistant message dwelled on ≥50%-visible for 2s
   // re-sights its attributed nodes — rereading old ground is a review, at message grain.
@@ -105,8 +105,10 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
       .getState()
       .startFromWord(conversationId, rootLabel, displaySource, messageId ?? null);
   };
-  const openFocusFromDoor = (word: string, nodeId: string) => {
-    useDoorStore.getState().markOpened(nodeId);
+  const openFocusFromDoor = (word: string, nodeId: string | null) => {
+    // A term-marked word with no matching knowledge node has nothing to mark "opened"
+    // (spec 043 §6) — it still opens a focus session directly, same as any other door.
+    if (nodeId !== null) useDoorStore.getState().markOpened(nodeId);
     openFocus(word);
   };
 

@@ -1,6 +1,8 @@
 /**
  * Purpose: zero-LLM door candidate selection (spec 039 §2.1) — picks which node labels
  * sighted in an assistant message become clickable "doors", capped by density and mastery.
+ * Also the shared door-patch shape termAnnotator's locateTermPatches produces (spec 043 §6):
+ * nodeId is null there until a caller enriches it against a known label.
  * Main exports: pickDoors, DoorCandidate, DoorPickInput, DOOR_LIT_THRESHOLD, MAX_DOORS_PER_MESSAGE.
  */
 
@@ -8,7 +10,10 @@ export interface DoorCandidate {
   start: number;
   end: number;
   original: string;
-  nodeId: string;
+  /** null = no known knowledge-tree node matches this door's word (spec 043 §6: an LLM
+   * term-marking pick may be a brand-new term with no node at all). Clicking it still opens a
+   * focus session — it just has nothing to mark "opened" or grade a guess against. */
+  nodeId: string | null;
 }
 
 export interface DoorPickInput {
@@ -75,10 +80,15 @@ function findFirstMatch(
  * Priority for the density cut is curiosity desc, then retention asc (hungriest first);
  * candidates are then greedily placed in priority order, skipping anything that would
  * overlap an already-placed span (reserved or previously picked). */
+/** pickDoors only ever matches against `input.messageNodes`, whose nodeId is a plain string —
+ * narrower than DoorCandidate's public (nullable) nodeId, which exists for termAnnotator's
+ * node-less term doors instead. */
+type MatchedCandidate = Omit<DoorCandidate, "nodeId"> & { nodeId: string };
+
 export function pickDoors(input: DoorPickInput): DoorCandidate[] {
   const reserved = input.reservedSpans ?? [];
 
-  const matched: DoorCandidate[] = [];
+  const matched: MatchedCandidate[] = [];
   for (const node of input.messageNodes) {
     if (node.label.length < MIN_LABEL_LENGTH) continue;
     if ((input.masteryByNode.get(node.nodeId) ?? 0) >= DOOR_LIT_THRESHOLD) continue;
@@ -97,7 +107,7 @@ export function pickDoors(input: DoorPickInput): DoorCandidate[] {
     return retentionA - retentionB;
   });
 
-  const placed: DoorCandidate[] = [];
+  const placed: MatchedCandidate[] = [];
   const occupied: { start: number; end: number }[] = [...reserved];
   for (const candidate of prioritized) {
     if (placed.length >= MAX_DOORS_PER_MESSAGE) break;

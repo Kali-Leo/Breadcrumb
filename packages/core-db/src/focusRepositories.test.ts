@@ -33,6 +33,13 @@ function makeFakeSql() {
         const [sessionId] = params as [string];
         return Promise.resolve(nodeRows.filter((row) => row.session_id === sessionId) as Row[]);
       }
+      if (sql.includes("SELECT DISTINCT label FROM focus_nodes WHERE kind = 'word'")) {
+        return Promise.resolve(
+          [...new Set(nodeRows.filter((row) => row.kind === "word").map((row) => row.label))].map(
+            (label) => ({ label }),
+          ) as Row[],
+        );
+      }
       return Promise.resolve([] as Row[]);
     },
     execute: (sql: string, params?: readonly unknown[]) => {
@@ -210,6 +217,43 @@ describe("createFocusNodesRepo", () => {
     await repo.updateLabel("n1", "短名");
     const nodes = await repo.listBySession("s1");
     expect(nodes[0]?.label).toBe("短名");
+  });
+
+  it("lists every distinct 'word' station label across sessions, ignoring 'question' stations", async () => {
+    const { client } = makeFakeSql();
+    const repo = createFocusNodesRepo(client);
+    await repo.insert({
+      id: "n1",
+      session_id: "s1",
+      parent_id: null,
+      kind: "word",
+      label: "闭包",
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:00:00Z",
+    });
+    await repo.insert({
+      id: "n2",
+      session_id: "s2",
+      parent_id: null,
+      kind: "word",
+      label: "闭包", // same label, different session — deduped
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:01:00Z",
+    });
+    await repo.insert({
+      id: "n3",
+      session_id: "s1",
+      parent_id: "n1",
+      kind: "question",
+      label: "为什么会内存泄漏",
+      question_text: "为什么闭包容易导致内存泄漏？",
+      answer_text: "",
+      created_at: "2026-08-14T10:02:00Z",
+    });
+
+    expect(await repo.listDistinctWordLabels()).toEqual(["闭包"]);
   });
 
   it("deletes every station of a session, leaving other sessions untouched", async () => {

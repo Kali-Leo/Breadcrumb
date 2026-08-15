@@ -31,6 +31,7 @@ import {
   createPracticeRepo,
   createResearchRepo,
   createSettingsRepo,
+  createTermMarksRepo,
   createTrailSummariesRepo,
   runMigrations,
   type SqlClient,
@@ -65,6 +66,7 @@ export interface Repos {
   companionKnowledgeState: ReturnType<typeof createCompanionKnowledgeStateRepo>;
   focusSessions: ReturnType<typeof createFocusSessionsRepo>;
   focusNodes: ReturnType<typeof createFocusNodesRepo>;
+  termMarks: ReturnType<typeof createTermMarksRepo>;
 }
 
 let sqlClientPromise: Promise<SqlClient> | null = null;
@@ -112,6 +114,7 @@ async function buildRepos(): Promise<Repos> {
     companionKnowledgeState: createCompanionKnowledgeStateRepo(sqlClient),
     focusSessions: createFocusSessionsRepo(sqlClient),
     focusNodes: createFocusNodesRepo(sqlClient),
+    termMarks: createTermMarksRepo(sqlClient),
   };
 }
 

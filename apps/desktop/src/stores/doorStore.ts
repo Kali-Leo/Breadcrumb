@@ -15,7 +15,7 @@ interface DoorState {
   doorsByMessage: Map<string, DoorCandidate[]>;
   /** Node ids already opened as doors this conversation — pickDoors never repeats them. */
   openedNodeIds: Set<string>;
-  ensureDoors(messageId: string, displaySource: string): Promise<void>;
+  ensureDoors(messageId: string, displaySource: string, conversationId: string): Promise<void>;
   markOpened(nodeId: string): void;
   /** Clears every session-scoped field — call when the active conversation changes. */
   resetForConversation(): void;
@@ -25,11 +25,11 @@ export const useDoorStore = create<DoorState>((set, get) => ({
   doorsByMessage: new Map(),
   openedNodeIds: new Set(),
 
-  async ensureDoors(messageId, displaySource) {
+  async ensureDoors(messageId, displaySource, conversationId) {
     if (get().doorsByMessage.has(messageId)) return;
     get().doorsByMessage.set(messageId, []); // reserve to keep the pick single-flight
     const { computeDoorPatches } = await import("../lib/conceptDoors");
-    const doors = await computeDoorPatches(messageId, displaySource);
+    const doors = await computeDoorPatches(messageId, displaySource, conversationId);
     set({ doorsByMessage: new Map(get().doorsByMessage).set(messageId, doors) });
   },
 

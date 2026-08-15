@@ -21,8 +21,9 @@ export interface DoorContext {
   patches: DoorCandidate[];
   /** A door word click-to-select handler — an ordinary reply opens a focus session directly,
    * the focus overlay's own doors select a new station (spec 042 §5). Every caller supplies
-   * one now: the old hover/click popover (spec 039 §2.2) is gone. */
-  onSelect: (word: string, nodeId: string) => void;
+   * one now: the old hover/click popover (spec 039 §2.2) is gone. nodeId is null for a
+   * term-marked word with no matching knowledge node (spec 043 §6). */
+  onSelect: (word: string, nodeId: string | null) => void;
 }
 
 export interface AnyNode extends Node {

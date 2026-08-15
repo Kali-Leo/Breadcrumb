@@ -53,6 +53,10 @@ export interface FeatureSwitches {
    * streamed answer. Off leaves the rest of focus mode (entry, subway map, exit record)
    * working, just with no way to generate a new station's content. */
   focusExplain: boolean;
+  /** Term marking (spec 043): one small call after a reply/focus answer lands, picking which
+   * words would trip up this learner — the primary source of explore doors. Off leaves doors
+   * to the zero-LLM legacy node-matching source only. */
+  termMarking: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -101,6 +105,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   companionMemory: true,
   companionScript: true,
   focusExplain: true,
+  termMarking: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

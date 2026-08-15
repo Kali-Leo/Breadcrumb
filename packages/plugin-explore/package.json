@@ -10,7 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@breadcrumb/core-db": "workspace:*"
+    "@breadcrumb/core-db": "workspace:*",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
