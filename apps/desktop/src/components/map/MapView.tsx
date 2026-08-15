@@ -22,7 +22,7 @@ import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { GoalView } from "../goal/GoalView";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
-import { KingdomSubwayView, type SubwayKingdom } from "./KingdomSubwayView";
+import { type KingdomRef, KingdomView } from "./kingdom/KingdomView";
 import { findIsland, type MapLevel } from "./levels";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { MapModeToggle } from "./MapModeToggle";
@@ -40,7 +40,7 @@ export function MapView() {
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
   const [goalViewOpen, setGoalViewOpen] = useState(false);
-  const [subwayKingdom, setSubwayKingdom] = useState<SubwayKingdom | null>(null);
+  const [subwayKingdom, setSubwayKingdom] = useState<KingdomRef | null>(null);
   const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
@@ -209,7 +209,7 @@ export function MapView() {
       )}
       {subwayKingdom !== null && (
         <div className="absolute inset-0 z-20 bg-stone-50">
-          <KingdomSubwayView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />
+          <KingdomView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />
         </div>
       )}
     </div>
