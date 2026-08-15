@@ -27,7 +27,7 @@ export function SelfReportCard() {
 
   return (
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
-      <h3 className="font-semibold text-stone-600">告诉我你已经会的</h3>
+      <h3 className="font-semibold text-stone-600">这片你已经会一些？告诉我</h3>
       <div className="mt-1 flex gap-1">
         <input
           value={text}

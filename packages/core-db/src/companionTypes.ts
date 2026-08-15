@@ -36,11 +36,16 @@ export type CompanionProposalStatus = "pending" | "accepted" | "declined" | "exp
  * because the gate itself is pure/rule-based and may in principle propose without a node
  * (kept nullable to match the spec's table contract, not currently produced by the gate).
  * resolved_at is null while status is 'pending'. */
+/** Which invitation the proposal carries: teach-back (讲给我听) or reunion (一起回顾) —
+ * spec 048 §5 folded reunion invites into the same gate. */
+export type CompanionProposalKind = "teach" | "reunion";
+
 export interface CompanionProposalRow {
   id: string;
   companion_id: string;
   node_id: string | null;
   topic: string;
+  kind: CompanionProposalKind;
   status: CompanionProposalStatus;
   created_at: string;
   resolved_at: string | null;

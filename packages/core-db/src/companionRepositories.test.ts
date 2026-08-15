@@ -131,16 +131,26 @@ function makeFakeSql() {
           if (row) memories.set(id, { ...row, last_accessed_at: isoNow });
         }
       } else if (sql.includes("INTO companion_proposals")) {
-        const [id, companion_id, node_id, topic, status, created_at, resolved_at] = p as [
+        const [id, companion_id, node_id, topic, kind, status, created_at, resolved_at] = p as [
           string,
           string,
           string | null,
           string,
+          CompanionProposalRow["kind"],
           CompanionProposalRow["status"],
           string,
           string | null,
         ];
-        proposals.set(id, { id, companion_id, node_id, topic, status, created_at, resolved_at });
+        proposals.set(id, {
+          id,
+          companion_id,
+          node_id,
+          topic,
+          kind,
+          status,
+          created_at,
+          resolved_at,
+        });
       } else if (sql.startsWith("UPDATE companion_proposals SET status")) {
         const [status, resolved_at, id] = p as [CompanionProposalRow["status"], string, string];
         const row = proposals.get(id);
@@ -236,6 +246,7 @@ describe("companion proposals repo", () => {
     companion_id: "shichimi",
     node_id: "node-1",
     topic: "递归",
+    kind: "teach",
     status: "pending",
     created_at: "2026-08-01T00:00:00.000Z",
     resolved_at: null,

@@ -67,13 +67,14 @@ export function createCompanionProposalsRepo(sql: SqlClient) {
     async insert(row: CompanionProposalRow): Promise<void> {
       await sql.execute(
         `INSERT INTO companion_proposals
-           (id, companion_id, node_id, topic, status, created_at, resolved_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+           (id, companion_id, node_id, topic, kind, status, created_at, resolved_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           row.id,
           row.companion_id,
           row.node_id,
           row.topic,
+          row.kind,
           row.status,
           row.created_at,
           row.resolved_at,

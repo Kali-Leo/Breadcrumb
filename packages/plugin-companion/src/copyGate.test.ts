@@ -79,6 +79,7 @@ describe("companion copy gates", () => {
     COMPANION_COPY.sectionTitle,
     COMPANION_COPY.aiLabel,
     COMPANION_COPY.invitation("二分查找"),
+    COMPANION_COPY.reunionInvitation("二分查找"),
     CRISIS_RESPONSE,
     BREAK_REMINDER_COPY,
     IMPORTANCE_PROMPT,

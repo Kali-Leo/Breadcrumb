@@ -1,11 +1,13 @@
 /**
- * Purpose: the palace's context stack (spec 046) — what the right panel shows follows what
- * the learner is pointing at: a knowledge-cluster introduction when hovering a place, one
- * plain line for an unnamed islet, and at the idle world level the world overview plus the
- * graduated mirror modules (MirrorStack).
+ * Purpose: the palace's right rail (re-cut by Leo, spec 048 §1) — hovering a place shows
+ * its cluster card; otherwise the world level shows the heatmap/settled cards, continue
+ * suggestions and (ranked mode) the goal card, and a dived island shows island-scoped
+ * suggestions plus the self-report card. The wheel/click operation hints stay pinned at
+ * the bottom in every state.
  * Main exports: MapInfoPanel.
  */
 import type { WorldModel } from "@breadcrumb/plugin-map";
+import { useSettingsStore } from "../../stores/settingsStore";
 import { ContinueCard } from "./ContinueCard";
 import { GoalCard } from "./GoalCard";
 import { findIsland, type MapLevel } from "./levels";
@@ -17,7 +19,6 @@ interface MapInfoPanelProps {
   world: WorldModel;
   hover: HoverInfo | null;
   level: MapLevel;
-  levelPath: string[];
   onOpenGoalView(): void;
 }
 
@@ -64,61 +65,40 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
   );
 }
 
-export function MapInfoPanel({
-  world,
-  hover,
-  level,
-  levelPath,
-  onOpenGoalView,
-}: MapInfoPanelProps) {
-  const islandCount = world.islands.length;
-  const kingdomCount = world.islands.reduce((sum, island) => sum + island.kingdoms.length, 0);
-  const pointCount = world.islands.reduce((sum, island) => sum + island.memberNodeIds.length, 0);
+export function MapInfoPanel({ world, hover, level, onOpenGoalView }: MapInfoPanelProps) {
+  const learningMode = useSettingsStore((state) => state.learningMode);
 
   return (
-    <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto border-l border-stone-200 bg-stone-50 p-4">
-      <div>
-        <h2 className="text-lg font-semibold text-stone-700">记忆宫殿</h2>
-        <p className="mt-1 text-xs text-stone-400">{levelPath.join(" · ")}</p>
-      </div>
-
-      {hover === null ? (
-        <>
-          <div className="rounded-xl bg-white p-3 text-sm text-stone-600 shadow-sm">
-            <p>
-              {islandCount} 座岛屿 · {kingdomCount} 个国度
-            </p>
-            <p className="mt-1">{pointCount} 个知识点已定居</p>
-          </div>
-          <div className="rounded-xl bg-white p-3 text-xs leading-5 text-stone-500 shadow-sm">
-            <p className="mb-1 font-medium text-stone-600">操作</p>
-            <p>滚轮向上：深入指针所指的地方</p>
-            <p>滚轮向下：返回上一层</p>
-            <p>点击地名：直接前往</p>
-          </div>
-          {level.kind === "world" ? (
-            // Idle world level: the full context stack (spec 046/047).
-            <>
-              <MirrorStack />
-              <ContinueCard />
-              <SelfReportCard />
-              <GoalCard onOpenGoalView={onOpenGoalView} />
-            </>
-          ) : (
-            // Dived into an island: suggestions scoped to this island's own members.
-            (() => {
-              const island = findIsland(world, level.islandId);
-              return (
+    <aside className="flex h-full w-full flex-col border-l border-stone-200 bg-stone-50">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        {hover !== null ? (
+          <HoverCards hover={hover} />
+        ) : level.kind === "world" ? (
+          <>
+            <MirrorStack />
+            <ContinueCard />
+            {learningMode === "ranked" && <GoalCard onOpenGoalView={onOpenGoalView} />}
+          </>
+        ) : (
+          (() => {
+            const island = findIsland(world, level.islandId);
+            return (
+              <>
                 <ContinueCard
                   filterNodeIds={island === undefined ? undefined : new Set(island.memberNodeIds)}
                 />
-              );
-            })()
-          )}
-        </>
-      ) : (
-        <HoverCards hover={hover} />
-      )}
+                <SelfReportCard />
+              </>
+            );
+          })()
+        )}
+      </div>
+      {/* Pinned in every state (Leo: the hints must not disappear when hovering). */}
+      <div className="shrink-0 border-t border-stone-200 p-3 text-xs leading-5 text-stone-500">
+        <p>滚轮向上：深入指针所指的地方</p>
+        <p>滚轮向下：返回上一层</p>
+        <p>点击地名：直接前往</p>
+      </div>
     </aside>
   );
 }

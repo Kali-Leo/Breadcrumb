@@ -792,6 +792,12 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE UNIQUE INDEX idx_term_marks_target ON term_marks(target_kind, target_id);`,
     ],
   },
+  {
+    // Spec 048 §5: reunion invitations join teach-back in the companion proposal gate —
+    // one kind column tells them apart; every pre-existing row was a teach proposal.
+    id: "0037_companion_proposal_kind",
+    statements: [`ALTER TABLE companion_proposals ADD COLUMN kind TEXT NOT NULL DEFAULT 'teach';`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

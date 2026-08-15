@@ -91,10 +91,14 @@ export async function openCompanionConversation(companionId: string): Promise<st
   return conversationId;
 }
 
-/** Delivers a teach-back invitation as the companion's own chat message: reuses (or creates)
- * her companion conversation and appends the invitation at the newest leaf. If that
- * conversation happens to be open on screen, the message is folded into the live view too. */
-export async function appendCompanionInvitation(companionId: string, topic: string): Promise<void> {
+/** Delivers a teach-back or reunion invitation as the companion's own chat message: reuses
+ * (or creates) her companion conversation and appends the invitation at the newest leaf. If
+ * that conversation happens to be open on screen, the message is folded into the live view. */
+export async function appendCompanionInvitation(
+  companionId: string,
+  topic: string,
+  kind: "teach" | "reunion" = "teach",
+): Promise<void> {
   const repos = await getRepos();
   const conversationId = await openCompanionConversation(companionId);
   const allMessages = await repos.messages.listByConversation(conversationId);
@@ -102,7 +106,10 @@ export async function appendCompanionInvitation(companionId: string, topic: stri
     id: newId(),
     conversation_id: conversationId,
     role: "assistant" as const,
-    content: COMPANION_COPY.invitation(topic),
+    content:
+      kind === "reunion"
+        ? COMPANION_COPY.reunionInvitation(topic)
+        : COMPANION_COPY.invitation(topic),
     created_at: nowIso(),
     teaching_mode: null,
     parent_id: newestLeafId(allMessages),

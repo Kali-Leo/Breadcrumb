@@ -7,7 +7,7 @@
  * knowledgeStore/memoryStore's own subscription pattern.
  * Main exports: useCompanionStore.
  */
-import type { CompanionProposalRow } from "@breadcrumb/core-db";
+import type { CompanionProposalKind, CompanionProposalRow } from "@breadcrumb/core-db";
 import type { CompanionCard } from "@breadcrumb/plugin-companion";
 import {
   DEFAULT_QUIET_HOURS,
@@ -15,6 +15,7 @@ import {
   detectCrisis,
   loadCompanionCards,
 } from "@breadcrumb/plugin-companion";
+import { DEFAULT_REUNION_WAITING_THRESHOLD, pickReunionInvites } from "@breadcrumb/plugin-feedback";
 import { create } from "zustand";
 import { appendCompanionInvitation, seedTeachScriptForConversation } from "../lib/companionActions";
 import {
@@ -121,10 +122,27 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     await useMemoryStore.getState().refresh();
     const nodes = useKnowledgeStore.getState().nodes;
     const retentionByNode = useMemoryStore.getState().retentionByNode;
-    const candidateTopics = pickTeachCandidates(nodes, retentionByNode, 3).map((node) => ({
+
+    // Teach-back and reunion invitations alternate (spec 048 §5) — whichever kind went out
+    // last, the other goes next, falling back when one has no candidates. Both share the
+    // same rate/quiet-hours gate.
+    const teachTopics = pickTeachCandidates(nodes, retentionByNode, 3).map((node) => ({
       nodeId: node.id,
       topic: node.label,
     }));
+    const nodeTitles = new Map(nodes.map((node) => [node.id, node.label]));
+    const reunionTopics = pickReunionInvites(retentionByNode, nodeTitles, {
+      limit: 3,
+      waitingThreshold: DEFAULT_REUNION_WAITING_THRESHOLD,
+    }).invites.map((invite) => ({ nodeId: invite.nodeId, topic: invite.title }));
+
+    const lastKind: CompanionProposalKind = sweep.updatedRows[0]?.kind ?? "reunion";
+    const preferredKind: CompanionProposalKind = lastKind === "teach" ? "reunion" : "teach";
+    const preferredTopics = preferredKind === "teach" ? teachTopics : reunionTopics;
+    const kind: CompanionProposalKind =
+      preferredTopics.length > 0 ? preferredKind : preferredKind === "teach" ? "reunion" : "teach";
+    const candidateTopics = kind === "teach" ? teachTopics : reunionTopics;
+
     const decision = decideProposal({
       nowIso: now,
       recentProposals: sweep.updatedRows,
@@ -137,16 +155,19 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     }
     const row: CompanionProposalRow = {
       id: newId(),
-      companion_id: "shichimi",
+      // Shichimi (the student) asks to be taught; Cumin (the mentor) invites a reunion.
+      companion_id: kind === "teach" ? "shichimi" : "cumin",
       node_id: decision.nodeId,
       topic: decision.topic,
+      kind,
       status: "pending",
       created_at: now,
       resolved_at: null,
     };
     await repos.companionProposals.insert(row);
-    // The invitation is delivered as her own chat message — the sidebar dot marks it unread.
-    await appendCompanionInvitation(row.companion_id, row.topic);
+    // The invitation is delivered as the companion's own chat message — the sidebar dot
+    // marks it unread.
+    await appendCompanionInvitation(row.companion_id, row.topic, row.kind);
     set({ activeProposal: row, proposalSeen: false });
   },
 
@@ -160,6 +181,9 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     const repos = await getRepos();
     await repos.companionProposals.resolve(proposal.id, "accepted", nowIso());
     set({ activeProposal: null, proposalSeen: true });
+    // A reunion needs no teach script — the invitation itself is the context and the
+    // conversation simply continues (spec 048 §5).
+    if (proposal.kind === "reunion") return;
     const knownNodeLabels = useKnowledgeStore.getState().nodes.map((node) => node.label);
     await seedTeachScriptForConversation(conversationId, proposal.topic, knownNodeLabels);
   },

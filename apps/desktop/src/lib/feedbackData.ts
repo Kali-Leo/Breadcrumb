@@ -1,85 +1,47 @@
 /**
- * Purpose: one-shot fetch of every table the mirror modules read (spec 035; graduated into
- * the palace by spec 046) plus assembly of the surviving view models via
- * @breadcrumb/plugin-feedback's pure functions.
- * Main exports: FeedbackData, EvidenceCandidate, loadFeedbackData.
+ * Purpose: one-shot fetch of the tables the surviving mirror cards read (spec 035 → 048)
+ * plus assembly of their view models via @breadcrumb/plugin-feedback's pure functions.
+ * Main exports: FeedbackData, loadFeedbackData.
  */
-import type {
-  DiglotWordGuessRow,
-  DiglotWordStateRow,
-  MasteryClaimRow,
-  NodeSightingRow,
-} from "@breadcrumb/core-db";
+import type { DiglotWordStateRow } from "@breadcrumb/core-db";
 import {
-  type CumulativeTotals,
   computeContinuity,
-  computeCumulativeTotals,
   computeDailyActivity,
   computeSettled,
-  computeSmallWins,
   type DailyActivityCell,
-  DEFAULT_REUNION_WAITING_THRESHOLD,
-  pickReunionInvites,
-  type ReunionInvite,
   type SettledResult,
-  type SmallWin,
 } from "@breadcrumb/plugin-feedback";
 import { computeRetentionByNode } from "@breadcrumb/plugin-memory";
 import { getRepos } from "./db";
-import { nowIso, todayLocalMidnightIso } from "./time";
+import { nowIso } from "./time";
 
-/** 365 days of heatmap history, three reunion invites shown at once — the same figures the
- * spec's copy templates were tested against. */
+/** 365 days of heatmap history — the figure the spec's copy templates were tested against. */
 const HEATMAP_DAYS = 365;
-const REUNION_INVITE_LIMIT = 3;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-export interface EvidenceCandidate {
-  nodeId: string;
-  title: string;
-  lastSeenIso: string;
-}
 
 export interface FeedbackData {
   cells: DailyActivityCell[];
   continuity: { activeDays: number; longestRunDays: number; currentRunDays: number };
-  smallWinsToday: SmallWin[];
-  smallWinsWeek: SmallWin[];
-  totals: CumulativeTotals;
-  reunion: { waitingCount: number; invites: ReunionInvite[] };
   settled: SettledResult;
-  evidenceCandidates: EvidenceCandidate[];
-  // Raw rows kept around so the evidence section can call buildNodeEvidence on demand
-  // without a second round-trip — it is pure and cheap given data already in memory.
-  sightings: NodeSightingRow[];
-  conversationTitlesById: Map<string, string>;
-  retentionByNode: Map<string, number>;
-  masteryClaims: MasteryClaimRow[];
 }
 
-/** Fetches sightings, the node tree, conversations, mastery claims, and every installed
- * diglot pack's word states/guesses, then computes all modules' view models. Frequent
- * full pulls of sightings match the 🧪 lab panel's existing scale (spec 035 §架构). */
+/** Fetches sightings, the node tree, conversations and every installed diglot pack's word
+ * states/guesses, then computes the heatmap and settled view models. */
 export async function loadFeedbackData(): Promise<FeedbackData> {
   const repos = await getRepos();
   const now = nowIso();
-  const todayMidnight = todayLocalMidnightIso();
-  const weekAgo = new Date(Date.parse(todayMidnight) - 6 * MS_PER_DAY).toISOString();
 
-  const [sightings, nodes, conversations, masteryClaims, packs] = await Promise.all([
+  const [sightings, nodes, conversations, packs] = await Promise.all([
     repos.nodeSightings.listAll(),
     repos.knowledgeNodes.listAll(),
     repos.conversations.listRecentFirst(),
-    repos.masteryClaims.listAll(),
     repos.diglot.listPacks(),
   ]);
   const statesByPack = await Promise.all(packs.map((pack) => repos.diglot.listStates(pack.id)));
   const guessesByPack = await Promise.all(packs.map((pack) => repos.diglot.listGuesses(pack.id)));
   const wordStates: DiglotWordStateRow[] = statesByPack.flat();
-  const guesses: DiglotWordGuessRow[] = guessesByPack.flat();
+  const guesses = guessesByPack.flat();
 
   const nodeTitleById = new Map(nodes.map((node) => [node.id, node.label]));
-  const conversationTitlesById = new Map(conversations.map((c) => [c.id, c.title]));
   const retentionByNode = computeRetentionByNode(sightings, now);
 
   // Heatmap footprint: node encounters, word guesses, and one mark per conversation opened —
@@ -94,57 +56,7 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
   );
   const continuity = computeContinuity(cells);
 
-  const smallWinsToday = computeSmallWins({
-    sightings,
-    nodeTitleById,
-    guesses,
-    teachConversations: conversations,
-    window: { sinceIso: todayMidnight, nowIso: now },
-  });
-  const smallWinsWeek = computeSmallWins({
-    sightings,
-    nodeTitleById,
-    guesses,
-    teachConversations: conversations,
-    window: { sinceIso: weekAgo, nowIso: now },
-  });
-
-  const totals = computeCumulativeTotals({ sightings, wordStates, conversations });
-
-  const reunion = pickReunionInvites(retentionByNode, nodeTitleById, {
-    limit: REUNION_INVITE_LIMIT,
-    waitingThreshold: DEFAULT_REUNION_WAITING_THRESHOLD,
-  });
-
   const settled = computeSettled({ sightings, nodeTitleById, retentionByNode, wordStates });
 
-  const lastSeenByNode = new Map<string, string>();
-  for (const sighting of sightings) {
-    const current = lastSeenByNode.get(sighting.node_id);
-    if (current === undefined || sighting.created_at > current) {
-      lastSeenByNode.set(sighting.node_id, sighting.created_at);
-    }
-  }
-  const evidenceCandidates: EvidenceCandidate[] = [...lastSeenByNode.entries()]
-    .map(([nodeId, lastSeenIso]) => ({
-      nodeId,
-      title: nodeTitleById.get(nodeId) ?? nodeId,
-      lastSeenIso,
-    }))
-    .sort((a, b) => b.lastSeenIso.localeCompare(a.lastSeenIso));
-
-  return {
-    cells,
-    continuity,
-    smallWinsToday,
-    smallWinsWeek,
-    totals,
-    reunion,
-    settled,
-    evidenceCandidates,
-    sightings,
-    conversationTitlesById,
-    retentionByNode,
-    masteryClaims,
-  };
+  return { cells, continuity, settled };
 }

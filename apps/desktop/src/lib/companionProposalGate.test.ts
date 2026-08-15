@@ -17,6 +17,7 @@ function proposal(
     companion_id: "shichimi",
     node_id: null,
     topic: "闭包",
+    kind: "teach",
     status,
     created_at: createdAt,
     resolved_at: status === "pending" ? null : createdAt,

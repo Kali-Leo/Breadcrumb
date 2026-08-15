@@ -121,4 +121,8 @@ export const COMPANION_COPY = {
    * Zero-LLM template; mirrors the plain teach opener's register. */
   invitation: (topic: string): string =>
     `「${topic}」这部分我还没弄懂。你有空的时候,能用你自己的话给我讲讲吗?从它是什么讲起就好。`,
+  /** The reunion invitation as the companion's own ordinary chat message (spec 048 §5 —
+   * same no-cards-no-buttons contract: replying accepts, ignoring lets it expire). */
+  reunionInvitation: (topic: string): string =>
+    `「${topic}」有阵子没一起聊过了。想回顾的话,回我一句就行,我们从你还记得的部分开始。`,
 } as const;

@@ -22,8 +22,10 @@ import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { GoalView } from "../goal/GoalView";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
+import { KingdomSubwayView, type SubwayKingdom } from "./KingdomSubwayView";
 import { findIsland, type MapLevel } from "./levels";
 import { MapInfoPanel } from "./MapInfoPanel";
+import { MapModeToggle } from "./MapModeToggle";
 import type { HoverInfo } from "./mapHover";
 import { cachedWorldModel } from "./mapWorldCache";
 import { useMapApplication } from "./useMapApplication";
@@ -38,6 +40,7 @@ export function MapView() {
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
   const [goalViewOpen, setGoalViewOpen] = useState(false);
+  const [subwayKingdom, setSubwayKingdom] = useState<SubwayKingdom | null>(null);
   const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
@@ -144,6 +147,10 @@ export function MapView() {
   if (goalViewOpen) {
     return <GoalView onClose={() => setGoalViewOpen(false)} />;
   }
+  // A kingdom's subway map (spec 048 §4) replaces the page; closing returns to the island.
+  if (subwayKingdom !== null) {
+    return <KingdomSubwayView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />;
+  }
   if (initFailed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
@@ -161,21 +168,35 @@ export function MapView() {
       </div>
     );
   }
-  const levelPath: string[] = ["世界"];
-  if (level.kind === "island") {
+  // Clicking a kingdom while dived into its island opens the kingdom's subway map — the
+  // Pixi controller only navigates world→island itself, so this stays a plain DOM handler.
+  function onCanvasClick() {
+    if (level.kind !== "island" || hover === null || hover.kind !== "kingdom") return;
     const island = findIsland(world, level.islandId);
-    if (island !== undefined) levelPath.push(island.label);
+    const kingdom = island?.kingdoms.find((candidate) => candidate.nodeId === hover.nodeId);
+    if (kingdom === undefined) return;
+    setSubwayKingdom({
+      nodeId: kingdom.nodeId,
+      label: kingdom.label,
+      memberNodeIds: kingdom.memberNodeIds,
+    });
   }
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Square map hugging the left; the info panel takes the rest. */}
-      <div ref={containerRef} className="aspect-square h-full shrink-0 overflow-hidden" />
+      <div className="relative aspect-square h-full shrink-0">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
+        <div ref={containerRef} className="h-full w-full overflow-hidden" onClick={onCanvasClick} />
+        <div className="absolute left-3 top-3 z-10">
+          <MapModeToggle />
+        </div>
+      </div>
       <div className="min-w-0 flex-1">
         <MapInfoPanel
           world={world}
           hover={hover}
           level={level}
-          levelPath={levelPath}
           onOpenGoalView={() => setGoalViewOpen(true)}
         />
       </div>
