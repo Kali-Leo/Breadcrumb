@@ -1,17 +1,17 @@
 /**
- * Purpose: lab-panel "对比树" section (spec 023/025/026) — the 教材/真人 toggle (occupation
- * default), occupation-directory input with candidate confirmation (offline, instant),
- * profile chips, the tree, the detail panel, and 一键生成目标 with its plain confirm copy.
- * Learning guidance stays with the recommendation system; this module only compares.
- * Main exports: LabCompareSection.
+ * Purpose: the "对比树" section inside the goal view (spec 023/025/026; re-homed by spec
+ * 047) — the 教材/真人 toggle (occupation default), occupation-directory input with
+ * candidate confirmation (offline, instant), profile chips, the tree, the detail panel,
+ * and 一键生成目标 with its plain confirm copy. This module only compares.
+ * Main exports: CompareSection.
  */
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { useEffect, useState } from "react";
-import { type OccupationHit, searchOccupations } from "../lib/occupationActions";
-import { useCompareStore } from "../stores/compareStore";
-import { useSettingsStore } from "../stores/settingsStore";
-import { CompareTreeView } from "./CompareTreeView";
-import { CompareNodeDetail, ExperimentalBuildForm } from "./LabCompareDetail";
+import { type OccupationHit, searchOccupations } from "../../lib/occupationActions";
+import { useCompareStore } from "../../stores/compareStore";
+import { useSettingsStore } from "../../stores/settingsStore";
+import { CompareTreeView } from "../CompareTreeView";
+import { CompareNodeDetail, ExperimentalBuildForm } from "./CompareDetail";
 
 function findNode(roots: readonly OverlapNode[], key: string): OverlapNode | null {
   for (const root of roots) {
@@ -34,7 +34,7 @@ function OccupationPicker() {
           setQuery(event.target.value);
           setHits(searchOccupations(event.target.value));
         }}
-        placeholder="输入职业，比如 web developer"
+        placeholder="输入职业，比如「前端工程师」"
         className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
       />
       {hits.length > 0 && (
@@ -74,7 +74,6 @@ function GoalFromProfile() {
         <div className="space-y-1 rounded border border-amber-200 bg-amber-50 px-2 py-1.5">
           <p className="text-stone-600">
             会按照你的特质与知识基础，转化成适合你的方案；之后随时可以回对比树查看重合比例。
-            学习引导仍由推荐系统负责。
           </p>
           <div className="flex gap-1">
             <button
@@ -112,8 +111,7 @@ function GoalFromProfile() {
   );
 }
 
-export function LabCompareSection() {
-  const labPanelEnabled = useSettingsStore((state) => state.featureSwitches.labPanel);
+export function CompareSection() {
   const compareCategory = useSettingsStore((state) => state.compareCategory);
   const setCompareCategory = useSettingsStore((state) => state.setCompareCategory);
   const profiles = useCompareStore((state) => state.profiles);
@@ -129,8 +127,8 @@ export function LabCompareSection() {
   const selectDetail = useCompareStore((state) => state.selectDetail);
 
   useEffect(() => {
-    if (labPanelEnabled) void load();
-  }, [labPanelEnabled, load]);
+    void load();
+  }, [load]);
 
   const shownProfiles = profiles.filter((profile) => profile.category === compareCategory);
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? null;
@@ -139,75 +137,73 @@ export function LabCompareSection() {
     selectedVisible && tree !== null && detailKey !== null ? findNode([tree], detailKey) : null;
 
   return (
-    <details className="rounded border border-stone-200" open>
-      <summary className="cursor-pointer px-2 py-1 font-semibold text-stone-600">对比树</summary>
-      <div className="space-y-2 border-t border-stone-100 px-2 py-1.5">
-        <div className="flex overflow-hidden rounded-full border border-stone-200 self-start w-fit">
-          {(
-            [
-              ["occupation", "真实职业"],
-              ["curriculum", "教材知识"],
-            ] as const
-          ).map(([category, label]) => (
+    <section className="space-y-2">
+      <h3 className="font-semibold text-stone-600">对比树</h3>
+      <div className="flex overflow-hidden rounded-full border border-stone-200 self-start w-fit">
+        {(
+          [
+            ["occupation", "真实职业"],
+            ["curriculum", "教材知识"],
+          ] as const
+        ).map(([category, label]) => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => void setCompareCategory(category)}
+            className={`px-3 py-0.5 transition-colors ${
+              compareCategory === category
+                ? "bg-amber-500 text-white"
+                : "bg-white text-stone-500 hover:bg-stone-50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {compareCategory === "occupation" && <OccupationPicker />}
+      {shownProfiles.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {shownProfiles.map((profile) => (
             <button
-              key={category}
+              key={profile.id}
               type="button"
-              onClick={() => void setCompareCategory(category)}
-              className={`px-3 py-0.5 transition-colors ${
-                compareCategory === category
-                  ? "bg-amber-500 text-white"
-                  : "bg-white text-stone-500 hover:bg-stone-50"
+              onClick={() => void selectProfile(profile.id)}
+              className={`rounded px-2 py-1 ${
+                profile.id === selectedProfileId
+                  ? "bg-amber-100 text-stone-700"
+                  : "bg-stone-100 text-stone-500"
               }`}
             >
-              {label}
+              {profile.title}
             </button>
           ))}
         </div>
-        {compareCategory === "occupation" && <OccupationPicker />}
-        {shownProfiles.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {shownProfiles.map((profile) => (
-              <button
-                key={profile.id}
-                type="button"
-                onClick={() => void selectProfile(profile.id)}
-                className={`rounded px-2 py-1 ${
-                  profile.id === selectedProfileId
-                    ? "bg-amber-100 text-stone-700"
-                    : "bg-stone-100 text-stone-500"
-                }`}
-              >
-                {profile.title}
-              </button>
-            ))}
-          </div>
-        )}
-        {loading ? (
-          <ul className="space-y-1" aria-label="对比树加载中">
-            {[0, 1, 2].map((index) => (
-              <li key={index} className="h-7 animate-pulse rounded bg-stone-100" />
-            ))}
-          </ul>
-        ) : (
-          selectedVisible &&
-          tree !== null && (
-            <CompareTreeView
-              root={tree}
-              expandedKeys={expandedKeys}
-              detailKey={detailKey}
-              onToggle={toggleExpanded}
-              onSelectDetail={selectDetail}
-            />
-          )
-        )}
-        {aligning && <p className="text-stone-400">语义对齐进行中…</p>}
-        {detailNode !== null && <CompareNodeDetail node={detailNode} />}
-        {selectedVisible && selectedProfile !== null && (
-          <p className="text-[11px] text-stone-400">资料出处：{selectedProfile.source_note}</p>
-        )}
-        {selectedVisible && <GoalFromProfile />}
-        <ExperimentalBuildForm />
-      </div>
-    </details>
+      )}
+      {loading ? (
+        <ul className="space-y-1" aria-label="对比树加载中">
+          {[0, 1, 2].map((index) => (
+            <li key={index} className="h-7 animate-pulse rounded bg-stone-100" />
+          ))}
+        </ul>
+      ) : (
+        selectedVisible &&
+        tree !== null && (
+          <CompareTreeView
+            root={tree}
+            expandedKeys={expandedKeys}
+            detailKey={detailKey}
+            onToggle={toggleExpanded}
+            onSelectDetail={selectDetail}
+          />
+        )
+      )}
+      {aligning && <p className="text-stone-400">正在对应你学过的内容…</p>}
+      {detailNode !== null && <CompareNodeDetail node={detailNode} />}
+      {selectedVisible && selectedProfile !== null && (
+        <p className="text-[11px] text-stone-400">资料出处：{selectedProfile.source_note}</p>
+      )}
+      {selectedVisible && <GoalFromProfile />}
+      <ExperimentalBuildForm />
+    </section>
   );
 }

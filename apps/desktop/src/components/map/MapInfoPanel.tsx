@@ -6,15 +6,19 @@
  * Main exports: MapInfoPanel.
  */
 import type { WorldModel } from "@breadcrumb/plugin-map";
-import type { MapLevel } from "./levels";
+import { ContinueCard } from "./ContinueCard";
+import { GoalCard } from "./GoalCard";
+import { findIsland, type MapLevel } from "./levels";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
+import { SelfReportCard } from "./SelfReportCard";
 
 interface MapInfoPanelProps {
   world: WorldModel;
   hover: HoverInfo | null;
   level: MapLevel;
   levelPath: string[];
+  onOpenGoalView(): void;
 }
 
 const KIND_NAMES = { island: "岛屿", kingdom: "国度" } as const;
@@ -60,7 +64,13 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
   );
 }
 
-export function MapInfoPanel({ world, hover, level, levelPath }: MapInfoPanelProps) {
+export function MapInfoPanel({
+  world,
+  hover,
+  level,
+  levelPath,
+  onOpenGoalView,
+}: MapInfoPanelProps) {
   const islandCount = world.islands.length;
   const kingdomCount = world.islands.reduce((sum, island) => sum + island.kingdoms.length, 0);
   const pointCount = world.islands.reduce((sum, island) => sum + island.memberNodeIds.length, 0);
@@ -86,7 +96,25 @@ export function MapInfoPanel({ world, hover, level, levelPath }: MapInfoPanelPro
             <p>滚轮向下：返回上一层</p>
             <p>点击地名：直接前往</p>
           </div>
-          {level.kind === "world" && <MirrorStack />}
+          {level.kind === "world" ? (
+            // Idle world level: the full context stack (spec 046/047).
+            <>
+              <MirrorStack />
+              <ContinueCard />
+              <SelfReportCard />
+              <GoalCard onOpenGoalView={onOpenGoalView} />
+            </>
+          ) : (
+            // Dived into an island: suggestions scoped to this island's own members.
+            (() => {
+              const island = findIsland(world, level.islandId);
+              return (
+                <ContinueCard
+                  filterNodeIds={island === undefined ? undefined : new Set(island.memberNodeIds)}
+                />
+              );
+            })()
+          )}
         </>
       ) : (
         <HoverCards hover={hover} />

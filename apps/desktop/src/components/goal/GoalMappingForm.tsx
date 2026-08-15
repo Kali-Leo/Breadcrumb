@@ -1,24 +1,24 @@
 /**
- * Purpose: lab-panel goal-mapping form — types a free-text goal, calls the goal-mapping LLM,
- * and persists the full result (all existing + all suggested nodes) immediately. No checkbox
- * calibration step: a learner who hasn't studied the material can't judge what belongs, so
- * domain judgment stays the system's job (2026-08-02 revision, spec 012 §2).
- * Main exports: LabGoalMappingForm.
+ * Purpose: goal-mapping form (spec 047; ex lab) — types a free-text goal, calls the
+ * goal-mapping LLM, and persists the full result (all existing + all suggested nodes)
+ * immediately. No checkbox calibration step: a learner who hasn't studied the material
+ * can't judge what belongs, so domain judgment stays the system's job (spec 012 §2).
+ * Main exports: GoalMappingForm.
  */
 import { useState } from "react";
-import { usePlannerStore } from "../stores/plannerStore";
+import { usePlannerStore } from "../../stores/plannerStore";
 
 const inputClass =
   "flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400";
 const buttonClass =
   "rounded bg-amber-500 px-2 py-1 text-xs text-white transition-colors hover:bg-amber-600";
 
-interface LabGoalMappingFormProps {
+interface GoalMappingFormProps {
   goalText: string;
   onGoalTextChange(text: string): void;
 }
 
-export function LabGoalMappingForm({ goalText, onGoalTextChange }: LabGoalMappingFormProps) {
+export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormProps) {
   const mapGoalText = usePlannerStore((state) => state.mapGoalText);
   const createGoal = usePlannerStore((state) => state.createGoal);
 
@@ -30,7 +30,7 @@ export function LabGoalMappingForm({ goalText, onGoalTextChange }: LabGoalMappin
     setHint("拆解中…");
     const mapping = await mapGoalText(trimmedTitle);
     if (mapping === null) {
-      setHint("这次没能拆解——检查一下网络或 API 设置，或者稍后再试");
+      setHint("这次没能拆解,稍后再试。若一直如此,可以去设置看看 AI 服务是否配置好了。");
       return;
     }
     await createGoal(trimmedTitle, mapping);

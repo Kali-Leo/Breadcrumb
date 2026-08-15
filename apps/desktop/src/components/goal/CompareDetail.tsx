@@ -1,21 +1,21 @@
 /**
- * Purpose: the comparison tree's detail panel (spec 023/026/029) — pure experience leaves
- * carry the learner's own 0–10 score (checkbox shortcut + score strip) with an AI helper
- * entry decoupled from scoring; hub leaves (entities) are unscored with a 线索 line and
- * on-demand decomposition; knowledge leaves show their match and evidence; branch nodes
- * report their 待细分 count. Also hosts the experimental build form.
+ * Purpose: the comparison tree's detail panel (spec 023/026/029; re-homed and de-scored by
+ * spec 047) — pure experience leaves carry a done checkbox and an AI helper entry (the 0-10
+ * self-score strip was retired per Leo's ruling: no score concept on screen; the binary
+ * done still writes through the same practice-score machinery internally); hub leaves
+ * (entities) are unscored with a 线索 line and on-demand decomposition; knowledge leaves
+ * show their match and evidence; branch nodes report what still awaits a closer look. Also
+ * hosts the experimental build form.
  * Main exports: CompareNodeDetail, ExperimentalBuildForm.
  */
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { useState } from "react";
-import { useCompareStore } from "../stores/compareStore";
-import { useSettingsStore } from "../stores/settingsStore";
-
-const SCORES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+import { useCompareStore } from "../../stores/compareStore";
+import { useSettingsStore } from "../../stores/settingsStore";
 
 function ClueLine({ node }: { node: OverlapNode }) {
   if (node.match === null) return null;
-  return <p className="text-stone-400">线索：你的地图里有「{node.match.nodeLabel}」（不计分）</p>;
+  return <p className="text-stone-400">线索：你的地图里有「{node.match.nodeLabel}」</p>;
 }
 
 function ExperienceDetail({ node }: { node: OverlapNode }) {
@@ -27,42 +27,22 @@ function ExperienceDetail({ node }: { node: OverlapNode }) {
   return (
     <div className="space-y-1.5">
       <p className="text-stone-600">{node.sourceRef}</p>
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => void setPracticeScore(node.key, done ? 0 : 10)}
-          className={`rounded px-2 py-0.5 transition-colors ${
-            done ? "bg-amber-500 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
-          }`}
-        >
-          {done ? "✓ 已完成" : "勾选为完成"}
-        </button>
-        <span className="text-stone-300">|</span>
-        {SCORES.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => void setPracticeScore(node.key, value)}
-            className={`rounded px-1.5 py-0.5 transition-colors ${
-              score === value
-                ? "bg-amber-500 text-white"
-                : "bg-stone-100 text-stone-500 hover:bg-stone-200"
-            }`}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
-      <p className="text-stone-400">
-        {score === null ? "还没打过分（不计分=0）" : `自评 ${score}/10`}
-      </p>
+      <button
+        type="button"
+        onClick={() => void setPracticeScore(node.key, done ? 0 : 10)}
+        className={`rounded px-2 py-0.5 transition-colors ${
+          done ? "bg-amber-500 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+        }`}
+      >
+        {done ? "✓ 已完成" : "勾选为完成"}
+      </button>
       <ClueLine node={node} />
       <button
         type="button"
         onClick={() => void discussPractice(node)}
         className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
       >
-        不知道怎么提高？和 AI 探讨（不影响分数）
+        想深入的话，和 AI 聊聊这里
       </button>
     </div>
   );
@@ -74,9 +54,7 @@ function HubDetail({ node }: { node: OverlapNode }) {
   const decomposeHub = useCompareStore((state) => state.decomposeHub);
   return (
     <div className="space-y-1.5">
-      <p className="text-stone-500">
-        整域概念——范围太大，不做二元计分；细分出知识点后由子级聚合出比例
-      </p>
+      <p className="text-stone-500">这是一整片领域，先细分成具体知识点，才看得清重合</p>
       <ClueLine node={node} />
       <p className="text-stone-400">佐证：{node.sourceRef}</p>
       {buildEnabled ? (
@@ -86,7 +64,7 @@ function HubDetail({ node }: { node: OverlapNode }) {
           onClick={() => void decomposeHub(node)}
           className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
         >
-          {decomposingHub ? "正在细分…" : "检索构建子树（实验功能，逐条核验出处）"}
+          {decomposingHub ? "正在细分…" : "细分这片领域（会逐条核对资料来源）"}
         </button>
       ) : (
         <p className="text-stone-400">想细分它？去设置里开启「对比画像构建（实验功能）」</p>
@@ -128,7 +106,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
             (node.match !== null ? (
               node.match.via === "semantic" ? (
                 <p className="text-stone-500">
-                  语义对齐到你的「{node.match.nodeLabel}」：{node.match.matchedText}
+                  对应你学过的「{node.match.nodeLabel}」：{node.match.matchedText}
                 </p>
               ) : (
                 <p className="text-stone-500">
@@ -140,7 +118,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
               <p className="text-stone-400">还没对上你的知识点</p>
             ))}
           {stubCount > 0 && (
-            <p className="text-stone-400">待细分 {stubCount} 个（不计分，点开各自节点可细分）</p>
+            <p className="text-stone-400">还有 {stubCount} 片领域可以细分——点开对应节点即可</p>
           )}
           <p className="text-stone-400">佐证：{node.sourceRef}</p>
         </>
@@ -184,7 +162,7 @@ export function ExperimentalBuildForm() {
           检索构建
         </button>
       </div>
-      <p className="text-stone-400">构建要逐条核验资料来源，预计需要几分钟</p>
+      <p className="text-stone-400">构建要逐条核对资料来源，预计需要几分钟</p>
       {buildNote !== null && <p className="text-stone-500">{buildNote}</p>}
     </div>
   );

@@ -45,9 +45,9 @@ const FEATURE_ROWS: Array<{
     purposes: ["interest", "self-report-mapping"],
   },
   {
-    feature: "labPanel",
-    name: "🧪 实验室面板",
-    hint: "临时实验面板:看推荐、建目标、比路线;建目标时会额外调用一次 AI",
+    feature: "goalPlanning",
+    name: "🎯 目标规划",
+    hint: "把你的目标拆解成知识点集合;建目标时调用一次 AI",
     purposes: ["goal-planning"],
   },
   {

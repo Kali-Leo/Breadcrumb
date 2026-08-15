@@ -21,7 +21,9 @@ export interface FeatureSwitches {
   factcheck: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
-  labPanel: boolean;
+  /** Goal planning (spec 047): mapping a free-text goal into a knowledge-node set — one
+   * LLM call per goal creation. Replaced the retired labPanel switch. */
+  goalPlanning: boolean;
   /** Experimental: search-build a comparison profile on demand (spec 023 §5). */
   compareProfileBuild: boolean;
   /** Semantic alignment between profile items and the user's own vocabulary (spec 024). */
@@ -77,16 +79,14 @@ const COMPARE_CATEGORY_KEY = "compareCategory";
 const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
 /** Metered features default ON: metering exists so features can run boldly — every
  * switch and its real spend live on the 开关与计价 page, and silent signal collection is
- * a core product value (Leo 2026-08-13). Only labPanel stays off: it exposes debug-grade
- * numbers, which is a UI choice, not a spending one. feedbackLab defaults ON too: it costs
- * zero tokens and, unlike labPanel's debug numbers, only ever shows plain facts — exactly
- * the "make learning visible" prototype the product is for (spec 035). */
+ * a core product value (Leo 2026-08-13). feedbackLab costs zero tokens and only ever
+ * shows plain facts — exactly the "make learning visible" surface the product is for. */
 const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
   factcheck: true,
   knowledgeEdges: true,
   interest: true,
-  labPanel: false,
+  goalPlanning: true,
   compareProfileBuild: true,
   compareAlignment: true,
   mapTopicNaming: true,

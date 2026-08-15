@@ -1,14 +1,15 @@
 /**
  * Purpose: read-only chip list showing every knowledge node the selected goal maps to (spec
- * 017 §1 goal-decomposition display) — lit chips filled amber, unlit chips outlined, and a
- * small "新方向" dot on unlit chips with zero footprints ever. No checkboxes, no actions.
- * Main exports: LabGoalComposition.
+ * 017 §1 goal-decomposition display; re-homed by spec 047) — lit chips filled amber, unlit
+ * chips outlined, and a small "新方向" dot on unlit chips with zero footprints ever. No
+ * checkboxes, no actions.
+ * Main exports: GoalComposition.
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { masteryAsSeenByGoal } from "../lib/plannerGapActions";
-import { usePlannerStore } from "../stores/plannerStore";
+import { masteryAsSeenByGoal } from "../../lib/plannerGapActions";
+import { usePlannerStore } from "../../stores/plannerStore";
 
-export function LabGoalComposition() {
+export function GoalComposition() {
   const goals = usePlannerStore((state) => state.goals);
   const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
   const nodes = usePlannerStore((state) => state.nodes);

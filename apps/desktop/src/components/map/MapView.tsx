@@ -18,7 +18,9 @@ import { applyAiContinentNames } from "../../lib/mapNamingActions";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
+import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { GoalView } from "../goal/GoalView";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
 import { findIsland, type MapLevel } from "./levels";
 import { MapInfoPanel } from "./MapInfoPanel";
@@ -35,6 +37,7 @@ export function MapView() {
   const [demoMode, setDemoMode] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
+  const [goalViewOpen, setGoalViewOpen] = useState(false);
   const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
@@ -47,6 +50,16 @@ export function MapView() {
   useEffect(() => {
     if (feedbackLabEnabled) void useFeedbackStore.getState().loadAll();
   }, [feedbackLabEnabled]);
+
+  // Planner cold start (spec 047): the palace hosts the frontier/goal surfaces now, so the
+  // one-time recompute that used to live in the lab happens here; event subscriptions keep
+  // it fresh afterwards.
+  useEffect(() => {
+    usePlannerStore
+      .getState()
+      .recompute()
+      .catch((error: unknown) => console.warn("planner recompute skipped:", error));
+  }, []);
 
   // Continents load asynchronously and re-derive whenever the tree changes; until the first
   // load resolves, cachedWorldModel's null-assignment fallback renders. AI names (spec 031
@@ -124,6 +137,13 @@ export function MapView() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [controllerRef]);
 
+  // The goal view is the palace's drill-in (spec 047) — it replaces the whole page and
+  // returns to the exact map state on close (level/camera state lives in the controller
+  // and is not reset by this swap... the Pixi app unmounts; cachedWorldModel keeps the
+  // rebuild cheap and the world level is the natural landing).
+  if (goalViewOpen) {
+    return <GoalView onClose={() => setGoalViewOpen(false)} />;
+  }
   if (initFailed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
@@ -151,7 +171,13 @@ export function MapView() {
       {/* Square map hugging the left; the info panel takes the rest. */}
       <div ref={containerRef} className="aspect-square h-full shrink-0 overflow-hidden" />
       <div className="min-w-0 flex-1">
-        <MapInfoPanel world={world} hover={hover} level={level} levelPath={levelPath} />
+        <MapInfoPanel
+          world={world}
+          hover={hover}
+          level={level}
+          levelPath={levelPath}
+          onOpenGoalView={() => setGoalViewOpen(true)}
+        />
       </div>
     </div>
   );

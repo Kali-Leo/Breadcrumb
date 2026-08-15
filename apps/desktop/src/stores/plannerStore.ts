@@ -62,7 +62,7 @@ interface PlannerState {
   /** Recomputes only `route` from already-loaded state against the current routeParams —
    * cheap enough to call on every slider drag, no DB round trip. */
   recomputeRoute(): void;
-  /** Calls the goal-mapping LLM; returns null (and does nothing) if labPanel is off or
+  /** Calls the goal-mapping LLM; returns null (and does nothing) if goalPlanning is off or
    * unconfigured. Does not persist — createGoal does that immediately with the full result. */
   mapGoalText(goalText: string): Promise<GoalMappingResult | null>;
   /** Persists the full mapping result (no calibration step, see plannerGoalActions), then
@@ -153,7 +153,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
   async mapGoalText(goalText) {
     const settings = useSettingsStore.getState();
-    if (!settings.featureSwitches.labPanel || !settings.networkEnabled || !settings.apiConfig) {
+    if (!settings.featureSwitches.goalPlanning || !settings.networkEnabled || !settings.apiConfig) {
       return null;
     }
     try {

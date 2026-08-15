@@ -1,14 +1,13 @@
 /**
- * Purpose: application root — loads persisted state once, lays out the shell
- * (sidebar / chat, settings, map, lab or feedback view; spec 044 retired the status bar
- * and folded the research platform into settings).
+ * Purpose: application root — loads persisted state once, lays out the shell around the
+ * three spaces (chat / memory palace / settings; specs 044-047 consolidated everything
+ * else into them).
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { FocusOverlay } from "./components/FocusOverlay";
-import { LabPanel } from "./components/LabPanel";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
@@ -34,7 +33,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map" | "lab">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map">("chat");
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -99,13 +98,11 @@ export default function App() {
           onOpenChat={() => setView("chat")}
           onOpenSettings={() => setView("settings")}
           onOpenMap={() => setView("map")}
-          onOpenLab={() => setView("lab")}
         />
         <main className="min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
-          {view === "lab" && <LabPanel />}
         </main>
       </div>
       <FocusOverlay />
