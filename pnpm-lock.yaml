@@ -119,9 +119,6 @@ importers:
       pixi.js:
         specifier: ^8.19.0
         version: 8.19.0
-      polygon-offset:
-        specifier: ^0.3.2
-        version: 0.3.2
       react:
         specifier: ^19.1.0
         version: 19.2.8
@@ -1670,9 +1667,6 @@ packages:
   bezier-js@6.1.4:
     resolution: {integrity: sha512-PA0FW9ZpcHbojUCMu28z9Vg/fNkwTj5YhusSAjHHDfHDGLxJ6YUKrAN2vk1fP2MMOxVw4Oko16FMlRGVBGqLKg==}
 
-  bintrees@1.0.2:
-    resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
-
   browserslist@4.28.7:
     resolution: {integrity: sha512-JxV13hNrFxqjOc8alRbq9dK1MM79NEXYpma2B2J4wAtpWS5zIEIKqWPGCl7N4o7Uc7B7itylh7SuDujATRyyTw==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
@@ -2442,9 +2436,6 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
-  martinez-polygon-clipping@0.1.5:
-    resolution: {integrity: sha512-sZ/tS4/DfyzZlTjrg8ZRt1YxNoI83HkRCKkAU9u41YTyUm/S87yVZZa+8fc29sz081Hn8VDysrZOyaU0Wna8mQ==}
-
   mdast-util-find-and-replace@3.0.2:
     resolution: {integrity: sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg==}
 
@@ -2672,9 +2663,6 @@ packages:
 
   poisson-disk-sampling@2.3.1:
     resolution: {integrity: sha512-O3TzHR8IA+Do5zC7EgPdHLOYOpUJ6DikiTwqRqXdSPUhx1ZqfeH6PqAD86KKi+8Nq8vnL2navErsgURKTe089w==}
-
-  polygon-offset@0.3.2:
-    resolution: {integrity: sha512-+EqcQ6aITqEzgTFiLTPdeYRJq/JiV2eJFxBPI6sKgULz4x7UPNPKcCQb8YvXp1lMPeeBK+qqLTI8AbYy9W2CUg==}
 
   postcss@8.5.23:
     resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
@@ -2928,9 +2916,6 @@ packages:
   tinypool@1.1.1:
     resolution: {integrity: sha512-Zba82s87IFq9A9XmjiX5uZA/ARWDrB03OHlq+Vw1fSdt0I+4/Kutwy8BP4Y/y/aORMo61FQ0vIb5j44vSo5Pkg==}
     engines: {node: ^18.0.0 || >=20.0.0}
-
-  tinyqueue@1.2.3:
-    resolution: {integrity: sha512-Qz9RgWuO9l8lT+Y9xvbzhPT2efIUIFd69N7eF7tJ9lnQl0iLj1M7peK7IoUGZL9DJHw9XftqLreccfxcQgYLxA==}
 
   tinyrainbow@2.0.0:
     resolution: {integrity: sha512-op4nsTR47R6p0vMUUoYl/a+ljLFVtlfaXkLQmqfLR1qHma1h/ysYk4hEXZ880bf2CYgTskvTa/e196Vd5dDQXw==}
@@ -4089,8 +4074,6 @@ snapshots:
 
   bezier-js@6.1.4: {}
 
-  bintrees@1.0.2: {}
-
   browserslist@4.28.7:
     dependencies:
       baseline-browser-mapping: 2.11.5
@@ -4818,11 +4801,6 @@ snapshots:
 
   marked@16.4.2: {}
 
-  martinez-polygon-clipping@0.1.5:
-    dependencies:
-      bintrees: 1.0.2
-      tinyqueue: 1.2.3
-
   mdast-util-find-and-replace@3.0.2:
     dependencies:
       '@types/mdast': 4.0.4
@@ -5253,10 +5231,6 @@ snapshots:
     dependencies:
       moore: 1.0.0
 
-  polygon-offset@0.3.2:
-    dependencies:
-      martinez-polygon-clipping: 0.1.5
-
   postcss@8.5.23:
     dependencies:
       nanoid: 3.3.16
@@ -5528,8 +5502,6 @@ snapshots:
       picomatch: 4.0.5
 
   tinypool@1.1.1: {}
-
-  tinyqueue@1.2.3: {}
 
   tinyrainbow@2.0.0: {}
 
