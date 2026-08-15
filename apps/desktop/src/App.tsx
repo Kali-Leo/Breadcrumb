@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
+import { CompanionSection } from "./components/CompanionSection";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -34,6 +35,7 @@ const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
   const [view, setView] = useState<"chat" | "settings" | "map">("chat");
+  const [companionsOpen, setCompanionsOpen] = useState(false);
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -95,14 +97,28 @@ export default function App() {
       <div className="flex min-h-0 flex-1">
         <Sidebar
           activeView={view}
+          companionsOpen={companionsOpen}
           onOpenChat={() => setView("chat")}
           onOpenSettings={() => setView("settings")}
           onOpenMap={() => setView("map")}
+          onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
-        <main className="min-w-0 flex-1">
+        <main className="relative min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
+          {/* The companions roster slides out over the center area's left edge (Leo's
+              design) — the sidebar stays a pure conversation list. */}
+          {companionsOpen && (
+            <div className="absolute left-0 top-0 z-30 h-full w-60 border-r border-stone-200 bg-white p-3 shadow-lg">
+              <CompanionSection
+                onOpenChat={() => {
+                  setCompanionsOpen(false);
+                  setView("chat");
+                }}
+              />
+            </div>
+          )}
         </main>
       </div>
       <FocusOverlay />

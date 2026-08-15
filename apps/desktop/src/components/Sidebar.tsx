@@ -1,19 +1,23 @@
 /**
- * Purpose: left column — new-chat button, companion rows pinned above the trail cards
- * (spec 044: the companion drawer is gone, companions are just conversations), the
- * icon-only view switcher, and the connectivity dot that replaced the status bar.
+ * Purpose: left column — new-chat button, the conversation list (companion chats appear in
+ * it by recency like any conversation), and the bottom icon row: the companions button
+ * (opens the center flyout, carries the unread dot), the view switcher and the
+ * connectivity dot that replaced the status bar. (Leo 2026-08-15: roster and recents are
+ * different things — the roster lives behind 👥, not inside the list.)
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
+import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
-import { CompanionSection } from "./CompanionSection";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
   activeView: "chat" | "settings" | "map";
+  companionsOpen: boolean;
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
+  onToggleCompanions(): void;
 }
 
 /** The status bar's network indicator, shrunk to a dot (spec 044): connectivity is
@@ -28,7 +32,40 @@ function ConnectivityDot() {
   );
 }
 
-export function Sidebar({ activeView, onOpenChat, onOpenSettings, onOpenMap }: SidebarProps) {
+/** The companions roster button — hidden with the companionChat switch, dotted while an
+ * invitation waits unread. */
+function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void }) {
+  const companionChatEnabled = useSettingsStore((state) => state.featureSwitches.companionChat);
+  const activeProposal = useCompanionStore((state) => state.activeProposal);
+  const proposalSeen = useCompanionStore((state) => state.proposalSeen);
+  if (!companionChatEnabled) return null;
+  const unread = activeProposal !== null && !proposalSeen;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title="伙伴"
+      aria-label="伙伴"
+      className={`relative rounded-lg px-2 py-1 text-base transition-colors ${
+        open ? "bg-amber-100" : "hover:bg-stone-100"
+      }`}
+    >
+      👥
+      {unread && (
+        <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-rose-400" />
+      )}
+    </button>
+  );
+}
+
+export function Sidebar({
+  activeView,
+  companionsOpen,
+  onOpenChat,
+  onOpenSettings,
+  onOpenMap,
+  onToggleCompanions,
+}: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
   return (
@@ -48,12 +85,12 @@ export function Sidebar({ activeView, onOpenChat, onOpenSettings, onOpenMap }: S
         ＋ 新的学习对话
       </button>
       <nav className="flex-1 overflow-y-auto px-2">
-        <CompanionSection onOpenChat={onOpenChat} />
         <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
       </nav>
       <div className="flex items-center gap-1 border-t border-stone-100 px-3 py-2">
         <ConnectivityDot />
         <span className="flex-1" />
+        <CompanionsButton open={companionsOpen} onToggle={onToggleCompanions} />
         {(
           [
             ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],

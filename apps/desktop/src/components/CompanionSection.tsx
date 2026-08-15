@@ -1,9 +1,9 @@
 /**
- * Purpose: the pinned companion group at the top of the sidebar conversation list
- * (spec 037; spec 044 moved it out of the collapsed drawer — companions are just
- * conversations). A pending teach-back invitation shows only as a small unread dot,
- * cleared on opening the chat (Leo 2026-08-15). Hidden entirely when the companion
- * chat switch is off (product principle 3). Main exports: CompanionSection.
+ * Purpose: the companions roster rows (spec 037), rendered inside the 👥 flyout that
+ * slides out over the center area (Leo 2026-08-15: roster and recents are different
+ * things). A pending invitation shows only as a small unread dot, cleared on opening the
+ * chat. Hidden entirely when the companion chat switch is off (product principle 3).
+ * Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { COMPANION_DESKTOP_COPY, openCompanionConversation } from "../lib/companionActions";
