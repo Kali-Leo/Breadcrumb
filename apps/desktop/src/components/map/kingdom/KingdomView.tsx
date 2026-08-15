@@ -8,6 +8,11 @@
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { useEffect, useMemo, useState } from "react";
+import {
+  appendCompanionInvitation,
+  openCompanionConversation,
+  seedTeachScriptForConversation,
+} from "../../../lib/companionActions";
 import { getRepos } from "../../../lib/db";
 import { startFrontierSession } from "../../../lib/frontierActions";
 import {
@@ -21,7 +26,6 @@ import { nowIso } from "../../../lib/time";
 import { appEventBus, useChatStore } from "../../../stores/chatStore";
 import { usePlannerStore } from "../../../stores/plannerStore";
 import { useSettingsStore } from "../../../stores/settingsStore";
-import { SelfReportCard } from "../SelfReportCard";
 import { KingdomNodeCard, type NodeRelations } from "./KingdomNodeCard";
 import { KingdomTreeSvg } from "./KingdomTreeSvg";
 
@@ -195,15 +199,29 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
           return;
         }
       }
-      const conversationId =
-        cardNode.state === "done"
-          ? await startTeachSession(cardNode.label)
-          : await startFrontierSession(
-              cardNode.label,
-              recommendation.primary?.nodeId === cardNode.id
-                ? recommendation.primary.reason.litPrerequisiteLabels
-                : [],
-            );
+      let conversationId: string;
+      if (cardNode.state === "done") {
+        // 用户主动讲的功能一律走伙伴（Leo 铁律）：Shichimi 发出邀请并提前备课，讲解
+        // 发生在她的对话里。伙伴开关关闭时退回匿名教学会话，能力不消失。
+        if (useSettingsStore.getState().featureSwitches.companionChat) {
+          conversationId = await openCompanionConversation("shichimi");
+          await appendCompanionInvitation("shichimi", cardNode.label, "teach");
+          await seedTeachScriptForConversation(
+            conversationId,
+            cardNode.label,
+            nodes.map((node) => node.label),
+          );
+        } else {
+          conversationId = await startTeachSession(cardNode.label);
+        }
+      } else {
+        conversationId = await startFrontierSession(
+          cardNode.label,
+          recommendation.primary?.nodeId === cardNode.id
+            ? recommendation.primary.reason.litPrerequisiteLabels
+            : [],
+        );
+      }
       await useChatStore.getState().loadFromDatabase();
       appEventBus.emit("app:navigateChat", { conversationId });
     } finally {
@@ -304,7 +322,6 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
             onToggleCollapse={() => toggleCollapse(cardNode.id)}
           />
         )}
-        <SelfReportCard />
       </aside>
     </div>
   );

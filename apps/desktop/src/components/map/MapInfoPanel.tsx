@@ -13,7 +13,6 @@ import { GoalCard } from "./GoalCard";
 import { findIsland, type MapLevel } from "./levels";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
-import { SelfReportCard } from "./SelfReportCard";
 
 interface MapInfoPanelProps {
   world: WorldModel;
@@ -87,7 +86,6 @@ export function MapInfoPanel({ world, hover, level, onOpenGoalView }: MapInfoPan
                 <ContinueCard
                   filterNodeIds={island === undefined ? undefined : new Set(island.memberNodeIds)}
                 />
-                <SelfReportCard />
               </>
             );
           })()

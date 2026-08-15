@@ -9,13 +9,14 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
 
-/** All user-visible teach-back strings in one place (plain statements only). */
+/** All user-visible teach-back strings in one place (plain statements only). "回讲" was
+ * ruled unreadable jargon (Leo 2026-08-15) — the user-facing family is "换你讲". */
 export const TEACH_COPY = {
-  sectionTitle: "回讲(实验)",
+  sectionTitle: "换你讲(实验)",
   sectionHint: "给一位初学者讲讲你学过的东西。讲出来这件事本身,就是最扎实的复习。",
   freeTopicPlaceholder: "或者自选一个主题",
   startButton: "开讲",
-  recentTitle: "最近的回讲",
+  recentTitle: "最近讲过的",
   /** The student's fixed opener — composed locally, no LLM call (spec 034 验收 1). */
   opener: (topic: string) =>
     `我正在学「${topic}」,还没真正弄懂。可以请你用自己的话给我讲讲吗?从它是什么讲起就好。`,
@@ -54,7 +55,7 @@ export async function startTeachSession(topic: string): Promise<string> {
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,
-    title: `回讲·${topic}`,
+    title: `换你讲·${topic}`,
     created_at: createdAt,
     updated_at: createdAt,
     kind: "teach",
@@ -71,7 +72,9 @@ export async function startTeachSession(topic: string): Promise<string> {
   return conversationId;
 }
 
-/** The teach topic lives in the title (`回讲·<topic>`) — zero-schema by design. */
+/** The teach topic lives in the title (`换你讲·<topic>`; the retired `回讲·` prefix stays
+ * parseable so old conversations keep working) — zero-schema by design. */
 export function teachTopicFromTitle(title: string): string {
+  if (title.startsWith("换你讲·")) return title.slice(4);
   return title.startsWith("回讲·") ? title.slice(3) : title;
 }

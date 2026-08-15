@@ -20,10 +20,10 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "compare-align": "对比对齐",
   "map-naming": "板块起名",
   "diglot-weave": "织入·智能替换",
-  "teach-quality": "回讲判读",
+  "teach-quality": "讲得怎么样",
   "companion-chat": "伙伴会话",
   "companion-memory": "伙伴记忆",
-  "companion-script": "回讲脚本",
+  "companion-script": "伙伴备课",
   "focus-explain": "专注解释",
   "term-marking": "生词标注",
 };

@@ -37,7 +37,7 @@ describe("seedDemo (real sqlite)", () => {
 
     expect(summary.conversations).toBe(4);
     expect(summary.messages).toBeGreaterThanOrEqual(14);
-    expect(summary.nodes).toBe(24);
+    expect(summary.nodes).toBe(39);
     expect(summary.sightings).toBeGreaterThanOrEqual(50);
     expect(summary.claims).toBe(6);
     expect(summary.wordStates).toBe(50);
@@ -46,7 +46,7 @@ describe("seedDemo (real sqlite)", () => {
 
     expect(await countDemoRows(temp, "conversations")).toBe(4);
     expect(await countDemoRows(temp, "messages")).toBe(summary.messages);
-    expect(await countDemoRows(temp, "knowledge_nodes")).toBe(24);
+    expect(await countDemoRows(temp, "knowledge_nodes")).toBe(39);
     expect(await countDemoRows(temp, "node_sightings")).toBe(summary.sightings);
     expect(await countDemoRows(temp, "mastery_claims")).toBe(6);
     expect(await countDemoRows(temp, "diglot_word_states", false)).toBe(50);
@@ -112,7 +112,7 @@ describe("seedDemo (real sqlite)", () => {
     });
 
     await insertDemoData(temp.sql, NOW);
-    expect(await countDemoRows(temp, "knowledge_nodes")).toBe(24);
+    expect(await countDemoRows(temp, "knowledge_nodes")).toBe(39);
 
     await wipeDemoData(temp.sql);
 

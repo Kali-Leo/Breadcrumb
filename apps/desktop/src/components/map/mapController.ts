@@ -6,7 +6,7 @@
  * Main exports: createMapController, MapController, MapHooks.
  */
 import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
-import { type Application, Container } from "pixi.js";
+import { type Application, Container, Graphics, Text, TextStyle } from "pixi.js";
 import { findIsland, frameForLevel, hitIsland, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";
 import { drawHoverHighlight, type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
@@ -26,9 +26,18 @@ export interface MapController {
     retentionByNode: ReadonlyMap<string, number>,
     newNodeIds: ReadonlySet<string>,
   ): void;
+  /** Marks where the recommendation engine's current invitation lives (spec 048 follow-up,
+   * Leo: the recommendation must surface as a bubble on every zoom level) — the containing
+   * island at the world level, the containing kingdom once dived into that island. */
+  setRecommendTarget(target: RecommendTarget | null): void;
   devJump(depth: number): void;
   tick(deltaSeconds: number): void;
   destroy(): void;
+}
+
+export interface RecommendTarget {
+  islandId: string;
+  kingdomId: string | null;
 }
 
 const WHEEL_COOLDOWN_MS = 380;
@@ -47,6 +56,10 @@ interface PendingAppear {
 export function createMapController(app: Application, art: MapArt, hooks: MapHooks): MapController {
   const worldRoot = new Container();
   app.stage.addChild(worldRoot);
+  // The recommendation bubble rides above every band; re-appended on rebuild to stay on top.
+  const recommendLayer = new Container();
+  worldRoot.addChild(recommendLayer);
+  let recommendTarget: RecommendTarget | null = null;
 
   let world: WorldModel | null = null;
   let level: MapLevel = { kind: "world" };
@@ -67,6 +80,36 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       height: app.screen.height,
     });
     worldRoot.addChild(controller.scene.root);
+    worldRoot.addChild(recommendLayer);
+    drawRecommendMarker();
+  }
+
+  /** One bubble at the label of whichever place holds the invitation on this level; the
+   * marker counter-scales in tick() so it keeps its on-screen size like the names do. */
+  function drawRecommendMarker(): void {
+    for (const child of recommendLayer.removeChildren()) child.destroy({ children: true });
+    const scene = controller.scene;
+    if (scene === null || recommendTarget === null) return;
+    const targetNodeId =
+      level.kind === "world"
+        ? recommendTarget.islandId
+        : level.islandId === recommendTarget.islandId
+          ? recommendTarget.kingdomId
+          : null;
+    if (targetNodeId === null) return;
+    const label = scene.labels.find((candidate) => candidate.nodeId === targetNodeId);
+    if (label === undefined) return;
+    const marker = new Container();
+    marker.position.set(label.text.x, label.text.y);
+    marker.addChild(new Graphics().circle(0, 0, 18).stroke({ width: 2, color: 0xf59e0b }));
+    const tag = new Text({
+      text: "下一步",
+      style: new TextStyle({ fontSize: 12, fill: 0xb45309 }),
+    });
+    tag.anchor.set(0.5, 1);
+    tag.position.set(0, -22);
+    marker.addChild(tag);
+    recommendLayer.addChild(marker);
   }
 
   const controller: MapController = {
@@ -82,6 +125,10 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       }
       applyLevel(true);
     },
+    setRecommendTarget(target) {
+      recommendTarget = target;
+      drawRecommendMarker();
+    },
     devJump(depth) {
       if (world === null) return;
       const island = world.islands.at(0);
@@ -95,6 +142,9 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       worldRoot.scale.y = worldRoot.scale.x;
       worldRoot.position.x += (cameraTarget.x - worldRoot.position.x) * ease;
       worldRoot.position.y += (cameraTarget.y - worldRoot.position.y) * ease;
+      for (const marker of recommendLayer.children) {
+        marker.scale.set(1 / worldRoot.scale.x);
+      }
       advancePendingAppear();
     },
     destroy() {
@@ -166,6 +216,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       pendingAppear = null;
       if (snap) applyBandsInstant(scene);
       else beginAppearTransition(scene);
+      drawRecommendMarker();
     }
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);

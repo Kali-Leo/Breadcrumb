@@ -106,6 +106,28 @@ export function MapView() {
   });
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 
+  // The recommendation surfaces as a bubble on every level (Leo's design): the containing
+  // island at the world level, the containing kingdom once dived in; the kingdom tree then
+  // rings the node itself. Demo worlds never match real planner ids, so the bubble rests.
+  const frontierCandidates = usePlannerStore((state) => state.frontierCandidates);
+  useEffect(() => {
+    if (!ready) return;
+    const primary = frontierCandidates[0];
+    let target: { islandId: string; kingdomId: string | null } | null = null;
+    if (primary !== undefined) {
+      const island = world.islands.find((candidate) =>
+        candidate.memberNodeIds.includes(primary.nodeId),
+      );
+      if (island !== undefined) {
+        const kingdom = island.kingdoms.find((candidate) =>
+          candidate.memberNodeIds.includes(primary.nodeId),
+        );
+        target = { islandId: island.nodeId, kingdomId: kingdom?.nodeId ?? null };
+      }
+    }
+    controllerRef.current?.setRecommendTarget(target);
+  }, [ready, frontierCandidates, world, controllerRef]);
+
   // Scene rebuilds on data changes; the renderer and camera model stay alive.
   useEffect(() => {
     if (!ready) return;

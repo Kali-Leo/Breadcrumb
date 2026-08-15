@@ -64,8 +64,8 @@ const FEATURE_ROWS: Array<{
   },
   {
     feature: "teachQuality",
-    name: "🎓 回讲判读",
-    hint: "回讲结束后判一次讲解质量(原理级/复述级/有误),好的讲解直接成为掌握度证据",
+    name: "🎓 讲得怎么样",
+    hint: "你讲给伙伴听之后,看一次讲得怎么样;讲得好会直接记为掌握的证据",
     purposes: ["teach-quality"],
   },
   {
@@ -83,7 +83,7 @@ const FEATURE_ROWS: Array<{
   {
     feature: "companionChat",
     name: "🎭 伙伴会话",
-    hint: "侧边栏三位 AI 学习伙伴:打开对话、主动发起回讲提议",
+    hint: "三位 AI 学习伙伴:打开对话、偶尔主动邀请你讲给它听或一起回顾",
     purposes: ["companion-chat"],
   },
   {
@@ -94,8 +94,8 @@ const FEATURE_ROWS: Array<{
   },
   {
     feature: "companionScript",
-    name: "📜 回讲脚本",
-    hint: "让回讲的伙伴提前备课,听讲时更懂得接话;回讲中每轮一小笔",
+    name: "📜 伙伴备课",
+    hint: "你讲之前,听讲的伙伴先备一下课,听的时候更会接话;你讲的过程中每轮一小笔",
     purposes: ["companion-script"],
   },
   {

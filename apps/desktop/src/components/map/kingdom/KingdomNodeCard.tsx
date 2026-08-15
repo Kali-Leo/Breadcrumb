@@ -50,7 +50,7 @@ function stateStatement(node: KingdomViewNode, lastSeenDate: string | null): str
   return "尚未开始。";
 }
 
-const MAIN_ACTION_LABEL = { untouched: "开始学习", visited: "继续", done: "回讲一次" } as const;
+const MAIN_ACTION_LABEL = { untouched: "开始学习", visited: "继续", done: "换你来讲讲" } as const;
 
 function RelationRow({
   title,
