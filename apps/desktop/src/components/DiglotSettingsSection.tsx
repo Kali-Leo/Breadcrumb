@@ -131,7 +131,7 @@ export function DiglotSettingsSection() {
             </details>
           )}
           <p className="text-xs text-stone-300">
-            词典数据:CC-CEDICT · FrequencyWords · CMUdict(CC BY-SA / BSD)
+            词典与发音数据来自这些开源项目:CC-CEDICT · FrequencyWords · CMUdict
           </p>
         </div>
       )}

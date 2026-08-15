@@ -14,7 +14,7 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
   const goals = usePlannerStore((state) => state.goals);
 
   return (
-    <section className="rounded border border-stone-200 bg-white p-3 text-xs">
+    <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
       <h3 className="font-semibold text-stone-600">学习目标</h3>
       {goals.length === 0 ? (
         <p className="mt-1 text-stone-400">有想去的方向？建一个目标,我来拆解成知识点。</p>

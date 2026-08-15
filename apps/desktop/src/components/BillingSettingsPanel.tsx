@@ -35,7 +35,7 @@ const FEATURE_ROWS: Array<{
   {
     feature: "knowledgeEdges",
     name: "🕸️ 知识关系发现",
-    hint: "新知识点落库后额外调用一次 AI,判定前置/辅助关系",
+    hint: "记下新知识点后,看一眼它和已学内容谁帮衬谁;每次一小笔",
     purposes: ["knowledge-edges"],
   },
   {
@@ -71,7 +71,7 @@ const FEATURE_ROWS: Array<{
   {
     feature: "mapTopicNaming",
     name: "🗺️ 板块 AI 起名(实验)",
-    hint: "记忆宫殿里给聚成一堆的零散兴趣起领域名;同一堆只算一次",
+    hint: "记忆宫殿里给零散兴趣聚成的板块起名字;同一片只花一次钱",
     purposes: ["map-naming"],
   },
   {
@@ -89,13 +89,13 @@ const FEATURE_ROWS: Array<{
   {
     feature: "companionMemory",
     name: "🧠 伙伴记忆",
-    hint: "伙伴对话轮次结束后记一条观察,累计到阈值再归纳一次洞察",
+    hint: "伙伴会记住和你聊过的内容;偶尔整理一次,让记忆更连贯",
     purposes: ["companion-memory"],
   },
   {
     feature: "companionScript",
     name: "📜 回讲脚本",
-    hint: "接受回讲提议时先生成脚本(期望点/预置误解),回讲中每轮做一次状态合并",
+    hint: "让回讲的伙伴提前备课,听讲时更懂得接话;回讲中每轮一小笔",
     purposes: ["companion-script"],
   },
   {

@@ -60,7 +60,7 @@ export function FeedbackHeatmapSection() {
   }, []);
 
   return (
-    <section className="rounded border border-stone-200 bg-white p-3">
+    <section className="rounded-xl bg-white p-3 shadow-sm">
       <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.heatmapTitle}</h3>
       <p className="mt-1 text-stone-400">{FEEDBACK_COPY.heatmapHint}</p>
       {continuity.activeDays === 0 ? (

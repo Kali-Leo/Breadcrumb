@@ -21,13 +21,13 @@ export const DIGLOT_UI_COPY = {
   guessLevelLow: "少",
   guessLevelStandard: "标准",
   guessLevelHigh: "多",
-  ttsLabel: "发音(本地 TTS)",
+  ttsLabel: "读给我听(在这台电脑上发音)",
   contrastLabel: "易混对比",
-  placementStatus: "新词起点",
-  placementNote: "随阅读自动校准:首次相遇没查词,起点会自动前移",
-  piperSection: "Piper 高质量发音(可选)",
-  piperPathLabel: "piper 可执行文件路径",
-  piperModelLabel: "voice 模型路径(.onnx)",
+  placementStatus: "新词难度起点",
+  placementNote: "会随你的阅读自动调整,不用管它",
+  piperSection: "更好听的发音(可选,需要自己装 Piper)",
+  piperPathLabel: "Piper 程序的位置",
+  piperModelLabel: "语音文件的位置(.onnx)",
 } as const;
 
 /** Guess feedback: plain statements of fact, one per grade. */

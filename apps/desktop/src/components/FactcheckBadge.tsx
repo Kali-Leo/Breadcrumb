@@ -48,7 +48,7 @@ export function FactcheckBadge({ messageId }: FactcheckBadgeProps) {
   }
 
   if (claims.length === 0) {
-    return <p className="pl-1 text-xs text-stone-400">🔍 这轮回答没有需要核查的客观事实</p>;
+    return <p className="pl-1 text-xs text-stone-400">🔍 这条回答没有需要核查的客观事实</p>;
   }
 
   const supportedCount = claims.filter((claim) => claim.relationship === "supported").length;

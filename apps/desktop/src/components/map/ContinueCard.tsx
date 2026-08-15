@@ -40,7 +40,7 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
   }
 
   return (
-    <section className="rounded border border-stone-200 bg-white p-3 text-xs">
+    <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
       <h3 className="font-semibold text-stone-600">从这里继续</h3>
       <ul className="mt-1 space-y-1">
         {shown.map((candidate) => (

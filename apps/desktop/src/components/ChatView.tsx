@@ -138,7 +138,7 @@ function ContinuationBanner() {
   if (currentLeafId === newestLeafId(allMessages)) return null;
   return (
     <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-stone-600">
-      <span>正在从中途的一站继续 · 原来的后续仍然保留</span>
+      <span>正在从中途继续 · 后来的消息都还在</span>
       <button
         type="button"
         onClick={returnToLatest}
