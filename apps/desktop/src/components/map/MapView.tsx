@@ -144,13 +144,6 @@ export function MapView() {
   // returns to the exact map state on close (level/camera state lives in the controller
   // and is not reset by this swap... the Pixi app unmounts; cachedWorldModel keeps the
   // rebuild cheap and the world level is the natural landing).
-  if (goalViewOpen) {
-    return <GoalView onClose={() => setGoalViewOpen(false)} />;
-  }
-  // A kingdom's subway map (spec 048 §4) replaces the page; closing returns to the island.
-  if (subwayKingdom !== null) {
-    return <KingdomSubwayView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />;
-  }
   if (initFailed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
@@ -182,24 +175,43 @@ export function MapView() {
     });
   }
 
+  // The goal view and a kingdom's subway map cover the palace as overlays instead of
+  // replacing it — the Pixi application initializes once per mount and its canvas would not
+  // survive an unmount/remount of its container (spec 048 walkthrough finding).
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      {/* Square map hugging the left; the info panel takes the rest. */}
-      <div className="relative aspect-square h-full shrink-0">
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
-        <div ref={containerRef} className="h-full w-full overflow-hidden" onClick={onCanvasClick} />
-        <div className="absolute left-3 top-3 z-10">
-          <MapModeToggle />
+    <div className="relative h-full w-full">
+      <div className="flex h-full w-full overflow-hidden">
+        {/* Square map hugging the left; the info panel takes the rest. */}
+        <div className="relative aspect-square h-full shrink-0">
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
+          <div
+            ref={containerRef}
+            className="h-full w-full overflow-hidden"
+            onClick={onCanvasClick}
+          />
+          <div className="absolute left-3 top-3 z-10">
+            <MapModeToggle />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <MapInfoPanel
+            world={world}
+            hover={hover}
+            level={level}
+            onOpenGoalView={() => setGoalViewOpen(true)}
+          />
         </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <MapInfoPanel
-          world={world}
-          hover={hover}
-          level={level}
-          onOpenGoalView={() => setGoalViewOpen(true)}
-        />
-      </div>
+      {goalViewOpen && (
+        <div className="absolute inset-0 z-20 bg-stone-50">
+          <GoalView onClose={() => setGoalViewOpen(false)} />
+        </div>
+      )}
+      {subwayKingdom !== null && (
+        <div className="absolute inset-0 z-20 bg-stone-50">
+          <KingdomSubwayView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />
+        </div>
+      )}
     </div>
   );
 }
