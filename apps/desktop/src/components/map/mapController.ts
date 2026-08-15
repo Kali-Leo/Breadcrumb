@@ -34,20 +34,14 @@ export interface MapController {
 const WHEEL_COOLDOWN_MS = 380;
 
 /** The camera counts as arrived once its scale is within this fraction of the target —
- * that is when the level's content starts appearing (Leo 2026-08-15: zoom first, then
- * names in order; no crossfade during the move). */
+ * that is when the level's content shows, all at once (Leo 2026-08-15: terrain-only
+ * zoom, then everything immediately; no crossfade, no staggered reveal). */
 const SETTLE_SCALE_RATIO = 0.04;
-const APPEAR_STAGGER_SECONDS = 0.07;
-const APPEAR_FADE_SECONDS = 0.3;
 
-/** One level-transition in flight: the incoming band's children, revealed in draw order
- * once the camera settles, each fading up to the alpha it had (retention dim etc.). */
+/** One level-transition in flight: the incoming band waits hidden until the camera lands. */
 interface PendingAppear {
   band: Container;
   showBorders: boolean;
-  items: { object: Container; baseAlpha: number }[];
-  started: boolean;
-  elapsed: number;
 }
 
 export function createMapController(app: Application, art: MapArt, hooks: MapHooks): MapController {
@@ -101,7 +95,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       worldRoot.scale.y = worldRoot.scale.x;
       worldRoot.position.x += (cameraTarget.x - worldRoot.position.x) * ease;
       worldRoot.position.y += (cameraTarget.y - worldRoot.position.y) * ease;
-      advancePendingAppear(deltaSeconds);
+      advancePendingAppear();
     },
     destroy() {
       app.canvas.removeEventListener("wheel", onWheel);
@@ -109,14 +103,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       app.canvas.removeEventListener("pointermove", onPointerMove);
     },
   };
-
-  /** Abandons an in-flight appear, restoring every item's own alpha so nothing is left
-   * half-faded when the next transition (or a scene rebuild) takes over. */
-  function cancelPendingAppear(): void {
-    if (pendingAppear === null) return;
-    for (const item of pendingAppear.items) item.object.alpha = item.baseAlpha;
-    pendingAppear = null;
-  }
 
   /** Snap path: both bands and the borders jump straight to the level's end state. */
   function applyBandsInstant(scene: WorldScene): void {
@@ -129,51 +115,33 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     scene.bordersLayer.alpha = atIsland ? 1 : 0;
   }
 
-  /** Animated path: everything level-bound hides for the ride; the incoming band's
-   * children are queued to appear in draw order once the camera lands. */
+  /** Animated path: everything level-bound hides for the ride and the incoming band
+   * (plus borders at the island level) shows in full once the camera lands. */
   function beginAppearTransition(scene: WorldScene): void {
     const atIsland = level.kind === "island";
     scene.worldBand.visible = false;
     scene.islandBand.visible = false;
     scene.bordersLayer.visible = false;
-    const band = atIsland ? scene.islandBand : scene.worldBand;
     pendingAppear = {
-      band,
+      band: atIsland ? scene.islandBand : scene.worldBand,
       showBorders: atIsland,
-      items: band.children.map((object) => ({ object, baseAlpha: object.alpha })),
-      started: false,
-      elapsed: 0,
     };
-    for (const item of pendingAppear.items) item.object.alpha = 0;
   }
 
-  function advancePendingAppear(deltaSeconds: number): void {
+  function advancePendingAppear(): void {
     const pending = pendingAppear;
     const scene = controller.scene;
     if (pending === null || scene === null) return;
-    if (!pending.started) {
-      const settled =
-        Math.abs(worldRoot.scale.x - cameraTarget.scale) <= cameraTarget.scale * SETTLE_SCALE_RATIO;
-      if (!settled) return;
-      pending.started = true;
-      pending.band.visible = true;
-      pending.band.alpha = 1;
-      if (pending.showBorders) {
-        scene.bordersLayer.visible = true;
-        scene.bordersLayer.alpha = 1;
-      }
+    const settled =
+      Math.abs(worldRoot.scale.x - cameraTarget.scale) <= cameraTarget.scale * SETTLE_SCALE_RATIO;
+    if (!settled) return;
+    pending.band.visible = true;
+    pending.band.alpha = 1;
+    if (pending.showBorders) {
+      scene.bordersLayer.visible = true;
+      scene.bordersLayer.alpha = 1;
     }
-    pending.elapsed += deltaSeconds;
-    let allDone = true;
-    for (const [index, item] of pending.items.entries()) {
-      const t = Math.min(
-        Math.max((pending.elapsed - index * APPEAR_STAGGER_SECONDS) / APPEAR_FADE_SECONDS, 0),
-        1,
-      );
-      item.object.alpha = t * t * (3 - 2 * t) * item.baseAlpha;
-      if (t < 1) allDone = false;
-    }
-    if (allDone) pendingAppear = null;
+    pendingAppear = null;
   }
 
   function showHover(hover: HoverResult | null): void {
@@ -195,7 +163,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     const scene = controller.scene;
     if (scene !== null) {
       counterScaleLabels(scene.labels, cameraTarget.scale);
-      cancelPendingAppear();
+      pendingAppear = null;
       if (snap) applyBandsInstant(scene);
       else beginAppearTransition(scene);
     }
