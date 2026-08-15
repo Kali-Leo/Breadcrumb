@@ -18,7 +18,6 @@ export interface ApiConfig {
 /** Every optional AI-consuming feature has its own switch (product principle 3). */
 export interface FeatureSwitches {
   knowledgeTree: boolean;
-  trail: boolean;
   factcheck: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
@@ -90,7 +89,6 @@ const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
  * the "make learning visible" prototype the product is for (spec 035). */
 const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
-  trail: true,
   factcheck: true,
   knowledgeEdges: true,
   interest: true,

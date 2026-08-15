@@ -27,12 +27,6 @@ const FEATURE_ROWS: Array<{
     purposes: ["knowledge-tree"],
   },
   {
-    feature: "trail",
-    name: "🍞 轨迹每日总结",
-    hint: "每天生成一句昨日学习总结",
-    purposes: ["trail"],
-  },
-  {
     feature: "factcheck",
     name: "🔍 求真核查",
     hint: "在 AI 回答下方点「求证」:提取事实并检索公开资料佐证",

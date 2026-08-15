@@ -29,7 +29,6 @@ import { useFocusSessionsStore } from "./stores/focusSessionsStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
-import { useTrailStore } from "./stores/trailStore";
 
 /** Idle delay before the research task platform's v1 "idle execution" kicks in — no real
  * OS-level idle detection yet, just a fixed wait after startup (spec 036 §3, noted as a v1
@@ -50,8 +49,6 @@ export default function App() {
       await useDiglotStore.getState().loadFromDatabase();
       await useChatStore.getState().loadFromDatabase();
       await useKnowledgeStore.getState().loadTree();
-      await useTrailStore.getState().refreshToday();
-      await useTrailStore.getState().ensureYesterdaySummary();
       await useCompanionStore.getState().initialize();
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).

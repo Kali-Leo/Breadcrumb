@@ -1,13 +1,12 @@
 /**
- * Purpose: left column — new-chat button, trail cards (spec 041), the breadcrumb trail, and
- * the view switcher (memory palace / lab / settings). Opening or creating a conversation
- * always returns to the chat view so navigation never dead-ends in another view.
+ * Purpose: left column — new-chat button, trail cards (spec 041), and the view switcher
+ * (memory palace / lab / settings). Opening or creating a conversation always returns to
+ * the chat view so navigation never dead-ends in another view.
  * Main exports: Sidebar.
  */
 import { useChatStore } from "../stores/chatStore";
 import { CompanionSection } from "./CompanionSection";
 import { TrailList } from "./TrailList";
-import { TrailPanel } from "./TrailPanel";
 
 interface SidebarProps {
   activeView: "chat" | "settings" | "map" | "lab" | "feedback" | "research";
@@ -49,12 +48,8 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto px-2">
         <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
       </nav>
-      {/* Temporarily collapsed so trail cards keep the room (Leo 2026-08-14) — these
-          sections are due for their own rework and live one click away meanwhile. */}
-      <details className="border-t border-stone-100 px-3 py-1.5">
-        <summary className="cursor-pointer list-none text-xs text-stone-400">🍞 面包屑轨迹</summary>
-        <TrailPanel />
-      </details>
+      {/* Temporarily collapsed so trail cards keep the room (Leo 2026-08-14) — due for its
+          own rework and lives one click away meanwhile. */}
       <details className="border-t border-stone-100 px-3 py-1.5">
         <summary className="cursor-pointer list-none text-xs text-stone-400">👥 伙伴</summary>
         <CompanionSection onOpenChat={onOpenChat} />
