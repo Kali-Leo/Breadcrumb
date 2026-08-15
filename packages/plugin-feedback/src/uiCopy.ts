@@ -50,6 +50,20 @@ export const FEEDBACK_COPY = {
   settledWordsLabel: "词",
   settledShowMore: "展开全部",
 
+  // Trends — self-comparison only, no target lines (restored by Leo, spec 048 follow-up).
+  trendsTitle: "趋势",
+  trendsHint: "只与过去的自己比;不设目标线。",
+  trendsEmpty: "线条会随学习慢慢出现。",
+  trendLayersTitle: "记忆 · 理解 · 直觉(估算)",
+  trendLayersMemoryLabel: "记忆",
+  trendLayersUnderstandingLabel: "理解",
+  trendLayersIntuitionLabel: "直觉转化",
+  trendLayersNote:
+    "三条都是估算,会随时间自然消退。记忆=估计还能想起的概念量;理解=有讲解或自报支撑的部分;直觉转化最粗略——长期稳定、且你自己用过的部分。",
+  trendWordsTitle: "词汇",
+  trendWordsSettledLabel: "已稳固超过一个月的词",
+  trendWordsColdStartNote: "新词稳固需要时间,这条线前段为 0 是正常的。",
+
   // Evidence — the open-learner-model surface: every judgment can be traced to plain facts.
   evidenceTitle: "判断的来历",
   evidenceHint: "系统对每个概念的看法,都能查到是从哪来的。",

@@ -4,7 +4,7 @@
  * and the settled list.
  * Main exports: useFeedbackStore.
  */
-import type { DailyActivityCell, SettledResult } from "@breadcrumb/plugin-feedback";
+import type { DailyActivityCell, LayerTrendPoint, TrendPoint } from "@breadcrumb/plugin-feedback";
 import { create } from "zustand";
 import { type FeedbackData, loadFeedbackData } from "../lib/feedbackData";
 
@@ -12,7 +12,10 @@ interface FeedbackState {
   loaded: boolean;
   cells: DailyActivityCell[];
   continuity: { activeDays: number; longestRunDays: number; currentRunDays: number };
-  settled: SettledResult;
+  trends: {
+    layers: LayerTrendPoint[];
+    wordsSettled: TrendPoint[];
+  };
   loadAll(): Promise<void>;
 }
 
@@ -20,7 +23,7 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   loaded: false,
   cells: [],
   continuity: { activeDays: 0, longestRunDays: 0, currentRunDays: 0 },
-  settled: { nodes: [], words: [] },
+  trends: { layers: [], wordsSettled: [] },
 
   async loadAll() {
     const data: FeedbackData = await loadFeedbackData();
@@ -28,7 +31,7 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
       loaded: true,
       cells: data.cells,
       continuity: data.continuity,
-      settled: data.settled,
+      trends: data.trends,
     });
   },
 }));

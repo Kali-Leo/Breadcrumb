@@ -107,17 +107,25 @@ export default function App() {
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
-          {/* The companions roster slides out over the center area's left edge (Leo's
-              design) — the sidebar stays a pure conversation list. */}
+          {/* The companions roster pops out at the center area's lower-left, sized to its
+              three rows; clicking anywhere else dismisses it (Leo's design). */}
           {companionsOpen && (
-            <div className="absolute left-0 top-0 z-30 h-full w-60 border-r border-stone-200 bg-white p-3 shadow-lg">
-              <CompanionSection
-                onOpenChat={() => {
-                  setCompanionsOpen(false);
-                  setView("chat");
-                }}
+            <>
+              <button
+                type="button"
+                aria-label="关闭伙伴列表"
+                onClick={() => setCompanionsOpen(false)}
+                className="absolute inset-0 z-20 cursor-default"
               />
-            </div>
+              <div className="absolute bottom-2 left-2 z-30 w-56 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+                <CompanionSection
+                  onOpenChat={() => {
+                    setCompanionsOpen(false);
+                    setView("chat");
+                  }}
+                />
+              </div>
+            </>
           )}
         </main>
       </div>

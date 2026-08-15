@@ -20,14 +20,16 @@ interface SidebarProps {
   onToggleCompanions(): void;
 }
 
-/** The status bar's network indicator, shrunk to a dot (spec 044): connectivity is
- * peripheral information — visible at a glance, explained on hover, never in the way. */
+/** Offline indicator (spec 048 follow-up, Leo: an unexplained always-on dot is bad
+ * design) — the normal online state shows nothing at all; only being offline earns a
+ * quiet grey dot with its explanation on hover. */
 function ConnectivityDot() {
   const networkEnabled = useSettingsStore((state) => state.networkEnabled);
+  if (networkEnabled) return null;
   return (
     <span
-      title={networkEnabled ? "联网中" : "已离线,联网功能安静停下,学习不受影响"}
-      className={`h-2 w-2 cursor-help rounded-full ${networkEnabled ? "bg-amber-400" : "bg-stone-300"}`}
+      title="已离线,联网功能安静停下,学习不受影响"
+      className="h-2 w-2 cursor-help rounded-full bg-stone-300"
     />
   );
 }
