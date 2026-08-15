@@ -95,6 +95,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       currentLeafId,
       messages: deriveActiveMessages({ allMessages, currentLeafId }),
       conversationCost,
+      streamingText: null,
       errorText: null,
     });
   },
@@ -108,6 +109,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       currentLeafId: null,
       messages: [],
       conversationCost: new Map(),
+      streamingText: null,
       errorText: null,
     });
   },
@@ -140,22 +142,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
     // with this value much later (spec 040 §7).
     const { useKnowledgeStore } = await import("./knowledgeStore");
     const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
+    // The whole round runs against this entry snapshot, and every UI set() below is guarded
+    // by isRoundVisible() — switching conversations mid-round must never stream the old
+    // reply into the newly opened one (it still lands in its own conversation in the DB).
+    const entryConversationId = get().activeConversationId;
+    const entryTree = {
+      allMessages: get().allMessages,
+      currentLeafId: get().currentLeafId,
+      messages: get().messages,
+    };
     const repos = await getRepos();
-    const conversationId = await ensureChatConversationId(
-      repos,
-      get().activeConversationId,
-      content,
-    );
-    if (conversationId !== get().activeConversationId)
+    const conversationId = await ensureChatConversationId(repos, entryConversationId, content);
+    if (
+      conversationId !== entryConversationId &&
+      get().activeConversationId === entryConversationId
+    )
       set({ activeConversationId: conversationId });
+    const isRoundVisible = () => get().activeConversationId === conversationId;
 
     const { useCompanionStore } = await import("./companionStore");
     if (activeKind === "companion" || activeKind === "teach") {
       useCompanionStore.getState().checkUserMessageForCrisis(content);
     }
 
-    const userMessage = await appendUserMessage(repos, get(), conversationId, content);
-    set({ ...foldAppendedMessage(get(), userMessage), streamingText: "", errorText: null });
+    const userMessage = await appendUserMessage(repos, entryTree, conversationId, content);
+    if (isRoundVisible() && !get().allMessages.some((m) => m.id === userMessage.id)) {
+      set({ ...foldAppendedMessage(get(), userMessage), streamingText: "", errorText: null });
+    }
     appEventBus.emit("chat:messageSent", {
       conversationId,
       messageId: userMessage.id,
@@ -163,7 +176,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     try {
-      const baseMessages: ChatMessage[] = get().messages.map((m) => ({
+      const baseMessages: ChatMessage[] = [...entryTree.messages, userMessage].map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -171,6 +184,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const crisisActive =
         (activeKind === "companion" || activeKind === "teach") &&
         useCompanionStore.getState().crisisActive;
+      let streamed = "";
       const { assistantMessage, cost } = await runSendRound({
         repos,
         activeKind,
@@ -181,15 +195,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
         companionScriptEnabled: settings.featureSwitches.companionScript,
         companionMemoryEnabled: settings.featureSwitches.companionMemory,
         crisisActive,
-        onDelta: (delta) => set({ streamingText: (get().streamingText ?? "") + delta }),
+        onDelta: (delta) => {
+          streamed += delta;
+          if (isRoundVisible()) set({ streamingText: streamed });
+        },
       });
-      set({
-        ...foldAppendedMessage(get(), assistantMessage),
-        streamingText: null,
-        conversationCost: cost.conversationCost,
-        todayCost: cost.todayCost,
-        conversations: cost.conversations,
-      });
+      if (isRoundVisible()) {
+        // A switch-away-and-back reloads from the DB, which may already hold this row.
+        const alreadyLoaded = get().allMessages.some((m) => m.id === assistantMessage.id);
+        set({
+          ...(alreadyLoaded ? {} : foldAppendedMessage(get(), assistantMessage)),
+          streamingText: null,
+          conversationCost: cost.conversationCost,
+          todayCost: cost.todayCost,
+          conversations: cost.conversations,
+        });
+      } else {
+        // The reply belongs to a conversation no longer on screen — global meters still move.
+        set({ todayCost: cost.todayCost, conversations: cost.conversations });
+      }
       appEventBus.emit("chat:responseFinished", {
         conversationId,
         messageId: assistantMessage.id,
@@ -197,10 +221,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         anchoredNodeId: roundAnchoredNodeId,
       });
     } catch (error) {
-      set({
-        streamingText: null,
-        errorText: `这次请求没有成功：${error instanceof Error ? error.message : String(error)}。休息一下再试，或检查设置里的 API 配置。`,
-      });
+      if (isRoundVisible()) {
+        set({
+          streamingText: null,
+          errorText: `这次请求没有成功：${error instanceof Error ? error.message : String(error)}。休息一下再试，或检查设置里的 API 配置。`,
+        });
+      }
     }
   },
 }));
