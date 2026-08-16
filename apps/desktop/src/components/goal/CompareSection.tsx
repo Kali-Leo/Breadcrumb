@@ -57,7 +57,9 @@ function OccupationPicker() {
         </div>
       )}
       {query.trim().length >= 2 && hits.length === 0 && (
-        <p className="text-stone-400">职业名录里没找到——换个说法试试，或用下方的自由构建</p>
+        <p className="text-stone-400">
+          职业名录里没找到。换个说法试试，或在下方输入主题，让 AI 生成一份新的对照。
+        </p>
       )}
     </div>
   );
@@ -139,6 +141,9 @@ export function CompareSection() {
   return (
     <section className="space-y-2">
       <h3 className="font-semibold text-stone-600">对比树</h3>
+      <p className="text-sm text-stone-500">
+        把你学过的内容，和一个职业或一套教材需要的知识放在一起对比，看看已经重合了多少。
+      </p>
       <div className="flex overflow-hidden rounded-full border border-stone-200 self-start w-fit">
         {(
           [

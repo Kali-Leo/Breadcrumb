@@ -6,7 +6,7 @@
  */
 
 export const RESEARCH_COPY = {
-  panelTitle: "🔬 研究课题平台",
+  panelTitle: "🔬 研究课题",
   panelIntro:
     "这里的统计结果都是这台电脑自己算出来的;研究任务经过审查、来源可查,数据不会自动离开这台设备,也不产生任何费用。",
   offNotice: "研究任务已关闭:不会再运行新的任务。已有结果仍然保留,可以逐条查看或删除。",
@@ -24,7 +24,7 @@ export const RESEARCH_COPY = {
   deleteConfirmAction: "确认删除",
   deleteCancelAction: "取消",
 
-  settingsRowTitle: "🔬 研究课题平台",
+  settingsRowTitle: "🔬 研究课题",
   settingsRowHint: "在本地运行经审查的研究任务并展示结果;数据不会自动离开设备,也不产生费用",
 
   /** Shown once, the moment the user turns the switch off — spec 036's four required

@@ -41,7 +41,7 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
             onClick={onOpenGoalView}
             className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
           >
-            打开目标对照
+            查看目标详情
           </button>
         )}
       </div>

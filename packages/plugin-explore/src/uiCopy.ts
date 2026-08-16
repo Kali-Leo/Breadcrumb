@@ -32,7 +32,7 @@ export const EXPLORE_UI_COPY = {
   /** Header's back-to-parent action (spec 042 §4 nav fix) — hidden at the root station. */
   focusUpButton: "← 上一级",
   /** One-line operation hint under the subway map (spec 042 §4). */
-  focusMapHint: "点站跳转 · 实线=文中选词 · 虚线=提问",
+  focusMapHint: "点一个站可以跳过去。实线是从文中选词长出来的，虚线是提问长出来的。",
 } as const;
 
 /** Ungraded reveal line: embedding grading was unavailable, so the door opens straight to
@@ -52,8 +52,17 @@ export function focusSelectHint(quotedText: string): string {
   return `按 Enter 解释「${quotedText}」`;
 }
 
+/** A raw exception message reads as unreadable jargon (a stack-trace fragment, an English
+ * error string) — anything with a 4+ letter ASCII run is treated as raw and swapped for the
+ * generic line instead of interpolated; a crafted Chinese line (short acronyms like "API"
+ * included) passes through untouched. */
+const RAW_LOOKING_PATTERN = /[A-Za-z]{4,}/;
+
 /** Plain-statement error banner for a failed focus-session station (spec 042 §2). */
 export function focusErrorLine(message: string): string {
+  if (RAW_LOOKING_PATTERN.test(message)) {
+    return "这一站没有生成成功。可以重试，或退出专注。";
+  }
   return `这一站没有生成成功：${message}。可以重试，或退出专注。`;
 }
 

@@ -22,56 +22,56 @@ const FEATURE_ROWS: Array<{
 }> = [
   {
     feature: "knowledgeTree",
-    name: "🌳 知识树提取",
-    hint: "每轮对话后额外调用一次 AI 提取知识点",
+    name: "🌳 知识整理",
+    hint: "每次对话结束后，AI 会把这次聊到的知识点整理进你的地图。每轮一次调用。",
     purposes: ["knowledge-tree"],
   },
   {
     feature: "factcheck",
-    name: "🔍 求真核查",
-    hint: "在 AI 回答下方点「求证」:提取事实并检索公开资料佐证",
+    name: "🔍 事实核查",
+    hint: "在 AI 回答下方点「求证」，AI 会去公开资料里查证回答中的说法。",
     purposes: ["factcheck"],
   },
   {
     feature: "knowledgeEdges",
-    name: "🕸️ 知识关系发现",
-    hint: "记下新知识点后,看一眼它和已学内容谁帮衬谁;每次一小笔",
+    name: "🕸️ 知识关联",
+    hint: "记下新知识点后，AI 会看看它和你学过的内容有什么联系。每次一小笔。",
     purposes: ["knowledge-edges"],
   },
   {
     feature: "interest",
-    name: "💡 兴趣画像",
-    hint: "每轮对话后观察好奇/困惑/厌倦倾向;也用于「我学过…」自报映射",
+    name: "💡 个性化推荐",
+    hint: "AI 会留意你对哪些内容感兴趣、哪里有困惑，用来调整推荐；你说「我学过…」时也靠它来识别对应的知识点。",
     purposes: ["interest", "self-report-mapping"],
   },
   {
     feature: "goalPlanning",
     name: "🎯 目标规划",
-    hint: "把你的目标拆解成知识点集合;建目标时调用一次 AI",
+    hint: "你定下一个目标后，AI 会把它变成一份要学的清单；建目标时用一次。",
     purposes: ["goal-planning"],
   },
   {
     feature: "compareProfileBuild",
-    name: "🌲 对比画像构建(实验功能)",
-    hint: "在对比树里按输入检索构建新画像:AI 提案后逐条核验资料来源,较耗时",
+    name: "🌲 对比资料构建（实验）",
+    hint: "想对比职业名录之外的主题时，AI 会检索公开资料整理出一份对照清单，并逐条核对来源；需要几分钟。",
     purposes: ["compare-profile"],
   },
   {
     feature: "compareAlignment",
-    name: "🌉 对比语义对齐",
-    hint: "AI 判定你的用词与资料用词是否同一概念;判定永久复用,只为新组合花钱",
+    name: "🌉 对比匹配",
+    hint: "对比时，AI 会判断你的说法和资料里的说法是不是同一个概念；同样的一对只判断一次。",
     purposes: ["compare-align"],
   },
   {
     feature: "teachQuality",
-    name: "🎓 讲得怎么样",
-    hint: "你讲给伙伴听之后,看一次讲得怎么样;讲得好会直接记为掌握的证据",
+    name: "🎓 讲解反馈",
+    hint: "你讲给伙伴听之后，AI 会看一遍你讲得怎么样；讲得清楚的部分会被记下来。",
     purposes: ["teach-quality"],
   },
   {
     feature: "mapTopicNaming",
-    name: "🗺️ 板块 AI 起名(实验)",
-    hint: "记忆宫殿里给零散兴趣聚成的板块起名字;同一片只花一次钱",
+    name: "🗺️ 地图起名（实验）",
+    hint: "在记忆宫殿里，AI 会给自动聚在一起的一片内容起名字；每片只起一次。",
     purposes: ["map-naming"],
   },
   {
@@ -82,7 +82,7 @@ const FEATURE_ROWS: Array<{
   },
   {
     feature: "companionChat",
-    name: "🎭 伙伴会话",
+    name: "🎭 伙伴聊天",
     hint: "三位 AI 学习伙伴:打开对话、偶尔主动邀请你讲给它听或一起回顾",
     purposes: ["companion-chat"],
   },
@@ -94,20 +94,20 @@ const FEATURE_ROWS: Array<{
   },
   {
     feature: "companionScript",
-    name: "📜 伙伴备课",
-    hint: "你讲之前,听讲的伙伴先备一下课,听的时候更会接话;你讲的过程中每轮一小笔",
+    name: "📜 伙伴预习",
+    hint: "你开讲之前，要听你讲的伙伴会先预习一下这个主题，听的时候更能接上话；你讲的过程中每轮一小笔。",
     purposes: ["companion-script"],
   },
   {
     feature: "focusExplain",
     name: "🔎 专注解释",
-    hint: "专注模式里选词或提问,每一站生成一次讲解",
+    hint: "在专注模式里选中词语或提问时，AI 会生成一段讲解；每个词讲一次。",
     purposes: ["focus-explain"],
   },
   {
     feature: "termMarking",
     name: "🖊️ 生词标注",
-    hint: "每条回答/专注解释生成后调用一次,标出可能读不懂的词;同一条只标一次",
+    hint: "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释；每条只标一次。",
     purposes: ["term-marking"],
   },
 ];
@@ -210,9 +210,10 @@ export function BillingSettingsPanel() {
         <ResearchTasksSettingsRow />
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-stone-700">🧵 织入·智能替换</p>
+            <p className="text-sm text-stone-700">🧵 语言学习·智能替换</p>
             <p className="text-xs text-stone-500">
-              语言织入的进阶层:多义词按语境选译,并织入短语级地道表达(基础织入零费用,此层每条消息一次小调用)
+              语言学习的加强版：AI
+              按上下文挑更准确的译法，偶尔换上一句地道短语。每条消息一次小额调用。
             </p>
             <p className="text-xs text-stone-400">{spendLine(today, total, ["diglot-weave"])}</p>
           </div>
@@ -221,13 +222,15 @@ export function BillingSettingsPanel() {
             onClick={() =>
               void saveDiglotSettings({ llmRefineEnabled: !diglotSettings.llmRefineEnabled })
             }
-            label="织入智能替换"
+            label="语言学习智能替换"
           />
         </div>
         <div className="flex items-center justify-between gap-4 border-t border-stone-100 pt-3">
           <div>
-            <p className="text-sm text-stone-700">💬 对话本体</p>
-            <p className="text-xs text-stone-500">核心功能,无开关;账目照记</p>
+            <p className="text-sm text-stone-700">💬 聊天</p>
+            <p className="text-xs text-stone-500">
+              和 AI 的日常对话。这是核心功能，一直开启；花费同样记在这里。
+            </p>
             <p className="text-xs text-stone-400">{spendLine(today, total, ["chat"])}</p>
           </div>
         </div>

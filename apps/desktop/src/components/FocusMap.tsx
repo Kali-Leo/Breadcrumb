@@ -105,7 +105,7 @@ export function FocusMap() {
           height={layout.height * scale}
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           role="img"
-          aria-label="专注地铁图"
+          aria-label="专注站点图"
         >
           {layout.links.map((link) => (
             <polyline

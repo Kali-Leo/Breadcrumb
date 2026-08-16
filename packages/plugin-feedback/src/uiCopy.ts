@@ -20,7 +20,7 @@ export const FEEDBACK_COPY = {
 
   // Small wins — concrete progress events (Amabile's progress principle stays in this
   // comment, not on screen).
-  smallWinsTitle: "微进展",
+  smallWinsTitle: "最近进展",
   smallWinsHint: "今天与近 7 天,具体前进了什么。",
   smallWinsEmpty: "这个窗口里还没有新的痕迹。打开一段对话,聊到哪里算哪里。",
   smallWinsTodayLabel: "今天",
@@ -31,15 +31,15 @@ export const FEEDBACK_COPY = {
   totalsTitle: "累计",
   totalsHint: "只增不减的总量。",
   totalsConcepts: "认识的概念",
-  totalsEncounters: "相遇总次数",
+  totalsEncounters: "接触过的次数",
   totalsWordsLearning: "在学的词",
   totalsWordsSettled: "已稳固的词",
   totalsConversations: "学习对话",
 
   // Reunion — minimal restart after a pause, zero attribution, no backlog counts.
-  reunionTitle: "重逢邀请",
+  reunionTitle: "一起回顾",
   reunionIntro: "这些概念有阵子没一起聊过了。想的话,挑一个去聊聊。",
-  reunionEmpty: "暂时没有在等重逢的概念。",
+  reunionEmpty: "暂时没有在等回顾的概念。",
   reunionInviteAction: "去聊聊",
 
   // Settled — "graduated from review" as the strongest done-language there is.
@@ -59,17 +59,17 @@ export const FEEDBACK_COPY = {
   trendLayersUnderstandingLabel: "理解",
   trendLayersIntuitionLabel: "直觉转化",
   trendLayersNote:
-    "三条都是估算,会随时间自然消退。记忆=估计还能想起的概念量;理解=有讲解或自报支撑的部分;直觉转化最粗略——长期稳定、且你自己用过的部分。",
+    "三条都是估算,会随时间自然消退。记忆=估计还能想起的概念量;理解=有讲解或你自己说学过支撑的部分;用熟了的部分最粗略——长期稳定、且你自己用过的部分。",
   trendWordsTitle: "词汇",
   trendWordsSettledLabel: "已稳固超过一个月的词",
   trendWordsColdStartNote: "新词稳固需要时间,这条线前段为 0 是正常的。",
 
   // Evidence — the open-learner-model surface: every judgment can be traced to plain facts.
-  evidenceTitle: "判断的来历",
+  evidenceTitle: "这些判断是怎么来的",
   evidenceHint: "系统对每个概念的看法,都能查到是从哪来的。",
   evidenceEmpty: "选一个概念,看看这个判断是怎么来的。",
-  evidencePickerPlaceholder: "搜索已相遇的概念…",
-  evidenceEncountersLabel: "相遇记录",
+  evidencePickerPlaceholder: "搜索接触过的概念…",
+  evidenceEncountersLabel: "接触记录",
   evidenceClaimsLabel: "来自你的证据",
   evidenceClaimLearned: "你说过:这个学过",
   evidenceClaimFamiliar: "你说过:这个比较熟",
@@ -107,7 +107,7 @@ export function wordGuessLabel(lemma: string, isClose: boolean): string {
 
 /** Small-wins label: a teach-back conversation held inside the window. */
 export function teachSessionLabel(title: string): string {
-  return `回讲了一次:${title}`;
+  return `讲了一次:${title}`;
 }
 
 /** Evidence section's per-claim label — which plain fact produced the mastery claim. */

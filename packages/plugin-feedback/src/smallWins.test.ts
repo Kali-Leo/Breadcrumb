@@ -151,7 +151,7 @@ describe("computeSmallWins", () => {
     expect(wins).toEqual([
       {
         kind: "teach-session",
-        label: "回讲了一次:回讲:递归",
+        label: "讲了一次:回讲:递归",
         occurredAtIso: "2026-08-09T00:00:00.000Z",
       },
     ]);

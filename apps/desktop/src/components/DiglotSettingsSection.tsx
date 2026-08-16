@@ -67,7 +67,7 @@ export function DiglotSettingsSection() {
       {settings.enabled && (
         <div className="space-y-3 text-sm text-stone-600">
           <p className="text-xs text-stone-400">
-            语对:中文 → English · 学习中 {cardsByLemma.size} 词 · 今日新词 {newToday}
+            从中文学 English · 正在学 {cardsByLemma.size} 个词 · 今天新遇到 {newToday} 个
           </p>
           <label className="block space-y-1">
             {DIGLOT_UI_COPY.densityLabel} {(settings.density * 100).toFixed(0)}%

@@ -23,7 +23,7 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
     return (
       <div className="rounded-xl bg-white p-3 shadow-sm">
         <p className="text-sm text-stone-600">无名小岛 · {hover.label}</p>
-        <p className="mt-1.5 text-xs leading-5 text-stone-400">偶尔碰过、还没成气候的关注</p>
+        <p className="mt-1.5 text-xs leading-5 text-stone-400">你偶尔接触过、还没有深入学的内容</p>
       </div>
     );
   }

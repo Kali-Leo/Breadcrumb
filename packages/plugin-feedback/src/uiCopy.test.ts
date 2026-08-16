@@ -36,7 +36,7 @@ describe("small-wins labels", () => {
   });
 
   it("labels a teach-back session", () => {
-    expect(teachSessionLabel("闭包")).toBe("回讲了一次:闭包");
+    expect(teachSessionLabel("闭包")).toBe("讲了一次:闭包");
   });
 });
 

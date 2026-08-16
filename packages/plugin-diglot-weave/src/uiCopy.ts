@@ -14,8 +14,8 @@ export const DIGLOT_UI_COPY = {
   alsoTranslatedAs: "也作",
   settingsTitle: "语言学习",
   settingsHint:
-    "对话里少量词语显示为目标语言;原文不变,随时可关。基础织入全本地零 token;「智能替换」进阶层在开关与计价页单独开关、单独看账。",
-  densityLabel: "替换密度",
+    "对话里会有少量词语显示成你正在学的语言;原文都还在,点一下就能看,也随时可以关闭。更准确的「智能替换」可以在设置的开关与计价页打开。",
+  densityLabel: "替换频率",
   newWordCapLabel: "每日新词上限",
   guessLevelLabel: "猜测频率",
   guessLevelLow: "少",

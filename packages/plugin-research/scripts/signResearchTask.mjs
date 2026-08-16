@@ -43,7 +43,7 @@ function bytesToHex(bytes) {
 const DEMO_PAYLOAD = {
   id: "breadcrumb-demo-task",
   institution: "Breadcrumb 项目组",
-  title: "示例研究:相遇分布与学习活跃度关联",
+  title: "示例研究:概念接触与学习活跃度的关联",
   purpose:
     "这是内置的示例研究任务,用于演示研究课题平台的完整链路:项目方签名的任务在本地计算三项聚合统计,结果只增加,你可以随时删除。它不对应任何真实机构的数据需求。",
   ethicsNote: "示例任务,无需伦理审查;真实任务的伦理审查备注会显示在这个位置。",
@@ -60,8 +60,12 @@ const DEMO_PAYLOAD = {
   display: [
     { kind: "text", text: "以下三项统计全部为本地聚合计算,只输出聚合结果,不包含任何单条记录。" },
     { kind: "stat", label: "认识的概念数", callIndex: 0 },
-    { kind: "bars", label: "各概念相遇次数分布", callIndex: 1 },
-    { kind: "stat", label: "「每日相遇次数」与「每日织入词事件数」的相关系数", callIndex: 2 },
+    { kind: "bars", label: "各概念的接触次数分布", callIndex: 1 },
+    {
+      kind: "stat",
+      label: "「每天接触概念的次数」和「每天遇到外语词的次数」是否一起变化",
+      callIndex: 2,
+    },
   ],
   expiresAt: "2030-01-01",
 };

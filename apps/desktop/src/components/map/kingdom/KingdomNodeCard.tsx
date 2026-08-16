@@ -35,7 +35,7 @@ interface KingdomNodeCardProps {
 /** One plain, suggest-only sentence for why this node is the current invitation. */
 export function reasonLine(candidate: FrontierCandidate): string {
   if (candidate.reason.litPrerequisiteLabels.length > 0) {
-    return `它的前置 ${candidate.reason.litPrerequisiteLabels.join("、")} 已完成。`;
+    return `学它之前需要的 ${candidate.reason.litPrerequisiteLabels.join("、")} 已经完成。`;
   }
   if (candidate.reason.wasLitBefore) return "以前学过,有阵子没见了。";
   if (candidate.reason.gatewayTo) return `通往你感兴趣的「${candidate.reason.gatewayTo.label}」。`;
@@ -109,8 +109,8 @@ export function KingdomNodeCard({
           onJump={onJump}
         />
         <RelationRow title="包含" items={relations.children} onJump={onJump} />
-        <RelationRow title="前置" items={relations.prerequisites} onJump={onJump} />
-        <RelationRow title="帮衬它的" items={relations.helpers} onJump={onJump} />
+        <RelationRow title="需要先会" items={relations.prerequisites} onJump={onJump} />
+        <RelationRow title="对它有帮助的" items={relations.helpers} onJump={onJump} />
       </div>
 
       <div className="mt-3 flex items-center gap-2">

@@ -122,7 +122,7 @@ async function executeRetentionSummary(
       bars: [
         { label: "均值", value: 0 },
         { label: "中位数", value: 0 },
-        { label: "达标占比", value: 0 },
+        { label: "高于基准线的占比", value: 0 },
       ],
     };
   }
@@ -139,7 +139,7 @@ async function executeRetentionSummary(
     bars: [
       { label: "均值", value: roundTo3(mean) },
       { label: "中位数", value: roundTo3(median) },
-      { label: "达标占比", value: roundTo3(share) },
+      { label: "高于基准线的占比", value: roundTo3(share) },
     ],
   };
 }

@@ -50,7 +50,7 @@ export function GoalComposition() {
               {labelById.get(nodeId) ?? nodeId}
               {isNewDirection && (
                 <span
-                  title="新方向"
+                  title="还没接触过的新方向"
                   className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle"
                 />
               )}

@@ -114,7 +114,7 @@ export const BREAK_REMINDER_COPY = "伙伴对话已经持续两小时。可以�
 
 /** Every other companion-introduced user-visible string not covered above. */
 export const COMPANION_COPY = {
-  sectionTitle: "伙伴",
+  sectionTitle: "好友",
   aiLabel: "AI 学习伙伴",
   /** The teach-back invitation as the companion's own ordinary chat message (Leo 2026-08-15:
    * no cards, no buttons — replying starts the teach-back, ignoring lets it expire).

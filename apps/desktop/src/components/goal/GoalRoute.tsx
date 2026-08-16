@@ -16,10 +16,10 @@ const chipClass = "rounded bg-amber-100 px-1 text-amber-700";
 function StepReasonChips({ reason }: { reason: RecommendedRouteStep["reason"] }) {
   return (
     <span className="flex flex-wrap gap-1 text-stone-500">
-      {reason.helpsSources.length > 0 && <span className={chipClass}>已有基础帮衬</span>}
+      {reason.helpsSources.length > 0 && <span className={chipClass}>你已有基础</span>}
       {reason.interest > ROUTE_INTEREST_CHIP_THRESHOLD && <span className={chipClass}>兴趣</span>}
       {reason.unlocks && <span className={chipClass}>通往「{reason.unlocks.label}」</span>}
-      {reason.isGoalNode && <span className={chipClass}>目标内</span>}
+      {reason.isGoalNode && <span className={chipClass}>在目标里</span>}
     </span>
   );
 }

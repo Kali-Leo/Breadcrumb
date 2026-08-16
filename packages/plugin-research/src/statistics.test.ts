@@ -213,7 +213,7 @@ describe("retention_summary", () => {
       bars: [
         { label: "均值", value: 0 },
         { label: "中位数", value: 0 },
-        { label: "达标占比", value: 0 },
+        { label: "高于基准线的占比", value: 0 },
       ],
     });
   });
@@ -230,7 +230,7 @@ describe("retention_summary", () => {
     const [mean, median, share] = result.bars;
     expect(mean?.label).toBe("均值");
     expect(median?.label).toBe("中位数");
-    expect(share?.label).toBe("达标占比");
+    expect(share?.label).toBe("高于基准线的占比");
     for (const bar of result.bars) {
       expect(bar.value).toBeGreaterThanOrEqual(0);
       expect(bar.value).toBeLessThanOrEqual(1);

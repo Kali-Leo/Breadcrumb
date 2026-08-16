@@ -33,7 +33,7 @@ export function SettingsQuietIssues() {
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <h3 className="font-medium text-stone-700">后台小事</h3>
+      <h3 className="font-medium text-stone-700">后台任务</h3>
       {failures.length === 0 ? (
         <p className="mt-1 text-sm text-stone-500">后台一切正常。</p>
       ) : (

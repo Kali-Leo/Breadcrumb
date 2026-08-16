@@ -48,8 +48,8 @@ function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void 
     <button
       type="button"
       onClick={onToggle}
-      title="伙伴"
-      aria-label="伙伴"
+      title="好友"
+      aria-label="好友"
       className={`relative rounded-lg px-2 py-1 text-base transition-colors ${
         open ? "bg-amber-100" : "hover:bg-stone-100"
       }`}

@@ -67,7 +67,7 @@ function HubDetail({ node }: { node: OverlapNode }) {
           {decomposingHub ? "正在细分…" : "细分这片领域（会逐条核对资料来源）"}
         </button>
       ) : (
-        <p className="text-stone-400">想细分它？去设置里开启「对比画像构建（实验功能）」</p>
+        <p className="text-stone-400">想细分它？去设置里开启「对比资料构建（实验）」</p>
       )}
     </div>
   );
@@ -85,7 +85,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
       <p className="font-medium text-stone-700">
         {node.label}
         {node.isLeaf && (node.kind === "hub" || node.kind === "tool") ? (
-          <span className="ml-2 text-stone-400">待细分</span>
+          <span className="ml-2 text-stone-400">还没细分成具体知识点</span>
         ) : (
           <span className="ml-2 text-stone-400">
             重合{" "}
@@ -118,7 +118,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
               <p className="text-stone-400">还没对上你的知识点</p>
             ))}
           {stubCount > 0 && (
-            <p className="text-stone-400">还有 {stubCount} 片领域可以细分——点开对应节点即可</p>
+            <p className="text-stone-400">还有 {stubCount} 片领域可以细分——在图里点开它们就可以</p>
           )}
           <p className="text-stone-400">佐证：{node.sourceRef}</p>
         </>
@@ -137,7 +137,7 @@ export function ExperimentalBuildForm() {
   if (!buildEnabled) {
     return (
       <p className="text-stone-400">
-        想对比职业名录之外的对象？去设置里开启「对比画像构建（实验功能）」
+        想对比职业名录之外的对象？去设置里开启「对比资料构建（实验）」
       </p>
     );
   }
@@ -150,7 +150,7 @@ export function ExperimentalBuildForm() {
         <input
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
-          placeholder="职业名录之外的自由主题"
+          placeholder="输入想对比的主题，比如「数据分析」"
           className="flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
         />
         <button
@@ -159,10 +159,10 @@ export function ExperimentalBuildForm() {
           onClick={() => void buildFromTopic(topic.trim())}
           className="rounded bg-amber-500 px-2 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
         >
-          检索构建
+          生成
         </button>
       </div>
-      <p className="text-stone-400">构建要逐条核对资料来源，预计需要几分钟</p>
+      <p className="text-stone-400">生成时会逐条核对资料来源，预计需要几分钟。</p>
       {buildNote !== null && <p className="text-stone-500">{buildNote}</p>}
     </div>
   );

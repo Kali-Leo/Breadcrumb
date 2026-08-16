@@ -34,10 +34,15 @@ export function GoalView({ onClose }: GoalViewProps) {
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100"
           >
-            ← 返回宫殿
+            ← 返回记忆宫殿
           </button>
         </div>
 
+        {selectedGoalId === null && (
+          <p className="text-sm text-stone-500">
+            写下你想达成的目标，AI 会把它变成一份要学的知识点清单。
+          </p>
+        )}
         <GoalMappingForm goalText={goalText} onGoalTextChange={setGoalText} />
 
         {goals.length > 0 && (

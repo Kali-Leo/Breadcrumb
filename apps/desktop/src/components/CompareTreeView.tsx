@@ -243,7 +243,7 @@ export function CompareTreeView({
               tabIndex={0}
               aria-label={
                 (node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? `${node.label} 待细分`
+                  ? `${node.label} 还没细分`
                   : `${node.label} 重合 ${percentOf(node.ratio)}`
               }
               style={{
@@ -276,7 +276,7 @@ export function CompareTreeView({
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {(node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? "待细分"
+                  ? "还没细分"
                   : percentOf(node.ratio)}
                 {point.data.hasHiddenChildren ? " ▸" : ""}
               </text>

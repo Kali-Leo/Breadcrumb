@@ -36,9 +36,8 @@ export type ExperimentalBuildOutcome =
 
 function costLineOf(model: string, usage: TokenUsage): string {
   const price = BUILTIN_MODEL_PRICES[model];
-  const tokens = usage.inputTokens + usage.outputTokens;
   const cost = price ? formatCost(calculateCostMicros(usage, price), price.currency) : "未知";
-  return `本次构建用了 ${tokens.toLocaleString()} token（${cost}）`;
+  return `本次构建花费 ${cost}`;
 }
 
 /** Fetches one cited URL and checks the page mentions the cited material's title tokens.
@@ -97,7 +96,7 @@ export async function runProposalPipeline(
     });
   } catch (error) {
     void recordAiFailure("compare-profile", error);
-    return { ok: false, reason: "画像提案这一步没能完成，可以点一下重试", costLine: null };
+    return { ok: false, reason: "AI 起草资料清单这一步没能完成，可以点一下重试", costLine: null };
   }
 
   // Verify each unique cited URL once; an item may share a source with its siblings.
@@ -176,7 +175,7 @@ export async function runExperimentalProfileBuild(
       title,
       origin: "searched",
       description,
-      source_note: `实验功能：检索构建于 ${nowIso().slice(0, 10)}，逐条来源通过了可达性与标题包含校验`,
+      source_note: `实验功能：检索构建于 ${nowIso().slice(0, 10)}，每条来源都验证过：网址能打开、内容对得上`,
       created_at: nowIso(),
       // The search-build pipeline only ever proposes curriculum/skill-tree topics (spec 026's
       // occupation category has its own separate build pipeline).

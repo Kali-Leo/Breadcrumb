@@ -7,6 +7,11 @@ import { buildReunionSystemLine, isReunionTitle, reunionTopicFromTitle } from ".
 
 describe("reunion helpers", () => {
   it("recognizes the title marker and extracts the topic", () => {
+    expect(isReunionTitle("回顾:闭包")).toBe(true);
+    expect(reunionTopicFromTitle("回顾:闭包")).toBe("闭包");
+  });
+
+  it("still recognizes the retired 重逢: prefix from old persisted titles", () => {
     expect(isReunionTitle("重逢:闭包")).toBe(true);
     expect(reunionTopicFromTitle("重逢:闭包")).toBe("闭包");
   });

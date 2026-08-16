@@ -13,6 +13,7 @@ import type { ChatSession, CostByCurrency } from "./chatSessions";
 import { beginStreamControl, endStreamControl, isAbortError } from "./chatStreamControl";
 import { foldAppendedMessage } from "./chatTreeActions";
 import { getRepos, type Repos } from "./db";
+import { recordAiFailure } from "./failureLog";
 
 /** Round guards shared by first send and retry — one wording, one place. */
 export const CHAT_ROUND_GUARD_COPY = {
@@ -100,10 +101,11 @@ export async function runAssistantRound(
       deps.patchSession(conversationId, (current) => ({ ...current, streamingText: null }));
       return;
     }
+    await recordAiFailure("chat", error);
     deps.patchSession(conversationId, (current) => ({
       ...current,
       streamingText: null,
-      errorText: `这次请求没有成功：${error instanceof Error ? error.message : String(error)}。休息一下再试，或检查设置里的 API 配置。`,
+      errorText: "这次请求没有成功。休息一下再试，或检查设置里的 AI 服务配置。",
     }));
   } finally {
     endStreamControl(conversationId, controller);

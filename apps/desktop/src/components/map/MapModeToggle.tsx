@@ -22,14 +22,15 @@ export function MapModeToggle() {
     <div className="flex overflow-hidden rounded-full border border-stone-300 bg-white/90 text-xs shadow-sm">
       {(
         [
-          ["casual", "休闲"],
-          ["ranked", "目标"],
+          ["casual", "休闲", "自由查看整张地图，推荐跟着你的兴趣走"],
+          ["ranked", "目标", "只突出和当前目标有关的部分"],
         ] as const
-      ).map(([mode, label]) => (
+      ).map(([mode, label, title]) => (
         <button
           key={mode}
           type="button"
           onClick={() => void switchTo(mode)}
+          title={title}
           className={`px-3 py-1 transition-colors ${
             learningMode === mode ? "bg-amber-500 text-white" : "text-stone-500 hover:bg-stone-50"
           }`}

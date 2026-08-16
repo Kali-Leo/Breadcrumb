@@ -79,7 +79,7 @@ export function KingdomTreeSvg({
   const nodeById = new Map(visibleNodes.map((node) => [node.id, node]));
 
   if (layout.stations.length === 0) {
-    return <p className="p-4 text-sm text-stone-400">这个国度还没有落座的知识点。</p>;
+    return <p className="p-4 text-sm text-stone-400">这片区域还没有记下的知识点。</p>;
   }
 
   // Shrink to fit the pane (never grow); past the floor the pane scrolls (spec 050 §1).
@@ -100,7 +100,7 @@ export function KingdomTreeSvg({
         height={layout.height * scale}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         role="img"
-        aria-label="这个国度的知识网络"
+        aria-label="这片区域的知识网络"
       >
         <defs>
           <marker

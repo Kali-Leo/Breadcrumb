@@ -6,15 +6,20 @@
  * buildReunionSystemLine.
  */
 
-/** Same marker startReunionSession puts in the conversation title (mirrors teach's 回讲· pattern). */
-export const REUNION_TITLE_PREFIX = "重逢:";
+/** Marker a reunion session puts in the conversation title. The retired `重逢:` prefix stays
+ * parseable so old conversations keep working (mirrors teachActions.ts's 换你讲·/回讲· pattern). */
+export const REUNION_TITLE_PREFIX = "回顾:";
+const LEGACY_REUNION_TITLE_PREFIX = "重逢:";
 
 export function isReunionTitle(title: string): boolean {
-  return title.startsWith(REUNION_TITLE_PREFIX);
+  return title.startsWith(REUNION_TITLE_PREFIX) || title.startsWith(LEGACY_REUNION_TITLE_PREFIX);
 }
 
 export function reunionTopicFromTitle(title: string): string {
-  return isReunionTitle(title) ? title.slice(REUNION_TITLE_PREFIX.length) : title;
+  if (title.startsWith(REUNION_TITLE_PREFIX)) return title.slice(REUNION_TITLE_PREFIX.length);
+  return title.startsWith(LEGACY_REUNION_TITLE_PREFIX)
+    ? title.slice(LEGACY_REUNION_TITLE_PREFIX.length)
+    : title;
 }
 
 /** The retrieval-first instruction for a reunion round: ask before telling, cue before

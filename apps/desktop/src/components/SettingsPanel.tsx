@@ -122,6 +122,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <>
           <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
             <h3 className="font-medium text-stone-700">AI 服务（OpenAI 兼容）</h3>
+            <p className="text-sm text-stone-500">
+              在这里填入你的 AI 服务账号；对话和其他 AI 功能都靠它工作。
+            </p>
             <label className="block space-y-1 text-sm text-stone-500">
               服务地址 Base URL
               <input
@@ -179,7 +182,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <div>
               <h3 className="font-medium text-stone-700">大陆网络模式</h3>
               <p className="text-sm text-stone-500">
-                求真核查只使用大陆可访问的资料源（必应）；关闭后优先维基百科。
+                事实核查只使用大陆可访问的资料源（必应）；关闭后优先维基百科。
               </p>
             </div>
             <Toggle

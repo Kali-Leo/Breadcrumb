@@ -36,8 +36,8 @@ export type CompanionId = (typeof COMPANION_IDS)[number];
 export const COMPANION_DESKTOP_COPY = {
   /** Per-row AI-disclosure tag: each companion's own positioning (Leo 2026-08-15),
    * keyed by the card's extensions.breadcrumb.role. */
-  roleLabels: { student: "AI 学生", peer: "AI 同窗", mentor: "AI 导师" } as Record<string, string>,
-  chatDisabled: "伙伴会话开关已关闭。想继续,去设置里打开「伙伴会话」",
+  roleLabels: { student: "AI 学生", peer: "AI 同学", mentor: "AI 导师" } as Record<string, string>,
+  chatDisabled: "伙伴聊天已关闭。想继续,去设置里打开「伙伴聊天」",
   crisisInterruptSystemLine:
     "学习者提到了伤害自己。放下角色,用一两句平实的话回应:说明你是 AI、帮不上这件事,值得找真的人聊,不展开、不扮演。",
   dismiss: "知道了",
