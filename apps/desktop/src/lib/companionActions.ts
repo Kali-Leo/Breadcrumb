@@ -21,7 +21,6 @@ import {
 } from "@breadcrumb/plugin-companion";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { useSettingsStore } from "../stores/settingsStore";
-import { foldAppendedMessage } from "./chatTreeActions";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { newestLeafId } from "./messageTree";
@@ -138,10 +137,7 @@ export async function appendHelperThanks(conversationId: string, topic: string):
   await repos.messages.append(thanks);
   await repos.conversations.touch(conversationId, thanks.created_at);
   const { useChatStore } = await import("../stores/chatStore");
-  const chat = useChatStore.getState();
-  if (chat.activeConversationId === conversationId) {
-    useChatStore.setState(foldAppendedMessage(chat, thanks));
-  }
+  useChatStore.getState().noteExternalMessage(conversationId, thanks);
 }
 
 /** Delivers a teach-back or reunion invitation as the companion's own chat message: reuses
@@ -170,10 +166,7 @@ export async function appendCompanionInvitation(
   await repos.messages.append(invitation);
   await repos.conversations.touch(conversationId, invitation.created_at);
   const { useChatStore } = await import("../stores/chatStore");
-  const chat = useChatStore.getState();
-  if (chat.activeConversationId === conversationId) {
-    useChatStore.setState(foldAppendedMessage(chat, invitation));
-  }
+  useChatStore.getState().noteExternalMessage(conversationId, invitation);
 }
 
 /** Generates the teach-back script and seeds this conversation's knowledge state (spec 037's

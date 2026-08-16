@@ -270,10 +270,13 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
 
 // Productive use (spec 033 signal table): when the user's own message contains a target
 // word they are learning, record the strongest signal — once per lemma per message.
-appEventBus.on("chat:messageSent", ({ messageId }) => {
+appEventBus.on("chat:messageSent", ({ conversationId, messageId }) => {
   const { settings, loaded, cardsByLemma, recordSignal } = useDiglotStore.getState();
   if (!settings.enabled || loaded === null) return;
-  const message = useChatStore.getState().messages.find((m) => m.id === messageId);
+  const message = useChatStore
+    .getState()
+    .messagesFor(conversationId)
+    .find((m) => m.id === messageId);
   if (message === undefined) return;
   const used = findProductiveUses(loaded, new Set(cardsByLemma.keys()), message.content);
   for (const lemma of used) {

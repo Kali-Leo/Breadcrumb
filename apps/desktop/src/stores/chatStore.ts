@@ -1,236 +1,180 @@
 /**
- * Purpose: zustand store driving the chat flow — conversations, messages, streaming state,
- * cost meters, and the full send pipeline (persist -> LLM stream -> persist -> meter -> bus).
- * Main exports: useChatStore, appEventBus.
+ * Purpose: zustand store driving the chat flow — conversations, per-conversation sessions
+ * (the mainstream model: every conversation owns its message tree, streaming buffer and
+ * cost; a round writes only into its own session so parallel windows never cross-wire),
+ * the active-session mirror older components read, and the send pipeline
+ * (persist -> LLM stream -> persist -> meter -> bus).
+ * Main exports: useChatStore, appEventBus, CostByCurrency.
  */
 import { createEventBus } from "@breadcrumb/core-bus";
-import type { ConversationKind, ConversationRow, Currency, MessageRow } from "@breadcrumb/core-db";
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import type { ConversationKind, ConversationRow, MessageRow } from "@breadcrumb/core-db";
 import { create } from "zustand";
-import { ensureChatConversationId } from "../lib/chatRoundContext";
-import { appendUserMessage, runSendRound } from "../lib/chatSendRound";
+import { runChatSendPipeline } from "../lib/chatSendPipeline";
 import {
-  deriveActiveMessages,
+  type ActiveMirror,
+  type ChatSession,
+  type CostByCurrency,
+  EMPTY_ACTIVE_MIRROR,
+  loadChatSession,
+  mirrorOf,
+} from "../lib/chatSessions";
+import {
   foldAppendedMessage,
   resumeTreeState,
   returnToLatestTreeState,
 } from "../lib/chatTreeActions";
-import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { getRepos } from "../lib/db";
-import { newestLeafId } from "../lib/messageTree";
 import { todayLocalMidnightIso } from "../lib/time";
-import { useSettingsStore } from "./settingsStore";
 
 export const appEventBus = createEventBus();
+export type { CostByCurrency };
 
-export type CostByCurrency = ReadonlyMap<Currency, number>;
-
-interface ChatState {
+interface ChatState extends ActiveMirror {
   conversations: ConversationRow[];
-  activeConversationId: string | null;
-  /** Kind of the open conversation — 'teach' switches the system prompt (spec 034). */
-  activeKind: ConversationKind;
-  /** companion_id of the open conversation, or null — 'companion' chats and companion-played
-   * 'teach' sessions alike (spec 037). */
-  activeCompanionId: string | null;
-  /** Every row for the open conversation, tree edges and all (spec 040 §1). */
-  allMessages: MessageRow[];
-  /** Current station; root-to-here defines `messages`. Null = "the newest leaf" (spec 040 §1). */
-  currentLeafId: string | null;
-  /** The active path, derived from allMessages+currentLeafId — renders and feeds LLM history. */
-  messages: MessageRow[];
-  streamingText: string | null;
-  errorText: string | null;
-  conversationCost: CostByCurrency;
   todayCost: CostByCurrency;
+  /** One runtime session per open conversation — the source of truth; the ActiveMirror
+   * fields are a faithful copy of the ACTIVE session for the main view's components. */
+  sessions: ReadonlyMap<string, ChatSession>;
+  activeConversationId: string | null;
   loadFromDatabase(): Promise<void>;
+  /** Loads a session without touching the active binding — parallel windows use this. */
+  ensureSession(id: string): Promise<ChatSession>;
   openConversation(id: string): Promise<void>;
   startNewConversation(): void;
-  /** Non-destructive continuation from any station: moves the current leaf, keeping every
-   * other branch intact and visible on the station map (spec 040 §2). */
+  /** Non-destructive continuation from any station (spec 040 §2). */
   resumeFromMessage(messageId: string): void;
-  /** Jumps the current leaf back to the newest one across all branches. */
   returnToLatest(): void;
-  sendMessage(content: string): Promise<void>;
+  /** Sends into the given conversation (defaults to the active one; null active = a fresh
+   * conversation is created). The round stays bound to that conversation for its lifetime. */
+  sendMessage(content: string, targetConversationId?: string): Promise<void>;
+  /** The active path of one conversation — event handlers must use this instead of the
+   * active mirror, or they read whatever happens to be on screen. */
+  messagesFor(conversationId: string): MessageRow[];
+  kindFor(conversationId: string): ConversationKind;
+  /** Folds an externally-appended row (invitation, thanks, exit record) into its session. */
+  noteExternalMessage(conversationId: string, message: MessageRow): void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  conversations: [],
-  activeConversationId: null,
-  activeKind: "chat",
-  activeCompanionId: null,
-  allMessages: [],
-  currentLeafId: null,
-  messages: [],
-  streamingText: null,
-  errorText: null,
-  conversationCost: new Map(),
-  todayCost: new Map(),
-
-  async loadFromDatabase() {
-    const repos = await getRepos();
-    // Sidebar list only ever shows 'chat' conversations — practice discussions (spec 026)
-    // are saved but deliberately hidden here.
-    const [conversations, todayCost] = await Promise.all([
-      repos.conversations.listByKind("chat"),
-      repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
-    ]);
-    set({ conversations, todayCost });
-  },
-
-  async openConversation(id) {
-    const repos = await getRepos();
-    const [allMessages, conversationCost, conversation] = await Promise.all([
-      repos.messages.listByConversation(id),
-      repos.llmCalls.sumCostForConversation(id),
-      repos.conversations.getById(id),
-    ]);
-    // "Reopen lands where you left off" (spec 040 §1): the newest leaf's path.
-    const currentLeafId = newestLeafId(allMessages);
-    set({
-      activeConversationId: id,
-      activeKind: conversation?.kind ?? "chat",
-      activeCompanionId: conversation?.companion_id ?? null,
-      allMessages,
-      currentLeafId,
-      messages: deriveActiveMessages({ allMessages, currentLeafId }),
-      conversationCost,
-      streamingText: null,
-      errorText: null,
+export const useChatStore = create<ChatState>((set, get) => {
+  /** The single session write path — keeps the active mirror in sync by construction. */
+  function patchSession(id: string, updater: (session: ChatSession) => ChatSession): void {
+    set((state) => {
+      const current = state.sessions.get(id);
+      if (current === undefined) return {};
+      const next = updater(current);
+      const sessions = new Map(state.sessions);
+      sessions.set(id, next);
+      return { sessions, ...(state.activeConversationId === id ? mirrorOf(next) : {}) };
     });
-    // Opening a helper's conversation reads its invitation — the roster dot clears.
-    if (conversation?.companion_id != null) {
-      const { useCompanionStore } = await import("./companionStore");
-      useCompanionStore.getState().markHelperSeen(conversation.companion_id);
-    }
-  },
+  }
 
-  startNewConversation() {
-    set({
-      activeConversationId: null,
-      activeKind: "chat",
-      activeCompanionId: null,
-      allMessages: [],
-      currentLeafId: null,
-      messages: [],
-      conversationCost: new Map(),
-      streamingText: null,
-      errorText: null,
+  function putSession(id: string, session: ChatSession, makeActive: boolean): void {
+    set((state) => {
+      const sessions = new Map(state.sessions);
+      sessions.set(id, session);
+      return {
+        sessions,
+        ...(makeActive
+          ? { activeConversationId: id, ...mirrorOf(session) }
+          : state.activeConversationId === id
+            ? mirrorOf(session)
+            : {}),
+      };
     });
-  },
+  }
 
-  resumeFromMessage(messageId) {
-    set(resumeTreeState(get(), messageId));
-  },
+  function setRoundError(conversationId: string | null, errorText: string): void {
+    if (conversationId !== null && get().sessions.has(conversationId)) {
+      patchSession(conversationId, (session) => ({ ...session, errorText }));
+    } else {
+      set({ errorText });
+    }
+  }
 
-  returnToLatest() {
-    set(returnToLatestTreeState(get()));
-  },
+  return {
+    conversations: [],
+    todayCost: new Map(),
+    sessions: new Map(),
+    activeConversationId: null,
+    ...EMPTY_ACTIVE_MIRROR,
 
-  async sendMessage(content) {
-    const settings = useSettingsStore.getState();
-    if (!settings.networkEnabled) {
-      set({ errorText: "当前处于离线模式。想继续对话，去设置里打开网络开关" });
-      return;
-    }
-    if (!settings.apiConfig) {
-      set({ errorText: "还没有配置 API。去设置页填写服务地址和密钥" });
-      return;
-    }
-    const activeKind = get().activeKind;
-    if (activeKind === "companion" && !settings.featureSwitches.companionChat) {
-      set({ errorText: COMPANION_DESKTOP_COPY.chatDisabled });
-      return;
-    }
-    // Captured before anything can shift it: creating/switching the conversation below
-    // triggers session reloads that clear the anchor, and extraction stamps provenance
-    // with this value much later (spec 040 §7).
-    const { useKnowledgeStore } = await import("./knowledgeStore");
-    const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
-    // The whole round runs against this entry snapshot, and every UI set() below is guarded
-    // by isRoundVisible() — switching conversations mid-round must never stream the old
-    // reply into the newly opened one (it still lands in its own conversation in the DB).
-    const entryConversationId = get().activeConversationId;
-    const entryTree = {
-      allMessages: get().allMessages,
-      currentLeafId: get().currentLeafId,
-      messages: get().messages,
-    };
-    const repos = await getRepos();
-    const conversationId = await ensureChatConversationId(repos, entryConversationId, content);
-    if (
-      conversationId !== entryConversationId &&
-      get().activeConversationId === entryConversationId
-    )
-      set({ activeConversationId: conversationId });
-    const isRoundVisible = () => get().activeConversationId === conversationId;
+    async loadFromDatabase() {
+      const repos = await getRepos();
+      // Sidebar list only ever shows 'chat' conversations — practice discussions (spec 026)
+      // are saved but deliberately hidden here.
+      const [conversations, todayCost] = await Promise.all([
+        repos.conversations.listByKind("chat"),
+        repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
+      ]);
+      set({ conversations, todayCost });
+    },
 
-    const { useCompanionStore } = await import("./companionStore");
-    if (activeKind === "companion" || activeKind === "teach") {
-      useCompanionStore.getState().checkUserMessageForCrisis(content);
-    }
-    const userMessage = await appendUserMessage(repos, entryTree, conversationId, content);
-    if (isRoundVisible() && !get().allMessages.some((m) => m.id === userMessage.id)) {
-      set({ ...foldAppendedMessage(get(), userMessage), streamingText: "", errorText: null });
-    }
-    appEventBus.emit("chat:messageSent", {
-      conversationId,
-      messageId: userMessage.id,
-      sentAt: userMessage.created_at,
-    });
+    async ensureSession(id) {
+      const existing = get().sessions.get(id);
+      if (existing !== undefined) return existing;
+      const session = await loadChatSession(await getRepos(), id);
+      putSession(id, session, false);
+      return session;
+    },
 
-    try {
-      const baseMessages: ChatMessage[] = [...entryTree.messages, userMessage].map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-      // Teaching contract v2 (spec 038): teach/companion prompts branch inside runSendRound.
-      const crisisActive =
-        (activeKind === "companion" || activeKind === "teach") &&
-        useCompanionStore.getState().crisisActive;
-      let streamed = "";
-      const { assistantMessage, cost } = await runSendRound({
-        repos,
-        activeKind,
-        conversationId,
-        userMessage,
-        baseMessages,
-        apiConfig: settings.apiConfig,
-        companionScriptEnabled: settings.featureSwitches.companionScript,
-        companionMemoryEnabled: settings.featureSwitches.companionMemory,
-        crisisActive,
-        onDelta: (delta) => {
-          streamed += delta;
-          if (isRoundVisible()) set({ streamingText: streamed });
+    async openConversation(id) {
+      // Always reload: an external append the session missed must not stay invisible.
+      const session = await loadChatSession(await getRepos(), id);
+      putSession(id, session, true);
+      // Opening a helper's conversation reads its invitation — the roster dot clears.
+      if (session.companionId !== null) {
+        const { useCompanionStore } = await import("./companionStore");
+        useCompanionStore.getState().markHelperSeen(session.companionId);
+      }
+    },
+
+    startNewConversation() {
+      set({ activeConversationId: null, ...EMPTY_ACTIVE_MIRROR });
+    },
+
+    resumeFromMessage(messageId) {
+      const id = get().activeConversationId;
+      if (id === null) return;
+      patchSession(id, (session) => ({ ...session, ...resumeTreeState(session, messageId) }));
+    },
+
+    returnToLatest() {
+      const id = get().activeConversationId;
+      if (id === null) return;
+      patchSession(id, (session) => ({ ...session, ...returnToLatestTreeState(session) }));
+    },
+
+    messagesFor(conversationId) {
+      return get().sessions.get(conversationId)?.messages ?? [];
+    },
+
+    kindFor(conversationId) {
+      return get().sessions.get(conversationId)?.kind ?? "chat";
+    },
+
+    noteExternalMessage(conversationId, message) {
+      patchSession(conversationId, (session) =>
+        session.allMessages.some((m) => m.id === message.id)
+          ? session
+          : { ...session, ...foldAppendedMessage(session, message) },
+      );
+    },
+
+    async sendMessage(content, targetConversationId) {
+      await runChatSendPipeline(
+        {
+          activeConversationId: () => get().activeConversationId,
+          ensureSession: (id) => get().ensureSession(id),
+          patchSession,
+          putSession,
+          setRoundError,
+          setGlobalMeters: (patch) => set(patch),
+          emitMessageSent: (payload) => appEventBus.emit("chat:messageSent", payload),
+          emitResponseFinished: (payload) => appEventBus.emit("chat:responseFinished", payload),
         },
-      });
-      if (isRoundVisible()) {
-        // A switch-away-and-back reloads from the DB, which may already hold this row.
-        const alreadyLoaded = get().allMessages.some((m) => m.id === assistantMessage.id);
-        set({
-          ...(alreadyLoaded ? {} : foldAppendedMessage(get(), assistantMessage)),
-          streamingText: null,
-          conversationCost: cost.conversationCost,
-          todayCost: cost.todayCost,
-          conversations: cost.conversations,
-        });
-      } else {
-        // The reply belongs to a conversation no longer on screen — global meters still move.
-        set({ todayCost: cost.todayCost, conversations: cost.conversations });
-      }
-      appEventBus.emit("chat:responseFinished", {
-        conversationId,
-        messageId: assistantMessage.id,
-        finishedAt: assistantMessage.created_at,
-        anchoredNodeId: roundAnchoredNodeId,
-      });
-    } catch (error) {
-      if (isRoundVisible()) {
-        set({
-          streamingText: null,
-          errorText: `这次请求没有成功：${error instanceof Error ? error.message : String(error)}。休息一下再试，或检查设置里的 API 配置。`,
-        });
-      }
-    }
-  },
-}));
+        content,
+        targetConversationId,
+      );
+    },
+  };
+});

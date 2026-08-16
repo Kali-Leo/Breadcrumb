@@ -75,7 +75,7 @@ async function extractFromFinishedRound(
   if (!settings.featureSwitches.knowledgeTree || !settings.networkEnabled || !settings.apiConfig) {
     return;
   }
-  const chatMessages = useChatStore.getState().messages;
+  const chatMessages = useChatStore.getState().messagesFor(conversationId);
   const answer = chatMessages.at(-1);
   const question = chatMessages.at(-2);
   if (answer?.role !== "assistant" || question?.role !== "user") return;

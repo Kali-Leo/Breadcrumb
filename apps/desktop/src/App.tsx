@@ -115,14 +115,7 @@ export default function App() {
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1">
-          {/* While the helper popup holds the conversation, the main pane steps aside —
-              the popup is the additional window, not a mirror (spec 050 §8). */}
-          {view === "chat" && helperPopup === null && <ChatView />}
-          {view === "chat" && helperPopup !== null && (
-            <div className="flex h-full items-center justify-center text-sm text-stone-400">
-              对话正在右下角的小窗里进行。
-            </div>
-          )}
+          {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
           {view === "vocab" && <VocabPanel />}

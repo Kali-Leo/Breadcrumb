@@ -213,8 +213,8 @@ appEventBus.on("chat:responseFinished", ({ conversationId }) => {
   void recordCompanionMemoryForFinishedRound(conversationId);
 });
 
-appEventBus.on("chat:messageSent", () => {
-  const activeKind = useChatStore.getState().activeKind;
-  if (activeKind !== "companion" && activeKind !== "teach") return;
+appEventBus.on("chat:messageSent", ({ conversationId }) => {
+  const kind = useChatStore.getState().kindFor(conversationId);
+  if (kind !== "companion" && kind !== "teach") return;
   useCompanionStore.getState().recordActivity();
 });

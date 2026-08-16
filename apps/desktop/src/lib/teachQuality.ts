@@ -49,7 +49,7 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
   }
   const node = useKnowledgeStore.getState().nodes.find((n) => n.label === topic);
   if (node === undefined) return;
-  const explanation = [...useChatStore.getState().messages]
+  const explanation = [...useChatStore.getState().messagesFor(conversationId)]
     .reverse()
     .find((message) => message.role === "user")?.content;
   if (explanation === undefined || explanation.trim().length < 20) return;
