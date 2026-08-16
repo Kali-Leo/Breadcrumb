@@ -43,9 +43,17 @@ interface RegionMirrorProps {
   memberCount: number;
   nodeIds: ReadonlySet<string>;
   sources: RegionFeedbackSources | null;
+  /** Shown when the region has no activity — goal surfaces pass goal-aware wording. */
+  emptyLine?: string;
 }
 
-export function RegionMirror({ title, memberCount, nodeIds, sources }: RegionMirrorProps) {
+export function RegionMirror({
+  title,
+  memberCount,
+  nodeIds,
+  sources,
+  emptyLine,
+}: RegionMirrorProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const data = useMemo(() => {
@@ -99,7 +107,7 @@ export function RegionMirror({ title, memberCount, nodeIds, sources }: RegionMir
       <>
         {header}
         <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs text-stone-400">这片区域还没有学习记录</p>
+          <p className="text-xs text-stone-400">{emptyLine ?? "这片区域还没有学习记录"}</p>
         </div>
       </>
     );

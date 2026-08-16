@@ -118,15 +118,18 @@ export function MapView() {
   const goals = usePlannerStore((state) => state.goals);
   const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
   const learningMode = useSettingsStore((state) => state.learningMode);
-  const displayWorld = useMemo(() => {
+  const { displayWorld, goalScope } = useMemo(() => {
     const goal =
       learningMode === "ranked"
         ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
         : null;
-    if (goal === null || demoMode) return world;
-    const goalNodeIds = new Set(JSON.parse(goal.node_ids_json) as string[]);
+    if (goal === null || demoMode) return { displayWorld: world, goalScope: null };
+    const goalNodeIds: ReadonlySet<string> = new Set(JSON.parse(goal.node_ids_json) as string[]);
     const cut = filterWorldToGoal(world, goalNodeIds);
-    return cut.islands.length === 0 ? world : cut;
+    return {
+      displayWorld: cut.islands.length === 0 ? world : cut,
+      goalScope: { title: goal.title, nodeIds: goalNodeIds },
+    };
   }, [world, learningMode, goals, selectedGoalId, demoMode]);
   const { containerRef, controllerRef, trailIdsRef, ready, initFailed } = useMapApplication({
     onHover: setHover,
@@ -257,7 +260,7 @@ export function MapView() {
           </div>
         </div>
         <div className="h-full min-w-64 flex-1 overflow-y-auto">
-          <MapInfoPanel hover={hover} level={level} world={displayWorld} />
+          <MapInfoPanel hover={hover} level={level} world={displayWorld} goalScope={goalScope} />
         </div>
       </div>
       {goalViewOpen && (

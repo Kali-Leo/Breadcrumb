@@ -22,6 +22,11 @@ interface MapInfoPanelProps {
   hover: HoverInfo | null;
   level: MapLevel;
   world: WorldModel;
+  /** Non-null while goal mode is cutting the map: the goal's title and full node set. The
+   * rail then keeps ONE scope — goal overall when idle, goal region on hover — so the
+   * blank-state numbers can never contradict the hover numbers (2026-08-16 bug: global
+   * charts while idle + empty goal regions on hover read as broken). */
+  goalScope: { title: string; nodeIds: ReadonlySet<string> } | null;
 }
 
 /** Skimming across regions settles before the rail swaps content (owner's ruling: 150ms). */
@@ -89,7 +94,7 @@ function PlaceCards({ hover }: { hover: HoverInfo }) {
   );
 }
 
-export function MapInfoPanel({ hover, level, world }: MapInfoPanelProps) {
+export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelProps) {
   const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
   const [sources, setSources] = useState<RegionFeedbackSources | null>(null);
   const [settledHover, setSettledHover] = useState<HoverInfo | null>(null);
@@ -129,6 +134,7 @@ export function MapInfoPanel({ hover, level, world }: MapInfoPanelProps) {
                   memberCount={settledHover.memberCount}
                   nodeIds={region}
                   sources={sources}
+                  emptyLine={goalScope !== null ? "目标里的这片还没开始学" : undefined}
                 />
               ) : (
                 <PlaceCards hover={settledHover} />
@@ -139,6 +145,15 @@ export function MapInfoPanel({ hover, level, world }: MapInfoPanelProps) {
               )}
             </>
           )
+        ) : goalScope !== null && feedbackLabEnabled ? (
+          <RegionMirror
+            key="goal-scope"
+            title={goalScope.title}
+            memberCount={goalScope.nodeIds.size}
+            nodeIds={goalScope.nodeIds}
+            sources={sources}
+            emptyLine="这个目标还没开始；开始学习后，记录会出现在这里"
+          />
         ) : level.kind === "world" ? (
           <MirrorStack />
         ) : null}
