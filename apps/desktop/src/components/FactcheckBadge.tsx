@@ -15,18 +15,25 @@ const RELATIONSHIP_BADGES: Record<string, { icon: string; label: string; tone: s
 };
 
 interface FactcheckBadgeProps {
+  /** The conversation this badge's message belongs to — passed by its window, never read
+   * from the active binding (same wiring as MessageBubble's conversationId prop). */
+  conversationId: string | null;
   messageId: string;
 }
 
-export function FactcheckBadge({ messageId }: FactcheckBadgeProps) {
+export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProps) {
   const enabled = useSettingsStore((state) => state.featureSwitches.factcheck);
-  const claims = useFactcheckStore((state) => state.claimsByMessageId[messageId]);
+  const claims = useFactcheckStore((state) =>
+    conversationId === null
+      ? undefined
+      : state.claimsByConversation.get(conversationId)?.get(messageId),
+  );
   const checking = useFactcheckStore((state) => state.checkingMessageIds.has(messageId));
   const notice = useFactcheckStore((state) => state.noticeByMessageId[messageId]);
   const checkMessage = useFactcheckStore((state) => state.checkMessage);
   const [open, setOpen] = useState(false);
 
-  if (!enabled) return null;
+  if (!enabled || conversationId === null) return null;
 
   if (checking) {
     return <p className="animate-pulse pl-1 text-xs text-stone-400">🔍 正在查资料…</p>;
@@ -37,7 +44,7 @@ export function FactcheckBadge({ messageId }: FactcheckBadgeProps) {
       <div className="pl-1">
         <button
           type="button"
-          onClick={() => void checkMessage(messageId)}
+          onClick={() => void checkMessage(conversationId, messageId)}
           className="text-xs text-stone-400 transition-colors hover:text-amber-600"
         >
           🔍 求证
