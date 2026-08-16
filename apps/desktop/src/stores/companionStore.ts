@@ -1,23 +1,18 @@
 /**
- * Purpose: zustand store for the companion cast (spec 037) — loaded cards, the proactive
- * teach-back proposal gate (invitation delivered as her own chat message; replying accepts,
- * Leo 2026-08-15), crisis detection, and the break reminder.
- * Subscribes to chat:responseFinished (gate re-evaluation + memory recording) and
- * chat:messageSent (break-reminder activity tracking) at module load, mirroring
- * knowledgeStore/memoryStore's own subscription pattern.
- * Main exports: useCompanionStore.
+ * Purpose: zustand store for the daily helper companions (spec 050 §9, Leo's redesign of
+ * spec 037) — each day the gate turns the lowest-retention, footprinted concepts into up
+ * to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
+ * paradigm); talking to one drives mastery judgment underneath; once a teach-quality
+ * claim lands the helper thanks the learner and leaves the roster. No same-day refills:
+ * yesterday's leftovers expire, tomorrow brings a fresh batch. Also keeps crisis
+ * detection and the break reminder.
+ * Side effects on import: subscribes to chat:responseFinished / chat:messageSent.
+ * Main exports: useCompanionStore, HELPER_ID_PREFIX, helperTopicOf.
  */
-import type { CompanionProposalKind, CompanionProposalRow } from "@breadcrumb/core-db";
-import type { CompanionCard } from "@breadcrumb/plugin-companion";
-import {
-  DEFAULT_QUIET_HOURS,
-  decideProposal,
-  detectCrisis,
-  loadCompanionCards,
-} from "@breadcrumb/plugin-companion";
-import { DEFAULT_REUNION_WAITING_THRESHOLD, pickReunionInvites } from "@breadcrumb/plugin-feedback";
+import type { CompanionProposalRow } from "@breadcrumb/core-db";
+import { detectCrisis } from "@breadcrumb/plugin-companion";
 import { create } from "zustand";
-import { appendCompanionInvitation, seedTeachScriptForConversation } from "../lib/companionActions";
+import { appendHelperThanks, startHelperConversation } from "../lib/companionActions";
 import {
   type BreakReminderState,
   dismissBreakReminder as dismissBreakReminderState,
@@ -25,39 +20,43 @@ import {
   recordCompanionActivity,
 } from "../lib/companionBreakReminder";
 import { recordCompanionMemoryForFinishedRound } from "../lib/companionMemoryActions";
-import { sweepExpiredProposals } from "../lib/companionProposalGate";
 import { getRepos } from "../lib/db";
 import { pickTeachCandidates } from "../lib/teachActions";
-import { newId, nowIso } from "../lib/time";
+import { newId, nowIso, todayLocalMidnightIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
 import { useSettingsStore } from "./settingsStore";
 
-const PROPOSAL_LOOKBACK_MS = 30 * 24 * 3_600_000;
+export const HELPER_ID_PREFIX = "helper-";
+const DAILY_HELPER_LIMIT = 3;
+/** A concept that had a helper within this window doesn't get another one yet. */
+const HELPER_REPEAT_COOLDOWN_DAYS = 7;
+const LOOKBACK_MS = 30 * 24 * 3_600_000;
+/** Without a quality verdict (switch off / offline), this many learner replies count as
+ * "did what could be done" and the helper thanks and leaves. */
+const FALLBACK_REPLY_LIMIT = 3;
 
-/** Serializes overlapping gate evaluations (React StrictMode double-mount, bus bursts) —
- * without this, two concurrent runs can both see "no pending" and insert duplicates. */
-let proposalGateEvaluationInFlight = false;
+/** Serializes overlapping gate runs (StrictMode double-mount, bus bursts). */
+let gateRunInFlight = false;
+
+export function helperTopicOf(row: CompanionProposalRow): string {
+  return row.topic;
+}
 
 interface CompanionState extends BreakReminderState {
-  cards: CompanionCard[];
-  activeProposal: CompanionProposalRow | null;
-  /** Unread state for the pending proposal (the sidebar dot): false until the learner has
-   * opened the companion conversation holding the invitation message, then true. */
-  proposalSeen: boolean;
+  /** Today's pending helpers — the whole roster (spec 050 §9: like a daily task list). */
+  helpers: CompanionProposalRow[];
+  seenHelperIds: ReadonlySet<string>;
   crisisActive: boolean;
   initialize(): Promise<void>;
-  evaluateProposalGate(): Promise<void>;
-  /** Internal single-run body of the gate — call evaluateProposalGate, which serializes. */
-  runProposalGateOnce(): Promise<void>;
-  /** Replying in the companion's chat IS accepting (Leo 2026-08-15, no buttons): resolves the
-   * pending proposal and seeds this conversation's teach script before the round runs. */
-  acceptProposalByReply(conversationId: string, companionId: string): Promise<void>;
-  /** Returns whether THIS call detected a crisis (not the sticky crisisActive flag) — the
-   * caller uses that to decide whether to add this round's out-of-persona interrupt line. */
+  /** Expires stale helpers, generates today's batch once per day, refreshes the roster. */
+  refreshDailyHelpers(): Promise<void>;
+  markHelperSeen(helperId: string): void;
+  /** Called after each finished round in a helper conversation — thanks and resolves once
+   * a teach-quality claim landed for the node (or the fallback reply count is reached). */
+  completeHelperIfReady(conversationId: string): Promise<void>;
   checkUserMessageForCrisis(content: string): boolean;
-  markProposalSeen(): void;
   dismissCrisis(): void;
   recordActivity(): void;
   dismissBreakReminder(): void;
@@ -72,120 +71,119 @@ function breakReminderSlice(state: BreakReminderState): BreakReminderState {
 }
 
 export const useCompanionStore = create<CompanionState>((set, get) => ({
-  cards: [],
-  activeProposal: null,
-  proposalSeen: false,
+  helpers: [],
+  seenHelperIds: new Set<string>(),
   crisisActive: false,
   ...INITIAL_BREAK_REMINDER_STATE,
 
   async initialize() {
-    set({ cards: loadCompanionCards() });
-    await get().evaluateProposalGate();
+    await get().refreshDailyHelpers();
   },
 
-  async evaluateProposalGate() {
-    const settings = useSettingsStore.getState();
-    if (!settings.featureSwitches.companionChat) {
-      set({ activeProposal: null });
+  async refreshDailyHelpers() {
+    if (!useSettingsStore.getState().featureSwitches.companionChat) {
+      set({ helpers: [] });
       return;
     }
-    if (proposalGateEvaluationInFlight) return;
-    proposalGateEvaluationInFlight = true;
+    if (gateRunInFlight) return;
+    gateRunInFlight = true;
     try {
-      await get().runProposalGateOnce();
+      const repos = await getRepos();
+      const now = nowIso();
+      const todayStart = todayLocalMidnightIso();
+      const sinceIso = new Date(Date.parse(now) - LOOKBACK_MS).toISOString();
+      const rows = await repos.companionProposals.listRecent(sinceIso);
+
+      // Yesterday's unhandled helpers leave quietly — tomorrow is a fresh page.
+      for (const row of rows) {
+        if (row.status === "pending" && row.created_at < todayStart) {
+          await repos.companionProposals.resolve(row.id, "expired", now);
+        }
+      }
+
+      const todays = rows.filter((row) => row.created_at >= todayStart);
+      if (todays.length === 0) {
+        await useMemoryStore.getState().refresh();
+        const nodes = useKnowledgeStore.getState().nodes;
+        const retentionByNode = useMemoryStore.getState().retentionByNode;
+        const cooldownStart = new Date(
+          Date.parse(todayStart) - HELPER_REPEAT_COOLDOWN_DAYS * 24 * 3_600_000,
+        ).toISOString();
+        const recentNodeIds = new Set(
+          rows.filter((row) => row.created_at >= cooldownStart).map((row) => row.node_id),
+        );
+        const candidates = pickTeachCandidates(nodes, retentionByNode, DAILY_HELPER_LIMIT * 2)
+          .filter((node) => !recentNodeIds.has(node.id))
+          .slice(0, DAILY_HELPER_LIMIT);
+        for (const node of candidates) {
+          const helperId = `${HELPER_ID_PREFIX}${node.id}`;
+          await startHelperConversation(helperId, node.label);
+          const row: CompanionProposalRow = {
+            id: newId(),
+            companion_id: helperId,
+            node_id: node.id,
+            topic: node.label,
+            kind: "teach",
+            status: "pending",
+            created_at: nowIso(),
+            resolved_at: null,
+          };
+          await repos.companionProposals.insert(row);
+          todays.push(row);
+        }
+        if (candidates.length > 0) await useChatStore.getState().loadFromDatabase();
+      }
+
+      set({ helpers: todays.filter((row) => row.status === "pending") });
     } finally {
-      proposalGateEvaluationInFlight = false;
+      gateRunInFlight = false;
     }
   },
 
-  async runProposalGateOnce() {
-    const repos = await getRepos();
-    const now = nowIso();
-    const sinceIso = new Date(Date.parse(now) - PROPOSAL_LOOKBACK_MS).toISOString();
-    const rows = await repos.companionProposals.listRecent(sinceIso);
-    const sweep = sweepExpiredProposals(rows, now);
-    for (const id of sweep.newlyExpiredIds) {
-      await repos.companionProposals.resolve(id, "expired", now);
-    }
+  markHelperSeen(helperId) {
+    const seen = new Set(get().seenHelperIds);
+    if (seen.has(helperId)) return;
+    seen.add(helperId);
+    set({ seenHelperIds: seen });
+  },
 
-    const pending = sweep.updatedRows.find((row) => row.status === "pending") ?? null;
-    if (pending !== null) {
-      // A different proposal than the one on screen is unread again; the same one keeps
-      // whatever seen-state it had (gate re-runs after every chat round).
-      if (get().activeProposal?.id !== pending.id)
-        set({ activeProposal: pending, proposalSeen: false });
+  async completeHelperIfReady(conversationId) {
+    const repos = await getRepos();
+    const conversation = await repos.conversations.getById(conversationId);
+    const helperId = conversation?.companion_id;
+    if (
+      conversation === null ||
+      helperId === null ||
+      helperId === undefined ||
+      !helperId.startsWith(HELPER_ID_PREFIX)
+    ) {
       return;
     }
+    const helper = get().helpers.find((row) => row.companion_id === helperId);
+    if (helper === undefined) return;
 
-    // Retention only refreshes after chat rounds (memoryStore's own subscription) — recompute
-    // it here too so the very first gate run of a session sees real numbers, not an empty map.
-    await useMemoryStore.getState().refresh();
-    const nodes = useKnowledgeStore.getState().nodes;
-    const retentionByNode = useMemoryStore.getState().retentionByNode;
-
-    // Teach-back and reunion invitations alternate (spec 048 §5) — whichever kind went out
-    // last, the other goes next, falling back when one has no candidates. Both share the
-    // same rate/quiet-hours gate.
-    const teachTopics = pickTeachCandidates(nodes, retentionByNode, 3).map((node) => ({
-      nodeId: node.id,
-      topic: node.label,
-    }));
-    const nodeTitles = new Map(nodes.map((node) => [node.id, node.label]));
-    const reunionTopics = pickReunionInvites(retentionByNode, nodeTitles, {
-      limit: 3,
-      waitingThreshold: DEFAULT_REUNION_WAITING_THRESHOLD,
-    }).invites.map((invite) => ({ nodeId: invite.nodeId, topic: invite.title }));
-
-    const lastKind: CompanionProposalKind = sweep.updatedRows[0]?.kind ?? "reunion";
-    const preferredKind: CompanionProposalKind = lastKind === "teach" ? "reunion" : "teach";
-    const preferredTopics = preferredKind === "teach" ? teachTopics : reunionTopics;
-    const kind: CompanionProposalKind =
-      preferredTopics.length > 0 ? preferredKind : preferredKind === "teach" ? "reunion" : "teach";
-    const candidateTopics = kind === "teach" ? teachTopics : reunionTopics;
-
-    const decision = decideProposal({
-      nowIso: now,
-      recentProposals: sweep.updatedRows,
-      candidateTopics,
-      quietHours: DEFAULT_QUIET_HOURS,
-    });
-    if (decision.verdict !== "propose") {
-      set({ activeProposal: null });
-      return;
+    // The confirmation is a teach-quality claim on the helper's node recorded after the
+    // helper appeared — judged ONLY from explanations inside this conversation (the judge
+    // reads this conversation; asking the main chat for the answer earns nothing here).
+    let confirmed = false;
+    if (helper.node_id !== null) {
+      const claims = await repos.masteryClaims.listAll();
+      confirmed = claims.some(
+        (claim) =>
+          claim.node_id === helper.node_id &&
+          claim.created_at >= helper.created_at &&
+          (claim.level === "taught_principled" || claim.level === "taught_surface"),
+      );
     }
-    const row: CompanionProposalRow = {
-      id: newId(),
-      // Shichimi (the student) asks to be taught; Cumin (the mentor) invites a reunion.
-      companion_id: kind === "teach" ? "shichimi" : "cumin",
-      node_id: decision.nodeId,
-      topic: decision.topic,
-      kind,
-      status: "pending",
-      created_at: now,
-      resolved_at: null,
-    };
-    await repos.companionProposals.insert(row);
-    // The invitation is delivered as the companion's own chat message — the sidebar dot
-    // marks it unread.
-    await appendCompanionInvitation(row.companion_id, row.topic, row.kind);
-    set({ activeProposal: row, proposalSeen: false });
-  },
+    if (!confirmed) {
+      const messages = await repos.messages.listByConversation(conversationId);
+      const learnerReplies = messages.filter((message) => message.role === "user").length;
+      if (learnerReplies < FALLBACK_REPLY_LIMIT) return;
+    }
 
-  markProposalSeen() {
-    if (!get().proposalSeen) set({ proposalSeen: true });
-  },
-
-  async acceptProposalByReply(conversationId, companionId) {
-    const proposal = get().activeProposal;
-    if (proposal === null || proposal.companion_id !== companionId) return;
-    const repos = await getRepos();
-    await repos.companionProposals.resolve(proposal.id, "accepted", nowIso());
-    set({ activeProposal: null, proposalSeen: true });
-    // A reunion needs no teach script — the invitation itself is the context and the
-    // conversation simply continues (spec 048 §5).
-    if (proposal.kind === "reunion") return;
-    const knownNodeLabels = useKnowledgeStore.getState().nodes.map((node) => node.label);
-    await seedTeachScriptForConversation(conversationId, proposal.topic, knownNodeLabels);
+    await appendHelperThanks(conversationId, helper.topic);
+    await repos.companionProposals.resolve(helper.id, "accepted", nowIso());
+    set({ helpers: get().helpers.filter((row) => row.id !== helper.id) });
   },
 
   checkUserMessageForCrisis(content) {
@@ -207,10 +205,11 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   },
 }));
 
-// Re-evaluating the gate is pure/cheap (no LLM call unless it decides to propose); memory
-// recording is metered and switch-gated inside recordCompanionMemoryForFinishedRound itself.
+// After each finished round: helper completion check (pure/cheap reads unless it resolves)
+// and — for the legacy fixed-cast conversations that remain openable — memory recording,
+// which is metered and switch-gated inside recordCompanionMemoryForFinishedRound itself.
 appEventBus.on("chat:responseFinished", ({ conversationId }) => {
-  void useCompanionStore.getState().evaluateProposalGate();
+  void useCompanionStore.getState().completeHelperIfReady(conversationId);
   void recordCompanionMemoryForFinishedRound(conversationId);
 });
 

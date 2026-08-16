@@ -6,6 +6,7 @@
  */
 import { BREAK_REMINDER_COPY, COMPANION_COPY, CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
 import { COMPANION_DESKTOP_COPY, getCompanionCardById } from "../lib/companionActions";
+import { teachTopicFromTitle } from "../lib/teachActions";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 
@@ -17,15 +18,27 @@ export function CompanionChatBanners() {
   const dismissCrisis = useCompanionStore((state) => state.dismissCrisis);
   const dismissBreakReminder = useCompanionStore((state) => state.dismissBreakReminder);
 
+  const activeTitle = useChatStore(
+    (state) =>
+      state.conversations.find((conversation) => conversation.id === state.activeConversationId)
+        ?.title ?? null,
+  );
+
   const isCompanionThread =
     (activeKind === "companion" || activeKind === "teach") && activeCompanionId !== null;
   const card = activeCompanionId !== null ? getCompanionCardById(activeCompanionId) : undefined;
+  // Daily helpers have no fixed card — their display name derives from the topic (spec 050 §9).
+  const helperName =
+    card === undefined && activeTitle !== null
+      ? COMPANION_COPY.helperRowName(teachTopicFromTitle(activeTitle))
+      : null;
+  const displayName = card?.data.name ?? helperName;
 
   return (
     <>
-      {isCompanionThread && card && (
+      {isCompanionThread && displayName !== null && (
         <div className="flex items-center gap-2 border-b border-stone-100 bg-white px-4 py-1.5 text-xs text-stone-500">
-          <span className="font-medium text-stone-600">{card.data.name}</span>
+          <span className="font-medium text-stone-600">{displayName}</span>
           <span>{COMPANION_COPY.aiLabel}</span>
         </div>
       )}

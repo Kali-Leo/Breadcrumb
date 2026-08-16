@@ -91,6 +91,59 @@ export async function openCompanionConversation(companionId: string): Promise<st
   return conversationId;
 }
 
+/** Creates a daily helper's conversation (spec 050 §9): kind 'teach' so the whole proven
+ * teach-back pipeline (student prompt from the title's topic, quality judgment, metering)
+ * applies untouched; companion_id links it to its roster row. The opener is the helper's
+ * plain ask-for-help message. Returns the existing conversation when one already exists. */
+export async function startHelperConversation(helperId: string, topic: string): Promise<string> {
+  const repos = await getRepos();
+  const existing = await repos.conversations.findLatestByCompanion(helperId, "teach");
+  if (existing !== null) return existing.id;
+  const conversationId = newId();
+  const createdAt = nowIso();
+  await repos.conversations.create({
+    id: conversationId,
+    title: `换你讲·${topic}`,
+    created_at: createdAt,
+    updated_at: createdAt,
+    kind: "teach",
+    companion_id: helperId,
+  });
+  await repos.messages.append({
+    id: newId(),
+    conversation_id: conversationId,
+    role: "assistant",
+    content: COMPANION_COPY.invitation(topic),
+    created_at: createdAt,
+    teaching_mode: null,
+    parent_id: null,
+  });
+  return conversationId;
+}
+
+/** The helper's goodbye once its concept is confirmed (or the day's help is done) — after
+ * this the roster row resolves and the character leaves (spec 050 §9). */
+export async function appendHelperThanks(conversationId: string, topic: string): Promise<void> {
+  const repos = await getRepos();
+  const allMessages = await repos.messages.listByConversation(conversationId);
+  const thanks = {
+    id: newId(),
+    conversation_id: conversationId,
+    role: "assistant" as const,
+    content: COMPANION_COPY.helperThanks(topic),
+    created_at: nowIso(),
+    teaching_mode: null,
+    parent_id: newestLeafId(allMessages),
+  };
+  await repos.messages.append(thanks);
+  await repos.conversations.touch(conversationId, thanks.created_at);
+  const { useChatStore } = await import("../stores/chatStore");
+  const chat = useChatStore.getState();
+  if (chat.activeConversationId === conversationId) {
+    useChatStore.setState(foldAppendedMessage(chat, thanks));
+  }
+}
+
 /** Delivers a teach-back or reunion invitation as the companion's own chat message: reuses
  * (or creates) her companion conversation and appends the invitation at the newest leaf. If
  * that conversation happens to be open on screen, the message is folded into the live view. */

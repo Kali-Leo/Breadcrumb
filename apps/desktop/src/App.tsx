@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
+import { CompanionChatPopup } from "./components/CompanionChatPopup";
 import { CompanionSection } from "./components/CompanionSection";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
@@ -37,6 +38,9 @@ const RESEARCH_IDLE_DELAY_MS = 10_000;
 export default function App() {
   const [view, setView] = useState<"chat" | "settings" | "map" | "vocab">("chat");
   const [companionsOpen, setCompanionsOpen] = useState(false);
+  const [helperPopup, setHelperPopup] = useState<{ conversationId: string; title: string } | null>(
+    null,
+  );
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -85,6 +89,11 @@ export default function App() {
     }
   }, [settingsLoaded, apiConfig]);
 
+  // Helper conversations open in the floating popup, never the main view (spec 050 §8).
+  useEffect(() => {
+    return appEventBus.on("companion:openPopup", (payload) => setHelperPopup(payload));
+  }, []);
+
   // Practice discussions (spec 026) jump from the comparison tree into the chat view.
   useEffect(() => {
     return appEventBus.on("app:navigateChat", ({ conversationId }) => {
@@ -106,7 +115,14 @@ export default function App() {
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1">
-          {view === "chat" && <ChatView />}
+          {/* While the helper popup holds the conversation, the main pane steps aside —
+              the popup is the additional window, not a mirror (spec 050 §8). */}
+          {view === "chat" && helperPopup === null && <ChatView />}
+          {view === "chat" && helperPopup !== null && (
+            <div className="flex h-full items-center justify-center text-sm text-stone-400">
+              对话正在右下角的小窗里进行。
+            </div>
+          )}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
           {view === "vocab" && <VocabPanel />}
@@ -120,15 +136,17 @@ export default function App() {
                 onClick={() => setCompanionsOpen(false)}
                 className="absolute inset-0 z-20 cursor-default"
               />
-              <div className="absolute bottom-2 left-2 z-30 w-56 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
-                <CompanionSection
-                  onOpenChat={() => {
-                    setCompanionsOpen(false);
-                    setView("chat");
-                  }}
-                />
+              <div className="absolute bottom-2 left-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+                <CompanionSection onPicked={() => setCompanionsOpen(false)} />
               </div>
             </>
+          )}
+          {helperPopup !== null && (
+            <CompanionChatPopup
+              conversationId={helperPopup.conversationId}
+              title={helperPopup.title}
+              onClose={() => setHelperPopup(null)}
+            />
           )}
         </main>
       </div>

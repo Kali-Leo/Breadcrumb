@@ -1,67 +1,64 @@
 /**
- * Purpose: the companions roster rows (spec 037), rendered inside the 👥 flyout that
- * slides out over the center area (Leo 2026-08-15: roster and recents are different
- * things). A pending invitation shows only as a small unread dot, cleared on opening the
- * chat. Hidden entirely when the companion chat switch is off (product principle 3).
+ * Purpose: the daily helpers roster inside the 👥 flyout (spec 050 §9) — today's
+ * help-seeking characters, each anchored to a concept the system judged worth revisiting;
+ * clicking one opens the floating chat popup (never the main chat view). Handled helpers
+ * are gone for the day; tomorrow brings a fresh batch. Hidden entirely when the companion
+ * chat switch is off (product principle 3).
  * Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
-import { COMPANION_DESKTOP_COPY, openCompanionConversation } from "../lib/companionActions";
-import { useChatStore } from "../stores/chatStore";
+import { startHelperConversation } from "../lib/companionActions";
+import { appEventBus } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
 
 interface CompanionSectionProps {
-  onOpenChat(): void;
+  /** Called after a helper is picked so the flyout can close. */
+  onPicked(): void;
 }
 
-export function CompanionSection({ onOpenChat }: CompanionSectionProps) {
+export function CompanionSection({ onPicked }: CompanionSectionProps) {
   const companionChatEnabled = useSettingsStore((state) => state.featureSwitches.companionChat);
-  const cards = useCompanionStore((state) => state.cards);
-  const activeProposal = useCompanionStore((state) => state.activeProposal);
-  const proposalSeen = useCompanionStore((state) => state.proposalSeen);
-  const openConversation = useChatStore((state) => state.openConversation);
+  const helpers = useCompanionStore((state) => state.helpers);
+  const seenHelperIds = useCompanionStore((state) => state.seenHelperIds);
 
   if (!companionChatEnabled) return null;
 
-  const open = async (companionId: string) => {
-    const conversationId = await openCompanionConversation(companionId);
-    await openConversation(conversationId);
-    onOpenChat();
+  const open = async (helperId: string, topic: string) => {
+    useCompanionStore.getState().markHelperSeen(helperId);
+    const conversationId = await startHelperConversation(helperId, topic);
+    appEventBus.emit("companion:openPopup", {
+      conversationId,
+      title: COMPANION_COPY.helperRowName(topic),
+    });
+    onPicked();
   };
 
   return (
-    <section className="mb-2">
-      <h3 className="mb-1 px-3 text-[11px] text-stone-400">{COMPANION_COPY.sectionTitle}</h3>
-      <ul className="space-y-1">
-        {cards.map((card) => {
-          const companionId = card.data.name.toLowerCase();
-          const proposal =
-            activeProposal !== null && activeProposal.companion_id === companionId
-              ? activeProposal
-              : null;
-          return (
-            <li key={card.data.name}>
+    <section>
+      <h3 className="mb-1 px-1 text-[11px] text-stone-400">{COMPANION_COPY.sectionTitle}</h3>
+      {helpers.length === 0 ? (
+        <p className="px-1 py-1 text-xs text-stone-400">{COMPANION_COPY.rosterEmpty}</p>
+      ) : (
+        <ul className="space-y-1">
+          {helpers.map((helper) => (
+            <li key={helper.id}>
               <button
                 type="button"
-                onClick={() => void open(companionId)}
-                className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-stone-600 hover:bg-stone-100"
+                onClick={() => void open(helper.companion_id, helper.topic)}
+                className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-stone-600 hover:bg-stone-100"
               >
                 <span className="flex items-center gap-2">
-                  <span>{card.data.name}</span>
-                  {proposal !== null && !proposalSeen && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                  <span className="truncate">{COMPANION_COPY.helperRowName(helper.topic)}</span>
+                  {!seenHelperIds.has(helper.companion_id) && (
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
                   )}
-                  <span className="ml-auto text-[10px] text-stone-400">
-                    {COMPANION_DESKTOP_COPY.roleLabels[card.data.extensions.breadcrumb.role] ??
-                      COMPANION_COPY.aiLabel}
-                  </span>
                 </span>
               </button>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

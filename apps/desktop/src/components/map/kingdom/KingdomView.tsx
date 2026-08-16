@@ -6,13 +6,10 @@
  * teach-back for a done one. Rendering lives in KingdomTreeSvg/KingdomNodeCard.
  * Main exports: KingdomView, KingdomRef.
  */
+
+import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { useEffect, useMemo, useState } from "react";
-import {
-  appendCompanionInvitation,
-  openCompanionConversation,
-  seedTeachScriptForConversation,
-} from "../../../lib/companionActions";
 import { getRepos } from "../../../lib/db";
 import { startLearningForConcept } from "../../../lib/focusLearning";
 import {
@@ -193,22 +190,18 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     setOpening(true);
     try {
       if (cardNode.state === "done") {
-        // 用户主动讲的功能一律走伙伴（Leo 铁律）：Shichimi 发出邀请并提前备课，讲解
-        // 发生在她的对话里。伙伴开关关闭时退回匿名教学会话，能力不消失。
-        let conversationId: string;
-        if (useSettingsStore.getState().featureSwitches.companionChat) {
-          conversationId = await openCompanionConversation("shichimi");
-          await appendCompanionInvitation("shichimi", cardNode.label, "teach");
-          await seedTeachScriptForConversation(
-            conversationId,
-            cardNode.label,
-            nodes.map((node) => node.label),
-          );
-        } else {
-          conversationId = await startTeachSession(cardNode.label);
-        }
+        // 用户主动讲=讲给一位求教的同学听（Leo 铁律，spec 050 §9 的临时求教者形态）；
+        // 对话在弹窗里进行，主界面不被占据。伙伴开关关闭时退回主界面对话形态。
+        const conversationId = await startTeachSession(cardNode.label);
         await useChatStore.getState().loadFromDatabase();
-        appEventBus.emit("app:navigateChat", { conversationId });
+        if (useSettingsStore.getState().featureSwitches.companionChat) {
+          appEventBus.emit("companion:openPopup", {
+            conversationId,
+            title: COMPANION_COPY.helperRowName(cardNode.label),
+          });
+        } else {
+          appEventBus.emit("app:navigateChat", { conversationId });
+        }
         return;
       }
       // 开始学习/继续都直进专注模式，AI 立刻开讲（spec 050 §2）；退出后落回宫殿。

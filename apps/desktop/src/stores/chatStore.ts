@@ -98,13 +98,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       streamingText: null,
       errorText: null,
     });
-    // Opening the companion's chat reads her pending invitation — the sidebar dot clears.
-    if (conversation?.kind === "companion" && conversation.companion_id !== null) {
+    // Opening a helper's conversation reads its invitation — the roster dot clears.
+    if (conversation?.companion_id != null) {
       const { useCompanionStore } = await import("./companionStore");
-      const companionState = useCompanionStore.getState();
-      if (companionState.activeProposal?.companion_id === conversation.companion_id) {
-        companionState.markProposalSeen();
-      }
+      useCompanionStore.getState().markHelperSeen(conversation.companion_id);
     }
   },
 
@@ -141,7 +138,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return;
     }
     const activeKind = get().activeKind;
-    const entryCompanionId = get().activeCompanionId;
     if (activeKind === "companion" && !settings.featureSwitches.companionChat) {
       set({ errorText: COMPANION_DESKTOP_COPY.chatDisabled });
       return;
@@ -173,13 +169,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (activeKind === "companion" || activeKind === "teach") {
       useCompanionStore.getState().checkUserMessageForCrisis(content);
     }
-    // Replying in a companion chat accepts her pending invitation (Leo 2026-08-15): the
-    // proposal resolves and the teach script seeds BEFORE the round's prompt is built, so
-    // this very reply already runs in student teach-back mode.
-    if (activeKind === "companion" && entryCompanionId !== null) {
-      await useCompanionStore.getState().acceptProposalByReply(conversationId, entryCompanionId);
-    }
-
     const userMessage = await appendUserMessage(repos, entryTree, conversationId, content);
     if (isRoundVisible() && !get().allMessages.some((m) => m.id === userMessage.id)) {
       set({ ...foldAppendedMessage(get(), userMessage), streamingText: "", errorText: null });

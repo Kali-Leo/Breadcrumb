@@ -125,4 +125,10 @@ export const COMPANION_COPY = {
    * same no-cards-no-buttons contract: replying accepts, ignoring lets it expire). */
   reunionInvitation: (topic: string): string =>
     `「${topic}」有阵子没一起聊过了。想回顾的话,回我一句就行,我们从你还记得的部分开始。`,
+  /** Daily helper roster (spec 050 §9): each helper is a peer who wants to understand one
+   * concept — never a mentor, never above the learner. */
+  helperRowName: (topic: string): string => `想弄懂「${topic}」的同学`,
+  helperThanks: (topic: string): string =>
+    `谢谢你!「${topic}」这块我明白多了。我先去自己练练,回头见。`,
+  rosterEmpty: "今天没有来请教的伙伴了。",
 } as const;

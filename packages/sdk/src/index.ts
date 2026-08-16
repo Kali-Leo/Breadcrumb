@@ -53,6 +53,9 @@ export interface BreadcrumbEventMap {
   /** Ask the palace to open its goal view — emitted by the sidebar's goal card, which
    * lives outside the palace component tree (spec 050 §5). */
   "palace:openGoalView": Record<string, never>;
+  /** Open a companion/helper conversation in the floating chat popup instead of the main
+   * chat view (spec 050 §8). */
+  "companion:openPopup": { conversationId: string; title: string };
   /** Fired after new knowledge_edges rows land (spec 010); spec 012's experiment panel
    * refreshes on this instead of polling. */
   "knowledge:edgesUpdated": { addedEdgeIds: string[] };

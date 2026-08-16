@@ -40,10 +40,10 @@ function ConnectivityDot() {
  * invitation waits unread. */
 function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void }) {
   const companionChatEnabled = useSettingsStore((state) => state.featureSwitches.companionChat);
-  const activeProposal = useCompanionStore((state) => state.activeProposal);
-  const proposalSeen = useCompanionStore((state) => state.proposalSeen);
+  const helpers = useCompanionStore((state) => state.helpers);
+  const seenHelperIds = useCompanionStore((state) => state.seenHelperIds);
   if (!companionChatEnabled) return null;
-  const unread = activeProposal !== null && !proposalSeen;
+  const unread = helpers.some((helper) => !seenHelperIds.has(helper.companion_id));
   return (
     <button
       type="button"
