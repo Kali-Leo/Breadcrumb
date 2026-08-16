@@ -15,12 +15,14 @@ import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { buildAncestorChain, type FocusGuessState, rollConceptGate } from "../lib/focusActions";
 import { insertFocusNode, insertFocusSession } from "../lib/focusExplainRound";
-import { recordMatchedGuess } from "../lib/focusGuessGrading";
 import {
   createQuestionChild,
   createWordChild,
   retryCurrentNode,
   runExplain,
+  skipPendingGuess,
+  stopExplainStream,
+  submitPendingGuess,
 } from "../lib/focusSessionActions";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
@@ -53,6 +55,9 @@ interface FocusState {
   submitGuess(guessText: string): Promise<void>;
   skipGuess(): void;
   askQuestion(question: string): Promise<void>;
+  /** Stops the in-flight explanation, keeping the streamed-so-far text as the station's
+   * content — no error, no banner. */
+  stopStreaming(): void;
   jumpTo(nodeId: string): void;
   exitFocus(): void;
   reopen(sessionId: string): Promise<void>;
@@ -128,32 +133,22 @@ export const useFocusStore = create<FocusState>((set, get) => ({
     await createWordChild(set, get, word, nodeId);
   },
 
-  async submitGuess(guessText) {
-    const state = get();
-    const pending = state.pendingGuess;
-    const trimmed = guessText.trim();
-    if (pending === null || trimmed.length === 0 || state.conversationId === null) return;
-    set({ pendingGuess: null, recentConsecutiveAbandons: 0 });
-    if (pending.matchedNodeId !== null) {
-      set({ guessedNodeIds: new Set(state.guessedNodeIds).add(pending.matchedNodeId) });
-    }
-    await recordMatchedGuess({
-      pending,
-      currentNode: state.nodes.find((node) => node.id === state.currentNodeId),
-      conversationId: state.conversationId,
-      guessText: trimmed,
-    });
-    await createWordChild(set, get, pending.word, pending.matchedNodeId);
-  },
+  submitGuess: (guessText) => submitPendingGuess(set, get, guessText),
 
   skipGuess() {
-    const pending = get().pendingGuess;
-    if (pending === null) return;
-    set({ pendingGuess: null, recentConsecutiveAbandons: get().recentConsecutiveAbandons + 1 });
-    void createWordChild(set, get, pending.word, pending.matchedNodeId);
+    skipPendingGuess(set, get);
   },
 
-  askQuestion: (question) => createQuestionChild(set, get, question),
+  async askQuestion(question) {
+    // Single-buffer guard (mirrors selectWord/jumpTo): asking during a stream would
+    // interleave two runs into one buffer. The ask bar drops the submit, keeping the text.
+    if (get().streamingText !== null) return;
+    await createQuestionChild(set, get, question);
+  },
+
+  stopStreaming() {
+    stopExplainStream(set, get);
+  },
 
   jumpTo(nodeId) {
     if (get().streamingText !== null || !get().nodes.some((node) => node.id === nodeId)) return;

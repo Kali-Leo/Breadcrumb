@@ -11,7 +11,7 @@ import { usePlannerStore } from "../../stores/plannerStore";
 const inputClass =
   "flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400";
 const buttonClass =
-  "rounded bg-amber-500 px-2 py-1 text-xs text-white transition-colors hover:bg-amber-600";
+  "rounded bg-amber-500 px-2 py-1 text-xs text-white transition-colors hover:bg-amber-600 disabled:opacity-50";
 
 interface GoalMappingFormProps {
   goalText: string;
@@ -23,20 +23,28 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
   const createGoal = usePlannerStore((state) => state.createGoal);
 
   const [hint, setHint] = useState("");
+  // Guards double-submit: the LLM call is slow enough that a second click used to create a
+  // second goal and spend twice.
+  const [busy, setBusy] = useState(false);
 
   async function runMapping() {
     const trimmedTitle = goalText.trim();
-    if (trimmedTitle.length === 0) return;
+    if (trimmedTitle.length === 0 || busy) return;
+    setBusy(true);
     setHint("拆解中…");
-    const mapping = await mapGoalText(trimmedTitle);
-    if (mapping === null) {
-      setHint("这次没能拆解,稍后再试。若一直如此,可以去设置看看 AI 服务是否配置好了。");
-      return;
+    try {
+      const mapping = await mapGoalText(trimmedTitle);
+      if (mapping === null) {
+        setHint("这次没能拆解,稍后再试。若一直如此,可以去设置看看 AI 服务是否配置好了。");
+        return;
+      }
+      await createGoal(trimmedTitle, mapping);
+      const total = mapping.existing.length + mapping.suggested.length;
+      setHint(`已按目标自动圈定 ${total} 个知识点（其中 ${mapping.suggested.length} 个是新方向）`);
+      onGoalTextChange("");
+    } finally {
+      setBusy(false);
     }
-    await createGoal(trimmedTitle, mapping);
-    const total = mapping.existing.length + mapping.suggested.length;
-    setHint(`已按目标自动圈定 ${total} 个知识点（其中 ${mapping.suggested.length} 个是新方向）`);
-    onGoalTextChange("");
   }
 
   return (
@@ -45,10 +53,21 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
         <input
           value={goalText}
           onChange={(event) => onGoalTextChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void runMapping();
+            }
+          }}
           placeholder="比如：通过考研数学"
           className={inputClass}
         />
-        <button type="button" onClick={() => void runMapping()} className={buttonClass}>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void runMapping()}
+          className={buttonClass}
+        >
           拆解目标
         </button>
       </div>

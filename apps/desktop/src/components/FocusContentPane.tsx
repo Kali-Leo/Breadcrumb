@@ -91,6 +91,9 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
         window.getSelection()?.removeAllRanges();
         setHint(null);
       } else if (event.key === "Escape") {
+        // Claim the key: Esc dismisses the hint only — the overlay's own Escape handler
+        // checks defaultPrevented and stays open.
+        event.preventDefault();
         setHint(null);
       }
     }

@@ -6,11 +6,12 @@
  */
 
 import { CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { Composer } from "./Composer";
 import { MessageBubble } from "./MessageBubble";
+import { BackToBottomPill, useScrollPinning } from "./scrollPinning";
 
 interface CompanionChatPopupProps {
   conversationId: string;
@@ -20,8 +21,10 @@ interface CompanionChatPopupProps {
 
 export function CompanionChatPopup({ conversationId, title, onClose }: CompanionChatPopupProps) {
   const session = useChatStore((state) => state.sessions.get(conversationId));
+  const draft = useChatStore((state) => state.drafts.get(conversationId) ?? "");
+  const setDraft = useChatStore((state) => state.setDraft);
   const crisisHere = useCompanionStore((state) => state.crisisConversationIds.has(conversationId));
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const { containerRef, pinned, handleScroll, scrollToBottom } = useScrollPinning();
 
   // Load this conversation's own session — the active binding is untouched.
   useEffect(() => {
@@ -30,12 +33,13 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
 
   const messages = session?.messages ?? [];
   const streamingText = session?.streamingText ?? null;
+  const streaming = streamingText !== null;
 
+  // Auto-scroll only while pinned near the bottom — reading upward stays undisturbed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: message/stream growth is the scroll trigger
   useEffect(() => {
-    const pane = scrollRef.current;
-    if (pane !== null) pane.scrollTop = pane.scrollHeight;
-  }, [messages.length, streamingText]);
+    if (pinned) scrollToBottom();
+  }, [messages.length, streamingText, pinned, scrollToBottom]);
 
   return (
     <div className="absolute bottom-3 right-3 z-40 flex h-[26rem] w-96 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
@@ -62,29 +66,56 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           </button>
         </div>
       )}
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-stone-50 p-3 text-sm">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            conversationId={conversationId}
-            author={message.role}
-            content={message.content}
-            messageId={message.id}
-          />
-        ))}
-        {streamingText !== null && streamingText !== "" && (
-          <MessageBubble
-            author="assistant"
-            conversationId={conversationId}
-            content={streamingText}
-          />
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="h-full space-y-3 overflow-y-auto bg-stone-50 p-3 text-sm"
+        >
+          {messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              conversationId={conversationId}
+              author={message.role}
+              content={message.content}
+              messageId={message.id}
+            />
+          ))}
+          {streamingText !== null && streamingText !== "" && (
+            <MessageBubble
+              author="assistant"
+              conversationId={conversationId}
+              content={streamingText}
+            />
+          )}
+          {(session?.errorText != null || (!streaming && messages.at(-1)?.role === "user")) && (
+            <p className="text-xs text-rose-500">
+              {session?.errorText ?? "这条消息还没有得到回复"}
+              {!streaming && messages.at(-1)?.role === "user" && (
+                <button
+                  type="button"
+                  onClick={() => void useChatStore.getState().retryRound(conversationId)}
+                  className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200"
+                >
+                  重试
+                </button>
+              )}
+            </p>
+          )}
+        </div>
+        {!pinned && (messages.length > 0 || streaming) && (
+          <BackToBottomPill onClick={scrollToBottom} />
         )}
-        {session?.errorText != null && <p className="text-xs text-rose-500">{session.errorText}</p>}
       </div>
       <div className="border-t border-stone-100">
         <Composer
-          disabled={session === undefined || streamingText !== null}
+          conversationId={conversationId}
+          value={draft}
+          streaming={streaming}
+          disabled={session === undefined}
+          onChange={(text) => setDraft(conversationId, text)}
           onSend={(content) => void useChatStore.getState().sendMessage(content, conversationId)}
+          onStop={() => useChatStore.getState().stopStreaming(conversationId)}
         />
       </div>
     </div>

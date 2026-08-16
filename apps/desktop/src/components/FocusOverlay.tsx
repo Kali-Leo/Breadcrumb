@@ -1,11 +1,12 @@
 /**
  * Purpose: the full-screen focus (explain-word) overlay (spec 042 §3) — header (back-to-parent,
- * root word, exit), the current station's content pane, and the session's own-sized subway map
- * pane (spec 042 §4). Renders nothing when no session is open; mounted once at the app shell's
- * top level.
+ * root word, exit; Escape exits too unless a lower layer claimed the key), the current station's
+ * content pane, and the session's own-sized subway map pane (spec 042 §4). Renders nothing when
+ * no session is open; mounted once at the app shell's top level.
  * Main exports: FocusOverlay.
  */
 import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
+import { useEffect } from "react";
 import { useFocusStore } from "../stores/focusStore";
 import { FocusContentPane } from "./FocusContentPane";
 import { FocusMap } from "./FocusMap";
@@ -17,6 +18,19 @@ export function FocusOverlay() {
   const currentNodeId = useFocusStore((state) => state.currentNodeId);
   const jumpTo = useFocusStore((state) => state.jumpTo);
   const exitFocus = useFocusStore((state) => state.exitFocus);
+
+  // Escape closes the overlay — unless a layer below (the selection hint) already claimed
+  // the key via preventDefault. Child effects register their listeners first, so their
+  // claim is visible by the time this handler runs.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      useFocusStore.getState().exitFocus();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   if (!open) return null;
 

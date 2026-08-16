@@ -67,12 +67,14 @@ export async function streamFocusNodeAnswer(input: {
   apiConfig: ApiConfig;
   conversationId: string;
   onDelta: (delta: string) => void;
+  signal?: AbortSignal;
 }): Promise<string> {
   const result = await streamFocusAnswer({
     messages: input.messages,
     apiConfig: input.apiConfig,
     conversationId: input.conversationId,
     onDelta: input.onDelta,
+    signal: input.signal,
   });
   const repos = await getRepos();
   await repos.focusNodes.updateAnswer(input.nodeId, result.content);

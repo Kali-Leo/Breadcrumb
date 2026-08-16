@@ -14,6 +14,7 @@ export interface StreamFocusAnswerInput {
   apiConfig: ApiConfig;
   conversationId: string;
   onDelta: (delta: string) => void;
+  signal?: AbortSignal;
 }
 
 export interface StreamFocusAnswerResult {
@@ -36,11 +37,15 @@ export async function streamFocusAnswer(
   const client = createLlmClient({ ...input.apiConfig, fetchImpl: tauriFetch });
   let abandoned = false;
   let sawDelta = false;
-  const stream = client.chatStream(input.messages, (delta) => {
-    if (abandoned) return;
-    sawDelta = true;
-    input.onDelta(delta);
-  });
+  const stream = client.chatStream(
+    input.messages,
+    (delta) => {
+      if (abandoned) return;
+      sawDelta = true;
+      input.onDelta(delta);
+    },
+    { signal: input.signal },
+  );
   const timers: number[] = [];
   const watchdog = new Promise<never>((_, reject) => {
     timers.push(
@@ -57,6 +62,7 @@ export async function streamFocusAnswer(
       conversationId: input.conversationId,
       model: input.apiConfig.model,
       usage: result.usage,
+      responseHadContent: result.content.length > 0,
     });
     return { content: result.content, usage: result.usage };
   } finally {

@@ -2,7 +2,7 @@
  * Purpose: unit tests for the streaming chat client (SSE parsing, deltas, usage, errors)
  * using an injected fake fetch — no network involved.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createLlmClient } from "./client";
 
 function sseResponseFromLines(lines: readonly string[]): Response {
@@ -70,6 +70,55 @@ describe("createLlmClient.chatStream", () => {
     await expect(
       makeClient(response).chatStream([{ role: "user", content: "hi" }], () => undefined),
     ).rejects.toThrow("HTTP 401");
+  });
+
+  it("rejects with AbortError when the signal fires mid-stream (real-fetch behavior)", async () => {
+    // A real fetch (browser or Tauri) reacts to its signal by erroring the body stream
+    // from the inside; the fake reproduces that so the drain-not-cancel path is exercised.
+    const encoder = new TextEncoder();
+    let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        bodyController = controller;
+      },
+    });
+    const client = createLlmClient({
+      baseUrl: "https://api.example.com/v1",
+      apiKey: "test-key",
+      model: "test-model",
+      fetchImpl: (_url, init) => {
+        init?.signal?.addEventListener("abort", () => {
+          // Tauri's http plugin surfaces an internal resource error here, not AbortError —
+          // the client must normalize it regardless.
+          bodyController?.error(new Error("The resource id 7 is invalid"));
+        });
+        return Promise.resolve(new Response(body, { status: 200 }));
+      },
+    });
+
+    const abortController = new AbortController();
+    const deltas: string[] = [];
+    const streaming = client.chatStream([{ role: "user", content: "hi" }], (t) => deltas.push(t), {
+      signal: abortController.signal,
+    });
+    bodyController?.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"部分"}}]}\n'));
+    await vi.waitFor(() => expect(deltas).toEqual(["部分"]));
+    abortController.abort();
+
+    await expect(streaming).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("still resolves normally when the signal never fires", async () => {
+    const response = sseResponseFromLines([
+      'data: {"choices":[{"delta":{"content":"ok"}}]}',
+      "data: [DONE]",
+    ]);
+    const result = await makeClient(response).chatStream(
+      [{ role: "user", content: "hi" }],
+      () => undefined,
+      { signal: new AbortController().signal },
+    );
+    expect(result.content).toBe("ok");
   });
 
   it("sends model, messages and stream flags in the request body", async () => {

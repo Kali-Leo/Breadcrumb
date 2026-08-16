@@ -2,7 +2,8 @@
  * Purpose: minimal OpenAI-compatible chat client with SSE streaming and Zod-validated
  * responses. Headless: the fetch implementation is injected (Tauri http plugin in the app,
  * a fake in tests).
- * Main exports: createLlmClient, LlmClientConfig, ChatMessage, ChatStreamResult.
+ * Main exports: createLlmClient, LlmClientConfig, ChatMessage, ChatStreamResult,
+ * ChatStreamOptions.
  */
 import { z } from "zod";
 import type { TokenUsage } from "./pricing";
@@ -31,17 +32,27 @@ const streamChunkSchema = z.object({
   usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).nullish(),
 });
 
+export interface ChatStreamOptions {
+  /** Aborting this signal is the ONE supported way to cancel a stream mid-flight: it
+   * cancels at the fetch layer, whose implementation owns its stream teardown. Consumers
+   * must never break out of the stream themselves (see readSseDataLines). On abort,
+   * chatStream rejects with a DOMException named "AbortError". */
+  signal?: AbortSignal;
+}
+
 export interface LlmClient {
   /** Streams one chat completion; onDelta fires per content fragment. */
   chatStream(
     messages: readonly ChatMessage[],
     onDelta: (text: string) => void,
+    options?: ChatStreamOptions,
   ): Promise<ChatStreamResult>;
 }
 
 export function createLlmClient(config: LlmClientConfig): LlmClient {
   return {
-    async chatStream(messages, onDelta) {
+    async chatStream(messages, onDelta, options) {
+      const signal = options?.signal;
       const response = await config.fetchImpl(
         `${config.baseUrl.replace(/\/$/, "")}/chat/completions`,
         {
@@ -56,6 +67,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
             stream: true,
             stream_options: { include_usage: true },
           }),
+          signal,
         },
       );
       if (!response.ok || response.body === null) {
@@ -64,19 +76,30 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
 
       let content = "";
       let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
-      for await (const dataLine of readSseDataLines(response.body)) {
-        const chunk = streamChunkSchema.parse(JSON.parse(dataLine));
-        const delta = chunk.choices[0]?.delta?.content;
-        if (delta) {
-          content += delta;
-          onDelta(delta);
+      try {
+        for await (const dataLine of readSseDataLines(response.body)) {
+          const chunk = streamChunkSchema.parse(JSON.parse(dataLine));
+          const delta = chunk.choices[0]?.delta?.content;
+          if (delta) {
+            content += delta;
+            onDelta(delta);
+          }
+          if (chunk.usage) {
+            usage = {
+              inputTokens: chunk.usage.prompt_tokens,
+              outputTokens: chunk.usage.completion_tokens,
+            };
+          }
         }
-        if (chunk.usage) {
-          usage = {
-            inputTokens: chunk.usage.prompt_tokens,
-            outputTokens: chunk.usage.completion_tokens,
-          };
+      } catch (error) {
+        // An aborted fetch errors the body stream from the inside, so the drain-not-cancel
+        // rule of readSseDataLines is respected — we never call cancel ourselves. Whatever
+        // the fetch implementation throws for its own teardown (Tauri's http plugin surfaces
+        // internal resource errors, not AbortError) is normalized to one recognizable shape.
+        if (signal?.aborted) {
+          throw new DOMException("chatStream aborted by its caller", "AbortError");
         }
+        throw error;
       }
       return { content, usage };
     },

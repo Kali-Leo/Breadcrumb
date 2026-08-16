@@ -12,7 +12,8 @@ export type PluginPermission =
   | "ui:sidebar"
   | "ui:panel";
 
-/** Metadata every plugin ships as `mod.json`. Runtime validation lives in core-bus. */
+/** Metadata every plugin ships as `mod.json`. Runtime validation is future work for the
+ * plugin loader — nothing validates manifests yet. */
 export interface PluginManifest {
   id: string;
   name: string;
@@ -63,10 +64,11 @@ export interface BreadcrumbEventMap {
   "interest:updated": { nodeIds: string[] };
   /** Fired after mastery_claims rows land, e.g. from the self-report action (spec 011). */
   "mastery:updated": { changedNodeIds: string[] };
-  /** Prefills the composer's draft without sending — used by the explore door "展开聊聊"
-   * action and the assistant-message selection quote bar (spec 039); the user still presses
-   * send themselves. */
-  "composer:prefill": { text: string };
+  /** Prefills one composer's draft without sending (spec 039 precedent; the user still
+   * presses send themselves). conversationId addresses the composer bound to that
+   * conversation — null addresses the new-conversation composer; without it, every mounted
+   * composer (main view + popup) would apply the same prefill. */
+  "composer:prefill": { text: string; conversationId: string | null };
   /** Station map click -> scroll chat to that round (spec 040 §3). */
   "chat:locateMessage": { messageId: string };
   /** Fired when a focus (explain-word) overlay closes (spec 042 §3) — the exit-record entry

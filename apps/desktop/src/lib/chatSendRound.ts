@@ -1,12 +1,12 @@
 /**
  * Purpose: runs the LLM half of one chat send round — system-message assembly, the streaming
- * completion, assistant-message persistence (parent = the triggering user message, spec 040
- * §1), conversation touch, and cost metering — so chatStore.ts's sendMessage stays a thin
- * orchestrator under the file-size cap.
+ * completion (stop-aware: an aborted stream keeps its partial reply), assistant-message
+ * persistence (parent = the triggering user message, spec 040 §1), conversation touch, and
+ * cost metering — so chatStore.ts's sendMessage stays a thin orchestrator under the cap.
  * Main exports: SendRoundResult, appendUserMessage, runSendRound.
  */
 import type { ConversationKind, MessageRow } from "@breadcrumb/core-db";
-import { type ChatMessage, createLlmClient } from "@breadcrumb/core-llm";
+import { type ChatMessage, createLlmClient, type TokenUsage } from "@breadcrumb/core-llm";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import {
@@ -15,6 +15,7 @@ import {
   buildLearnerContextSystemMessage,
 } from "./chatRoundContext";
 import { type RoundCostSnapshot, recordRoundCost } from "./chatRoundMetering";
+import { isAbortError } from "./chatStreamControl";
 import { resolveSendParentId, type TreeSlice } from "./chatTreeActions";
 import { buildRoundSystemMessages } from "./companionChatPrompt";
 import type { Repos } from "./db";
@@ -24,6 +25,10 @@ import { refreshConversationAutoTitle } from "./trailNamingActions";
 export interface SendRoundResult {
   assistantMessage: MessageRow;
   cost: RoundCostSnapshot;
+  /** True when the user stopped the stream mid-reply (ChatGPT model): the streamed-so-far
+   * content is persisted as the assistant message, usage is whatever the truncated stream
+   * reported (normally zero — recorded as-is), and no error is surfaced. */
+  stoppedEarly: boolean;
 }
 
 /** Builds and persists the round's user message; parent = the current station (spec 040 §2),
@@ -58,7 +63,9 @@ export async function runSendRound(params: {
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
   onDelta: (delta: string) => void;
-}): Promise<SendRoundResult> {
+  /** Wired to the round's stop button; aborting it resolves the round early (or to null). */
+  signal?: AbortSignal;
+}): Promise<SendRoundResult | null> {
   const { repos, activeKind, conversationId, userMessage, apiConfig } = params;
 
   // System messages, in unshift order: kind prompt(s) -> anchored node -> learner context
@@ -88,13 +95,35 @@ export async function runSendRound(params: {
   }
 
   const client = createLlmClient({ ...apiConfig, fetchImpl: tauriFetch });
-  const result = await client.chatStream(history, params.onDelta);
+  let content: string;
+  let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
+  let stoppedEarly = false;
+  let streamedSoFar = "";
+  try {
+    const result = await client.chatStream(
+      history,
+      (delta) => {
+        streamedSoFar += delta;
+        params.onDelta(delta);
+      },
+      { signal: params.signal },
+    );
+    content = result.content;
+    usage = result.usage;
+  } catch (error) {
+    if (!isAbortError(error)) throw error;
+    // Stop semantics (ChatGPT model): keep the partial reply and run the normal persist +
+    // meter path below. A stop before the first delta keeps nothing — the round dissolves.
+    if (streamedSoFar.length === 0) return null;
+    content = streamedSoFar;
+    stoppedEarly = true;
+  }
 
   const assistantMessage: MessageRow = {
     id: newId(),
     conversation_id: conversationId,
     role: "assistant",
-    content: result.content,
+    content,
     created_at: nowIso(),
     // Column kept dormant for future silent experiments (spec 038 revision 2026-08-14).
     teaching_mode: null,
@@ -116,8 +145,9 @@ export async function runSendRound(params: {
     conversationId,
     purpose: activeKind === "companion" ? "companion-chat" : "chat",
     model: apiConfig.model,
-    usage: result.usage,
+    usage,
+    responseHadContent: assistantMessage.content.length > 0,
   });
 
-  return { assistantMessage, cost };
+  return { assistantMessage, cost, stoppedEarly };
 }

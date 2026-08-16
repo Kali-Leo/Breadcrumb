@@ -71,15 +71,16 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Keep the session trail in sync with the open conversation.
+  // Keep the session trail in sync with the open conversation — fill-on-first-visit, so a
+  // revisited conversation shows its cached trail instantly.
   useEffect(() => {
-    void useKnowledgeStore.getState().loadSessionTrail(activeConversationId);
+    void useKnowledgeStore.getState().ensureTrailLoaded(activeConversationId);
   }, [activeConversationId]);
 
   // Keep the focus-session badge/bar lookups in sync with the open conversation (spec 042 §5,
-  // Leo 2026-08-14 revision).
+  // Leo 2026-08-14 revision) — same fill-on-first-visit shape, no wipe on switch.
   useEffect(() => {
-    void useFocusSessionsStore.getState().loadForConversation(activeConversationId);
+    void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
 
   // First run: no API configured yet -> open settings so the user can start in one step.

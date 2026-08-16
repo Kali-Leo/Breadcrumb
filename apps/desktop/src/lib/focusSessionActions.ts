@@ -1,41 +1,34 @@
 /**
  * Purpose: focusStore's station orchestrators — creating a word or question station under the
- * current one, the stream+persist+error-banner cycle any new station runs through, and the
- * fire-and-forget LLM short-name request every new station schedules (spec 042 §2-4). Split out
- * of focusStore.ts to stay under the file-size cap; not pure (talks to the DB and the LLM), so
- * it lives here rather than in focusActions.ts.
- * Main exports: createWordChild, createQuestionChild, runExplain, scheduleFocusLabelSummary,
- * FocusSessionRuntimeState, FocusSessionSet, FocusSessionGet.
+ * current one (each runs the runExplain stream cycle from focusExplainStream.ts), the retry
+ * path, and the fire-and-forget LLM short-name request every new station schedules (spec 042
+ * §2-4). Split out of focusStore.ts to stay under the file-size cap; not pure (talks to the DB
+ * and the LLM), so it lives here rather than in focusActions.ts.
+ * Main exports: createWordChild, createQuestionChild, submitPendingGuess, skipPendingGuess,
+ * retryCurrentNode, scheduleFocusLabelSummary (re-exports runExplain, stopExplainStream and
+ * the session types).
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import {
   buildQuestionMessages,
   buildWordExplainMessages,
   type FocusPromptMessage,
-  focusErrorLine,
 } from "@breadcrumb/plugin-explore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
-import { recordAiFailure } from "./failureLog";
 import { buildAncestorChain, truncateQuestionLabel } from "./focusActions";
-import { insertFocusNode, streamFocusNodeAnswer } from "./focusExplainRound";
+import { insertFocusNode } from "./focusExplainRound";
+import {
+  type FocusSessionGet,
+  type FocusSessionRuntimeState,
+  type FocusSessionSet,
+  runExplain,
+  stopExplainStream,
+} from "./focusExplainStream";
+import { recordMatchedGuess } from "./focusGuessGrading";
 
-/** The slice of focusStore's state these orchestrators read and write — narrower than the
- * store's full interface so this file doesn't import focusStore.ts (no import cycle). */
-export interface FocusSessionRuntimeState {
-  sessionId: string | null;
-  conversationId: string | null;
-  nodes: FocusNodeRow[];
-  currentNodeId: string | null;
-  streamingText: string | null;
-  errorText: string | null;
-  pendingGuess: { word: string; matchedNodeId: string | null } | null;
-  lastRevealAtByNode: ReadonlyMap<string, Date>;
-  openedDoorNodeIds: ReadonlySet<string>;
-}
-
-export type FocusSessionGet = () => FocusSessionRuntimeState;
-export type FocusSessionSet = (partial: Partial<FocusSessionRuntimeState>) => void;
+export type { FocusSessionGet, FocusSessionRuntimeState, FocusSessionSet };
+export { runExplain, stopExplainStream };
 
 /** Creates a child word station under the current one and streams its explanation — shared by
  * the no-gate path, a submitted guess, and a skipped guess (spec 042 §3). */
@@ -104,6 +97,38 @@ export async function createQuestionChild(
   await runExplain(set, get, newNode.id, buildQuestionMessages(ancestorChain, trimmed));
 }
 
+/** Grades and records a submitted guess, then opens the guessed word's station — the guess
+ * gate's accept path (spec 042 §3). */
+export async function submitPendingGuess(
+  set: FocusSessionSet,
+  get: FocusSessionGet,
+  guessText: string,
+): Promise<void> {
+  const state = get();
+  const pending = state.pendingGuess;
+  const trimmed = guessText.trim();
+  if (pending === null || trimmed.length === 0 || state.conversationId === null) return;
+  set({ pendingGuess: null, recentConsecutiveAbandons: 0 });
+  if (pending.matchedNodeId !== null) {
+    set({ guessedNodeIds: new Set(state.guessedNodeIds).add(pending.matchedNodeId) });
+  }
+  await recordMatchedGuess({
+    pending,
+    currentNode: state.nodes.find((node) => node.id === state.currentNodeId),
+    conversationId: state.conversationId,
+    guessText: trimmed,
+  });
+  await createWordChild(set, get, pending.word, pending.matchedNodeId);
+}
+
+/** The guess gate's skip path — counted as an abandon, then the station opens anyway. */
+export function skipPendingGuess(set: FocusSessionSet, get: FocusSessionGet): void {
+  const pending = get().pendingGuess;
+  if (pending === null) return;
+  set({ pendingGuess: null, recentConsecutiveAbandons: get().recentConsecutiveAbandons + 1 });
+  void createWordChild(set, get, pending.word, pending.matchedNodeId);
+}
+
 /** Fire-and-forget short-name request for a freshly created station (spec 042 §4) — the raw
  * label stays on the map until (if ever) the model's short name lands, so this never blocks the
  * streamed explanation. A missing API config or conversation just skips the request; a failed
@@ -129,50 +154,6 @@ export function scheduleFocusLabelSummary(
       ),
     });
   })();
-}
-
-/** Streams and persists one station's answer, degrading to a plain error banner on failure
- * (product principle 1) — shared by every action that opens a new station. */
-export async function runExplain(
-  set: FocusSessionSet,
-  get: FocusSessionGet,
-  nodeId: string,
-  messages: readonly FocusPromptMessage[],
-): Promise<void> {
-  const state = get();
-  const apiConfig = useSettingsStore.getState().apiConfig;
-  if (apiConfig === null || state.conversationId === null) {
-    set({ streamingText: null, errorText: focusErrorLine("还没有配置 API") });
-    return;
-  }
-  // The run stays bound to the session it started in — after an exit-and-reopen the old
-  // stream keeps writing into the DB but never into the NEW session's screen state
-  // (same cross-wire class the chat sessions refactor fixed).
-  const runSessionId = state.sessionId;
-  const setIfSameRun: FocusSessionSet = (patch) => {
-    if (get().sessionId === runSessionId) set(patch);
-  };
-  try {
-    const content = await streamFocusNodeAnswer({
-      nodeId,
-      messages,
-      apiConfig,
-      conversationId: state.conversationId,
-      onDelta: (delta) => setIfSameRun({ streamingText: `${get().streamingText ?? ""}${delta}` }),
-    });
-    setIfSameRun({
-      nodes: get().nodes.map((node) =>
-        node.id === nodeId ? { ...node, answer_text: content } : node,
-      ),
-      streamingText: null,
-    });
-  } catch (error) {
-    await recordAiFailure("focus-explain", error);
-    setIfSameRun({
-      streamingText: null,
-      errorText: focusErrorLine(error instanceof Error ? error.message : String(error)),
-    });
-  }
 }
 
 /** Re-runs the CURRENT station's explanation after a failure or watchdog timeout (2026-08-14:
