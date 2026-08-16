@@ -232,8 +232,13 @@ export function MapView() {
   return (
     <div className="relative h-full w-full">
       <div className="flex h-full w-full overflow-hidden">
-        {/* Square map hugging the left; the info panel takes the rest. */}
-        <div className="relative aspect-square h-full shrink-0">
+        {/* Square map hugging the left when space allows; when the window is small the
+            rail keeps its minimum width and the map gives way (the camera fit letterboxes
+            a non-square canvas) — content always wins over geometry. */}
+        <div
+          className="relative h-full"
+          style={{ aspectRatio: "1 / 1", maxWidth: "calc(100% - 16rem)" }}
+        >
           {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
           <div
             ref={containerRef}
@@ -251,7 +256,7 @@ export function MapView() {
             <p>点击地名：直接前往</p>
           </div>
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="h-full min-w-64 flex-1 overflow-y-auto">
           <MapInfoPanel hover={hover} level={level} world={displayWorld} />
         </div>
       </div>

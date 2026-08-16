@@ -10,6 +10,23 @@ mod tts;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // The configured 1280x800 is a preference, not a demand: on smaller screens the
+        // window must open fully visible (a window larger than the monitor cannot even be
+        // shrunk by the user on some compositors).
+        .setup(|app| {
+            use tauri::Manager;
+            if let Some(window) = app.get_webview_window("main") {
+                if let Ok(Some(monitor)) = window.current_monitor() {
+                    let scale = monitor.scale_factor();
+                    let screen = monitor.size().to_logical::<f64>(scale);
+                    let width = f64::min(1280.0, screen.width - 32.0);
+                    let height = f64::min(800.0, screen.height - 96.0);
+                    let _ = window.set_size(tauri::LogicalSize::new(width, height));
+                    let _ = window.center();
+                }
+            }
+            Ok(())
+        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_http::init())

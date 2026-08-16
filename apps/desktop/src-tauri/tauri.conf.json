@@ -14,9 +14,7 @@
       {
         "title": "Breadcrumb",
         "width": 1280,
-        "height": 800,
-        "minWidth": 1024,
-        "minHeight": 680
+        "height": 800
       }
     ],
     "security": {
