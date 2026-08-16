@@ -32,6 +32,11 @@ interface SettingsPanelProps {
 
 type SettingsPage = "general" | "billing" | "research";
 
+/** The API form's unsaved edits, module-level so switching views (which unmounts this
+ * panel) does not silently discard them — they come back on the next visit until saved
+ * (Leo-approved 2026-08-16: keep the 保存 button, never lose typed text). */
+let apiFormDraft: { baseUrl: string; apiKey: string; model: string } | null = null;
+
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const networkEnabled = useSettingsStore((state) => state.networkEnabled);
@@ -41,13 +46,32 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setMainlandNetwork = useSettingsStore((state) => state.setMainlandNetwork);
 
   const [page, setPage] = useState<SettingsPage>("general");
-  const [baseUrl, setBaseUrl] = useState(apiConfig?.baseUrl ?? "https://api.deepseek.com/v1");
-  const [apiKey, setApiKey] = useState(apiConfig?.apiKey ?? "");
-  const [model, setModel] = useState(apiConfig?.model ?? "deepseek-v4-flash");
+  const savedBaseUrl = apiConfig?.baseUrl ?? "https://api.deepseek.com/v1";
+  const savedApiKey = apiConfig?.apiKey ?? "";
+  const savedModel = apiConfig?.model ?? "deepseek-v4-flash";
+  const [baseUrl, setBaseUrl] = useState(apiFormDraft?.baseUrl ?? savedBaseUrl);
+  const [apiKey, setApiKey] = useState(apiFormDraft?.apiKey ?? savedApiKey);
+  const [model, setModel] = useState(apiFormDraft?.model ?? savedModel);
   const [savedHint, setSavedHint] = useState(false);
+
+  const dirty = baseUrl !== savedBaseUrl || apiKey !== savedApiKey || model !== savedModel;
+
+  function editBaseUrl(value: string): void {
+    setBaseUrl(value);
+    apiFormDraft = { baseUrl: value, apiKey, model };
+  }
+  function editApiKey(value: string): void {
+    setApiKey(value);
+    apiFormDraft = { baseUrl, apiKey: value, model };
+  }
+  function editModel(value: string): void {
+    setModel(value);
+    apiFormDraft = { baseUrl, apiKey, model: value };
+  }
 
   async function save() {
     await saveApiConfig({ baseUrl: baseUrl.trim(), apiKey: apiKey.trim(), model: model.trim() });
+    apiFormDraft = null;
     setSavedHint(true);
     setTimeout(() => setSavedHint(false), 2000);
   }
@@ -102,7 +126,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               服务地址 Base URL
               <input
                 value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
+                onChange={(e) => editBaseUrl(e.target.value)}
                 className={inputClass}
               />
             </label>
@@ -111,7 +135,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               <input
                 type="password"
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => editApiKey(e.target.value)}
                 placeholder="sk-…"
                 className={inputClass}
               />
@@ -120,7 +144,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               模型名
               <input
                 value={model}
-                onChange={(e) => setModel(e.target.value)}
+                onChange={(e) => editModel(e.target.value)}
                 className={inputClass}
               />
             </label>
@@ -132,6 +156,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               保存
             </button>
             {savedHint && <span className="ml-3 text-sm text-amber-600">已保存 ✓</span>}
+            {!savedHint && dirty && (
+              <span className="ml-3 text-sm text-stone-400">有修改还没保存</span>
+            )}
           </section>
 
           <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
