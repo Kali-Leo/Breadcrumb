@@ -34,7 +34,7 @@ export function GoalView({ onClose }: GoalViewProps) {
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100"
           >
-            ← 返回记忆宫殿
+            ← 返回地图
           </button>
         </div>
 
