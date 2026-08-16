@@ -15,7 +15,6 @@ import { TrendLineChart } from "./TrendLineChart";
 const MEMORY_COLOR = "#d97706";
 const UNDERSTANDING_COLOR = "#0d9488";
 const INTUITION_COLOR = "#6d28d9";
-const WORDS_SETTLED_COLOR = "#92400e";
 const LAYERS_CHART_HEIGHT = 200;
 
 function TrendCard({ title, children }: { title?: string; children: ReactNode }) {
@@ -30,7 +29,6 @@ function TrendCard({ title, children }: { title?: string; children: ReactNode })
 export function FeedbackTrendsSection() {
   const trends = useFeedbackStore((state) => state.trends);
   const isEmpty = trends.layers.every((point) => point.memory === 0);
-  const hasWordData = trends.wordsSettled.some((point) => point.value > 0);
 
   const memorySeries: TrendPoint[] = trends.layers.map((point) => ({
     date: point.date,
@@ -48,7 +46,6 @@ export function FeedbackTrendsSection() {
   return (
     <section className="rounded-xl bg-white p-3 shadow-sm">
       <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.trendsTitle}</h3>
-      <p className="mt-1 text-stone-400">{FEEDBACK_COPY.trendsHint}</p>
       {isEmpty ? (
         <p className="mt-2 text-stone-400">{FEEDBACK_COPY.trendsEmpty}</p>
       ) : (
@@ -80,23 +77,6 @@ export function FeedbackTrendsSection() {
             />
             <p className="mt-1 text-[10px] text-stone-400">{FEEDBACK_COPY.trendLayersNote}</p>
           </TrendCard>
-          {hasWordData && (
-            <TrendCard title={FEEDBACK_COPY.trendWordsTitle}>
-              <TrendLineChart
-                series={[
-                  {
-                    key: "wordsSettled",
-                    label: FEEDBACK_COPY.trendWordsSettledLabel,
-                    color: WORDS_SETTLED_COLOR,
-                    data: trends.wordsSettled,
-                  },
-                ]}
-              />
-              <p className="mt-1 text-[10px] text-stone-400">
-                {FEEDBACK_COPY.trendWordsColdStartNote}
-              </p>
-            </TrendCard>
-          )}
         </div>
       )}
     </section>

@@ -15,7 +15,7 @@ export const FEEDBACK_COPY = {
   // Heatmap — GitHub-garden-style, self-only so no social comparison; records what
   // happened, never sets a target.
   heatmapTitle: "学习热力图",
-  heatmapHint: "每格是一天,颜色深浅是当天的学习痕迹数。只记录发生过的,不设目标。",
+  heatmapHint: "每格是一天,颜色越深,那天学得越多。",
   heatmapEmpty: "还没有痕迹。开始一段学习对话,这里会出现第一格。",
 
   // Small wins — concrete progress events (Amabile's progress principle stays in this
@@ -50,9 +50,9 @@ export const FEEDBACK_COPY = {
   settledWordsLabel: "词",
   settledShowMore: "展开全部",
 
-  // Trends — self-comparison only, no target lines (restored by Leo, spec 048 follow-up).
+  // Trends — self-comparison only, no target lines (design rationale stays here in the
+  // comment, never on screen — Leo 2026-08-16).
   trendsTitle: "趋势",
-  trendsHint: "只与过去的自己比;不设目标线。",
   trendsEmpty: "线条会随学习慢慢出现。",
   trendLayersTitle: "记忆 · 理解 · 直觉(估算)",
   trendLayersMemoryLabel: "记忆",

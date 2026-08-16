@@ -14,7 +14,7 @@ import {
   seedTeachScriptForConversation,
 } from "../../../lib/companionActions";
 import { getRepos } from "../../../lib/db";
-import { startFrontierSession } from "../../../lib/frontierActions";
+import { startLearningForConcept } from "../../../lib/focusLearning";
 import {
   computeVisibleTree,
   deriveKingdomNodes,
@@ -192,17 +192,10 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     if (cardNode === null) return;
     setOpening(true);
     try {
-      if (cardNode.state === "visited") {
-        const lastSeen = lastSeenByNode.get(cardNode.id);
-        if (lastSeen !== undefined) {
-          appEventBus.emit("app:navigateChat", { conversationId: lastSeen.conversationId });
-          return;
-        }
-      }
-      let conversationId: string;
       if (cardNode.state === "done") {
         // 用户主动讲的功能一律走伙伴（Leo 铁律）：Shichimi 发出邀请并提前备课，讲解
         // 发生在她的对话里。伙伴开关关闭时退回匿名教学会话，能力不消失。
+        let conversationId: string;
         if (useSettingsStore.getState().featureSwitches.companionChat) {
           conversationId = await openCompanionConversation("shichimi");
           await appendCompanionInvitation("shichimi", cardNode.label, "teach");
@@ -214,16 +207,22 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
         } else {
           conversationId = await startTeachSession(cardNode.label);
         }
-      } else {
-        conversationId = await startFrontierSession(
-          cardNode.label,
-          recommendation.primary?.nodeId === cardNode.id
-            ? recommendation.primary.reason.litPrerequisiteLabels
-            : [],
-        );
+        await useChatStore.getState().loadFromDatabase();
+        appEventBus.emit("app:navigateChat", { conversationId });
+        return;
       }
-      await useChatStore.getState().loadFromDatabase();
-      appEventBus.emit("app:navigateChat", { conversationId });
+      // 开始学习/继续都直进专注模式，AI 立刻开讲（spec 050 §2）；退出后落回宫殿。
+      const result = await startLearningForConcept(
+        cardNode.label,
+        recommendation.primary?.nodeId === cardNode.id
+          ? recommendation.primary.reason.litPrerequisiteLabels
+          : [],
+        useSettingsStore.getState().featureSwitches.focusExplain,
+      );
+      if (result.mode === "chat") {
+        await useChatStore.getState().loadFromDatabase();
+        appEventBus.emit("app:navigateChat", { conversationId: result.conversationId });
+      }
     } finally {
       setOpening(false);
     }
@@ -282,7 +281,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
             ← 回到岛屿
           </button>
         </div>
-        <div className="flex-1 overflow-auto bg-stone-50 p-4">
+        <div className="min-h-0 flex-1 bg-stone-50">
           <KingdomTreeSvg
             visibleNodes={visibleNodes}
             lateralEdges={lateralEdges}

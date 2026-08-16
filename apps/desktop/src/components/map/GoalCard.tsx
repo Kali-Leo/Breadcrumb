@@ -27,13 +27,24 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
           ))}
         </ul>
       )}
-      <button
-        type="button"
-        onClick={onOpenGoalView}
-        className="mt-2 rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
-      >
-        {goals.length === 0 ? "去建目标" : "打开目标对照"}
-      </button>
+      <div className="mt-2 flex flex-wrap gap-1">
+        <button
+          type="button"
+          onClick={onOpenGoalView}
+          className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600"
+        >
+          ＋ 添加目标
+        </button>
+        {goals.length > 0 && (
+          <button
+            type="button"
+            onClick={onOpenGoalView}
+            className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
+          >
+            打开目标对照
+          </button>
+        )}
+      </div>
     </section>
   );
 }

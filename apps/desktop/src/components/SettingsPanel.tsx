@@ -8,7 +8,6 @@ import { useState } from "react";
 import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
-import { DiglotSettingsSection } from "./DiglotSettingsSection";
 import { ResearchPanel } from "./ResearchPanel";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
 
@@ -148,8 +147,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               label="网络总开关"
             />
           </section>
-
-          <DiglotSettingsSection />
 
           <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
             <div>

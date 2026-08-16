@@ -30,6 +30,9 @@ export interface MapController {
    * Leo: the recommendation must surface as a bubble on every zoom level) — the containing
    * island at the world level, the containing kingdom once dived into that island. */
   setRecommendTarget(target: RecommendTarget | null): void;
+  /** The goal's cut of the tree made visible (spec 050 §7): places outside the set dim
+   * hard, places inside keep their weight. Null = no goal, everything normal. */
+  setGoalHighlight(placeNodeIds: ReadonlySet<string> | null): void;
   devJump(depth: number): void;
   tick(deltaSeconds: number): void;
   destroy(): void;
@@ -60,6 +63,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   const recommendLayer = new Container();
   worldRoot.addChild(recommendLayer);
   let recommendTarget: RecommendTarget | null = null;
+  let goalHighlight: ReadonlySet<string> | null = null;
 
   let world: WorldModel | null = null;
   let level: MapLevel = { kind: "world" };
@@ -82,6 +86,21 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     worldRoot.addChild(controller.scene.root);
     worldRoot.addChild(recommendLayer);
     drawRecommendMarker();
+    applyGoalDim();
+  }
+
+  /** The goal cut, visible: names outside the goal's places drop to a quarter of their
+   * weight; inside stays as-is. Runs after rebuilds and level changes too, since both
+   * reset label alphas. */
+  function applyGoalDim(): void {
+    const scene = controller.scene;
+    if (scene === null) return;
+    for (const label of scene.labels) {
+      label.text.alpha =
+        goalHighlight === null || goalHighlight.has(label.nodeId)
+          ? label.baseAlpha
+          : label.baseAlpha * 0.25;
+    }
   }
 
   /** One bubble at the label of whichever place holds the invitation on this level; the
@@ -99,16 +118,31 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     if (targetNodeId === null) return;
     const label = scene.labels.find((candidate) => candidate.nodeId === targetNodeId);
     if (label === undefined) return;
+    // A small speech bubble hovering above the place name, its tail pointing down at it
+    // (Leo: a bubble, not a bare ring). Final looks stay his; this is the legible placeholder.
     const marker = new Container();
-    marker.position.set(label.text.x, label.text.y);
-    marker.addChild(new Graphics().circle(0, 0, 18).stroke({ width: 2, color: 0xf59e0b }));
+    marker.position.set(label.text.x, label.text.y - 16);
     const tag = new Text({
       text: "下一步",
       style: new TextStyle({ fontSize: 12, fill: 0xb45309 }),
     });
-    tag.anchor.set(0.5, 1);
-    tag.position.set(0, -22);
-    marker.addChild(tag);
+    tag.anchor.set(0.5, 0.5);
+    const paddingX = 8;
+    const paddingY = 5;
+    const bubbleWidth = tag.width + paddingX * 2;
+    const bubbleHeight = tag.height + paddingY * 2;
+    const bubble = new Graphics()
+      .roundRect(-bubbleWidth / 2, -bubbleHeight, bubbleWidth, bubbleHeight, 7)
+      .fill(0xfffbeb)
+      .stroke({ width: 1.4, color: 0xf59e0b })
+      .poly([-4, -1, 4, -1, 0, 7])
+      .fill(0xfffbeb)
+      .moveTo(-4, -0.5)
+      .lineTo(0, 6.5)
+      .lineTo(4, -0.5)
+      .stroke({ width: 1.4, color: 0xf59e0b });
+    tag.position.set(0, -bubbleHeight / 2);
+    marker.addChild(bubble, tag);
     recommendLayer.addChild(marker);
   }
 
@@ -128,6 +162,10 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     setRecommendTarget(target) {
       recommendTarget = target;
       drawRecommendMarker();
+    },
+    setGoalHighlight(placeNodeIds) {
+      goalHighlight = placeNodeIds;
+      applyGoalDim();
     },
     devJump(depth) {
       if (world === null) return;
@@ -217,6 +255,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       if (snap) applyBandsInstant(scene);
       else beginAppearTransition(scene);
       drawRecommendMarker();
+      applyGoalDim();
     }
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);

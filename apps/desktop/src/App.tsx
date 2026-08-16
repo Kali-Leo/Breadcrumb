@@ -12,6 +12,7 @@ import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
+import { VocabPanel } from "./components/VocabPanel";
 import { runDedupSweep } from "./lib/dedupSweep";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { appEventBus, useChatStore } from "./stores/chatStore";
@@ -34,7 +35,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "vocab">("chat");
   const [companionsOpen, setCompanionsOpen] = useState(false);
   const settingsLoaded = useSettingsStore((state) => state.loaded);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
@@ -101,12 +102,14 @@ export default function App() {
           onOpenChat={() => setView("chat")}
           onOpenSettings={() => setView("settings")}
           onOpenMap={() => setView("map")}
+          onOpenVocab={() => setView("vocab")}
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1">
           {view === "chat" && <ChatView />}
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
+          {view === "vocab" && <VocabPanel />}
           {/* The companions roster pops out at the center area's lower-left, sized to its
               three rows; clicking anywhere else dismisses it (Leo's design). */}
           {companionsOpen && (

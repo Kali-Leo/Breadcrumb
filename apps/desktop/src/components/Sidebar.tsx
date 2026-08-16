@@ -9,14 +9,16 @@
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { PalaceRail } from "./map/PalaceRail";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map";
+  activeView: "chat" | "settings" | "map" | "vocab";
   companionsOpen: boolean;
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
+  onOpenVocab(): void;
   onToggleCompanions(): void;
 }
 
@@ -66,6 +68,7 @@ export function Sidebar({
   onOpenChat,
   onOpenSettings,
   onOpenMap,
+  onOpenVocab,
   onToggleCompanions,
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
@@ -87,7 +90,13 @@ export function Sidebar({
         ＋ 新的学习对话
       </button>
       <nav className="flex-1 overflow-y-auto px-2">
-        <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
+        {/* In the palace the left rail carries goals and continue-from-here (Leo, spec 050
+            §5); everywhere else it is the conversation history. */}
+        {activeView === "map" ? (
+          <PalaceRail />
+        ) : (
+          <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
+        )}
       </nav>
       <div className="flex items-center gap-1 border-t border-stone-100 px-3 py-2">
         <ConnectivityDot />
@@ -96,6 +105,7 @@ export function Sidebar({
         {(
           [
             ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],
+            ["📖", "词汇", onOpenVocab, activeView === "vocab"],
             ["⚙️", "设置", onOpenSettings, activeView === "settings"],
           ] as const
         ).map(([icon, name, onClick, active]) => (

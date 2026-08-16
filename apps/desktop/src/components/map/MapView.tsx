@@ -15,6 +15,7 @@ import type { ContinentAssignment } from "@breadcrumb/plugin-map";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/mapNamingActions";
+import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useMemoryStore } from "../../stores/memoryStore";
@@ -53,6 +54,11 @@ export function MapView() {
   useEffect(() => {
     if (feedbackLabEnabled) void useFeedbackStore.getState().loadAll();
   }, [feedbackLabEnabled]);
+
+  // The left rail's goal card opens the palace-internal goal view via the bus (spec 050 §5).
+  useEffect(() => {
+    return appEventBus.on("palace:openGoalView", () => setGoalViewOpen(true));
+  }, []);
 
   // Planner cold start (spec 047): the palace hosts the frontier/goal surfaces now, so the
   // one-time recompute that used to live in the lab happens here; event subscriptions keep
@@ -127,6 +133,32 @@ export function MapView() {
     }
     controllerRef.current?.setRecommendTarget(target);
   }, [ready, frontierCandidates, world, controllerRef]);
+
+  // The goal's cut of the tree becomes visible on the map (spec 050 §7): places holding
+  // any goal node keep their weight, everything else dims hard.
+  const goals = usePlannerStore((state) => state.goals);
+  const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
+  const learningMode = useSettingsStore((state) => state.learningMode);
+  useEffect(() => {
+    if (!ready) return;
+    const goal =
+      learningMode === "ranked"
+        ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
+        : null;
+    if (goal === null) {
+      controllerRef.current?.setGoalHighlight(null);
+      return;
+    }
+    const goalNodeIds = new Set(JSON.parse(goal.node_ids_json) as string[]);
+    const placeIds = new Set<string>();
+    for (const island of world.islands) {
+      if (island.memberNodeIds.some((id) => goalNodeIds.has(id))) placeIds.add(island.nodeId);
+      for (const kingdom of island.kingdoms) {
+        if (kingdom.memberNodeIds.some((id) => goalNodeIds.has(id))) placeIds.add(kingdom.nodeId);
+      }
+    }
+    controllerRef.current?.setGoalHighlight(placeIds);
+  }, [ready, learningMode, goals, selectedGoalId, world, controllerRef]);
 
   // Scene rebuilds on data changes; the renderer and camera model stay alive.
   useEffect(() => {
@@ -216,12 +248,7 @@ export function MapView() {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <MapInfoPanel
-            world={world}
-            hover={hover}
-            level={level}
-            onOpenGoalView={() => setGoalViewOpen(true)}
-          />
+          <MapInfoPanel hover={hover} level={level} />
         </div>
       </div>
       {goalViewOpen && (

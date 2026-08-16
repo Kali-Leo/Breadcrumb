@@ -6,19 +6,13 @@
  * the bottom in every state.
  * Main exports: MapInfoPanel.
  */
-import type { WorldModel } from "@breadcrumb/plugin-map";
-import { useSettingsStore } from "../../stores/settingsStore";
-import { ContinueCard } from "./ContinueCard";
-import { GoalCard } from "./GoalCard";
-import { findIsland, type MapLevel } from "./levels";
+import type { MapLevel } from "./levels";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
 
 interface MapInfoPanelProps {
-  world: WorldModel;
   hover: HoverInfo | null;
   level: MapLevel;
-  onOpenGoalView(): void;
 }
 
 const KIND_NAMES = { island: "岛屿", kingdom: "国度" } as const;
@@ -64,32 +58,15 @@ function HoverCards({ hover }: { hover: HoverInfo }) {
   );
 }
 
-export function MapInfoPanel({ world, hover, level, onOpenGoalView }: MapInfoPanelProps) {
-  const learningMode = useSettingsStore((state) => state.learningMode);
-
+export function MapInfoPanel({ hover, level }: MapInfoPanelProps) {
   return (
     <aside className="flex h-full w-full flex-col border-l border-stone-200 bg-stone-50">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
         {hover !== null ? (
           <HoverCards hover={hover} />
         ) : level.kind === "world" ? (
-          <>
-            <MirrorStack />
-            <ContinueCard />
-            {learningMode === "ranked" && <GoalCard onOpenGoalView={onOpenGoalView} />}
-          </>
-        ) : (
-          (() => {
-            const island = findIsland(world, level.islandId);
-            return (
-              <>
-                <ContinueCard
-                  filterNodeIds={island === undefined ? undefined : new Set(island.memberNodeIds)}
-                />
-              </>
-            );
-          })()
-        )}
+          <MirrorStack />
+        ) : null}
       </div>
       {/* Pinned in every state (Leo: the hints must not disappear when hovering). */}
       <div className="shrink-0 border-t border-stone-200 p-3 text-xs leading-5 text-stone-500">

@@ -50,6 +50,9 @@ export interface BreadcrumbEventMap {
   /** Ask the shell to switch to the chat view with a conversation open — used by the
    * comparison tree's practice discussions (spec 026). */
   "app:navigateChat": { conversationId: string };
+  /** Ask the palace to open its goal view — emitted by the sidebar's goal card, which
+   * lives outside the palace component tree (spec 050 §5). */
+  "palace:openGoalView": Record<string, never>;
   /** Fired after new knowledge_edges rows land (spec 010); spec 012's experiment panel
    * refreshes on this instead of polling. */
   "knowledge:edgesUpdated": { addedEdgeIds: string[] };

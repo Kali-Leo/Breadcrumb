@@ -6,9 +6,10 @@
  * Main exports: ContinueCard.
  */
 import { useState } from "react";
-import { startFrontierSession } from "../../lib/frontierActions";
+import { startLearningForConcept } from "../../lib/focusLearning";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { usePlannerStore } from "../../stores/plannerStore";
+import { useSettingsStore } from "../../stores/settingsStore";
 
 const SHOWN_LIMIT = 3;
 
@@ -31,9 +32,16 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
   async function open(nodeId: string, label: string, litLabels: readonly string[]) {
     setOpeningNodeId(nodeId);
     try {
-      const conversationId = await startFrontierSession(label, litLabels);
-      await useChatStore.getState().loadFromDatabase();
-      appEventBus.emit("app:navigateChat", { conversationId });
+      // Straight into focus mode — the AI starts explaining right away (spec 050 §2).
+      const result = await startLearningForConcept(
+        label,
+        litLabels,
+        useSettingsStore.getState().featureSwitches.focusExplain,
+      );
+      if (result.mode === "chat") {
+        await useChatStore.getState().loadFromDatabase();
+        appEventBus.emit("app:navigateChat", { conversationId: result.conversationId });
+      }
     } finally {
       setOpeningNodeId(null);
     }
