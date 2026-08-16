@@ -22,7 +22,7 @@ import {
 import { recordCompanionMemoryForFinishedRound } from "../lib/companionMemoryActions";
 import { getRepos } from "../lib/db";
 import { pickTeachCandidates } from "../lib/teachActions";
-import { newId, nowIso, todayLocalMidnightIso } from "../lib/time";
+import { newId, nowIso, onLocalDayChange, todayLocalMidnightIso } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
@@ -42,6 +42,29 @@ let gateRunInFlight = false;
 /** Conversations whose helper-completion check is in flight — two rounds finishing close
  * together must not thank twice. */
 const completingConversationIds = new Set<string>();
+/** Guards the day-change/switch-toggle re-gate wiring below against being registered twice
+ * (StrictMode double-invokes initialize()) — module scope survives both invocations. */
+let dailyGateTriggersWired = false;
+
+/** Re-runs the daily-helper gate when the local day rolls over (an app left open across
+ * midnight must not keep yesterday's roster until restart) and when the companionChat
+ * switch flips off→on (toggling it back on must not leave helpers empty until restart).
+ * Wired once per module lifetime from initialize(). */
+function wireDailyHelperGateTriggers(): void {
+  if (dailyGateTriggersWired) return;
+  dailyGateTriggersWired = true;
+  onLocalDayChange(() => {
+    void useCompanionStore.getState().refreshDailyHelpers();
+  });
+  let previousCompanionChatEnabled = useSettingsStore.getState().featureSwitches.companionChat;
+  useSettingsStore.subscribe((state) => {
+    const enabled = state.featureSwitches.companionChat;
+    if (enabled && !previousCompanionChatEnabled) {
+      void useCompanionStore.getState().refreshDailyHelpers();
+    }
+    previousCompanionChatEnabled = enabled;
+  });
+}
 
 export function helperTopicOf(row: CompanionProposalRow): string {
   return row.topic;
@@ -123,6 +146,7 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   ...INITIAL_BREAK_REMINDER_STATE,
 
   async initialize() {
+    wireDailyHelperGateTriggers();
     await get().refreshDailyHelpers();
   },
 

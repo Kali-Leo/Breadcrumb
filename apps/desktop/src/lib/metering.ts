@@ -1,17 +1,34 @@
 /**
- * Purpose: shared cost metering — records one LLM call row (billed via the builtin price
- * table; unknown models record zero) so every feature's spend shows up in the meters.
+ * Purpose: the single writer for llm_calls rows — every metered call site (companion
+ * memory, diglot refine, factcheck, edge/interest extraction, the chat round via
+ * chatRoundMetering, ...) goes through this one row-construction path so pricing and
+ * fallback-currency logic can't drift between call sites the way it already had (this file
+ * defaulted unknown models to USD; chatRoundMetering.ts's hand-rolled copy defaulted to
+ * CNY — a real bug, mixed-currency ledgers for anyone on an unlisted model). Also flags a
+ * metering under-count instead of silently trusting it.
  * Main exports: recordMeteredCall.
  */
 import { BUILTIN_MODEL_PRICES, calculateCostMicros, type TokenUsage } from "@breadcrumb/core-llm";
 import { getRepos } from "./db";
+import { recordAiFailure } from "./failureLog";
 import { newId, nowIso } from "./time";
+
+/** Fallback currency for models missing from BUILTIN_MODEL_PRICES. Every builtin entry in
+ * packages/core-llm/src/pricing.ts (deepseek-v4-flash, deepseek-v4-pro) is denominated in
+ * USD — CNY exists in the ModelPrice union's type but no builtin price uses it — so USD is
+ * the currency consistent with the documented pricing model, not an arbitrary pick. */
+const FALLBACK_CURRENCY = "USD";
 
 export async function recordMeteredCall(input: {
   purpose: string;
   model: string;
   conversationId: string | null;
   usage: TokenUsage;
+  /** Whether the provider's response actually had content, independent of what `usage`
+   * reports — pass this when the caller can see the raw response text, so a 0/0-token
+   * response that was NOT actually empty gets flagged rather than silently recorded as a
+   * free call. Omit when the caller can't tell (the row is still recorded as-is either way). */
+  responseHadContent?: boolean;
 }): Promise<void> {
   const repos = await getRepos();
   const price = BUILTIN_MODEL_PRICES[input.model];
@@ -23,7 +40,20 @@ export async function recordMeteredCall(input: {
     input_tokens: input.usage.inputTokens,
     output_tokens: input.usage.outputTokens,
     cost_micros: price ? calculateCostMicros(input.usage, price) : 0,
-    currency: price?.currency ?? "USD",
+    currency: price?.currency ?? FALLBACK_CURRENCY,
     created_at: nowIso(),
   });
+  // Some providers ignore stream_options usage reporting and report 0/0 tokens on a real,
+  // non-empty response — recording that as a free call would silently understate spend, so
+  // instead of trusting it we surface the gap where it's visible (spec 014's debug table).
+  const meterUndercounted =
+    input.usage.inputTokens === 0 &&
+    input.usage.outputTokens === 0 &&
+    input.responseHadContent === true;
+  if (meterUndercounted) {
+    await recordAiFailure(
+      "metering",
+      `zero input/output tokens recorded for purpose "${input.purpose}" (model "${input.model}") despite a non-empty response — the provider likely ignored stream_options usage reporting, so this call's cost is under-counted as 0`,
+    );
+  }
 }

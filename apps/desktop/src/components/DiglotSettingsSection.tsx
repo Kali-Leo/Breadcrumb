@@ -5,6 +5,7 @@
  * Main exports: DiglotSettingsSection.
  */
 import { DIGLOT_UI_COPY, GUESS_LEVEL_BASE, type GuessLevel } from "@breadcrumb/plugin-diglot-weave";
+import { type KeyboardEvent, useEffect, useState } from "react";
 import { useDiglotStore } from "../stores/diglotStore";
 
 const GUESS_LEVEL_LABELS: Record<GuessLevel, string> = {
@@ -18,6 +19,29 @@ export function DiglotSettingsSection() {
   const saveSettings = useDiglotStore((state) => state.saveSettings);
   const cardsByLemma = useDiglotStore((state) => state.cardsByLemma);
   const newToday = useDiglotStore((state) => state.newWordsIntroducedToday);
+
+  // Text inputs commit on blur/Enter (macOS System Settings model), not per keystroke —
+  // per-keystroke saves each wiped and re-wove every message (spec: saveSettings only
+  // invalidates on WEAVE_AFFECTING_SETTING_KEYS now, but a 40-char path is still 40 writes
+  // and, while llmRefineEnabled, billed LLM refine calls for keys that don't even affect
+  // weaving). Checkboxes/sliders below keep instant apply — they're one discrete action.
+  const [piperPathDraft, setPiperPathDraft] = useState(settings.piperPath);
+  const [piperModelPathDraft, setPiperModelPathDraft] = useState(settings.piperModelPath);
+  useEffect(() => setPiperPathDraft(settings.piperPath), [settings.piperPath]);
+  useEffect(() => setPiperModelPathDraft(settings.piperModelPath), [settings.piperModelPath]);
+
+  const commitPiperPath = (): void => {
+    if (piperPathDraft !== settings.piperPath) void saveSettings({ piperPath: piperPathDraft });
+  };
+  const commitPiperModelPath = (): void => {
+    if (piperModelPathDraft !== settings.piperModelPath) {
+      void saveSettings({ piperModelPath: piperModelPathDraft });
+    }
+  };
+  // Enter commits by blurring — the blur handler is the single commit path for both inputs.
+  const blurOnEnter = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === "Enter") e.currentTarget.blur();
+  };
 
   const inputClass =
     "w-full rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400";
@@ -112,8 +136,10 @@ export function DiglotSettingsSection() {
                 <label className="block space-y-1">
                   {DIGLOT_UI_COPY.piperPathLabel}
                   <input
-                    value={settings.piperPath}
-                    onChange={(e) => void saveSettings({ piperPath: e.target.value })}
+                    value={piperPathDraft}
+                    onChange={(e) => setPiperPathDraft(e.target.value)}
+                    onBlur={commitPiperPath}
+                    onKeyDown={blurOnEnter}
                     className={inputClass}
                     placeholder="/usr/bin/piper(留空则用系统发音)"
                   />
@@ -121,8 +147,10 @@ export function DiglotSettingsSection() {
                 <label className="block space-y-1">
                   {DIGLOT_UI_COPY.piperModelLabel}
                   <input
-                    value={settings.piperModelPath}
-                    onChange={(e) => void saveSettings({ piperModelPath: e.target.value })}
+                    value={piperModelPathDraft}
+                    onChange={(e) => setPiperModelPathDraft(e.target.value)}
+                    onBlur={commitPiperModelPath}
+                    onKeyDown={blurOnEnter}
                     className={inputClass}
                     placeholder="~/piper-voices/en_US-lessac-medium.onnx"
                   />

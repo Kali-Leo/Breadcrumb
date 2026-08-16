@@ -20,15 +20,33 @@ import { appEventBus } from "./chatStore";
 import { usePlannerStore } from "./plannerStore";
 import { useSettingsStore } from "./settingsStore";
 
+/** Per-profile view state (VS Code explorer model): which keys are expanded and which
+ * node's detail panel is open. Kept so switching profiles to peek and back doesn't lose
+ * a deep expansion. */
+interface CompareProfileViewState {
+  expandedKeys: ReadonlySet<string>;
+  detailKey: string | null;
+}
+
+const EMPTY_PROFILE_VIEW_STATE: CompareProfileViewState = {
+  expandedKeys: new Set<string>(),
+  detailKey: null,
+};
+
 interface CompareState {
   profiles: ComparisonProfileRow[];
   selectedProfileId: string | null;
   /** The profile's overlap tree under one visible root node (the profile itself). */
   tree: OverlapNode | null;
-  /** Keys the user has opened — initial view shows roots only (spec 023 §1). */
+  /** Keys the user has opened — initial view shows roots only (spec 023 §1). Mirrors the
+   * selected profile's entry in viewStateByProfile (chatStore sessions/mirror pattern). */
   expandedKeys: ReadonlySet<string>;
-  /** Node whose match/source details are shown below the tree. */
+  /** Node whose match/source details are shown below the tree. Mirrors the selected
+   * profile's entry in viewStateByProfile. */
   detailKey: string | null;
+  /** Saved view state for every profile visited this session, keyed by profile id — restored
+   * on return instead of resetting to roots-only. */
+  viewStateByProfile: ReadonlyMap<string, CompareProfileViewState>;
   loading: boolean;
   building: boolean;
   /** True while the background semantic alignment for the selected profile runs — drives the
@@ -77,12 +95,19 @@ async function sweepInBackground(
   }
 }
 
+function mirrorOf(
+  viewState: CompareProfileViewState,
+): Pick<CompareState, "expandedKeys" | "detailKey"> {
+  return { expandedKeys: viewState.expandedKeys, detailKey: viewState.detailKey };
+}
+
 export const useCompareStore = create<CompareState>((set, get) => ({
   profiles: [],
   selectedProfileId: null,
   tree: null,
   expandedKeys: new Set<string>(),
   detailKey: null,
+  viewStateByProfile: new Map<string, CompareProfileViewState>(),
   loading: false,
   building: false,
   aligning: false,
@@ -111,7 +136,19 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   },
 
   async selectProfile(profileId) {
-    set({ loading: true, detailKey: null });
+    // Save the outgoing profile's expansion/detail state before switching (VS Code
+    // explorer model) — a peek at another profile must not lose a deep expansion. The
+    // restore happens atomically with selectedProfileId/tree below so old and new state
+    // never render mixed together.
+    const outgoing = get().selectedProfileId;
+    const viewStateByProfile = new Map(get().viewStateByProfile);
+    if (outgoing !== null) {
+      viewStateByProfile.set(outgoing, {
+        expandedKeys: get().expandedKeys,
+        detailKey: get().detailKey,
+      });
+    }
+    set({ loading: true, viewStateByProfile });
     try {
       // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
       // alignment runs behind it and quietly patches the tree when new verdicts land.
@@ -120,13 +157,14 @@ export const useCompareStore = create<CompareState>((set, get) => ({
         computeComparisonTree(profileId),
         repos.practice.listScores(),
       ]);
+      const restored = viewStateByProfile.get(profileId) ?? EMPTY_PROFILE_VIEW_STATE;
       set({
         selectedProfileId: profileId,
         tree,
         scoreByItemId: new Map(scores.map((row) => [row.item_id, row.score])),
-        expandedKeys: new Set<string>(),
         loading: false,
         goalNote: null,
+        ...mirrorOf(restored),
       });
       void sweepInBackground(
         async () => {

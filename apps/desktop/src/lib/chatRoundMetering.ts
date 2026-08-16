@@ -1,12 +1,15 @@
 /**
- * Purpose: records one chat round's llm_calls row and refreshes the three cost views chatStore
- * shows (conversation total / today total / the sidebar's conversation list) — split out to
- * keep chatStore.ts's sendMessage under the file-size cap; nothing companion-specific here.
+ * Purpose: records one chat round's llm_calls row (via metering.ts's single writer, so this
+ * path can't drift from every other metered call's pricing/fallback-currency logic) and
+ * refreshes the three cost views chatStore shows (conversation total / today total / the
+ * sidebar's conversation list) — split out to keep chatStore.ts's sendMessage under the
+ * file-size cap; nothing companion-specific here.
  * Main exports: recordRoundCost.
  */
-import { BUILTIN_MODEL_PRICES, calculateCostMicros, type TokenUsage } from "@breadcrumb/core-llm";
+import type { TokenUsage } from "@breadcrumb/core-llm";
 import type { Repos } from "./db";
-import { newId, nowIso, todayLocalMidnightIso } from "./time";
+import { recordMeteredCall } from "./metering";
+import { todayLocalMidnightIso } from "./time";
 
 export interface RoundCostSnapshot {
   conversationCost: Awaited<ReturnType<Repos["llmCalls"]["sumCostForConversation"]>>;
@@ -16,19 +19,23 @@ export interface RoundCostSnapshot {
 
 export async function recordRoundCost(
   repos: Pick<Repos, "llmCalls" | "conversations">,
-  params: { conversationId: string; purpose: string; model: string; usage: TokenUsage },
+  params: {
+    conversationId: string;
+    purpose: string;
+    model: string;
+    usage: TokenUsage;
+    /** See recordMeteredCall — forwarded when the caller has the raw response text handy;
+     * omitted callers (e.g. the main round path, which doesn't plumb it through today) just
+     * skip the under-count check rather than misfiring on missing data. */
+    responseHadContent?: boolean;
+  },
 ): Promise<RoundCostSnapshot> {
-  const price = BUILTIN_MODEL_PRICES[params.model];
-  await repos.llmCalls.record({
-    id: newId(),
-    conversation_id: params.conversationId,
+  await recordMeteredCall({
     purpose: params.purpose,
     model: params.model,
-    input_tokens: params.usage.inputTokens,
-    output_tokens: params.usage.outputTokens,
-    cost_micros: price ? calculateCostMicros(params.usage, price) : 0,
-    currency: price?.currency ?? "CNY",
-    created_at: nowIso(),
+    conversationId: params.conversationId,
+    usage: params.usage,
+    responseHadContent: params.responseHadContent,
   });
   const [conversationCost, todayCost, conversations] = await Promise.all([
     repos.llmCalls.sumCostForConversation(params.conversationId),

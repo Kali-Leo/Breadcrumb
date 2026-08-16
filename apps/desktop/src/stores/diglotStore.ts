@@ -27,7 +27,7 @@ import {
   loadCards,
   weaveAssistantMessage,
 } from "../lib/diglotWeave";
-import { nowIso } from "../lib/time";
+import { nowIso, onLocalDayChange } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
@@ -58,9 +58,64 @@ export interface DiglotSettings {
   fsrsFittedReviewCount: number;
 }
 
-/** Bumped on every saveSettings — in-flight weaves compare it to discard stale output. */
+/** Bumped when a weave-affecting setting changes — in-flight weaves compare it to discard
+ * stale output. */
 let weaveEpoch = 0;
 const SETTINGS_KEY = "diglotSettings";
+
+/** Settings keys whose value actually feeds weave PATCH computation — traced through
+ * lib/diglotWeave.ts's weaveAssistantMessage, lib/diglotRefine.ts's refineWeavePatches and
+ * the scheduler in packages/plugin-diglot-weave/src/scheduler.ts:
+ *  - density: ScheduleInput.density -> scheduler.ts budgetFor() (replacement count budget)
+ *  - newWordDailyBase: weaveAssistantMessage's adaptiveNewWordCap base cap
+ *  - introductionRankFloor: weaveAssistantMessage filters the introductionRank map by it
+ *  - llmRefineEnabled: ensureWoven's gate on calling refineWeavePatches at all
+ *  - pairId: selects the loaded language pack (loadBundledPack) that candidates/tokenize/
+ *    replacement all read from
+ * Everything else in DiglotSettings never reaches this path: ttsEnabled/piperPath/
+ * piperModelPath are audio-only (no weave input); enabled only gates whether ensureWoven
+ * runs at all, not what it computes, so cached patches for already-woven messages stay
+ * correct across a disable/re-enable; guessLevel only feeds shouldAskGuess/
+ * computeGuessProbability (guess-card frequency), not patch selection; placementStep only
+ * modulates how far recordSignal nudges introductionRankFloor, it isn't itself a scheduler
+ * input; fsrsParams/fsrsFittedReviewCount reconfigure the shared FSRS scheduler via
+ * configureDiglotScheduler, which today is only called from loadFromDatabase and the
+ * background fit job (both bypass saveSettings), so there is no saveSettings path that
+ * changes them. */
+const WEAVE_AFFECTING_SETTING_KEYS: readonly (keyof DiglotSettings)[] = [
+  "density",
+  "newWordDailyBase",
+  "introductionRankFloor",
+  "llmRefineEnabled",
+  "pairId",
+];
+
+/** Guards the daily new-word counter's day-change wiring against double registration
+ * (StrictMode double-invokes loadFromDatabase via App.tsx's effect). */
+let dailyWordCounterTriggerWired = false;
+
+function wireDailyWordCounterTrigger(): void {
+  if (dailyWordCounterTriggerWired) return;
+  dailyWordCounterTriggerWired = true;
+  onLocalDayChange(() => {
+    void recomputeNewWordsIntroducedToday();
+  });
+}
+
+/** Recomputes today's introduced-word count from the DB — called on local-day rollover so
+ * an app kept open across midnight starts a fresh budget instead of carrying yesterday's
+ * count (and yesterday's exhausted budget) until restart. */
+async function recomputeNewWordsIntroducedToday(): Promise<void> {
+  const { settings, loaded } = useDiglotStore.getState();
+  if (!settings.enabled || loaded === null) return;
+  const repos = await getRepos();
+  const states = await repos.diglot.listStates(settings.pairId);
+  const today = nowIso().slice(0, 10);
+  useDiglotStore.setState({
+    newWordsIntroducedToday: states.filter((s) => s.introduced_at.startsWith(today)).length,
+  });
+}
+
 const DEFAULT_SETTINGS: DiglotSettings = {
   enabled: false,
   pairId: "zh:en",
@@ -124,6 +179,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   },
 
   async loadFromDatabase() {
+    wireDailyWordCounterTrigger();
     const repos = await getRepos();
     const stored = await repos.settings.get<DiglotSettings>(SETTINGS_KEY);
     const settings = { ...DEFAULT_SETTINGS, ...stored };
@@ -143,7 +199,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     });
     void get().refreshConfusions();
     // Personal memory model (vision/09 #1): apply fitted parameters, refit in background.
-    configureDiglotScheduler(settings.fsrsParams ?? undefined);
+    configureDiglotScheduler(settings.pairId, settings.fsrsParams ?? undefined);
     void (async () => {
       const { maybeFitFsrsParameters } = await import("../lib/fsrsFit");
       const fitted = await maybeFitFsrsParameters(settings.pairId, settings.fsrsFittedReviewCount);
@@ -168,13 +224,23 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   },
 
   async saveSettings(partial) {
-    const settings = { ...get().settings, ...partial };
+    const previous = get().settings;
+    const settings = { ...previous, ...partial };
     const repos = await getRepos();
     await repos.settings.set(SETTINGS_KEY, settings, nowIso());
-    // Any setting change invalidates woven output; re-enable reloads pack and cards. The
+    // Only a change to a WEAVE_AFFECTING_SETTING_KEYS key invalidates woven output — e.g.
+    // TTS/piper text fields don't feed patch computation at all, so saving them must not
+    // wipe and re-weave (with billed LLM refine calls) every already-rendered message. The
     // epoch bump makes every in-flight weave discard its (old-settings) result.
-    weaveEpoch += 1;
-    set({ settings, patchesByMessage: new Map() });
+    const weaveAffected = WEAVE_AFFECTING_SETTING_KEYS.some(
+      (key) => previous[key] !== settings[key],
+    );
+    if (weaveAffected) {
+      weaveEpoch += 1;
+      set({ settings, patchesByMessage: new Map() });
+    } else {
+      set({ settings });
+    }
     if (settings.enabled && get().loaded === null) await get().loadFromDatabase();
   },
 
@@ -257,6 +323,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   shouldAskGuess(lemma) {
     const state = get();
     const probability = computeGuessProbability({
+      pairId: state.settings.pairId,
       card: state.cardsByLemma.get(lemma) ?? null,
       now: new Date(),
       level: state.settings.guessLevel,
