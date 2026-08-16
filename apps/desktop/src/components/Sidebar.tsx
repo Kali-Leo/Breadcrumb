@@ -98,30 +98,32 @@ export function Sidebar({
           <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
         )}
       </nav>
-      <div className="flex items-center gap-1 border-t border-stone-100 px-3 py-2">
+      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友. */}
+      <div className="flex items-center border-t border-stone-100 px-2 py-2">
         <ConnectivityDot />
-        <span className="flex-1" />
-        <CompanionsButton open={companionsOpen} onToggle={onToggleCompanions} />
-        {(
-          [
-            ["🏛️", "记忆宫殿", onOpenMap, activeView === "map"],
-            ["📖", "词汇", onOpenVocab, activeView === "vocab"],
-            ["⚙️", "设置", onOpenSettings, activeView === "settings"],
-          ] as const
-        ).map(([icon, name, onClick, active]) => (
-          <button
-            key={name}
-            type="button"
-            onClick={onClick}
-            title={name}
-            aria-label={name}
-            className={`rounded-lg px-2 py-1 text-base transition-colors ${
-              active ? "bg-amber-100" : "hover:bg-stone-100"
-            }`}
-          >
-            {icon}
-          </button>
-        ))}
+        <div className="flex flex-1 items-center justify-evenly">
+          {(
+            [
+              ["⚙️", "设置", onOpenSettings, activeView === "settings"],
+              ["Aa", "词汇", onOpenVocab, activeView === "vocab"],
+              ["🗺️", "地图", onOpenMap, activeView === "map"],
+            ] as const
+          ).map(([icon, name, onClick, active]) => (
+            <button
+              key={name}
+              type="button"
+              onClick={onClick}
+              title={name}
+              aria-label={name}
+              className={`rounded-lg px-2 py-1 text-base transition-colors ${
+                active ? "bg-amber-100" : "hover:bg-stone-100"
+              }`}
+            >
+              {icon}
+            </button>
+          ))}
+          <CompanionsButton open={companionsOpen} onToggle={onToggleCompanions} />
+        </div>
       </div>
     </aside>
   );

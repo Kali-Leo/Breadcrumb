@@ -80,7 +80,7 @@ describe("companion copy gates", () => {
     COMPANION_COPY.aiLabel,
     COMPANION_COPY.invitation("二分查找"),
     COMPANION_COPY.reunionInvitation("二分查找"),
-    COMPANION_COPY.helperRowName("二分查找"),
+    COMPANION_COPY.helperName("二分查找"),
     COMPANION_COPY.helperThanks("二分查找"),
     COMPANION_COPY.rosterEmpty,
     CRISIS_RESPONSE,

@@ -197,7 +197,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
         if (useSettingsStore.getState().featureSwitches.companionChat) {
           appEventBus.emit("companion:openPopup", {
             conversationId,
-            title: COMPANION_COPY.helperRowName(cardNode.label),
+            title: COMPANION_COPY.helperName(cardNode.label),
           });
         } else {
           appEventBus.emit("app:navigateChat", { conversationId });

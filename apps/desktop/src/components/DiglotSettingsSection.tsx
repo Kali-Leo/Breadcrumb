@@ -55,7 +55,7 @@ export function DiglotSettingsSection() {
         </div>
         <button
           type="button"
-          aria-label="语言织入开关"
+          aria-label="语言学习开关"
           onClick={() => void saveSettings({ enabled: !settings.enabled })}
           className={`h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors ${settings.enabled ? "bg-amber-500" : "bg-stone-300"}`}
         >

@@ -29,7 +29,7 @@ export function CompanionSection({ onPicked }: CompanionSectionProps) {
     const conversationId = await startHelperConversation(helperId, topic);
     appEventBus.emit("companion:openPopup", {
       conversationId,
-      title: COMPANION_COPY.helperRowName(topic),
+      title: COMPANION_COPY.helperName(topic),
     });
     onPicked();
   };
@@ -49,7 +49,8 @@ export function CompanionSection({ onPicked }: CompanionSectionProps) {
                 className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-stone-600 hover:bg-stone-100"
               >
                 <span className="flex items-center gap-2">
-                  <span className="truncate">{COMPANION_COPY.helperRowName(helper.topic)}</span>
+                  <span className="shrink-0">{COMPANION_COPY.helperName(helper.topic)}</span>
+                  <span className="truncate text-xs text-stone-400">{helper.topic}</span>
                   {!seenHelperIds.has(helper.companion_id) && (
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
                   )}

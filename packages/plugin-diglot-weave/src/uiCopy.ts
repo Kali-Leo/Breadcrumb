@@ -12,7 +12,7 @@ export const DIGLOT_UI_COPY = {
   guessPlaceholder: "你的猜测",
   guessSubmit: "提交",
   alsoTranslatedAs: "也作",
-  settingsTitle: "语言织入(学外语)",
+  settingsTitle: "语言学习",
   settingsHint:
     "对话里少量词语显示为目标语言;原文不变,随时可关。基础织入全本地零 token;「智能替换」进阶层在开关与计价页单独开关、单独看账。",
   densityLabel: "替换密度",
@@ -21,7 +21,7 @@ export const DIGLOT_UI_COPY = {
   guessLevelLow: "少",
   guessLevelStandard: "标准",
   guessLevelHigh: "多",
-  ttsLabel: "读给我听(在这台电脑上发音)",
+  ttsLabel: "朗读",
   contrastLabel: "易混对比",
   placementStatus: "新词难度起点",
   placementNote: "会随你的阅读自动调整,不用管它",

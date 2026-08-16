@@ -47,7 +47,6 @@ function VocabTrendCard() {
 export function VocabPanel() {
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto bg-stone-50 p-6">
-      <h2 className="text-lg font-semibold text-stone-700">词汇</h2>
       <DiglotSettingsSection />
       <VocabTrendCard />
     </div>

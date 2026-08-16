@@ -31,7 +31,7 @@ export function CompanionChatBanners() {
   // Daily helpers have no fixed card — their display name derives from the topic (spec 050 §9).
   const helperName =
     card === undefined && activeTitle !== null
-      ? COMPANION_COPY.helperRowName(teachTopicFromTitle(activeTitle))
+      ? COMPANION_COPY.helperName(teachTopicFromTitle(activeTitle))
       : null;
   const displayName = card?.data.name ?? helperName;
 

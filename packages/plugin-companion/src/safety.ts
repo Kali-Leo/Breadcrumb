@@ -126,9 +126,51 @@ export const COMPANION_COPY = {
   reunionInvitation: (topic: string): string =>
     `「${topic}」有阵子没一起聊过了。想回顾的话,回我一句就行,我们从你还记得的部分开始。`,
   /** Daily helper roster (spec 050 §9): each helper is a peer who wants to understand one
-   * concept — never a mentor, never above the learner. */
-  helperRowName: (topic: string): string => `想弄懂「${topic}」的同学`,
+   * concept — never a mentor, never above the learner. Helpers go by person names (Leo
+   * 2026-08-16 — the messenger convention; the topic rides along as secondary text), picked
+   * deterministically from the pool so the same helper always keeps the same name. */
+  helperName: (topic: string): string =>
+    HELPER_PERSON_NAMES[hashText(topic) % HELPER_PERSON_NAMES.length] as string,
   helperThanks: (topic: string): string =>
     `谢谢你!「${topic}」这块我明白多了。我先去自己练练,回头见。`,
   rosterEmpty: "今天没有来请教的伙伴了。",
 } as const;
+
+/** Common two-character given names, plain and era-neutral — enough that three concurrent
+ * helpers rarely collide, few enough to feel like recurring classmates. */
+const HELPER_PERSON_NAMES = [
+  "小雨",
+  "小舟",
+  "小柏",
+  "小禾",
+  "小砚",
+  "小岚",
+  "小樾",
+  "小榛",
+  "阿澄",
+  "阿荞",
+  "阿枫",
+  "阿桐",
+  "阿萤",
+  "阿洲",
+  "阿棠",
+  "阿橙",
+  "小杏",
+  "小竹",
+  "小葵",
+  "小梧",
+  "阿栗",
+  "阿蓝",
+  "阿莞",
+  "阿汀",
+] as const;
+
+/** FNV-1a over UTF-16 code units — tiny, dependency-free, stable across sessions. */
+function hashText(text: string): number {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
