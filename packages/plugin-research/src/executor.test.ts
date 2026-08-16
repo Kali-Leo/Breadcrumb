@@ -5,6 +5,7 @@
  */
 
 import type { SqlClient } from "@breadcrumb/core-db";
+import { withSequentialTransactions } from "@breadcrumb/core-db";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { describe, expect, it } from "vitest";
 import { runPendingResearchTasks, TASK_TIME_BUDGET_MS } from "./executor";
@@ -56,7 +57,7 @@ function makeFakeSql(options?: { knowledgeNodeCount?: number }) {
   const knowledgeNodeCount = options?.knowledgeNodeCount ?? 3;
   const taskRuns: TaskRunRow[] = [];
   const results: ResultRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: async <Row>(sql: string): Promise<Row[]> => {
       if (sql.includes("FROM research_task_runs")) return taskRuns as unknown as Row[];
       if (sql.includes("COUNT(*) AS n FROM knowledge_nodes")) {
@@ -105,7 +106,7 @@ function makeFakeSql(options?: { knowledgeNodeCount?: number }) {
         });
       }
     },
-  };
+  });
   return { client, taskRuns, results };
 }
 

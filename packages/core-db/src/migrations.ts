@@ -817,12 +817,17 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
   const applied = new Set(appliedRows.map((row) => row.id));
   for (const migration of MIGRATIONS) {
     if (applied.has(migration.id)) continue;
-    for (const statement of migration.statements) {
-      await sql.execute(statement);
-    }
-    await sql.execute("INSERT INTO _migrations (id, applied_at) VALUES (?, ?)", [
-      migration.id,
-      new Date().toISOString(),
+    // One transaction per migration, bookkeeping row included: a crash mid-migration leaves
+    // it cleanly unapplied instead of half-applied (which would re-run on next boot and
+    // abort on "table already exists", bricking startup). Safe because every migration here
+    // is plain DDL/DML — SQLite allows all of it, including 0027's table rebuild, inside a
+    // transaction (no PRAGMA/VACUUM/ATTACH statements exist in this list).
+    await sql.executeTransaction([
+      ...migration.statements.map((statement) => ({ sql: statement })),
+      {
+        sql: "INSERT INTO _migrations (id, applied_at) VALUES (?, ?)",
+        params: [migration.id, new Date().toISOString()],
+      },
     ]);
   }
 }

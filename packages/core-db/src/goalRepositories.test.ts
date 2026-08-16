@@ -4,12 +4,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createGoalsRepo } from "./goalRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { GoalRow, SqlClient } from "./types";
 
 /** In-memory fake keyed by goal id. */
 function makeFakeSql() {
   const rows = new Map<string, GoalRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM goals")) {
         return Promise.resolve(
@@ -47,7 +48,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

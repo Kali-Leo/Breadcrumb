@@ -4,12 +4,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createAiFailuresRepo } from "./aiFailureRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { AiFailureRow, SqlClient } from "./types";
 
 /** In-memory fake keyed by insertion order. */
 function makeFakeSql() {
   const rows: AiFailureRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("FROM ai_failures")) {
         const limit = Number(params?.[0] ?? rows.length);
@@ -27,7 +28,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

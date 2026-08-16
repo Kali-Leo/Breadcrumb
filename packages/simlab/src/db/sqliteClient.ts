@@ -8,25 +8,39 @@ import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runMigrations, type SqlClient } from "@breadcrumb/core-db";
+import { runMigrations, type SqlClient, type SqlTransactionStatement } from "@breadcrumb/core-db";
 import Database from "better-sqlite3";
 import { createSimlabRepos, type SimlabRepos } from "./repos";
 
 /** Adapts a better-sqlite3 handle to SqlClient. execute() falls back to db.exec() for
  * parameter-less statements containing no '?' (DDL, multi-statement migrations) since
  * better-sqlite3's prepared statements reject those; every other call goes through a
- * prepared statement, same as the real app's tauri-plugin-sql adapter. */
+ * prepared statement, same as the real app's tauri-plugin-sql adapter.
+ * executeTransaction() is genuinely atomic via better-sqlite3's transaction(): any
+ * statement error rolls the whole batch back, matching the desktop's Rust command. */
 export function createSqliteClient(db: Database.Database): SqlClient {
+  const runStatement = (statement: SqlTransactionStatement): void => {
+    const params = statement.params;
+    if ((params === undefined || params.length === 0) && !statement.sql.includes("?")) {
+      db.exec(statement.sql);
+      return;
+    }
+    db.prepare(statement.sql).run(...(params ?? []));
+  };
+  const runBatchInTransaction = db.transaction(
+    (statements: ReadonlyArray<SqlTransactionStatement>) => {
+      for (const statement of statements) runStatement(statement);
+    },
+  );
   return {
     async select<Row>(sql: string, params?: readonly unknown[]): Promise<Row[]> {
       return db.prepare(sql).all(...(params ?? [])) as Row[];
     },
     async execute(sql: string, params?: readonly unknown[]): Promise<void> {
-      if ((params === undefined || params.length === 0) && !sql.includes("?")) {
-        db.exec(sql);
-        return;
-      }
-      db.prepare(sql).run(...(params ?? []));
+      runStatement({ sql, params });
+    },
+    async executeTransaction(statements: ReadonlyArray<SqlTransactionStatement>): Promise<void> {
+      runBatchInTransaction(statements);
     },
   };
 }

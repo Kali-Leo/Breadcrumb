@@ -15,6 +15,7 @@ import type {
   CompanionProposalRow,
 } from "./companionTypes";
 import { createConversationsRepo } from "./repositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { ConversationRow, SqlClient } from "./types";
 
 function makeFakeSql() {
@@ -23,7 +24,7 @@ function makeFakeSql() {
   const proposals = new Map<string, CompanionProposalRow>();
   const knowledgeStates = new Map<string, CompanionKnowledgeStateRow>();
 
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       const p = (params ?? []) as unknown[];
       if (sql.includes("FROM conversations WHERE companion_id = ? AND kind = ?")) {
@@ -163,7 +164,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return client;
 }
 

@@ -5,6 +5,7 @@
  */
 
 import type { SqlClient } from "@breadcrumb/core-db";
+import { withSequentialTransactions } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
 import { executeStatCall } from "./statistics";
 import { buildDayKeys } from "./statisticsSeries";
@@ -22,7 +23,7 @@ interface FakeTables {
  * `COUNT(*) AS n`, plain `SELECT ... FROM table`, and `WHERE created_at >= ?`. `execute()`
  * throws — statistics.ts must never write. */
 function makeFakeSql(tables: FakeTables): SqlClient {
-  return {
+  return withSequentialTransactions({
     select: async <Row>(sql: string, params?: readonly unknown[]): Promise<Row[]> => {
       const tableName = /FROM (\w+)/.exec(sql)?.[1] as keyof FakeTables | undefined;
       let rows: readonly Record<string, unknown>[] = (
@@ -43,7 +44,7 @@ function makeFakeSql(tables: FakeTables): SqlClient {
     execute: () => {
       throw new Error("statistics.ts must be read-only — execute() should never be called");
     },
-  };
+  });
 }
 
 const NOW = new Date("2026-08-13T04:00:00.000Z");

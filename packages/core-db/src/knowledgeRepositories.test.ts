@@ -4,18 +4,16 @@
  * fake SqlClients that simulate the real table constraints.
  */
 import { describe, expect, it } from "vitest";
-import {
-  createKnowledgeEdgesRepo,
-  createNodeAliasesRepo,
-  createNodeEmbeddingsRepo,
-} from "./knowledgeRepositories";
+import { createKnowledgeEdgesRepo, createNodeAliasesRepo } from "./knowledgeRepositories";
+import { createNodeEmbeddingsRepo } from "./nodeEmbeddingRepository";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { KnowledgeEdgeRow, NodeAliasRow, NodeEmbeddingRow, SqlClient } from "./types";
 
 /** In-memory fake that reproduces the "keep higher confidence" upsert contract for one
  * table, keyed like the real UNIQUE(source_id, target_id, edge_type) constraint. */
 function makeFakeEdgesSql() {
   const rows = new Map<string, KnowledgeEdgeRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("WHERE source_id = ?") && sql.includes("edge_type = ?")) {
         const [nodeId, edgeType] = params as [string, string];
@@ -73,7 +71,7 @@ function makeFakeEdgesSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 
@@ -158,7 +156,7 @@ describe("createKnowledgeEdgesRepo queries", () => {
  * semantics: a second insert for an already-known label is silently dropped. */
 function makeFakeAliasesSql() {
   const rows = new Map<string, NodeAliasRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("WHERE alias_label = ?")) {
         const [label] = params as [string];
@@ -176,7 +174,7 @@ function makeFakeAliasesSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 
@@ -218,7 +216,7 @@ describe("createNodeAliasesRepo", () => {
 /** In-memory fake for node_embeddings' PRIMARY KEY(node_id) upsert semantics. */
 function makeFakeEmbeddingsSql() {
   const rows = new Map<string, NodeEmbeddingRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("WHERE node_id = ?")) {
         const [nodeId] = params as [string];
@@ -239,7 +237,7 @@ function makeFakeEmbeddingsSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

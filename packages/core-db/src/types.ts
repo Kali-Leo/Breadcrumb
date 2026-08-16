@@ -7,12 +7,24 @@
  * PracticeScoreRow.
  */
 
+/** One statement of an executeTransaction batch. */
+export interface SqlTransactionStatement {
+  readonly sql: string;
+  readonly params?: readonly unknown[];
+}
+
 /** Minimal SQL access the host provides (tauri-plugin-sql in the app, fakes in tests). */
 export interface SqlClient {
   /** Runs a SELECT; returns rows as objects keyed by column name. */
   select<Row>(sql: string, params?: readonly unknown[]): Promise<Row[]>;
   /** Runs a mutating statement (INSERT/UPDATE/DELETE/DDL). */
   execute(sql: string, params?: readonly unknown[]): Promise<void>;
+  /** Runs the whole batch inside ONE database transaction: either every statement persists
+   * or none does. Deliberately a batch of precomputed statements, not a callback — any reads
+   * a caller needs happen BEFORE the call and are baked into the params. That is enough for
+   * this single-user local app: the failure mode being defended against is a crash mid-write
+   * corrupting a multi-statement invariant (write atomicity), not concurrent readers. */
+  executeTransaction(statements: ReadonlyArray<SqlTransactionStatement>): Promise<void>;
 }
 
 export type MessageRole = "user" | "assistant" | "system";

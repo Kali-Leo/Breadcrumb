@@ -5,12 +5,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createCanonicalRepo } from "./canonicalRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { CanonicalConceptRow, NodeConceptAnchorRow, SqlClient } from "./types";
 
 function makeFakeSql() {
   const conceptRows = new Map<string, CanonicalConceptRow>();
   const anchorRows = new Map<string, NodeConceptAnchorRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.startsWith("SELECT * FROM canonical_concepts")) {
         const rows = [...conceptRows.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -56,7 +57,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, conceptRows, anchorRows };
 }
 

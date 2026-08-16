@@ -4,13 +4,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { createInterestSignalsRepo, createMasteryClaimsRepo } from "./interestRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { InterestSignalRow, MasteryClaimRow, SqlClient } from "./types";
 
 /** In-memory fake keyed by table name inferred from the SQL text. */
 function makeFakeSql() {
   const interestRows: InterestSignalRow[] = [];
   const claimRows: MasteryClaimRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM interest_signals")) return Promise.resolve(interestRows as Row[]);
       if (sql.includes("FROM mastery_claims")) return Promise.resolve(claimRows as Row[]);
@@ -53,7 +54,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, interestRows, claimRows };
 }
 

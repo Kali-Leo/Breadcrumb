@@ -5,13 +5,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { createFocusNodesRepo, createFocusSessionsRepo } from "./focusRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { FocusNodeRow, FocusSessionRow, SqlClient } from "./types";
 
 /** In-memory fake keyed by table name inferred from the SQL text. */
 function makeFakeSql() {
   const sessionRows: FocusSessionRow[] = [];
   const nodeRows: FocusNodeRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("FROM focus_sessions WHERE id = ?")) {
         const [id] = params as [string];
@@ -117,7 +118,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, sessionRows, nodeRows };
 }
 
@@ -147,7 +148,7 @@ describe("createFocusSessionsRepo", () => {
     expect(await repo.listByConversation("other")).toHaveLength(0);
   });
 
-  it("deletes a session outright (zero-substance-session cleanup on exit)", async () => {
+  it("deletes a session and its stations atomically (zero-substance-session cleanup on exit)", async () => {
     const { client } = makeFakeSql();
     const repo = createFocusSessionsRepo(client);
     await repo.insert({
@@ -159,11 +160,22 @@ describe("createFocusSessionsRepo", () => {
       updated_at: "2026-08-14T10:00:00Z",
       source_message_id: null,
     });
+    await createFocusNodesRepo(client).insert({
+      id: "n1",
+      session_id: "s1",
+      parent_id: null,
+      kind: "word",
+      label: "闭包",
+      question_text: null,
+      answer_text: "",
+      created_at: "2026-08-14T10:00:00Z",
+    });
 
-    await repo.remove("s1");
+    await repo.removeWithNodes("s1");
 
     expect(await repo.getById("s1")).toBeNull();
     expect(await repo.listByConversation("c1")).toHaveLength(0);
+    expect(await createFocusNodesRepo(client).listBySession("s1")).toHaveLength(0);
   });
 });
 

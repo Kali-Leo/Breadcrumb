@@ -56,11 +56,19 @@ export function createFocusSessionsRepo(sql: SqlClient) {
         [conversationId],
       );
     },
-    /** Deletes a session shell outright — the zero-substance-session cleanup on exit (Leo
-     * 2026-08-14 revision to spec 042 §5). Caller removes its nodes first (FK-shaped ordering,
-     * no real FK/cascade in this schema). */
+    /** Deletes a session shell only — prefer removeWithNodes, the atomic full-delete path;
+     * kept for callers that have already removed the nodes themselves. */
     async remove(id: string): Promise<void> {
       await sql.execute("DELETE FROM focus_sessions WHERE id = ?", [id]);
+    },
+    /** Deletes a session AND every one of its stations in ONE transaction — the
+     * zero-substance-session cleanup on exit (Leo 2026-08-14 revision to spec 042 §5). A
+     * crash can no longer strand orphaned focus_nodes rows between the two deletes. */
+    async removeWithNodes(id: string): Promise<void> {
+      await sql.executeTransaction([
+        { sql: "DELETE FROM focus_nodes WHERE session_id = ?", params: [id] },
+        { sql: "DELETE FROM focus_sessions WHERE id = ?", params: [id] },
+      ]);
     },
   };
 }

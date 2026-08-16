@@ -5,11 +5,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { createTermMarksRepo } from "./termMarksRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient, TermMarkRow } from "./types";
 
 function makeFakeSql() {
   const rows: TermMarkRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.includes("FROM term_marks WHERE target_kind = ? AND target_id = ?")) {
         const [targetKind, targetId] = params as [string, string];
@@ -34,7 +35,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

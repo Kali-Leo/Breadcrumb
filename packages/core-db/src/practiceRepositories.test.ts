@@ -4,11 +4,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { createPracticeRepo } from "./practiceRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { PracticeScoreRow, SqlClient } from "./types";
 
 function makeFakeSql() {
   const rows = new Map<string, PracticeScoreRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM practice_scores")) {
         return Promise.resolve([...rows.values()] as Row[]);
@@ -22,7 +23,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

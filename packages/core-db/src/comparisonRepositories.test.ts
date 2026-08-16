@@ -6,12 +6,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createComparisonRepo } from "./comparisonRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { ComparisonProfileItemRow, ComparisonProfileRow, SqlClient } from "./types";
 
 function makeFakeSql() {
   const profileRows = new Map<string, ComparisonProfileRow>();
   const itemRows = new Map<string, ComparisonProfileItemRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       if (sql.startsWith("SELECT * FROM comparison_profiles WHERE id = ?")) {
         const [id] = params as [string];
@@ -89,7 +90,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, profileRows, itemRows };
 }
 

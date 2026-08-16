@@ -1,5 +1,6 @@
 /**
  * Purpose: real-SQLite regression tests for the better-sqlite3 SqlClient adapter — the
+ * executeTransaction all-or-nothing rollback contract, the
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
  * "keep higher confidence" ON CONFLICT semantics, the comparison tree's whole-replace
  * profile/item tables
@@ -45,6 +46,55 @@ describe("createTempDatabase", () => {
     expect(existsSync(temp.path)).toBe(true);
     const nodes = await temp.repos.knowledgeNodes.listAll();
     expect(nodes).toEqual([]);
+  });
+});
+
+describe("executeTransaction atomicity (real sqlite)", () => {
+  it("rolls the whole batch back when a middle statement fails — no partial rows", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-15T10:00:00.000Z";
+
+    await expect(
+      temp.sql.executeTransaction([
+        {
+          sql: "INSERT INTO ai_failures (id, purpose, message, created_at) VALUES (?, ?, ?, ?)",
+          params: ["f1", "test", "first row", now],
+        },
+        // Violates knowledge_nodes' NOT NULL label constraint — must abort the batch.
+        {
+          sql: "INSERT INTO knowledge_nodes (id, parent_id, label, summary, kind, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+          params: ["n1", null, null, "s", "concept", now],
+        },
+        {
+          sql: "INSERT INTO ai_failures (id, purpose, message, created_at) VALUES (?, ?, ?, ?)",
+          params: ["f2", "test", "second row", now],
+        },
+      ]),
+    ).rejects.toThrow(/NOT NULL/);
+
+    // Statement 1 ran before the failure, statement 3 never ran — atomicity means BOTH are
+    // absent afterwards, not just the ones after the failure point.
+    expect(await temp.sql.select("SELECT * FROM ai_failures", [])).toEqual([]);
+    expect(await temp.sql.select("SELECT * FROM knowledge_nodes", [])).toEqual([]);
+  });
+
+  it("persists every statement of a successful batch", async () => {
+    temp = await createTempDatabase();
+    const now = "2026-08-15T10:00:00.000Z";
+    await temp.sql.executeTransaction([
+      {
+        sql: "INSERT INTO ai_failures (id, purpose, message, created_at) VALUES (?, ?, ?, ?)",
+        params: ["f1", "test", "first row", now],
+      },
+      {
+        sql: "INSERT INTO ai_failures (id, purpose, message, created_at) VALUES (?, ?, ?, ?)",
+        params: ["f2", "test", "second row", now],
+      },
+    ]);
+    expect(await temp.sql.select("SELECT id FROM ai_failures ORDER BY id", [])).toEqual([
+      { id: "f1" },
+      { id: "f2" },
+    ]);
   });
 });
 

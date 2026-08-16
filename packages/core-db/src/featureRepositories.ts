@@ -57,17 +57,19 @@ export function createTrailSummariesRepo(sql: SqlClient) {
 
 export function createFactcheckRepo(sql: SqlClient) {
   return {
+    /** One transaction for the run row plus all its claims — a crash never leaves a run
+     * without its claims (or orphaned claims). */
     async recordRun(run: FactcheckRunRow, claims: readonly FactcheckClaimRow[]): Promise<void> {
-      await sql.execute(
-        "INSERT INTO factcheck_runs (id, message_id, conversation_id, created_at) VALUES (?, ?, ?, ?)",
-        [run.id, run.message_id, run.conversation_id, run.created_at],
-      );
-      for (const claim of claims) {
-        await sql.execute(
-          `INSERT INTO factcheck_claims
+      await sql.executeTransaction([
+        {
+          sql: "INSERT INTO factcheck_runs (id, message_id, conversation_id, created_at) VALUES (?, ?, ?, ?)",
+          params: [run.id, run.message_id, run.conversation_id, run.created_at],
+        },
+        ...claims.map((claim) => ({
+          sql: `INSERT INTO factcheck_claims
              (id, run_id, claim_text, relationship, reasoning, evidence_json, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
+          params: [
             claim.id,
             claim.run_id,
             claim.claim_text,
@@ -76,8 +78,8 @@ export function createFactcheckRepo(sql: SqlClient) {
             claim.evidence_json,
             claim.created_at,
           ],
-        );
-      }
+        })),
+      ]);
     },
     /** All runs of one conversation, oldest first — the newest run per message wins in UI. */
     async listRunsByConversation(conversationId: string): Promise<FactcheckRunRow[]> {

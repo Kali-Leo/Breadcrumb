@@ -36,6 +36,7 @@ import {
   runMigrations,
   type SqlClient,
 } from "@breadcrumb/core-db";
+import { invoke } from "@tauri-apps/api/core";
 import Database from "@tauri-apps/plugin-sql";
 
 export interface Repos {
@@ -118,13 +119,30 @@ async function buildRepos(): Promise<Repos> {
   };
 }
 
+/** Must match the string passed to Database.load — it is the key tauri-plugin-sql stores its
+ * connection pool under, and the execute_sql_transaction command looks the pool up by it. */
+const DATABASE_URL = "sqlite:breadcrumb.db";
+
 async function openAndMigrate(): Promise<SqlClient> {
-  const database = await Database.load("sqlite:breadcrumb.db");
+  const database = await Database.load(DATABASE_URL);
   const sqlClient: SqlClient = {
     select: <Row>(sql: string, params?: readonly unknown[]) =>
       database.select<Row[]>(sql, params ? [...params] : []),
     execute: async (sql: string, params?: readonly unknown[]) => {
       await database.execute(sql, params ? [...params] : []);
+    },
+    // tauri-plugin-sql's pool holds up to 10 sqlite connections and execute() may land each
+    // call on a different one, so BEGIN/COMMIT issued as separate execute() calls would not
+    // form a transaction. execute_sql_transaction (src-tauri/src/transactions.rs) runs the
+    // whole batch on ONE pooled connection inside a real sqlx transaction instead.
+    executeTransaction: async (statements) => {
+      await invoke("execute_sql_transaction", {
+        db: DATABASE_URL,
+        statements: statements.map((statement) => ({
+          sql: statement.sql,
+          params: statement.params === undefined ? [] : [...statement.params],
+        })),
+      });
     },
   };
   await runMigrations(sqlClient);

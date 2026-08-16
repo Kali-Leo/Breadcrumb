@@ -5,12 +5,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createMessagesRepo } from "./repositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { MessageRow, SqlClient } from "./types";
 
 /** In-memory fake: stores appended messages and answers listByConversation. */
 function makeFakeSql() {
   const rows: MessageRow[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM messages")) return Promise.resolve(rows as Row[]);
       return Promise.resolve([] as Row[]);
@@ -31,7 +32,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, rows };
 }
 

@@ -4,12 +4,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { createResearchRepo, type ResearchResultRow } from "./researchRepositories";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient } from "./types";
 
 function makeFakeSql() {
   const runs = new Map<string, string>();
   const results = new Map<string, ResearchResultRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM research_task_runs")) {
         const rows = [...runs.entries()].map(([task_id, ran_at]) => ({ task_id, ran_at }));
@@ -38,7 +39,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return client;
 }
 

@@ -10,6 +10,7 @@ import type {
   DiglotWordGuessRow,
   DiglotWordStateRow,
 } from "./diglotTypes";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient } from "./types";
 
 function makeFakeSql() {
@@ -17,7 +18,7 @@ function makeFakeSql() {
   const events: DiglotWordEventRow[] = [];
   const guesses: DiglotWordGuessRow[] = [];
   const packs = new Map<string, DiglotLanguagePackRow>();
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       const p = (params ?? []) as string[];
       if (sql.includes("FROM diglot_word_states WHERE pair = ? AND due <= ?")) {
@@ -114,7 +115,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, states, events, guesses, packs };
 }
 

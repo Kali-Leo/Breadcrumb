@@ -1,19 +1,20 @@
 /**
- * Purpose: SQL statements for the knowledge-graph domain — tree nodes, their local
- * embeddings, sightings (footprints), the directed requires/helps edges (spec 010),
- * node-dedup aliases (spec 015), and the spec-015-#4 duplicate-node merge executor.
- * Main exports: createKnowledgeNodesRepo, createNodeEmbeddingsRepo (incl. getByNode, used by
- * the explore door concept-guess grading, spec 039), createNodeSightingsRepo,
- * createKnowledgeEdgesRepo, createNodeAliasesRepo, createNodeMergeRepo.
+ * Purpose: SQL statements for the knowledge-graph domain — tree nodes, sightings
+ * (footprints), the directed requires/helps edges (spec 010), and node-dedup aliases (spec
+ * 015); node embeddings live in nodeEmbeddingRepository.ts and the duplicate-node merge
+ * executor in nodeMergeRepository.ts (it shares this file's statement builders).
+ * Main exports: createKnowledgeNodesRepo, createNodeSightingsRepo, createKnowledgeEdgesRepo,
+ * createNodeAliasesRepo, buildKnowledgeEdgeUpsertStatement, buildKnowledgeEdgeRemoveStatement,
+ * buildNodeAliasInsertStatement.
  */
 import type {
   KnowledgeEdgeRow,
   KnowledgeEdgeType,
   KnowledgeNodeRow,
   NodeAliasRow,
-  NodeEmbeddingRow,
   NodeSightingRow,
   SqlClient,
+  SqlTransactionStatement,
 } from "./types";
 
 export function createKnowledgeNodesRepo(sql: SqlClient) {
@@ -41,39 +42,6 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
          WHERE f.first_seen >= ? AND f.first_seen < ?
          ORDER BY f.first_seen ASC`,
         [fromIso, toIso],
-      );
-    },
-  };
-}
-
-export function createNodeEmbeddingsRepo(sql: SqlClient) {
-  return {
-    async upsert(row: NodeEmbeddingRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO node_embeddings (node_id, model, vector_json, created_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(node_id) DO UPDATE SET
-           model = excluded.model, vector_json = excluded.vector_json, created_at = excluded.created_at`,
-        [row.node_id, row.model, row.vector_json, row.created_at],
-      );
-    },
-    async listAll(): Promise<NodeEmbeddingRow[]> {
-      return sql.select<NodeEmbeddingRow>("SELECT * FROM node_embeddings");
-    },
-    /** One node's embedding, or null when it has none yet — used to grade a concept guess
-     * against a single door's node (spec 039) without loading the whole table. */
-    async getByNode(nodeId: string): Promise<NodeEmbeddingRow | null> {
-      const rows = await sql.select<NodeEmbeddingRow>(
-        "SELECT * FROM node_embeddings WHERE node_id = ? LIMIT 1",
-        [nodeId],
-      );
-      return rows[0] ?? null;
-    },
-    /** Nodes that still lack an embedding — the backfill queue. */
-    async listNodesMissingEmbedding(): Promise<KnowledgeNodeRow[]> {
-      return sql.select<KnowledgeNodeRow>(
-        `SELECT k.* FROM knowledge_nodes k
-         LEFT JOIN node_embeddings e ON e.node_id = k.id
-         WHERE e.node_id IS NULL ORDER BY k.created_at ASC`,
       );
     },
   };
@@ -115,13 +83,11 @@ export function createNodeSightingsRepo(sql: SqlClient) {
   };
 }
 
-export function createKnowledgeEdgesRepo(sql: SqlClient) {
+/** The confidence-guarded edge upsert as a transaction statement — single source of truth
+ * for both createKnowledgeEdgesRepo.upsert and the merge executor's batch. */
+export function buildKnowledgeEdgeUpsertStatement(row: KnowledgeEdgeRow): SqlTransactionStatement {
   return {
-    /** Insert, or on conflict keep whichever judgment has higher confidence — a later
-     * lower-confidence pass never downgrades an already-recorded edge. */
-    async upsert(row: KnowledgeEdgeRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO knowledge_edges
+    sql: `INSERT INTO knowledge_edges
            (id, source_id, target_id, edge_type, weight, confidence, origin, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(source_id, target_id, edge_type) DO UPDATE SET
@@ -130,17 +96,40 @@ export function createKnowledgeEdgesRepo(sql: SqlClient) {
            origin = excluded.origin,
            created_at = excluded.created_at
          WHERE excluded.confidence > knowledge_edges.confidence`,
-        [
-          row.id,
-          row.source_id,
-          row.target_id,
-          row.edge_type,
-          row.weight,
-          row.confidence,
-          row.origin,
-          row.created_at,
-        ],
-      );
+    params: [
+      row.id,
+      row.source_id,
+      row.target_id,
+      row.edge_type,
+      row.weight,
+      row.confidence,
+      row.origin,
+      row.created_at,
+    ],
+  };
+}
+
+/** Edge delete by id as a transaction statement (shared with the merge executor). */
+export function buildKnowledgeEdgeRemoveStatement(id: string): SqlTransactionStatement {
+  return { sql: "DELETE FROM knowledge_edges WHERE id = ?", params: [id] };
+}
+
+/** The insert-or-ignore alias insert as a transaction statement (shared with the merge
+ * executor); an already-aliased label keeps its first-recorded target. */
+export function buildNodeAliasInsertStatement(row: NodeAliasRow): SqlTransactionStatement {
+  return {
+    sql: "INSERT OR IGNORE INTO node_aliases (alias_label, node_id, created_at) VALUES (?, ?, ?)",
+    params: [row.alias_label, row.node_id, row.created_at],
+  };
+}
+
+export function createKnowledgeEdgesRepo(sql: SqlClient) {
+  return {
+    /** Insert, or on conflict keep whichever judgment has higher confidence — a later
+     * lower-confidence pass never downgrades an already-recorded edge. */
+    async upsert(row: KnowledgeEdgeRow): Promise<void> {
+      const statement = buildKnowledgeEdgeUpsertStatement(row);
+      await sql.execute(statement.sql, statement.params);
     },
     /** Every edge, oldest first — raw material for the graph algorithms (plugin-graph). */
     async listAll(): Promise<KnowledgeEdgeRow[]> {
@@ -171,7 +160,8 @@ export function createKnowledgeEdgesRepo(sql: SqlClient) {
           );
     },
     async remove(id: string): Promise<void> {
-      await sql.execute("DELETE FROM knowledge_edges WHERE id = ?", [id]);
+      const statement = buildKnowledgeEdgeRemoveStatement(id);
+      await sql.execute(statement.sql, statement.params);
     },
   };
 }
@@ -181,10 +171,8 @@ export function createNodeAliasesRepo(sql: SqlClient) {
     /** Insert-or-ignore: a label already aliased (e.g. re-judged "同一" in a later round)
      * keeps its first-recorded target instead of being silently overwritten. */
     async insert(row: NodeAliasRow): Promise<void> {
-      await sql.execute(
-        "INSERT OR IGNORE INTO node_aliases (alias_label, node_id, created_at) VALUES (?, ?, ?)",
-        [row.alias_label, row.node_id, row.created_at],
-      );
+      const statement = buildNodeAliasInsertStatement(row);
+      await sql.execute(statement.sql, statement.params);
     },
     async findByLabel(aliasLabel: string): Promise<NodeAliasRow | null> {
       const rows = await sql.select<NodeAliasRow>(
@@ -196,80 +184,6 @@ export function createNodeAliasesRepo(sql: SqlClient) {
     /** Every alias ever recorded — raw material for planNodeChanges' aliasNodeIdByLabel input. */
     async listAll(): Promise<NodeAliasRow[]> {
       return sql.select<NodeAliasRow>("SELECT * FROM node_aliases ORDER BY created_at ASC");
-    },
-  };
-}
-
-/** Executes one real merge (spec 015 #4): folds every trace of `duplicateId` into
- * `canonicalId` and deletes the duplicate node. Built on top of createKnowledgeEdgesRepo and
- * createNodeAliasesRepo to reuse their existing conflict rules verbatim rather than
- * re-implementing them. */
-export function createNodeMergeRepo(sql: SqlClient) {
-  const knowledgeEdges = createKnowledgeEdgesRepo(sql);
-  const nodeAliases = createNodeAliasesRepo(sql);
-  return {
-    /**
-     * Runs, in order:
-     * 1. Reassign node_sightings.node_id, interest_signals.node_id, mastery_claims.node_id
-     *    and node_aliases.node_id from duplicateId to canonicalId (plain bulk UPDATEs — none
-     *    of these tables has a uniqueness constraint that reassignment could violate).
-     * 2. Re-point any child's parent_id from duplicateId to canonicalId.
-     * 3. For every knowledge_edges row touching duplicateId: remove the old row, then, unless
-     *    the reassignment would make it a self-loop (source === target after substitution),
-     *    re-insert it via knowledgeEdgesRepo.upsert — its existing ON CONFLICT(source_id,
-     *    target_id, edge_type) rule keeps whichever judgment has the higher confidence when
-     *    the reassignment collides with an edge canonicalId already has.
-     * 4. Record duplicateLabel as an alias of canonicalId (insert-or-ignore, so a duplicate
-     *    label matching an already-aliased label keeps that alias's original target).
-     * 5. Delete the duplicate's embedding and its knowledge_nodes row.
-     */
-    async mergeNode(
-      canonicalId: string,
-      duplicateId: string,
-      duplicateLabel: string,
-      nowIso: string,
-    ): Promise<void> {
-      await sql.execute("UPDATE node_sightings SET node_id = ? WHERE node_id = ?", [
-        canonicalId,
-        duplicateId,
-      ]);
-      await sql.execute("UPDATE interest_signals SET node_id = ? WHERE node_id = ?", [
-        canonicalId,
-        duplicateId,
-      ]);
-      await sql.execute("UPDATE mastery_claims SET node_id = ? WHERE node_id = ?", [
-        canonicalId,
-        duplicateId,
-      ]);
-      await sql.execute("UPDATE node_aliases SET node_id = ? WHERE node_id = ?", [
-        canonicalId,
-        duplicateId,
-      ]);
-      await sql.execute("UPDATE knowledge_nodes SET parent_id = ? WHERE parent_id = ?", [
-        canonicalId,
-        duplicateId,
-      ]);
-
-      const touchedEdges = await sql.select<KnowledgeEdgeRow>(
-        "SELECT * FROM knowledge_edges WHERE source_id = ? OR target_id = ?",
-        [duplicateId, duplicateId],
-      );
-      for (const edge of touchedEdges) {
-        await knowledgeEdges.remove(edge.id);
-        const newSourceId = edge.source_id === duplicateId ? canonicalId : edge.source_id;
-        const newTargetId = edge.target_id === duplicateId ? canonicalId : edge.target_id;
-        if (newSourceId === newTargetId) continue; // drop: would become a self-loop
-        await knowledgeEdges.upsert({ ...edge, source_id: newSourceId, target_id: newTargetId });
-      }
-
-      await nodeAliases.insert({
-        alias_label: duplicateLabel,
-        node_id: canonicalId,
-        created_at: nowIso,
-      });
-
-      await sql.execute("DELETE FROM node_embeddings WHERE node_id = ?", [duplicateId]);
-      await sql.execute("DELETE FROM knowledge_nodes WHERE id = ?", [duplicateId]);
     },
   };
 }

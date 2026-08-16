@@ -3,13 +3,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { MIGRATIONS, runMigrations } from "./migrations";
+import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient } from "./types";
 
 /** In-memory fake: records executed statements and simulates the _migrations table. */
 function makeFakeSql() {
   const executed: string[] = [];
   const appliedIds: string[] = [];
-  const client: SqlClient = {
+  const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string) => {
       if (sql.includes("FROM _migrations")) {
         return Promise.resolve(appliedIds.map((id) => ({ id })) as Row[]);
@@ -27,7 +28,7 @@ function makeFakeSql() {
       }
       return Promise.resolve();
     },
-  };
+  });
   return { client, executed, appliedIds };
 }
 

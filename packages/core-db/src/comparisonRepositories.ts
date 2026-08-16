@@ -30,35 +30,39 @@ export function createComparisonRepo(sql: SqlClient) {
       );
     },
     /** Whole-replace: deletes the profile's previous row and items, then inserts the given
-     * ones. No partial updates are
+     * ones — all inside ONE transaction, so a crash never leaves a half-deleted or
+     * half-inserted tree. No partial updates are
      * offered; a profile is always rewritten as a complete picture. INSERT OR REPLACE keeps the
      * write idempotent even when two callers race (e.g. dev StrictMode double effects). */
     async replaceProfile(
       profile: ComparisonProfileRow,
       items: readonly ComparisonProfileItemRow[],
     ): Promise<void> {
-      await sql.execute("DELETE FROM comparison_profile_items WHERE profile_id = ?", [profile.id]);
-      await sql.execute("DELETE FROM comparison_profiles WHERE id = ?", [profile.id]);
-      await sql.execute(
-        `INSERT OR REPLACE INTO comparison_profiles
-           (id, title, origin, description, source_note, created_at, category)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          profile.id,
-          profile.title,
-          profile.origin,
-          profile.description,
-          profile.source_note,
-          profile.created_at,
-          profile.category,
-        ],
-      );
-      for (const item of items) {
-        await sql.execute(
-          `INSERT OR REPLACE INTO comparison_profile_items
+      await sql.executeTransaction([
+        {
+          sql: "DELETE FROM comparison_profile_items WHERE profile_id = ?",
+          params: [profile.id],
+        },
+        { sql: "DELETE FROM comparison_profiles WHERE id = ?", params: [profile.id] },
+        {
+          sql: `INSERT OR REPLACE INTO comparison_profiles
+             (id, title, origin, description, source_note, created_at, category)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          params: [
+            profile.id,
+            profile.title,
+            profile.origin,
+            profile.description,
+            profile.source_note,
+            profile.created_at,
+            profile.category,
+          ],
+        },
+        ...items.map((item) => ({
+          sql: `INSERT OR REPLACE INTO comparison_profile_items
              (id, profile_id, parent_id, label, aliases_json, source_ref, position, concept_id, item_kind)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
+          params: [
             item.id,
             item.profile_id,
             item.parent_id,
@@ -69,13 +73,15 @@ export function createComparisonRepo(sql: SqlClient) {
             item.concept_id,
             item.item_kind,
           ],
-        );
-      }
+        })),
+      ]);
     },
-    /** Deletes the profile row and its items. */
+    /** Deletes the profile row and its items in one transaction. */
     async deleteProfile(id: string): Promise<void> {
-      await sql.execute("DELETE FROM comparison_profile_items WHERE profile_id = ?", [id]);
-      await sql.execute("DELETE FROM comparison_profiles WHERE id = ?", [id]);
+      await sql.executeTransaction([
+        { sql: "DELETE FROM comparison_profile_items WHERE profile_id = ?", params: [id] },
+        { sql: "DELETE FROM comparison_profiles WHERE id = ?", params: [id] },
+      ]);
     },
   };
 }
