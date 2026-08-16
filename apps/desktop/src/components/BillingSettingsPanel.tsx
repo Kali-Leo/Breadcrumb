@@ -71,13 +71,13 @@ const FEATURE_ROWS: Array<{
   {
     feature: "mapTopicNaming",
     name: "🗺️ 地图起名（实验）",
-    hint: "在记忆宫殿里，AI 会给自动聚在一起的一片内容起名字；每片只起一次。",
+    hint: "在地图里，AI 会给自动聚在一起的一片内容起名字；每片只起一次。",
     purposes: ["map-naming"],
   },
   {
     feature: "feedbackLab",
     name: "🪞 这段时间",
-    hint: "记忆宫殿右栏的回顾内容:全部由本地数据算出,不花钱",
+    hint: "地图右栏的回顾内容:全部由本地数据算出,不花钱",
     purposes: [],
   },
   {
