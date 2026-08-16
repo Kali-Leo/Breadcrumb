@@ -381,3 +381,42 @@ export interface TermMarkRow {
   terms_json: string;
   created_at: string;
 }
+
+/** Where one discovery card came from (spec 051 §4): 'nearby' = similarity to the user's
+ * positive interest centroid, 'explore' = a Thompson-sampled explore topic, 'starter' = the
+ * cross-domain cold-start batch shown before any interest signal exists. Validated in
+ * TypeScript, not a DB CHECK — same precedent as conversations.kind (0029). */
+export type DiscoveryCardSource = "nearby" | "explore" | "starter";
+
+/** One knowledge card on the discovery feed (spec 051). body_md and embedding_json are lazy:
+ * NULL until the card is first opened / until the background embedding pass reaches it.
+ * opened_at is NULL until the user opens the card once, and is never cleared afterward. */
+export interface DiscoveryCardRow {
+  id: string;
+  title: string;
+  hook: string;
+  topic_label: string;
+  source: DiscoveryCardSource;
+  body_md: string | null;
+  embedding_json: string | null;
+  batch_id: string;
+  created_at: string;
+  opened_at: string | null;
+}
+
+/** Silent interest signal kinds the feed records (spec 051 §3): impression = the card sat in
+ * viewport ≥1s; open = the card was tapped open; dwell = time spent reading the opened body;
+ * dislike = the one explicit control ("不感兴趣"). */
+export type DiscoveryEventKind = "impression" | "open" | "dwell" | "dislike";
+
+/** One discovery signal event. topic_label is denormalized from the card at insert time (see
+ * migration 0038) so folding events into topic weights never needs a join. value_ms only
+ * carries a reading-duration value for kind='dwell'. */
+export interface DiscoveryEventRow {
+  id: string;
+  card_id: string;
+  topic_label: string;
+  kind: DiscoveryEventKind;
+  value_ms: number | null;
+  created_at: string;
+}

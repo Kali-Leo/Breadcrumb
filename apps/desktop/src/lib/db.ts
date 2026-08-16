@@ -13,6 +13,7 @@ import {
   createComparisonRepo,
   createConversationsRepo,
   createDiglotRepo,
+  createDiscoveryRepo,
   createFactcheckRepo,
   createFocusNodesRepo,
   createFocusSessionsRepo,
@@ -61,6 +62,7 @@ export interface Repos {
   canonical: ReturnType<typeof createCanonicalRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
   diglot: ReturnType<typeof createDiglotRepo>;
+  discovery: ReturnType<typeof createDiscoveryRepo>;
   research: ReturnType<typeof createResearchRepo>;
   companionMemories: ReturnType<typeof createCompanionMemoriesRepo>;
   companionProposals: ReturnType<typeof createCompanionProposalsRepo>;
@@ -109,6 +111,7 @@ async function buildRepos(): Promise<Repos> {
     canonical: createCanonicalRepo(sqlClient),
     practice: createPracticeRepo(sqlClient),
     diglot: createDiglotRepo(sqlClient),
+    discovery: createDiscoveryRepo(sqlClient),
     research: createResearchRepo(sqlClient),
     companionMemories: createCompanionMemoriesRepo(sqlClient),
     companionProposals: createCompanionProposalsRepo(sqlClient),

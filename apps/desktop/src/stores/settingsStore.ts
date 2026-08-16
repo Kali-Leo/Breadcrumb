@@ -58,6 +58,13 @@ export interface FeatureSwitches {
    * words would trip up this learner — the primary source of explore doors. Off leaves doors
    * to the zero-LLM legacy node-matching source only. */
   termMarking: boolean;
+  /** Discovery feed (spec 051): generating a new batch of knowledge cards when the grid is
+   * scrolled to the bottom. Off (or offline) leaves already-cached cards readable, just with
+   * no new ones. */
+  discoveryCards: boolean;
+  /** Discovery feed: writing a card's full article body the first time it's opened. Off
+   * leaves the card grid itself working, just with no way to generate a new card's body. */
+  discoveryArticles: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -104,6 +111,8 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   companionScript: true,
   focusExplain: true,
   termMarking: true,
+  discoveryCards: true,
+  discoveryArticles: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */

@@ -26,4 +26,6 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "companion-script": "伙伴预习",
   "focus-explain": "专注讲解",
   "term-marking": "生词标注",
+  "discovery-cards": "发现页新卡片",
+  "discovery-article": "发现页正文",
 };

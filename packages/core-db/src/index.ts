@@ -10,6 +10,7 @@ export * from "./companionTypes";
 export * from "./comparisonRepositories";
 export * from "./diglotRepositories";
 export * from "./diglotTypes";
+export * from "./discoveryRepositories";
 export * from "./featureRepositories";
 export * from "./focusRepositories";
 export * from "./goalRepositories";

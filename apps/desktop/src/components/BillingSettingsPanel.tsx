@@ -110,6 +110,18 @@ const FEATURE_ROWS: Array<{
     hint: "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释；每条只标一次。",
     purposes: ["term-marking"],
   },
+  {
+    feature: "discoveryCards",
+    name: "🧭 发现页新卡片",
+    hint: "翻到底时，AI 生成一批新的知识卡片；一批一次调用。",
+    purposes: ["discovery-cards"],
+  },
+  {
+    feature: "discoveryArticles",
+    name: "📄 发现页正文",
+    hint: "第一次点开一张卡片时，AI 写出它的完整内容；每张只写一次，之后离线也能读。",
+    purposes: ["discovery-article"],
+  },
 ];
 
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */
