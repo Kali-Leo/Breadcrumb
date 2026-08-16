@@ -54,7 +54,7 @@ vi.mock("../stores/diglotStore", () => ({
 }));
 
 vi.mock("../stores/doorStore", () => ({
-  useDoorStore: { getState: () => ({ openedNodeIds: new Set() }) },
+  useDoorStore: { getState: () => ({ openedFor: () => new Set() }) },
 }));
 
 const { computeDoorPatches } = await import("./conceptDoors");

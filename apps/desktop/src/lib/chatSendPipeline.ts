@@ -73,7 +73,7 @@ export async function runChatSendPipeline(
   }
   const { useCompanionStore } = await import("../stores/companionStore");
   if (kind === "companion" || kind === "teach") {
-    useCompanionStore.getState().checkUserMessageForCrisis(content);
+    useCompanionStore.getState().checkUserMessageForCrisis(content, conversationId);
   }
 
   const entryTree = {
@@ -103,7 +103,8 @@ export async function runChatSendPipeline(
     }));
     // Teaching contract v2 (spec 038): teach/companion prompts branch inside runSendRound.
     const crisisActive =
-      (kind === "companion" || kind === "teach") && useCompanionStore.getState().crisisActive;
+      (kind === "companion" || kind === "teach") &&
+      useCompanionStore.getState().crisisConversationIds.has(conversationId);
     let streamed = "";
     const { assistantMessage, cost } = await runSendRound({
       repos,

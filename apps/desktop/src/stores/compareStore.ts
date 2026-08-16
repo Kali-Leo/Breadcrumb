@@ -133,7 +133,9 @@ export const useCompareStore = create<CompareState>((set, get) => ({
           const selected = get().selectedProfileId;
           if (selected === null) return;
           const refreshed = await computeComparisonTree(selected);
-          set({ tree: refreshed });
+          // The user may have switched profiles during the sweep — a stale tree must
+          // never land under the newly selected profile's title.
+          if (get().selectedProfileId === selected) set({ tree: refreshed });
         },
         (aligning) => set({ aligning }),
       );
@@ -208,7 +210,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       const selected = get().selectedProfileId;
       if (selected !== null) {
         const tree = await computeComparisonTree(selected);
-        set({ tree });
+        if (get().selectedProfileId === selected) set({ tree });
       }
     } catch (error) {
       console.warn("practice score skipped:", error);
@@ -244,7 +246,11 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       const dropped =
         outcome.droppedCount > 0 ? `；有 ${outcome.droppedCount} 条因资料没核验通过被丢弃` : "";
       const tree = await computeComparisonTree(profileId);
-      set({ decomposingHub: false, buildNote: `${outcome.costLine}${dropped}`, tree });
+      set({
+        decomposingHub: false,
+        buildNote: `${outcome.costLine}${dropped}`,
+        ...(get().selectedProfileId === profileId ? { tree } : {}),
+      });
     } else {
       const cost = outcome.costLine === null ? "" : `；${outcome.costLine}`;
       set({ decomposingHub: false, buildNote: `${outcome.reason}${cost}` });

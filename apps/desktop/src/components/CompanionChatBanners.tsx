@@ -13,7 +13,8 @@ import { useCompanionStore } from "../stores/companionStore";
 export function CompanionChatBanners() {
   const activeKind = useChatStore((state) => state.activeKind);
   const activeCompanionId = useChatStore((state) => state.activeCompanionId);
-  const crisisActive = useCompanionStore((state) => state.crisisActive);
+  const activeConversationId = useChatStore((state) => state.activeConversationId);
+  const crisisConversationIds = useCompanionStore((state) => state.crisisConversationIds);
   const breakReminderActive = useCompanionStore((state) => state.breakReminderActive);
   const dismissCrisis = useCompanionStore((state) => state.dismissCrisis);
   const dismissBreakReminder = useCompanionStore((state) => state.dismissBreakReminder);
@@ -42,12 +43,12 @@ export function CompanionChatBanners() {
           <span>{COMPANION_COPY.aiLabel}</span>
         </div>
       )}
-      {crisisActive && (
+      {activeConversationId !== null && crisisConversationIds.has(activeConversationId) && (
         <div className="mx-4 mt-2 rounded-xl bg-rose-50 px-4 py-3 text-sm text-stone-700">
           <p>{CRISIS_RESPONSE}</p>
           <button
             type="button"
-            onClick={dismissCrisis}
+            onClick={() => activeConversationId !== null && dismissCrisis(activeConversationId)}
             className="mt-1 text-stone-400 text-xs underline"
           >
             {COMPANION_DESKTOP_COPY.dismiss}

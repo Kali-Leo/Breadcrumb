@@ -145,15 +145,22 @@ export async function runExplain(
     set({ streamingText: null, errorText: focusErrorLine("还没有配置 API") });
     return;
   }
+  // The run stays bound to the session it started in — after an exit-and-reopen the old
+  // stream keeps writing into the DB but never into the NEW session's screen state
+  // (same cross-wire class the chat sessions refactor fixed).
+  const runSessionId = state.sessionId;
+  const setIfSameRun: FocusSessionSet = (patch) => {
+    if (get().sessionId === runSessionId) set(patch);
+  };
   try {
     const content = await streamFocusNodeAnswer({
       nodeId,
       messages,
       apiConfig,
       conversationId: state.conversationId,
-      onDelta: (delta) => set({ streamingText: `${get().streamingText ?? ""}${delta}` }),
+      onDelta: (delta) => setIfSameRun({ streamingText: `${get().streamingText ?? ""}${delta}` }),
     });
-    set({
+    setIfSameRun({
       nodes: get().nodes.map((node) =>
         node.id === nodeId ? { ...node, answer_text: content } : node,
       ),
@@ -161,7 +168,7 @@ export async function runExplain(
     });
   } catch (error) {
     await recordAiFailure("focus-explain", error);
-    set({
+    setIfSameRun({
       streamingText: null,
       errorText: focusErrorLine(error instanceof Error ? error.message : String(error)),
     });

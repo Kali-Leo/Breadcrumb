@@ -8,7 +8,6 @@
 import { useEffect, useRef, useState } from "react";
 import { newestLeafId } from "../lib/messageTree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
-import { useDoorStore } from "../stores/doorStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
 import { useFocusSessionsStore } from "../stores/focusSessionsStore";
 import { CompanionChatBanners } from "./CompanionChatBanners";
@@ -36,13 +35,6 @@ export function ChatView() {
   useEffect(() => {
     void loadFactchecks(activeConversationId);
   }, [activeConversationId, loadFactchecks]);
-
-  // Explore doors are session-scoped (spec 039 §2.2): a fresh conversation starts with no
-  // opened doors, no reveal cooldowns, no guess history.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed on the conversation switch, not on resetForConversation's identity
-  useEffect(() => {
-    useDoorStore.getState().resetForConversation();
-  }, [activeConversationId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll whenever a message or stream delta arrives
   useEffect(() => {
@@ -101,6 +93,7 @@ export function ChatView() {
               ) : (
                 <>
                   <MessageBubble
+                    conversationId={activeConversationId}
                     author={message.role}
                     content={message.content}
                     messageId={message.id}
@@ -116,7 +109,13 @@ export function ChatView() {
             </div>
           );
         })}
-        {isStreaming && <MessageBubble author="assistant" content={streamingText || "…"} />}
+        {isStreaming && (
+          <MessageBubble
+            conversationId={activeConversationId}
+            author="assistant"
+            content={streamingText || "…"}
+          />
+        )}
         {errorText && (
           <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
             {errorText}

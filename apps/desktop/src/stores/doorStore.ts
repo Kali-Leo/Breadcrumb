@@ -1,10 +1,8 @@
 /**
- * Purpose: zustand store for explore doors (spec 039 §2.1) — per-message door candidates
- * (single-flight, mirrors diglotStore.ensureWoven) and the opened-node bookkeeping pickDoors
- * reads so it never repeats a station. The guess-first popover and its grading (spec 039
- * §2.2) lived here for the old hover-card entry; that entry is gone (spec 042 §6 — ordinary
- * replies now open a focus session directly, no guess), so this store is down to the
- * zero-LLM door-picking half.
+ * Purpose: zustand store for explore doors (spec 039 §2.1) — door candidates and the
+ * opened-node bookkeeping pickDoors reads, both layered per conversation (parallel chat
+ * windows each keep their own doors; switching the main view never wipes another
+ * window's). Single-flight per message, mirroring diglotStore.ensureWoven.
  * Main exports: useDoorStore.
  */
 import type { DoorCandidate } from "@breadcrumb/plugin-explore";
@@ -12,33 +10,44 @@ import { create } from "zustand";
 import { appEventBus } from "./chatStore";
 
 interface DoorState {
-  doorsByMessage: Map<string, DoorCandidate[]>;
-  /** Node ids already opened as doors this conversation — pickDoors never repeats them. */
-  openedNodeIds: Set<string>;
+  doorsByConversation: Map<string, Map<string, DoorCandidate[]>>;
+  /** Node ids already opened as doors, per conversation — pickDoors never repeats them. */
+  openedByConversation: Map<string, Set<string>>;
   ensureDoors(messageId: string, displaySource: string, conversationId: string): Promise<void>;
-  markOpened(nodeId: string): void;
-  /** Clears every session-scoped field — call when the active conversation changes. */
-  resetForConversation(): void;
+  markOpened(conversationId: string, nodeId: string): void;
+  openedFor(conversationId: string): ReadonlySet<string>;
 }
 
+const EMPTY_OPENED: ReadonlySet<string> = new Set();
+
 export const useDoorStore = create<DoorState>((set, get) => ({
-  doorsByMessage: new Map(),
-  openedNodeIds: new Set(),
+  doorsByConversation: new Map(),
+  openedByConversation: new Map(),
 
   async ensureDoors(messageId, displaySource, conversationId) {
-    if (get().doorsByMessage.has(messageId)) return;
-    get().doorsByMessage.set(messageId, []); // reserve to keep the pick single-flight
+    const layer =
+      get().doorsByConversation.get(conversationId) ?? new Map<string, DoorCandidate[]>();
+    if (layer.has(messageId)) return;
+    layer.set(messageId, []); // reserve to keep the pick single-flight
+    set({ doorsByConversation: new Map(get().doorsByConversation).set(conversationId, layer) });
     const { computeDoorPatches } = await import("../lib/conceptDoors");
     const doors = await computeDoorPatches(messageId, displaySource, conversationId);
-    set({ doorsByMessage: new Map(get().doorsByMessage).set(messageId, doors) });
+    // The reservation may have been swept away while we computed — a write-back would
+    // resurrect a cleared entry, so it only lands if the reservation is still there.
+    const current = get().doorsByConversation.get(conversationId);
+    if (current === undefined || !current.has(messageId)) return;
+    const nextLayer = new Map(current).set(messageId, doors);
+    set({ doorsByConversation: new Map(get().doorsByConversation).set(conversationId, nextLayer) });
   },
 
-  markOpened(nodeId) {
-    set({ openedNodeIds: new Set(get().openedNodeIds).add(nodeId) });
+  markOpened(conversationId, nodeId) {
+    const opened = new Set(get().openedByConversation.get(conversationId) ?? []);
+    opened.add(nodeId);
+    set({ openedByConversation: new Map(get().openedByConversation).set(conversationId, opened) });
   },
 
-  resetForConversation() {
-    set({ doorsByMessage: new Map(), openedNodeIds: new Set() });
+  openedFor(conversationId) {
+    return get().openedByConversation.get(conversationId) ?? EMPTY_OPENED;
   },
 }));
 
@@ -46,7 +55,13 @@ export const useDoorStore = create<DoorState>((set, get) => ({
 // were computed against an empty sighting list and cached as []. Dropping the empty entries
 // here lets MessageBubble's effect (which depends on the entry) recompute with real data.
 appEventBus.on("knowledge:nodesExtracted", () => {
-  const doors = useDoorStore.getState().doorsByMessage;
-  const kept = new Map([...doors].filter(([, candidates]) => candidates.length > 0));
-  if (kept.size !== doors.size) useDoorStore.setState({ doorsByMessage: kept });
+  const layers = useDoorStore.getState().doorsByConversation;
+  let changed = false;
+  const next = new Map<string, Map<string, DoorCandidate[]>>();
+  for (const [conversationId, layer] of layers) {
+    const kept = new Map([...layer].filter(([, candidates]) => candidates.length > 0));
+    if (kept.size !== layer.size) changed = true;
+    next.set(conversationId, kept);
+  }
+  if (changed) useDoorStore.setState({ doorsByConversation: next });
 });

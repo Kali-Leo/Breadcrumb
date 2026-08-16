@@ -58,6 +58,8 @@ export interface DiglotSettings {
   fsrsFittedReviewCount: number;
 }
 
+/** Bumped on every saveSettings — in-flight weaves compare it to discard stale output. */
+let weaveEpoch = 0;
 const SETTINGS_KEY = "diglotSettings";
 const DEFAULT_SETTINGS: DiglotSettings = {
   enabled: false,
@@ -169,7 +171,9 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     const settings = { ...get().settings, ...partial };
     const repos = await getRepos();
     await repos.settings.set(SETTINGS_KEY, settings, nowIso());
-    // Any setting change invalidates woven output; re-enable reloads pack and cards.
+    // Any setting change invalidates woven output; re-enable reloads pack and cards. The
+    // epoch bump makes every in-flight weave discard its (old-settings) result.
+    weaveEpoch += 1;
     set({ settings, patchesByMessage: new Map() });
     if (settings.enabled && get().loaded === null) await get().loadFromDatabase();
   },
@@ -178,6 +182,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     const { settings, loaded, patchesByMessage, cardsByLemma } = get();
     if (!settings.enabled || loaded === null) return;
     if (patchesByMessage.has(messageId)) return;
+    const epochAtStart = weaveEpoch;
     patchesByMessage.set(messageId, []); // reserve to keep the weave single-flight
     const result = await weaveAssistantMessage({
       loaded,
@@ -194,6 +199,9 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     if (settings.llmRefineEnabled && networkEnabled && apiConfig !== null && patches.length > 0) {
       patches = await refineWeavePatches(apiConfig, loaded, content, patches);
     }
+    // Settings changed underneath (epoch bump) or the reservation was swept — this weave
+    // was computed against stale inputs and must not land.
+    if (epochAtStart !== weaveEpoch || !get().patchesByMessage.has(messageId)) return;
     set({
       patchesByMessage: new Map(get().patchesByMessage).set(messageId, patches),
       newWordsIntroducedToday: get().newWordsIntroducedToday + result.introducedLemmas.length,
@@ -221,8 +229,10 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
         placed.introductionRankFloor !== settings.introductionRankFloor ||
         placed.placementStep !== settings.placementStep
       ) {
-        const nextSettings = { ...settings, ...placed };
         const repos = await getRepos();
+        // Merge onto the settings AS THEY ARE NOW — a concurrent saveSettings between the
+        // entry snapshot and this write must not be silently reverted.
+        const nextSettings = { ...get().settings, ...placed };
         await repos.settings.set(SETTINGS_KEY, nextSettings, nowIso());
         set({ settings: nextSettings });
       }

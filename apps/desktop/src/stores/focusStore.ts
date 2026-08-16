@@ -162,7 +162,8 @@ export const useFocusStore = create<FocusState>((set, get) => ({
 
   exitFocus() {
     const sessionId = get().sessionId;
-    set({ open: false });
+    // sessionId flips to null so any in-flight explain run recognises itself as stale.
+    set({ open: false, sessionId: null, streamingText: null, errorText: null });
     if (sessionId !== null) appEventBus.emit("focus:exited", { sessionId });
   },
 

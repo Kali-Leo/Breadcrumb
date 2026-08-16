@@ -141,21 +141,25 @@ async function extractFromFinishedRound(
     // canonical inventory right where they are born — fire-and-forget, never blocks chat.
     void anchorNodesByAlias(plan.newNodes);
 
-    const store = useKnowledgeStore.getState();
-    const isViewingThisConversation =
-      useChatStore.getState().activeConversationId === conversationId;
     const refreshedNodes = await repos.knowledgeNodes.listAll();
-    useKnowledgeStore.setState({
-      nodes: refreshedNodes,
-      freshNodeIds: new Set(plan.newNodes.map((node) => node.id)),
-      sessionNodeIds: isViewingThisConversation
-        ? [
-            ...store.sessionNodeIds,
-            ...plan.sightings
-              .map((sighting) => sighting.node_id)
-              .filter((nodeId) => !store.sessionNodeIds.includes(nodeId)),
-          ]
-        : store.sessionNodeIds,
+    // Both the trail check and the current trail are read AT WRITE TIME — the extraction
+    // spans awaits during which the user may have switched conversations, and a stale
+    // snapshot here used to write the old conversation's footprints over the new one's.
+    useKnowledgeStore.setState((state) => {
+      const isViewingThisConversation =
+        useChatStore.getState().activeConversationId === conversationId;
+      return {
+        nodes: refreshedNodes,
+        freshNodeIds: new Set(plan.newNodes.map((node) => node.id)),
+        sessionNodeIds: isViewingThisConversation
+          ? [
+              ...state.sessionNodeIds,
+              ...plan.sightings
+                .map((sighting) => sighting.node_id)
+                .filter((nodeId) => !state.sessionNodeIds.includes(nodeId)),
+            ]
+          : state.sessionNodeIds,
+      };
     });
     if (plan.sightings.length > 0 || plan.newNodes.length > 0) {
       appEventBus.emit("knowledge:nodesExtracted", {

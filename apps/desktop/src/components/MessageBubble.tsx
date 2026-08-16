@@ -11,7 +11,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { recordMessageReencounter } from "../lib/reencounter";
-import { useChatStore } from "../stores/chatStore";
 import { useDiglotStore } from "../stores/diglotStore";
 import { useDoorStore } from "../stores/doorStore";
 import { useFocusStore } from "../stores/focusStore";
@@ -22,14 +21,16 @@ import { SelectionFocusCatcher } from "./SelectionFocusCatcher";
 interface MessageBubbleProps {
   author: "user" | "assistant" | "system";
   content: string;
+  /** The conversation this bubble belongs to — passed by its window, never read from the
+   * active binding (a popup renders another conversation's bubbles at the same time). */
+  conversationId: string | null;
   /** Present for persisted messages; streaming previews have none and are never woven. */
   messageId?: string;
 }
 
-export function MessageBubble({ author, content, messageId }: MessageBubbleProps) {
+export function MessageBubble({ author, content, conversationId, messageId }: MessageBubbleProps) {
   const isUser = author === "user";
   const bubbleRef = useRef<HTMLDivElement>(null);
-  const conversationId = useChatStore((state) => state.activeConversationId);
   const diglotEnabled = useDiglotStore((state) => state.settings.enabled);
   const patches = useDiglotStore((state) =>
     messageId === undefined ? undefined : state.patchesByMessage.get(messageId),
@@ -53,7 +54,9 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
   // to reserve its spans first (when weaving is on) so reservedSpans reflects the truth —
   // `patches` is undefined until ensureWoven's single-flight reservation lands, even as [].
   const doorsForMessage = useDoorStore((state) =>
-    messageId === undefined ? undefined : state.doorsByMessage.get(messageId),
+    messageId === undefined || conversationId === null
+      ? undefined
+      : state.doorsByConversation.get(conversationId)?.get(messageId),
   );
   useEffect(() => {
     if (author !== "assistant" || messageId === undefined || conversationId === null) return;
@@ -75,7 +78,6 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
         for (const entry of entries) {
           if (entry.isIntersecting && dwellTimer === null) {
             dwellTimer = window.setTimeout(() => {
-              const conversationId = useChatStore.getState().activeConversationId;
               if (conversationId !== null) {
                 void recordMessageReencounter(messageId, conversationId);
               }
@@ -93,7 +95,7 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
       if (dwellTimer !== null) window.clearTimeout(dwellTimer);
       observer.disconnect();
     };
-  }, [isUser, messageId]);
+  }, [isUser, messageId, conversationId]);
 
   // A marked word or a selection both open a focus session directly — no guess, no popover
   // (spec 042 §5). Silently does nothing while the switch is off or no conversation is open;
@@ -108,7 +110,8 @@ export function MessageBubble({ author, content, messageId }: MessageBubbleProps
   const openFocusFromDoor = (word: string, nodeId: string | null) => {
     // A term-marked word with no matching knowledge node has nothing to mark "opened"
     // (spec 043 §6) — it still opens a focus session directly, same as any other door.
-    if (nodeId !== null) useDoorStore.getState().markOpened(nodeId);
+    if (nodeId !== null && conversationId !== null)
+      useDoorStore.getState().markOpened(conversationId, nodeId);
     openFocus(word);
   };
 

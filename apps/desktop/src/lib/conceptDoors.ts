@@ -100,7 +100,7 @@ export async function computeDoorPatches(
       masteryByNode,
       curiosityByNode,
       retentionByNode,
-      alreadyOpenedNodeIds: useDoorStore.getState().openedNodeIds,
+      alreadyOpenedNodeIds: useDoorStore.getState().openedFor(conversationId),
       reservedSpans: [...reservedSpans, ...termDoors],
     });
 

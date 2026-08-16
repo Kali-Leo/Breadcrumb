@@ -39,6 +39,9 @@ const FALLBACK_REPLY_LIMIT = 3;
 
 /** Serializes overlapping gate runs (StrictMode double-mount, bus bursts). */
 let gateRunInFlight = false;
+/** Conversations whose helper-completion check is in flight — two rounds finishing close
+ * together must not thank twice. */
+const completingConversationIds = new Set<string>();
 
 export function helperTopicOf(row: CompanionProposalRow): string {
   return row.topic;
@@ -48,7 +51,7 @@ interface CompanionState extends BreakReminderState {
   /** Today's pending helpers — the whole roster (spec 050 §9: like a daily task list). */
   helpers: CompanionProposalRow[];
   seenHelperIds: ReadonlySet<string>;
-  crisisActive: boolean;
+  crisisConversationIds: ReadonlySet<string>;
   initialize(): Promise<void>;
   /** Expires stale helpers, generates today's batch once per day, refreshes the roster. */
   refreshDailyHelpers(): Promise<void>;
@@ -56,10 +59,53 @@ interface CompanionState extends BreakReminderState {
   /** Called after each finished round in a helper conversation — thanks and resolves once
    * a teach-quality claim landed for the node (or the fallback reply count is reached). */
   completeHelperIfReady(conversationId: string): Promise<void>;
-  checkUserMessageForCrisis(content: string): boolean;
-  dismissCrisis(): void;
+  checkUserMessageForCrisis(content: string, conversationId: string): boolean;
+  dismissCrisis(conversationId: string): void;
   recordActivity(): void;
   dismissBreakReminder(): void;
+}
+
+async function completeHelperOnce(
+  conversationId: string,
+  get: () => CompanionState,
+  set: (patch: Partial<CompanionState>) => void,
+): Promise<void> {
+  const repos = await getRepos();
+  const conversation = await repos.conversations.getById(conversationId);
+  const helperId = conversation?.companion_id;
+  if (
+    conversation === null ||
+    helperId === null ||
+    helperId === undefined ||
+    !helperId.startsWith(HELPER_ID_PREFIX)
+  ) {
+    return;
+  }
+  const helper = get().helpers.find((row) => row.companion_id === helperId);
+  if (helper === undefined) return;
+
+  // The confirmation is a teach-quality claim on the helper's node recorded after the
+  // helper appeared — judged ONLY from explanations inside this conversation (the judge
+  // reads this conversation; asking the main chat for the answer earns nothing here).
+  let confirmed = false;
+  if (helper.node_id !== null) {
+    const claims = await repos.masteryClaims.listAll();
+    confirmed = claims.some(
+      (claim) =>
+        claim.node_id === helper.node_id &&
+        claim.created_at >= helper.created_at &&
+        (claim.level === "taught_principled" || claim.level === "taught_surface"),
+    );
+  }
+  if (!confirmed) {
+    const messages = await repos.messages.listByConversation(conversationId);
+    const learnerReplies = messages.filter((message) => message.role === "user").length;
+    if (learnerReplies < FALLBACK_REPLY_LIMIT) return;
+  }
+
+  await appendHelperThanks(conversationId, helper.topic);
+  await repos.companionProposals.resolve(helper.id, "accepted", nowIso());
+  set({ helpers: get().helpers.filter((row) => row.id !== helper.id) });
 }
 
 function breakReminderSlice(state: BreakReminderState): BreakReminderState {
@@ -73,7 +119,7 @@ function breakReminderSlice(state: BreakReminderState): BreakReminderState {
 export const useCompanionStore = create<CompanionState>((set, get) => ({
   helpers: [],
   seenHelperIds: new Set<string>(),
-  crisisActive: false,
+  crisisConversationIds: new Set<string>(),
   ...INITIAL_BREAK_REMINDER_STATE,
 
   async initialize() {
@@ -148,52 +194,29 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   },
 
   async completeHelperIfReady(conversationId) {
-    const repos = await getRepos();
-    const conversation = await repos.conversations.getById(conversationId);
-    const helperId = conversation?.companion_id;
-    if (
-      conversation === null ||
-      helperId === null ||
-      helperId === undefined ||
-      !helperId.startsWith(HELPER_ID_PREFIX)
-    ) {
-      return;
+    if (completingConversationIds.has(conversationId)) return;
+    completingConversationIds.add(conversationId);
+    try {
+      await completeHelperOnce(conversationId, get, set);
+    } finally {
+      completingConversationIds.delete(conversationId);
     }
-    const helper = get().helpers.find((row) => row.companion_id === helperId);
-    if (helper === undefined) return;
-
-    // The confirmation is a teach-quality claim on the helper's node recorded after the
-    // helper appeared — judged ONLY from explanations inside this conversation (the judge
-    // reads this conversation; asking the main chat for the answer earns nothing here).
-    let confirmed = false;
-    if (helper.node_id !== null) {
-      const claims = await repos.masteryClaims.listAll();
-      confirmed = claims.some(
-        (claim) =>
-          claim.node_id === helper.node_id &&
-          claim.created_at >= helper.created_at &&
-          (claim.level === "taught_principled" || claim.level === "taught_surface"),
-      );
-    }
-    if (!confirmed) {
-      const messages = await repos.messages.listByConversation(conversationId);
-      const learnerReplies = messages.filter((message) => message.role === "user").length;
-      if (learnerReplies < FALLBACK_REPLY_LIMIT) return;
-    }
-
-    await appendHelperThanks(conversationId, helper.topic);
-    await repos.companionProposals.resolve(helper.id, "accepted", nowIso());
-    set({ helpers: get().helpers.filter((row) => row.id !== helper.id) });
   },
 
-  checkUserMessageForCrisis(content) {
+  checkUserMessageForCrisis(content, conversationId) {
     const fired = detectCrisis(content);
-    if (fired) set({ crisisActive: true });
+    if (fired) {
+      const next = new Set(get().crisisConversationIds);
+      next.add(conversationId);
+      set({ crisisConversationIds: next });
+    }
     return fired;
   },
 
-  dismissCrisis() {
-    set({ crisisActive: false });
+  dismissCrisis(conversationId) {
+    const next = new Set(get().crisisConversationIds);
+    next.delete(conversationId);
+    set({ crisisConversationIds: next });
   },
 
   recordActivity() {

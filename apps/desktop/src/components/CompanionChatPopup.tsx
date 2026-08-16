@@ -4,8 +4,11 @@
  * same time without cross-wiring. Reuses the real message bubbles and composer.
  * Main exports: CompanionChatPopup.
  */
+
+import { CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
 import { useEffect, useRef } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { useCompanionStore } from "../stores/companionStore";
 import { Composer } from "./Composer";
 import { MessageBubble } from "./MessageBubble";
 
@@ -17,6 +20,7 @@ interface CompanionChatPopupProps {
 
 export function CompanionChatPopup({ conversationId, title, onClose }: CompanionChatPopupProps) {
   const session = useChatStore((state) => state.sessions.get(conversationId));
+  const crisisHere = useCompanionStore((state) => state.crisisConversationIds.has(conversationId));
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Load this conversation's own session — the active binding is untouched.
@@ -46,17 +50,34 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           ✕
         </button>
       </div>
+      {crisisHere && (
+        <div className="border-b border-rose-100 bg-rose-50 px-3 py-2 text-xs text-stone-700">
+          <p>{CRISIS_RESPONSE}</p>
+          <button
+            type="button"
+            onClick={() => useCompanionStore.getState().dismissCrisis(conversationId)}
+            className="mt-1 text-stone-400 underline"
+          >
+            知道了
+          </button>
+        </div>
+      )}
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-stone-50 p-3 text-sm">
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
+            conversationId={conversationId}
             author={message.role}
             content={message.content}
             messageId={message.id}
           />
         ))}
         {streamingText !== null && streamingText !== "" && (
-          <MessageBubble author="assistant" content={streamingText} />
+          <MessageBubble
+            author="assistant"
+            conversationId={conversationId}
+            content={streamingText}
+          />
         )}
         {session?.errorText != null && <p className="text-xs text-rose-500">{session.errorText}</p>}
       </div>

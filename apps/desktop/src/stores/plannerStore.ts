@@ -75,6 +75,12 @@ interface PlannerState {
   skipGoalNode(nodeId: string): Promise<void>;
 }
 
+/** One extraction fires several bus events back-to-back; each used to launch its own
+ * full-table recompute concurrently, last-write-wins. One in flight + one pending rerun
+ * covers every burst. */
+let recomputeInFlight = false;
+let recomputePending = false;
+
 export const usePlannerStore = create<PlannerState>((set, get) => ({
   nodes: [],
   edges: [],
@@ -91,32 +97,49 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   route: null,
 
   async recompute() {
-    const repos = await getRepos();
-    const [nodes, edges, sightings, claims, signals, embeddings, goals] = await Promise.all([
-      repos.knowledgeNodes.listAll(),
-      repos.knowledgeEdges.listAll(),
-      repos.nodeSightings.listAll(),
-      repos.masteryClaims.listAll(),
-      repos.interestSignals.listAll(),
-      repos.nodeEmbeddings.listAll(),
-      repos.goals.listAll(),
-    ]);
+    if (recomputeInFlight) {
+      recomputePending = true;
+      return;
+    }
+    recomputeInFlight = true;
+    try {
+      await runRecompute();
+    } finally {
+      recomputeInFlight = false;
+      if (recomputePending) {
+        recomputePending = false;
+        void get().recompute();
+      }
+    }
 
-    const snapshot = computePlannerSnapshot(
-      nodes,
-      edges,
-      sightings,
-      claims,
-      signals,
-      embeddings,
-      goals,
-      get().selectedGoalId,
-      useSettingsStore.getState().learningMode === "ranked",
-      useSettingsStore.getState().routeParams,
-      nowIso(),
-    );
+    async function runRecompute(): Promise<void> {
+      const repos = await getRepos();
+      const [nodes, edges, sightings, claims, signals, embeddings, goals] = await Promise.all([
+        repos.knowledgeNodes.listAll(),
+        repos.knowledgeEdges.listAll(),
+        repos.nodeSightings.listAll(),
+        repos.masteryClaims.listAll(),
+        repos.interestSignals.listAll(),
+        repos.nodeEmbeddings.listAll(),
+        repos.goals.listAll(),
+      ]);
 
-    set({ nodes, edges, claims, goals, ...snapshot });
+      const snapshot = computePlannerSnapshot(
+        nodes,
+        edges,
+        sightings,
+        claims,
+        signals,
+        embeddings,
+        goals,
+        get().selectedGoalId,
+        useSettingsStore.getState().learningMode === "ranked",
+        useSettingsStore.getState().routeParams,
+        nowIso(),
+      );
+
+      set({ nodes, edges, claims, goals, ...snapshot });
+    }
   },
 
   selectGoal(goalId) {

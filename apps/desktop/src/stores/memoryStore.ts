@@ -24,6 +24,13 @@ export const useMemoryStore = create<MemoryState>((set) => ({
   },
 }));
 
+// One trailing timer, not a queue — parallel rounds finishing close together used to
+// stack several full FSRS recomputes.
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 appEventBus.on("chat:responseFinished", () => {
-  setTimeout(() => void useMemoryStore.getState().refresh(), 7000);
+  if (refreshTimer !== null) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    void useMemoryStore.getState().refresh();
+  }, 7000);
 });

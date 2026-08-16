@@ -55,6 +55,13 @@ interface ChatState extends ActiveMirror {
   noteExternalMessage(conversationId: string, message: MessageRow): void;
 }
 
+/** In-flight session loads, deduped per conversation (StrictMode double-mounts, popup +
+ * send racing) — a later putSession from a stale load must not clobber folded messages. */
+const sessionLoads = new Map<string, Promise<ChatSession>>();
+/** The most recently requested open — an earlier, slower open resolving late must not
+ * yank the active binding back. */
+let latestOpenRequestId: string | null = null;
+
 export const useChatStore = create<ChatState>((set, get) => {
   /** The single session write path — keeps the active mirror in sync by construction. */
   function patchSession(id: string, updater: (session: ChatSession) => ChatSession): void {
@@ -112,15 +119,31 @@ export const useChatStore = create<ChatState>((set, get) => {
     async ensureSession(id) {
       const existing = get().sessions.get(id);
       if (existing !== undefined) return existing;
-      const session = await loadChatSession(await getRepos(), id);
-      putSession(id, session, false);
-      return session;
+      const inFlight = sessionLoads.get(id);
+      if (inFlight !== undefined) return inFlight;
+      const load = (async () => {
+        const session = await loadChatSession(await getRepos(), id);
+        // A session that appeared meanwhile (a send round folded into it) wins over the
+        // older DB snapshot.
+        const current = get().sessions.get(id);
+        if (current !== undefined) return current;
+        putSession(id, session, false);
+        return session;
+      })();
+      sessionLoads.set(id, load);
+      try {
+        return await load;
+      } finally {
+        sessionLoads.delete(id);
+      }
     },
 
     async openConversation(id) {
+      latestOpenRequestId = id;
       // Always reload: an external append the session missed must not stay invisible.
       const session = await loadChatSession(await getRepos(), id);
-      putSession(id, session, true);
+      // Only the newest open request may move the active binding (fast A→B clicking).
+      putSession(id, session, latestOpenRequestId === id);
       // Opening a helper's conversation reads its invitation — the roster dot clears.
       if (session.companionId !== null) {
         const { useCompanionStore } = await import("./companionStore");
