@@ -8,6 +8,7 @@ import {
   activityLine,
   evidenceClaimLabel,
   FEEDBACK_COPY,
+  heatmapCellLine,
   newConceptLabel,
   reencounterLabel,
   reunionOpener,
@@ -26,6 +27,9 @@ describe("feedback lab copy gates", () => {
     // activityLine: zero and a representative count.
     activityLine(0),
     activityLine(12),
+    // heatmapCellLine: an empty day and a representative footprint count.
+    heatmapCellLine("2026-08-05", 0),
+    heatmapCellLine("2026-08-12", 3),
     // reunionOpener: the zero-LLM opener seeded into reunion chats.
     reunionOpener("黑洞"),
     // small-wins labels: every kind.

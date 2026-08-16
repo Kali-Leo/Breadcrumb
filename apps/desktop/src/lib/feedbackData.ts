@@ -8,11 +8,13 @@ import {
   computeContinuity,
   computeDailyActivity,
   computeLayerTrendSeries,
+  computeWordLayerTrendSeries,
   computeWordSettledSeries,
   type DailyActivityCell,
   type LayerTrendPoint,
   TREND_WINDOW_DAYS,
   type TrendPoint,
+  type WordLayerTrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { getRepos } from "./db";
 import { buildProductiveUseTimesByNode } from "./productiveUseTimes";
@@ -27,6 +29,7 @@ export interface FeedbackData {
   trends: {
     layers: LayerTrendPoint[];
     wordsSettled: TrendPoint[];
+    wordLayers: WordLayerTrendPoint[];
   };
 }
 
@@ -71,6 +74,7 @@ export async function loadFeedbackData(): Promise<FeedbackData> {
       ...trendWindow,
     }),
     wordsSettled: computeWordSettledSeries(wordEvents, wordStates, trendWindow),
+    wordLayers: computeWordLayerTrendSeries(wordEvents, wordStates, trendWindow),
   };
 
   return { cells, continuity, trends };

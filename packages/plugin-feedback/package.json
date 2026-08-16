@@ -12,7 +12,8 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/plugin-diglot-weave": "workspace:*",
-    "@breadcrumb/plugin-memory": "workspace:*"
+    "@breadcrumb/plugin-memory": "workspace:*",
+    "ts-fsrs": "^5.2.1"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

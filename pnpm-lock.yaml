@@ -331,6 +331,9 @@ importers:
       '@breadcrumb/plugin-memory':
         specifier: workspace:*
         version: link:../plugin-memory
+      ts-fsrs:
+        specifier: ^5.2.1
+        version: 5.4.1
     devDependencies:
       typescript:
         specifier: ^5.9.0

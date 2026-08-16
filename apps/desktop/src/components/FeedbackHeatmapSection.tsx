@@ -4,8 +4,8 @@
  * target line, no comparison to anyone else.
  * Main exports: FeedbackHeatmapSection.
  */
-import { activityLine, FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
-import { useEffect, useRef } from "react";
+import { activityLine, FEEDBACK_COPY, heatmapCellLine } from "@breadcrumb/plugin-feedback";
+import { cloneElement, useEffect, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
 import { useFeedbackStore } from "../stores/feedbackStore";
 
@@ -62,12 +62,17 @@ export function FeedbackHeatmapSection() {
   return (
     <section className="rounded-xl bg-white p-3 shadow-sm">
       <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.heatmapTitle}</h3>
-      <p className="mt-1 text-stone-400">{FEEDBACK_COPY.heatmapHint}</p>
       {continuity.activeDays === 0 ? (
         <p className="mt-2 text-stone-400">{FEEDBACK_COPY.heatmapEmpty}</p>
       ) : (
         <>
-          <div ref={scrollRef} className="mt-2 overflow-x-auto">
+          {/* How-to-read note lives on hover over the calendar area (progressive
+              disclosure); each cell adds its own date + footprint-count title. */}
+          <div
+            ref={scrollRef}
+            className="mt-2 overflow-x-auto"
+            title={FEEDBACK_COPY.heatmapHoverNote}
+          >
             <ActivityCalendar
               data={activities}
               theme={AMBER_THEME}
@@ -76,6 +81,13 @@ export function FeedbackHeatmapSection() {
               blockMargin={3}
               fontSize={10}
               labels={{ months: MONTH_LABELS }}
+              renderBlock={(block, activity) =>
+                cloneElement(
+                  block,
+                  {},
+                  <title>{heatmapCellLine(activity.date, activity.count)}</title>,
+                )
+              }
               showColorLegend={false}
               showTotalCount={false}
               showWeekdayLabels={false}

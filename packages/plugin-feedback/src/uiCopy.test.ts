@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   activityLine,
   evidenceClaimLabel,
+  heatmapCellLine,
   newConceptLabel,
   reencounterLabel,
   reunionOpener,
@@ -18,6 +19,21 @@ describe("activityLine", () => {
   it("states cumulative active days only — no run or streak clauses", () => {
     expect(activityLine(10)).toBe("活跃 10 天");
     expect(activityLine(0)).toBe("活跃 0 天");
+  });
+});
+
+describe("heatmapCellLine", () => {
+  it("states the day and its footprint count as a plain fact", () => {
+    expect(heatmapCellLine("2026-08-12", 3)).toBe("8月12日,留下 3 个学习痕迹");
+    expect(heatmapCellLine("2026-01-05", 1)).toBe("1月5日,留下 1 个学习痕迹");
+  });
+
+  it("shows only the date for an empty day — absence is not narrated", () => {
+    expect(heatmapCellLine("2026-08-05", 0)).toBe("8月5日");
+  });
+
+  it("falls back to the raw key for a malformed date", () => {
+    expect(heatmapCellLine("not-a-date", 2)).toBe("not-a-date");
   });
 });
 

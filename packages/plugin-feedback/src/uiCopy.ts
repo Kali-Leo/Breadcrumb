@@ -4,8 +4,8 @@
  * praise, no performed warmth, no pressure); simlab scans this module against the pressure
  * lexicon and a praise-word blacklist. Design rationale lives in code comments, never on
  * screen (pedagogy stays invisible).
- * Main exports: FEEDBACK_COPY, activityLine, reunionOpener, newConceptLabel,
- * reencounterLabel, wordGuessLabel, teachSessionLabel, evidenceClaimLabel.
+ * Main exports: FEEDBACK_COPY, activityLine, heatmapCellLine, reunionOpener,
+ * newConceptLabel, reencounterLabel, wordGuessLabel, teachSessionLabel, evidenceClaimLabel.
  */
 import type { MasteryClaimLevel } from "@breadcrumb/core-db";
 
@@ -13,9 +13,10 @@ export const FEEDBACK_COPY = {
   loading: "加载中…",
 
   // Heatmap — GitHub-garden-style, self-only so no social comparison; records what
-  // happened, never sets a target.
+  // happened, never sets a target. The how-to-read sentence lives on hover (progressive
+  // disclosure), not as a standing caption.
   heatmapTitle: "学习热力图",
-  heatmapHint: "每格是一天,颜色越深,那天学得越多。",
+  heatmapHoverNote: "每格是一天,颜色越深,那天学得越多。",
   heatmapEmpty: "还没有痕迹。开始一段学习对话,这里会出现第一格。",
 
   // Small wins — concrete progress events (Amabile's progress principle stays in this
@@ -51,18 +52,28 @@ export const FEEDBACK_COPY = {
   settledShowMore: "展开全部",
 
   // Trends — self-comparison only, no target lines (design rationale stays here in the
-  // comment, never on screen — Leo 2026-08-16).
+  // comment, never on screen — Leo 2026-08-16). Each line explains itself on legend hover
+  // (one complete sentence per line); no standing caption paragraphs.
   trendsTitle: "趋势",
   trendsEmpty: "线条会随学习慢慢出现。",
-  trendLayersTitle: "记忆 · 理解 · 直觉(估算)",
   trendLayersMemoryLabel: "记忆",
   trendLayersUnderstandingLabel: "理解",
-  trendLayersIntuitionLabel: "直觉转化",
-  trendLayersNote:
-    "三条都是估算,会随时间自然消退。记忆=估计还能想起的概念量;理解=有讲解或你自己说学过支撑的部分;用熟了的部分最粗略——长期稳定、且你自己用过的部分。",
+  trendLayersIntuitionLabel: "直觉",
+  // memory(t) = Σ retrievability over sighted concepts (plugin-memory layers.ts) — decays
+  // with the forgetting curve, phrased as "自然消退" without naming the mechanism.
+  trendLayersMemoryNote: "估算这一天你还能想起来的概念有多少;一阵子不接触,会随时间自然消退。",
+  // understanding(t) = Σ claimScore × retrievability — the claim-backed share of memory.
+  trendLayersUnderstandingNote: "记得的概念里,有你自己讲解过或说过学过作支撑的那部分,也是估算。",
+  // intuition(t) = Σ retrievability over long-stable concepts with a recorded productive use.
+  trendLayersIntuitionNote: "最粗略的估算:已经长期稳固、而且你在对话里自己用过的那部分。",
   trendWordsTitle: "词汇",
   trendWordsSettledLabel: "已稳固超过一个月的词",
-  trendWordsColdStartNote: "新词稳固需要时间,这条线前段为 0 是正常的。",
+  // Word-chart legend hover notes — same layer semantics replayed over woven words
+  // (wordSettledSeries.ts): memory = Σ replayed-card retrievability; intuition = the
+  // long-stable, productively-used share; settled folds the old cold-start caption in.
+  trendWordsMemoryNote: "估算这一天你还能想起来的词有多少;一阵子不接触,会随时间自然消退。",
+  trendWordsIntuitionNote: "最粗略的估算:已经长期稳固、而且你在自己的话里用过的那部分词。",
+  trendWordsSettledNote: "数的是已经稳固超过一个月的词;新词稳固需要时间,这条线前段为 0 是正常的。",
 
   // Evidence — the open-learner-model surface: every judgment can be traced to plain facts.
   evidenceTitle: "这些判断是怎么来的",
@@ -81,6 +92,17 @@ export const FEEDBACK_COPY = {
  * out (a broken run reads as a whip; the cumulative count keeps investment visible). */
 export function activityLine(activeDays: number): string {
   return `活跃 ${activeDays} 天`;
+}
+
+/** Per-cell hover line for the heatmap ("YYYY-MM-DD" + that day's footprint count) — the
+ * count is a plain fact ("痕迹" matches heatmapEmpty's language), never a target or gap. */
+export function heatmapCellLine(date: string, count: number): string {
+  const [, monthPart, dayPart] = date.split("-");
+  const month = Number(monthPart);
+  const day = Number(dayPart);
+  if (!Number.isInteger(month) || !Number.isInteger(day)) return date;
+  const dayLabel = `${month}月${day}日`;
+  return count === 0 ? dayLabel : `${dayLabel},留下 ${count} 个学习痕迹`;
 }
 
 /** Reunion session opener — composed locally at creation time (zero LLM). Seeding the chat
