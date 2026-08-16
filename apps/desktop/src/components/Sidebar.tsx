@@ -6,6 +6,7 @@
  * different things — the roster lives behind 👥, not inside the list.)
  * Main exports: Sidebar.
  */
+import { ALargeSmall, Map as MapIcon, Settings, Users } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -50,11 +51,11 @@ function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void 
       onClick={onToggle}
       title="好友"
       aria-label="好友"
-      className={`relative rounded-lg px-2 py-1 text-base transition-colors ${
-        open ? "bg-amber-100" : "hover:bg-stone-100"
+      className={`relative rounded-lg px-2 py-1.5 transition-colors ${
+        open ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"
       }`}
     >
-      👥
+      <Users size={19} strokeWidth={1.8} />
       {unread && (
         <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-rose-400" />
       )}
@@ -98,28 +99,29 @@ export function Sidebar({
           <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
         )}
       </nav>
-      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友. */}
+      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友.
+          One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
       <div className="flex items-center border-t border-stone-100 px-2 py-2">
         <ConnectivityDot />
         <div className="flex flex-1 items-center justify-evenly">
           {(
             [
-              ["⚙️", "设置", onOpenSettings, activeView === "settings"],
-              ["Aa", "词汇", onOpenVocab, activeView === "vocab"],
-              ["🗺️", "地图", onOpenMap, activeView === "map"],
+              [Settings, "设置", onOpenSettings, activeView === "settings"],
+              [ALargeSmall, "词汇", onOpenVocab, activeView === "vocab"],
+              [MapIcon, "地图", onOpenMap, activeView === "map"],
             ] as const
-          ).map(([icon, name, onClick, active]) => (
+          ).map(([Icon, name, onClick, active]) => (
             <button
               key={name}
               type="button"
               onClick={onClick}
               title={name}
               aria-label={name}
-              className={`rounded-lg px-2 py-1 text-base transition-colors ${
-                active ? "bg-amber-100" : "hover:bg-stone-100"
+              className={`rounded-lg px-2 py-1.5 transition-colors ${
+                active ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"
               }`}
             >
-              {icon}
+              <Icon size={19} strokeWidth={1.8} />
             </button>
           ))}
           <CompanionsButton open={companionsOpen} onToggle={onToggleCompanions} />
