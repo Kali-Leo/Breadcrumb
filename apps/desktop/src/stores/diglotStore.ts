@@ -1,7 +1,12 @@
 /**
  * Purpose: zustand store for the diglot weave (spec 033) — persisted settings, session
  * caches (pack, cards, per-message patches), signal ingestion and the guess-card session
- * state. Side effect on import: subscribes productive-use detection to chat:messageSent.
+ * state. Weave timing (Leo 2026-08-16): history messages weave base-only via ensureWoven
+ * (MessageBubble blanks the text until patches land, so the original never paints first);
+ * a fresh reply weaves ONCE via ensureWovenBeforeReveal — awaited by chatAssistantRound
+ * BEFORE the streamingText→message swap, with the LLM refine raced against a hard timeout —
+ * so visible text is never morphed after the fact. Side effect on import: subscribes
+ * productive-use detection to chat:messageSent.
  * Main exports: useDiglotStore, DiglotSettings.
  */
 import type { DiglotEventKind } from "@breadcrumb/core-db";
@@ -20,6 +25,7 @@ import type { Card } from "ts-fsrs";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { refineWeavePatches } from "../lib/diglotRefine";
+import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "../lib/diglotReveal";
 import {
   applyDiglotSignal,
   findProductiveUses,
@@ -27,6 +33,7 @@ import {
   loadCards,
   weaveAssistantMessage,
 } from "../lib/diglotWeave";
+import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { nowIso, onLocalDayChange } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
@@ -69,13 +76,14 @@ const SETTINGS_KEY = "diglotSettings";
  *  - density: ScheduleInput.density -> scheduler.ts budgetFor() (replacement count budget)
  *  - newWordDailyBase: weaveAssistantMessage's adaptiveNewWordCap base cap
  *  - introductionRankFloor: weaveAssistantMessage filters the introductionRank map by it
- *  - llmRefineEnabled: ensureWoven's gate on calling refineWeavePatches at all
  *  - pairId: selects the loaded language pack (loadBundledPack) that candidates/tokenize/
  *    replacement all read from
  * Everything else in DiglotSettings never reaches this path: ttsEnabled/piperPath/
  * piperModelPath are audio-only (no weave input); enabled only gates whether ensureWoven
  * runs at all, not what it computes, so cached patches for already-woven messages stay
- * correct across a disable/re-enable; guessLevel only feeds shouldAskGuess/
+ * correct across a disable/re-enable; llmRefineEnabled only feeds the ONE-SHOT reveal-time
+ * refine (ensureWovenBeforeReveal) — cached history patches are base-only by design and
+ * must not be wiped when the toggle flips; guessLevel only feeds shouldAskGuess/
  * computeGuessProbability (guess-card frequency), not patch selection; placementStep only
  * modulates how far recordSignal nudges introductionRankFloor, it isn't itself a scheduler
  * input; fsrsParams/fsrsFittedReviewCount reconfigure the shared FSRS scheduler via
@@ -86,7 +94,6 @@ const WEAVE_AFFECTING_SETTING_KEYS: readonly (keyof DiglotSettings)[] = [
   "density",
   "newWordDailyBase",
   "introductionRankFloor",
-  "llmRefineEnabled",
   "pairId",
 ];
 
@@ -134,6 +141,9 @@ const DEFAULT_SETTINGS: DiglotSettings = {
 
 interface DiglotState {
   settings: DiglotSettings;
+  /** True once the persisted settings were read — MessageBubble's weave gate holds
+   * assistant text back until it knows whether weaving is on (never paint-then-morph). */
+  settingsHydrated: boolean;
   loaded: LoadedLanguagePack | null;
   cardsByLemma: Map<string, Card>;
   patchesByMessage: Map<string, ReplacementPatch[]>;
@@ -146,7 +156,12 @@ interface DiglotState {
   refreshConfusions(): Promise<void>;
   loadFromDatabase(): Promise<void>;
   saveSettings(partial: Partial<DiglotSettings>): Promise<void>;
+  /** Base-only weave for a message already on screen gated blank (history path). */
   ensureWoven(messageId: string, content: string): Promise<void>;
+  /** Reveal-time weave for a freshly streamed reply (base + LLM refine under a hard
+   * timeout) — awaited by chatAssistantRound BEFORE the streamingText→message swap.
+   * Takes the RAW persisted content and normalizes it exactly like MessageBubble does. */
+  ensureWovenBeforeReveal(messageId: string, rawContent: string): Promise<void>;
   recordSignal(
     lemma: string,
     kind: DiglotEventKind,
@@ -161,6 +176,7 @@ interface DiglotState {
 
 export const useDiglotStore = create<DiglotState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
+  settingsHydrated: false,
   loaded: null,
   cardsByLemma: new Map(),
   patchesByMessage: new Map(),
@@ -183,7 +199,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     const repos = await getRepos();
     const stored = await repos.settings.get<DiglotSettings>(SETTINGS_KEY);
     const settings = { ...DEFAULT_SETTINGS, ...stored };
-    set({ settings });
+    set({ settings, settingsHydrated: true });
     if (!settings.enabled) return;
     const loaded = await loadBundledPack(settings.pairId);
     const cardsByLemma = await loadCards(settings.pairId);
@@ -245,33 +261,11 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   },
 
   async ensureWoven(messageId, content) {
-    const { settings, loaded, patchesByMessage, cardsByLemma } = get();
-    if (!settings.enabled || loaded === null) return;
-    if (patchesByMessage.has(messageId)) return;
-    const epochAtStart = weaveEpoch;
-    patchesByMessage.set(messageId, []); // reserve to keep the weave single-flight
-    const result = await weaveAssistantMessage({
-      loaded,
-      content,
-      density: settings.density,
-      newWordDailyBase: settings.newWordDailyBase,
-      introductionRankFloor: settings.introductionRankFloor,
-      cardsByLemma,
-      newWordsIntroducedToday: get().newWordsIntroducedToday,
-    });
-    let patches = result.patches;
-    // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
-    const { apiConfig, networkEnabled } = useSettingsStore.getState();
-    if (settings.llmRefineEnabled && networkEnabled && apiConfig !== null && patches.length > 0) {
-      patches = await refineWeavePatches(apiConfig, loaded, content, patches);
-    }
-    // Settings changed underneath (epoch bump) or the reservation was swept — this weave
-    // was computed against stale inputs and must not land.
-    if (epochAtStart !== weaveEpoch || !get().patchesByMessage.has(messageId)) return;
-    set({
-      patchesByMessage: new Map(get().patchesByMessage).set(messageId, patches),
-      newWordsIntroducedToday: get().newWordsIntroducedToday + result.introducedLemmas.length,
-    });
+    await weaveAndStore(messageId, content, false);
+  },
+
+  async ensureWovenBeforeReveal(messageId, rawContent) {
+    await weaveAndStore(messageId, normalizeMathDelimiters(rawContent), true);
   },
 
   async recordSignal(lemma, kind, messageId, context, latencyMs) {
@@ -344,6 +338,61 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     });
   },
 }));
+
+/** Message ids with a weave in flight — single-flight guard that stays OUT of
+ * patchesByMessage, so subscribers (MessageBubble's blank-until-woven gate, the doors
+ * effect) keep seeing `undefined` until the FINAL patches land in one set(). */
+const weaveInFlight = new Set<string>();
+
+/** The one weave path (both halves of the timing ruling): base weave always; the metered
+ * LLM refine only on the reveal path, raced against its hard timeout — on timeout the base
+ * weave lands and, because refine never runs again for a cached message, it is skipped for
+ * that message forever. */
+async function weaveAndStore(
+  messageId: string,
+  displaySource: string,
+  refine: boolean,
+): Promise<void> {
+  const { settings, loaded, patchesByMessage, cardsByLemma } = useDiglotStore.getState();
+  if (!settings.enabled || loaded === null) return;
+  if (patchesByMessage.has(messageId) || weaveInFlight.has(messageId)) return;
+  weaveInFlight.add(messageId);
+  const epochAtStart = weaveEpoch;
+  try {
+    const result = await weaveAssistantMessage({
+      loaded,
+      content: displaySource,
+      density: settings.density,
+      newWordDailyBase: settings.newWordDailyBase,
+      introductionRankFloor: settings.introductionRankFloor,
+      cardsByLemma,
+      newWordsIntroducedToday: useDiglotStore.getState().newWordsIntroducedToday,
+    });
+    let patches = result.patches;
+    // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
+    const { apiConfig, networkEnabled } = useSettingsStore.getState();
+    if (refine && settings.llmRefineEnabled && networkEnabled && apiConfig !== null) {
+      const basePatches = patches;
+      if (basePatches.length > 0) {
+        patches = await refineWithHardTimeout(
+          () => refineWeavePatches(apiConfig, loaded, displaySource, basePatches),
+          basePatches,
+          REFINE_HARD_TIMEOUT_MS,
+        );
+      }
+    }
+    // Settings changed underneath (the epoch bump also swept patchesByMessage) — this
+    // weave was computed against stale inputs and must not land.
+    if (epochAtStart !== weaveEpoch) return;
+    const state = useDiglotStore.getState();
+    useDiglotStore.setState({
+      patchesByMessage: new Map(state.patchesByMessage).set(messageId, patches),
+      newWordsIntroducedToday: state.newWordsIntroducedToday + result.introducedLemmas.length,
+    });
+  } finally {
+    weaveInFlight.delete(messageId);
+  }
+}
 
 // Productive use (spec 033 signal table): when the user's own message contains a target
 // word they are learning, record the strongest signal — once per lemma per message.

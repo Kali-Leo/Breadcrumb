@@ -79,6 +79,15 @@ export async function runAssistantRound(
       return;
     }
     const { assistantMessage, cost } = outcome;
+    // Diglot weave timing (Leo 2026-08-16): stream end is the single legitimate swap
+    // moment — the weave (base + refine under its hard internal timeout) must be ready
+    // BEFORE streamingText is replaced by the persisted message, so the final text appears
+    // woven exactly once. Returns immediately while weaving is disabled, so the swap is
+    // never delayed then. Dynamic import: diglotStore statically imports chatStore.
+    const { useDiglotStore } = await import("../stores/diglotStore");
+    await useDiglotStore
+      .getState()
+      .ensureWovenBeforeReveal(assistantMessage.id, assistantMessage.content);
     deps.patchSession(conversationId, (current) => ({
       ...current,
       ...(current.allMessages.some((m) => m.id === assistantMessage.id)

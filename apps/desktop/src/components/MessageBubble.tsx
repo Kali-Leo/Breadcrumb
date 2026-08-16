@@ -2,7 +2,9 @@
  * Purpose: renders one chat message (user right-aligned amber, assistant left-aligned
  * neutral). Assistant messages render as markdown with KaTeX math; the diglot weave
  * (spec 033) and explore doors (spec 039) both apply to the same normalized display
- * source, so patch offsets always match the screen. A door click or a selection+Enter both
+ * source, so patch offsets always match the screen. While weaving is enabled, assistant
+ * text stays blank until its patches are cached (weave-before-first-paint, Leo 2026-08-16)
+ * — the original is never painted and then morphed. A door click or a selection+Enter both
  * open a focus session directly — no guess, no popover (spec 042 §5) — anchored to this
  * message's id so its in-place badge (Leo 2026-08-14) can find its way back. Storage and LLM
  * context keep the original text untouched.
@@ -32,6 +34,8 @@ export function MessageBubble({ author, content, conversationId, messageId }: Me
   const isUser = author === "user";
   const bubbleRef = useRef<HTMLDivElement>(null);
   const diglotEnabled = useDiglotStore((state) => state.settings.enabled);
+  const diglotHydrated = useDiglotStore((state) => state.settingsHydrated);
+  const diglotPackLoaded = useDiglotStore((state) => state.loaded !== null);
   const patches = useDiglotStore((state) =>
     messageId === undefined ? undefined : state.patchesByMessage.get(messageId),
   );
@@ -44,15 +48,28 @@ export function MessageBubble({ author, content, conversationId, messageId }: Me
   );
 
   const shouldWeave = diglotEnabled && author === "assistant" && messageId !== undefined;
+  // diglotPackLoaded is a dep on purpose: an early bubble rendered while the pack was
+  // still loading must retry once it lands, or its gate below would blank forever.
   useEffect(() => {
-    if (shouldWeave && messageId !== undefined) {
+    if (shouldWeave && diglotPackLoaded && messageId !== undefined) {
       void useDiglotStore.getState().ensureWoven(messageId, displaySource);
     }
-  }, [shouldWeave, messageId, displaySource]);
+  }, [shouldWeave, diglotPackLoaded, messageId, displaySource]);
+
+  // Weave-before-first-paint gate (Leo 2026-08-16): a persisted assistant message must
+  // never paint its original and then re-render woven. While weaving is enabled (or its
+  // settings are not yet hydrated) and this message's patches are not yet cached, render
+  // nothing — the base weave resolves in milliseconds from the local pack, and a freshly
+  // streamed reply was already woven by ensureWovenBeforeReveal before the swap, so its
+  // first render never waits here. Weaving off → the original renders immediately.
+  const weavePending =
+    author === "assistant" &&
+    messageId !== undefined &&
+    (!diglotHydrated || (diglotEnabled && patches === undefined));
 
   // Explore doors (spec 039 §2.1): zero-LLM, so no settings gate. Waits for the diglot weave
-  // to reserve its spans first (when weaving is on) so reservedSpans reflects the truth —
-  // `patches` is undefined until ensureWoven's single-flight reservation lands, even as [].
+  // to finish first (when weaving is on) so reservedSpans reflects the truth — `patches`
+  // stays undefined until the weave's FINAL patches land in the store, even as [].
   const doorsForMessage = useDoorStore((state) =>
     messageId === undefined || conversationId === null
       ? undefined
@@ -128,7 +145,7 @@ export function MessageBubble({ author, content, conversationId, messageId }: Me
       >
         {isUser ? (
           content
-        ) : (
+        ) : weavePending ? null : (
           <SelectionFocusCatcher onConfirm={openFocus}>
             <MarkdownContent
               source={displaySource}

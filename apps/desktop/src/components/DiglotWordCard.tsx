@@ -1,6 +1,7 @@
 /**
  * Purpose: the hover card of a woven word (spec 033) — guess-first when the policy asks
- * (no skip path, Leo 2026-08-12), otherwise the gloss: original word, reading, audio.
+ * (no skip path, Leo 2026-08-12), otherwise the gloss: original word, reading, audio. The
+ * 🔊 renders only for a VERIFIED audio provider (canSpeak); IPA shows regardless.
  * Main exports: DiglotWordCard.
  */
 import {
@@ -8,8 +9,8 @@ import {
   type PackEntry,
   type ReplacementPatch,
 } from "@breadcrumb/plugin-diglot-weave";
-import { useEffect, useRef, useState } from "react";
-import { speakWord } from "../lib/diglotAudio";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { canSpeak, speakWord, subscribeVoicesChanged } from "../lib/diglotAudio";
 import { feedbackTextFor, submitDiglotGuess } from "../lib/diglotGuess";
 import { useDiglotStore } from "../stores/diglotStore";
 
@@ -46,6 +47,13 @@ export function DiglotWordCard({
   const noteGlossSeen = useDiglotStore((state) => state.noteGlossSeen);
   const noteGuessOutcome = useDiglotStore((state) => state.noteGuessOutcome);
   const confusion = useDiglotStore((state) => state.confusionByLemma.get(patch.lemma));
+  const targetLang = loaded?.pack.targetLang ?? "en";
+  // Strict speaker honesty (Leo 2026-08-16): 🔊 only for a verified provider. The webkit
+  // voice list loads lazily — the voiceschanged subscription re-evaluates once it arrives.
+  const speakable = useSyncExternalStore(subscribeVoicesChanged, () =>
+    canSpeak(targetLang, settings.piperPath, settings.piperModelPath),
+  );
+  const showSpeaker = settings.ttsEnabled && speakable;
 
   // The gloss reveal is itself the "hover" lookup signal — but only after any guess gate.
   useEffect(() => {
@@ -83,14 +91,14 @@ export function DiglotWordCard({
       <div className="w-64 space-y-1.5 p-3 text-sm text-stone-700">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-medium">{patch.replacement}</span>
-          {settings.ttsEnabled && (
+          {showSpeaker && (
             <button
               type="button"
               className="ml-auto rounded px-1 text-base hover:bg-stone-100"
               onClick={() =>
                 void speakWord(
                   patch.replacement,
-                  loaded?.pack.targetLang ?? "en",
+                  targetLang,
                   settings.piperPath,
                   settings.piperModelPath,
                 )
@@ -147,7 +155,7 @@ export function DiglotWordCard({
         <span className="text-base font-medium">{patch.replacement}</span>
         {entry.reading !== "" && <span className="text-xs text-stone-400">{entry.reading}</span>}
         <span className="text-xs text-stone-400">{entry.pos}</span>
-        {settings.ttsEnabled && (
+        {showSpeaker && (
           <button
             type="button"
             className="ml-auto rounded px-1 text-base hover:bg-stone-100"
@@ -155,7 +163,7 @@ export function DiglotWordCard({
               void recordSignal(patch.lemma, "audio", messageId, context, null);
               void speakWord(
                 patch.replacement,
-                loaded?.pack.targetLang ?? "en",
+                targetLang,
                 settings.piperPath,
                 settings.piperModelPath,
               );

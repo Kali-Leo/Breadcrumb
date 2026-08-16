@@ -13,21 +13,13 @@ export const DIGLOT_UI_COPY = {
   guessSubmit: "提交",
   alsoTranslatedAs: "也作",
   settingsTitle: "语言学习",
-  settingsHint:
-    "对话里会有少量词语显示成你正在学的语言;原文都还在,点一下就能看,也随时可以关闭。更准确的「智能替换」可以在设置的开关与计价页打开。",
-  densityLabel: "替换频率",
-  newWordCapLabel: "每日新词上限",
-  guessLevelLabel: "猜测频率",
-  guessLevelLow: "少",
-  guessLevelStandard: "标准",
-  guessLevelHigh: "多",
-  ttsLabel: "朗读",
+  settingsHint: "对话里会有部分词替换为你正在学的另一种语言",
+  pairStatus: "从中文学 English",
+  llmRefineLabel: "智能替换",
+  llmRefineHint: "让 AI 按上下文挑更合适的词替换，效果更准，但每条消息花一小笔。",
+  learningWordsTitle: "正在学的词",
+  learningWordsEmpty: "开始对话后，学到的词会出现在这里。",
   contrastLabel: "易混对比",
-  placementStatus: "新词难度起点",
-  placementNote: "会随你的阅读自动调整,不用管它",
-  piperSection: "更好听的发音(可选,需要自己装 Piper)",
-  piperPathLabel: "Piper 程序的位置",
-  piperModelLabel: "语音文件的位置(.onnx)",
 } as const;
 
 /** Guess feedback: plain statements of fact, one per grade. */

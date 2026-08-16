@@ -1,13 +1,18 @@
 /**
  * Purpose: renders a woven assistant message (spec 033) — patch segments with highlighted
  * target words, hover-opened cards (guess gate decided at open), abandonment on close,
- * and viewport exposure signals (once per message per session).
+ * and viewport exposure signals (once per message per session). The card renders through
+ * createPortal(document.body): DiglotText lives inside markdown <p> elements, and the
+ * card's block content is invalid DOM there (React nesting warnings) besides getting
+ * clipped by scroll containers; placement math lives in lib/diglotCardPosition.
  * Main exports: DiglotText.
  */
 import type { ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
 import { applyPatches } from "@breadcrumb/plugin-diglot-weave";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { contextSentenceFor } from "../lib/contextSentence";
+import { computeDiglotCardPosition } from "../lib/diglotCardPosition";
 import { useDiglotStore } from "../stores/diglotStore";
 import { DiglotWordCard } from "./DiglotWordCard";
 
@@ -21,9 +26,9 @@ interface OpenCard {
   patchStart: number;
   guessFirst: boolean;
   guessResolved: boolean;
-  /** Fixed-position anchor, clamped inside the chat scroll container — absolute
-   * positioning got clipped by overflow-y-auto in narrow layouts (real-app walkthrough).
-   * Exactly one of top/bottom is set: cards flip below the word near the viewport top. */
+  /** Fixed-position viewport anchor from the word's getBoundingClientRect, computed by
+   * computeDiglotCardPosition (clamped inside the scroller; exactly one of top/bottom is
+   * set — cards flip below the word near the viewport top). */
   left: number;
   top: number | null;
   bottom: number | null;
@@ -111,6 +116,16 @@ export function DiglotText({
     setOpenCard(null);
   };
 
+  // The portal card is fixed-positioned, so any scroll (the chat scroller does not bubble,
+  // hence capture) would detach it from its word — close instead, as mouseleave would.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeCard is recreated per render; openCard alone decides (re)subscription
+  useEffect(() => {
+    if (openCard === null) return;
+    const closeOnScroll = () => closeCard(openCard);
+    window.addEventListener("scroll", closeOnScroll, { capture: true, passive: true });
+    return () => window.removeEventListener("scroll", closeOnScroll, { capture: true });
+  }, [openCard]);
+
   const base = rangeStart ?? 0;
   const slice = rangeEnd === undefined ? content.slice(base) : content.slice(base, rangeEnd);
   const localPatches = patches.map((patch) => ({
@@ -125,12 +140,12 @@ export function DiglotText({
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
     const rect = anchor.getBoundingClientRect();
     const scroller = anchor.closest(".overflow-y-auto")?.getBoundingClientRect();
-    const minLeft = (scroller?.left ?? 0) + 8;
-    const maxLeft = (scroller?.right ?? window.innerWidth) - CARD_WIDTH - 8;
-    const left = Math.min(Math.max(rect.left, minLeft), Math.max(maxLeft, minLeft));
-    const flipBelow = rect.top < 220;
-    const top = flipBelow ? rect.bottom + 4 : null;
-    const bottom = flipBelow ? null : window.innerHeight - rect.top + 4;
+    const { left, top, bottom } = computeDiglotCardPosition({
+      anchor: rect,
+      scroller: scroller ?? null,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      cardWidth: CARD_WIDTH,
+    });
     setOpenCard((card) =>
       card?.patchStart === patchStart
         ? card
@@ -192,37 +207,43 @@ export function DiglotText({
             >
               {segment.patch.replacement}
             </button>
-            {openCard?.patchStart === segment.patch.start && (
-              <span
-                role="tooltip"
-                style={{
-                  position: "fixed",
-                  left: openCard.left,
-                  top: openCard.top ?? undefined,
-                  bottom: openCard.bottom ?? undefined,
-                }}
-                className="z-20 block rounded-xl border border-stone-200 bg-white shadow-lg"
-                onMouseEnter={() => {
-                  if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
-                }}
-                onMouseLeave={() => scheduleClose(openCard)}
-              >
-                <DiglotWordCard
-                  patch={segment.patch}
-                  entry={loaded.pack.entries[segment.patch.lemma] ?? null}
-                  context={contextSentenceFor(content, {
-                    ...segment.patch,
-                    start: segment.patch.start + base,
-                    end: segment.patch.end + base,
-                  })}
-                  messageId={messageId}
-                  guessFirst={openCard.guessFirst}
-                  onGuessResolved={() =>
-                    setOpenCard((card) => (card === null ? null : { ...card, guessResolved: true }))
-                  }
-                />
-              </span>
-            )}
+            {openCard?.patchStart === segment.patch.start &&
+              // Portal: the card's block content may not live inside the markdown <p>
+              // (invalid DOM nesting), and body-level rendering escapes clipping.
+              createPortal(
+                <div
+                  role="tooltip"
+                  style={{
+                    position: "fixed",
+                    left: openCard.left,
+                    top: openCard.top ?? undefined,
+                    bottom: openCard.bottom ?? undefined,
+                  }}
+                  className="z-20 rounded-xl border border-stone-200 bg-white shadow-lg"
+                  onMouseEnter={() => {
+                    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+                  }}
+                  onMouseLeave={() => scheduleClose(openCard)}
+                >
+                  <DiglotWordCard
+                    patch={segment.patch}
+                    entry={loaded.pack.entries[segment.patch.lemma] ?? null}
+                    context={contextSentenceFor(content, {
+                      ...segment.patch,
+                      start: segment.patch.start + base,
+                      end: segment.patch.end + base,
+                    })}
+                    messageId={messageId}
+                    guessFirst={openCard.guessFirst}
+                    onGuessResolved={() =>
+                      setOpenCard((card) =>
+                        card === null ? null : { ...card, guessResolved: true },
+                      )
+                    }
+                  />
+                </div>,
+                document.body,
+              )}
           </span>
         ),
       )}
