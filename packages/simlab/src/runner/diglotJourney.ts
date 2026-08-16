@@ -4,6 +4,7 @@
  * model; collects debt, starvation and constraint metrics. Zero LLM, zero DB, seeded PRNG.
  * Main exports: simulateDiglotJourney, DiglotJourneyReport.
  */
+import type { DiglotPairId } from "@breadcrumb/core-db";
 import {
   adaptiveNewWordCap,
   type CandidateOccurrence,
@@ -108,6 +109,8 @@ export function simulateDiglotJourney(input: {
     totalWordsLearning: 0,
   };
   const introductionRank = new Map(pack.introductionQueue.map((lemma, rank) => [lemma, rank]));
+  // The journey simulates one learner on one language pair; FSRS state is keyed by it.
+  const journeyPair: DiglotPairId = "sim-zh-en";
 
   for (let day = 0; day < input.days; day += 1) {
     let newToday = 0;
@@ -120,6 +123,7 @@ export function simulateDiglotJourney(input: {
       const candidates: CandidateOccurrence[] = extractCandidates(tokens, pack);
       const reviewDebt = [...cards.values()].filter((card) => card.due <= now).length;
       const scheduled = scheduleReplacements({
+        pairId: journeyPair,
         candidates,
         cardsByLemma: cards,
         now,
@@ -151,7 +155,7 @@ export function simulateDiglotJourney(input: {
         // but each reveal itself teaches — lookup probability decays with encounters even
         // when the memory model still scores recall near zero. Every 3rd clean exposure
         // rates Good via the real mapping.
-        const recall = retrievabilityOf(card, now);
+        const recall = retrievabilityOf(journeyPair, card, now);
         const seen = encounters.get(item.lemma) ?? 0;
         encounters.set(item.lemma, seen + 1);
         const kinds = recentKinds.get(item.lemma) ?? [];
@@ -160,7 +164,7 @@ export function simulateDiglotJourney(input: {
         const rating = ratingForSignal(kind, kinds as never[], undefined, card.reps);
         kinds.unshift(kind);
         recentKinds.set(item.lemma, kinds.slice(0, 8));
-        if (rating !== null) card = reviewCard(card, now, rating);
+        if (rating !== null) card = reviewCard(journeyPair, card, now, rating);
         cards.set(item.lemma, card);
       }
     }

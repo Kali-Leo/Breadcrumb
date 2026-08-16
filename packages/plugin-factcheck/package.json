@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-llm": "workspace:*",
+    "cheerio": "^1.0.0",
     "zod": "^4.1.0"
   },
   "devDependencies": {

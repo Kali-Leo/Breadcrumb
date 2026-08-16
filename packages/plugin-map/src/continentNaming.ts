@@ -22,7 +22,14 @@ export interface ContinentNamingRequest {
 }
 
 export const continentNamingSchema = z.object({
-  clusters: z.array(z.object({ id: z.string(), name: z.string() })),
+  clusters: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string().refine(isPlainContinentName, {
+        message: `name must be ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} code points with no digits`,
+      }),
+    }),
+  ),
 });
 
 /** Stable across runs and machines: the member set alone decides the key, so a cluster that
@@ -33,7 +40,9 @@ export function continentNameCacheKey(memberNodeIds: readonly string[]): string 
 }
 
 /** A name the map can wear: plain, short, no digits. Rank words are asked against in the
- * prompt; length and digits are what can be checked mechanically. */
+ * prompt; length and digits are what can be checked mechanically. Folded into
+ * continentNamingSchema via .refine() so an unusable name can never parse through — kept
+ * exported since callers may still want to re-check a name from another source. */
 export function isPlainContinentName(name: string): boolean {
   const trimmed = name.trim();
   const length = [...trimmed].length;

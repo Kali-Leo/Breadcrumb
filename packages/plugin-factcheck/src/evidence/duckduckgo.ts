@@ -1,13 +1,13 @@
 /**
- * Purpose: DuckDuckGo evidence provider (fallback) — scrapes the key-free HTML endpoint,
- * decodes redirect links, and only surfaces results whose page is actually reachable
- * (fetch-and-verify). Main exports: createDuckDuckGoProvider.
+ * Purpose: DuckDuckGo evidence provider (fallback) — scrapes the key-free HTML endpoint with
+ * cheerio (real DOM traversal, so a result-block link and its snippet stay paired by DOM
+ * structure rather than by list index), decodes redirect links, and only surfaces results
+ * whose page is actually reachable (fetch-and-verify). Main exports: createDuckDuckGoProvider.
  */
+import { load } from "cheerio";
 import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
 
-const RESULT_LINK_PATTERN = /class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
-const RESULT_SNIPPET_PATTERN = /class="result__snippet"[^>]*>([\s\S]*?)<\/(?:a|div)>/g;
 const SNIPPET_MAX_LENGTH = 600;
 
 export interface DuckDuckGoProviderOptions {
@@ -28,6 +28,12 @@ export function createDuckDuckGoProvider(options: DuckDuckGoProviderOptions): Ev
         );
         if (!response.ok) return [];
         const candidates = parseResults(await response.text());
+        if (candidates.length === 0) {
+          // Headless package: no DB, so this can't reach recordAiFailure (app-side, see
+          // apps/desktop/src/lib/failureLog.ts) — a distinctive prefix is the next best
+          // signal that DuckDuckGo's markup drifted out from under the cheerio selectors.
+          console.warn("[factcheck:duckduckgo] parsed 0 result candidates from a 200 response");
+        }
         return await verifyCandidates(options.fetchImpl, timeoutMs, candidates, limit);
       } catch {
         return [];
@@ -43,17 +49,20 @@ interface ResultCandidate {
 }
 
 function parseResults(html: string): ResultCandidate[] {
-  const links = [...html.matchAll(RESULT_LINK_PATTERN)];
-  const snippets = [...html.matchAll(RESULT_SNIPPET_PATTERN)];
   const candidates: ResultCandidate[] = [];
-  for (const [index, link] of links.entries()) {
-    const url = decodeRedirectUrl(link[1] ?? "");
-    const title = stripHtml(link[2] ?? "");
-    const snippet = stripHtml(snippets[index]?.[1] ?? "");
+  const $ = load(html);
+  // Each result lives in one block carrying (among others) the "result" class; scoping the
+  // title/snippet lookup to that block keeps them paired by DOM structure, not list index.
+  $(".result").each((_index, element) => {
+    const $item = $(element);
+    const $link = $item.find(".result__a").first();
+    const url = decodeRedirectUrl($link.attr("href") ?? "");
+    const title = stripHtml($link.html() ?? "");
+    const snippet = stripHtml($item.find(".result__snippet").first().html() ?? "");
     if (url !== null && title.length > 0 && snippet.length > 0) {
       candidates.push({ url, title, snippet: snippet.slice(0, SNIPPET_MAX_LENGTH) });
     }
-  }
+  });
   return candidates;
 }
 

@@ -157,7 +157,7 @@ export function replayWord(input: {
       created_at: createdAt,
     });
     if (rating !== null) {
-      card = reviewCard(card, new Date(createdAt), rating);
+      card = reviewCard(DEMO_PAIR, card, new Date(createdAt), rating);
       lastRatedAtIso = createdAt;
       reps += 1;
     }

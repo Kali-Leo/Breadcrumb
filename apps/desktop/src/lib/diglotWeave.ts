@@ -100,6 +100,7 @@ export async function weaveAssistantMessage(input: {
       .filter(([, rank]) => rank >= input.introductionRankFloor),
   );
   const scheduled = scheduleReplacements({
+    pairId: pair,
     candidates,
     cardsByLemma: input.cardsByLemma,
     now,
@@ -172,7 +173,7 @@ export async function applyDiglotSignal(input: {
   });
   let card = input.card;
   if (rating !== null) {
-    card = reviewCard(card, now, rating);
+    card = reviewCard(input.pair, card, now, rating);
     await repos.diglot.updateStateCard(
       input.lemma,
       input.pair,

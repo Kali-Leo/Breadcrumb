@@ -9,6 +9,7 @@ import { newWordCard, reviewCard } from "./memoryState";
 import { adaptiveNewWordCap, type ScheduleInput, scheduleReplacements } from "./scheduler";
 
 const NOW = new Date("2026-08-12T12:00:00.000Z");
+const PAIR_ID = "zh:en";
 
 function candidate(lemma: string, clauseIndex: number, start: number): CandidateOccurrence {
   return { lemma, surface: lemma, start, end: start + lemma.length, clauseIndex };
@@ -17,11 +18,12 @@ function candidate(lemma: string, clauseIndex: number, start: number): Candidate
 /** A card whose recall has decayed for `days` days since one Good review. */
 function agedCard(days: number) {
   const reviewedAt = new Date(NOW.getTime() - days * 24 * 3600 * 1000);
-  return reviewCard(newWordCard(reviewedAt), reviewedAt, Rating.Good);
+  return reviewCard(PAIR_ID, newWordCard(reviewedAt), reviewedAt, Rating.Good);
 }
 
 function baseInput(overrides: Partial<ScheduleInput>): ScheduleInput {
   return {
+    pairId: PAIR_ID,
     candidates: [],
     cardsByLemma: new Map(),
     now: NOW,

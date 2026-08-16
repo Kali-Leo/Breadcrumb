@@ -31,7 +31,7 @@ export async function maybeFitFsrsParameters(
   if (reviewCount < lastFittedReviewCount + REFIT_REVIEW_STEP) return null;
   try {
     const params = await invoke<number[]>("optimize_fsrs_parameters", { items });
-    configureDiglotScheduler(params);
+    configureDiglotScheduler(pair, params);
     return { params, reviewCount };
   } catch (error) {
     void recordAiFailure("fsrs-fitting", error);

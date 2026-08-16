@@ -1,15 +1,13 @@
 /**
  * Purpose: Bing China evidence provider — key-free cn.bing.com HTML search reachable from
- * mainland China (where Wikipedia/DuckDuckGo are not), with redirect decoding and
- * fetch-and-verify. Main exports: createBingProvider.
+ * mainland China (where Wikipedia/DuckDuckGo are not), parsed with cheerio (real DOM
+ * traversal survives markup drift far better than hand-written regexes), with redirect
+ * decoding and fetch-and-verify. Main exports: createBingProvider.
  */
+import { load } from "cheerio";
 import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
 
-/** The real result link lives inside <h2>; a plain first-<a> grab hits the site-attribution link. */
-const HEADING_LINK_PATTERN = /<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/;
-const FALLBACK_LINK_PATTERN = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/;
-const RESULT_SNIPPET_PATTERN = /<p[^>]*>([\s\S]*?)<\/p>/;
 const SNIPPET_MAX_LENGTH = 600;
 
 export interface BingProviderOptions {
@@ -30,6 +28,12 @@ export function createBingProvider(options: BingProviderOptions): EvidenceProvid
         );
         if (!response.ok) return [];
         const candidates = parseResults(await response.text());
+        if (candidates.length === 0) {
+          // Headless package: no DB, so this can't reach recordAiFailure (app-side, see
+          // apps/desktop/src/lib/failureLog.ts) — a distinctive prefix is the next best
+          // signal that Bing's markup drifted out from under the cheerio selectors.
+          console.warn("[factcheck:bing] parsed 0 result candidates from a 200 response");
+        }
         return await verifyCandidates(options.fetchImpl, timeoutMs, candidates, limit);
       } catch {
         return [];
@@ -46,15 +50,20 @@ interface ResultCandidate {
 
 function parseResults(html: string): ResultCandidate[] {
   const candidates: ResultCandidate[] = [];
-  for (const chunk of html.split('<li class="b_algo"').slice(1)) {
-    const link = HEADING_LINK_PATTERN.exec(chunk) ?? FALLBACK_LINK_PATTERN.exec(chunk);
-    const url = decodeBingUrl(link?.[1] ?? "");
-    const title = stripHtml(link?.[2] ?? "");
-    const snippet = stripHtml(RESULT_SNIPPET_PATTERN.exec(chunk)?.[1] ?? "");
+  const $ = load(html);
+  $("li.b_algo").each((_index, element) => {
+    const $item = $(element);
+    // The real result link lives inside <h2>; a plain first-<a> grab hits the
+    // site-attribution link — same fallback order as the old regex pair.
+    const $headingLink = $item.find("h2 a[href]").first();
+    const $link = $headingLink.length > 0 ? $headingLink : $item.find("a[href]").first();
+    const url = decodeBingUrl($link.attr("href") ?? "");
+    const title = stripHtml($link.html() ?? "");
+    const snippet = stripHtml($item.find("p").first().html() ?? "");
     if (url !== null && title.length > 0 && snippet.length > 0) {
       candidates.push({ url, title, snippet: snippet.slice(0, SNIPPET_MAX_LENGTH) });
     }
-  }
+  });
   return candidates;
 }
 

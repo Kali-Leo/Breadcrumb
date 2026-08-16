@@ -1,6 +1,6 @@
 /**
- * Purpose: unit tests for cosine-similarity candidate ranking and the same-parent/
- * most-recent fallback candidate strategy.
+ * Purpose: unit tests for cosine-similarity candidate ranking (relative-gate + absolute-cap)
+ * and the same-parent/most-recent fallback candidate strategy.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -13,6 +13,27 @@ function embedding(nodeId: string, vector: number[]): NodeEmbeddingRow {
     vector_json: JSON.stringify(vector),
     created_at: "2026-08-01T10:00:00Z",
   };
+}
+
+/** Unit vector at `angleDegrees` from the x-axis, in 2D. */
+function unitVectorAtAngle(angleDegrees: number): number[] {
+  const radians = (angleDegrees * Math.PI) / 180;
+  return [Math.cos(radians), Math.sin(radians)];
+}
+
+/** `count` vectors that are ALL exactly `sharedSimilarity` cosine-similar to [1, 0, 0, ...]
+ * — built by giving each candidate its own orthogonal axis, so the relative gate can never
+ * distinguish between them and only the absolute cap can bound the result. */
+function equallySimilarEmbeddings(count: number, sharedSimilarity: number): NodeEmbeddingRow[] {
+  const orthogonalMagnitude = Math.sqrt(1 - sharedSimilarity * sharedSimilarity);
+  const rows: NodeEmbeddingRow[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const vector = new Array(count + 1).fill(0);
+    vector[0] = sharedSimilarity;
+    vector[index + 1] = orthogonalMagnitude;
+    rows.push(embedding(`candidate${index}`, vector));
+  }
+  return rows;
 }
 
 function node(id: string, parentId: string | null, createdAt: string): KnowledgeNodeRow {
@@ -33,19 +54,30 @@ describe("rankCandidatePairs", () => {
       embedding("close", [0.9, 0.1]),
       embedding("far", [0, 1]),
     ];
-    const pairs = rankCandidatePairs(embeddings, ["new1"], 2);
-    expect(pairs.map((pair) => pair.existingNodeId)).toEqual(["close", "far"]);
-    expect(pairs[0]?.similarity ?? 0).toBeGreaterThan(pairs[1]?.similarity ?? 1);
+    const pairs = rankCandidatePairs(embeddings, ["new1"], 8);
+    expect(pairs.map((pair) => pair.existingNodeId)).toEqual(["close"]);
+    expect(pairs[0]?.similarity ?? 0).toBeGreaterThan(0);
   });
 
-  it("caps results at topK per new node", () => {
+  it("drops a candidate far below the node's own best match even under the absolute cap", () => {
+    // near ~cos(10°), mid ~cos(50°), far ~cos(85°): near clears the relative gate against
+    // this node's own mean/best, mid and far do not — even though the absolute cap (8) has
+    // plenty of room left for all three.
     const embeddings = [
-      embedding("new1", [1, 0]),
-      embedding("a", [1, 0]),
-      embedding("b", [0.9, 0.1]),
-      embedding("c", [0.1, 0.9]),
+      embedding("new1", unitVectorAtAngle(0)),
+      embedding("near", unitVectorAtAngle(10)),
+      embedding("mid", unitVectorAtAngle(50)),
+      embedding("far", unitVectorAtAngle(85)),
     ];
-    expect(rankCandidatePairs(embeddings, ["new1"], 1)).toHaveLength(1);
+    const pairs = rankCandidatePairs(embeddings, ["new1"], 8);
+    expect(pairs.map((pair) => pair.existingNodeId)).toEqual(["near"]);
+  });
+
+  it("still bounds results at the absolute cap when many candidates equally clear the gate", () => {
+    const equallySimilar = equallySimilarEmbeddings(10, 0.9);
+    const embeddings = [embedding("new1", [1, ...new Array(10).fill(0)]), ...equallySimilar];
+    const pairs = rankCandidatePairs(embeddings, ["new1"], 8);
+    expect(pairs).toHaveLength(8);
   });
 
   it("returns [] when the new node has no embedding", () => {

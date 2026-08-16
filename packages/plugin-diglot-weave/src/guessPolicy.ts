@@ -4,6 +4,7 @@
  * high, just-looked-up words score zero, repeated abandonment damps globally.
  * Main exports: computeGuessProbability, GuessPolicyInput, GUESS_LEVEL_BASE.
  */
+import type { DiglotPairId } from "@breadcrumb/core-db";
 import type { Card } from "ts-fsrs";
 import { retrievabilityOf } from "./memoryState";
 
@@ -21,6 +22,8 @@ const PROBABILITY_CEILING = 0.6;
 const RECENT_GLOSS_MS = 60 * 60 * 1000;
 
 export interface GuessPolicyInput {
+  /** Which pair's FSRS scheduler to read recall from (memoryState.ts is per-pair). */
+  pairId: DiglotPairId;
   /** The word's FSRS card, or null when this is its first encounter. */
   card: Card | null;
   now: Date;
@@ -59,7 +62,7 @@ export function computeGuessProbability(input: GuessPolicyInput): number {
     return Math.min(NEW_WORD_PROBABILITY * damp, PROBABILITY_CEILING);
   }
   const base = GUESS_LEVEL_BASE[input.level];
-  const band = recallBandFactor(retrievabilityOf(input.card, input.now));
+  const band = recallBandFactor(retrievabilityOf(input.pairId, input.card, input.now));
   const starvation = input.hasExplicitSignal ? 1 : 1.5;
   return Math.min(base * band * starvation * damp, PROBABILITY_CEILING);
 }

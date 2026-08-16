@@ -1,21 +1,34 @@
 /**
- * Purpose: FSRS-6 card lifecycle for woven words (spec 033) — one shared scheduler,
- * JSON (de)serialization for the diglot_word_states.fsrs_json column, and the mapping
- * from implicit signal events to FSRS ratings per the spec's signal table.
+ * Purpose: FSRS-6 card lifecycle for woven words (spec 033) — one scheduler instance per
+ * language pair, JSON (de)serialization for the diglot_word_states.fsrs_json column, and
+ * the mapping from implicit signal events to FSRS ratings per the spec's signal table.
  * Main exports: newWordCard, cardFromJson, cardToJson, reviewCard, ratingForSignal,
- * retrievabilityOf, EXPOSURES_PER_GOOD.
+ * retrievabilityOf, configureDiglotScheduler, EXPOSURES_PER_GOOD.
  */
-import type { DiglotEventKind } from "@breadcrumb/core-db";
-import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
+import type { DiglotEventKind, DiglotPairId } from "@breadcrumb/core-db";
+import { type Card, createEmptyCard, type FSRS, fsrs, type Grade, Rating } from "ts-fsrs";
 
-/** One scheduler for the whole plugin; fuzz disabled so scheduling stays deterministic
- * and replayable in tests and simlab. Reconfigured with personally fitted parameters
- * once the review log is large enough (vision/09 #1). */
-let scheduler = fsrs({ enable_fuzz: false });
+/** One scheduler instance per language pair — personally fitted parameters (vision/09 #1)
+ * are per-pair, so a shared singleton would cross-contaminate scheduling the moment a
+ * second pair exists. Fuzz disabled so scheduling stays deterministic and replayable in
+ * tests and simlab. ts-fsrs instances are cheap, so lazy per-pair creation is fine. */
+const schedulersByPair = new Map<DiglotPairId, FSRS>();
 
-/** Swaps in personally fitted FSRS parameters (21 weights); no argument restores defaults. */
-export function configureDiglotScheduler(w?: readonly number[]): void {
-  scheduler = fsrs(w === undefined ? { enable_fuzz: false } : { enable_fuzz: false, w: [...w] });
+function schedulerFor(pairId: DiglotPairId): FSRS {
+  const existing = schedulersByPair.get(pairId);
+  if (existing !== undefined) return existing;
+  const created = fsrs({ enable_fuzz: false });
+  schedulersByPair.set(pairId, created);
+  return created;
+}
+
+/** Swaps in personally fitted FSRS parameters (21 weights) for one pair; no `w` restores
+ * that pair's default. Other pairs are unaffected. */
+export function configureDiglotScheduler(pairId: DiglotPairId, w?: readonly number[]): void {
+  schedulersByPair.set(
+    pairId,
+    fsrs(w === undefined ? { enable_fuzz: false } : { enable_fuzz: false, w: [...w] }),
+  );
 }
 
 /** Every 2nd passive exposure without a lookup converts into one Good review — passive
@@ -51,14 +64,14 @@ export function cardFromJson(json: string): Card {
   };
 }
 
-/** Applies one FSRS review and returns the next card. */
-export function reviewCard(card: Card, now: Date, rating: Grade): Card {
-  return scheduler.next(card, now, rating).card;
+/** Applies one FSRS review and returns the next card, scheduled by `pairId`'s scheduler. */
+export function reviewCard(pairId: DiglotPairId, card: Card, now: Date, rating: Grade): Card {
+  return schedulerFor(pairId).next(card, now, rating).card;
 }
 
-/** Recall probability of the card at `now` (0..1). */
-export function retrievabilityOf(card: Card, now: Date): number {
-  const retrievability = scheduler.get_retrievability(card, now, false);
+/** Recall probability of the card at `now` (0..1), evaluated by `pairId`'s scheduler. */
+export function retrievabilityOf(pairId: DiglotPairId, card: Card, now: Date): number {
+  const retrievability = schedulerFor(pairId).get_retrievability(card, now, false);
   return Math.max(0, Math.min(1, retrievability));
 }
 

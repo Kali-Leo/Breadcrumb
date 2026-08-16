@@ -29,7 +29,13 @@ export function createEventBus(): EventBus {
       const handlers = handlersByEvent.get(eventName);
       if (!handlers) return;
       for (const handler of handlers) {
-        handler(payload);
+        try {
+          handler(payload);
+        } catch (error) {
+          // One misbehaving subscriber must never block delivery to the rest, nor unwind
+          // into the feature that emitted the event.
+          console.warn(`[core-bus] handler for "${eventName}" threw`, error);
+        }
       }
     },
   };

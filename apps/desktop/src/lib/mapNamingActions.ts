@@ -15,7 +15,6 @@ import {
   type ContinentSummary,
   continentNameCacheKey,
   continentNamingSchema,
-  isPlainContinentName,
 } from "@breadcrumb/plugin-map";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
@@ -31,8 +30,10 @@ const LABELS_PER_CLUSTER = 12;
 
 type NameCache = Record<string, string>;
 
-/** Asks for one name per request id; an unusable name is simply left out, so that cluster
- * keeps its medoid name and will be asked about again — one call, never a wrong name. */
+/** Asks for one name per request id; continentNamingSchema now rejects an unusable name at
+ * parse time (name.refine → isPlainContinentName), so a batch containing one is thrown away
+ * whole by the caller's try/catch — every cluster in it keeps its medoid name and the batch
+ * is asked about again next open, never a wrong name. */
 async function requestNames(
   apiConfig: ApiConfig,
   requests: readonly { id: string; memberLabels: string[] }[],
@@ -49,11 +50,7 @@ async function requestNames(
     conversationId: null,
     usage,
   });
-  const named = new Map<string, string>();
-  for (const cluster of parsed.clusters) {
-    if (isPlainContinentName(cluster.name)) named.set(cluster.id, cluster.name.trim());
-  }
-  return named;
+  return new Map(parsed.clusters.map((cluster) => [cluster.id, cluster.name.trim()]));
 }
 
 /** A cluster continent's kingdoms ARE its members, so their labels are the naming evidence. */

@@ -8,14 +8,16 @@ import { computeGuessProbability, type GuessPolicyInput } from "./guessPolicy";
 import { newWordCard, reviewCard } from "./memoryState";
 
 const NOW = new Date("2026-08-12T12:00:00.000Z");
+const PAIR_ID = "zh:en";
 
 function agedCard(days: number) {
   const reviewedAt = new Date(NOW.getTime() - days * 24 * 3600 * 1000);
-  return reviewCard(newWordCard(reviewedAt), reviewedAt, Rating.Good);
+  return reviewCard(PAIR_ID, newWordCard(reviewedAt), reviewedAt, Rating.Good);
 }
 
 function baseInput(overrides: Partial<GuessPolicyInput>): GuessPolicyInput {
   return {
+    pairId: PAIR_ID,
     card: agedCard(10),
     now: NOW,
     level: "standard",

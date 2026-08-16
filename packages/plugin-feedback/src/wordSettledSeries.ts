@@ -27,7 +27,7 @@ function replayStabilityCheckpoints(
     priorKinds.unshift(event.kind);
     if (priorKinds.length > 8) priorKinds.pop();
     if (rating === null) continue;
-    card = reviewCard(card, new Date(event.created_at), rating);
+    card = reviewCard(event.pair, card, new Date(event.created_at), rating);
     checkpoints.push({ ms: Date.parse(event.created_at), stability: card.stability });
     reps += 1;
   }

@@ -1,6 +1,8 @@
 /**
  * Purpose: renders a ```mermaid code fence as a diagram (spec 034 顺带) — mermaid.js
- * lazy-loaded on first use; any parse/render failure falls back to the plain code block.
+ * lazy-loaded on first use; render is debounced until the source is stable so a growing
+ * unclosed fence shows the plain code block instead of flickering; any parse/render
+ * failure falls back to the plain code block.
  * Main exports: MermaidBlock.
  */
 import { useEffect, useRef, useState } from "react";
@@ -17,18 +19,34 @@ function loadMermaid() {
 
 let renderCounter = 0;
 
+/** How long the source must go unchanged before a render is attempted — long enough that a
+ * streaming reply's per-delta growth never triggers one, short enough to feel instant once
+ * the fence stops changing (ChatGPT-style: defer until the block is settled). */
+const STABLE_SOURCE_DEBOUNCE_MS = 300;
+
 export function MermaidBlock({ code }: { code: string }) {
   const [svg, setSvg] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [stableCode, setStableCode] = useState<string | null>(null);
   renderCounter += 1;
   const idRef = useRef(`mermaid-${renderCounter}`);
 
+  // Debounce: only adopt `code` as the render target once it has stopped changing for
+  // STABLE_SOURCE_DEBOUNCE_MS. A still-streaming fence keeps re-arming the timer and never
+  // reaches this render at all, so the plain code block shows the whole time instead of
+  // flickering between it and a diagram on every delta.
   useEffect(() => {
+    const timer = setTimeout(() => setStableCode(code), STABLE_SOURCE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [code]);
+
+  useEffect(() => {
+    if (stableCode === null) return;
     let cancelled = false;
     void (async () => {
       try {
         const mermaid = await loadMermaid();
-        const { svg: rendered } = await mermaid.render(idRef.current, code);
+        const { svg: rendered } = await mermaid.render(idRef.current, stableCode);
         if (!cancelled) setSvg(rendered);
       } catch {
         if (!cancelled) setFailed(true);
@@ -37,7 +55,7 @@ export function MermaidBlock({ code }: { code: string }) {
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [stableCode]);
 
   if (failed || svg === null) {
     return (

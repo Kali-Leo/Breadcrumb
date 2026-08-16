@@ -17,6 +17,7 @@ function scheduledFor(message: string) {
   const tokens = tokenizeMessage(message, "en");
   const candidates = extractCandidates(tokens, loaded);
   const scheduled = scheduleReplacements({
+    pairId: "en:fr",
     candidates,
     cardsByLemma: new Map(),
     now: new Date("2026-08-12T12:00:00.000Z"),

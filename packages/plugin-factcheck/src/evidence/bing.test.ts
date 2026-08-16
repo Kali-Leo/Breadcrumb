@@ -68,4 +68,51 @@ describe("createBingProvider", () => {
 
     expect(await provider.search("anything", 3)).toEqual([]);
   });
+
+  it("parses a result block whose attribute order and whitespace differ from the fixture", () => {
+    // A hand-written regex anchored on exact attribute order/spacing breaks the moment Bing
+    // reorders attributes or reformats whitespace; cheerio's DOM traversal does not care.
+    const reorderedHtml = `
+<li
+  class="b_algo"
+><h2><a  target="_blank"   href="${DIRECT_URL}"  >光速
+      - <b>百科</b></a></h2>
+  <div class="b_caption">
+    <p>
+      光速是每秒 299792458 米。
+    </p>
+  </div>
+</li>`;
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.startsWith("https://cn.bing.com/search")) {
+        return new Response(reorderedHtml, { status: 200 });
+      }
+      return new Response("ok", { status: 200 });
+    });
+    const provider = createBingProvider({ fetchImpl });
+
+    return provider.search("光速", 1).then((items) => {
+      expect(items).toEqual([
+        {
+          url: DIRECT_URL,
+          title: "光速 - 百科",
+          snippet: "光速是每秒 299792458 米。",
+          source: "bing",
+        },
+      ]);
+    });
+  });
+
+  it("warns with a distinctive prefix when a 200 response yields zero candidates", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response("<html></html>", { status: 200 }));
+    const provider = createBingProvider({ fetchImpl });
+
+    expect(await provider.search("anything", 3)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("[factcheck:bing]"));
+    warn.mockRestore();
+  });
 });

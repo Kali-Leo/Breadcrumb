@@ -5,6 +5,7 @@
  * Main exports: scheduleReplacements, adaptiveNewWordCap, ScheduleInput,
  * ScheduledReplacement, DEFAULT_DENSITY.
  */
+import type { DiglotPairId } from "@breadcrumb/core-db";
 import type { Card } from "ts-fsrs";
 import { Rating } from "ts-fsrs";
 import type { CandidateOccurrence } from "./candidates";
@@ -22,6 +23,8 @@ const MIN_WORDS_FOR_WEAVE = 20;
 const DESIRED_RETENTION = 0.9;
 
 export interface ScheduleInput {
+  /** Which pair's FSRS scheduler to score reviews against (memoryState.ts is per-pair). */
+  pairId: DiglotPairId;
   candidates: readonly CandidateOccurrence[];
   /** FSRS cards of words already being learned, by lemma. */
   cardsByLemma: ReadonlyMap<string, Card>;
@@ -58,10 +61,10 @@ export function adaptiveNewWordCap(baseCap: number, reviewDebtCount: number): nu
  * context novelty, plus an overdue-rescue term — deeply forgotten words have LOW expected
  * FSRS gain and would otherwise be starved by mildly due words forever (spec 033
  * acceptance 6: the scheduler raises a word's priority the longer it waits). */
-function reviewScore(card: Card, now: Date, novelty: number): number {
-  const recall = retrievabilityOf(card, now);
+function reviewScore(pairId: DiglotPairId, card: Card, now: Date, novelty: number): number {
+  const recall = retrievabilityOf(pairId, card, now);
   const urgency = Math.max(0, DESIRED_RETENTION - recall);
-  const nextStability = reviewCard(card, now, Rating.Good).stability;
+  const nextStability = reviewCard(pairId, card, now, Rating.Good).stability;
   const currentStability = Math.max(card.stability, 0.01);
   // Capped: brand-new cards (stability ≈ 0) would otherwise produce absurd gains and
   // crowd out genuinely due mature words for days (real-app walkthrough observation).
@@ -94,7 +97,11 @@ export function scheduleReplacements(input: ScheduleInput): ScheduledReplacement
     const card = input.cardsByLemma.get(candidate.lemma);
     const novelty = input.noveltyByLemma?.get(candidate.lemma) ?? 1;
     if (card !== undefined) {
-      scored.push({ ...candidate, kind: "review", score: reviewScore(card, input.now, novelty) });
+      scored.push({
+        ...candidate,
+        kind: "review",
+        score: reviewScore(input.pairId, card, input.now, novelty),
+      });
     } else {
       const rank = input.introductionRank.get(candidate.lemma);
       if (rank === undefined || input.newWordBudgetToday <= 0) continue;
