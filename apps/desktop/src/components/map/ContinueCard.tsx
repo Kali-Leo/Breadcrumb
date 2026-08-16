@@ -68,11 +68,6 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
                     重逢 · 以前学过
                   </span>
                 )}
-                {candidate.reason.inGoalGap && (
-                  <span className="rounded bg-amber-100 px-1 text-[10px] text-amber-700">
-                    在目标路上
-                  </span>
-                )}
               </span>
               {candidate.reason.litPrerequisiteLabels.length > 0 && (
                 <span className="mt-0.5 block text-stone-400">
@@ -84,9 +79,10 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
                   通往你感兴趣的「{candidate.reason.gatewayTo.label}」
                 </span>
               )}
-              <span className="mt-0.5 block text-[10px] text-amber-600">
-                {openingNodeId === candidate.nodeId ? "打开中…" : "去聊聊"}
-              </span>
+              {/* Click feedback only — the whole row is the action, no standing verb. */}
+              {openingNodeId === candidate.nodeId && (
+                <span className="mt-0.5 block text-[10px] text-amber-600">打开中…</span>
+              )}
             </button>
           </li>
         ))}

@@ -2,7 +2,9 @@
  * Purpose: imperative map controller — owns the world scene, the discrete level state
  * (world → island, the deepest view since the kingdom and village dives were removed
  * 2026-08-11, backup: branch backup/village-town-scene), exact-fit camera animation,
- * wheel dive/back, band fades and the hover readout plus its highlight.
+ * wheel dive/back, band fades and the hover readout plus its highlight. Goal mode is not
+ * handled here: MapView hands in a goal-filtered world model (goalWorldFilter.ts) and the
+ * exact-fit framing refits to it automatically.
  * Main exports: createMapController, MapController, MapHooks.
  */
 import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
@@ -30,9 +32,6 @@ export interface MapController {
    * Leo: the recommendation must surface as a bubble on every zoom level) — the containing
    * island at the world level, the containing kingdom once dived into that island. */
   setRecommendTarget(target: RecommendTarget | null): void;
-  /** The goal's cut of the tree made visible (spec 050 §7): places outside the set dim
-   * hard, places inside keep their weight. Null = no goal, everything normal. */
-  setGoalHighlight(placeNodeIds: ReadonlySet<string> | null): void;
   devJump(depth: number): void;
   tick(deltaSeconds: number): void;
   destroy(): void;
@@ -63,7 +62,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   const recommendLayer = new Container();
   worldRoot.addChild(recommendLayer);
   let recommendTarget: RecommendTarget | null = null;
-  let goalHighlight: ReadonlySet<string> | null = null;
 
   let world: WorldModel | null = null;
   let level: MapLevel = { kind: "world" };
@@ -86,21 +84,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     worldRoot.addChild(controller.scene.root);
     worldRoot.addChild(recommendLayer);
     drawRecommendMarker();
-    applyGoalDim();
-  }
-
-  /** The goal cut, visible: names outside the goal's places drop to a quarter of their
-   * weight; inside stays as-is. Runs after rebuilds and level changes too, since both
-   * reset label alphas. */
-  function applyGoalDim(): void {
-    const scene = controller.scene;
-    if (scene === null) return;
-    for (const label of scene.labels) {
-      label.text.alpha =
-        goalHighlight === null || goalHighlight.has(label.nodeId)
-          ? label.baseAlpha
-          : label.baseAlpha * 0.25;
-    }
   }
 
   /** One bubble at the label of whichever place holds the invitation on this level; the
@@ -162,10 +145,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     setRecommendTarget(target) {
       recommendTarget = target;
       drawRecommendMarker();
-    },
-    setGoalHighlight(placeNodeIds) {
-      goalHighlight = placeNodeIds;
-      applyGoalDim();
     },
     devJump(depth) {
       if (world === null) return;
@@ -255,7 +234,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       if (snap) applyBandsInstant(scene);
       else beginAppearTransition(scene);
       drawRecommendMarker();
-      applyGoalDim();
     }
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);

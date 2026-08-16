@@ -23,7 +23,7 @@ export function MapModeToggle() {
       {(
         [
           ["casual", "休闲", "自由查看整张地图，推荐跟着你的兴趣走"],
-          ["ranked", "目标", "只突出和当前目标有关的部分"],
+          ["ranked", "目标", "只显示和当前目标有关的部分"],
         ] as const
       ).map(([mode, label, title]) => (
         <button

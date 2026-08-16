@@ -7,7 +7,10 @@
  * on) patch in a moment later. The world model is cached per (nodes, assignment) pair so
  * re-opening the palace skips the expensive terrain build (identical output, just
  * remembered). The Pixi lifecycle lives in useMapApplication; if its init fails the page
- * says so in place instead of staying blank. StrictMode-safe; DEV keys 0 demo, 1..2 jumps.
+ * says so in place instead of staying blank. Goal mode redraws to the goal's cut via
+ * goalWorldFilter (hide places without goal nodes + camera refit; a positional re-layout is
+ * deliberately off the table — island positions stay stable across modes). StrictMode-safe;
+ * DEV keys 0 demo, 1..2 jumps.
  * Main exports: MapView.
  */
 
@@ -23,6 +26,7 @@ import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { GoalView } from "../goal/GoalView";
 import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
+import { filterWorldToGoal } from "./goalWorldFilter";
 import { type KingdomRef, KingdomView } from "./kingdom/KingdomView";
 import { findIsland, type MapLevel } from "./levels";
 import { MapInfoPanel } from "./MapInfoPanel";
@@ -106,6 +110,24 @@ export function MapView() {
     () => cachedWorldModel(nodes, effectiveAssignment),
     [nodes, effectiveAssignment],
   );
+
+  // Goal mode redraws the map to the goal's cut (Leo: 目标截取的树意味着目标地图要重绘):
+  // places with zero goal nodes are removed from the world handed to the controller, and
+  // the exact-fit framing refits to what remains. A goal touching no place keeps the full
+  // map (nothing to frame otherwise). Leaving goal mode restores the full world.
+  const goals = usePlannerStore((state) => state.goals);
+  const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
+  const learningMode = useSettingsStore((state) => state.learningMode);
+  const displayWorld = useMemo(() => {
+    const goal =
+      learningMode === "ranked"
+        ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
+        : null;
+    if (goal === null || demoMode) return world;
+    const goalNodeIds = new Set(JSON.parse(goal.node_ids_json) as string[]);
+    const cut = filterWorldToGoal(world, goalNodeIds);
+    return cut.islands.length === 0 ? world : cut;
+  }, [world, learningMode, goals, selectedGoalId, demoMode]);
   const { containerRef, controllerRef, trailIdsRef, ready, initFailed } = useMapApplication({
     onHover: setHover,
     onLevel: setLevel,
@@ -121,7 +143,7 @@ export function MapView() {
     const primary = frontierCandidates[0];
     let target: { islandId: string; kingdomId: string | null } | null = null;
     if (primary !== undefined) {
-      const island = world.islands.find((candidate) =>
+      const island = displayWorld.islands.find((candidate) =>
         candidate.memberNodeIds.includes(primary.nodeId),
       );
       if (island !== undefined) {
@@ -132,39 +154,14 @@ export function MapView() {
       }
     }
     controllerRef.current?.setRecommendTarget(target);
-  }, [ready, frontierCandidates, world, controllerRef]);
+  }, [ready, frontierCandidates, displayWorld, controllerRef]);
 
-  // The goal's cut of the tree becomes visible on the map (spec 050 §7): places holding
-  // any goal node keep their weight, everything else dims hard.
-  const goals = usePlannerStore((state) => state.goals);
-  const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
-  const learningMode = useSettingsStore((state) => state.learningMode);
-  useEffect(() => {
-    if (!ready) return;
-    const goal =
-      learningMode === "ranked"
-        ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
-        : null;
-    if (goal === null) {
-      controllerRef.current?.setGoalHighlight(null);
-      return;
-    }
-    const goalNodeIds = new Set(JSON.parse(goal.node_ids_json) as string[]);
-    const placeIds = new Set<string>();
-    for (const island of world.islands) {
-      if (island.memberNodeIds.some((id) => goalNodeIds.has(id))) placeIds.add(island.nodeId);
-      for (const kingdom of island.kingdoms) {
-        if (kingdom.memberNodeIds.some((id) => goalNodeIds.has(id))) placeIds.add(kingdom.nodeId);
-      }
-    }
-    controllerRef.current?.setGoalHighlight(placeIds);
-  }, [ready, learningMode, goals, selectedGoalId, world, controllerRef]);
-
-  // Scene rebuilds on data changes; the renderer and camera model stay alive.
+  // Scene rebuilds on data changes; the renderer and camera model stay alive. New-node
+  // reveals diff against the FULL world so leaving goal mode never replays them.
   useEffect(() => {
     if (!ready) return;
     controllerRef.current?.setWorld(
-      world,
+      displayWorld,
       retentionByNode,
       (() => {
         const datasetKey = demoMode ? "demo" : "real";
@@ -178,7 +175,7 @@ export function MapView() {
           : new Set([...currentIds].filter((id) => !previousIds.has(id)));
       })(),
     );
-  }, [ready, world, retentionByNode, demoMode, controllerRef]);
+  }, [ready, world, displayWorld, retentionByNode, demoMode, controllerRef]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined;
@@ -210,7 +207,7 @@ export function MapView() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
         <span className="text-4xl">🏛️</span>
-        <p className="text-sm">你的记忆宫殿还是一片海——去聊聊天，第一座岛屿会浮现</p>
+        <p className="text-sm">这里还是一片海——去聊聊天，第一座岛屿会浮现</p>
         {import.meta.env.DEV && <p className="text-xs text-stone-300">DEV：按 0 载入演示海图</p>}
       </div>
     );
@@ -219,7 +216,7 @@ export function MapView() {
   // Pixi controller only navigates world→island itself, so this stays a plain DOM handler.
   function onCanvasClick() {
     if (level.kind !== "island" || hover === null || hover.kind !== "kingdom") return;
-    const island = findIsland(world, level.islandId);
+    const island = findIsland(displayWorld, level.islandId);
     const kingdom = island?.kingdoms.find((candidate) => candidate.nodeId === hover.nodeId);
     if (kingdom === undefined) return;
     setSubwayKingdom({
@@ -246,9 +243,16 @@ export function MapView() {
           <div className="absolute left-3 top-3 z-10">
             <MapModeToggle />
           </div>
+          {/* Operation hints live on the map itself (owner fix 5) — quiet ink in the
+              bottom-left corner of the parchment, never a rail resident. */}
+          <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded bg-stone-100/60 px-2 py-1 text-[11px] leading-4 text-stone-600/75">
+            <p>滚轮向上：深入指针所指的地方</p>
+            <p>滚轮向下：返回上一层</p>
+            <p>点击地名：直接前往</p>
+          </div>
         </div>
         <div className="min-w-0 flex-1">
-          <MapInfoPanel hover={hover} level={level} />
+          <MapInfoPanel hover={hover} level={level} world={displayWorld} />
         </div>
       </div>
       {goalViewOpen && (

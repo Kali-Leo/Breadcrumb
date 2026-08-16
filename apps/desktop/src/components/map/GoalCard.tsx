@@ -1,7 +1,7 @@
 /**
- * Purpose: the palace context stack's goal card (spec 047) — with goals it lists them and
- * opens the goal view; without goals it is one quiet invitation. No progress fractions, no
- * denominators (ladder rule: assessment is never displayed as a mechanism).
+ * Purpose: the map rail's goal card (spec 047) — lists the goals and offers one entry,
+ * 目标设置, into the goal view (which handles both adding and viewing). No progress
+ * fractions, no denominators (ladder rule: assessment is never displayed as a mechanism).
  * Main exports: GoalCard.
  */
 import { usePlannerStore } from "../../stores/plannerStore";
@@ -27,23 +27,15 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
           ))}
         </ul>
       )}
-      <div className="mt-2 flex flex-wrap gap-1">
+      {/* One entry only — the goal view itself handles both adding and viewing. */}
+      <div className="mt-2">
         <button
           type="button"
           onClick={onOpenGoalView}
           className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600"
         >
-          ＋ 添加目标
+          目标设置
         </button>
-        {goals.length > 0 && (
-          <button
-            type="button"
-            onClick={onOpenGoalView}
-            className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
-          >
-            查看目标详情
-          </button>
-        )}
       </div>
     </section>
   );
