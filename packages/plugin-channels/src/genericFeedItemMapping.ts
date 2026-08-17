@@ -1,8 +1,9 @@
 /**
  * Purpose: turn one validated feed entry — RSS/RDF item, Atom entry, or JSON Feed item — into a
- * candidate-item draft. Cover art comes from enclosures, the media namespace or the iTunes image,
- * never from an extra request; an audio enclosure becomes the draft's mediaUrl so the episode can
- * be played in the app; upstreamSignal is null because plain feeds publish no crowd number.
+ * candidate-item draft. Cover art comes from enclosures, the media namespace, the iTunes image or,
+ * failing all of those, the first picture the entry's own HTML embeds — never from an extra
+ * request; an audio enclosure becomes the draft's mediaUrl so the episode can be played in the
+ * app; upstreamSignal is null because plain feeds publish no crowd number.
  * Main exports: mapRssItem, mapAtomEntry, mapJsonFeedItem, FeedItemMappingContext.
  */
 import type { CandidateItemKind } from "./candidateItem";
@@ -11,6 +12,7 @@ import {
   imageUrlFromAttachments,
   kindFromAttachments,
 } from "./feedAttachments";
+import { firstEmbeddedImageUrl } from "./feedEmbeddedImages";
 import type { AtomEntry, JsonFeedItem, RssItem } from "./feedSchemas";
 import {
   firstNonEmptyText,
@@ -118,20 +120,18 @@ function assembleDraft(
 export function mapRssItem(item: RssItem, context: FeedItemMappingContext): CandidateDraft {
   const enclosures = item.enclosures ?? [];
   const permalinkGuid = item.guid?.isPermaLink === false ? null : item.guid?.value;
+  const bodyHtml = firstNonEmptyText(item.description, item.content?.encoded);
   return assembleDraft(context, {
     identity: firstNonEmptyText(item.guid?.value, item.link),
     url: resolveAbsoluteUrl(firstNonEmptyText(item.link, permalinkGuid), context.baseUrl),
     mediaUrl: audioUrlFromAttachments(enclosures),
     rawTitle: firstNonEmptyText(item.title),
-    rawSummary: firstNonEmptyText(
-      item.description,
-      item.content?.encoded,
-      descriptionFromMedia(item.media),
-    ),
+    rawSummary: firstNonEmptyText(bodyHtml, descriptionFromMedia(item.media)),
     coverUrl: firstNonEmptyText(
       enclosures.find((one) => one.type?.startsWith("image/"))?.url,
       imageUrlFromMedia(item.media),
       item.itunes?.image,
+      firstEmbeddedImageUrl(context.baseUrl, item.content?.encoded, item.description),
     ),
     author: firstNonEmptyText(
       item.authors?.[0],
@@ -160,6 +160,7 @@ export function mapAtomEntry(entry: AtomEntry, context: FeedItemMappingContext):
       imageUrlFromAttachments(enclosures),
       imageUrlFromMedia(entry.media),
       entry.itunes?.image,
+      firstEmbeddedImageUrl(context.baseUrl, entry.content, entry.summary),
     ),
     author: firstNonEmptyText(entry.authors?.[0]?.name, entry.dc?.creator, entry.itunes?.author),
     rawDate: firstNonEmptyText(entry.published, entry.updated, entry.dc?.date),
@@ -185,6 +186,7 @@ export function mapJsonFeedItem(
       item.image,
       item.banner_image,
       imageUrlFromAttachments(attachments),
+      firstEmbeddedImageUrl(context.baseUrl, item.content_html),
     ),
     author: firstNonEmptyText(item.authors?.[0]?.name),
     rawDate: firstNonEmptyText(item.date_published, item.date_modified),
