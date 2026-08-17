@@ -3,6 +3,7 @@
  * pool shown on the feed, now holding external content, and the silent signal stream over it.
  * Main exports: createDiscoveryRepo factory, DiscoveryCardInsert.
  */
+import { createDiscoveryBackgroundQueries } from "./discoveryBackgroundQueries";
 import { createDiscoveryPoolMaintenance } from "./discoveryPoolMaintenance";
 import type { DiscoveryCardRow, DiscoveryEventRow, SqlClient } from "./types";
 
@@ -36,6 +37,9 @@ export function createDiscoveryRepo(sql: SqlClient) {
   return {
     // The pool's unseen-only read and its two housekeeping deletes (discoveryPoolMaintenance.ts).
     ...createDiscoveryPoolMaintenance(sql),
+    // What the passes behind the feed read: the pool's missing vectors, pictures and quality
+    // scores (discoveryBackgroundQueries.ts).
+    ...createDiscoveryBackgroundQueries(sql),
     /** One transaction for a whole fetched batch — a crash never leaves a partial batch on
      * the feed (spec 051 §5; spec 053 §3 restocks the pool the same way). */
     async insertCards(rows: readonly DiscoveryCardInsert[]): Promise<void> {
@@ -85,25 +89,6 @@ export function createDiscoveryRepo(sql: SqlClient) {
     async listCardIds(): Promise<string[]> {
       const rows = await sql.select<{ id: string }>("SELECT id FROM discovery_cards");
       return rows.map((row) => row.id);
-    },
-    /** Pooled cards the background embedding pass has not reached yet, newest first — spec
-     * 053 §3's display-first, embed-later rule: a card is shown the moment it lands and its
-     * vector only shapes later orderings. */
-    async listCardsMissingEmbedding(limit: number): Promise<DiscoveryCardRow[]> {
-      return sql.select<DiscoveryCardRow>(
-        "SELECT * FROM discovery_cards WHERE embedding_json IS NULL ORDER BY created_at DESC LIMIT ?",
-        [limit],
-      );
-    },
-    /** Pooled cards that landed with no picture but do carry an address, newest first — what
-     * the background cover-enrichment pass works through (spec 053 §2). Which of them are worth
-     * a request is the app's decision, not this table's. */
-    async listCardsMissingCover(limit: number): Promise<DiscoveryCardRow[]> {
-      return sql.select<DiscoveryCardRow>(
-        `SELECT * FROM discovery_cards WHERE cover_url IS NULL AND url IS NOT NULL
-           ORDER BY created_at DESC LIMIT ?`,
-        [limit],
-      );
     },
     /** Fills in the cover a feed did not carry, read off the article page itself (spec 053 §2).
      * Only ever writes a real address: a card nothing could be found for stays NULL, which is

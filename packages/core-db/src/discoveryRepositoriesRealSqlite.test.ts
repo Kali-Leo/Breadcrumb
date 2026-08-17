@@ -154,4 +154,59 @@ describe("createDiscoveryRepo external cards (real sqlite)", () => {
     },
     TEST_TIMEOUT_MS,
   );
+
+  it(
+    "hands the quality check every unrated card in the pool, newest first",
+    async () => {
+      database = await openMigratedDatabase();
+      const repo = createDiscoveryRepo(database.sql);
+      await repo.insertCards([
+        makeExternalCard("card-1", "2026-08-17T09:00:00Z"),
+        makeExternalCard("card-2", "2026-08-17T09:00:01Z"),
+        makeExternalCard("card-3", "2026-08-17T09:00:02Z"),
+      ]);
+      expect((await repo.listCardsMissingQualityScore(10)).map((card) => card.id)).toEqual([
+        "card-3",
+        "card-2",
+        "card-1",
+      ]);
+
+      await repo.setCardQualityScore("card-3", 0.4);
+      expect((await repo.listCardsMissingQualityScore(10)).map((card) => card.id)).toEqual([
+        "card-2",
+        "card-1",
+      ]);
+      // A zero is a rating like any other: it must not read back as "still unrated".
+      await repo.setCardQualityScore("card-2", 0);
+      expect((await repo.listCardsMissingQualityScore(10)).map((card) => card.id)).toEqual([
+        "card-1",
+      ]);
+      expect((await repo.listCardsMissingQualityScore(1)).map((card) => card.id)).toEqual([
+        "card-1",
+      ]);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "counts how many cards already carry one picture",
+    async () => {
+      database = await openMigratedDatabase();
+      const repo = createDiscoveryRepo(database.sql);
+      const logo = "https://site.example/logo.png";
+      await repo.insertCards([
+        { ...makeExternalCard("card-1", "2026-08-17T09:00:00Z"), cover_url: logo },
+        { ...makeExternalCard("card-2", "2026-08-17T09:00:01Z"), cover_url: logo },
+        {
+          ...makeExternalCard("card-3", "2026-08-17T09:00:02Z"),
+          cover_url: "https://site.example/real-cover.png",
+        },
+        makeExternalCard("card-4", "2026-08-17T09:00:03Z"),
+      ]);
+      expect(await repo.countCardsWithCoverUrl(logo)).toBe(2);
+      expect(await repo.countCardsWithCoverUrl("https://site.example/real-cover.png")).toBe(1);
+      expect(await repo.countCardsWithCoverUrl("https://site.example/never-seen.png")).toBe(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
 });
