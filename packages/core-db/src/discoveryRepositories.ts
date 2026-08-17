@@ -62,6 +62,28 @@ export function createDiscoveryRepo(sql: SqlClient) {
         [limit],
       );
     },
+    /** Every pooled card id. The landing pass reads this to drop items it already holds
+     * (spec 053 §3: refetching a feed must insert nothing and change nothing). Ids only —
+     * the pool carries embeddings, and reading whole rows just to compare ids would move
+     * megabytes on every restock. */
+    async listCardIds(): Promise<string[]> {
+      const rows = await sql.select<{ id: string }>("SELECT id FROM discovery_cards");
+      return rows.map((row) => row.id);
+    },
+    /** Pooled cards the background embedding pass has not reached yet, newest first — spec
+     * 053 §3's display-first, embed-later rule: a card is shown the moment it lands and its
+     * vector only shapes later orderings. */
+    async listCardsMissingEmbedding(limit: number): Promise<DiscoveryCardRow[]> {
+      return sql.select<DiscoveryCardRow>(
+        "SELECT * FROM discovery_cards WHERE embedding_json IS NULL ORDER BY created_at DESC LIMIT ?",
+        [limit],
+      );
+    },
+    /** Records the batch quality check's verdict (spec 053 §5). The score only ever demotes
+     * a card in ranking; nothing is hidden because of it. */
+    async setCardQualityScore(id: string, score: number): Promise<void> {
+      await sql.execute("UPDATE discovery_cards SET quality_score = ? WHERE id = ?", [score, id]);
+    },
     /** Lazy-fills a card's full article on first open (spec 051 §2) — cached permanently
      * afterward, so a second open never re-triggers the LLM call. */
     async setCardBody(id: string, bodyMd: string): Promise<void> {

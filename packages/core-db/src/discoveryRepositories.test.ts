@@ -22,6 +22,18 @@ function makeFakeSql() {
             .map((row) => ({ title: row.title })) as Row[],
         );
       }
+      if (sql.includes("SELECT id FROM discovery_cards")) {
+        return Promise.resolve(cardRows.map((row) => ({ id: row.id })) as Row[]);
+      }
+      if (sql.includes("WHERE embedding_json IS NULL")) {
+        const limit = params?.[0] as number;
+        return Promise.resolve(
+          [...cardRows]
+            .filter((row) => row.embedding_json === null)
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .slice(0, limit) as Row[],
+        );
+      }
       if (sql.includes("FROM discovery_cards")) {
         const limit = params?.[0] as number;
         return Promise.resolve(
@@ -77,6 +89,11 @@ function makeFakeSql() {
         const [openedAt, id] = params as [string, string];
         const row = cardRows.find((card) => card.id === id);
         if (row) row.opened_at = openedAt;
+      }
+      if (sql.startsWith("UPDATE discovery_cards SET quality_score")) {
+        const [score, id] = params as [number, string];
+        const row = cardRows.find((card) => card.id === id);
+        if (row) row.quality_score = score;
       }
       if (sql.startsWith("UPDATE discovery_cards SET saved_at")) {
         const [savedAt, id] = params as [string | null, string];
@@ -210,6 +227,33 @@ describe("createDiscoveryRepo cards", () => {
     expect(cardRows[0]?.opened_at).toBeNull();
     await repo.markSaved("c1", null);
     expect(cardRows[0]?.saved_at).toBeNull();
+  });
+
+  it("lists every card id for the landing pass's dedup set", async () => {
+    const { client } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([makeCard({ id: "c1" }), makeCard({ id: "c2" })]);
+    expect((await repo.listCardIds()).sort()).toEqual(["c1", "c2"]);
+  });
+
+  it("lists only the cards still missing an embedding, newest first", async () => {
+    const { client } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([
+      makeCard({ id: "c1", created_at: "2026-08-16T10:00:00Z" }),
+      makeCard({ id: "c2", created_at: "2026-08-16T10:00:01Z" }),
+    ]);
+    await repo.setCardEmbedding("c2", "[0.1]");
+    expect((await repo.listCardsMissingEmbedding(10)).map((row) => row.id)).toEqual(["c1"]);
+  });
+
+  it("writes a quality score without touching the rest of the row", async () => {
+    const { client, cardRows } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([makeCard({ id: "c1" })]);
+    await repo.setCardQualityScore("c1", 0.2);
+    expect(cardRows[0]?.quality_score).toBe(0.2);
+    expect(cardRows[0]?.title).toBe("闭包是什么");
   });
 
   it("lists recent titles newest first, capped at the limit", async () => {
