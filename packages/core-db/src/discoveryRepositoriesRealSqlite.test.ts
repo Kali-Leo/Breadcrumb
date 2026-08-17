@@ -112,6 +112,29 @@ describe("createDiscoveryRepo external cards (real sqlite)", () => {
   );
 
   it(
+    "hands the cover pass the imageless cards and drops one as soon as it is filled",
+    async () => {
+      database = await openMigratedDatabase();
+      const repo = createDiscoveryRepo(database.sql);
+      await repo.insertCards([
+        makeExternalCard("card-1", "2026-08-17T09:00:00Z"),
+        makeExternalCard("card-2", "2026-08-17T09:00:01Z"),
+        { ...makeExternalCard("card-3", "2026-08-17T09:00:02Z"), cover_url: "https://a/3.jpg" },
+      ]);
+      expect((await repo.listCardsMissingCover(10)).map((card) => card.id)).toEqual([
+        "card-2",
+        "card-1",
+      ]);
+
+      await repo.setCardCoverUrl("card-2", "https://example.org/og.png");
+      expect((await repo.listCardsMissingCover(10)).map((card) => card.id)).toEqual(["card-1"]);
+      const [newest] = await repo.listNewestCards(1);
+      expect(newest?.cover_url).toBe("https://a/3.jpg");
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
     "counts only cards the user has never opened",
     async () => {
       database = await openMigratedDatabase();

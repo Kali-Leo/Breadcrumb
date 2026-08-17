@@ -95,6 +95,22 @@ export function createDiscoveryRepo(sql: SqlClient) {
         [limit],
       );
     },
+    /** Pooled cards that landed with no picture but do carry an address, newest first — what
+     * the background cover-enrichment pass works through (spec 053 §2). Which of them are worth
+     * a request is the app's decision, not this table's. */
+    async listCardsMissingCover(limit: number): Promise<DiscoveryCardRow[]> {
+      return sql.select<DiscoveryCardRow>(
+        `SELECT * FROM discovery_cards WHERE cover_url IS NULL AND url IS NOT NULL
+           ORDER BY created_at DESC LIMIT ?`,
+        [limit],
+      );
+    },
+    /** Fills in the cover a feed did not carry, read off the article page itself (spec 053 §2).
+     * Only ever writes a real address: a card nothing could be found for stays NULL, which is
+     * what the grid already knows how to draw. */
+    async setCardCoverUrl(id: string, coverUrl: string): Promise<void> {
+      await sql.execute("UPDATE discovery_cards SET cover_url = ? WHERE id = ?", [coverUrl, id]);
+    },
     /** Records the batch quality check's verdict (spec 053 §5). The score only ever demotes
      * a card in ranking; nothing is hidden because of it. */
     async setCardQualityScore(id: string, score: number): Promise<void> {

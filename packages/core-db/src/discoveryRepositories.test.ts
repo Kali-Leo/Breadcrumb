@@ -34,6 +34,15 @@ function makeFakeSql() {
             .slice(0, limit) as Row[],
         );
       }
+      if (sql.includes("WHERE cover_url IS NULL")) {
+        const limit = params?.[0] as number;
+        return Promise.resolve(
+          [...cardRows]
+            .filter((row) => row.cover_url === null && row.url !== null)
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .slice(0, limit) as Row[],
+        );
+      }
       if (sql.includes("FROM discovery_cards")) {
         const limit = params?.[0] as number;
         return Promise.resolve(
@@ -91,6 +100,11 @@ function makeFakeSql() {
         const [openedAt, id] = params as [string, string];
         const row = cardRows.find((card) => card.id === id);
         if (row) row.opened_at = openedAt;
+      }
+      if (sql.startsWith("UPDATE discovery_cards SET cover_url")) {
+        const [coverUrl, id] = params as [string, string];
+        const row = cardRows.find((card) => card.id === id);
+        if (row) row.cover_url = coverUrl;
       }
       if (sql.startsWith("UPDATE discovery_cards SET quality_score")) {
         const [score, id] = params as [number, string];
@@ -249,6 +263,34 @@ describe("createDiscoveryRepo cards", () => {
     ]);
     await repo.setCardEmbedding("c2", "[0.1]");
     expect((await repo.listCardsMissingEmbedding(10)).map((row) => row.id)).toEqual(["c1"]);
+  });
+
+  it("lists only the cards that have an address but no picture, newest first", async () => {
+    const { client } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([
+      makeCard({ id: "c1", url: "https://a.example/1", created_at: "2026-08-16T10:00:00Z" }),
+      makeCard({ id: "c2", url: "https://a.example/2", created_at: "2026-08-16T10:00:01Z" }),
+      makeCard({
+        id: "c3",
+        url: "https://a.example/3",
+        cover_url: "https://a.example/3.jpg",
+        created_at: "2026-08-16T10:00:02Z",
+      }),
+      // No address at all: a card from the retired 051 generation pipeline, nothing to read.
+      makeCard({ id: "c4", created_at: "2026-08-16T10:00:03Z" }),
+    ]);
+    expect((await repo.listCardsMissingCover(10)).map((row) => row.id)).toEqual(["c2", "c1"]);
+  });
+
+  it("writes a cover found on the page without touching the rest of the row", async () => {
+    const { client, cardRows } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([makeCard({ id: "c1", url: "https://a.example/1" })]);
+    await repo.setCardCoverUrl("c1", "https://a.example/og.png");
+    expect(cardRows[0]?.cover_url).toBe("https://a.example/og.png");
+    expect(cardRows[0]?.title).toBe("闭包是什么");
+    expect(await repo.listCardsMissingCover(10)).toEqual([]);
   });
 
   it("writes a quality score without touching the rest of the row", async () => {
