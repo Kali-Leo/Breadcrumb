@@ -4,8 +4,8 @@
  * Playing to the end records that the episode was finished.
  *
  * Some feeds link an episode's web page instead of its audio file. That link cannot be played,
- * so the player says so where the controls would have been and offers the browser; the cover,
- * title and description stay where they are.
+ * so the player says so where the controls would have been and leaves the header's 在浏览器打开
+ * as the way onward; the cover, title and description stay where they are.
  * Main exports: DiscoveryPodcastPlayer.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -34,7 +34,7 @@ export function DiscoveryPodcastPlayer({ card }: { card: DiscoveryCardRow }) {
       )}
       <p className="mt-5 font-medium text-lg text-stone-800 leading-snug">{card.title}</p>
       {unplayable || audioSource === null ? (
-        <DiscoveryReaderFallback line={UNPLAYABLE_LINE} url={card.url} className="mt-5" />
+        <DiscoveryReaderFallback line={UNPLAYABLE_LINE} className="mt-5" />
       ) : (
         // biome-ignore lint/a11y/useMediaCaption: podcast feeds ship no caption track
         <audio

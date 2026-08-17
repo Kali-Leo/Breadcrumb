@@ -44,6 +44,9 @@ interface DiscoveryState {
   /** Takes the row, not an id: an item opened from 收藏 is off the grid and still records. */
   openCard(card: DiscoveryCardRow): Promise<void>;
   streamArticle(cardId: string, onDelta: (delta: string) => void): Promise<StreamArticleResult>;
+  /** Keeps the text an external article was just read from on the row the grid holds, so a
+   * second open in the same session reads it from here rather than off the network again. */
+  noteCardBody(cardId: string, bodyMd: string): void;
   recordImpression(cardId: string, topicLabel: string): Promise<void>;
   recordDwell(cardId: string, topicLabel: string, ms: number): Promise<void>;
   recordFinish(cardId: string, topicLabel: string): Promise<void>;
@@ -141,6 +144,12 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
         cards: get().cards.map((c) => (c.id === cardId ? { ...c, body_md: outcome.bodyMd } : c)),
       });
       return { ok: true, bodyMd: outcome.bodyMd };
+    },
+
+    noteCardBody(cardId, bodyMd) {
+      set({
+        cards: get().cards.map((c) => (c.id === cardId ? { ...c, body_md: bodyMd } : c)),
+      });
     },
 
     async recordImpression(cardId, topicLabel) {

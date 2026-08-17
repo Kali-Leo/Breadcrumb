@@ -2,7 +2,7 @@
  * Purpose: read one web page and keep only the part a person came to read (spec 053 §7) — fetch
  * the address through Tauri's HTTP client, hand the HTML to Defuddle (MIT, kepano/defuddle) and
  * take its Markdown out, so the overlay can render it through the same Markdown component chat
- * messages use. Nothing is stored: extraction runs each time a page is opened.
+ * messages use. Storing what came back is the caller's business (lib/articleReading).
  * Side effects: one HTTP GET to the page's own address.
  * Main exports: extractArticleAt, ArticleExtraction, ArticleExtractionDependencies.
  */
@@ -52,18 +52,32 @@ function nonEmpty(value: string | null | undefined): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+/**
+ * The timeout is a controller we disarm, not `AbortSignal.timeout`. That signal stays armed for
+ * its full twenty seconds no matter how the request ended, and Tauri's HTTP plugin, whose request
+ * resource is freed the moment the body is read, answered the late abort with a rejection nobody
+ * was waiting on any more: every article the reader opened threw an unhandled rejection into the
+ * console twenty seconds later (spec 053 T10). Clearing the timer on the way out — success,
+ * failure or bad status alike — leaves nothing behind to fire.
+ */
 async function fetchPageHtml(url: string, fetchImpl: typeof tauriFetch): Promise<string | null> {
-  const response = await fetchImpl(url, {
-    method: "GET",
-    headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": USER_AGENT },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-  if (!response.ok) return null;
-  if (!looksLikeHtml(response.headers.get("content-type"))) return null;
-  const declaredLength = Number(response.headers.get("content-length") ?? Number.NaN);
-  if (Number.isFinite(declaredLength) && declaredLength > MAXIMUM_PAGE_BYTES) return null;
-  const html = await response.text();
-  return html.length > MAXIMUM_PAGE_BYTES ? html.slice(0, MAXIMUM_PAGE_BYTES) : html;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetchImpl(url, {
+      method: "GET",
+      headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": USER_AGENT },
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    if (!looksLikeHtml(response.headers.get("content-type"))) return null;
+    const declaredLength = Number(response.headers.get("content-length") ?? Number.NaN);
+    if (Number.isFinite(declaredLength) && declaredLength > MAXIMUM_PAGE_BYTES) return null;
+    const html = await response.text();
+    return html.length > MAXIMUM_PAGE_BYTES ? html.slice(0, MAXIMUM_PAGE_BYTES) : html;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

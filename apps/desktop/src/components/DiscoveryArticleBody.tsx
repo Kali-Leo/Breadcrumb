@@ -1,14 +1,15 @@
 /**
- * Purpose: the reading pane for an external page (spec 053 §7) — fetches the page and keeps only
- * its text (lib/articleExtraction), then renders it through the same Markdown component chat
- * messages use. While it loads, the feed's quiet skeleton stands in. When the page cannot be read
- * here, one plain line and the browser. The marker after the last line records that the item was
- * read through.
+ * Purpose: the reading pane for an external page (spec 053 §7) — asks lib/articleReading for the
+ * article's text, which is the text already kept for this card or, the first time, a live
+ * extraction that is then kept, and renders it through the same Markdown component chat messages
+ * use. While it loads, the feed's quiet skeleton stands in. When the page cannot be read here,
+ * one plain line, with the header's 在浏览器打开 as the way onward. The marker after the last
+ * line records that the item was read through.
  * Main exports: DiscoveryArticleBody.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { useEffect, useState } from "react";
-import { type ArticleExtraction, extractArticleAt } from "../lib/articleExtraction";
+import { type CardArticle, readCardArticle } from "../lib/articleReading";
 import { useSettingsStore } from "../stores/settingsStore";
 import { DiscoveryFinishSentinel } from "./DiscoveryFinishSentinel";
 import { DiscoveryReaderFallback } from "./DiscoveryReaderFallback";
@@ -17,7 +18,7 @@ import { MarkdownContent } from "./MarkdownContent";
 const UNREADABLE_LINE = "这篇文章没能在这里显示。";
 const OFFLINE_LINE = "打开这篇文章需要联网。";
 
-type LoadState = { phase: "loading" } | { phase: "done"; result: ArticleExtraction };
+type LoadState = { phase: "loading" } | { phase: "done"; article: CardArticle };
 
 function ArticleSkeleton() {
   return (
@@ -31,36 +32,32 @@ function ArticleSkeleton() {
 
 export function DiscoveryArticleBody({ card }: { card: DiscoveryCardRow }) {
   const [state, setState] = useState<LoadState>({ phase: "loading" });
+  // Read so that flipping the network switch re-runs this: a card whose text is already kept
+  // reads the same either way, and one whose text is not now has a reason to try.
   const networkEnabled = useSettingsStore((settings) => settings.networkEnabled);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on what changes the answer
   useEffect(() => {
-    if (card.url === null || !networkEnabled) {
-      setState({ phase: "done", result: { kind: "failed" } });
-      return;
-    }
     let current = true;
     setState({ phase: "loading" });
-    void extractArticleAt(card.url).then((result) => {
-      if (current) setState({ phase: "done", result });
+    void readCardArticle(card).then((article) => {
+      if (current) setState({ phase: "done", article });
     });
     return () => {
       current = false;
     };
-  }, [card.url, networkEnabled]);
+  }, [card.id, card.body_md, networkEnabled]);
 
   if (state.phase === "loading") return <ArticleSkeleton />;
-  if (state.result.kind === "failed") {
+  if (state.article.kind === "unreadable") {
     return (
-      <DiscoveryReaderFallback
-        line={networkEnabled ? UNREADABLE_LINE : OFFLINE_LINE}
-        url={card.url}
-      />
+      <DiscoveryReaderFallback line={state.article.offline ? OFFLINE_LINE : UNREADABLE_LINE} />
     );
   }
 
   return (
     <>
-      <MarkdownContent source={state.result.markdown} />
+      <MarkdownContent source={state.article.markdown} />
       <DiscoveryFinishSentinel card={card} />
     </>
   );

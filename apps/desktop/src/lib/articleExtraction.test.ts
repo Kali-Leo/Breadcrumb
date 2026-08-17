@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { type ArticleExtractionDependencies, extractArticleAt } from "./articleExtraction";
 
 type FetchImpl = ArticleExtractionDependencies["fetchImpl"];
@@ -90,5 +90,55 @@ describe("extractArticleAt", () => {
     }) as unknown as FetchImpl;
     const result = await extractArticleAt("https://unreachable.example", { fetchImpl: failing });
     expect(result.kind).toBe("failed");
+  });
+});
+
+/**
+ * FIXED (2026-08-17, spec 053 T10). The request carried `AbortSignal.timeout(20_000)`, which
+ * stays armed for its full twenty seconds however the request ended. Tauri's HTTP plugin frees a
+ * request's resource as soon as its body is read, so the late abort reached a freed id and came
+ * back as a rejection nobody was waiting on: every article the reader opened put an unhandled
+ * rejection in the console twenty seconds after it had finished loading.
+ */
+describe("extractArticleAt after it has finished", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** A fetch that records how many cancellable timers were pending while it was in flight. */
+  function recordingFetch(response: Response) {
+    const seen = { signals: [] as AbortSignal[], timersInFlight: [] as number[] };
+    const fetchImpl = vi.fn(async (_url: string, init: { signal: AbortSignal }) => {
+      seen.signals.push(init.signal);
+      seen.timersInFlight.push(vi.getTimerCount());
+      return response;
+    }) as unknown as FetchImpl;
+    return { fetchImpl, seen };
+  }
+
+  it("arms a timer for the request and disarms it the moment the page is read", async () => {
+    vi.useFakeTimers();
+    const { fetchImpl, seen } = recordingFetch(respondWith(ARTICLE_HTML));
+
+    const result = await extractArticleAt("https://example.com/posts/closures", { fetchImpl });
+    expect(result.kind).toBe("extracted");
+
+    // One clearable timer while the request was open — AbortSignal.timeout, which is what this
+    // used to arm, is not clearable and would show none here.
+    expect(seen.timersInFlight).toEqual([1]);
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(seen.signals[0]?.aborted).toBe(false);
+  });
+
+  it("disarms the timer on a page it refused as well", async () => {
+    vi.useFakeTimers();
+    const { fetchImpl, seen } = recordingFetch(
+      respondWith("%PDF-1.7", { contentType: "application/pdf" }),
+    );
+    const result = await extractArticleAt("https://example.com/file.pdf", { fetchImpl });
+    expect(result.kind).toBe("failed");
+    expect(seen.timersInFlight).toEqual([1]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
