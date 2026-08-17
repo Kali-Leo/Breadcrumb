@@ -30,4 +30,6 @@ apps/desktop/src-tauri/gen/
 packages/simlab/artifacts/
 
 # Claude Code local settings (per-machine, not shared)
-.claude/settings.local.json
+CLAUDE.md
+.claude/
+docs/rules/
