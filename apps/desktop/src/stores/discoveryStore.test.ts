@@ -13,6 +13,7 @@ const insertEventMock = vi.fn(async (row: DiscoveryEventRow) => {
   eventRows.push(row);
 });
 const markSavedMock = vi.fn(async () => {});
+const markOpenedMock = vi.fn(async () => {});
 
 vi.mock("../lib/db", () => ({
   getRepos: vi.fn(async () => ({
@@ -20,7 +21,7 @@ vi.mock("../lib/db", () => ({
       listNewestCards: async (limit: number) => cardRows.slice(0, limit),
       listAllEvents: async () => eventRows,
       insertEvent: insertEventMock,
-      markOpened: vi.fn(async () => {}),
+      markOpened: markOpenedMock,
       markSaved: markSavedMock,
     },
   })),
@@ -32,6 +33,7 @@ vi.mock("../lib/discoveryRefill", () => ({ refillDiscoveryPool: refillDiscoveryP
 vi.mock("../lib/discoveryArticleActions", () => ({ streamCardArticle: vi.fn() }));
 
 const { useDiscoveryStore } = await import("./discoveryStore");
+const { useSettingsStore } = await import("./settingsStore");
 
 const NOTHING_NEW = "翻过的卡片还能读；新卡片需要联网和开关。";
 
@@ -59,6 +61,10 @@ function card(id: string): DiscoveryCardRow {
     media_url: null,
     ...(id === "" ? {} : {}),
   };
+}
+
+function cardOn(id: string, topicLabel: string): DiscoveryCardRow {
+  return { ...card(id), topic_label: topicLabel };
 }
 
 function stocked() {
@@ -102,6 +108,7 @@ beforeEach(() => {
   eventRows = [];
   insertEventMock.mockClear();
   markSavedMock.mockClear();
+  markOpenedMock.mockClear();
   refillDiscoveryPoolMock.mockReset();
   refillDiscoveryPoolMock.mockResolvedValue(stocked());
   useDiscoveryStore.setState({
@@ -273,5 +280,116 @@ describe("silent signals", () => {
     expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["b"]);
     expect(useDiscoveryStore.getState().pending).toEqual([]);
     expect(insertEventMock).toHaveBeenCalledWith(expect.objectContaining({ kind: "dislike" }));
+  });
+});
+
+/** A grid the reader is part-way down: the first two cards have been on screen (an impression
+ * each), the four below them have not been reached yet. */
+function partlyReadGrid(): DiscoveryCardRow[] {
+  return [
+    cardOn("seen-1", "看过的"),
+    cardOn("seen-2", "看过的"),
+    cardOn("f1", "熟悉"),
+    cardOn("f2", "熟悉"),
+    cardOn("f3", "熟悉"),
+    cardOn("f4", "熟悉"),
+  ];
+}
+
+function gridTopics(): string[] {
+  return useDiscoveryStore
+    .getState()
+    .cards.slice(2)
+    .map((c) => c.topic_label);
+}
+
+describe("reshapeUpcoming — moving the feed's dial", () => {
+  beforeEach(() => {
+    // The pool holds the grid plus four cards on a field the reader has no history with.
+    cardRows = [
+      ...partlyReadGrid(),
+      cardOn("n1", "新领域"),
+      cardOn("n2", "新领域"),
+      cardOn("n3", "新领域"),
+      cardOn("n4", "新领域"),
+    ];
+    // One finish on 熟悉 is what makes that topic the familiar side and 新领域 the unfamiliar one.
+    eventRows = [
+      {
+        id: "seed-event",
+        card_id: "seed",
+        topic_label: "熟悉",
+        kind: "finish",
+        value_ms: null,
+        created_at: new Date().toISOString(),
+      },
+    ];
+    useDiscoveryStore.setState({
+      cards: partlyReadGrid(),
+      pending: [],
+      sessionImpressedIds: new Set(["seen-1", "seen-2"]),
+    });
+    useSettingsStore.setState({ discoveryExplorationShare: 0.15 });
+  });
+
+  it("changes what is coming up as soon as the dial moves", async () => {
+    await useDiscoveryStore.getState().reshapeUpcoming();
+    expect(gridTopics()).toEqual(["熟悉", "熟悉", "熟悉", "熟悉"]);
+
+    useSettingsStore.setState({ discoveryExplorationShare: 0.4 });
+    await useDiscoveryStore.getState().reshapeUpcoming();
+    expect(gridTopics()).toContain("新领域");
+  });
+
+  it("leaves every card the reader has already seen exactly where it was", async () => {
+    useSettingsStore.setState({ discoveryExplorationShare: 0.4 });
+    await useDiscoveryStore.getState().reshapeUpcoming();
+    const ids = useDiscoveryStore.getState().cards.map((c) => c.id);
+    expect(ids.slice(0, 2)).toEqual(["seen-1", "seen-2"]);
+    expect(ids).toHaveLength(6);
+    expect(new Set(ids).size).toBe(6); // no card shown twice after the re-shape
+  });
+
+  it("queues the cards that did not fit rather than dropping them", async () => {
+    useSettingsStore.setState({ discoveryExplorationShare: 0.4 });
+    await useDiscoveryStore.getState().reshapeUpcoming();
+    const shown = new Set(useDiscoveryStore.getState().cards.map((c) => c.id));
+    const queued = useDiscoveryStore.getState().pending.map((c) => c.id);
+    expect(queued.length).toBeGreaterThan(0);
+    expect(queued.some((id) => shown.has(id))).toBe(false);
+  });
+});
+
+describe("openCard", () => {
+  it("records an item opened from the 收藏 list, which is not on the grid", async () => {
+    useDiscoveryStore.setState({ cards: [card("on-grid")] });
+    await useDiscoveryStore.getState().openCard(card("kept-weeks-ago"));
+    expect(markOpenedMock).toHaveBeenCalledWith("kept-weeks-ago", expect.any(String));
+    expect(insertEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "open", card_id: "kept-weeks-ago" }),
+    );
+  });
+
+  it("marks the grid's own row opened", async () => {
+    useDiscoveryStore.setState({ cards: [card("a")] });
+    await useDiscoveryStore.getState().openCard(card("a"));
+    expect(useDiscoveryStore.getState().cards[0]?.opened_at).not.toBeNull();
+  });
+
+  it("writes one open event however often the same item is re-opened", async () => {
+    const row = card("a");
+    useDiscoveryStore.setState({ cards: [row] });
+    await useDiscoveryStore.getState().openCard(row);
+    // The reader closes the overlay and opens the same card again: the caller still holds the
+    // snapshot from before, so the guard has to read the row the store now has.
+    await useDiscoveryStore.getState().openCard(row);
+    expect(insertEventMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not re-record an item the reader opened in an earlier session", async () => {
+    const alreadyRead = { ...card("old"), opened_at: "2026-08-16T09:00:00.000Z" };
+    await useDiscoveryStore.getState().openCard(alreadyRead);
+    expect(insertEventMock).not.toHaveBeenCalled();
+    expect(markOpenedMock).not.toHaveBeenCalled();
   });
 });

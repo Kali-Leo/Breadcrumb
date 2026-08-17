@@ -28,9 +28,9 @@ export function DiscoveryFeedDial() {
     const share = shareForDialPosition(next);
     await useSettingsStore.getState().setDiscoveryExplorationShare(share);
     await recordFeedDialMove(share);
-    // Re-ranks what is queued behind the grid, so the cards after the ones on screen follow the
-    // new setting; the cards the reader is looking at right now stay where they are.
-    await useDiscoveryStore.getState().refillPool();
+    // Re-ranks everything the reader has not reached yet — the cards below the fold change on
+    // the spot, the ones already looked at stay where they are (spec 053 验收).
+    await useDiscoveryStore.getState().reshapeUpcoming();
   }
 
   // Same wrapper as the map's 休闲｜目标 pill: the two buttons name themselves and carry

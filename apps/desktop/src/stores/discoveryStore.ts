@@ -3,8 +3,8 @@
  * at a time out of the local card pool and keeps that pool stocked behind the reader
  * (lib/discoveryRefill). Cards come from external channels now; nothing on the display path
  * waits on the network, on an embedding or on an LLM. The silent signal actions
- * (impression/open/dwell/save/finish/dislike) write into discovery_events. Article streaming
- * stays a thin pass-through for the retired self-generated cards still sitting in old pools.
+ * (impression/open/dwell/save/finish/dislike) write into discovery_events; the dial re-ranks
+ * what the reader has not reached. Article streaming is a pass-through for retired card pools.
  * Main exports: useDiscoveryStore.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -18,6 +18,7 @@ import {
   takeNextPage,
 } from "../lib/discoveryFeedPaging";
 import { type RefillOutcome, refillDiscoveryPool } from "../lib/discoveryRefill";
+import { reshapeUpcomingCards } from "../lib/discoveryUpcomingReshape";
 import { nowIso } from "../lib/time";
 import { useSettingsStore } from "./settingsStore";
 
@@ -52,7 +53,10 @@ interface DiscoveryState {
    * opens already filled. */
   refillPool(): Promise<void>;
   loadMore(): Promise<void>;
-  openCard(cardId: string): Promise<void>;
+  /** Re-ranks the not-yet-reached part of the grid, for when the dial moves (spec 053 §6). */
+  reshapeUpcoming(): Promise<void>;
+  /** Takes the row, not an id: an item opened from 收藏 is off the grid and still records. */
+  openCard(card: DiscoveryCardRow): Promise<void>;
   streamArticle(cardId: string, onDelta: (delta: string) => void): Promise<StreamArticleResult>;
   recordImpression(cardId: string, topicLabel: string): Promise<void>;
   recordDwell(cardId: string, topicLabel: string, ms: number): Promise<void>;
@@ -122,15 +126,22 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
       set({ loading: false, blockedReason: bannerFor(outcome) });
     },
 
-    async openCard(cardId) {
-      const card = get().cards.find((c) => c.id === cardId);
-      if (card === undefined || card.opened_at !== null) return;
+    async reshapeUpcoming() {
+      const share = useSettingsStore.getState().discoveryExplorationShare;
+      set(await reshapeUpcomingCards(get().cards, get().sessionImpressedIds, share));
+    },
+
+    async openCard(card) {
+      // The grid hands over a snapshot; the store holds the row as it stands now, and reading
+      // that one back is what stops a re-open writing a second event. A 收藏 row is off the grid.
+      const live = get().cards.find((c) => c.id === card.id) ?? card;
+      if (live.opened_at !== null) return;
       const repos = await getRepos();
       const openedAt = nowIso();
-      await repos.discovery.markOpened(cardId, openedAt);
-      await recordDiscoveryEvent(cardId, card.topic_label, "open");
+      await repos.discovery.markOpened(card.id, openedAt);
+      await recordDiscoveryEvent(card.id, card.topic_label, "open");
       set({
-        cards: get().cards.map((c) => (c.id === cardId ? { ...c, opened_at: openedAt } : c)),
+        cards: get().cards.map((c) => (c.id === card.id ? { ...c, opened_at: openedAt } : c)),
       });
     },
 

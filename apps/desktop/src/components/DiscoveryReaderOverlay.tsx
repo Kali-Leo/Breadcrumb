@@ -46,7 +46,7 @@ export function DiscoveryReaderOverlay({ card, onClose }: DiscoveryReaderOverlay
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — reruns only when a different card opens
   useEffect(() => {
     openedAtRef.current = Date.now();
-    void useDiscoveryStore.getState().openCard(card.id);
+    void useDiscoveryStore.getState().openCard(card);
     return () => {
       const dwellMs = Date.now() - openedAtRef.current;
       void useDiscoveryStore.getState().recordDwell(card.id, card.topic_label, dwellMs);
