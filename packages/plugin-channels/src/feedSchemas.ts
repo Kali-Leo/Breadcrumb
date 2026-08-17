@@ -16,15 +16,22 @@ const mediaContentSchema = z.object({
   medium: optionalText,
 });
 
+/** media:description and media:title arrive wrapped, because they carry attributes of their own. */
+const mediaTextSchema = z.object({ value: optionalText });
+
 const mediaGroupSchema = z.object({
   thumbnails: z.array(mediaThumbnailSchema).optional(),
   contents: z.array(mediaContentSchema).optional(),
+  description: mediaTextSchema.optional(),
+  title: mediaTextSchema.optional(),
 });
 
 /** media: RSS, both at item level and inside <media:group> (YouTube's layout). */
 export const mediaNamespaceSchema = z.object({
   thumbnails: z.array(mediaThumbnailSchema).optional(),
   contents: z.array(mediaContentSchema).optional(),
+  description: mediaTextSchema.optional(),
+  title: mediaTextSchema.optional(),
   group: mediaGroupSchema.optional(),
   groups: z.array(mediaGroupSchema).optional(),
 });

@@ -71,6 +71,122 @@
         "dailyRequestBudget": 96,
         "userAgentOverride": null
       }
+    },
+    {
+      "id": "linux-do",
+      "displayName": "linux.do",
+      "adapterType": "discourse",
+      "endpoint": { "feedUrl": "https://linux.do/latest.rss", "fullTextTopicsPerPoll": 5 },
+      "language": "zh-CN",
+      "defaultKind": "discussion",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 300,
+        "userAgentOverride": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "v2ex-hot",
+      "displayName": "V2EX 今日热议",
+      "adapterType": "v2ex",
+      "endpoint": { "feedUrl": "https://www.v2ex.com/api/topics/hot.json" },
+      "language": "zh-CN",
+      "defaultKind": "discussion",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 48,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "hacker-news-front-page",
+      "displayName": "Hacker News",
+      "adapterType": "hackernews",
+      "endpoint": { "feedUrl": "https://hn.algolia.com/api/v1/search?tags=front_page" },
+      "language": "en",
+      "defaultKind": "discussion",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 900000,
+        "dailyRequestBudget": 96,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "arxiv-cs-ai",
+      "displayName": "arXiv Artificial Intelligence (cs.AI)",
+      "adapterType": "arxiv",
+      "endpoint": { "feedUrl": "https://rss.arxiv.org/rss/cs.AI" },
+      "language": "en",
+      "defaultKind": "paper",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      },
+      "unverified": true
+    },
+    {
+      "id": "arxiv-cs-lg",
+      "displayName": "arXiv Machine Learning (cs.LG)",
+      "adapterType": "arxiv",
+      "endpoint": { "feedUrl": "https://rss.arxiv.org/rss/cs.LG" },
+      "language": "en",
+      "defaultKind": "paper",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      },
+      "unverified": true
+    },
+    {
+      "id": "arxiv-q-bio-nc",
+      "displayName": "arXiv Neurons and Cognition (q-bio.NC)",
+      "adapterType": "arxiv",
+      "endpoint": { "feedUrl": "https://rss.arxiv.org/rss/q-bio.NC" },
+      "language": "en",
+      "defaultKind": "paper",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      },
+      "unverified": true
+    },
+    {
+      "id": "podcast-search",
+      "displayName": "播客搜索（iTunes）",
+      "adapterType": "podcast-search",
+      "endpoint": { "feedUrl": "https://itunes.apple.com/search" },
+      "language": "und",
+      "defaultKind": "podcast",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 3000,
+        "dailyRequestBudget": 200,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "douban-interests",
+      "displayName": "豆瓣书影音动态",
+      "adapterType": "douban-user",
+      "endpoint": { "feedUrl": "https://www.douban.com/feed/people/{userId}/interests" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": false,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 3600000,
+        "dailyRequestBudget": 24,
+        "userAgentOverride": null
+      },
+      "templateParameters": [{ "name": "userId", "label": "豆瓣用户 ID" }]
     }
   ]
 }

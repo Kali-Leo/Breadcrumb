@@ -2,8 +2,9 @@
  * Purpose: the one place a channel touches the network. Applies the whole discipline in order —
  * enabled check, rate limit and daily budget, backoff, conditional GET with replayed
  * ETag/If-Modified-Since, compliant or per-source User-Agent, request timeout, response size cap —
- * and returns an outcome instead of throwing, so one dead source never breaks a poll.
- * Main exports: ChannelFetcher, ChannelFetcherOptions, FetchContext.
+ * and returns an outcome instead of throwing, so one dead source never breaks a poll. Adapters
+ * never see this class; they get a FetchContext whose `fetchUrl` is bound to their source.
+ * Main exports: ChannelFetcher, ChannelFetcherOptions.
  */
 import { readBoundedResponseBody } from "./boundedBody";
 import type { ChannelSource } from "./channelCatalog";
@@ -15,21 +16,14 @@ import {
   conditionalRequestStateSchema,
   defaultRequestTimeoutMilliseconds,
   defaultResponseSizeCapBytes,
+  type FetchContext,
   type FetchImplementation,
   type FetchOutcome,
+  type SourceRequestOptions,
 } from "./fetchContract";
 
 const feedAcceptHeader =
   "application/rss+xml, application/atom+xml, application/feed+json, application/xml;q=0.9, */*;q=0.8";
-
-/** What adapters are allowed to know about the current request environment. `dataSaverEnabled`
- * is the standing instruction: while it is on, an adapter must not issue image requests. */
-export interface FetchContext {
-  readonly userAgent: string;
-  readonly dataSaverEnabled: boolean;
-  readonly responseSizeCapBytes: number;
-  readonly requestTimeoutMilliseconds: number;
-}
 
 export interface ChannelFetcherOptions {
   fetchImplementation: FetchImplementation;
@@ -41,6 +35,14 @@ export interface ChannelFetcherOptions {
   requestTimeoutMilliseconds?: number;
   dataSaverEnabled?: boolean;
   ledger?: FetchBudgetLedger;
+}
+
+interface ResolvedRequest {
+  source: ChannelSource;
+  url: string;
+  enabled: boolean;
+  isPoll: boolean;
+  accept: string;
 }
 
 function describeFailure(error: unknown): string {
@@ -79,23 +81,38 @@ export class ChannelFetcher {
     this.dataSaverEnabled = enabled;
   }
 
-  contextForSource(source: ChannelSource): FetchContext {
+  private userAgentFor(source: ChannelSource): string {
+    return source.fetchPolicy.userAgentOverride ?? this.defaultUserAgent;
+  }
+
+  /** The context adapters run against. `enabled` is the reader's per-channel switch, passed in by
+   * the caller because it lives in settings, not in the catalog. */
+  contextForSource(source: ChannelSource, enabled = true): FetchContext {
     return {
-      userAgent: source.fetchPolicy.userAgentOverride ?? this.defaultUserAgent,
+      userAgent: this.userAgentFor(source),
       dataSaverEnabled: this.dataSaverEnabled,
       responseSizeCapBytes: this.responseSizeCapBytes,
       requestTimeoutMilliseconds: this.requestTimeoutMilliseconds,
+      fetchUrl: (url: string, options?: SourceRequestOptions) =>
+        this.request({
+          source,
+          url,
+          enabled,
+          isPoll: (options?.kind ?? "follow-up") === "poll",
+          accept: options?.accept ?? feedAcceptHeader,
+        }),
     };
   }
 
-  private async buildHeaders(source: ChannelSource): Promise<Record<string, string>> {
+  private async buildHeaders(request: ResolvedRequest): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
-      "User-Agent": this.contextForSource(source).userAgent,
-      Accept: feedAcceptHeader,
+      "User-Agent": this.userAgentFor(request.source),
+      Accept: request.accept,
     };
+    if (!request.isPoll) return headers;
     let stored: unknown = null;
     try {
-      stored = await this.conditionalRequestStore.read(source.id);
+      stored = await this.conditionalRequestStore.read(request.source.id);
     } catch {
       stored = null;
     }
@@ -117,34 +134,32 @@ export class ChannelFetcher {
     }
   }
 
-  /**
-   * Fetches one source's endpoint. `enabled` is the reader's per-channel switch, passed in by the
-   * caller because it lives in settings, not in the catalog.
-   */
-  async fetchSource(source: ChannelSource, enabled = true): Promise<FetchOutcome> {
-    if (!enabled) return { status: "skipped", reason: "source-disabled" };
-    const allowance = this.ledger.checkAllowance(source.id, source.fetchPolicy);
+  private async request(request: ResolvedRequest): Promise<FetchOutcome> {
+    if (!request.enabled) return { status: "skipped", reason: "source-disabled" };
+    const allowance = this.ledger.checkAllowance(request.source.id, request.source.fetchPolicy, {
+      ignoreMinimumInterval: !request.isPoll,
+    });
     if (!allowance.allowed && allowance.reason !== null) {
       return { status: "skipped", reason: allowance.reason };
     }
 
-    const headers = await this.buildHeaders(source);
+    const headers = await this.buildHeaders(request);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.requestTimeoutMilliseconds);
-    this.ledger.recordRequestStarted(source.id);
+    this.ledger.recordRequestStarted(request.source.id);
     try {
-      const response = await this.fetchImplementation(source.endpoint.feedUrl, {
+      const response = await this.fetchImplementation(request.url, {
         method: "GET",
         headers,
         redirect: "follow",
         signal: controller.signal,
       });
       if (response.status === 304) {
-        this.ledger.recordSuccess(source.id);
+        this.ledger.recordSuccess(request.source.id);
         return { status: "not-modified" };
       }
       if (!response.ok) {
-        this.ledger.recordFailure(source.id);
+        this.ledger.recordFailure(request.source.id);
         return {
           status: "failed",
           reason: response.statusText || "http error",
@@ -152,20 +167,27 @@ export class ChannelFetcher {
         };
       }
       const bounded = await readBoundedResponseBody(response, this.responseSizeCapBytes);
-      await this.rememberValidators(source.id, response);
-      this.ledger.recordSuccess(source.id);
+      if (request.isPoll) await this.rememberValidators(request.source.id, response);
+      this.ledger.recordSuccess(request.source.id);
       return {
         status: "fetched",
         body: bounded.text,
         truncated: bounded.truncated,
         byteLength: bounded.byteLength,
-        finalUrl: response.url || source.endpoint.feedUrl,
+        finalUrl: response.url || request.url,
       };
     } catch (error) {
-      this.ledger.recordFailure(source.id);
+      this.ledger.recordFailure(request.source.id);
       return { status: "failed", reason: describeFailure(error), httpStatus: null };
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  /** Polls a source's own feed address: the one request that owns the conditional-request state. */
+  async fetchSource(source: ChannelSource, enabled = true): Promise<FetchOutcome> {
+    return this.contextForSource(source, enabled).fetchUrl(source.endpoint.feedUrl, {
+      kind: "poll",
+    });
   }
 }

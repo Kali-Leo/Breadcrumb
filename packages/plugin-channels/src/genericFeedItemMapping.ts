@@ -26,17 +26,15 @@ export interface FeedItemMappingContext {
   observedAtIso: string;
 }
 
-interface MediaLike {
+interface MediaContainer {
   thumbnails?: ReadonlyArray<{ url?: string }>;
   contents?: ReadonlyArray<{ url?: string; type?: string; medium?: string }>;
-  group?: {
-    thumbnails?: ReadonlyArray<{ url?: string }>;
-    contents?: ReadonlyArray<{ url?: string; type?: string; medium?: string }>;
-  };
-  groups?: ReadonlyArray<{
-    thumbnails?: ReadonlyArray<{ url?: string }>;
-    contents?: ReadonlyArray<{ url?: string; type?: string; medium?: string }>;
-  }>;
+  description?: { value?: string };
+}
+
+interface MediaLike extends MediaContainer {
+  group?: MediaContainer;
+  groups?: ReadonlyArray<MediaContainer>;
 }
 
 interface AttachmentLike {
@@ -57,6 +55,13 @@ function imageUrlFromMedia(media: MediaLike | undefined): string | null {
     (content) => content.medium === "image" || content.type?.startsWith("image/"),
   );
   return firstNonEmptyText(thumbnails?.[0]?.url, imageContent?.url);
+}
+
+/** A YouTube channel feed carries no Atom summary at all: the text lives in media:description. */
+function descriptionFromMedia(media: MediaLike | undefined): string | null {
+  if (!media) return null;
+  const group = media.group ?? media.groups?.[0];
+  return firstNonEmptyText(media.description?.value, group?.description?.value);
 }
 
 function imageUrlFromAttachments(attachments: ReadonlyArray<AttachmentLike>): string | null {
@@ -125,7 +130,11 @@ export function mapRssItem(item: RssItem, context: FeedItemMappingContext): Cand
     identity: firstNonEmptyText(item.guid?.value, item.link),
     url: resolveAbsoluteUrl(firstNonEmptyText(item.link, permalinkGuid), context.baseUrl),
     rawTitle: firstNonEmptyText(item.title),
-    rawSummary: firstNonEmptyText(item.description, item.content?.encoded),
+    rawSummary: firstNonEmptyText(
+      item.description,
+      item.content?.encoded,
+      descriptionFromMedia(item.media),
+    ),
     coverUrl: firstNonEmptyText(
       enclosures.find((one) => one.type?.startsWith("image/"))?.url,
       imageUrlFromMedia(item.media),
@@ -152,7 +161,7 @@ export function mapAtomEntry(entry: AtomEntry, context: FeedItemMappingContext):
     identity: firstNonEmptyText(entry.id, alternate?.href),
     url: resolveAbsoluteUrl(firstNonEmptyText(alternate?.href, links[0]?.href), context.baseUrl),
     rawTitle: firstNonEmptyText(entry.title),
-    rawSummary: firstNonEmptyText(entry.summary, entry.content),
+    rawSummary: firstNonEmptyText(entry.summary, entry.content, descriptionFromMedia(entry.media)),
     coverUrl: firstNonEmptyText(
       imageUrlFromAttachments(enclosures),
       imageUrlFromMedia(entry.media),

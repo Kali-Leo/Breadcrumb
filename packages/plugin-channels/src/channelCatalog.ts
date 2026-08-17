@@ -1,25 +1,45 @@
 /**
  * Purpose: the channel catalog format — a static JSON file that ships with the app and can be
  * updated on its own, listing which sources exist, how to reach them, and how hard we are allowed
- * to poll them. Users add their own feeds by appending entries of the same shape.
+ * to poll them. Users add their own feeds by appending entries of the same shape, and template
+ * entries (豆瓣 user activity) wait for the parameter the reader supplies in settings.
  * Main exports: channelSourceSchema, channelCatalogSchema, parseChannelCatalog,
- * loadStarterChannelCatalog, ChannelSource, ChannelCatalog.
+ * loadStarterChannelCatalog, fillSourceTemplate, ChannelSource, ChannelCatalog.
  */
 import { z } from "zod";
 import { candidateItemKindSchema } from "./candidateItem";
 import starterCatalogJson from "./starterChannelCatalog.json" with { type: "json" };
 
-/** Adapter families. Only the generic feed adapter exists today; the specialized ones
- * (Discourse, V2EX, Hacker News, arXiv, iTunes, YouTube, Douban) join this union when they land. */
-export const channelAdapterTypes = ["generic-feed"] as const;
+/** Adapter families. Each one knows how to turn a specific service's payload into candidate
+ * items; every other source in the world goes through "generic-feed". */
+export const channelAdapterTypes = [
+  "generic-feed",
+  "discourse",
+  "v2ex",
+  "hackernews",
+  "arxiv",
+  "podcast-search",
+  "youtube-channel",
+  "douban-user",
+] as const;
 
 export const channelAdapterTypeSchema = z.enum(channelAdapterTypes);
 
 export type ChannelAdapterType = z.infer<typeof channelAdapterTypeSchema>;
 
-/** Endpoint config for the generic RSS/Atom/JSON-Feed adapter: just the feed address. */
-export const genericFeedEndpointSchema = z.object({
+/**
+ * Every source states one address, `feedUrl`: the thing a poll reads, or — for the search-only
+ * families — the API entry point a query is appended to. Adapters that need a second number carry
+ * it alongside; nothing else is stored, because anything more is guesswork the survey did not
+ * verify.
+ */
+export const channelEndpointSchema = z.object({
   feedUrl: z.url(),
+  /**
+   * Discourse only: how many of the newest topics a poll may open through `/t/{id}.json` for the
+   * full post body and the reply count. Zero keeps the poll to the one RSS request.
+   */
+  fullTextTopicsPerPoll: z.number().int().min(0).max(20).optional(),
 });
 
 export const fetchPolicySchema = z.object({
@@ -33,12 +53,21 @@ export const fetchPolicySchema = z.object({
 
 export type FetchPolicy = z.infer<typeof fetchPolicySchema>;
 
+/** A blank the reader fills in before the source works, substituted into `feedUrl` as `{name}`. */
+export const templateParameterSchema = z.object({
+  name: z.string().regex(/^[a-zA-Z][a-zA-Z0-9]*$/),
+  /** Shown next to the input in settings, in the source's own language. */
+  label: z.string().min(1),
+});
+
+export type TemplateParameter = z.infer<typeof templateParameterSchema>;
+
 export const channelSourceSchema = z.object({
   id: z.string().min(1),
   /** Shown to the reader as the source name, in the source's own language. */
   displayName: z.string().min(1),
   adapterType: channelAdapterTypeSchema,
-  endpoint: genericFeedEndpointSchema,
+  endpoint: channelEndpointSchema,
   /** BCP 47 tag, e.g. "zh-CN" or "en". */
   language: z.string().min(2),
   /** What the items are when the payload itself does not say (a plain blog feed is articles;
@@ -47,6 +76,11 @@ export const channelSourceSchema = z.object({
   /** Whether a fresh install polls this source before the reader touches settings. */
   defaultEnabled: z.boolean(),
   fetchPolicy: fetchPolicySchema,
+  /** Present and non-empty means the entry is a template: unusable until `fillSourceTemplate`
+   * substitutes the reader's values. Absent is the ordinary case. */
+  templateParameters: z.array(templateParameterSchema).optional(),
+  /** True when the address was not measured in the 2026-08-17 channel survey. */
+  unverified: z.boolean().optional(),
 });
 
 export type ChannelSource = z.infer<typeof channelSourceSchema>;
@@ -81,4 +115,31 @@ export function parseChannelCatalog(value: unknown): ChannelCatalog {
  * rather than halfway through a poll. */
 export function loadStarterChannelCatalog(): ChannelCatalog {
   return parseChannelCatalog(starterCatalogJson);
+}
+
+/** A template entry is not fetchable as it stands — its address still has `{name}` blanks in it. */
+export function isSourceTemplate(source: ChannelSource): boolean {
+  return (source.templateParameters?.length ?? 0) > 0;
+}
+
+/**
+ * Substitutes the values the reader typed into a template entry and returns a plain source.
+ * Values are URL-encoded, so a pasted id with a slash or a space cannot rewrite the path.
+ * Throws when a parameter is missing or blank: an unfinished template must never reach the network.
+ */
+export function fillSourceTemplate(
+  source: ChannelSource,
+  values: Readonly<Record<string, string>>,
+): ChannelSource {
+  let feedUrl = source.endpoint.feedUrl;
+  for (const parameter of source.templateParameters ?? []) {
+    const value = values[parameter.name]?.trim();
+    if (!value) throw new Error(`missing template parameter ${parameter.name} for ${source.id}`);
+    feedUrl = feedUrl.replaceAll(`{${parameter.name}}`, encodeURIComponent(value));
+  }
+  return channelSourceSchema.parse({
+    ...source,
+    endpoint: { ...source.endpoint, feedUrl },
+    templateParameters: undefined,
+  });
 }

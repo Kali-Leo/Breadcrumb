@@ -4,9 +4,13 @@
  * duplicated entries are rejected rather than half-loaded.
  */
 import { describe, expect, it } from "vitest";
+import { sourceSupportsPolling, sourceSupportsSearch } from "./adapterCapabilities";
 import {
   type ChannelCatalog,
+  type ChannelSource,
   channelSourceSchema,
+  fillSourceTemplate,
+  isSourceTemplate,
   loadStarterChannelCatalog,
   parseChannelCatalog,
 } from "./channelCatalog";
@@ -45,16 +49,87 @@ describe("loadStarterChannelCatalog", () => {
       "https://segmentfault.com/feeds",
       "https://www.cnblogs.com/rss",
       "https://rss.sina.com.cn/tech/rollnews.xml",
+      "https://linux.do/latest.rss",
+      "https://www.v2ex.com/api/topics/hot.json",
+      "https://hn.algolia.com/api/v1/search?tags=front_page",
+      "https://rss.arxiv.org/rss/cs.AI",
+      "https://rss.arxiv.org/rss/cs.LG",
+      "https://rss.arxiv.org/rss/q-bio.NC",
+      "https://itunes.apple.com/search",
+      "https://www.douban.com/feed/people/{userId}/interests",
     ]);
   });
 
-  it("enables every starter source by default and needs no custom User-Agent", () => {
+  it("marks as unverified exactly the addresses the survey did not record", () => {
+    const unverified = catalog.sources.filter((source) => source.unverified === true);
+    expect(unverified.map((source) => source.id)).toEqual([
+      "arxiv-cs-ai",
+      "arxiv-cs-lg",
+      "arxiv-q-bio-nc",
+    ]);
+  });
+
+  it("gives every source a positive interval and a daily budget", () => {
     for (const source of catalog.sources) {
-      expect(source.defaultEnabled).toBe(true);
-      expect(source.adapterType).toBe("generic-feed");
-      expect(source.fetchPolicy.userAgentOverride).toBeNull();
       expect(source.fetchPolicy.minimumIntervalMilliseconds).toBeGreaterThan(0);
+      expect(source.fetchPolicy.dailyRequestBudget).toBeGreaterThan(0);
     }
+  });
+
+  it("overrides the User-Agent only for linux.do, which 403s a library one", () => {
+    const overriding = catalog.sources.filter(
+      (source) => source.fetchPolicy.userAgentOverride !== null,
+    );
+    expect(overriding.map((source) => source.id)).toEqual(["linux-do"]);
+    expect(overriding[0]?.fetchPolicy.userAgentOverride).toMatch(/^Mozilla\/5\.0/);
+  });
+
+  it("leaves the 豆瓣 entry off until the reader supplies a user id", () => {
+    const douban = catalog.sources.find((source) => source.id === "douban-interests");
+    expect(douban?.defaultEnabled).toBe(false);
+    expect(douban && isSourceTemplate(douban)).toBe(true);
+    expect(douban && sourceSupportsPolling(douban)).toBe(false);
+  });
+
+  it("keeps the podcast search out of the polling rotation and in the search rotation", () => {
+    const itunes = catalog.sources.find((source) => source.id === "podcast-search");
+    expect(itunes && sourceSupportsPolling(itunes)).toBe(false);
+    expect(itunes && sourceSupportsSearch(itunes)).toBe(true);
+  });
+
+  it("enables every other source on a fresh install", () => {
+    const disabled = catalog.sources.filter((source) => !source.defaultEnabled);
+    expect(disabled.map((source) => source.id)).toEqual(["douban-interests"]);
+  });
+});
+
+function starterSource(id: string): ChannelSource {
+  const source = loadStarterChannelCatalog().sources.find((one) => one.id === id);
+  if (!source) throw new Error(`missing starter source ${id}`);
+  return source;
+}
+
+describe("fillSourceTemplate", () => {
+  const template = starterSource("douban-interests");
+
+  it("substitutes the reader's id and leaves a source that can be polled", () => {
+    const filled = fillSourceTemplate(template, { userId: "ahbei" });
+    expect(filled.endpoint.feedUrl).toBe("https://www.douban.com/feed/people/ahbei/interests");
+    expect(isSourceTemplate(filled)).toBe(false);
+    expect(sourceSupportsPolling(filled)).toBe(true);
+  });
+
+  it("encodes a pasted value so it cannot rewrite the path", () => {
+    const filled = fillSourceTemplate(template, { userId: "../../secret" });
+    expect(filled.endpoint.feedUrl).toBe(
+      "https://www.douban.com/feed/people/..%2F..%2Fsecret/interests",
+    );
+  });
+
+  it("refuses a blank value rather than fetching an address with a hole in it", () => {
+    expect(() => fillSourceTemplate(template, { userId: "  " })).toThrow(
+      /missing template parameter/,
+    );
   });
 });
 
@@ -67,7 +142,7 @@ describe("parseChannelCatalog", () => {
 
   it("rejects an unknown adapter type and a non-url endpoint", () => {
     expect(() =>
-      parseChannelCatalog(catalogWith([{ ...exampleSource, adapterType: "discourse" }])),
+      parseChannelCatalog(catalogWith([{ ...exampleSource, adapterType: "telepathy" }])),
     ).toThrow();
     expect(() =>
       parseChannelCatalog(catalogWith([{ ...exampleSource, endpoint: { feedUrl: "not a url" } }])),

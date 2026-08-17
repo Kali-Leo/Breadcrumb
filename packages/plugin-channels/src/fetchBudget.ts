@@ -77,10 +77,13 @@ export class FetchBudgetLedger {
     return existing;
   }
 
-  /** Whether this source may spend a request right now, and if not, which rule stopped it. */
+  /** Whether this source may spend a request right now, and if not, which rule stopped it.
+   * `ignoreMinimumInterval` is for the follow-up requests that complete a poll already under way
+   * (Discourse topic bodies): they still spend daily budget and still obey backoff. */
   checkAllowance(
     sourceId: string,
     policy: { minimumIntervalMilliseconds: number; dailyRequestBudget: number },
+    options: { ignoreMinimumInterval?: boolean } = {},
   ): FetchAllowance {
     const state = this.snapshot(sourceId);
     const now = this.now();
@@ -91,6 +94,7 @@ export class FetchBudgetLedger {
       return { allowed: false, reason: "daily-budget" };
     }
     if (
+      options.ignoreMinimumInterval !== true &&
       state.lastRequestAtMilliseconds !== null &&
       now - state.lastRequestAtMilliseconds < policy.minimumIntervalMilliseconds
     ) {

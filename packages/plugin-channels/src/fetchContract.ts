@@ -1,9 +1,10 @@
 /**
  * Purpose: the shared vocabulary of the fetch-discipline layer — the injectable fetch function
  * (so the desktop app can hand in Tauri's HTTP client), the conditional-request state we persist
- * between polls, and the outcome union callers switch on. No I/O happens here.
+ * between polls, the outcome union callers switch on, and the FetchContext adapters receive. No
+ * I/O happens here.
  * Main exports: FetchImplementation, conditionalRequestStateSchema, ConditionalRequestStore,
- * FetchOutcome, buildDefaultUserAgent, defaults.
+ * FetchOutcome, FetchContext, SourceRequestOptions, buildDefaultUserAgent, defaults.
  */
 import { z } from "zod";
 
@@ -26,7 +27,15 @@ export interface ConditionalRequestStore {
   write(sourceId: string, state: ConditionalRequestState): Promise<void>;
 }
 
-export type FetchSkipReason = "source-disabled" | "minimum-interval" | "daily-budget" | "backoff";
+export type FetchSkipReason =
+  | "source-disabled"
+  | "minimum-interval"
+  | "daily-budget"
+  | "backoff"
+  /** The source only answers searches (iTunes podcast discovery); there is nothing to poll. */
+  | "not-pollable"
+  /** A catalog template whose parameters the reader has not filled in yet (豆瓣 user id). */
+  | "template-not-filled";
 
 export type FetchOutcome =
   | {
@@ -42,6 +51,39 @@ export type FetchOutcome =
   | { status: "not-modified" }
   | { status: "skipped"; reason: FetchSkipReason }
   | { status: "failed"; reason: string; httpStatus: number | null };
+
+/**
+ * Why a request is being made. A poll is the source's own scheduled feed read: it owns the
+ * conditional-request state and waits out the minimum interval. A follow-up is an extra request an
+ * adapter needs to finish that poll or answer a search (a Discourse topic body, an Algolia query),
+ * so it spends daily budget and obeys backoff but does not wait out the poll interval.
+ */
+export type SourceRequestKind = "poll" | "follow-up";
+
+export interface SourceRequestOptions {
+  /** Defaults to "follow-up": only the fetcher's own poll path claims the conditional state. */
+  kind?: SourceRequestKind;
+  /** Replaces the feed Accept header, for the JSON endpoints. */
+  accept?: string;
+}
+
+/**
+ * What adapters are allowed to know about the current request environment, including the single
+ * door to the network: `fetchUrl` comes bound to one catalog source and already carries that
+ * source's whole discipline (enabled switch, rate limit, daily budget, backoff, User-Agent,
+ * timeout, size cap). `dataSaverEnabled` is the standing instruction: while it is on, an adapter
+ * must not issue image requests.
+ */
+export interface FetchContext {
+  readonly userAgent: string;
+  readonly dataSaverEnabled: boolean;
+  readonly responseSizeCapBytes: number;
+  readonly requestTimeoutMilliseconds: number;
+  readonly fetchUrl: (url: string, options?: SourceRequestOptions) => Promise<FetchOutcome>;
+}
+
+/** Accept header for the API endpoints (V2EX, Algolia, Discourse topics, iTunes, oEmbed). */
+export const jsonAcceptHeader = "application/json, text/json;q=0.9, */*;q=0.8";
 
 /** 5 MB. The survey measured an 18.5 MB podcast feed; past this we truncate and flag. */
 export const defaultResponseSizeCapBytes = 5 * 1024 * 1024;
