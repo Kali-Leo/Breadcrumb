@@ -11,8 +11,9 @@ import { DiscoveryCardTile } from "./DiscoveryCardTile";
 
 const SKELETON_COUNT = 8;
 
+/** Roughly a cover card's height, so a loading grid does not jump when real cards land. */
 function SkeletonCard() {
-  return <div className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />;
+  return <div className="h-64 animate-pulse rounded-2xl bg-white shadow-sm" />;
 }
 
 interface DiscoveryCardGridProps {

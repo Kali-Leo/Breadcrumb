@@ -8,8 +8,8 @@
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { useEffect, useState } from "react";
 import { useDiscoveryStore } from "../stores/discoveryStore";
-import { DiscoveryArticleOverlay } from "./DiscoveryArticleOverlay";
 import { DiscoveryCardGrid } from "./DiscoveryCardGrid";
+import { DiscoveryReaderOverlay } from "./DiscoveryReaderOverlay";
 
 export function DiscoveryView() {
   const cards = useDiscoveryStore((state) => state.cards);
@@ -51,7 +51,7 @@ export function DiscoveryView() {
         </>
       )}
       {openCard !== null && (
-        <DiscoveryArticleOverlay card={openCard} onClose={() => setOpenCard(null)} />
+        <DiscoveryReaderOverlay card={openCard} onClose={() => setOpenCard(null)} />
       )}
     </div>
   );
