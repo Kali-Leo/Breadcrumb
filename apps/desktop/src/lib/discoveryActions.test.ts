@@ -163,6 +163,14 @@ describe("generateBatch success", () => {
         batch_id: "b0",
         created_at: "2026-08-10T00:00:00.000Z",
         opened_at: "2026-08-10T00:01:00.000Z",
+        source_id: null,
+        kind: null,
+        url: null,
+        cover_url: null,
+        author: null,
+        published_at: null,
+        saved_at: null,
+        quality_score: null,
       },
     ];
     chatJsonMock.mockResolvedValue({

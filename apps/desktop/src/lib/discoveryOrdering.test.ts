@@ -20,6 +20,14 @@ function card(overrides: Partial<DiscoveryCardRow> & { id: string }): DiscoveryC
     batch_id: "batch",
     created_at: "2026-08-15T00:00:00.000Z",
     opened_at: null,
+    source_id: null,
+    kind: null,
+    url: null,
+    cover_url: null,
+    author: null,
+    published_at: null,
+    saved_at: null,
+    quality_score: null,
     ...overrides,
   };
 }

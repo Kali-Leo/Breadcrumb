@@ -4,9 +4,9 @@
  * from the candidate cards themselves, scores+MMR-reranks the embedded ones, and appends
  * cards with no embedding yet (a fresh batch whose fastembed pass hasn't landed) by recency.
  * No DB, no I/O.
- * Main exports: orderCardsForDisplay, discoveryRowToInterestEvent.
+ * Main exports: orderCardsForDisplay, discoveryRowsToInterestEvents.
  */
-import type { DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
+import type { DiscoveryCardRow, DiscoveryEventKind, DiscoveryEventRow } from "@breadcrumb/core-db";
 import {
   computeCentroid,
   foldInterestFromEvents,
@@ -16,13 +16,32 @@ import {
   scoreByCentroids,
 } from "@breadcrumb/plugin-discovery";
 
-export function discoveryRowToInterestEvent(row: DiscoveryEventRow): InterestEvent {
-  return {
-    topicLabel: row.topic_label,
-    kind: row.kind,
-    valueMs: row.value_ms,
-    createdAt: row.created_at,
-  };
+/** The kinds the interest model weighs today. Spec 053 §6 records more kinds (save/unsave/
+ * finish/dial/onboarding); spec 053 T4 folds them into interest weighting, until then they are
+ * stored but skipped here rather than guessed at a contribution. */
+const INTEREST_EVENT_KINDS: readonly InterestEvent["kind"][] = [
+  "impression",
+  "open",
+  "dwell",
+  "dislike",
+];
+
+function isInterestEventKind(kind: DiscoveryEventKind): kind is InterestEvent["kind"] {
+  return (INTEREST_EVENT_KINDS as readonly string[]).includes(kind);
+}
+
+export function discoveryRowsToInterestEvents(rows: readonly DiscoveryEventRow[]): InterestEvent[] {
+  const events: InterestEvent[] = [];
+  for (const row of rows) {
+    if (!isInterestEventKind(row.kind)) continue;
+    events.push({
+      topicLabel: row.topic_label,
+      kind: row.kind,
+      valueMs: row.value_ms,
+      createdAt: row.created_at,
+    });
+  }
+  return events;
 }
 
 function parseEmbedding(embeddingJson: string | null): number[] | null {
@@ -82,7 +101,7 @@ export function orderCardsForDisplay(
 
   if (embedded.length === 0) return unembedded;
 
-  const weights = foldInterestFromEvents(events.map(discoveryRowToInterestEvent), nowIso);
+  const weights = foldInterestFromEvents(discoveryRowsToInterestEvents(events), nowIso);
   const weightByTopic = new Map(weights.map((w) => [w.topicLabel, w.weight]));
   const positiveCentroid = buildCentroid(embedded, weightByTopic, "positive");
   const negativeCentroid = buildCentroid(embedded, weightByTopic, "negative");

@@ -20,7 +20,7 @@ import {
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
-import { discoveryRowToInterestEvent } from "./discoveryOrdering";
+import { discoveryRowsToInterestEvents } from "./discoveryOrdering";
 import { embedTexts } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
 import { recordMeteredCall } from "./metering";
@@ -92,7 +92,7 @@ export async function generateBatch(): Promise<GenerateBatchOutcome> {
     ]);
 
     const starter = eventRows.length === 0 && existingCards.length === 0;
-    const events = eventRows.map(discoveryRowToInterestEvent);
+    const events = discoveryRowsToInterestEvents(eventRows);
     const exploitTopics = foldInterestFromEvents(events, nowIso())
       .filter((weight) => weight.weight > 0)
       .slice(0, EXPLOIT_TOPIC_COUNT)
@@ -157,6 +157,15 @@ export async function generateBatch(): Promise<GenerateBatchOutcome> {
       batch_id: batchId,
       created_at: createdAt,
       opened_at: null,
+      // Spec 053's external-content columns stay NULL on self-generated cards.
+      source_id: null,
+      kind: null,
+      url: null,
+      cover_url: null,
+      author: null,
+      published_at: null,
+      saved_at: null,
+      quality_score: null,
     }));
     await repos.discovery.insertCards(rows);
     const embeddedRows = await embedNewCards(rows);
