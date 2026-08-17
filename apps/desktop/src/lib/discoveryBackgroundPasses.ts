@@ -1,15 +1,16 @@
 /**
  * Purpose: the work that happens behind cards that are already on screen (spec 053 §3's
- * display-first, embed-later rule) — the batch quality check over what just landed, and the
- * embedding pass over whatever in the pool still has no vector. Neither one is allowed to hold
- * a card back: a card is readable the moment it lands, and both of these only shape how the
- * NEXT ordering comes out.
- * Side effects: one LLM call per landed batch (metered, switchable), local embedding calls, and
- * card updates.
+ * display-first, embed-later rule) — the batch quality check over what just landed, the embedding
+ * pass over whatever in the pool still has no vector, and the cover pass that goes looking for the
+ * picture a feed did not ship. None of them is allowed to hold a card back: a card is readable the
+ * moment it lands, and these only shape how the NEXT ordering and the next screenful come out.
+ * Side effects: one LLM call per landed batch (metered, switchable), local embedding calls,
+ * budgeted page reads, and card updates.
  * Main exports: scoreLandedBatch, embedPoolBacklog, runBackgroundPasses.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { getRepos } from "./db";
+import { enrichMissingCovers } from "./discoveryCoverEnrichment";
 import { scoreBatchQuality } from "./discoveryQualityCheck";
 import { embedTexts } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
@@ -57,9 +58,15 @@ export async function embedPoolBacklog(limit = EMBEDDING_BACKLOG_LIMIT): Promise
   }
 }
 
-/** Both passes, in the order that matters least to the reader: whatever fails, the cards are
- * already in the pool and already readable. */
+/**
+ * All three passes, in the order that matters least to the reader: whatever fails, the cards are
+ * already in the pool and already readable. The cover pass runs last because it is the only one
+ * that goes out to a page the reader might never open — and a cover it finds lands on the row, so
+ * the next time the grid stages a page out of the pool it draws the picture (a card already on
+ * screen keeps the face it was drawn with until the next launch, which is nobody's problem).
+ */
 export async function runBackgroundPasses(rows: readonly DiscoveryCardRow[]): Promise<void> {
   await scoreLandedBatch(rows);
   await embedPoolBacklog();
+  await enrichMissingCovers();
 }

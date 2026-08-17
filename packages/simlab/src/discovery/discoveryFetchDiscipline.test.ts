@@ -56,6 +56,16 @@ async function freshRun(
   return run;
 }
 
+/**
+ * Every address a pooled card points at. A request to one of these is the cover pass reading an
+ * article page: nothing else in the app fetches a card's own address behind the reader.
+ */
+async function pooledCardAddresses(): Promise<Set<string>> {
+  const repos = await getRepos();
+  const cards = await repos.discovery.listNewestCards(10_000);
+  return new Set(cards.flatMap((card) => (card.url === null ? [] : [card.url])));
+}
+
 /** How many pooled cards each channel has left standing, by the label its cards are filed under. */
 async function poolCountsByTopic(): Promise<Map<string, number>> {
   const repos = await getRepos();
@@ -114,6 +124,40 @@ describe("discovery fetch discipline", () => {
     );
     expect(imageRequests).toEqual([]);
   }, 60_000);
+
+  it("reads no article page for a missing picture while 省流量模式 is on", async () => {
+    const run = await freshRun();
+    await useDiscoveryChannelSettingsStore.getState().setDataSaverEnabled(true);
+    run.network.clearRequests();
+    await (await refillDiscoveryPool({ force: true, now: JOURNEY_START })).backgroundWork;
+    const addresses = await pooledCardAddresses();
+    // Two feeds in the journey set ship no covers at all, so there is plenty here to be tempted by.
+    expect([...addresses].length).toBeGreaterThan(0);
+    expect(run.network.requests.filter((request) => addresses.has(request.url))).toEqual([]);
+  }, 60_000);
+
+  /**
+   * Spec 053 §2, the one-attempt-ever half of the cover pass: every article address in the
+   * synthetic world answers 404, and a page that gave nothing must not be asked again — not by the
+   * next pass of the same day, and not tomorrow — or the daily budget would go on re-reading the
+   * same dead links forever and the cards behind them would never get a turn.
+   */
+  it("asks an article page for its picture once, and never asks it again", async () => {
+    const run = await freshRun();
+    await runJourneyDay({ persona, world: run.world, network: run.network, dayIndex: 0, pages: 2 });
+    const firstDay = run.network.requests.map((request) => request.url);
+    await runJourneyDay({ persona, world: run.world, network: run.network, dayIndex: 1, pages: 2 });
+    const secondDay = run.network.requests.map((request) => request.url);
+
+    const addresses = await pooledCardAddresses();
+    const pagesRead = (urls: string[]): string[] => urls.filter((url) => addresses.has(url));
+    // Both days went looking — otherwise "asked once" would be satisfied by never asking at all.
+    expect(pagesRead(firstDay).length).toBeGreaterThan(0);
+    expect(pagesRead(secondDay).length).toBeGreaterThan(0);
+    const everyPageRead = [...pagesRead(firstDay), ...pagesRead(secondDay)];
+    const askedTwice = everyPageRead.filter((url, index) => everyPageRead.indexOf(url) !== index);
+    expect(askedTwice).toEqual([]);
+  }, 120_000);
 
   it("loses nothing when a channel is unreachable: the others still fill the grid", async () => {
     const run = await freshRun();
