@@ -41,40 +41,26 @@ function makeFakeSql() {
     },
     execute: (sql: string, params?: readonly unknown[]) => {
       if (sql.startsWith("INSERT INTO discovery_cards")) {
-        const [
-          id,
-          title,
-          hook,
-          topic_label,
-          source,
-          body_md,
-          embedding_json,
-          batch_id,
-          created_at,
-          opened_at,
-        ] = params as [
-          string,
-          string,
-          string,
-          string,
-          DiscoveryCardRow["source"],
-          string | null,
-          string | null,
-          string,
-          string,
-          string | null,
-        ];
+        const values = params as readonly unknown[];
         cardRows.push({
-          id,
-          title,
-          hook,
-          topic_label,
-          source,
-          body_md,
-          embedding_json,
-          batch_id,
-          created_at,
-          opened_at,
+          id: values[0] as string,
+          title: values[1] as string,
+          hook: values[2] as string,
+          topic_label: values[3] as string,
+          source: values[4] as DiscoveryCardRow["source"],
+          body_md: values[5] as string | null,
+          embedding_json: values[6] as string | null,
+          batch_id: values[7] as string,
+          created_at: values[8] as string,
+          opened_at: values[9] as string | null,
+          source_id: values[10] as string | null,
+          kind: values[11] as DiscoveryCardRow["kind"],
+          url: values[12] as string | null,
+          cover_url: values[13] as string | null,
+          author: values[14] as string | null,
+          published_at: values[15] as string | null,
+          saved_at: values[16] as string | null,
+          quality_score: values[17] as number | null,
         });
       }
       if (sql.startsWith("UPDATE discovery_cards SET body_md")) {
@@ -91,6 +77,11 @@ function makeFakeSql() {
         const [openedAt, id] = params as [string, string];
         const row = cardRows.find((card) => card.id === id);
         if (row) row.opened_at = openedAt;
+      }
+      if (sql.startsWith("UPDATE discovery_cards SET saved_at")) {
+        const [savedAt, id] = params as [string | null, string];
+        const row = cardRows.find((card) => card.id === id);
+        if (row) row.saved_at = savedAt;
       }
       if (sql.startsWith("INSERT INTO discovery_events")) {
         const [id, card_id, topic_label, kind, value_ms, created_at] = params as [
@@ -121,6 +112,14 @@ function makeCard(overrides: Partial<DiscoveryCardRow> = {}): DiscoveryCardRow {
     batch_id: "batch-1",
     created_at: "2026-08-16T10:00:00Z",
     opened_at: null,
+    source_id: null,
+    kind: null,
+    url: null,
+    cover_url: null,
+    author: null,
+    published_at: null,
+    saved_at: null,
+    quality_score: null,
     ...overrides,
   };
 }
@@ -155,6 +154,62 @@ describe("createDiscoveryRepo cards", () => {
     expect(cardRows[0]?.opened_at).toBeNull();
     await repo.markOpened("c1", "2026-08-16T11:00:00Z");
     expect(cardRows[0]?.opened_at).toBe("2026-08-16T11:00:00Z");
+  });
+
+  it("carries the external-content columns through insert", async () => {
+    const { client, cardRows } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([
+      makeCard({
+        id: "c1",
+        source_id: "hacker-news",
+        kind: "discussion",
+        url: "https://news.ycombinator.com/item?id=1",
+        cover_url: null,
+        author: "pg",
+        published_at: "2026-08-15T08:00:00Z",
+        quality_score: 0.75,
+      }),
+    ]);
+    expect(cardRows[0]?.source_id).toBe("hacker-news");
+    expect(cardRows[0]?.kind).toBe("discussion");
+    expect(cardRows[0]?.url).toBe("https://news.ycombinator.com/item?id=1");
+    expect(cardRows[0]?.author).toBe("pg");
+    expect(cardRows[0]?.published_at).toBe("2026-08-15T08:00:00Z");
+    expect(cardRows[0]?.quality_score).toBe(0.75);
+  });
+
+  it("leaves the external-content columns null when a caller omits them", async () => {
+    const { client, cardRows } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([
+      {
+        id: "c1",
+        title: "闭包是什么",
+        hook: "函数记住了它出生时的作用域。",
+        topic_label: "编程语言",
+        source: "starter",
+        body_md: null,
+        embedding_json: null,
+        batch_id: "batch-1",
+        created_at: "2026-08-16T10:00:00Z",
+        opened_at: null,
+      },
+    ]);
+    expect(cardRows[0]?.source_id).toBeNull();
+    expect(cardRows[0]?.kind).toBeNull();
+    expect(cardRows[0]?.quality_score).toBeNull();
+  });
+
+  it("saves and unsaves a card without touching opened_at", async () => {
+    const { client, cardRows } = makeFakeSql();
+    const repo = createDiscoveryRepo(client);
+    await repo.insertCards([makeCard({ id: "c1" })]);
+    await repo.markSaved("c1", "2026-08-17T09:00:00Z");
+    expect(cardRows[0]?.saved_at).toBe("2026-08-17T09:00:00Z");
+    expect(cardRows[0]?.opened_at).toBeNull();
+    await repo.markSaved("c1", null);
+    expect(cardRows[0]?.saved_at).toBeNull();
   });
 
   it("lists recent titles newest first, capped at the limit", async () => {

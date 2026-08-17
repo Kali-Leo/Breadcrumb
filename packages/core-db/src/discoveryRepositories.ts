@@ -1,20 +1,37 @@
 /**
- * Purpose: SQL statements for the discovery feed's two tables (spec 051) — the card batches
- * shown on the feed and the silent impression/open/dwell/dislike signal stream over them.
- * Main exports: createDiscoveryRepo factory.
+ * Purpose: SQL statements for the discovery feed's two tables (spec 051, spec 053) — the card
+ * pool shown on the feed, now holding external content, and the silent signal stream over it.
+ * Main exports: createDiscoveryRepo factory, DiscoveryCardInsert.
  */
 import type { DiscoveryCardRow, DiscoveryEventRow, SqlClient } from "./types";
 
+/** Spec 053's external-content columns are optional at insert time (they default to NULL), so
+ * the retired 051 generation pipeline keeps inserting cards without naming them — same
+ * precedent as conversations.create's companion_id. */
+export type DiscoveryCardInsert = Omit<DiscoveryCardRow, ExternalContentColumn> &
+  Partial<Pick<DiscoveryCardRow, ExternalContentColumn>>;
+
+type ExternalContentColumn =
+  | "source_id"
+  | "kind"
+  | "url"
+  | "cover_url"
+  | "author"
+  | "published_at"
+  | "saved_at"
+  | "quality_score";
+
 export function createDiscoveryRepo(sql: SqlClient) {
   return {
-    /** One transaction for a whole generated batch — a crash never leaves a partial batch on
-     * the feed (spec 051 §5, one LLM call = 12 cards). */
-    async insertCards(rows: readonly DiscoveryCardRow[]): Promise<void> {
+    /** One transaction for a whole fetched batch — a crash never leaves a partial batch on
+     * the feed (spec 051 §5; spec 053 §3 restocks the pool the same way). */
+    async insertCards(rows: readonly DiscoveryCardInsert[]): Promise<void> {
       await sql.executeTransaction(
         rows.map((row) => ({
           sql: `INSERT INTO discovery_cards
-              (id, title, hook, topic_label, source, body_md, embedding_json, batch_id, created_at, opened_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              (id, title, hook, topic_label, source, body_md, embedding_json, batch_id, created_at, opened_at,
+               source_id, kind, url, cover_url, author, published_at, saved_at, quality_score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           params: [
             row.id,
             row.title,
@@ -26,6 +43,14 @@ export function createDiscoveryRepo(sql: SqlClient) {
             row.batch_id,
             row.created_at,
             row.opened_at,
+            row.source_id ?? null,
+            row.kind ?? null,
+            row.url ?? null,
+            row.cover_url ?? null,
+            row.author ?? null,
+            row.published_at ?? null,
+            row.saved_at ?? null,
+            row.quality_score ?? null,
           ],
         })),
       );
@@ -51,6 +76,26 @@ export function createDiscoveryRepo(sql: SqlClient) {
     /** Marks a card opened; never cleared afterward. */
     async markOpened(id: string, atIso: string): Promise<void> {
       await sql.execute("UPDATE discovery_cards SET opened_at = ? WHERE id = ?", [atIso, id]);
+    },
+    /** Saves a card (an instant) or unsaves it (null) — spec 053 §6's 收藏 toggle. */
+    async markSaved(id: string, savedAtIso: string | null): Promise<void> {
+      await sql.execute("UPDATE discovery_cards SET saved_at = ? WHERE id = ?", [savedAtIso, id]);
+    },
+    /** The 收藏 list, most recently saved first. */
+    async listSaved(): Promise<DiscoveryCardRow[]> {
+      return sql.select<DiscoveryCardRow>(
+        "SELECT * FROM discovery_cards WHERE saved_at IS NOT NULL ORDER BY saved_at DESC",
+      );
+    },
+    /** How many pooled cards the user has never opened — spec 053 §3's low-water mark, which
+     * triggers a background restock. Cards the user dismissed are excluded by the caller from
+     * the ids it feeds the feed, exactly as it already filters dislikes from the event stream;
+     * that consumed-id logic stays app-side. */
+    async countUnseenPoolCards(): Promise<number> {
+      const rows = await sql.select<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM discovery_cards WHERE opened_at IS NULL",
+      );
+      return rows[0]?.total ?? 0;
     },
     /** Most recent titles, newest first — the batch prompt's dedup avoid-list (spec 051 §5). */
     async listRecentTitles(limit: number): Promise<string[]> {

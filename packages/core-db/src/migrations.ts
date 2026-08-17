@@ -856,6 +856,45 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0040_study_mode",
     statements: [`ALTER TABLE conversations ADD COLUMN study_mode INTEGER NOT NULL DEFAULT 0;`],
   },
+  {
+    // Spec 053: the feed's cards become real external content instead of self-generated ones.
+    // Purely additive — every column is nullable, so the retired 051 pipeline's rows stay
+    // valid and readable with all eight new columns NULL. source_id names the channel the
+    // item came from (a plugin-channels catalog entry), kind is the content form
+    // ('article' | 'video' | 'podcast' | 'discussion' | 'paper'), validated in TypeScript per
+    // the no-CHECK convention (0029-0031, 0038). saved_at carries spec 053 §6's 收藏 — set on
+    // save, back to NULL on unsave, deliberately never merged with any "like" semantics.
+    // quality_score is the batch LLM quality check (§5), which only ever lowers ranking.
+    // discovery_events.kind stays a plain TEXT with no CHECK (see 0038), so the new event
+    // kinds ('save' | 'unsave' | 'finish' | 'dial' | 'onboarding') need no schema change;
+    // value_ms is reused as their generic payload, encoded and decoded in the app layer.
+    // channel_state is one row per channel: the conditional-request validators (ETag /
+    // Last-Modified) that make a repeat poll near-zero-bytes, the reachability + failure
+    // count driving silent skipping and exponential backoff, and the per-day request budget
+    // (daily_budget_used counted against budget_day, a YYYY-MM-DD local day string).
+    id: "0041_external_content_feed",
+    statements: [
+      `ALTER TABLE discovery_cards ADD COLUMN source_id TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN kind TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN url TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN cover_url TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN author TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN published_at TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN saved_at TEXT;`,
+      `ALTER TABLE discovery_cards ADD COLUMN quality_score REAL;`,
+      `CREATE INDEX idx_discovery_cards_saved ON discovery_cards(saved_at);`,
+      `CREATE TABLE channel_state (
+        source_id TEXT PRIMARY KEY,
+        etag TEXT,
+        last_modified TEXT,
+        last_fetch_at TEXT,
+        reachable INTEGER,
+        failure_count INTEGER,
+        daily_budget_used INTEGER,
+        budget_day TEXT
+      );`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

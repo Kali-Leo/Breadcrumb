@@ -391,9 +391,20 @@ export interface TermMarkRow {
  * TypeScript, not a DB CHECK — same precedent as conversations.kind (0029). */
 export type DiscoveryCardSource = "nearby" | "explore" | "starter";
 
-/** One knowledge card on the discovery feed (spec 051). body_md and embedding_json are lazy:
- * NULL until the card is first opened / until the background embedding pass reaches it.
- * opened_at is NULL until the user opens the card once, and is never cleared afterward. */
+/** What form the content behind a card takes (spec 053 §1) — the candidate contract every
+ * channel adapter emits. Validated in TypeScript, not a DB CHECK (0029/0038 precedent). */
+export type DiscoveryCardKind = "article" | "video" | "podcast" | "discussion" | "paper";
+
+/** One card on the discovery feed. Columns id..opened_at are spec 051's self-generated card;
+ * body_md and embedding_json are lazy (NULL until the card is first opened / until the
+ * background embedding pass reaches it) and opened_at is NULL until the first open and never
+ * cleared afterward. Columns source_id..quality_score are spec 053's external content: all
+ * NULL on cards from the retired 051 generation pipeline, all filled on cards fetched from a
+ * channel. url is where the item actually lives, cover_url its real cover image (NULL when
+ * the feed offers none, or in data-saver mode), published_at the upstream publication instant.
+ * saved_at is set when the user saves the card and back to NULL when they unsave it — 收藏,
+ * never merged with any "like" semantics (spec 053 §6). quality_score is the batch LLM quality
+ * check (§5): it only ever lowers ranking, it never hides a card. */
 export interface DiscoveryCardRow {
   id: string;
   title: string;
@@ -405,12 +416,33 @@ export interface DiscoveryCardRow {
   batch_id: string;
   created_at: string;
   opened_at: string | null;
+  source_id: string | null;
+  kind: DiscoveryCardKind | null;
+  url: string | null;
+  cover_url: string | null;
+  author: string | null;
+  published_at: string | null;
+  saved_at: string | null;
+  quality_score: number | null;
 }
 
-/** Silent interest signal kinds the feed records (spec 051 §3): impression = the card sat in
+/** Signal kinds the feed records. Spec 051 §3, all silent: impression = the card sat in
  * viewport ≥1s; open = the card was tapped open; dwell = time spent reading the opened body;
- * dislike = the one explicit control ("不感兴趣"). */
-export type DiscoveryEventKind = "impression" | "open" | "dwell" | "dislike";
+ * dislike = the one explicit control ("不感兴趣"). Spec 053 §6 adds, still without any
+ * "like" button: save / unsave = the 收藏 toggle; finish = the item was read or played to the
+ * end; dial = the feed's 熟悉的多一点｜新领域多一点 switch moved; onboarding = one stance from
+ * the first-run field picker. value_ms is reused as the generic payload of the last two (dial
+ * position, onboarding stance) — storage stays generic, the app layer encodes and decodes. */
+export type DiscoveryEventKind =
+  | "impression"
+  | "open"
+  | "dwell"
+  | "dislike"
+  | "save"
+  | "unsave"
+  | "finish"
+  | "dial"
+  | "onboarding";
 
 /** One discovery signal event. topic_label is denormalized from the card at insert time (see
  * migration 0038) so folding events into topic weights never needs a join. value_ms only
