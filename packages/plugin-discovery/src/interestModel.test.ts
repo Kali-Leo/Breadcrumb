@@ -40,6 +40,45 @@ describe("foldInterestFromEvents", () => {
     expect(result?.weight).toBeCloseTo(-2.5, 5);
   });
 
+  it("ranks save above finish above open, the order of deliberate effort", () => {
+    const weightOf = (kind: InterestEvent["kind"]): number =>
+      foldInterestFromEvents([event({ kind })], NOW)[0]?.weight ?? 0;
+    expect(weightOf("save")).toBeGreaterThan(weightOf("finish"));
+    expect(weightOf("finish")).toBeGreaterThan(weightOf("open"));
+  });
+
+  it("lets an unsave cancel the save it undid, leaving no lingering positive", () => {
+    const [result] = foldInterestFromEvents(
+      [event({ kind: "save" }), event({ kind: "unsave" })],
+      NOW,
+    );
+    // Both fall below the noise threshold once cancelled, so the topic drops out entirely.
+    expect(result).toBeUndefined();
+  });
+
+  it("seeds a topic from a first-run stance, in the direction of the stance", () => {
+    const wanted = foldInterestFromEvents([event({ kind: "onboarding", valueMs: 1 })], NOW)[0]
+      ?.weight;
+    const refused = foldInterestFromEvents([event({ kind: "onboarding", valueMs: -1 })], NOW)[0]
+      ?.weight;
+    const neutral = foldInterestFromEvents([event({ kind: "onboarding", valueMs: 0 })], NOW);
+    expect(wanted).toBeCloseTo(1.5, 5);
+    expect(refused).toBeCloseTo(-1.5, 5);
+    expect(neutral).toHaveLength(0);
+  });
+
+  it("lets a week of real behaviour overrule a first-run stance", () => {
+    const [result] = foldInterestFromEvents(
+      [
+        event({ kind: "onboarding", valueMs: -1 }),
+        event({ kind: "save" }),
+        event({ kind: "open" }),
+      ],
+      NOW,
+    );
+    expect(result?.weight).toBeGreaterThan(0);
+  });
+
   it("decays a one-week-old event contribution by exactly 0.9", () => {
     const oneWeekAgo = new Date(Date.parse(NOW) - 7 * 24 * 60 * 60 * 1000).toISOString();
     const [result] = foldInterestFromEvents([event({ kind: "open", createdAt: oneWeekAgo })], NOW);
@@ -104,5 +143,22 @@ describe("topicStatsFromEvents", () => {
       ]),
     );
     expect(stats).toHaveLength(2);
+  });
+
+  it("counts finishing and saving as successes too, and a refused first-run stance as a failure", () => {
+    const stats = topicStatsFromEvents([
+      event({ topicLabel: "编程", kind: "finish" }),
+      event({ topicLabel: "编程", kind: "save" }),
+      event({ topicLabel: "编程", kind: "unsave" }),
+      event({ topicLabel: "历史", kind: "onboarding", valueMs: 1 }),
+      event({ topicLabel: "体育", kind: "onboarding", valueMs: -1 }),
+    ]);
+    expect(stats).toEqual(
+      expect.arrayContaining([
+        { topicLabel: "编程", opens: 2, dislikes: 0 },
+        { topicLabel: "历史", opens: 1, dislikes: 0 },
+        { topicLabel: "体育", opens: 0, dislikes: 1 },
+      ]),
+    );
   });
 });

@@ -1,33 +1,34 @@
 /**
- * Purpose: pure display-ordering logic for the discovery feed's card grid (spec 051 §4) —
- * folds the event stream into interest weights, builds positive/negative embedding centroids
- * from the candidate cards themselves, scores+MMR-reranks the embedded ones, and appends
- * cards with no embedding yet (a fresh batch whose fastembed pass hasn't landed) by recency.
+ * Purpose: pure display-ordering logic for the discovery feed's card grid (spec 051 §4, spec
+ * 053 §4) — folds the event stream into interest weights, builds positive/negative embedding
+ * centroids from the candidate cards themselves, adds each item's own features (crowd signal,
+ * a real cover, freshness, the quality check's demotion), reranks with topic/channel/form
+ * quotas, and hands a guaranteed share of the positions to topics the reader has no history
+ * with. A card with no embedding yet is ranked on everything else at a neutral similarity
+ * rather than pushed to the end: showing never waits on embedding (spec 053 §3).
  * No DB, no I/O.
  * Main exports: orderCardsForDisplay, discoveryRowsToInterestEvents.
  */
 import type { DiscoveryCardRow, DiscoveryEventKind, DiscoveryEventRow } from "@breadcrumb/core-db";
 import {
   computeCentroid,
+  contentFeatureAdjustment,
+  defaultExplorationShare,
   foldInterestFromEvents,
   type InterestEvent,
+  interleaveExploration,
   type MmrCandidate,
   mmrSelect,
   scoreByCentroids,
 } from "@breadcrumb/plugin-discovery";
 
-/** The kinds the interest model weighs today. Spec 053 §6 records more kinds (save/unsave/
- * finish/dial/onboarding); spec 053 T4 folds them into interest weighting, until then they are
- * stored but skipped here rather than guessed at a contribution. */
-const INTEREST_EVENT_KINDS: readonly InterestEvent["kind"][] = [
-  "impression",
-  "open",
-  "dwell",
-  "dislike",
-];
+/** Every recorded kind except 'dial': moving the feed's familiar/new switch says nothing about
+ * the topic of the card it happened to be over. The rest — including saves, finishes and the
+ * first-run stances — all carry interest and are weighted by the interest model. */
+const NON_INTEREST_EVENT_KINDS: readonly DiscoveryEventKind[] = ["dial"];
 
 function isInterestEventKind(kind: DiscoveryEventKind): kind is InterestEvent["kind"] {
-  return (INTEREST_EVENT_KINDS as readonly string[]).includes(kind);
+  return !NON_INTEREST_EVENT_KINDS.includes(kind);
 }
 
 export function discoveryRowsToInterestEvents(rows: readonly DiscoveryEventRow[]): InterestEvent[] {
@@ -54,10 +55,6 @@ function parseEmbedding(embeddingJson: string | null): number[] | null {
   }
 }
 
-function byRecencyDescending(a: DiscoveryCardRow, b: DiscoveryCardRow): number {
-  return b.created_at.localeCompare(a.created_at);
-}
-
 /** Weighted mean of `cards` embeddings, keyed off each card's own topic weight — cards from
  * a positive-weighted topic vote for the "what the user likes" centroid, negative-weighted
  * topics vote for the "what to avoid" one. Null when no card contributes (no evidence yet for
@@ -78,41 +75,70 @@ function buildCentroid(
   );
 }
 
+/** A card whose vector has not been computed yet is neither close to nor far from what the
+ * reader likes; treating it as either would be a guess. */
+const NEUTRAL_SIMILARITY = 0;
+
+export interface OrderingOptions {
+  /** Share of the positions reserved for topics with no history — the feed's dial (spec 053
+   * §6). Defaults to the plugin's own default. */
+  explorationShare?: number;
+}
+
 /** Orders one page's worth of candidate cards for the grid. `events` is the full silent
  * signal history (foldInterestFromEvents does its own decay), not scoped to these cards. */
 export function orderCardsForDisplay(
   cards: readonly DiscoveryCardRow[],
   events: readonly DiscoveryEventRow[],
   nowIso: string,
+  options: OrderingOptions = {},
 ): DiscoveryCardRow[] {
   // A dislike is permanent: the card never re-enters the feed, this session or any later one.
   const dislikedIds = new Set(
     events.filter((event) => event.kind === "dislike").map((event) => event.card_id),
   );
-  const embedded: { card: DiscoveryCardRow; embedding: number[] }[] = [];
-  const unembedded: DiscoveryCardRow[] = [];
-  for (const card of cards) {
-    if (dislikedIds.has(card.id)) continue;
-    const embedding = parseEmbedding(card.embedding_json);
-    if (embedding === null) unembedded.push(card);
-    else embedded.push({ card, embedding });
-  }
-  unembedded.sort(byRecencyDescending);
-
-  if (embedded.length === 0) return unembedded;
+  const live = cards
+    .filter((card) => !dislikedIds.has(card.id))
+    .map((card) => ({ card, embedding: parseEmbedding(card.embedding_json) }));
+  if (live.length === 0) return [];
 
   const weights = foldInterestFromEvents(discoveryRowsToInterestEvents(events), nowIso);
   const weightByTopic = new Map(weights.map((w) => [w.topicLabel, w.weight]));
+  const embedded = live.filter(
+    (entry): entry is { card: DiscoveryCardRow; embedding: number[] } => entry.embedding !== null,
+  );
   const positiveCentroid = buildCentroid(embedded, weightByTopic, "positive");
   const negativeCentroid = buildCentroid(embedded, weightByTopic, "negative");
 
-  const candidates: MmrCandidate<DiscoveryCardRow>[] = embedded.map(({ card, embedding }) => ({
+  const candidates: MmrCandidate<DiscoveryCardRow>[] = live.map(({ card, embedding }) => ({
     item: card,
-    score: scoreByCentroids(embedding, positiveCentroid, negativeCentroid),
+    score:
+      (embedding === null
+        ? NEUTRAL_SIMILARITY
+        : scoreByCentroids(embedding, positiveCentroid, negativeCentroid)) +
+      contentFeatureAdjustment(
+        {
+          upstreamSignal: card.upstream_signal,
+          hasCover: card.cover_url !== null,
+          publishedAt: card.published_at,
+          qualityScore: card.quality_score,
+        },
+        nowIso,
+      ),
     embedding,
     topicLabel: card.topic_label,
+    sourceId: card.source_id,
+    contentKind: card.kind,
   }));
-  const ranked = mmrSelect(candidates, embedded.length);
+  const ranked = mmrSelect(candidates, candidates.length);
 
-  return [...ranked, ...unembedded];
+  // Topics the reader has never accumulated a weight on are the unfamiliar ones; the dial
+  // decides how much of the page they get, so a feed can never close in on itself.
+  const familiar = ranked.filter((card) => weightByTopic.has(card.topic_label));
+  const unfamiliar = ranked.filter((card) => !weightByTopic.has(card.topic_label));
+  return interleaveExploration(
+    familiar,
+    unfamiliar,
+    options.explorationShare ?? defaultExplorationShare,
+  );
 }

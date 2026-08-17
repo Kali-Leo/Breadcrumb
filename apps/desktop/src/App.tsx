@@ -57,9 +57,9 @@ export default function App() {
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
       void backfillMissingEmbeddings().then(() => runDedupSweep());
-      // Discovery preload from the first moment the API is reachable (Leo's order,
-      // 2026-08-17): the feed should open already filled, never on a cold spinner.
-      void useDiscoveryStore.getState().ensureWarm();
+      // Discovery preload from the first moment the app is up (Leo's order, 2026-08-17):
+      // the feed should open already filled, never on a cold spinner.
+      void useDiscoveryStore.getState().refillPool();
     })();
   }, []);
 

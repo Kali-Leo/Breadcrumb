@@ -171,6 +171,7 @@ describe("generateBatch success", () => {
         published_at: null,
         saved_at: null,
         quality_score: null,
+        upstream_signal: null,
       },
     ];
     chatJsonMock.mockResolvedValue({

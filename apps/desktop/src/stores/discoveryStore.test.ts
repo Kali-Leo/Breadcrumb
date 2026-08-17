@@ -1,16 +1,18 @@
 /**
- * Purpose: unit tests for discoveryStore — impression dedup (once per session per card),
- * dislike removing a card from the display list while still recording the event, and
- * loadInitial's blocked-reason banner when generateBatch can't produce a starter batch.
+ * Purpose: unit tests for discoveryStore — paging out of the local pool, the app-start restock
+ * and a mount-time load sharing one round, the banner appearing only for a cold empty feed,
+ * impression dedup, and the signal actions (save/unsave/finish/dislike) writing what spec 053
+ * §6 says they write.
  */
 import type { DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let cardRows: DiscoveryCardRow[] = [];
 let eventRows: DiscoveryEventRow[] = [];
 const insertEventMock = vi.fn(async (row: DiscoveryEventRow) => {
   eventRows.push(row);
 });
+const markSavedMock = vi.fn(async () => {});
 
 vi.mock("../lib/db", () => ({
   getRepos: vi.fn(async () => ({
@@ -19,16 +21,19 @@ vi.mock("../lib/db", () => ({
       listAllEvents: async () => eventRows,
       insertEvent: insertEventMock,
       markOpened: vi.fn(async () => {}),
+      markSaved: markSavedMock,
     },
   })),
 }));
 
-const generateBatchMock = vi.fn();
-vi.mock("../lib/discoveryActions", () => ({ generateBatch: generateBatchMock }));
+const refillDiscoveryPoolMock = vi.fn();
+vi.mock("../lib/discoveryRefill", () => ({ refillDiscoveryPool: refillDiscoveryPoolMock }));
 
 vi.mock("../lib/discoveryArticleActions", () => ({ streamCardArticle: vi.fn() }));
 
 const { useDiscoveryStore } = await import("./discoveryStore");
+
+const NOTHING_NEW = "翻过的卡片还能读；新卡片需要联网和开关。";
 
 function card(id: string): DiscoveryCardRow {
   return {
@@ -36,38 +41,198 @@ function card(id: string): DiscoveryCardRow {
     title: `title-${id}`,
     hook: "hook",
     topic_label: "topic",
-    source: "starter",
+    source: "explore",
     body_md: null,
     embedding_json: null,
     batch_id: "batch",
     created_at: "2026-08-16T00:00:00.000Z",
     opened_at: null,
-    source_id: null,
-    kind: null,
-    url: null,
+    source_id: "hacker-news-front-page",
+    kind: "article",
+    url: `https://example.org/${id}`,
     cover_url: null,
     author: null,
-    published_at: null,
+    published_at: "2026-08-16T00:00:00.000Z",
     saved_at: null,
     quality_score: null,
+    upstream_signal: null,
+    ...(id === "" ? {} : {}),
   };
 }
 
-afterEach(() => {
+function stocked() {
+  return {
+    kind: "stocked" as const,
+    landedCount: 0,
+    unseenCount: cardRows.length,
+    reason: null,
+    backgroundWork: Promise.resolve(),
+  };
+}
+
+function unavailable() {
+  return {
+    kind: "unavailable" as const,
+    landedCount: 0,
+    unseenCount: 0,
+    reason: NOTHING_NEW,
+    backgroundWork: Promise.resolve(),
+  };
+}
+
+/** A restock that actually brings cards home: they are in the pool by the time it resolves. */
+function refillsWith(ids: readonly string[]) {
+  return async () => {
+    // The real landing pass is idempotent by card id (discoveryPoolLanding); the fake pool
+    // behaves the same way, so a repeated round cannot invent a duplicate card.
+    for (const id of ids) if (!cardRows.some((row) => row.id === id)) cardRows.push(card(id));
+    return {
+      kind: "refilled" as const,
+      landedCount: ids.length,
+      unseenCount: cardRows.length,
+      reason: null,
+      backgroundWork: Promise.resolve(),
+    };
+  };
+}
+
+beforeEach(() => {
   cardRows = [];
   eventRows = [];
   insertEventMock.mockClear();
-  generateBatchMock.mockReset();
+  markSavedMock.mockClear();
+  refillDiscoveryPoolMock.mockReset();
+  refillDiscoveryPoolMock.mockResolvedValue(stocked());
   useDiscoveryStore.setState({
     cards: [],
+    pending: [],
     loading: false,
     blockedReason: null,
     sessionImpressedIds: new Set(),
   });
 });
 
-describe("recordImpression", () => {
-  it("records an impression event only once per session per card", async () => {
+describe("loadInitial", () => {
+  it("shows what the pool already holds without waiting on a restock", async () => {
+    cardRows = [card("a"), card("b")];
+    await useDiscoveryStore.getState().loadInitial();
+    expect(
+      useDiscoveryStore
+        .getState()
+        .cards.map((c) => c.id)
+        .sort(),
+    ).toEqual(["a", "b"]);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+    expect(useDiscoveryStore.getState().blockedReason).toBeNull();
+  });
+
+  it("fills a cold empty pool from the restock it triggers", async () => {
+    refillDiscoveryPoolMock.mockImplementation(refillsWith(["fresh-1", "fresh-2"]));
+    await useDiscoveryStore.getState().loadInitial();
+    expect(
+      useDiscoveryStore
+        .getState()
+        .cards.map((c) => c.id)
+        .sort(),
+    ).toEqual(["fresh-1", "fresh-2"]);
+  });
+
+  it("states the plain reason when a cold start has nothing and nothing can be fetched", async () => {
+    refillDiscoveryPoolMock.mockResolvedValue(unavailable());
+    await useDiscoveryStore.getState().loadInitial();
+    expect(useDiscoveryStore.getState().cards).toEqual([]);
+    expect(useDiscoveryStore.getState().blockedReason).toBe(NOTHING_NEW);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+
+  it("says nothing at all when the grid has cards and the restock came back empty-handed", async () => {
+    cardRows = [card("a")];
+    refillDiscoveryPoolMock.mockResolvedValue(unavailable());
+    await useDiscoveryStore.getState().loadInitial();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["a"]);
+    expect(useDiscoveryStore.getState().blockedReason).toBeNull();
+  });
+
+  it("does not reload over a grid the reader is already looking at", async () => {
+    cardRows = [card("a")];
+    await useDiscoveryStore.getState().loadInitial();
+    await useDiscoveryStore.getState().loadInitial();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["a"]);
+  });
+});
+
+describe("the app-start restock and the feed's first load", () => {
+  it("puts the warm-up's cards on the grid instead of leaving them in the database", async () => {
+    refillDiscoveryPoolMock.mockImplementation(refillsWith(["w1"]));
+    await useDiscoveryStore.getState().refillPool();
+    await useDiscoveryStore.getState().loadInitial();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
+  });
+
+  it("runs one round when two restocks are asked for at the same time", async () => {
+    let release = (): void => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    refillDiscoveryPoolMock.mockImplementation(async () => {
+      await gate;
+      return refillsWith(["w1"])();
+    });
+    const first = useDiscoveryStore.getState().refillPool();
+    const second = useDiscoveryStore.getState().refillPool();
+    release();
+    await Promise.all([first, second]);
+    expect(refillDiscoveryPoolMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves no empty screen behind a restock that is still running (handoff §五.a)", async () => {
+    let release = (): void => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    refillDiscoveryPoolMock.mockImplementation(async () => {
+      await gate;
+      return refillsWith(["w1"])();
+    });
+    const warm = useDiscoveryStore.getState().refillPool();
+    const initial = useDiscoveryStore.getState().loadInitial();
+    release();
+    await Promise.all([warm, initial]);
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+
+  it("keeps a failed warm-up silent — nobody has opened the feed yet", async () => {
+    refillDiscoveryPoolMock.mockResolvedValue(unavailable());
+    await useDiscoveryStore.getState().refillPool();
+    expect(useDiscoveryStore.getState().blockedReason).toBeNull();
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+});
+
+describe("loadMore", () => {
+  it("hands over one page at a time and never the same card twice", async () => {
+    cardRows = Array.from({ length: 30 }, (_, index) => card(`c${index}`));
+    await useDiscoveryStore.getState().loadInitial();
+    const firstPage = useDiscoveryStore.getState().cards.length;
+    await useDiscoveryStore.getState().loadMore();
+    const shown = useDiscoveryStore.getState().cards.map((c) => c.id);
+    expect(firstPage).toBe(24);
+    expect(shown).toHaveLength(30);
+    expect(new Set(shown).size).toBe(30);
+  });
+
+  it("asks for a restock when the reader has reached the end of the pool", async () => {
+    cardRows = [card("a")];
+    await useDiscoveryStore.getState().loadInitial();
+    refillDiscoveryPoolMock.mockImplementation(refillsWith(["more-1"]));
+    await useDiscoveryStore.getState().loadMore();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["a", "more-1"]);
+  });
+});
+
+describe("silent signals", () => {
+  it("records an impression once per session per card", async () => {
     useDiscoveryStore.setState({ cards: [card("a")] });
     await useDiscoveryStore.getState().recordImpression("a", "topic");
     await useDiscoveryStore.getState().recordImpression("a", "topic");
@@ -81,67 +246,31 @@ describe("recordImpression", () => {
     await useDiscoveryStore.getState().recordImpression("b", "topic");
     expect(insertEventMock).toHaveBeenCalledTimes(2);
   });
-});
 
-describe("dislikeCard", () => {
-  it("removes the card from the display list and records a dislike event", async () => {
-    useDiscoveryStore.setState({ cards: [card("a"), card("b")] });
+  it("records reading something to the end", async () => {
+    await useDiscoveryStore.getState().recordFinish("a", "topic");
+    expect(insertEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "finish", card_id: "a", topic_label: "topic" }),
+    );
+  });
+
+  it("saves a card, and unsaving takes it back off the list without disliking it", async () => {
+    useDiscoveryStore.setState({ cards: [card("a")] });
+    await useDiscoveryStore.getState().saveCard("a", "topic");
+    expect(useDiscoveryStore.getState().cards[0]?.saved_at).not.toBeNull();
+    expect(markSavedMock).toHaveBeenLastCalledWith("a", expect.any(String));
+
+    await useDiscoveryStore.getState().unsaveCard("a", "topic");
+    expect(useDiscoveryStore.getState().cards[0]?.saved_at).toBeNull();
+    expect(markSavedMock).toHaveBeenLastCalledWith("a", null);
+    expect(eventRows.map((row) => row.kind)).toEqual(["save", "unsave"]);
+  });
+
+  it("removes a disliked card from the grid and from what was queued behind it", async () => {
+    useDiscoveryStore.setState({ cards: [card("a"), card("b")], pending: [card("a")] });
     await useDiscoveryStore.getState().dislikeCard("a", "topic");
     expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["b"]);
+    expect(useDiscoveryStore.getState().pending).toEqual([]);
     expect(insertEventMock).toHaveBeenCalledWith(expect.objectContaining({ kind: "dislike" }));
-  });
-});
-
-describe("loadInitial", () => {
-  it("sets the blocked-reason banner and an empty grid when a cold-start generation is blocked", async () => {
-    generateBatchMock.mockResolvedValue({
-      kind: "blocked",
-      reason: "翻过的卡片还能读；新卡片需要联网和开关。",
-    });
-    await useDiscoveryStore.getState().loadInitial();
-    expect(useDiscoveryStore.getState().cards).toEqual([]);
-    expect(useDiscoveryStore.getState().blockedReason).toBe(
-      "翻过的卡片还能读；新卡片需要联网和开关。",
-    );
-    expect(useDiscoveryStore.getState().loading).toBe(false);
-  });
-
-  it("loads existing cards without calling generateBatch when the DB already has some", async () => {
-    cardRows = [card("existing")];
-    await useDiscoveryStore.getState().loadInitial();
-    expect(generateBatchMock).not.toHaveBeenCalled();
-    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["existing"]);
-  });
-});
-
-describe("warm-up and load sharing one generation (handoff 2026-08-17 §五.a)", () => {
-  it("ensureWarm lands its generated batch into display state, not just the DB", async () => {
-    generateBatchMock.mockResolvedValue({ kind: "generated", cards: [card("w1")] });
-    await useDiscoveryStore.getState().ensureWarm();
-    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
-    expect(useDiscoveryStore.getState().loading).toBe(false);
-  });
-
-  it("loadInitial during an in-flight warm-up awaits the same batch instead of showing an empty screen", async () => {
-    let resolveGeneration = (_: unknown): void => {};
-    generateBatchMock.mockReturnValue(
-      new Promise((resolve) => {
-        resolveGeneration = resolve;
-      }),
-    );
-    const warm = useDiscoveryStore.getState().ensureWarm();
-    const initial = useDiscoveryStore.getState().loadInitial();
-    resolveGeneration({ kind: "generated", cards: [card("w1")] });
-    await Promise.all([warm, initial]);
-    expect(generateBatchMock).toHaveBeenCalledTimes(1);
-    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
-    expect(useDiscoveryStore.getState().loading).toBe(false);
-  });
-
-  it("a blocked warm-up stays silent (no banner) when nobody has opened the feed", async () => {
-    generateBatchMock.mockResolvedValue({ kind: "blocked", reason: "翻过的卡片还能读。" });
-    await useDiscoveryStore.getState().ensureWarm();
-    expect(useDiscoveryStore.getState().blockedReason).toBeNull();
-    expect(useDiscoveryStore.getState().loading).toBe(false);
   });
 });

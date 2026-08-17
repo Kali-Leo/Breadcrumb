@@ -1,19 +1,42 @@
 /**
  * Purpose: Maximal Marginal Relevance reranking (textbook algorithm, Carbonell & Goldstein
- * 1998) with a hard per-topic quota, used to keep the discovery feed's batch diverse instead
- * of letting one high-scoring topic dominate. Pure math, no DB, no I/O.
- * Main exports: MmrCandidate, mmrSelect.
+ * 1998) with hard quotas on topic, source channel and content form, used to keep the discovery
+ * feed's batch diverse instead of letting one topic, one platform or one content form dominate
+ * (spec 053 §4's 跨渠道与内容形态双配额). Pure math, no DB, no I/O.
+ * Main exports: MmrCandidate, MmrSelectOptions, defaultMmrOptions, mmrSelect.
  */
 
 export interface MmrCandidate<T> {
   item: T;
   score: number;
-  /** Null when the candidate has no embedding yet (e.g. a just-generated card whose fastembed
-   * pass hasn't run) — such candidates fall back to pure score ranking but still count toward
-   * their topic's quota. */
+  /** Null when the candidate has no embedding yet (a just-landed card the background embedding
+   * pass hasn't reached) — such candidates fall back to pure score ranking but still count
+   * toward their quotas. */
   embedding: readonly number[] | null;
   topicLabel: string;
+  /** The channel the item came from. Null for items that belong to no channel. */
+  sourceId?: string | null;
+  /** article, video, podcast, discussion, paper. Null when the item has no form of its own. */
+  contentKind?: string | null;
 }
+
+export interface MmrSelectOptions {
+  /** Relevance-versus-diversity balance: 1 is pure score, 0 is pure novelty. */
+  lambda?: number;
+  perTopicCap?: number;
+  perSourceCap?: number;
+  perKindCap?: number;
+}
+
+/** Sized for one page of the feed (about two dozen cards): at most three cards on one topic,
+ * five from any one platform, ten of any one content form. The caps shape the head of the list;
+ * whatever they hold back sinks to the tail and comes up on a later page. */
+export const defaultMmrOptions: Required<MmrSelectOptions> = {
+  lambda: 0.7,
+  perTopicCap: 3,
+  perSourceCap: 5,
+  perKindCap: 10,
+};
 
 function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
   if (a.length === 0 || b.length === 0 || a.length !== b.length) return 0;
@@ -38,21 +61,44 @@ function candidateSimilarity<T>(a: MmrCandidate<T>, b: MmrCandidate<T>): number 
   return cosineSimilarity(a.embedding, b.embedding);
 }
 
-/** Greedy MMR selection: repeatedly picks the remaining candidate maximizing
+/** The three quota dimensions of one candidate. A null dimension is exempt: an item with no
+ * channel cannot crowd out a channel. */
+function quotaKeys<T>(candidate: MmrCandidate<T>): { dimension: string; key: string }[] {
+  const keys = [{ dimension: "topic", key: candidate.topicLabel }];
+  if (candidate.sourceId) keys.push({ dimension: "source", key: candidate.sourceId });
+  if (candidate.contentKind) keys.push({ dimension: "kind", key: candidate.contentKind });
+  return keys;
+}
+
+function capFor(dimension: string, options: Required<MmrSelectOptions>): number {
+  if (dimension === "source") return options.perSourceCap;
+  if (dimension === "kind") return options.perKindCap;
+  return options.perTopicCap;
+}
+
+/**
+ * Greedy MMR selection: repeatedly picks the remaining candidate maximizing
  * `lambda * score - (1 - lambda) * maxSimilarityToAlreadySelected`, deferring any candidate
- * whose topic has already hit `perTopicCap`. Capped-out candidates are not dropped — they
- * sink to the tail in score order (a mono-topic pool must still show everything; the cap
- * shapes the TOP of the feed, it is not admission control — 2026-08-17 starvation fix). */
+ * that has hit a quota on any of its three dimensions. Capped-out candidates are not dropped —
+ * they sink to the tail in score order (a mono-topic pool must still show everything; the caps
+ * shape the TOP of the feed, they are not admission control — 2026-08-17 starvation fix).
+ */
 export function mmrSelect<T>(
   items: readonly MmrCandidate<T>[],
   k: number,
-  lambda = 0.7,
-  perTopicCap = 3,
+  options: MmrSelectOptions = {},
 ): T[] {
+  const settings: Required<MmrSelectOptions> = { ...defaultMmrOptions, ...options };
   const remaining = [...items];
   const selected: MmrCandidate<T>[] = [];
   const deferred: MmrCandidate<T>[] = [];
-  const countByTopic = new Map<string, number>();
+  const counts = new Map<string, number>();
+
+  const isQuotaFree = (candidate: MmrCandidate<T>): boolean =>
+    quotaKeys(candidate).every(
+      ({ dimension, key }) =>
+        (counts.get(`${dimension}:${key}`) ?? 0) < capFor(dimension, settings),
+    );
 
   while (selected.length < k && remaining.length > 0) {
     let bestIndex = -1;
@@ -60,15 +106,13 @@ export function mmrSelect<T>(
 
     for (let i = 0; i < remaining.length; i++) {
       const candidate = remaining[i];
-      if (!candidate) continue;
-      const topicCount = countByTopic.get(candidate.topicLabel) ?? 0;
-      if (topicCount >= perTopicCap) continue;
+      if (!candidate || !isQuotaFree(candidate)) continue;
 
       const maxSimilarity =
         selected.length === 0
           ? 0
           : Math.max(...selected.map((chosen) => candidateSimilarity(candidate, chosen)));
-      const value = lambda * candidate.score - (1 - lambda) * maxSimilarity;
+      const value = settings.lambda * candidate.score - (1 - settings.lambda) * maxSimilarity;
 
       if (value > bestValue) {
         bestValue = value;
@@ -77,14 +121,17 @@ export function mmrSelect<T>(
     }
 
     if (bestIndex === -1) {
-      // Every remaining candidate is topic-capped: they sink to the tail by score.
+      // Every remaining candidate has hit a quota: they sink to the tail by score.
       deferred.push(...remaining.splice(0, remaining.length));
       break;
     }
     const [chosen] = remaining.splice(bestIndex, 1);
     if (!chosen) break;
     selected.push(chosen);
-    countByTopic.set(chosen.topicLabel, (countByTopic.get(chosen.topicLabel) ?? 0) + 1);
+    for (const { dimension, key } of quotaKeys(chosen)) {
+      const countKey = `${dimension}:${key}`;
+      counts.set(countKey, (counts.get(countKey) ?? 0) + 1);
+    }
   }
 
   deferred.sort((a, b) => b.score - a.score);

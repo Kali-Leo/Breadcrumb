@@ -4,6 +4,7 @@
  * changes write through. (Learning mode was retired by spec 045 — goals are objects now.)
  * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams.
  */
+import { defaultExplorationShare, explorationShareBounds } from "@breadcrumb/plugin-discovery";
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
@@ -91,6 +92,7 @@ const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 const LEARNING_MODE_KEY = "learningMode";
 const ROUTE_PARAMS_KEY = "routeParams";
 const COMPARE_CATEGORY_KEY = "compareCategory";
+const DISCOVERY_EXPLORATION_SHARE_KEY = "discoveryExplorationShare";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
  * learner tunes from the middle (spec 017 #1). */
 const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
@@ -120,6 +122,13 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   discoveryQualityCheck: true,
 };
 
+/** Keeps a stored or passed-in share inside the dial's travel: the feed always explores a
+ * little and never explores more than half (see explorationShareBounds). */
+function clampExplorationShare(share: number | null): number {
+  if (share === null || !Number.isFinite(share)) return defaultExplorationShare;
+  return Math.min(explorationShareBounds.maximum, Math.max(explorationShareBounds.minimum, share));
+}
+
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
 function guessMainlandNetwork(): boolean {
   return navigator.language.toLowerCase() === "zh-cn";
@@ -138,6 +147,9 @@ interface SettingsState {
   routeParams: RouteParams;
   /** 教材/真人 display filter for the comparison tree — occupation (真人) by default. */
   compareCategory: CompareCategory;
+  /** How much of the discovery feed goes to topics the reader has no history with (spec 053
+   * §4/§6). The two-position switch above the feed writes it; the ordering reads it. */
+  discoveryExplorationShare: number;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
@@ -146,6 +158,7 @@ interface SettingsState {
   setLearningMode(mode: LearningMode): Promise<void>;
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
+  setDiscoveryExplorationShare(share: number): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -157,6 +170,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   learningMode: "casual",
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
+  discoveryExplorationShare: defaultExplorationShare,
 
   async loadFromDatabase() {
     const repos = await getRepos();
@@ -168,6 +182,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       learningMode,
       routeParams,
       compareCategory,
+      discoveryExplorationShare,
     ] = await Promise.all([
       repos.settings.get<ApiConfig>(API_CONFIG_KEY),
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
@@ -176,6 +191,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
       repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
+      repos.settings.get<number>(DISCOVERY_EXPLORATION_SHARE_KEY),
     ]);
     set({
       loaded: true,
@@ -186,6 +202,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       learningMode: learningMode ?? "casual",
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
+      discoveryExplorationShare: clampExplorationShare(discoveryExplorationShare),
     });
   },
 
@@ -230,5 +247,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(COMPARE_CATEGORY_KEY, category, nowIso());
     set({ compareCategory: category });
+  },
+
+  async setDiscoveryExplorationShare(share) {
+    const clamped = clampExplorationShare(share);
+    const repos = await getRepos();
+    await repos.settings.set(DISCOVERY_EXPLORATION_SHARE_KEY, clamped, nowIso());
+    set({ discoveryExplorationShare: clamped });
   },
 }));

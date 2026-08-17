@@ -44,6 +44,9 @@ importers:
       '@breadcrumb/core-teaching':
         specifier: workspace:*
         version: link:../../packages/core-teaching
+      '@breadcrumb/plugin-channels':
+        specifier: workspace:*
+        version: link:../../packages/plugin-channels
       '@breadcrumb/plugin-companion':
         specifier: workspace:*
         version: link:../../packages/plugin-companion

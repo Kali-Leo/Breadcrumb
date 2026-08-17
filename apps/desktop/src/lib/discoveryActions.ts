@@ -166,6 +166,7 @@ export async function generateBatch(): Promise<GenerateBatchOutcome> {
       published_at: null,
       saved_at: null,
       quality_score: null,
+      upstream_signal: null,
     }));
     await repos.discovery.insertCards(rows);
     const embeddedRows = await embedNewCards(rows);

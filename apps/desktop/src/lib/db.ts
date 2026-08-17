@@ -7,6 +7,7 @@
 import {
   createAiFailuresRepo,
   createCanonicalRepo,
+  createChannelStateRepo,
   createCompanionKnowledgeStateRepo,
   createCompanionMemoriesRepo,
   createCompanionProposalsRepo,
@@ -60,6 +61,7 @@ export interface Repos {
   goals: ReturnType<typeof createGoalsRepo>;
   comparisons: ReturnType<typeof createComparisonRepo>;
   canonical: ReturnType<typeof createCanonicalRepo>;
+  channelState: ReturnType<typeof createChannelStateRepo>;
   practice: ReturnType<typeof createPracticeRepo>;
   diglot: ReturnType<typeof createDiglotRepo>;
   discovery: ReturnType<typeof createDiscoveryRepo>;
@@ -109,6 +111,7 @@ async function buildRepos(): Promise<Repos> {
     goals: createGoalsRepo(sqlClient),
     comparisons: createComparisonRepo(sqlClient),
     canonical: createCanonicalRepo(sqlClient),
+    channelState: createChannelStateRepo(sqlClient),
     practice: createPracticeRepo(sqlClient),
     diglot: createDiglotRepo(sqlClient),
     discovery: createDiscoveryRepo(sqlClient),

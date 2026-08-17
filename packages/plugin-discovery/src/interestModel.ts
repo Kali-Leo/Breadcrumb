@@ -1,20 +1,36 @@
 /**
- * Purpose: folds the discovery feed's silent event stream (impression/open/dwell/dislike)
- * into per-topic interest weights and per-topic open/dislike counts. Contribution recipe
- * after Nunti's keyword-weight table (method only, no code copied — Nunti is GPL) with an
- * added exponential time decay; pure math, no DB, no I/O.
+ * Purpose: folds the discovery feed's silent event stream (impression/open/dwell/save/unsave/
+ * finish/dislike, plus the first-run stances) into per-topic interest weights and per-topic
+ * positive/negative counts. Contribution recipe after Nunti's keyword-weight table (method
+ * only, no code copied — Nunti is GPL) with an added exponential time decay; pure math, no DB,
+ * no I/O.
  * Main exports: DiscoveryEventKind, InterestEvent, TopicWeight, TopicStats,
  * foldInterestFromEvents, topicStatsFromEvents.
  */
 
-export type DiscoveryEventKind = "impression" | "open" | "dwell" | "dislike";
+/**
+ * Every kind that says something about interest. Spec 053 §6's zero-like architecture: all the
+ * positives are self-interested actions the reader took for their own sake (they opened it,
+ * they stayed, they kept it, they finished it), never a rating button. The feed's dial moves
+ * (kind 'dial' in the DB) say nothing about a topic and are not part of this union.
+ */
+export type DiscoveryEventKind =
+  | "impression"
+  | "open"
+  | "dwell"
+  | "dislike"
+  | "save"
+  | "unsave"
+  | "finish"
+  | "onboarding";
 
 /** A plain domain event, decoupled from the DB row shape — callers map DiscoveryEventRow into
  * this before folding, keeping this package independent of core-db's column naming. */
 export interface InterestEvent {
   topicLabel: string;
   kind: DiscoveryEventKind;
-  /** Reading duration in milliseconds; only meaningful for kind='dwell', null otherwise. */
+  /** Reading duration in milliseconds for kind='dwell'; the first-run stance for
+   * kind='onboarding' (positive = 想看, 0 = 一般, negative = 不想看); null otherwise. */
   valueMs: number | null;
   createdAt: string;
 }
@@ -37,8 +53,15 @@ const MILLISECONDS_PER_MINUTE = 60 * 1000;
  * shown as a near-zero preference. */
 const WEIGHT_DROP_THRESHOLD = 0.05;
 
+/** What one first-run stance is worth. Deliberately below a save: it is what the reader
+ * guessed about themselves before seeing anything, and a week of real behaviour should be able
+ * to overrule it (which the decay below makes happen on its own). */
+const ONBOARDING_STANCE_CONTRIBUTION = 1.5;
+
 /** Per-event raw contribution, before time decay. Dwell scales with reading time, capped at
- * 2 minutes (further reading adds no extra confidence past that). */
+ * 2 minutes (further reading adds no extra confidence past that). Saving outranks finishing
+ * outranks opening because each one costs the reader more deliberate effort — and unsaving is
+ * the exact mirror of saving, so taking something back leaves no lingering positive. */
 function rawContribution(event: InterestEvent): number {
   switch (event.kind) {
     case "impression":
@@ -49,8 +72,16 @@ function rawContribution(event: InterestEvent): number {
       const minutes = Math.min((event.valueMs ?? 0) / MILLISECONDS_PER_MINUTE, 2);
       return minutes * 0.75;
     }
+    case "finish":
+      return 2.0;
+    case "save":
+      return 2.5;
+    case "unsave":
+      return -2.5;
     case "dislike":
       return -2.5;
+    case "onboarding":
+      return Math.sign(event.valueMs ?? 0) * ONBOARDING_STANCE_CONTRIBUTION;
   }
 }
 
@@ -83,10 +114,23 @@ export function foldInterestFromEvents(
     .sort((a, b) => b.weight - a.weight);
 }
 
-/** Raw open/dislike counts per topic (no decay) — the Beta-distribution input for Thompson
+/** Whether an event counts as a success or a failure for the Beta posteriors below. Opening,
+ * finishing and saving all count as one success each: they are separate acts, and a reader who
+ * opened, finished and saved the same topic really did say three things about it. */
+function countsAsSuccess(event: InterestEvent): boolean {
+  if (event.kind === "open" || event.kind === "finish" || event.kind === "save") return true;
+  return event.kind === "onboarding" && (event.valueMs ?? 0) > 0;
+}
+
+function countsAsFailure(event: InterestEvent): boolean {
+  if (event.kind === "dislike") return true;
+  return event.kind === "onboarding" && (event.valueMs ?? 0) < 0;
+}
+
+/** Raw success/dislike counts per topic (no decay) — the Beta-distribution input for Thompson
  * sampling (thompson.ts), which needs counts, not a decayed continuous score. Every topic
  * that appears in any event (any kind) is included, so a topic with only impressions still
- * gets a neutral Beta(1,1) prior. */
+ * gets a neutral Beta(1,1) prior, and a first-run stance seeds the topic's very first pull. */
 export function topicStatsFromEvents(events: readonly InterestEvent[]): TopicStats[] {
   const statsByTopic = new Map<string, TopicStats>();
   for (const event of events) {
@@ -95,8 +139,8 @@ export function topicStatsFromEvents(events: readonly InterestEvent[]): TopicSta
       opens: 0,
       dislikes: 0,
     };
-    if (event.kind === "open") stats.opens += 1;
-    if (event.kind === "dislike") stats.dislikes += 1;
+    if (countsAsSuccess(event)) stats.opens += 1;
+    if (countsAsFailure(event)) stats.dislikes += 1;
     statsByTopic.set(event.topicLabel, stats);
   }
   return [...statsByTopic.values()];
