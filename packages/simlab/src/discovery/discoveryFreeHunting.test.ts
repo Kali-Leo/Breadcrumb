@@ -92,19 +92,16 @@ describe("discovery free hunting (seeded random actions over hostile feeds)", ()
   }, 300_000);
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). A feed entry that correctly escapes literal angle brackets
-   * comes out of the pipeline as live markup. feedText.stripHtmlToPlainText removes tags FIRST and
-   * decodes entities SECOND, so `&lt;script&gt;alert(1)&lt;/script&gt;` — the standard, correct
-   * way for a feed to publish that text for display — passes the tag-stripping step untouched
-   * (there are no `<`…`>` runs yet) and is then turned into a real `<script>` element by the
-   * entity decoder. The card's title and hook carry it from there into the DB. React's own
-   * escaping is what keeps this from being exploitable in today's grid, so the visible symptom is
-   * a title reading `<script>alert(1)</script>` instead of the text the publisher meant; the
-   * hazard is that hook/title stop being trustworthy as plain text for anything that renders
-   * markup later. Fixing it is a real decision (decode-then-strip changes what a title carrying a
-   * literal `&lt;` shows), so it is documented rather than patched here.
+   * FIXED (2026-08-17, spec 053 T9 finding #10). A feed entry that correctly escapes literal angle
+   * brackets used to come out of the pipeline as live markup: stripHtmlToPlainText removed tags
+   * FIRST and decoded entities SECOND, so `&lt;script&gt;alert(1)&lt;/script&gt;` — the standard
+   * way for a feed to publish that text for display — passed the tag stripper untouched and was
+   * turned into a real `<script>` element by the decoder afterwards. Entities are now decoded
+   * first and tags stripped after, which is what a mainstream reader does: the title reads
+   * "alert(1)", the words the publisher meant to show. The price, taken deliberately, is that a
+   * title carrying a literal `&lt;` now reads as a tag.
    */
-  it.fails("never lets a feed's escaped markup become live markup on a card", async () => {
+  it("never lets a feed's escaped markup become live markup on a card", async () => {
     installFakeNetwork(createFakeChannelNetwork());
     const feedUrl = "https://entity-smuggler.example/feed.xml";
     const run = await prepareDiscoveryJourney({

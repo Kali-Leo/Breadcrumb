@@ -25,15 +25,25 @@ function decodeCommonEntities(value: string): string {
   return decoded;
 }
 
-/** Feeds put markup in titles and full articles in descriptions; the card shows plain text.
- * Block-level tags become a space so words do not fuse across paragraphs. */
+/**
+ * Feeds put markup in titles and full articles in descriptions; the card shows plain text.
+ * Block-level tags become a space so words do not fuse across paragraphs.
+ *
+ * The order is what mainstream readers do and what keeps escaped markup escaped: real script and
+ * style elements are dropped whole first (their bodies are code, not text), then entities are
+ * decoded, then tags are stripped, then one more decode for the doubly-escaped fields real feeds
+ * ship (`&amp;quot;`). Decoding after stripping — which is what this did until spec 053 T9
+ * finding #10 — meant a correctly escaped `&lt;script&gt;alert(1)&lt;/script&gt;` sailed through
+ * the tag stripper as ordinary text and was turned into a live `<script>` element by the decoder
+ * afterwards. It now reads as the text "alert(1)", which is what the publisher wrote it to show.
+ * The price of decoding first is that a title carrying a literal `&lt;` reads as a tag from here
+ * on; a reader that hands the field to an HTML parser makes the same trade.
+ */
 export function stripHtmlToPlainText(value: string | null | undefined): string {
   if (!value) return "";
   const withoutScripts = value.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, " ");
-  const withBreaks = withoutScripts.replace(
-    /<\/(p|div|li|tr|h[1-6]|blockquote)\s*>|<br\s*\/?>/gi,
-    " ",
-  );
+  const decoded = decodeCommonEntities(withoutScripts);
+  const withBreaks = decoded.replace(/<\/(p|div|li|tr|h[1-6]|blockquote)\s*>|<br\s*\/?>/gi, " ");
   const withoutTags = withBreaks.replace(/<[^>]*>/g, "");
   return decodeCommonEntities(withoutTags).replace(/\s+/g, " ").trim();
 }

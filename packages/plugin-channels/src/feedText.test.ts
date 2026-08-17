@@ -28,6 +28,20 @@ describe("stripHtmlToPlainText", () => {
     expect(stripHtmlToPlainText(null)).toBe("");
     expect(stripHtmlToPlainText(undefined)).toBe("");
   });
+
+  /** Spec 053 T9 finding #10: entities are decoded before tags are stripped, so the markup a
+   * publisher escaped on purpose stays text instead of coming back to life afterwards. */
+  it("shows escaped markup as the text it was written to be, not as a tag", () => {
+    expect(stripHtmlToPlainText("&lt;script&gt;alert(1)&lt;/script&gt;")).toBe("alert(1)");
+    expect(stripHtmlToPlainText("&lt;img src=x onerror=alert(2)&gt; 正文")).toBe("正文");
+  });
+
+  it("still reads a doubly escaped field the way its publisher meant it", () => {
+    expect(stripHtmlToPlainText("&amp;quot;引用&amp;quot;")).toBe('"引用"');
+    expect(stripHtmlToPlainText("&amp;lt;b&amp;gt;double escaped&amp;lt;/b&amp;gt;")).toBe(
+      "<b>double escaped</b>",
+    );
+  });
 });
 
 describe("resolveAbsoluteUrl", () => {
