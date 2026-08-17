@@ -166,7 +166,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
     },
 
     async recordDwell(cardId, topicLabel, ms) {
-      if (ms <= 0) return;
+      // A NaN or Infinity duration (a timer started before a clock jump, a subtraction against an
+      // unset start) passes a plain `<= 0` test and lands in the row as NULL, which reads back as
+      // a dwell that says nothing. Only a real duration is worth recording.
+      if (!Number.isFinite(ms) || ms <= 0) return;
       await recordDiscoveryEvent(cardId, topicLabel, "dwell", Math.round(ms));
     },
 
