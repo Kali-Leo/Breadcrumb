@@ -74,6 +74,7 @@ export function Composer(props: ComposerProps) {
               <button
                 key={label}
                 type="button"
+                aria-pressed={studyMode === on}
                 onClick={() => onSetStudyMode(on)}
                 title={title}
                 className={`px-3 py-1 transition-colors ${

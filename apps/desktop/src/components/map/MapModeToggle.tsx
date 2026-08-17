@@ -29,6 +29,7 @@ export function MapModeToggle() {
         <button
           key={mode}
           type="button"
+          aria-pressed={learningMode === mode}
           onClick={() => void switchTo(mode)}
           title={title}
           className={`px-3 py-1 transition-colors ${
