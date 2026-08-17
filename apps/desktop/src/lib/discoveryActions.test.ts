@@ -1,6 +1,8 @@
 /**
- * Purpose: unit tests for generateBatch — guard blocking (offline/switch-off/no apiConfig,
- * each with the same plain banner reason), starter detection on a truly empty DB, the
+ * Purpose: unit tests for the RETIRED self-generated card pipeline (spec 053 T8 sealed it in
+ * place; nothing calls generateBatch any more). Kept so the sealed code stays honest if it is
+ * ever revived — guard blocking (offline/no apiConfig, each with the same plain banner
+ * reason), starter detection on a truly empty DB, the
  * generated batch's persistence + metering + best-effort embedding, and the plain failure
  * banner when the LLM call itself throws (mocks db repos, settings, chatJson, metering,
  * embeddings, failure log).
@@ -42,7 +44,6 @@ const apiConfig = {
 };
 let settingsState = {
   networkEnabled: true,
-  featureSwitches: { discoveryCards: true },
   apiConfig: apiConfig as typeof apiConfig | null,
 };
 vi.mock("../stores/settingsStore", () => ({
@@ -82,26 +83,12 @@ afterEach(() => {
   recordMeteredCallMock.mockReset();
   embedTextsMock.mockReset();
   chatJsonMock.mockReset();
-  settingsState = {
-    networkEnabled: true,
-    featureSwitches: { discoveryCards: true },
-    apiConfig,
-  };
+  settingsState = { networkEnabled: true, apiConfig };
 });
 
 describe("generateBatch guards", () => {
   it("blocks offline with the plain reason, no LLM call", async () => {
     settingsState.networkEnabled = false;
-    const outcome = await generateBatch();
-    expect(outcome).toEqual({
-      kind: "blocked",
-      reason: "翻过的卡片还能读；新卡片需要联网和开关。",
-    });
-    expect(chatJsonMock).not.toHaveBeenCalled();
-  });
-
-  it("blocks when the discoveryCards switch is off, same reason", async () => {
-    settingsState.featureSwitches.discoveryCards = false;
     const outcome = await generateBatch();
     expect(outcome).toEqual({
       kind: "blocked",

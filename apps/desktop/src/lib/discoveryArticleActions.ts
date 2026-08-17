@@ -1,4 +1,10 @@
 /**
+ * LEGACY PATH (spec 053 T8). Cards are external content now and bring their own text, so this
+ * only ever runs for a self-generated card (spec 051, source_id NULL) left in an old pool — see
+ * DiscoveryGeneratedArticleBody. It is kept, with its discoveryArticles switch and its 计价 line,
+ * exactly as long as those cards can still be opened; the batch generator that made them is
+ * retired (lib/discoveryActions).
+ *
  * Purpose: streams one discovery card's full article body on first open (spec 051 §2) —
  * mirrors focus mode's explain-stream pattern (lib/focusExplainStream.ts: createLlmClient +
  * chatStream + a silence/total watchdog) but under the dedicated "discovery-article" metering

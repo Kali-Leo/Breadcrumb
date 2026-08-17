@@ -1,6 +1,12 @@
 /**
+ * RETIRED (spec 053 T8, 2026-08-17). Nothing calls this any more: the feed's cards are real
+ * external content now (lib/discoveryRefill → lib/discoveryChannels), and the self-generated
+ * pipeline is sealed rather than deleted, as spec 053 总则 asks ("自产出卡管线退役封存（代码不
+ * 删）"). Its dedicated feature switch and its 计价 line are gone (T5); if it is ever revived it
+ * needs both back. The cards it wrote are still in the pool and still readable.
+ *
  * Purpose: generates one discovery-feed card batch (spec 051 §5) — guards on
- * network/switch/API config, assembles the exploit/explore/graph-neighbor prompt input from
+ * network/API config, assembles the exploit/explore/graph-neighbor prompt input from
  * local data, calls the card-batch LLM contract, meters and persists the batch, then embeds
  * the new cards locally (fastembed via lib/embeddings.ts). Guard and generation failures both
  * degrade to a plain reason string for the feed's banner; an embedding failure only logs
@@ -77,8 +83,10 @@ async function embedNewCards(rows: readonly DiscoveryCardRow[]): Promise<Discove
 }
 
 export async function generateBatch(): Promise<GenerateBatchOutcome> {
-  const { networkEnabled, featureSwitches, apiConfig } = useSettingsStore.getState();
-  if (!networkEnabled || !featureSwitches.discoveryCards || apiConfig === null) {
+  const { networkEnabled, apiConfig } = useSettingsStore.getState();
+  // The dedicated switch retired with the pipeline (spec 053 T8); what is left is the network
+  // total switch, which every metered call answers to.
+  if (!networkEnabled || apiConfig === null) {
     return { kind: "blocked", reason: OFFLINE_OR_SWITCH_OFF_REASON };
   }
 

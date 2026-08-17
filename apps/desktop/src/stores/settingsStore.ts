@@ -59,12 +59,10 @@ export interface FeatureSwitches {
    * words would trip up this learner — the primary source of explore doors. Off leaves doors
    * to the zero-LLM legacy node-matching source only. */
   termMarking: boolean;
-  /** Discovery feed (spec 051): generating a new batch of knowledge cards when the grid is
-   * scrolled to the bottom. Off (or offline) leaves already-cached cards readable, just with
-   * no new ones. */
-  discoveryCards: boolean;
-  /** Discovery feed: writing a card's full article body the first time it's opened. Off
-   * leaves the card grid itself working, just with no way to generate a new card's body. */
+  /** Discovery feed: writing the article body of a self-generated card (spec 051) the first
+   * time it is opened. Spec 053 replaced generation with external content, so this only ever
+   * fires on cards left in old pools; the switch retires with the last of them.
+   * (The 051 card-generation switch itself retired with its pipeline, spec 053 T8.) */
   discoveryArticles: boolean;
   /** Discovery feed (spec 053 §5): one call per fetched batch of external items, rating how
    * much substance each title + summary promises. Off means the feed is ordered by its
@@ -117,7 +115,6 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   companionScript: true,
   focusExplain: true,
   termMarking: true,
-  discoveryCards: true,
   discoveryArticles: true,
   discoveryQualityCheck: true,
 };
