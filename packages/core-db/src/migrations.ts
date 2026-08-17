@@ -895,6 +895,16 @@ export const MIGRATIONS: readonly Migration[] = [
       );`,
     ],
   },
+  {
+    // Spec 053 §4 ranks candidates partly on the crowd signal their channel published — a
+    // Hacker News point count, a forum's reply count, a chart position — normalized to 0..1 by
+    // the channel layer. 0041 landed every other field of the candidate contract but this one,
+    // so it had nowhere to be stored and the ranking feature had nothing to read. Nullable
+    // like the rest: most plain RSS feeds publish no such number, and no number must never
+    // read as a low one.
+    id: "0042_discovery_upstream_signal",
+    statements: [`ALTER TABLE discovery_cards ADD COLUMN upstream_signal REAL;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

@@ -55,6 +55,7 @@ describe("migration 0041 (real sqlite)", () => {
         "published_at",
         "saved_at",
         "quality_score",
+        "upstream_signal",
       ]);
 
       const channelColumns = await database.sql.select<{ name: string }>(

@@ -404,7 +404,9 @@ export type DiscoveryCardKind = "article" | "video" | "podcast" | "discussion" |
  * the feed offers none, or in data-saver mode), published_at the upstream publication instant.
  * saved_at is set when the user saves the card and back to NULL when they unsave it — 收藏,
  * never merged with any "like" semantics (spec 053 §6). quality_score is the batch LLM quality
- * check (§5): it only ever lowers ranking, it never hides a card. */
+ * check (§5): it only ever lowers ranking, it never hides a card. upstream_signal is the crowd
+ * number the channel published (points, replies, chart position), normalized to 0..1 by the
+ * channel layer and NULL wherever the channel publishes no such number. */
 export interface DiscoveryCardRow {
   id: string;
   title: string;
@@ -424,6 +426,7 @@ export interface DiscoveryCardRow {
   published_at: string | null;
   saved_at: string | null;
   quality_score: number | null;
+  upstream_signal: number | null;
 }
 
 /** Signal kinds the feed records. Spec 051 §3, all silent: impression = the card sat in

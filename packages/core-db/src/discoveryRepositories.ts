@@ -19,7 +19,8 @@ type ExternalContentColumn =
   | "author"
   | "published_at"
   | "saved_at"
-  | "quality_score";
+  | "quality_score"
+  | "upstream_signal";
 
 export function createDiscoveryRepo(sql: SqlClient) {
   return {
@@ -30,8 +31,9 @@ export function createDiscoveryRepo(sql: SqlClient) {
         rows.map((row) => ({
           sql: `INSERT INTO discovery_cards
               (id, title, hook, topic_label, source, body_md, embedding_json, batch_id, created_at, opened_at,
-               source_id, kind, url, cover_url, author, published_at, saved_at, quality_score)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               source_id, kind, url, cover_url, author, published_at, saved_at, quality_score,
+               upstream_signal)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           params: [
             row.id,
             row.title,
@@ -51,6 +53,7 @@ export function createDiscoveryRepo(sql: SqlClient) {
             row.published_at ?? null,
             row.saved_at ?? null,
             row.quality_score ?? null,
+            row.upstream_signal ?? null,
           ],
         })),
       );
