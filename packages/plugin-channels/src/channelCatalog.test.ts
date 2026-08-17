@@ -55,6 +55,9 @@ describe("loadStarterChannelCatalog", () => {
       "https://rss.arxiv.org/rss/cs.AI",
       "https://rss.arxiv.org/rss/cs.LG",
       "https://rss.arxiv.org/rss/q-bio.NC",
+      "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw",
+      "https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA",
+      "https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q",
       "https://itunes.apple.com/search",
       "https://www.douban.com/feed/people/{userId}/interests",
     ]);
@@ -95,6 +98,24 @@ describe("loadStarterChannelCatalog", () => {
     const itunes = catalog.sources.find((source) => source.id === "podcast-search");
     expect(itunes && sourceSupportsPolling(itunes)).toBe(false);
     expect(itunes && sourceSupportsSearch(itunes)).toBe(true);
+  });
+
+  /** Spec 053 §1 lists YouTube among the first-wave channels, and until spec 053 T10 the shipped
+   * catalog had no entry for it at all, so a fresh install saw no video on the grid. Each address
+   * below was fetched on 2026-08-17 and answered with an Atom document carrying 15 entries. */
+  it("ships the three YouTube channels a fresh install starts with", () => {
+    const youtube = catalog.sources.filter((source) => source.adapterType === "youtube-channel");
+    expect(youtube.map((source) => source.displayName)).toEqual([
+      "3Blue1Brown",
+      "Veritasium",
+      "Kurzgesagt – In a Nutshell",
+    ]);
+    for (const source of youtube) {
+      expect(new URL(source.endpoint.feedUrl).searchParams.get("channel_id")).toMatch(/^UC/);
+      expect(source.defaultKind).toBe("video");
+      expect(source.defaultEnabled).toBe(true);
+      expect(source.unverified).toBeUndefined();
+    }
   });
 
   it("enables every other source on a fresh install", () => {

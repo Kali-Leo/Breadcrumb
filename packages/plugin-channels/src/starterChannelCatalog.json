@@ -160,6 +160,54 @@
       "unverified": true
     },
     {
+      "id": "youtube-3blue1brown",
+      "displayName": "3Blue1Brown",
+      "adapterType": "youtube-channel",
+      "endpoint": {
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw"
+      },
+      "language": "en",
+      "defaultKind": "video",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "youtube-veritasium",
+      "displayName": "Veritasium",
+      "adapterType": "youtube-channel",
+      "endpoint": {
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA"
+      },
+      "language": "en",
+      "defaultKind": "video",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "youtube-kurzgesagt",
+      "displayName": "Kurzgesagt – In a Nutshell",
+      "adapterType": "youtube-channel",
+      "endpoint": {
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q"
+      },
+      "language": "en",
+      "defaultKind": "video",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 8,
+        "userAgentOverride": null
+      }
+    },
+    {
       "id": "podcast-search",
       "displayName": "播客搜索（iTunes）",
       "adapterType": "podcast-search",
