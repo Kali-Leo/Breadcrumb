@@ -169,7 +169,7 @@ export function ChatView() {
         {...(activeKind === "chat"
           ? {
               studyMode,
-              onToggleStudyMode: () => void setStudyMode(activeConversationId, !studyMode),
+              onSetStudyMode: (on: boolean) => void setStudyMode(activeConversationId, on),
             }
           : {})}
       />
