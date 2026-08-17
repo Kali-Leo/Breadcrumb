@@ -9,9 +9,15 @@ import type { ChannelSource } from "@breadcrumb/plugin-channels";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 let stateRows: ChannelStateRow[] = [];
+/** The reader's source settings, as the settings table would hand them back. */
+let storedChannelSettings: unknown = {};
 
 vi.mock("./db", () => ({
   getRepos: vi.fn(async () => ({
+    settings: {
+      get: async () => storedChannelSettings,
+      set: async () => {},
+    },
     channelState: {
       get: async (sourceId: string) => stateRows.find((row) => row.source_id === sourceId) ?? null,
       listAll: async () => stateRows,
@@ -23,6 +29,10 @@ vi.mock("./db", () => ({
 }));
 
 const { pollChannelsForCandidates } = await import("./discoveryChannels");
+const { useDiscoveryChannelSettingsStore } = await import(
+  "../stores/discoveryChannelSettingsStore"
+);
+const { listCatalogChannelChoices } = await import("./discoveryChannelSources");
 
 const NOW = new Date("2026-08-17T10:00:00.000Z");
 
@@ -63,6 +73,9 @@ function source(overrides: Partial<ChannelSource> = {}): ChannelSource {
 
 afterEach(() => {
   stateRows = [];
+  storedChannelSettings = {};
+  // The settings row is read once and kept; each case starts from an unread one.
+  useDiscoveryChannelSettingsStore.setState({ loaded: false });
 });
 
 describe("pollChannelsForCandidates", () => {
@@ -165,5 +178,22 @@ describe("pollChannelsForCandidates", () => {
     expect(headers["If-None-Match"]).toBe('"v1"');
     expect(outcome.answeredSourceCount).toBe(1);
     expect(outcome.items).toEqual([]);
+  });
+
+  it("asks exactly the channels the reader's settings leave on, their own feeds included", async () => {
+    const ownFeed = "https://example.org/my-blog/feed";
+    const allOff = listCatalogChannelChoices().map((choice) => [choice.id, false]);
+    storedChannelSettings = {
+      channelEnabledById: Object.fromEntries(allOff),
+      userFeedUrls: [ownFeed],
+      dataSaverEnabled: true,
+    };
+    const fetchImplementation = vi.fn(
+      async (_url: string, _init: RequestInit) => new Response(SAMPLE_FEED, { status: 200 }),
+    );
+    const outcome = await pollChannelsForCandidates({ fetchImplementation, now: () => NOW });
+    expect(fetchImplementation).toHaveBeenCalledTimes(1);
+    expect(fetchImplementation.mock.calls[0]?.[0]).toBe(ownFeed);
+    expect(outcome.items).toHaveLength(2);
   });
 });

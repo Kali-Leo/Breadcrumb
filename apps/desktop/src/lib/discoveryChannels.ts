@@ -13,11 +13,12 @@ import {
   type ChannelSource,
   type FetchImplementation,
   fetchLatestFromSource,
-  loadStarterChannelCatalog,
   searchTopics,
   sourceSupportsSearch,
 } from "@breadcrumb/plugin-channels";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { ensureDiscoveryChannelSettingsLoaded } from "../stores/discoveryChannelSettingsStore";
+import { buildEnabledChannelSources } from "./discoveryChannelSources";
 import {
   createChannelStateConditionalStore,
   isSourceAvailableNow,
@@ -39,26 +40,26 @@ export interface ChannelAccessOptions {
   /** Swapped in tests; production always uses Tauri's HTTP client, which is not subject to the
    * webview's CORS rules. */
   fetchImplementation?: FetchImplementation;
-  /** Overrides the shipped catalog — the settings page's user-added feeds will pass this. */
+  /** Overrides the reader's settings — tests pass a source list directly. */
   sources?: readonly ChannelSource[];
-  /** Spec 053 §2's 省流量模式. The switch itself lands with the settings page (T8). */
+  /** Spec 053 §2's 省流量模式; taken from settings when the caller says nothing. */
   dataSaverEnabled?: boolean;
   now?: () => Date;
 }
 
-function catalogSources(options: ChannelAccessOptions): ChannelSource[] {
-  if (options.sources !== undefined) return [...options.sources];
-  // Per-source switches live in settings and land with the settings page (spec 053 T8); until
-  // then the catalog's own default decides, which is "on" for everything but the 豆瓣 template.
-  return loadStarterChannelCatalog().sources.filter((source) => source.defaultEnabled);
-}
-
-function buildFetcher(options: ChannelAccessOptions): ChannelFetcher {
-  return new ChannelFetcher({
+/** One read of the reader's source settings (spec 053 §8): which channels are on, whether
+ * pictures may be fetched, their own feeds, their 豆瓣 id. */
+async function resolveAccess(options: ChannelAccessOptions): Promise<{
+  sources: readonly ChannelSource[];
+  fetcher: ChannelFetcher;
+}> {
+  const settings = await ensureDiscoveryChannelSettingsLoaded();
+  const fetcher = new ChannelFetcher({
     fetchImplementation: options.fetchImplementation ?? tauriFetch,
     conditionalRequestStore: createChannelStateConditionalStore(),
-    dataSaverEnabled: options.dataSaverEnabled ?? false,
+    dataSaverEnabled: options.dataSaverEnabled ?? settings.dataSaverEnabled,
   });
+  return { sources: options.sources ?? buildEnabledChannelSources(settings), fetcher };
 }
 
 /**
@@ -70,15 +71,15 @@ export async function pollChannelsForCandidates(
   options: ChannelAccessOptions = {},
 ): Promise<ChannelPollOutcome> {
   const now = options.now ?? (() => new Date());
-  const states = await readChannelStates();
-  const due = catalogSources(options).filter((source) =>
+  const [states, access] = await Promise.all([readChannelStates(), resolveAccess(options)]);
+  const due = access.sources.filter((source) =>
     isSourceAvailableNow(source, states.get(source.id), now()),
   );
   if (due.length === 0) {
     return { items: [], attemptedSourceCount: 0, answeredSourceCount: 0 };
   }
 
-  const fetcher = buildFetcher(options);
+  const fetcher = access.fetcher;
   const results = await Promise.all(
     due.map(async (source) => {
       try {
@@ -124,11 +125,12 @@ export async function searchChannelsForCandidates(
   options: ChannelAccessOptions = {},
 ): Promise<TopicSearchHarvest[]> {
   const now = options.now ?? (() => new Date());
-  const searchable = catalogSources(options).filter(sourceSupportsSearch);
+  const access = await resolveAccess(options);
+  const searchable = access.sources.filter(sourceSupportsSearch);
   const firstSource = searchable[0];
   if (queries.length === 0 || firstSource === undefined) return [];
 
-  const fetcher = buildFetcher(options);
+  const fetcher = access.fetcher;
   const seenIds = new Set<string>();
   const harvests: TopicSearchHarvest[] = [];
   for (const query of queries) {
