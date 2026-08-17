@@ -3,6 +3,7 @@
  * pool shown on the feed, now holding external content, and the silent signal stream over it.
  * Main exports: createDiscoveryRepo factory, DiscoveryCardInsert.
  */
+import { createDiscoveryPoolMaintenance } from "./discoveryPoolMaintenance";
 import type { DiscoveryCardRow, DiscoveryEventRow, SqlClient } from "./types";
 
 /** Spec 053's external-content columns are optional at insert time (they default to NULL), so
@@ -10,6 +11,14 @@ import type { DiscoveryCardRow, DiscoveryEventRow, SqlClient } from "./types";
  * precedent as conversations.create's companion_id. */
 export type DiscoveryCardInsert = Omit<DiscoveryCardRow, ExternalContentColumn> &
   Partial<Pick<DiscoveryCardRow, ExternalContentColumn>>;
+
+/**
+ * Same-instant tie-break for the event stream. Ids are random uuids, so ordering by id put rows
+ * written in the same millisecond — the first-run panel's whole set of stances, an open and the
+ * dwell that followed it — into an order that changed from library to library. SQLite's rowid is
+ * the insertion counter, which is the order those rows actually happened in.
+ */
+const BY_INSERTION = "rowid ASC";
 
 type ExternalContentColumn =
   | "source_id"
@@ -25,6 +34,8 @@ type ExternalContentColumn =
 
 export function createDiscoveryRepo(sql: SqlClient) {
   return {
+    // The pool's unseen-only read and its two housekeeping deletes (discoveryPoolMaintenance.ts).
+    ...createDiscoveryPoolMaintenance(sql),
     /** One transaction for a whole fetched batch — a crash never leaves a partial batch on
      * the feed (spec 051 §5; spec 053 §3 restocks the pool the same way). */
     async insertCards(rows: readonly DiscoveryCardInsert[]): Promise<void> {
@@ -142,14 +153,14 @@ export function createDiscoveryRepo(sql: SqlClient) {
     /** Events since a cutoff — raw material for a windowed interest-weight refold. */
     async listEventsSince(iso: string): Promise<DiscoveryEventRow[]> {
       return sql.select<DiscoveryEventRow>(
-        "SELECT * FROM discovery_events WHERE created_at >= ? ORDER BY created_at ASC, id ASC",
+        `SELECT * FROM discovery_events WHERE created_at >= ? ORDER BY created_at ASC, ${BY_INSERTION}`,
         [iso],
       );
     },
     /** Every event ever recorded — raw material for a full interest-weight fold. */
     async listAllEvents(): Promise<DiscoveryEventRow[]> {
       return sql.select<DiscoveryEventRow>(
-        "SELECT * FROM discovery_events ORDER BY created_at ASC, id ASC",
+        `SELECT * FROM discovery_events ORDER BY created_at ASC, ${BY_INSERTION}`,
       );
     },
   };
