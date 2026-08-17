@@ -25,12 +25,35 @@ import { newId, nowIso } from "./time";
 /** Both evidence lists handed to the model are capped here (spec 043 §2). */
 const LABEL_LIST_CAP = 50;
 
+/** Concurrent calls for the same target share one promise — without this, two renders racing
+ * past the cache check would each bill an LLM call and the loser's insert would hit the
+ * UNIQUE index (the recurring term-marking rows in ai_failures, 2026-08-15/16). */
+const inflight = new Map<string, Promise<string[]>>();
+
 /** Returns the marked term strings for one target — computing and caching them on a first
  * call, reading the cache on every later one (spec 043 §5): the same target is never billed
  * twice. Returns [] (no LLM call at all) while the switch is off, networking is off, there's
  * no API config, or the answer is blank; returns [] and logs a failure on any error along the
  * way — a target that fails is simply retried next time it's asked for (no cache row written). */
 export async function ensureTermMarks(
+  targetKind: TermMarkTargetKind,
+  targetId: string,
+  answerText: string,
+  conversationId: string,
+): Promise<string[]> {
+  const inflightKey = `${targetKind}:${targetId}`;
+  const pending = inflight.get(inflightKey);
+  if (pending !== undefined) return pending;
+  const task = computeTermMarks(targetKind, targetId, answerText, conversationId);
+  inflight.set(inflightKey, task);
+  try {
+    return await task;
+  } finally {
+    inflight.delete(inflightKey);
+  }
+}
+
+async function computeTermMarks(
   targetKind: TermMarkTargetKind,
   targetId: string,
   answerText: string,

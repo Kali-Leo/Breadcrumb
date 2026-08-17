@@ -19,9 +19,11 @@ export function createTermMarksRepo(sql: SqlClient) {
       );
       return rows[0] ?? null;
     },
+    /** First verdict wins: a concurrent duplicate insert for the same target is silently
+     * dropped instead of surfacing a UNIQUE-index error to the caller. */
     async insert(row: TermMarkRow): Promise<void> {
       await sql.execute(
-        "INSERT INTO term_marks (id, target_kind, target_id, terms_json, created_at) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO term_marks (id, target_kind, target_id, terms_json, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(target_kind, target_id) DO NOTHING",
         [row.id, row.target_kind, row.target_id, row.terms_json, row.created_at],
       );
     },

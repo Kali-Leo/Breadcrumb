@@ -31,6 +31,17 @@ function makeFakeSql() {
           string,
           string,
         ];
+        const duplicate = rows.some(
+          (row) => row.target_kind === target_kind && row.target_id === target_id,
+        );
+        if (duplicate) {
+          if (sql.includes("ON CONFLICT(target_kind, target_id) DO NOTHING")) {
+            return Promise.resolve();
+          }
+          return Promise.reject(
+            new Error("UNIQUE constraint failed: term_marks.target_kind, term_marks.target_id"),
+          );
+        }
         rows.push({ id, target_kind, target_id, terms_json, created_at });
       }
       return Promise.resolve();
@@ -88,6 +99,33 @@ describe("createTermMarksRepo", () => {
     });
     expect(await repo.getByTarget("focus_node", "x1")).toMatchObject({
       terms_json: JSON.stringify(["乙"]),
+    });
+  });
+
+  it("silently drops a duplicate insert for the same target, keeping the first verdict", async () => {
+    const { client, rows } = makeFakeSql();
+    const repo = createTermMarksRepo(client);
+    await repo.insert({
+      id: "tm1",
+      target_kind: "message",
+      target_id: "m1",
+      terms_json: JSON.stringify(["先到"]),
+      created_at: "2026-08-14T10:00:00Z",
+    });
+    await expect(
+      repo.insert({
+        id: "tm2",
+        target_kind: "message",
+        target_id: "m1",
+        terms_json: JSON.stringify(["后到"]),
+        created_at: "2026-08-14T10:00:01Z",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(rows).toHaveLength(1);
+    expect(await repo.getByTarget("message", "m1")).toMatchObject({
+      id: "tm1",
+      terms_json: JSON.stringify(["先到"]),
     });
   });
 });
