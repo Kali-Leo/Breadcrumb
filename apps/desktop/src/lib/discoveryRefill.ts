@@ -16,7 +16,7 @@ import { readChannelStates } from "./discoveryChannelState";
 import { pollChannelsForCandidates } from "./discoveryChannels";
 import { type CandidateGroup, landCandidateItems } from "./discoveryPoolLanding";
 import { pruneDiscoveryPool } from "./discoveryPoolPruning";
-import { runActiveRecall } from "./discoveryRecall";
+import { recallRanToday, runActiveRecall } from "./discoveryRecall";
 import { nowIso } from "./time";
 
 /** Below this many unseen cards, a restock starts. Comfortably more than one screen, so the
@@ -108,7 +108,12 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   const now = options.now ?? new Date();
   const unseenBefore = await countAvailableUnseenCards();
   const stale = await pollingHasGoneStale(now);
-  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK && !stale) {
+  // A reader whose pool never runs low never got a round of active recall: the watermark
+  // returned "stocked" before anything was asked, and the day's query budget went unspent from
+  // one morning to the next while the feed kept serving what the world had pushed at it (spec
+  // 053 T10). One round a day is the floor, and it is a floor the daily budget already bounds.
+  const recallUntouchedToday = !(await recallRanToday(now));
+  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK && !stale && !recallUntouchedToday) {
     return {
       kind: "stocked",
       landedCount: 0,
@@ -131,12 +136,13 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   const landed = await landCandidateItems([{ items: poll.items }], nowIso());
 
   // Go and look for what this reader in particular has been reading about — when what the world
-  // published on its own left the pool thin, and also on the round that ran because nothing had
-  // been asked in hours. A pool that stays full of what the reader never opens used to hold that
-  // second case off forever, so their own topics were the one thing the feed stopped looking for
-  // (spec 053 T9 findings #6/#7). The day's query budget bounds both cases.
+  // published on its own left the pool thin, on the round that ran because nothing had been asked
+  // in hours, and on the day's first round whatever the pool looks like. A pool that stays full of
+  // what the reader never opens used to hold all of that off forever, so their own topics were the
+  // one thing the feed stopped looking for (spec 053 T9 findings #6/#7, T10). The day's query
+  // budget bounds every case.
   let recalled: typeof landed = [];
-  if (stale || unseenBefore + landed.length < POOL_TARGET_SIZE) {
+  if (stale || recallUntouchedToday || unseenBefore + landed.length < POOL_TARGET_SIZE) {
     const recall = await runActiveRecall(now);
     const groups: CandidateGroup[] = recall.harvests.map((harvest) => ({
       items: harvest.items,

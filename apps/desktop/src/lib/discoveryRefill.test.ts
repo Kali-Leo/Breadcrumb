@@ -128,6 +128,26 @@ function answeredHoursAgo(hoursAgo: number): ChannelStateRow {
   };
 }
 
+/** The day's recall round has already been run, which is the ordinary state of an app that has
+ * been open for a while — and the state in which the watermark alone decides whether to poll. */
+function recallAlreadyRanToday(): void {
+  settingRows.set("discoveryRecallBudget", { day: "2026-08-17", used: 3, cursor: 3 });
+}
+
+/** One reading event, so the reader's history has a topic in it for recall to search on. */
+function readAbout(topicLabel: string): void {
+  eventRows = [
+    {
+      id: "e1",
+      card_id: "old",
+      topic_label: topicLabel,
+      kind: "open",
+      value_ms: null,
+      created_at: "2026-08-16T12:00:00.000Z",
+    },
+  ];
+}
+
 function pollFound(items: readonly CandidateItem[], answeredSourceCount = 1): void {
   pollChannelsForCandidatesMock.mockResolvedValue({
     items: [...items],
@@ -155,6 +175,7 @@ afterEach(() => {
 
 describe("refillDiscoveryPool watermark", () => {
   it("spends no request while the pool is above the low mark", async () => {
+    recallAlreadyRanToday();
     fillPool(POOL_LOW_WATERMARK + 5);
     const outcome = await refillDiscoveryPool({ now: NOW });
     expect(outcome.kind).toBe("stocked");
@@ -240,16 +261,7 @@ describe("refillDiscoveryPool staleness and pool limits", () => {
  */
 describe("refillDiscoveryPool active recall", () => {
   it("goes looking for the reader's own interests when polling left the pool thin", async () => {
-    eventRows = [
-      {
-        id: "e1",
-        card_id: "old",
-        topic_label: "编程与技术",
-        kind: "open",
-        value_ms: null,
-        created_at: "2026-08-16T12:00:00.000Z",
-      },
-    ];
+    readAbout("编程与技术");
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([
       { query: "编程与技术", items: [candidate("hn:recalled")] },
@@ -263,34 +275,50 @@ describe("refillDiscoveryPool active recall", () => {
     expect(cardRows.find((row) => row.id === "hn:recalled")?.topic_label).toBe("编程与技术");
   });
 
+  /**
+   * FIXED (2026-08-17, spec 053 T10). A reader whose pool never ran low never got a round of
+   * active recall at all: the watermark returned "stocked" before anything was asked, so the
+   * day's query budget went unspent from one morning to the next and the feed only ever showed
+   * what the world had pushed at it. The day's first restock now runs whatever the pool looks
+   * like, and the daily budget is what keeps that from becoming a habit.
+   */
+  it("asks after the reader's own subjects once a day even from a full pool", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    readAbout("编程与技术");
+    pollFound([candidate("hn:1")]);
+    searchChannelsForCandidatesMock.mockResolvedValue([
+      { query: "编程与技术", items: [candidate("hn:recalled")] },
+    ]);
+
+    const first = await refillDiscoveryPool({ now: NOW });
+    expect(first.kind).toBe("refilled");
+    expect(searchChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
+
+    // And exactly once: the second visit to a still-full pool costs nothing again.
+    const second = await refillDiscoveryPool({ now: NOW });
+    expect(second.kind).toBe("stocked");
+    expect(searchChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
+    expect(pollChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks the day as asked even when the reader has no history to search on", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    pollFound([candidate("hn:1")]);
+    await refillDiscoveryPool({ now: NOW });
+    expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
+    expect((await refillDiscoveryPool({ now: NOW })).kind).toBe("stocked");
+  });
+
   it("stops searching once the day's query budget is gone", async () => {
     settingRows.set("discoveryRecallBudget", { day: "2026-08-17", used: 12 });
-    eventRows = [
-      {
-        id: "e1",
-        card_id: "old",
-        topic_label: "编程与技术",
-        kind: "open",
-        value_ms: null,
-        created_at: "2026-08-16T12:00:00.000Z",
-      },
-    ];
+    readAbout("编程与技术");
     pollFound([candidate("hn:1")]);
     await refillDiscoveryPool({ now: NOW });
     expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
   });
 
   it("charges the queries it spent against today's budget", async () => {
-    eventRows = [
-      {
-        id: "e1",
-        card_id: "old",
-        topic_label: "编程与技术",
-        kind: "open",
-        value_ms: null,
-        created_at: "2026-08-16T12:00:00.000Z",
-      },
-    ];
+    readAbout("编程与技术");
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([{ query: "编程与技术", items: [] }]);
     await refillDiscoveryPool({ now: NOW });

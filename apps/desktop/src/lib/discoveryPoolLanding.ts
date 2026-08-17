@@ -3,9 +3,11 @@
  * §3) — one card per item, the source's own summary as the hook, the channel (for arXiv, the
  * category; for a feed the reader pasted in, its hostname) as the topic, and an id that is stable
  * across refetches so polling the same feed again inserts nothing. Cards land ready to display:
- * no embedding, no quality score, no network needed to show them.
+ * no embedding, no quality score, no network needed to show them. One round's landings are
+ * shared out across the sources that answered, so a single enormous feed cannot take the pool.
  * Side effects: reads the pool's ids and inserts card rows.
- * Main exports: landCandidateItems, CandidateGroup, cardRowFromCandidate.
+ * Main exports: landCandidateItems, CandidateGroup, cardRowFromCandidate,
+ * shareLandingsAcrossSources, PER_SOURCE_LANDING_CAP.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import {
@@ -104,6 +106,45 @@ export function cardRowFromCandidate(
 }
 
 /**
+ * The most items one source may land in a single round. Two arXiv categories publishing a couple
+ * of hundred abstracts each filled the 500-card pool between them in one round, and the pruning
+ * that runs afterwards (oldest publication first) then dropped what the small channels had
+ * landed: a walkthrough found reachable channels — 新浪科技, arXiv q-bio.NC — sitting at zero
+ * cards in a pool that had hit its cap (spec 053 T10). Sixty is several pages from one source,
+ * more than a reader works through in a sitting, and what a source has over the cap is not lost
+ * so much as deferred: the next round reads the same feed again.
+ */
+export const PER_SOURCE_LANDING_CAP = 60;
+
+/**
+ * Keeps at most `cap` items per source and hands back what is left interleaved round-robin, so
+ * the pool is written source by source rather than one feed run to exhaustion before the next is
+ * touched. Each source keeps its own items in the order its channel published them.
+ */
+export function shareLandingsAcrossSources(
+  items: readonly CandidateItem[],
+  cap: number,
+): CandidateItem[] {
+  const bySource = new Map<string, CandidateItem[]>();
+  for (const item of items) {
+    const kept = bySource.get(item.sourceId) ?? [];
+    if (kept.length >= cap) continue;
+    kept.push(item);
+    bySource.set(item.sourceId, kept);
+  }
+  const queues = [...bySource.values()];
+  const longest = queues.reduce((most, queue) => Math.max(most, queue.length), 0);
+  const shared: CandidateItem[] = [];
+  for (let index = 0; index < longest; index += 1) {
+    for (const queue of queues) {
+      const item = queue[index];
+      if (item !== undefined) shared.push(item);
+    }
+  }
+  return shared;
+}
+
+/**
  * Inserts everything the pool does not already hold and returns just the rows that were new.
  * Idempotent by card id: an item already in the pool is left exactly as it is, keeping whatever
  * the reader has done with it (opened, saved, disliked) and whatever the background passes have
@@ -122,7 +163,7 @@ export async function landCandidateItems(
   const rows: DiscoveryCardRow[] = [];
 
   for (const group of groups) {
-    for (const item of group.items) {
+    for (const item of shareLandingsAcrossSources(group.items, PER_SOURCE_LANDING_CAP)) {
       if (known.has(item.id)) continue;
       known.add(item.id);
       const topicLabel =

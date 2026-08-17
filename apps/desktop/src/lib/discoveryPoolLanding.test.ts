@@ -20,7 +20,9 @@ vi.mock("./db", () => ({
   })),
 }));
 
-const { landCandidateItems } = await import("./discoveryPoolLanding");
+const { landCandidateItems, PER_SOURCE_LANDING_CAP, shareLandingsAcrossSources } = await import(
+  "./discoveryPoolLanding"
+);
 
 const NOW = "2026-08-17T10:00:00.000Z";
 
@@ -180,5 +182,66 @@ describe("landCandidateItems", () => {
   it("does not touch the database when a round found nothing", async () => {
     expect(await landCandidateItems([{ items: [] }], NOW)).toEqual([]);
     expect(insertCardsMock).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * FIXED (2026-08-17, spec 053 T10). Two arXiv categories publishing a couple of hundred abstracts
+ * each filled the 500-card pool between them in a single round; the pruning that runs afterwards
+ * trims by oldest publication, so what the small channels had landed went first and a walkthrough
+ * found reachable sources — 新浪科技, arXiv q-bio.NC — sitting at zero cards in a pool at its cap.
+ */
+describe("sharing one round's landings across the sources that answered", () => {
+  const manyFrom = (sourceId: string, count: number) =>
+    Array.from({ length: count }, (_unused, index) =>
+      item({ id: `${sourceId}:${index}`, sourceId }),
+    );
+
+  it("keeps at most the cap from any one source", () => {
+    const shared = shareLandingsAcrossSources(
+      [...manyFrom("arxiv-cs-lg", 200), ...manyFrom("sina-tech", 12)],
+      PER_SOURCE_LANDING_CAP,
+    );
+    const perSource = new Map<string, number>();
+    for (const one of shared) {
+      perSource.set(one.sourceId, (perSource.get(one.sourceId) ?? 0) + 1);
+    }
+    expect(perSource.get("arxiv-cs-lg")).toBe(PER_SOURCE_LANDING_CAP);
+    expect(perSource.get("sina-tech")).toBe(12);
+  });
+
+  it("keeps the newest of what a source sent, in the order the channel published it", () => {
+    const shared = shareLandingsAcrossSources(manyFrom("arxiv-cs-lg", 200), 3);
+    expect(shared.map((one) => one.id)).toEqual([
+      "arxiv-cs-lg:0",
+      "arxiv-cs-lg:1",
+      "arxiv-cs-lg:2",
+    ]);
+  });
+
+  it("interleaves the sources rather than running one feed to exhaustion first", () => {
+    const shared = shareLandingsAcrossSources(
+      [...manyFrom("arxiv-cs-lg", 3), ...manyFrom("sina-tech", 2)],
+      PER_SOURCE_LANDING_CAP,
+    );
+    expect(shared.map((one) => one.id)).toEqual([
+      "arxiv-cs-lg:0",
+      "sina-tech:0",
+      "arxiv-cs-lg:1",
+      "sina-tech:1",
+      "arxiv-cs-lg:2",
+    ]);
+  });
+
+  it("lands the small channel's cards even when a giant one answered in the same round", async () => {
+    const landed = await landCandidateItems(
+      [{ items: [...manyFrom("arxiv-cs-lg", 400), ...manyFrom("sina-tech", 8)] }],
+      NOW,
+    );
+    const fromSina = landed.filter((row) => row.source_id === "sina-tech");
+    expect(fromSina).toHaveLength(8);
+    expect(landed.filter((row) => row.source_id === "arxiv-cs-lg")).toHaveLength(
+      PER_SOURCE_LANDING_CAP,
+    );
   });
 });

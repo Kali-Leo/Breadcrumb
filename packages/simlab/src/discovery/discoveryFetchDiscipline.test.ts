@@ -6,6 +6,7 @@
  * the ones that started life as findings carry the note on what they caught and how it was fixed.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import type { TopicFeed } from "./topicFeedCatalog";
 
 vi.mock("../../../../apps/desktop/src/lib/db", () => import("./desktopDatabase"));
 vi.mock("@tauri-apps/api/core", () => import("./desktopRuntimeDoubles"));
@@ -27,10 +28,13 @@ const {
   prepareDiscoveryJourney,
   runJourneyDay,
 } = await import("./discoveryJourneyHarness");
-const { HACKER_NEWS_SEARCH_PREFIX, JOURNEY_FEEDS, topicFeedByKey } = await import(
+const { HACKER_NEWS_SEARCH_PREFIX, JOURNEY_FEEDS, TOPIC_FEEDS, topicFeedByKey } = await import(
   "./syntheticChannelWorld"
 );
 const { refillDiscoveryPool } = await import("../../../../apps/desktop/src/lib/discoveryRefill");
+const { PER_SOURCE_LANDING_CAP } = await import(
+  "../../../../apps/desktop/src/lib/discoveryPoolLanding"
+);
 const { useDiscoveryChannelSettingsStore } = await import(
   "../../../../apps/desktop/src/stores/discoveryChannelSettingsStore"
 );
@@ -42,12 +46,24 @@ const persona = {
   attention: 0.4,
 };
 
-async function freshRun(options: { qualityCheckEnabled?: boolean } = {}) {
+async function freshRun(
+  options: { qualityCheckEnabled?: boolean; feeds?: readonly TopicFeed[] } = {},
+) {
   installFakeNetwork(createFakeChannelNetwork());
   resetRuntimeDoubles();
   const run = await prepareDiscoveryJourney({ network: fakeNetwork(), ...options });
   run.world.publishDay(0, JOURNEY_START.toISOString());
   return run;
+}
+
+/** How many pooled cards each channel has left standing, by the label its cards are filed under. */
+async function poolCountsByTopic(): Promise<Map<string, number>> {
+  const repos = await getRepos();
+  const counts = new Map<string, number>();
+  for (const card of await repos.discovery.listNewestCards(10_000)) {
+    counts.set(card.topic_label, (counts.get(card.topic_label) ?? 0) + 1);
+  }
+  return counts;
 }
 
 let restoreRandomness: () => void = () => undefined;
@@ -211,6 +227,83 @@ describe("discovery fetch discipline", () => {
       requestsByDay.slice(1).every((count) => count > 0),
       requestsByDay.join(","),
     ).toBe(true);
+  }, 120_000);
+
+  /**
+   * FIXED (2026-08-17, spec 053 T10). One round's landings went into the pool whole, so a feed
+   * that republishes an archive on every poll took as much of the 500-card pool as it wanted.
+   * The walkthrough found two arXiv categories holding the pool between them while 新浪科技 and
+   * arXiv q-bio.NC — both reachable, both polled, both answering — sat at zero cards, because the
+   * trim that runs after a round drops the oldest publication first and everything the small
+   * channels had landed was older than what the giant one had just published. A round now keeps
+   * at most PER_SOURCE_LANDING_CAP items per source and interleaves the rest.
+   * Spec 053 §3 (缓存池) and §4 (跨渠道配额).
+   */
+  it("shares a round out instead of letting an archive feed take the whole pool", async () => {
+    const archive = topicFeedByKey("megafeed");
+    const run = await freshRun({ feeds: TOPIC_FEEDS });
+    expect(archive.itemsPerDay).toBeGreaterThan(PER_SOURCE_LANDING_CAP);
+    await (await refillDiscoveryPool({ force: true, now: JOURNEY_START })).backgroundWork;
+
+    const counts = await poolCountsByTopic();
+    expect(counts.get(archive.topicLabel) ?? 0).toBeLessThanOrEqual(PER_SOURCE_LANDING_CAP);
+    for (const feed of TOPIC_FEEDS) {
+      expect(counts.get(feed.topicLabel) ?? 0, `${feed.key} landed nothing`).toBeGreaterThan(0);
+    }
+    expect(run.network.requestsFor(archive.feedUrl).length).toBe(1);
+  }, 60_000);
+
+  it("holds that share every round of a week, and leaves no channel at zero", async () => {
+    const run = await freshRun({ feeds: TOPIC_FEEDS });
+    for (let dayIndex = 0; dayIndex < 6; dayIndex += 1) {
+      await runJourneyDay({
+        persona,
+        world: run.world,
+        network: run.network,
+        dayIndex,
+        pages: 2,
+      });
+    }
+
+    // Every card of one round carries that round's batch id, so the pool itself says how much
+    // each source landed in each round — the cap holds for all of them, not just the first.
+    const repos = await getRepos();
+    const perRoundPerSource = new Map<string, number>();
+    for (const card of await repos.discovery.listNewestCards(10_000)) {
+      const key = `${card.batch_id}/${card.source_id}`;
+      perRoundPerSource.set(key, (perRoundPerSource.get(key) ?? 0) + 1);
+    }
+    const oversized = [...perRoundPerSource].filter(([, count]) => count > PER_SOURCE_LANDING_CAP);
+    expect(oversized).toEqual([]);
+
+    const counts = await poolCountsByTopic();
+    for (const feed of TOPIC_FEEDS) {
+      expect(counts.get(feed.topicLabel) ?? 0, `${feed.key} was crowded out`).toBeGreaterThan(0);
+    }
+  }, 180_000);
+
+  /**
+   * Spec 053 §4's active layer, at journey level: once the reader has read anything at all, every
+   * day sends their own subjects out to the channels that answer queries. The condition that gets
+   * a day its round when nothing else would ask for one — a full pool, a world that answered
+   * recently, a budget nobody has touched since midnight — is pinned in the unit test next to it
+   * (apps/desktop/src/lib/discoveryRefill.test.ts).
+   */
+  it("asks after the reader's own subjects on every day that has a history behind it", async () => {
+    const run = await freshRun();
+    const daysThatSearched: number[] = [];
+    for (let dayIndex = 0; dayIndex < 5; dayIndex += 1) {
+      await runJourneyDay({
+        persona,
+        world: run.world,
+        network: run.network,
+        dayIndex,
+        pages: 1,
+      });
+      const queries = run.network.requestsFor(HACKER_NEWS_SEARCH_PREFIX);
+      if (queries.length > 0) daysThatSearched.push(dayIndex);
+    }
+    expect(daysThatSearched).toEqual([1, 2, 3, 4]);
   }, 120_000);
 
   it("still shows the reader a full grid on those frozen days", async () => {

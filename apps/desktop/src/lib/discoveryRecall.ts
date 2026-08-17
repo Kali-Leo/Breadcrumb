@@ -5,7 +5,7 @@
  * left and how far the rotation through the reader's terms has got, both of which survive a
  * restart. No LLM is involved at any step.
  * Side effects: the daily budget row in settings, network requests via discoveryChannels.
- * Main exports: runActiveRecall, DAILY_RECALL_QUERY_BUDGET.
+ * Main exports: runActiveRecall, recallRanToday, DAILY_RECALL_QUERY_BUDGET.
  */
 import { z } from "zod";
 import { getRepos } from "./db";
@@ -65,9 +65,23 @@ export interface ActiveRecallOutcome {
 }
 
 /**
+ * Whether today's budget row has been written at all — which is to say whether recall has been
+ * run once since the day turned over, spending queries or not. The refill next door uses it to
+ * make sure a day gets one round of looking for the reader's own subjects even when the pool is
+ * full enough that nothing else would ask for one (spec 053 T10).
+ */
+export async function recallRanToday(now: Date): Promise<boolean> {
+  const repos = await getRepos();
+  const stored = await repos.settings.get<unknown>(RECALL_BUDGET_KEY);
+  const parsed = recallBudgetSchema.safeParse(stored);
+  return parsed.success && parsed.data.day === localDayKey(now);
+}
+
+/**
  * Runs one round of active recall. Returns nothing at all — with no queries spent — when the
  * day's budget is gone or the reader's history says nothing yet; the passive polling layer is
- * what fills the pool in that case.
+ * what fills the pool in that case. The day is marked as asked either way, so a library with no
+ * reading history behind it yet does not re-open the same question on every call.
  */
 export async function runActiveRecall(now: Date = new Date()): Promise<ActiveRecallOutcome> {
   const day = localDayKey(now);
@@ -84,7 +98,10 @@ export async function runActiveRecall(now: Date = new Date()): Promise<ActiveRec
     { events, cards, nowIso: now.toISOString(), cursor: budget.cursor },
     allowance,
   );
-  if (terms.length === 0) return { harvests: [], queriesSpent: 0 };
+  if (terms.length === 0) {
+    await spendQueries(day, 0);
+    return { harvests: [], queriesSpent: 0 };
+  }
 
   const harvests = await searchChannelsForCandidates(terms, { now: () => now });
   await spendQueries(day, terms.length);
