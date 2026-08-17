@@ -26,6 +26,10 @@ export const PURPOSE_NAMES: Record<string, string> = {
   "companion-script": "伙伴预习",
   "focus-explain": "专注讲解",
   "term-marking": "生词标注",
+  // Self-generated discovery cards and their article bodies were retired by spec 053 (the
+  // feed shows external content now); these two labels stay so historical llm_calls and
+  // ai_failures rows still read as words instead of raw purpose keys.
   "discovery-cards": "发现页新卡片",
   "discovery-article": "发现页正文",
+  "discovery-quality-check": "发现 · 质检",
 };

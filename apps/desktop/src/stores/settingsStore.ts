@@ -65,6 +65,10 @@ export interface FeatureSwitches {
   /** Discovery feed: writing a card's full article body the first time it's opened. Off
    * leaves the card grid itself working, just with no way to generate a new card's body. */
   discoveryArticles: boolean;
+  /** Discovery feed (spec 053 §5): one call per fetched batch of external items, rating how
+   * much substance each title + summary promises. Off means the feed is ordered by its
+   * zero-LLM features alone — nothing is hidden either way, the score only ever demotes. */
+  discoveryQualityCheck: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -113,6 +117,7 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   termMarking: true,
   discoveryCards: true,
   discoveryArticles: true,
+  discoveryQualityCheck: true,
 };
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
