@@ -12,6 +12,7 @@ import type { ConversationKind, ConversationRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
+  buildFreeChatSystemPrompt,
   buildReunionSystemLine,
   buildTeachingSystemPrompt,
   isReunionTitle,
@@ -183,6 +184,9 @@ export async function buildRoundSystemMessages(params: {
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
+  /** The session's 学习模式 state (spec 052) — passed from runtime rather than re-read from
+   * the row, so a toggle immediately followed by a send can never race a stale read. */
+  studyMode: boolean;
 }): Promise<ChatMessage[]> {
   const { repos, activeKind, conversationId, content, apiConfig } = params;
   // Fetched for every kind now: chat needs the title to spot reunion sessions (spec 038 §2.4).
@@ -215,7 +219,14 @@ export async function buildRoundSystemMessages(params: {
         await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
       );
   } else {
-    messages.push({ role: "system", content: buildTeachingSystemPrompt() });
+    // 学习模式 off (spec 052) means a plain chat round carries no teaching program; practice
+    // rounds keep the contract — they exist to practice. Reunion/anchor context lines stay in
+    // both regimes: they say why the conversation exists, not how to teach.
+    const freeChat = activeKind === "chat" && !params.studyMode;
+    messages.push({
+      role: "system",
+      content: freeChat ? buildFreeChatSystemPrompt() : buildTeachingSystemPrompt(),
+    });
     if (row !== null && isReunionTitle(row.title)) {
       messages.push({
         role: "system",

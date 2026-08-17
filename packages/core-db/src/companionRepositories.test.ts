@@ -105,6 +105,7 @@ function makeFakeSql() {
           kind,
           companion_id,
           auto_title: null,
+          study_mode: 0,
         });
       } else if (sql.includes("INTO companion_memories")) {
         const [id, companion_id, kind, content, importance, created_at, last_accessed_at] = p as [

@@ -51,6 +51,7 @@ function teachConversation(
     kind,
     companion_id: null,
     auto_title: null,
+    study_mode: 0,
   };
 }
 

@@ -848,6 +848,14 @@ export const MIGRATIONS: readonly Migration[] = [
         AND id NOT IN (SELECT card_id FROM discovery_events)`,
     ],
   },
+  {
+    // Spec 052: the composer's 学习模式 toggle. 0 = free chat (the default — Leo 2026-08-17:
+    // main-chat replies carry no special guidance unless asked for), 1 = guided learning
+    // (teaching contract + learner context, the pre-052 behavior). Boolean-as-INTEGER,
+    // validated in TypeScript per the no-CHECK convention (0029-0031).
+    id: "0040_study_mode",
+    statements: [`ALTER TABLE conversations ADD COLUMN study_mode INTEGER NOT NULL DEFAULT 0;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */

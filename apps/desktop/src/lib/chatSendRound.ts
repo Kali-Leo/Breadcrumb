@@ -62,6 +62,9 @@ export async function runSendRound(params: {
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
+  /** The session's 学习模式 state (spec 052); false on a chat round = free chat, no teaching
+   * program, no learner/focus context injection. */
+  studyMode: boolean;
   onDelta: (delta: string) => void;
   /** Wired to the round's stop button; aborting it resolves the round early (or to null). */
   signal?: AbortSignal;
@@ -81,11 +84,14 @@ export async function runSendRound(params: {
       companionScriptEnabled: params.companionScriptEnabled,
       companionMemoryEnabled: params.companionMemoryEnabled,
       crisisActive: params.crisisActive,
+      studyMode: params.studyMode,
     })),
   );
   const anchoredMessage = await buildAnchoredNodeSystemMessage();
   if (anchoredMessage) history.unshift(anchoredMessage);
-  if (activeKind === "chat") {
+  // 学习模式 gate (spec 052): a free chat round carries no learner-context or focus-context
+  // steering — silent measurement continues elsewhere, but nothing shapes the reply.
+  if (activeKind === "chat" && params.studyMode) {
     // Neither is persisted (spec 038 §2.3 precedent): both are assembled fresh every round and
     // only ever live in this round's outgoing history.
     const focusContextMessage = await buildFocusContextSystemMessage(conversationId);

@@ -24,7 +24,18 @@ export const TEACHING_CONTRACT_BASE: string =
   "对方答错时，先指出答对的部分，再引导对方自己定位问题。\n" +
   "- 结尾如有值得展开的相关分支，用一句话提及，由对方决定是否继续。";
 
-/** The standing system prompt for a plain chat round — one regime, no variants. */
+/** The standing system prompt for a guided (学习模式) chat round — one regime, no variants. */
 export function buildTeachingSystemPrompt(): string {
   return TEACHING_CONTRACT_BASE;
+}
+
+/** The standing system prompt for a free chat round (spec 052) — no teaching program at all,
+ * just the product's tone floor as one positive line (the no-ban-list execution ruling,
+ * 2026-08-02). Any topic, any form; the reply neither guides nor gates. */
+export const FREE_CHAT_BASE: string =
+  "你是 Breadcrumb 的 AI 伙伴。自然对话即可，任何话题、任何形式都可以聊；" +
+  "语气平实、就事论事，不评判也不夸赞对方；回答清楚、诚实、切题。";
+
+export function buildFreeChatSystemPrompt(): string {
+  return FREE_CHAT_BASE;
 }

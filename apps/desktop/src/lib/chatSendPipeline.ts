@@ -25,6 +25,9 @@ export interface ChatSendDeps extends AssistantRoundDeps {
   setRoundError(conversationId: string | null, errorText: string): void;
   /** Clears the draft of the composer this send was bound to (null = new-conversation). */
   clearDraft(conversationKey: string | null): void;
+  /** The new-conversation composer's 学习模式 state (spec 052) — a brand-new conversation
+   * is born with whatever the toggle showed when the first message was sent. */
+  readNewConversationStudyMode(): boolean;
   emitMessageSent(payload: { conversationId: string; messageId: string; sentAt: string }): void;
 }
 
@@ -53,8 +56,9 @@ export async function runChatSendPipeline(
   let conversationId: string;
   let session: ChatSession;
   if (requestedId === null) {
-    conversationId = await ensureChatConversationId(repos, null, content);
-    session = freshChatSession();
+    const studyMode = deps.readNewConversationStudyMode();
+    conversationId = await ensureChatConversationId(repos, null, content, studyMode);
+    session = freshChatSession(studyMode);
     // A draft main view follows its newborn conversation; other windows are unaffected.
     deps.putSession(conversationId, session, deps.activeConversationId() === null);
   } else {
@@ -109,6 +113,7 @@ export async function runChatSendPipeline(
     companionScriptEnabled: settings.featureSwitches.companionScript,
     companionMemoryEnabled: settings.featureSwitches.companionMemory,
     crisisActive,
+    studyMode: session.studyMode,
     roundAnchoredNodeId,
   });
 }

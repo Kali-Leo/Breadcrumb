@@ -32,6 +32,9 @@ export function ChatView() {
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const draft = useChatStore((state) => state.drafts.get(state.activeConversationId) ?? "");
   const setDraft = useChatStore((state) => state.setDraft);
+  const activeKind = useChatStore((state) => state.activeKind);
+  const studyMode = useChatStore((state) => state.studyModeFor(state.activeConversationId));
+  const setStudyMode = useChatStore((state) => state.setStudyMode);
   const ensureFactchecksLoaded = useFactcheckStore((state) => state.ensureLoaded);
   const entrySessionByMessageId = useFocusSessionsStore((state) => state.entrySessionByMessageId);
   const { containerRef, pinned, handleScroll, scrollToBottom } = useScrollPinning();
@@ -163,6 +166,12 @@ export function ChatView() {
         onChange={(text) => setDraft(activeConversationId, text)}
         onSend={(content) => void sendMessage(content, activeConversationId ?? undefined)}
         onStop={() => stopStreaming(activeConversationId)}
+        {...(activeKind === "chat"
+          ? {
+              studyMode,
+              onToggleStudyMode: () => void setStudyMode(activeConversationId, !studyMode),
+            }
+          : {})}
       />
     </div>
   );

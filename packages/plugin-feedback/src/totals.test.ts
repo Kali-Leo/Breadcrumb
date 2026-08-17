@@ -49,6 +49,7 @@ function conversation(id: string, kind: ConversationRow["kind"]): ConversationRo
     kind,
     companion_id: null,
     auto_title: null,
+    study_mode: 0,
   };
 }
 

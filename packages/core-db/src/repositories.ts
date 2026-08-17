@@ -37,11 +37,22 @@ export function createConversationsRepo(sql: SqlClient) {
      * set at creation (spec 041 §1) — it starts NULL and is filled in once the trail has
      * stations, via setAutoTitle. */
     async create(
-      row: Omit<ConversationRow, "companion_id" | "auto_title"> & { companion_id?: string | null },
+      row: Omit<ConversationRow, "companion_id" | "auto_title" | "study_mode"> & {
+        companion_id?: string | null;
+        study_mode?: 0 | 1;
+      },
     ): Promise<void> {
       await sql.execute(
-        "INSERT INTO conversations (id, title, created_at, updated_at, kind, companion_id) VALUES (?, ?, ?, ?, ?, ?)",
-        [row.id, row.title, row.created_at, row.updated_at, row.kind, row.companion_id ?? null],
+        "INSERT INTO conversations (id, title, created_at, updated_at, kind, companion_id, study_mode) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          row.id,
+          row.title,
+          row.created_at,
+          row.updated_at,
+          row.kind,
+          row.companion_id ?? null,
+          row.study_mode ?? 0,
+        ],
       );
     },
     /** Every conversation regardless of kind, newest first. */
@@ -94,6 +105,11 @@ export function createConversationsRepo(sql: SqlClient) {
      * auto_title, never updated_at, so a fresh name never reshuffles the sidebar's order. */
     async setAutoTitle(id: string, autoTitle: string | null): Promise<void> {
       await sql.execute("UPDATE conversations SET auto_title = ? WHERE id = ?", [autoTitle, id]);
+    },
+    /** Flips the 学习模式 toggle (spec 052); never touches updated_at, so toggling alone
+     * does not reshuffle the sidebar. */
+    async setStudyMode(id: string, studyMode: 0 | 1): Promise<void> {
+      await sql.execute("UPDATE conversations SET study_mode = ? WHERE id = ?", [studyMode, id]);
     },
   };
 }

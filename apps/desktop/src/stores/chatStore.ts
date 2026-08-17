@@ -59,6 +59,11 @@ interface ChatState extends ActiveMirror {
    * active mirror, or they read whatever happens to be on screen. */
   messagesFor(conversationId: string): MessageRow[];
   kindFor(conversationId: string): ConversationKind;
+  /** The 学习模式 state the composer shows (spec 052); the null key is the new-conversation
+   * composer, whose state is sticky and stamps each conversation it births. */
+  newConversationStudyMode: boolean;
+  studyModeFor(conversationId: string | null): boolean;
+  setStudyMode(conversationId: string | null, on: boolean): Promise<void>;
   /** Folds an externally-appended row (invitation, thanks, exit record) into its session. */
   noteExternalMessage(conversationId: string, message: MessageRow): void;
 }
@@ -81,6 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => {
       putSession,
       setRoundError,
       clearDraft: (key) => get().setDraft(key, ""),
+      readNewConversationStudyMode: () => get().newConversationStudyMode,
       setGlobalMeters: (patch) => set(patch),
       emitMessageSent: (payload) => appEventBus.emit("chat:messageSent", payload),
       emitResponseFinished: (payload) => appEventBus.emit("chat:responseFinished", payload),
@@ -93,6 +99,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     sessions: new Map(),
     activeConversationId: null,
     drafts: new Map(),
+    newConversationStudyMode: false,
     ...EMPTY_ACTIVE_MIRROR,
 
     async loadFromDatabase() {
@@ -183,6 +190,22 @@ export const useChatStore = create<ChatState>((set, get) => {
 
     kindFor(conversationId) {
       return get().sessions.get(conversationId)?.kind ?? "chat";
+    },
+
+    studyModeFor(conversationId) {
+      if (conversationId === null) return get().newConversationStudyMode;
+      return get().sessions.get(conversationId)?.studyMode ?? false;
+    },
+
+    async setStudyMode(conversationId, on) {
+      if (conversationId === null) {
+        set({ newConversationStudyMode: on });
+        return;
+      }
+      // Session first (the round reads runtime state), then the row (persistence).
+      patchSession(conversationId, (session) => ({ ...session, studyMode: on }));
+      const repos = await getRepos();
+      await repos.conversations.setStudyMode(conversationId, on ? 1 : 0);
     },
 
     noteExternalMessage(conversationId, message) {

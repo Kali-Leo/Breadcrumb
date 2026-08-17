@@ -24,6 +24,7 @@ export async function ensureChatConversationId(
   repos: Pick<Repos, "conversations">,
   existingId: string | null,
   content: string,
+  studyMode: boolean,
 ): Promise<string> {
   if (existingId !== null) return existingId;
   const conversationId = newId();
@@ -35,6 +36,7 @@ export async function ensureChatConversationId(
     created_at: createdAt,
     updated_at: createdAt,
     kind: "chat",
+    study_mode: studyMode ? 1 : 0,
   });
   return conversationId;
 }

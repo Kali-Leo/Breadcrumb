@@ -46,6 +46,8 @@ export async function runAssistantRound(
     companionScriptEnabled: boolean;
     companionMemoryEnabled: boolean;
     crisisActive: boolean;
+    /** The session's 学习模式 state (spec 052), threaded through to prompt assembly. */
+    studyMode: boolean;
     roundAnchoredNodeId: string | null;
   },
 ): Promise<void> {
@@ -67,6 +69,7 @@ export async function runAssistantRound(
       companionScriptEnabled: args.companionScriptEnabled,
       companionMemoryEnabled: args.companionMemoryEnabled,
       crisisActive: args.crisisActive,
+      studyMode: args.studyMode,
       signal: controller.signal,
       onDelta: (delta) => {
         streamed += delta;
@@ -177,6 +180,7 @@ export async function runChatRetryRound(
     companionScriptEnabled: settings.featureSwitches.companionScript,
     companionMemoryEnabled: settings.featureSwitches.companionMemory,
     crisisActive,
+    studyMode: session.studyMode,
     roundAnchoredNodeId: useKnowledgeStore.getState().anchoredNodeId,
   });
 }

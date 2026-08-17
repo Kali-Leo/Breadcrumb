@@ -3,7 +3,12 @@
  * drops a discipline should fail here, not in production.
  */
 import { describe, expect, it } from "vitest";
-import { buildTeachingSystemPrompt, TEACHING_CONTRACT_BASE } from "./contract";
+import {
+  buildFreeChatSystemPrompt,
+  buildTeachingSystemPrompt,
+  FREE_CHAT_BASE,
+  TEACHING_CONTRACT_BASE,
+} from "./contract";
 
 describe("buildTeachingSystemPrompt", () => {
   it("is exactly the base contract", () => {
@@ -31,6 +36,26 @@ describe("buildTeachingSystemPrompt", () => {
   it("contract stays free of pressure and praise wording", () => {
     for (const banned of ["你还差", "落后", "别忘了", "应该早点", "再不", "真棒", "很棒", "太棒"]) {
       expect(TEACHING_CONTRACT_BASE).not.toContain(banned);
+    }
+  });
+});
+
+describe("buildFreeChatSystemPrompt (spec 052)", () => {
+  it("is exactly the free-chat base", () => {
+    expect(buildFreeChatSystemPrompt()).toBe(FREE_CHAT_BASE);
+  });
+
+  it("carries no teaching program — free chat must not guide or gate", () => {
+    for (const teachingWord of ["讲解", "练习", "提示", "引导", "问题收束", "知识点", "学习"]) {
+      expect(FREE_CHAT_BASE).not.toContain(teachingWord);
+    }
+    expect(FREE_CHAT_BASE).toContain("任何话题");
+  });
+
+  it("keeps the product tone floor", () => {
+    expect(FREE_CHAT_BASE).toContain("不评判也不夸赞");
+    for (const banned of ["真棒", "很棒", "太棒", "！"]) {
+      expect(FREE_CHAT_BASE).not.toContain(banned);
     }
   });
 });

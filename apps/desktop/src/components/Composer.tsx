@@ -8,6 +8,14 @@
 import { useEffect, useRef } from "react";
 import { appEventBus } from "../stores/chatStore";
 
+/** 学习模式 toggle copy (spec 052) — hover hints are full sentences so a first-time visitor
+ * learns both states without any other introduction. */
+const STUDY_MODE_COPY = {
+  label: "学习模式",
+  onHint: "学习模式已开启：回复会引导你思考和练习。点击关闭，改为自由聊天。",
+  offHint: "现在是自由聊天，聊什么都可以。点击开启学习模式，回复会更注重引导和巩固。",
+} as const;
+
 interface ComposerProps {
   /** The conversation this composer is bound to; null = the new-conversation composer.
    * Stop/prefill/draft all key off this binding, never off "whatever is active". */
@@ -19,10 +27,15 @@ interface ComposerProps {
   onChange(text: string): void;
   onSend(content: string): void;
   onStop(): void;
+  /** 学习模式 (spec 052): present only on plain-chat composers — leaving both undefined
+   * hides the toggle (companion/teach popups). */
+  studyMode?: boolean;
+  onToggleStudyMode?: () => void;
 }
 
 export function Composer(props: ComposerProps) {
   const { conversationId, value, streaming, disabled, onChange, onSend, onStop } = props;
+  const { studyMode, onToggleStudyMode } = props;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -47,6 +60,20 @@ export function Composer(props: ComposerProps) {
 
   return (
     <div className="flex items-end gap-2 border-t border-stone-200 bg-white p-3">
+      {onToggleStudyMode !== undefined && (
+        <button
+          type="button"
+          onClick={onToggleStudyMode}
+          title={studyMode ? STUDY_MODE_COPY.onHint : STUDY_MODE_COPY.offHint}
+          className={`whitespace-nowrap rounded-full border px-3 py-2 text-sm transition-colors ${
+            studyMode
+              ? "border-amber-500 bg-amber-500 text-white hover:bg-amber-600"
+              : "border-stone-300 text-stone-500 hover:bg-stone-50"
+          }`}
+        >
+          {STUDY_MODE_COPY.label}
+        </button>
+      )}
       <textarea
         ref={textareaRef}
         value={value}

@@ -58,6 +58,9 @@ export interface ConversationRow {
    * title`: once the user renames a conversation this column is cleared and stops updating,
    * so the rename always wins. */
   auto_title: string | null;
+  /** The composer's 学习模式 toggle (spec 052), chat kind only: 0 = free chat (default),
+   * 1 = guided learning. Other kinds ignore it — their prompts are fixed by kind. */
+  study_mode: 0 | 1;
 }
 
 export interface MessageRow {

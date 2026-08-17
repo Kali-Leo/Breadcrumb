@@ -36,6 +36,7 @@ function conversation(id: string, updatedAt: string): ConversationRow {
     kind: "chat",
     companion_id: null,
     auto_title: null,
+    study_mode: 0,
   };
 }
 

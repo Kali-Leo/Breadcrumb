@@ -18,6 +18,9 @@ export type CostByCurrency = ReadonlyMap<Currency, number>;
 export interface ChatSession {
   kind: ConversationKind;
   companionId: string | null;
+  /** The 学习模式 toggle (spec 052), chat kind only — runtime source of truth for a round's
+   * prompt regime; persisted through conversations.study_mode. */
+  studyMode: boolean;
   /** Every row, tree edges and all (spec 040 §1). */
   allMessages: MessageRow[];
   /** Current station; null = the newest leaf (spec 040 §1). */
@@ -67,10 +70,11 @@ export function mirrorOf(session: ChatSession): ActiveMirror {
 }
 
 /** A just-created conversation's session — nothing persisted beyond the row itself yet. */
-export function freshChatSession(): ChatSession {
+export function freshChatSession(studyMode = false): ChatSession {
   return {
     kind: "chat",
     companionId: null,
+    studyMode,
     allMessages: [],
     currentLeafId: null,
     messages: [],
@@ -92,6 +96,7 @@ export async function loadChatSession(repos: Repos, id: string): Promise<ChatSes
   return {
     kind: conversation?.kind ?? "chat",
     companionId: conversation?.companion_id ?? null,
+    studyMode: (conversation?.study_mode ?? 0) === 1,
     allMessages,
     currentLeafId,
     messages: deriveActiveMessages({ allMessages, currentLeafId }),
