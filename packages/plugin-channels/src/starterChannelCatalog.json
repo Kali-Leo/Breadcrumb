@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "revisedOn": "2026-08-17",
+  "sources": [
+    {
+      "id": "sspai",
+      "displayName": "少数派",
+      "adapterType": "generic-feed",
+      "endpoint": { "feedUrl": "https://sspai.com/feed" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 48,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "juejin",
+      "displayName": "掘金",
+      "adapterType": "generic-feed",
+      "endpoint": { "feedUrl": "https://juejin.cn/rss" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 48,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "segmentfault",
+      "displayName": "SegmentFault 思否",
+      "adapterType": "generic-feed",
+      "endpoint": { "feedUrl": "https://segmentfault.com/feeds" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 48,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "cnblogs",
+      "displayName": "博客园",
+      "adapterType": "generic-feed",
+      "endpoint": { "feedUrl": "https://www.cnblogs.com/rss" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 1800000,
+        "dailyRequestBudget": 48,
+        "userAgentOverride": null
+      }
+    },
+    {
+      "id": "sina-tech",
+      "displayName": "新浪科技",
+      "adapterType": "generic-feed",
+      "endpoint": { "feedUrl": "https://rss.sina.com.cn/tech/rollnews.xml" },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 900000,
+        "dailyRequestBudget": 96,
+        "userAgentOverride": null
+      }
+    }
+  ]
+}
