@@ -180,7 +180,8 @@ describe("runJourney", () => {
     expect(a.totalConversations).toBe(b.totalConversations);
     expect(a.totalRounds).toBe(b.totalRounds);
     expect(a.newNodeLabels).toEqual(b.newNodeLabels);
-  });
+    // Two full journeys on real sqlite run 9s+ on slow CI runners (2026-08-17 CI timeouts).
+  }, 60_000);
 
   it("threads telemetry through: ledger tallies successes, pressure hits are reported from both tutor replies and trail summaries", async () => {
     artifactsBaseDir = mkdtempSync(join(tmpdir(), "breadcrumb-simlab-journey-telemetry-"));

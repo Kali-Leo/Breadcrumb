@@ -90,7 +90,8 @@ describe("seedDemo (real sqlite)", () => {
     const events = await temp.repos.diglot.listAllEvents(DEMO_PAIR);
     const todayWordEvents = events.filter((e) => Date.parse(e.created_at) >= todayStartMs);
     expect(todayWordEvents.length).toBeGreaterThanOrEqual(2);
-  });
+    // Real-sqlite seeding takes 10s+ on slow CI runners (2026-08-17 CI timeouts).
+  }, 60_000);
 
   it("is fully reversible: --wipe clears every demo row and leaves real data untouched", async () => {
     temp = await createTempDatabase();
@@ -141,5 +142,6 @@ describe("seedDemo (real sqlite)", () => {
     await wipeDemoData(temp.sql);
     const secondInsert = await insertDemoData(temp.sql, NOW);
     expect(secondInsert).toEqual(again);
-  });
+    // Triple seed+wipe on real sqlite runs 18s+ on slow CI runners (2026-08-17 CI timeouts).
+  }, 120_000);
 });
