@@ -41,6 +41,8 @@ const EXPLORE_TOPIC_COUNT = 3;
 const GRAPH_NEIGHBOR_TOPIC_COUNT = 5;
 const RECENT_TITLES_LIMIT = 60;
 const KNOWN_CONCEPTS_LIMIT = 40;
+/** Hard ceiling on one card-batch call; past it the batch fails plainly and retries later. */
+const BATCH_TIMEOUT_MS = 90_000;
 
 function sourceForCard(topicLabel: string, exploreTopics: readonly string[]): DiscoveryCardSource {
   return exploreTopics.includes(topicLabel) ? "explore" : "nearby";
@@ -111,7 +113,12 @@ export async function generateBatch(): Promise<GenerateBatchOutcome> {
     ].slice(0, 24);
 
     const config = { ...apiConfig, fetchImpl: tauriFetch };
-    const { parsed, usage } = await chatJson(
+    // A hung provider must not leave skeleton cards on screen forever (2026-08-17 fix).
+    let watchdogTimer: ReturnType<typeof setTimeout> | undefined;
+    const watchdog = new Promise<never>((_, reject) => {
+      watchdogTimer = setTimeout(() => reject(new Error("一直没有收到响应")), BATCH_TIMEOUT_MS);
+    });
+    const batchCall = chatJson(
       config,
       buildCardBatchMessages({
         exploitTopics,
@@ -123,6 +130,11 @@ export async function generateBatch(): Promise<GenerateBatchOutcome> {
         starter,
       }),
       cardBatchSchema,
+    );
+    // The abandoned call settling after a timeout must never surface as an unhandled rejection.
+    batchCall.catch(() => undefined);
+    const { parsed, usage } = await Promise.race([watchdog, batchCall]).finally(() =>
+      clearTimeout(watchdogTimer),
     );
     await recordMeteredCall({
       purpose: "discovery-cards",

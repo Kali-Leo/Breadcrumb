@@ -24,6 +24,9 @@ interface DiscoveryState {
   blockedReason: string | null;
   sessionImpressedIds: Set<string>;
   loadInitial(): Promise<void>;
+  /** Called once at app start (Leo's order): if fewer than a batch of unseen cards is
+   * waiting, generate one in the background so the page opens already filled. */
+  ensureWarm(): Promise<void>;
   loadMore(): Promise<void>;
   openCard(cardId: string): Promise<void>;
   streamArticle(cardId: string, onDelta: (delta: string) => void): Promise<StreamArticleResult>;
@@ -37,6 +40,25 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   loading: false,
   blockedReason: null,
   sessionImpressedIds: new Set(),
+
+  async ensureWarm() {
+    if (get().loading) return;
+    const repos = await getRepos();
+    const [cards, events] = await Promise.all([
+      repos.discovery.listNewestCards(60),
+      repos.discovery.listAllEvents(),
+    ]);
+    const consumedIds = new Set(
+      events
+        .filter((event) => event.kind === "dislike" || event.kind === "open")
+        .map((event) => event.card_id),
+    );
+    const unseen = cards.filter((card) => !consumedIds.has(card.id)).length;
+    if (unseen >= 12) return;
+    set({ loading: true });
+    await generateBatch();
+    set({ loading: false });
+  },
 
   async loadInitial() {
     if (get().loading) return; // StrictMode double-mount fires this twice concurrently

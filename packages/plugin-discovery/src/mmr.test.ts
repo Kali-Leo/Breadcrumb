@@ -16,7 +16,7 @@ function candidate(overrides: Partial<MmrCandidate<string>>): MmrCandidate<strin
 }
 
 describe("mmrSelect", () => {
-  it("enforces a hard per-topic cap even when the capped topic scores highest", () => {
+  it("caps a topic in the head of the list while sinking its overflow to the tail", () => {
     const items: MmrCandidate<string>[] = [
       candidate({ item: "a1", score: 0.9, topicLabel: "A" }),
       candidate({ item: "a2", score: 0.8, topicLabel: "A" }),
@@ -25,18 +25,19 @@ describe("mmrSelect", () => {
       candidate({ item: "b1", score: 0.1, topicLabel: "B" }),
     ];
     const picked = mmrSelect(items, 4, 0.7, 2);
-    const topicACount = picked.filter((item) => item.startsWith("a")).length;
-    expect(topicACount).toBeLessThanOrEqual(2);
-    expect(picked).toContain("b1");
+    // The low-scoring other topic still beats the third A into the head of the list…
+    expect(picked.indexOf("b1")).toBeLessThan(picked.indexOf("a3"));
+    // …but nothing vanishes: remaining budget is filled by the capped overflow.
+    expect(picked).toHaveLength(4);
   });
 
-  it("stops early when every remaining candidate is topic-capped", () => {
+  it("returns every candidate of a mono-topic pool instead of starving the list", () => {
     const items: MmrCandidate<string>[] = [
       candidate({ item: "a1", score: 1, topicLabel: "A" }),
       candidate({ item: "a2", score: 1, topicLabel: "A" }),
     ];
     const picked = mmrSelect(items, 5, 0.7, 1);
-    expect(picked).toEqual(["a1"]);
+    expect(picked).toEqual(["a1", "a2"]);
   });
 
   it("penalizes a candidate highly similar to an already-selected one", () => {
@@ -73,7 +74,8 @@ describe("mmrSelect", () => {
     const picked = mmrSelect(items, 3, 0.7, 1);
     // Topic A is capped at 1: only a1 survives from it, so b1 fills the second slot and there
     // is no third eligible candidate left (a2/a3 are both excluded by the cap).
-    expect(picked).toEqual(["a1", "b1"]);
+    expect(picked.slice(0, 2)).toEqual(["a1", "b1"]);
+    expect(picked).toHaveLength(3);
   });
 
   it("returns items unmodified in order when k exceeds the candidate count", () => {

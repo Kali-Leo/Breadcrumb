@@ -50,9 +50,13 @@ export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
       ref={containerRef}
       className="group relative rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md"
     >
-      <button type="button" onClick={() => onOpen(card)} className="block w-full p-4 text-left">
-        <p className="font-medium text-stone-700">{card.title}</p>
-        <p className="mt-1 text-sm text-stone-500">{card.hook}</p>
+      <button
+        type="button"
+        onClick={() => onOpen(card)}
+        className="block min-h-36 w-full p-6 text-left"
+      >
+        <p className="text-lg font-medium leading-snug text-stone-700">{card.title}</p>
+        <p className="mt-2 text-[15px] leading-relaxed text-stone-500">{card.hook}</p>
       </button>
       <button
         type="button"

@@ -39,9 +39,10 @@ function candidateSimilarity<T>(a: MmrCandidate<T>, b: MmrCandidate<T>): number 
 }
 
 /** Greedy MMR selection: repeatedly picks the remaining candidate maximizing
- * `lambda * score - (1 - lambda) * maxSimilarityToAlreadySelected`, skipping any candidate
- * whose topic has already hit `perTopicCap`. Stops early if every remaining candidate is
- * capped out. */
+ * `lambda * score - (1 - lambda) * maxSimilarityToAlreadySelected`, deferring any candidate
+ * whose topic has already hit `perTopicCap`. Capped-out candidates are not dropped — they
+ * sink to the tail in score order (a mono-topic pool must still show everything; the cap
+ * shapes the TOP of the feed, it is not admission control — 2026-08-17 starvation fix). */
 export function mmrSelect<T>(
   items: readonly MmrCandidate<T>[],
   k: number,
@@ -50,6 +51,7 @@ export function mmrSelect<T>(
 ): T[] {
   const remaining = [...items];
   const selected: MmrCandidate<T>[] = [];
+  const deferred: MmrCandidate<T>[] = [];
   const countByTopic = new Map<string, number>();
 
   while (selected.length < k && remaining.length > 0) {
@@ -74,12 +76,18 @@ export function mmrSelect<T>(
       }
     }
 
-    if (bestIndex === -1) break; // every remaining candidate is topic-capped
+    if (bestIndex === -1) {
+      // Every remaining candidate is topic-capped: they sink to the tail by score.
+      deferred.push(...remaining.splice(0, remaining.length));
+      break;
+    }
     const [chosen] = remaining.splice(bestIndex, 1);
     if (!chosen) break;
     selected.push(chosen);
     countByTopic.set(chosen.topicLabel, (countByTopic.get(chosen.topicLabel) ?? 0) + 1);
   }
 
-  return selected.map((entry) => entry.item);
+  deferred.sort((a, b) => b.score - a.score);
+  const tailBudget = k - selected.length;
+  return [...selected, ...deferred.slice(0, Math.max(0, tailBudget))].map((entry) => entry.item);
 }

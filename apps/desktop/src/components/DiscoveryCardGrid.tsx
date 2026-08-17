@@ -37,7 +37,8 @@ export function DiscoveryCardGrid({ cards, loading, onOpen }: DiscoveryCardGridP
           void useDiscoveryStore.getState().loadMore();
         }
       },
-      { threshold: 0.1 },
+      // Fire well before the reader reaches the end, so the next batch is usually ready.
+      { threshold: 0.1, rootMargin: "900px" },
     );
     observer.observe(element);
     return () => observer.disconnect();
@@ -45,7 +46,7 @@ export function DiscoveryCardGrid({ cards, loading, onOpen }: DiscoveryCardGridP
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <DiscoveryCardTile key={card.id} card={card} onOpen={onOpen} />
         ))}

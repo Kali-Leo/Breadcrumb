@@ -835,6 +835,19 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX idx_discovery_events_created ON discovery_events(created_at);`,
     ],
   },
+  {
+    // The first card generation shipped with a hook style that spoiled its own answer
+    // (2026-08-17 fix); unopened stubs of that era read stale next to the new style, so
+    // they are cleared — opened cards keep their generated articles.
+    id: "0039_discovery_clear_unopened_stubs",
+    statements: [
+      `DELETE FROM discovery_events WHERE card_id IN (
+        SELECT id FROM discovery_cards WHERE opened_at IS NULL AND body_md IS NULL
+      ) AND kind = 'impression'`,
+      `DELETE FROM discovery_cards WHERE opened_at IS NULL AND body_md IS NULL
+        AND id NOT IN (SELECT card_id FROM discovery_events)`,
+    ],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
