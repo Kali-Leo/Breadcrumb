@@ -1,12 +1,12 @@
 /**
  * Purpose: the ranking features that come from the item itself rather than from the reader's
  * history (spec 053 §4) — how much of a crowd it drew upstream, whether it can be shown with a
- * real cover, how fresh it is, and the batch quality check's verdict. Everything here is added
- * to the interest score computed elsewhere, deliberately in small amounts: these features break
- * ties between items the reader would plausibly want, they never outvote what the reader has
- * actually shown interest in. Pure math, no DB, no I/O.
+ * real cover, how fresh it is, and the batch quality check's verdict. The bonus and the quality
+ * demotion are handed back separately because they are sized differently: rankingScore.ts scales
+ * the bonus down to a tie-breaker, while the demotion keeps its full weight (spec 053 §5 — the
+ * check may only ever push an item down). Pure math, no DB, no I/O.
  * Main exports: ContentSignals, ContentFeatureWeights, defaultContentFeatureWeights,
- * contentFeatureAdjustment.
+ * ContentFeatureParts, contentFeatureParts.
  */
 
 /** What one candidate carries in its own right. Every field is nullable because most plain RSS
@@ -37,11 +37,14 @@ export interface ContentFeatureWeights {
 }
 
 /**
- * Sized against the interest score they are added to, which is a cosine difference in −1..1 and
- * in practice moves in tenths: one strong feature is worth a couple of hundredths of similarity,
- * so features reorder near-ties and nothing more. The 72-hour half-life matches how these
- * channels actually read — a two-day-old forum thread is still live, a two-week-old one is not.
- * The 0.35 quality floor is where the prompt's own scale stops promising anything checkable.
+ * The RELATIVE shape of the three bonuses — a saturated crowd signal is worth about three covers,
+ * freshness a little less than the crowd. Their absolute size against the interest score is not
+ * set here: rankingScore.ts scales the whole bonus down to a tie-breaker, because sizing it here
+ * is exactly what let flat features outvote the reader's own history for a month (spec 053 T9
+ * finding #8). The 72-hour half-life matches how these channels actually read — a two-day-old
+ * forum thread is still live, a two-week-old one is not. The 0.35 quality floor is where the
+ * prompt's own scale stops promising anything checkable, and the 0.40 demotion is applied at full
+ * size, unscaled.
  */
 export const defaultContentFeatureWeights: ContentFeatureWeights = {
   upstreamSignal: 0.25,
@@ -81,24 +84,33 @@ function qualityShortfall(qualityScore: number | null, threshold: number): numbe
   return Math.min(1, (threshold - Math.max(0, qualityScore)) / threshold);
 }
 
+export interface ContentFeatureParts {
+  /** Crowd signal + cover + freshness, all non-negative. Scaled by the caller. */
+  bonus: number;
+  /** How far the quality check pushes the item down, 0 upward. Never scaled. */
+  demotion: number;
+}
+
 /**
- * The number to add to an item's interest score. Positive contributions come from the crowd
- * signal, a real cover and freshness; the only negative one is the quality check, and it can
- * only lower the total — a high rating buys an item nothing, so an unrated batch ranks exactly
- * as it would have with the check switched off.
+ * The item's own contribution to its ranking, in two parts. The bonus comes from the crowd
+ * signal, a real cover and freshness; the demotion is the quality check's, and it is the only
+ * negative one — a high rating buys an item nothing, so an unrated batch ranks exactly as it
+ * would have with the check switched off.
  */
-export function contentFeatureAdjustment(
+export function contentFeatureParts(
   signals: ContentSignals,
   nowIso: string,
   weights: ContentFeatureWeights = defaultContentFeatureWeights,
-): number {
+): ContentFeatureParts {
   const upstream = Math.min(1, Math.max(0, signals.upstreamSignal ?? 0)) * weights.upstreamSignal;
   const cover = signals.hasCover ? weights.cover : 0;
   const freshness =
     freshnessFactor(signals.publishedAt, nowIso, weights.freshnessHalfLifeHours) *
     weights.freshness;
-  const demotion =
-    qualityShortfall(signals.qualityScore, weights.qualityDemotionThreshold) *
-    weights.maximumQualityDemotion;
-  return upstream + cover + freshness - demotion;
+  return {
+    bonus: upstream + cover + freshness,
+    demotion:
+      qualityShortfall(signals.qualityScore, weights.qualityDemotionThreshold) *
+      weights.maximumQualityDemotion,
+  };
 }

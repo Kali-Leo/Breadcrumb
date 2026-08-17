@@ -159,6 +159,47 @@ describe("orderCardsForDisplay", () => {
     expect(countStrangers(familiarLeaning)).toBeLessThan(countStrangers(newLeaning));
   });
 
+  it("never brings back a card the reader already opened", () => {
+    const cards = [
+      card({ id: "read", topic_label: "A", opened_at: "2026-08-15T12:00:00.000Z" }),
+      card({ id: "unread", topic_label: "A" }),
+    ];
+    expect(orderCardsForDisplay(cards, [], NOW).map((entry) => entry.id)).toEqual(["unread"]);
+  });
+
+  it("sinks a topic the reader keeps turning down below one they have no opinion about", () => {
+    const cards = [
+      card({ id: "refused", topic_label: "八卦", cover_url: "https://example.org/c.png" }),
+      card({ id: "stranger", topic_label: "地质学" }),
+    ];
+    const events = [
+      event({ id: "e1", card_id: "old-1", topic_label: "八卦", kind: "dislike" }),
+      event({ id: "e2", card_id: "old-2", topic_label: "八卦", kind: "dislike" }),
+      event({ id: "e3", card_id: "old-3", topic_label: "读过的", kind: "open" }),
+    ];
+    expect(orderCardsForDisplay(cards, events, NOW).map((entry) => entry.id)).toEqual([
+      "stranger",
+      "refused",
+    ]);
+  });
+
+  it("keeps a topic in the exploration lane when the reader has only ever scrolled past it", () => {
+    // Twenty impressions and nothing else: the feed showed it, the reader did nothing about it.
+    const seenOften = Array.from({ length: 20 }, (_unused, index) =>
+      event({ id: `i${index}`, card_id: `c${index}`, topic_label: "本地新闻", kind: "impression" }),
+    );
+    const events = [...seenOften, event({ id: "open", card_id: "read", topic_label: "天文学" })];
+    const cards = [
+      ...["k1", "k2", "k3", "k4"].map((id) => card({ id, topic_label: "天文学" })),
+      ...["n1", "n2", "n3", "n4"].map((id) => card({ id, topic_label: "本地新闻" })),
+    ];
+    const familiarLeaning = orderCardsForDisplay(cards, events, NOW, { explorationShare: 0.1 });
+    const newLeaning = orderCardsForDisplay(cards, events, NOW, { explorationShare: 0.5 });
+    const localNewsOnPage = (ordered: readonly DiscoveryCardRow[]): number =>
+      ordered.slice(0, 4).filter((entry) => entry.id.startsWith("n")).length;
+    expect(localNewsOnPage(familiarLeaning)).toBeLessThan(localNewsOnPage(newLeaning));
+  });
+
   it("returns an empty list for an empty pool rather than throwing", () => {
     expect(orderCardsForDisplay([], [], NOW)).toEqual([]);
   });

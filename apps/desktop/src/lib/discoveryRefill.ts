@@ -1,17 +1,21 @@
 /**
  * Purpose: keeps the discovery pool stocked (spec 053 §3) — when fewer than 30 unseen cards are
- * left, one round of channel polling, and active recall on top of it if the pool is still thin,
- * restocks toward 100. The pool is what the feed reads from, so this runs behind the feed and
- * never blocks it: cards land displayable, and quality scoring and embedding follow them.
- * Side effects: network requests through the channel layer, card inserts, and the background
- * passes it hands back to the caller.
+ * left, or when nothing out there has been asked in six hours, one round of channel polling, and
+ * active recall on top of it if the pool is still thin, restocks toward 100. The pool is what the
+ * feed reads from, so this runs behind the feed and never blocks it: cards land displayable, and
+ * quality scoring and embedding follow them. Whatever a round lands, the pool's age and size
+ * limits are applied afterward (discoveryPoolPruning).
+ * Side effects: network requests through the channel layer, card inserts and deletes, and the
+ * background passes it hands back to the caller.
  * Main exports: refillDiscoveryPool, RefillOutcome, POOL_LOW_WATERMARK, POOL_TARGET_SIZE.
  */
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { runBackgroundPasses } from "./discoveryBackgroundPasses";
+import { readChannelStates } from "./discoveryChannelState";
 import { pollChannelsForCandidates } from "./discoveryChannels";
 import { type CandidateGroup, landCandidateItems } from "./discoveryPoolLanding";
+import { pruneDiscoveryPool } from "./discoveryPoolPruning";
 import { runActiveRecall } from "./discoveryRecall";
 import { nowIso } from "./time";
 
@@ -62,6 +66,33 @@ async function countAvailableUnseenCards(): Promise<number> {
   return Math.max(0, unseen - dislikedIds.size);
 }
 
+/**
+ * How long a stocked pool may go without anyone asking the world what is new. A reader who keeps
+ * a hundred cards ahead of them used to freeze the feed completely: the watermark returned
+ * "stocked" before touching the network, so polling stopped, active recall (which runs inside the
+ * same call) stopped with it, and the same set of cards was served until they scrolled to the
+ * bottom of it (spec 053 T9 finding #6). Six hours is a quarter of a day — often enough that a
+ * morning and an evening sitting each see new things, rare enough to stay a good guest. Still no
+ * timers: the check runs when the app starts and when the reader asks for more.
+ */
+const POLL_STALENESS_MILLISECONDS = 6 * 60 * 60 * 1000;
+
+/**
+ * Whether it has been long enough since anything out there last answered. Channel state carries
+ * the instant of each source's last poll and whether it worked, so the newest successful one is
+ * the whole answer; a library where nothing has ever answered is stale by definition.
+ */
+async function pollingHasGoneStale(now: Date): Promise<boolean> {
+  const states = await readChannelStates();
+  let newestSuccess = Number.NEGATIVE_INFINITY;
+  for (const state of states.values()) {
+    if (state.reachable !== 1 || state.last_fetch_at === null) continue;
+    const at = Date.parse(state.last_fetch_at);
+    if (!Number.isNaN(at)) newestSuccess = Math.max(newestSuccess, at);
+  }
+  return now.getTime() - newestSuccess >= POLL_STALENESS_MILLISECONDS;
+}
+
 export interface RefillOptions {
   /** Skips the watermark check — used by an explicit "give me more" at the end of the feed. */
   force?: boolean;
@@ -76,7 +107,8 @@ export interface RefillOptions {
 export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<RefillOutcome> {
   const now = options.now ?? new Date();
   const unseenBefore = await countAvailableUnseenCards();
-  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK) {
+  const stale = await pollingHasGoneStale(now);
+  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK && !stale) {
     return {
       kind: "stocked",
       landedCount: 0,
@@ -98,10 +130,13 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   const poll = await pollChannelsForCandidates({ now: () => now });
   const landed = await landCandidateItems([{ items: poll.items }], nowIso());
 
-  // Still thin after everything the world published on its own: go and look for what this
-  // reader in particular has been reading about.
+  // Go and look for what this reader in particular has been reading about — when what the world
+  // published on its own left the pool thin, and also on the round that ran because nothing had
+  // been asked in hours. A pool that stays full of what the reader never opens used to hold that
+  // second case off forever, so their own topics were the one thing the feed stopped looking for
+  // (spec 053 T9 findings #6/#7). The day's query budget bounds both cases.
   let recalled: typeof landed = [];
-  if (unseenBefore + landed.length < POOL_TARGET_SIZE) {
+  if (stale || unseenBefore + landed.length < POOL_TARGET_SIZE) {
     const recall = await runActiveRecall(now);
     const groups: CandidateGroup[] = recall.harvests.map((harvest) => ({
       items: harvest.items,
@@ -112,6 +147,7 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   }
 
   const allLanded = [...landed, ...recalled];
+  await pruneDiscoveryPool(now);
   const backgroundWork = runBackgroundPasses(allLanded);
   if (allLanded.length === 0 && poll.answeredSourceCount === 0) {
     return {

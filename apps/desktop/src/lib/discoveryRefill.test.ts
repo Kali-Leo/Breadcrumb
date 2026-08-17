@@ -5,13 +5,14 @@
  * silent outcome when networking is off or nothing out there answers. The channel layer is
  * mocked; landing, recall and the pool arithmetic all run for real.
  */
-import type { DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
+import type { ChannelStateRow, DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
 import type { CandidateItem } from "@breadcrumb/plugin-channels";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let cardRows: DiscoveryCardRow[] = [];
 let eventRows: DiscoveryEventRow[] = [];
 let settingRows = new Map<string, unknown>();
+let channelStateRows: ChannelStateRow[] = [];
 
 vi.mock("./db", () => ({
   getRepos: vi.fn(async () => ({
@@ -23,6 +24,19 @@ vi.mock("./db", () => ({
       insertCards: async (rows: readonly DiscoveryCardRow[]) => {
         cardRows.push(...rows);
       },
+      deleteUnseenCardsLandedBefore: async (cutoffIso: string) => {
+        cardRows = cardRows.filter(
+          (row) => row.opened_at !== null || row.saved_at !== null || row.created_at >= cutoffIso,
+        );
+      },
+      trimUnseenPoolTo: async (limit: number) => {
+        const untouched = cardRows.filter((row) => row.opened_at === null && row.saved_at === null);
+        const dropped = new Set(untouched.slice(limit).map((row) => row.id));
+        cardRows = cardRows.filter((row) => !dropped.has(row.id));
+      },
+    },
+    channelState: {
+      listAll: async () => channelStateRows,
     },
     settings: {
       get: async <Value>(key: string) => (settingRows.get(key) ?? null) as Value | null,
@@ -100,6 +114,20 @@ function fillPool(count: number): void {
   for (let index = 0; index < count; index += 1) cardRows.push(pooledCard(`pool-${index}`));
 }
 
+/** A channel that answered `hoursAgo` hours before NOW — what the staleness check reads. */
+function answeredHoursAgo(hoursAgo: number): ChannelStateRow {
+  return {
+    source_id: "hacker-news-front-page",
+    etag: null,
+    last_modified: null,
+    last_fetch_at: new Date(NOW.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
+    reachable: 1,
+    failure_count: 0,
+    daily_budget_used: 1,
+    budget_day: "2026-08-17",
+  };
+}
+
 function pollFound(items: readonly CandidateItem[], answeredSourceCount = 1): void {
   pollChannelsForCandidatesMock.mockResolvedValue({
     items: [...items],
@@ -107,6 +135,12 @@ function pollFound(items: readonly CandidateItem[], answeredSourceCount = 1): vo
     answeredSourceCount,
   });
 }
+
+// Most cases are about the watermark, so the world answered an hour ago and staleness is out of
+// the way; the cases that are about staleness set their own.
+beforeEach(() => {
+  channelStateRows = [answeredHoursAgo(1)];
+});
 
 afterEach(() => {
   cardRows = [];
@@ -157,6 +191,45 @@ describe("refillDiscoveryPool watermark", () => {
     const outcome = await refillDiscoveryPool({ now: NOW, force: true });
     expect(outcome.kind).toBe("refilled");
     expect(pollChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("refillDiscoveryPool staleness and pool limits", () => {
+  it("asks the world again when a stocked pool has heard nothing for six hours", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    channelStateRows = [answeredHoursAgo(7)];
+    pollFound([candidate("hn:1")]);
+    const outcome = await refillDiscoveryPool({ now: NOW });
+    expect(outcome.kind).toBe("refilled");
+    expect(pollChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks the world on a library where nothing has ever answered", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    channelStateRows = [];
+    pollFound([candidate("hn:1")]);
+    expect((await refillDiscoveryPool({ now: NOW })).kind).toBe("refilled");
+  });
+
+  it("does not count a channel that failed as an answer", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    channelStateRows = [{ ...answeredHoursAgo(1), reachable: 0 }];
+    pollFound([candidate("hn:1")]);
+    expect((await refillDiscoveryPool({ now: NOW })).kind).toBe("refilled");
+  });
+
+  it("drops untouched candidates older than two weeks and keeps what the reader touched", async () => {
+    const old = "2026-07-01T00:00:00.000Z";
+    cardRows.push(pooledCard("stale", { created_at: old }));
+    cardRows.push(pooledCard("stale-but-opened", { created_at: old, opened_at: old }));
+    cardRows.push(pooledCard("stale-but-saved", { created_at: old, saved_at: old }));
+    pollFound([candidate("hn:1")]);
+    await refillDiscoveryPool({ now: NOW });
+    expect(cardRows.map((row) => row.id).sort()).toEqual([
+      "hn:1",
+      "stale-but-opened",
+      "stale-but-saved",
+    ]);
   });
 });
 

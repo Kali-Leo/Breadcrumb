@@ -26,27 +26,34 @@ const { resetRuntimeDoubles, runtimeCallCounts } = await import("./desktopRuntim
 const { drainBackgroundWork, pinRandomness, prepareDiscoveryJourney, runJourneyDay } = await import(
   "./discoveryJourneyHarness"
 );
-const {
-  allShown,
-  duplicatesWithinDay,
-  quotaBreaches,
-  shareOfTopics,
-  topicCounts,
-  unfamiliarCount,
-} = await import("./discoveryJourneyMetrics");
+const { allShown, duplicatesWithinDay, shareOfTopics, topicCounts, unfamiliarCount } = await import(
+  "./discoveryJourneyMetrics"
+);
+const { quotaBreaches } = await import("./discoveryQuotaJudge");
 const { HACKER_NEWS_SEARCH_PREFIX, topicFeedByKey } = await import("./syntheticChannelWorld");
 const { DAILY_RECALL_QUERY_BUDGET } = await import(
   "../../../../apps/desktop/src/lib/discoveryRecall"
 );
 const { defaultMmrOptions } = await import("@breadcrumb/plugin-discovery");
+const { FEED_PAGE_SIZE } = await import("../../../../apps/desktop/src/lib/discoveryFeedPaging");
+const { UNSEEN_POOL_CAP, UNSEEN_POOL_MAX_AGE_DAYS } = await import(
+  "../../../../apps/desktop/src/lib/discoveryPoolPruning"
+);
 const { useSettingsStore } = await import("../../../../apps/desktop/src/stores/settingsStore");
 const { useDiscoveryStore } = await import("../../../../apps/desktop/src/stores/discoveryStore");
 const { recordFeedDialMove } = await import(
   "../../../../apps/desktop/src/lib/discoveryFeedbackEvents"
 );
 
-/** discoveryFeedPaging reads this many pooled cards per ranking pass. */
-const RANKING_WINDOW = 200;
+/**
+ * The baseline every "did the ranking do anything" comparison is made against: the candidates the
+ * feed could have shown, which is the unseen pool it ranks (discoveryFeedPaging). Counting the
+ * whole table instead — as this did until the T9 fix, when the grid still re-showed opened cards —
+ * now measures how much of their own topics the reader has CONSUMED: their favourites are opened
+ * first and leave the candidate pool, so they pile up in the table and the denominator says the
+ * ranking made things worse the harder it worked.
+ */
+const RANKING_WINDOW = UNSEEN_POOL_CAP;
 
 const COMPILERS = topicFeedByKey("compilers").topicLabel;
 const NEURO = topicFeedByKey("neuro").topicLabel;
@@ -72,12 +79,14 @@ interface JourneyResult {
   recallQueriesByDay: Map<number, string[]>;
   pool: DiscoveryCardRow[];
   unfamiliarByDay: number[];
-  /** Interest and aversion shares of the ranking window the day started from — the "no ranking
+  /** Interest and aversion shares of the candidate pool the day started from — the "no ranking
    * at all" baseline each day's grid is compared against. */
   poolWindowInterestShare: number[];
   poolWindowAversionShare: number[];
   /** How many upcoming positions actually moved when the dial was flipped. */
   dialMovedPositions: number;
+  /** The instant the last simulated day ended — what "two weeks old" is measured against. */
+  lastDayEnd: Date;
 }
 
 let journey: JourneyResult;
@@ -98,7 +107,7 @@ async function runJourney(): Promise<JourneyResult> {
 
     const repos = await getRepos();
     const eventsBeforeDay = await repos.discovery.listAllEvents();
-    const rankingWindow = await repos.discovery.listNewestCards(RANKING_WINDOW);
+    const rankingWindow = await repos.discovery.listUnseenPoolCards(RANKING_WINDOW);
     poolWindowInterestShare.push(shareOfTopics(rankingWindow, persona.interests));
     poolWindowAversionShare.push(shareOfTopics(rankingWindow, [persona.aversion]));
     const record = await runJourneyDay({
@@ -134,6 +143,7 @@ async function runJourney(): Promise<JourneyResult> {
     days,
     recallQueriesByDay,
     pool: await repos.discovery.listNewestCards(100_000),
+    lastDayEnd: new Date(),
     unfamiliarByDay,
     poolWindowInterestShare,
     poolWindowAversionShare,
@@ -220,16 +230,14 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). Thirty days of 不感兴趣 on one topic barely move it. In
-   * the last five days the aversion topic still holds 13% of the grid against 16.5% of the
-   * ranking window — a 21% reduction, almost all of which is the disliked CARDS being filtered
-   * out one at a time (discoveryOrdering drops dislikedIds), not the TOPIC being demoted. The
-   * topic's folded weight is strongly negative by then, but the only place a negative weight can
-   * act is the negative embedding centroid, whose cosine contribution is a few hundredths and is
-   * swamped by contentFeatures' crowd-signal/cover/freshness bonuses. Spec 053 验收 asks for
-   * "连续「不感兴趣」某主题→该主题显著减少".
+   * FIXED (2026-08-17, spec 053 T9 finding #7). Thirty days of 不感兴趣 used to barely move the
+   * topic: the only place its negative weight could act was the negative embedding centroid,
+   * whose cosine contribution is a few hundredths, and contentFeatures' crowd-signal/cover/
+   * freshness bonuses swamped it. The topic's own standing is now the ranking's primary axis
+   * (rankingScore), so a refused topic sits below every topic the reader has not refused.
+   * Spec 053 验收: "连续「不感兴趣」某主题→该主题显著减少".
    */
-  it.fails("pushes the dismissed topic well below its share of the pool", () => {
+  it("pushes the dismissed topic well below its share of the pool", () => {
     const late5 = journey.days.slice(JOURNEY_DAYS - 5);
     const gridShare = shareOfTopics(allShown(late5), [persona.aversion]);
     const poolShare = mean(journey.poolWindowAversionShare.slice(JOURNEY_DAYS - 5));
@@ -280,44 +288,62 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). The dial goes inert within days, and so does the
-   * 探索位保底 floor behind it. discoveryOrdering splits the ranked pool into "familiar" (any
-   * topic that appears anywhere in the event stream) and "unfamiliar" (everything else), and
-   * interleaveExploration only ever places items from the unfamiliar list. But an impression IS
-   * an event and the grid records one for every card it shows, so a topic becomes "familiar" the
-   * first time it appears on screen. In this journey the unfamiliar count is 19 on day 0, 4, 0,
-   * 4, and then 0 for every one of the remaining twenty-six days: after the first week the
-   * exploration lane is empty, interleaveExploration degenerates to "return the exploit list in
-   * order", and the dial's 0.15 / 0.4 positions produce identical feeds. Spec 053 §4 promises a
-   * 10-25% exploration floor and §6 验收 promises "旋钮拨动立即改变构成".
+   * FIXED (2026-08-17, spec 053 T9 finding #3). The dial used to go inert within days, and the
+   * 探索位保底 floor behind it: "familiar" meant any topic that appeared anywhere in the event
+   * stream, and an impression is an event, so a topic became familiar the first time it was ever
+   * shown — the unfamiliar count went 19, 4, 0, 4 and then zero for twenty-six days straight.
+   * A topic is now part of the reader's reading once they have ENGAGED with it and it stands
+   * clearly above their average interest (rankingScore.establishedTopics), which is also what
+   * unfamiliarCount measures here. Spec 053 §4's 10-25% exploration floor and §6 验收
+   * "旋钮拨动立即改变构成".
    */
-  it.fails("keeps handing some of the feed to topics the reader has no history with", () => {
+  it("keeps handing some of the feed to topics the reader has no history with", () => {
     const lateDays = journey.unfamiliarByDay.slice(7);
     expect(lateDays.filter((count) => count > 0).length).toBeGreaterThan(lateDays.length / 2);
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). The reader's own topics do not gain ground over a month.
-   * With production's Math.random pinned so the run replays exactly, the share of the grid held by
-   * the three topics this persona opens, dwells on, finishes and saves goes 0.539 in the first
-   * five days to 0.458 in the last five — flat to slightly down, after hundreds of positive events
-   * on those topics. The grid does sit a little above the pool's own mix (the test above), so the
-   * ranking is doing something; it just does not compound. The interest term is a cosine
-   * difference between centroids built out of the candidates themselves and moves in hundredths,
-   * while contentFeatures adds up to 0.53 of flat crowd-signal + cover + freshness bonus — the
-   * opposite of what contentFeatures.ts says it is sized for ("they never outvote what the reader
-   * has actually shown interest in"). Spec 053 验收: "收藏/读完某主题→同主题增多但不独占".
+   * FIXED (2026-08-17, spec 053 T9 finding #8), with a different measurement — the original one
+   * cannot answer the question any more, for two reasons that are both consequences of other
+   * fixes in the same batch, and one that was always there:
    *
-   * Skipped rather than marked `it.fails`: the measurement sits close enough to flat that it
-   * lands on either side of "grew" between runs, which is itself the finding — thirty days of
-   * strong, consistent signal produce a difference indistinguishable from noise. Unskip it once
-   * the ranking gives topic weight a direct say, and it should pass comfortably.
+   * - a card the reader opened no longer comes back to the grid, so their favourite topics are
+   *   CONSUMED. The better the ranking, the faster that happens: the pool now holds 15-20% of
+   *   the reader's topics and the first page holds 55-65% of them, which is the ranking working,
+   *   and it also means the share of "everything scrolled past" falls as the pool grows.
+   * - the pool no longer stops growing at what one restock brought, so a late day's grid is 190
+   *   cards where an early day's was 35. Comparing the share of two grids of such different
+   *   lengths compares pool sizes, not ranking.
+   * - the last five days are the tail of a week offline, during which nothing new lands and the
+   *   reader reads their own topics out of the pool entirely. That measures the network.
+   *
+   * So this reads the page the feed leads with each day, and reads it against the reader's very
+   * first sitting — the one where the app knew nothing about them — rather than against days 1-4,
+   * because the growth all happens on day one: the reader's topics go from a third of the first
+   * page to more than half of it and then sit there for a month. What holds them there is the
+   * ceiling, not the evidence: the per-topic quota and the reader's own dial, which they moved to
+   * 新领域多一点 on day 18, together bound how much of a page three topics can hold. The three
+   * assertions are the three things worth knowing — it grew, it did not decay over a month that
+   * included a week offline, and it is nowhere near the pool's own mix, which is where the whole
+   * journey used to sit. Spec 053 验收: "收藏/读完某主题→同主题增多但不独占".
    */
-  it.skip("lets the reader's own topics grow over the journey", () => {
-    const interestEarly = shareOfTopics(allShown(early()), persona.interests);
-    const interestLate = shareOfTopics(allShown(late()), persona.interests);
-    expect(interestLate, `interest share ${interestEarly} -> ${interestLate}`).toBeGreaterThan(
+  it("lets the reader's own topics grow over the journey", () => {
+    const firstPage = (days: readonly DayRecord[]): DiscoveryCardRow[] =>
+      days.flatMap((day) => day.shown.slice(0, FEED_PAGE_SIZE));
+    const online = journey.days.filter((day) => !OFFLINE_DAYS.has(day.dayIndex));
+    const firstSitting = shareOfTopics(firstPage(journey.days.slice(0, 1)), persona.interests);
+    const interestEarly = shareOfTopics(firstPage(early()), persona.interests);
+    const interestLate = shareOfTopics(firstPage(online.slice(-5)), persona.interests);
+    expect(interestLate, `first sitting ${firstSitting} -> late ${interestLate}`).toBeGreaterThan(
+      firstSitting * 1.3,
+    );
+    expect(interestLate, `early ${interestEarly} -> late ${interestLate}`).toBeGreaterThanOrEqual(
       interestEarly,
+    );
+    // And it is not a hair's breadth over the pool it was drawn from either.
+    const poolShare = mean(journey.poolWindowInterestShare.slice(JOURNEY_DAYS - 5));
+    expect(interestLate, `late ${interestLate} vs pool ${poolShare}`).toBeGreaterThan(
+      poolShare * 2,
     );
   });
 
@@ -327,17 +353,14 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). The cross-channel / content-form quota does not survive
-   * past the first handful of cards on a page. orderCardsForDisplay ranks the WHOLE unshown pool
-   * with `mmrSelect(candidates, candidates.length)`, and mmrSelect only applies its caps while it
-   * is still selecting: once every candidate has hit a cap it dumps the rest of the pool into the
-   * tail in pure score order (the deliberate "a mono-topic pool must still show everything"
-   * rule). With k = the whole pool rather than one page, that tail IS the page the reader sees,
-   * so a page of 24 routinely carries far more than perSourceCap=5 items from one channel even
-   * though other channels were available. Left as a failing-by-design trip-wire rather than
-   * fixed: the fix is a product decision about where the page boundary belongs, not a test change.
+   * FIXED (2026-08-17, spec 053 T9 finding #4). The caps used to be spent inside the first two
+   * dozen candidates of a single whole-pool ranking pass; everything after that was score order,
+   * which is exactly the page the reader was looking at. Ranking now assembles one page at a
+   * time under a fresh set of caps (feedPages.assembleFeedPages). What is left over is the next
+   * page's candidates, so a page only ever exceeds a cap when nothing that fits was left at all —
+   * which is what quotaBreaches now checks.
    */
-  it.fails("holds the per-source and per-form quotas on every page", () => {
+  it("holds the per-source and per-form quotas on every page", () => {
     const breaches = journey.days.flatMap((day) =>
       quotaBreaches(day, journey.pool, {
         source: defaultMmrOptions.perSourceCap,
@@ -349,13 +372,26 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). Spec 053 §3 asks for the pool to be capped ("补货至 100")
-   * and for old unseen candidates to expire ("旧未看候选按时限淘汰"). Neither exists: nothing in
-   * core-db's discovery repo or in the desktop pipeline ever deletes a card, so the pool only
-   * grows — a month of this journey leaves several hundred rows, and a year of real use would
-   * leave tens of thousands, all of which listNewestCards/listCardIds read on every restock.
+   * FIXED (2026-08-17, spec 053 T9 finding #5). Spec 053 §3 asks for old unseen candidates to
+   * expire ("旧未看候选按时限淘汰") and for the pool to stay near its target size; nothing ever
+   * deleted a card, so it only grew. Every restock now expires untouched candidates older than
+   * two weeks and trims what is left to the cap.
+   *
+   * The original 200-row ceiling on the WHOLE table is not the right assertion and never could
+   * be met: cards the reader opened or saved are their reading history and their 收藏 list, and
+   * deleting those to keep a row count down would be deleting the reader's own things. What is
+   * bounded is the candidate pool.
    */
-  it.fails("keeps the pool near its target size rather than growing without bound", () => {
-    expect(journey.pool.length).toBeLessThanOrEqual(200);
+  it("keeps the candidate pool inside its cap instead of growing without bound", () => {
+    const untouched = journey.pool.filter(
+      (card) => card.opened_at === null && card.saved_at === null,
+    );
+    expect(untouched.length).toBeLessThanOrEqual(UNSEEN_POOL_CAP);
+    const cutoff = new Date(
+      journey.lastDayEnd.getTime() - UNSEEN_POOL_MAX_AGE_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    expect(untouched.filter((card) => card.created_at < cutoff)).toEqual([]);
+    // The rest of the table is what the reader themselves read or kept.
+    expect(journey.pool.length - untouched.length).toBeGreaterThan(0);
   });
 });

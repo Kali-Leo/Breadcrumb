@@ -4,7 +4,8 @@
  * A ranked list alone cannot do this: the best-scoring items are by construction the familiar
  * ones, so unfamiliar items are placed by position rather than by score. Pure list math, no DB,
  * no I/O.
- * Main exports: defaultExplorationShare, explorationShareBounds, interleaveExploration.
+ * Main exports: defaultExplorationShare, explorationShareBounds, explorationPositionCount,
+ * interleaveExploration.
  */
 
 /** What the feed does before the reader ever touches the dial: one card in four comes from
@@ -20,6 +21,15 @@ export const explorationShareBounds = { minimum: 0.1, maximum: 0.5 } as const;
 function clampShare(share: number): number {
   if (!Number.isFinite(share)) return defaultExplorationShare;
   return Math.min(1, Math.max(0, share));
+}
+
+/**
+ * How many of `positions` the exploration lane gets — the same count the interleaving below
+ * produces, so a page can be SELECTED under the share before it is laid out under it.
+ */
+export function explorationPositionCount(positions: number, share: number): number {
+  if (!Number.isFinite(positions) || positions <= 0) return 0;
+  return Math.floor(Math.trunc(positions) * clampShare(share));
 }
 
 /**

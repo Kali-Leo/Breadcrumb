@@ -57,6 +57,21 @@ describe("pickExploreTopics", () => {
     expect(pickExploreTopics([], 3, makeSeededRandom(1))).toEqual([]);
   });
 
+  it("never samples a topic the reader only ever turned down", () => {
+    const stats = [
+      { topicLabel: "历史", opens: 0, dislikes: 1 },
+      { topicLabel: "编程", opens: 0, dislikes: 0 },
+    ];
+    for (let seed = 0; seed < 50; seed += 1) {
+      expect(pickExploreTopics(stats, 2, makeSeededRandom(seed))).toEqual(["编程"]);
+    }
+  });
+
+  it("takes a turned-down topic back once the reader has engaged with it even once", () => {
+    const stats = [{ topicLabel: "历史", opens: 1, dislikes: 3 }];
+    expect(pickExploreTopics(stats, 1, makeSeededRandom(3))).toEqual(["历史"]);
+  });
+
   it("picks a topic with much stronger open/dislike evidence far more often across seeds", () => {
     const stats = [
       { topicLabel: "strong", opens: 40, dislikes: 1 },

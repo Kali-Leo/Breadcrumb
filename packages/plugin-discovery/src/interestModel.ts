@@ -5,7 +5,7 @@
  * only, no code copied — Nunti is GPL) with an added exponential time decay; pure math, no DB,
  * no I/O.
  * Main exports: DiscoveryEventKind, InterestEvent, TopicWeight, TopicStats,
- * foldInterestFromEvents, topicStatsFromEvents.
+ * foldInterestFromEvents, topicStatsFromEvents, TopicEvidence, classifyTopicsByEvidence.
  */
 
 /**
@@ -131,6 +131,35 @@ function countsAsFailure(event: InterestEvent): boolean {
  * sampling (thompson.ts), which needs counts, not a decayed continuous score. Every topic
  * that appears in any event (any kind) is included, so a topic with only impressions still
  * gets a neutral Beta(1,1) prior, and a first-run stance seeds the topic's very first pull. */
+/**
+ * What the reader's history says about a topic, in the only two terms the exploration lane
+ * needs: have they ever engaged with it, and have they ever turned it down.
+ */
+export interface TopicEvidence {
+  /** Topics with at least one self-interested action on them — opened, finished, saved, or a
+   * 想看 stance. Seeing a card is not engaging with it, which is the whole point: a topic the
+   * grid has merely shown must stay in the exploration lane until the reader does something. */
+  engaged: ReadonlySet<string>;
+  /** Topics whose only evidence is negative: 不感兴趣, or a 不想看 stance, and nothing positive
+   * anywhere. Neither familiar nor worth exploring — the feed leaves them to the ranking. */
+  avoided: ReadonlySet<string>;
+}
+
+/**
+ * Splits the topics in the event stream into the two sets above (spec 053 T9 findings #2 and
+ * #3). Everything else — every topic with no history, and every topic the reader has only ever
+ * scrolled past — is in neither set, which is what the feed treats as unexplored territory.
+ */
+export function classifyTopicsByEvidence(events: readonly InterestEvent[]): TopicEvidence {
+  const engaged = new Set<string>();
+  const avoided = new Set<string>();
+  for (const stats of topicStatsFromEvents(events)) {
+    if (stats.opens > 0) engaged.add(stats.topicLabel);
+    else if (stats.dislikes > 0) avoided.add(stats.topicLabel);
+  }
+  return { engaged, avoided };
+}
+
 export function topicStatsFromEvents(events: readonly InterestEvent[]): TopicStats[] {
   const statsByTopic = new Map<string, TopicStats>();
   for (const event of events) {

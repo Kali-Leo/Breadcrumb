@@ -51,19 +51,32 @@ export interface TopicOpenDislikeStats {
   dislikes: number;
 }
 
+/**
+ * A topic the reader has turned down and never once engaged with is not an arm worth pulling.
+ * Beta(1, dislikes+1) still draws above zero sometimes, so a topic whose only evidence is
+ * "不感兴趣" or a 不想看 stance would keep coming back up as something to test — on a cold start,
+ * where those are the only topics with any history at all, it comes up immediately (spec 053 T9
+ * finding #2). One open, save or finish anywhere in its history puts it back in the pool.
+ */
+function isAvoidedArm(topic: TopicOpenDislikeStats): boolean {
+  return topic.opens <= 0 && topic.dislikes > 0;
+}
+
 /** Draws one Beta(opens+1, dislikes+1) sample per topic and returns the top `count` topics by
  * drawn value — the classic Thompson-sampling explore policy applied to topics instead of
- * arms. `random` must be a [0,1) uniform source; inject a seeded generator for deterministic
- * tests, Math.random in production. */
+ * arms, over the arms the reader has not ruled out. `random` must be a [0,1) uniform source;
+ * inject a seeded generator for deterministic tests, Math.random in production. */
 export function pickExploreTopics(
   stats: readonly TopicOpenDislikeStats[],
   count: number,
   random: () => number,
 ): string[] {
-  const sampled = stats.map((topic) => ({
-    topicLabel: topic.topicLabel,
-    sample: sampleBeta(topic.opens + 1, topic.dislikes + 1, random),
-  }));
+  const sampled = stats
+    .filter((topic) => !isAvoidedArm(topic))
+    .map((topic) => ({
+      topicLabel: topic.topicLabel,
+      sample: sampleBeta(topic.opens + 1, topic.dislikes + 1, random),
+    }));
   sampled.sort((a, b) => b.sample - a.sample);
   return sampled.slice(0, count).map((entry) => entry.topicLabel);
 }

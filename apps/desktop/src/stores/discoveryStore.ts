@@ -17,25 +17,11 @@ import {
   recordDiscoveryEvent,
   takeNextPage,
 } from "../lib/discoveryFeedPaging";
-import { type RefillOutcome, refillDiscoveryPool } from "../lib/discoveryRefill";
+import type { RefillOutcome } from "../lib/discoveryRefill";
+import { restockBehindTheGrid, runRefill } from "../lib/discoveryRestockTask";
 import { reshapeUpcomingCards } from "../lib/discoveryUpcomingReshape";
 import { nowIso } from "../lib/time";
 import { useSettingsStore } from "./settingsStore";
-
-/** Every restock entry point funnels through one shared in-flight task: the app-start warm-up
- * and a mount-triggered load await the SAME round instead of one bailing out on the other's
- * loading flag — which left cards written to the DB but never displayed (handoff 2026-08-17
- * §五.a). */
-let refillTask: Promise<RefillOutcome> | null = null;
-
-function runRefill(force: boolean): Promise<RefillOutcome> {
-  if (refillTask === null) {
-    refillTask = refillDiscoveryPool({ force }).finally(() => {
-      refillTask = null;
-    });
-  }
-  return refillTask;
-}
 
 export type StreamArticleResult = { ok: true; bodyMd: string } | { ok: false; reason: string };
 
@@ -103,7 +89,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
       await stagePending();
       if (takePage(FEED_PAGE_SIZE) > 0) {
         set({ loading: false });
-        void runRefill(false).then(stagePending);
+        restockBehindTheGrid(stagePending);
         return;
       }
       const outcome = await runRefill(false);
@@ -116,7 +102,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
       if (get().loading) return; // guard re-entry (scroll sentinel firing twice)
       const taken = takePage(FEED_PAGE_SIZE);
       if (taken >= FEED_PAGE_SIZE) {
-        void runRefill(false).then(stagePending);
+        restockBehindTheGrid(stagePending);
         return;
       }
       set({ loading: true, blockedReason: null });

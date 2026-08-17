@@ -116,16 +116,13 @@ describe("discovery cold start (empty library, first-run stances only)", () => {
   });
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). The first thing the app does with a 不想看 answer is go
-   * looking for it. selectRecallTerms round-robins three lists, and one of them is
-   * pickExploreTopics — Thompson sampling over Beta(opens+1, dislikes+1) posteriors built from
-   * every topic that appears in the event stream, including the ones whose only event is the
-   * reader saying 不想看. On a cold start there are exactly three topics with any history at all,
-   * so the sampler returns all three, and "历史" goes out as a search term on day one. The reader
-   * said no and the app went shopping for it (product principle 5's spirit; spec 053 §6 calls the
-   * stances 兴趣种子).
+   * FIXED (2026-08-17, spec 053 T9 finding #2). The first thing the app used to do with a 不想看
+   * answer was go looking for it: pickExploreTopics sampled Beta(opens+1, dislikes+1) over every
+   * topic in the event stream, including the ones whose only evidence was the reader saying no,
+   * and on a cold start those are the only topics there are. An arm with no positive evidence
+   * and at least one refusal is now left out of the draw entirely (thompson.ts).
    */
-  it.fails("never searches for a field the reader said 不想看 to", () => {
+  it("never searches for a field the reader said 不想看 to", () => {
     expect(coldStart.recallQueries).not.toContain(AVOIDED);
   });
 

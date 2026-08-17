@@ -7,30 +7,34 @@
  * Main exports: rankUnshownPoolCards, takeNextPage, recordDiscoveryEvent.
  */
 import type { DiscoveryCardRow, DiscoveryEventKind } from "@breadcrumb/core-db";
+import { defaultFeedPageSize } from "@breadcrumb/plugin-discovery";
 import { getRepos } from "./db";
 import { orderCardsForDisplay } from "./discoveryOrdering";
+import { UNSEEN_POOL_CAP } from "./discoveryPoolPruning";
 import { newId, nowIso } from "./time";
 
-/** How much of the pool one ordering pass considers. The pool is capped around a hundred
- * cards, so this covers it with room for what the reader has already read. */
-const POOL_READ_LIMIT = 200;
+/** Cards handed to the grid at a time — and the page the ranking's quotas are enforced over. */
+export const FEED_PAGE_SIZE = defaultFeedPageSize;
 
-/** Cards handed to the grid at a time. */
-export const FEED_PAGE_SIZE = 24;
-
-/** Ranks every pooled card that is not already on the grid. Cards on screen are left where they
- * are: re-ordering under a reader mid-scroll would move what they were about to click. */
+/** Ranks every pooled card the reader has not opened and is not already looking at. Cards on
+ * screen are left where they are: re-ordering under a reader mid-scroll would move what they
+ * were about to click. The read covers the whole unseen pool — the pool is capped, and ranking
+ * only the newest slice of it would mean the ranking never chooses, it only re-orders whatever
+ * arrived last. */
 export async function rankUnshownPoolCards(
   shownIds: ReadonlySet<string>,
   explorationShare: number,
 ): Promise<DiscoveryCardRow[]> {
   const repos = await getRepos();
   const [pool, events] = await Promise.all([
-    repos.discovery.listNewestCards(POOL_READ_LIMIT),
+    repos.discovery.listUnseenPoolCards(UNSEEN_POOL_CAP),
     repos.discovery.listAllEvents(),
   ]);
   const fresh = pool.filter((card) => !shownIds.has(card.id));
-  return orderCardsForDisplay(fresh, events, nowIso(), { explorationShare });
+  return orderCardsForDisplay(fresh, events, nowIso(), {
+    explorationShare,
+    pageSize: FEED_PAGE_SIZE,
+  });
 }
 
 export interface FeedPage {

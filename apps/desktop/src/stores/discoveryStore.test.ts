@@ -19,6 +19,9 @@ vi.mock("../lib/db", () => ({
   getRepos: vi.fn(async () => ({
     discovery: {
       listNewestCards: async (limit: number) => cardRows.slice(0, limit),
+      // The grid only ever reads the unseen pool: an opened card is off it for good.
+      listUnseenPoolCards: async (limit: number) =>
+        cardRows.filter((row) => row.opened_at === null).slice(0, limit),
       listAllEvents: async () => eventRows,
       insertEvent: insertEventMock,
       markOpened: markOpenedMock,
@@ -333,12 +336,19 @@ describe("reshapeUpcoming — moving the feed's dial", () => {
   });
 
   it("changes what is coming up as soon as the dial moves", async () => {
+    // How far down the reader has to scroll before meeting something new. Counting instead does
+    // not tell the two dial positions apart here: the pool holds one familiar topic, and the
+    // per-topic quota only lets three of it onto a page whatever the dial says (spec 053 §4),
+    // which is why this no longer reads ["熟悉", "熟悉", "熟悉", "熟悉"] at the familiar end.
+    const firstNewTerritory = (): number => gridTopics().indexOf("新领域");
     await useDiscoveryStore.getState().reshapeUpcoming();
-    expect(gridTopics()).toEqual(["熟悉", "熟悉", "熟悉", "熟悉"]);
+    const familiarLeaning = firstNewTerritory();
+    expect(familiarLeaning).toBeGreaterThan(0);
 
     useSettingsStore.setState({ discoveryExplorationShare: 0.4 });
     await useDiscoveryStore.getState().reshapeUpcoming();
     expect(gridTopics()).toContain("新领域");
+    expect(firstNewTerritory()).toBeLessThan(familiarLeaning);
   });
 
   it("leaves every card the reader has already seen exactly where it was", async () => {

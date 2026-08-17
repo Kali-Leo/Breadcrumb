@@ -184,15 +184,14 @@ describe("discovery fetch discipline", () => {
   }, 120_000);
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). A reader who does not work the pool down never gets new
-   * content again. refillDiscoveryPool returns "stocked" without touching the network whenever 30
-   * or more pooled cards are unopened, and the only other things that would shrink the pool —
-   * spec 053 §3's "旧未看候选按时限淘汰" and the 100-card cap — do not exist in the code. One good
-   * restock puts far more than 30 cards in the pool, so from the second day on the app polls
-   * nothing, active recall never runs (it is gated behind the same call), and the feed serves the
-   * same frozen set until the reader scrolls all the way to the end of it.
+   * FIXED (2026-08-17, spec 053 T9 finding #6). A reader who did not work the pool down never got
+   * new content again: the watermark returned "stocked" without touching the network whenever 30
+   * pooled cards were unopened, so from the second day on nothing was polled and active recall —
+   * gated behind the same call — never ran either. A round now also runs when nothing out there
+   * has answered in six hours, checked at app start and at loadMore exactly as before, with no
+   * timers anywhere.
    */
-  it.fails("keeps looking for new content for a reader who reads only the first page", async () => {
+  it("keeps looking for new content for a reader who reads only the first page", async () => {
     const run = await freshRun();
     const requestsByDay: number[] = [];
     for (let dayIndex = 0; dayIndex < 5; dayIndex += 1) {

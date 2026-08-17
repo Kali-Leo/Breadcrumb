@@ -1,10 +1,16 @@
 /**
  * Purpose: Maximal Marginal Relevance reranking (textbook algorithm, Carbonell & Goldstein
- * 1998) with hard quotas on topic, source channel and content form, used to keep the discovery
- * feed's batch diverse instead of letting one topic, one platform or one content form dominate
- * (spec 053 §4's 跨渠道与内容形态双配额). Pure math, no DB, no I/O.
- * Main exports: MmrCandidate, MmrSelectOptions, defaultMmrOptions, mmrSelect.
+ * 1998) under the topic / source channel / content form quotas that keep the discovery feed's
+ * batch diverse instead of letting one topic, one platform or one content form dominate (spec 053
+ * §4's 跨渠道与内容形态双配额). The counters themselves live in quotaLedger.ts, so one page of the
+ * feed can be assembled out of two lanes — familiar and unexplored — under a single set of caps
+ * (feedPages.ts). Pure math, no DB, no I/O.
+ * Main exports: MmrCandidate, MmrSelectOptions, defaultMmrOptions, selectWithQuotas, mmrSelect.
  */
+import { createQuotaLedger, type QuotaLedger } from "./quotaLedger";
+
+export type { QuotaLedger } from "./quotaLedger";
+export { createQuotaLedger } from "./quotaLedger";
 
 export interface MmrCandidate<T> {
   item: T;
@@ -29,8 +35,8 @@ export interface MmrSelectOptions {
 }
 
 /** Sized for one page of the feed (about two dozen cards): at most three cards on one topic,
- * five from any one platform, ten of any one content form. The caps shape the head of the list;
- * whatever they hold back sinks to the tail and comes up on a later page. */
+ * five from any one platform, ten of any one content form. The caps shape the page the reader is
+ * actually looking at; whatever they hold back is the next page's candidate. */
 export const defaultMmrOptions: Required<MmrSelectOptions> = {
   lambda: 0.7,
   perTopicCap: 3,
@@ -61,44 +67,27 @@ function candidateSimilarity<T>(a: MmrCandidate<T>, b: MmrCandidate<T>): number 
   return cosineSimilarity(a.embedding, b.embedding);
 }
 
-/** The three quota dimensions of one candidate. A null dimension is exempt: an item with no
- * channel cannot crowd out a channel. */
-function quotaKeys<T>(candidate: MmrCandidate<T>): { dimension: string; key: string }[] {
-  const keys = [{ dimension: "topic", key: candidate.topicLabel }];
-  if (candidate.sourceId) keys.push({ dimension: "source", key: candidate.sourceId });
-  if (candidate.contentKind) keys.push({ dimension: "kind", key: candidate.contentKind });
-  return keys;
-}
-
-function capFor(dimension: string, options: Required<MmrSelectOptions>): number {
-  if (dimension === "source") return options.perSourceCap;
-  if (dimension === "kind") return options.perKindCap;
-  return options.perTopicCap;
+export interface QuotaSelection<T> {
+  selected: MmrCandidate<T>[];
+  /** Everything not selected, best score first — the next page's candidates. */
+  deferred: MmrCandidate<T>[];
 }
 
 /**
- * Greedy MMR selection: repeatedly picks the remaining candidate maximizing
- * `lambda * score - (1 - lambda) * maxSimilarityToAlreadySelected`, deferring any candidate
- * that has hit a quota on any of its three dimensions. Capped-out candidates are not dropped —
- * they sink to the tail in score order (a mono-topic pool must still show everything; the caps
- * shape the TOP of the feed, they are not admission control — 2026-08-17 starvation fix).
+ * Greedy MMR selection under a ledger: repeatedly picks the remaining candidate maximizing
+ * `lambda * score - (1 - lambda) * maxSimilarityToAlreadySelected`, skipping any candidate that
+ * has hit a quota on any of its three dimensions. Stops at `k` or when every candidate left is
+ * capped out — nothing is padded and nothing is dropped; what it did not take comes back as
+ * `deferred` for the next page to consider.
  */
-export function mmrSelect<T>(
+export function selectWithQuotas<T>(
   items: readonly MmrCandidate<T>[],
   k: number,
-  options: MmrSelectOptions = {},
-): T[] {
-  const settings: Required<MmrSelectOptions> = { ...defaultMmrOptions, ...options };
+  ledger: QuotaLedger,
+  lambda: number = defaultMmrOptions.lambda,
+): QuotaSelection<T> {
   const remaining = [...items];
   const selected: MmrCandidate<T>[] = [];
-  const deferred: MmrCandidate<T>[] = [];
-  const counts = new Map<string, number>();
-
-  const isQuotaFree = (candidate: MmrCandidate<T>): boolean =>
-    quotaKeys(candidate).every(
-      ({ dimension, key }) =>
-        (counts.get(`${dimension}:${key}`) ?? 0) < capFor(dimension, settings),
-    );
 
   while (selected.length < k && remaining.length > 0) {
     let bestIndex = -1;
@@ -106,35 +95,41 @@ export function mmrSelect<T>(
 
     for (let i = 0; i < remaining.length; i++) {
       const candidate = remaining[i];
-      if (!candidate || !isQuotaFree(candidate)) continue;
-
+      if (!candidate || !ledger.isFree(candidate)) continue;
       const maxSimilarity =
         selected.length === 0
           ? 0
           : Math.max(...selected.map((chosen) => candidateSimilarity(candidate, chosen)));
-      const value = settings.lambda * candidate.score - (1 - settings.lambda) * maxSimilarity;
-
+      const value = lambda * candidate.score - (1 - lambda) * maxSimilarity;
       if (value > bestValue) {
         bestValue = value;
         bestIndex = i;
       }
     }
 
-    if (bestIndex === -1) {
-      // Every remaining candidate has hit a quota: they sink to the tail by score.
-      deferred.push(...remaining.splice(0, remaining.length));
-      break;
-    }
+    if (bestIndex === -1) break; // every candidate left has hit a quota
     const [chosen] = remaining.splice(bestIndex, 1);
     if (!chosen) break;
     selected.push(chosen);
-    for (const { dimension, key } of quotaKeys(chosen)) {
-      const countKey = `${dimension}:${key}`;
-      counts.set(countKey, (counts.get(countKey) ?? 0) + 1);
-    }
+    ledger.take(chosen);
   }
 
-  deferred.sort((a, b) => b.score - a.score);
-  const tailBudget = k - selected.length;
-  return [...selected, ...deferred.slice(0, Math.max(0, tailBudget))].map((entry) => entry.item);
+  return { selected, deferred: remaining.sort((a, b) => b.score - a.score) };
+}
+
+/**
+ * One list of `k` items under a fresh set of caps. Candidates the caps hold back are not dropped:
+ * once every one of them is capped out they fill the tail in score order, because a mono-topic
+ * pool must still show everything it has (the caps shape the page, they are not admission
+ * control — 2026-08-17 starvation fix).
+ */
+export function mmrSelect<T>(
+  items: readonly MmrCandidate<T>[],
+  k: number,
+  options: MmrSelectOptions = {},
+): T[] {
+  const lambda = options.lambda ?? defaultMmrOptions.lambda;
+  const { selected, deferred } = selectWithQuotas(items, k, createQuotaLedger(options), lambda);
+  const tailBudget = Math.max(0, k - selected.length);
+  return [...selected, ...deferred.slice(0, tailBudget)].map((entry) => entry.item);
 }

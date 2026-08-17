@@ -1,12 +1,13 @@
 /**
- * Purpose: unit tests for contentFeatureAdjustment — the quality check demotes and never
- * promotes, an unrated item is exactly neutral, freshness halves on schedule, and a feed that
- * publishes no crowd numbers, no cover and no date is not penalized for it.
+ * Purpose: unit tests for contentFeatureParts — the quality check demotes and never promotes, an
+ * unrated item is exactly neutral, freshness halves on schedule, and a feed that publishes no
+ * crowd numbers, no cover and no date is not penalized for it. The tests read the two parts as
+ * one number, which is what rankingScore does with them once each is scaled.
  */
 import { describe, expect, it } from "vitest";
 import {
   type ContentSignals,
-  contentFeatureAdjustment,
+  contentFeatureParts,
   defaultContentFeatureWeights,
 } from "./contentFeatures";
 
@@ -26,7 +27,13 @@ function hoursBefore(hours: number): string {
   return new Date(Date.parse(NOW) - hours * 60 * 60 * 1000).toISOString();
 }
 
-describe("contentFeatureAdjustment", () => {
+/** The bonus net of the demotion — the single number the two parts amount to. */
+function contentFeatureAdjustment(signals: ContentSignals, nowIso: string): number {
+  const parts = contentFeatureParts(signals, nowIso);
+  return parts.bonus - parts.demotion;
+}
+
+describe("contentFeatureParts", () => {
   it("scores a bare feed item — no crowd number, no cover, no date — at exactly zero", () => {
     expect(contentFeatureAdjustment(signals(), NOW)).toBe(0);
   });
