@@ -1,139 +1,107 @@
 /**
- * Purpose: unit tests for selectRecallTerms — where the search terms come from (topics the
- * reader's signals favour, words pulled locally out of what they read, and a topic Thompson
- * wants to test), that a first-run stance can seed a term before any card has been read, and
- * that no term is asked for twice.
+ * Purpose: unit tests for runActiveRecall's budget row — a restock spends at most its share of
+ * the day's queries, a spent day sends nothing at all, and the rotation cursor advances with
+ * every term spent and survives into the next day so the reader's whole list gets its turn.
  */
-import type { DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
-import { describe, expect, it, vi } from "vitest";
+import type { DiscoveryEventRow } from "@breadcrumb/core-db";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./db", () => ({ getRepos: vi.fn() }));
-vi.mock("./discoveryChannels", () => ({ searchChannelsForCandidates: vi.fn() }));
+let settingsRows = new Map<string, unknown>();
+const searchMock = vi.fn(async (queries: readonly string[]) =>
+  queries.map((query) => ({ query, items: [] })),
+);
 
-const { selectRecallTerms } = await import("./discoveryRecall");
+const events: DiscoveryEventRow[] = ["编程与技术", "科学", "数学", "历史"].map((topic, index) => ({
+  id: `e${index}`,
+  card_id: `card-${index}`,
+  topic_label: topic,
+  kind: "save",
+  value_ms: null,
+  created_at: "2026-08-16T10:00:00.000Z",
+}));
 
-const NOW = "2026-08-17T10:00:00.000Z";
-/** A fixed draw keeps Thompson's pick deterministic under test. */
-const fixedRandom = (): number => 0.5;
+vi.mock("./db", () => ({
+  getRepos: vi.fn(async () => ({
+    settings: {
+      get: async (key: string) => settingsRows.get(key) ?? null,
+      set: async (key: string, value: unknown) => {
+        settingsRows.set(key, value);
+      },
+    },
+    discovery: {
+      listAllEvents: async () => events,
+      listNewestCards: async () => [],
+    },
+  })),
+}));
 
-function event(overrides: Partial<DiscoveryEventRow> & { id: string }): DiscoveryEventRow {
-  return {
-    card_id: "card-1",
-    topic_label: "编译器",
-    kind: "open",
-    value_ms: null,
-    created_at: "2026-08-16T10:00:00.000Z",
-    ...overrides,
-  };
+vi.mock("./discoveryChannels", () => ({ searchChannelsForCandidates: searchMock }));
+
+const { runActiveRecall, DAILY_RECALL_QUERY_BUDGET } = await import("./discoveryRecall");
+
+const NOW = new Date("2026-08-17T10:00:00.000Z");
+const NEXT_DAY = new Date("2026-08-18T10:00:00.000Z");
+
+function queriesOfCall(index: number): string[] {
+  return [...((searchMock.mock.calls[index]?.[0] ?? []) as readonly string[])];
 }
 
-function card(id: string, title: string, hook: string): DiscoveryCardRow {
-  return {
-    id,
-    title,
-    hook,
-    topic_label: "编译器",
-    source: "explore",
-    body_md: null,
-    embedding_json: null,
-    batch_id: "batch",
-    created_at: "2026-08-16T00:00:00.000Z",
-    opened_at: "2026-08-16T10:00:00.000Z",
-    source_id: "sample",
-    kind: "article",
-    url: `https://example.org/${id}`,
-    cover_url: null,
-    author: null,
-    published_at: "2026-08-16T00:00:00.000Z",
-    saved_at: null,
-    quality_score: null,
-    upstream_signal: null,
-    media_url: null,
-  };
-}
+afterEach(() => {
+  settingsRows = new Map();
+  searchMock.mockClear();
+});
 
-describe("selectRecallTerms", () => {
-  it("asks for nothing when the reader has done nothing yet", () => {
-    expect(
-      selectRecallTerms({ events: [], cards: [], nowIso: NOW, random: fixedRandom }, 3),
-    ).toEqual([]);
+describe("runActiveRecall", () => {
+  it("spends a few queries and writes down what it spent", async () => {
+    const outcome = await runActiveRecall(NOW);
+    expect(outcome.queriesSpent).toBe(3);
+    expect(settingsRows.get("discoveryRecallBudget")).toMatchObject({
+      day: "2026-08-17",
+      used: 3,
+      cursor: 3,
+    });
   });
 
-  it("leads with the topic the reader's own signals favour", () => {
-    const terms = selectRecallTerms(
-      {
-        events: [event({ id: "e1", kind: "save" })],
-        cards: [],
-        nowIso: NOW,
-        random: fixedRandom,
-      },
-      3,
-    );
-    expect(terms[0]).toBe("编译器");
+  it("stops asking once the day's queries are gone", async () => {
+    settingsRows.set("discoveryRecallBudget", {
+      day: "2026-08-17",
+      used: DAILY_RECALL_QUERY_BUDGET,
+      cursor: 0,
+    });
+    const outcome = await runActiveRecall(NOW);
+    expect(outcome.queriesSpent).toBe(0);
+    expect(searchMock).not.toHaveBeenCalled();
   });
 
-  it("takes a term from a first-run stance before any card has been read", () => {
-    const terms = selectRecallTerms(
-      {
-        events: [event({ id: "e1", kind: "onboarding", topic_label: "天文学", value_ms: 1 })],
-        cards: [],
-        nowIso: NOW,
-        random: fixedRandom,
-      },
-      3,
-    );
-    expect(terms).toContain("天文学");
+  /** Spec 053 F1 handoff: successive restocks used to re-ask the head of the list forever. */
+  it("moves on to the reader's other interests on the next restock", async () => {
+    await runActiveRecall(NOW);
+    await runActiveRecall(NOW);
+    const first = queriesOfCall(0);
+    const second = queriesOfCall(1);
+    expect(first).toHaveLength(3);
+    expect(second[0]).not.toBe(first[0]);
+    // The reader has four interests and a restock asks about three; two restocks reach all four.
+    expect(new Set([...first, ...second]).size).toBe(4);
   });
 
-  it("pulls a word out of what the reader actually read, alongside the topic itself", () => {
-    const terms = selectRecallTerms(
-      {
-        events: [
-          event({ id: "e1", card_id: "c1", kind: "finish" }),
-          event({ id: "e2", card_id: "c2", kind: "open" }),
-        ],
-        cards: [
-          card("c1", "把寄存器分配讲清楚", "寄存器分配的图着色做法。"),
-          card("c2", "再谈寄存器分配", "寄存器分配在真实编译器里的样子。"),
-        ],
-        nowIso: NOW,
-        random: fixedRandom,
-      },
-      3,
-    );
-    expect(terms[0]).toBe("编译器");
-    expect(terms.some((term) => term.includes("寄存"))).toBe(true);
+  it("gives the day's queries back tomorrow without restarting the rotation", async () => {
+    await runActiveRecall(NOW);
+    await runActiveRecall(NEXT_DAY);
+    expect(settingsRows.get("discoveryRecallBudget")).toMatchObject({
+      day: "2026-08-18",
+      used: 3,
+      cursor: 6,
+    });
+    expect(queriesOfCall(1)[0]).not.toBe(queriesOfCall(0)[0]);
   });
 
-  it("never spends two queries on the same term", () => {
-    const terms = selectRecallTerms(
-      {
-        events: [
-          event({ id: "e1", kind: "save" }),
-          event({ id: "e2", kind: "open" }),
-          event({ id: "e3", topic_label: "天文学", kind: "open" }),
-        ],
-        cards: [],
-        nowIso: NOW,
-        random: fixedRandom,
-      },
-      4,
-    );
-    expect(new Set(terms).size).toBe(terms.length);
-  });
-
-  it("never asks for more terms than the budget allows", () => {
-    const terms = selectRecallTerms(
-      {
-        events: ["编译器", "天文学", "烹饪", "历史"].map((topic, index) =>
-          event({ id: `e${index}`, topic_label: topic, kind: "save" }),
-        ),
-        cards: [],
-        nowIso: NOW,
-        random: fixedRandom,
-      },
-      2,
-    );
-    expect(terms).toHaveLength(2);
+  /** A row written before the rotation existed has no cursor at all; it reads as "start at the
+   * front" rather than as a broken row that costs the reader the day's recall. */
+  it("reads a budget row from before the rotation existed", async () => {
+    settingsRows.set("discoveryRecallBudget", { day: "2026-08-17", used: 10 });
+    const outcome = await runActiveRecall(NOW);
+    expect(outcome.queriesSpent).toBe(2);
+    expect(settingsRows.get("discoveryRecallBudget")).toMatchObject({ used: 12, cursor: 2 });
   });
 });

@@ -99,6 +99,24 @@ describe("isSourceAvailableNow", () => {
     expect(isSourceAvailableNow(source(), failedLongAgo, NOW)).toBe(true);
   });
 
+  /** Spec 053 T9 finding #9: the interval has to hold across restocks and restarts, not only
+   * inside one fetcher's in-memory ledger. */
+  it("waits out the minimum interval after a poll that worked", () => {
+    const justPolled = state({
+      failure_count: 0,
+      last_fetch_at: new Date(NOW.getTime() - 30_000).toISOString(),
+    });
+    expect(isSourceAvailableNow(source(), justPolled, NOW)).toBe(false);
+  });
+
+  it("polls again once the minimum interval has passed", () => {
+    const polledLongEnoughAgo = state({
+      failure_count: 0,
+      last_fetch_at: new Date(NOW.getTime() - 90_000).toISOString(),
+    });
+    expect(isSourceAvailableNow(source(), polledLongEnoughAgo, NOW)).toBe(true);
+  });
+
   it("stops at today's request budget and starts again tomorrow", () => {
     const spent = state({ daily_budget_used: 24, budget_day: localDayKey(NOW) });
     expect(isSourceAvailableNow(source(), spent, NOW)).toBe(false);

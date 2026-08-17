@@ -1,9 +1,10 @@
 /**
  * Purpose: the channel_state half of fetch discipline (spec 053 §2) — what one channel told us
- * last time (ETag / Last-Modified), whether it answered, how long its failure streak is and how
- * much of today's request budget it has spent. The channel layer's own ledger is in-memory and
- * starts empty on every launch; this is what makes a dead source stay skipped and a spent budget
- * stay spent across restarts. Side effects: reads and writes the channel_state table.
+ * last time (ETag / Last-Modified), when it was last asked, whether it answered, how long its
+ * failure streak is and how much of today's request budget it has spent. The channel layer's own
+ * ledger is in-memory and starts empty on every launch; this is what makes a dead source stay
+ * skipped, a spent budget stay spent, and a channel's minimum interval hold across restocks and
+ * restarts. Side effects: reads and writes the channel_state table.
  * Main exports: localDayKey, readChannelStates, createChannelStateConditionalStore,
  * isSourceAvailableNow, recordSourceFetch.
  */
@@ -75,9 +76,15 @@ function backoffMilliseconds(failureCount: number): number {
 }
 
 /**
- * Whether polling this source right now is worth a request. A source in backoff or out of
- * today's budget is skipped in silence — the reader is never told that a channel is down, they
- * just see the cards from the channels that are up (spec 053 总则).
+ * Whether polling this source right now is worth a request. A source inside its minimum
+ * interval, in backoff, or out of today's budget is skipped in silence — the reader is never told
+ * that a channel is down, they just see the cards from the channels that are up (spec 053 总则).
+ *
+ * The interval is checked here rather than only in the channel layer's ledger because that ledger
+ * lives on a ChannelFetcher instance, and a new fetcher is built for every round: five restocks in
+ * one second used to mean five polls of every source, against a catalog that says at most one
+ * every thirty minutes (spec 053 T9 finding #9). channel_state already carries the instant of the
+ * last attempt, which is exactly what the rule needs and what survives a restart.
  */
 export function isSourceAvailableNow(
   source: ChannelSource,
@@ -92,15 +99,23 @@ export function isSourceAvailableNow(
   ) {
     return false;
   }
-  const failureCount = state.failure_count ?? 0;
-  if (failureCount === 0 || state.last_fetch_at === null) return true;
+  if (state.last_fetch_at === null) return true;
   const lastFetch = Date.parse(state.last_fetch_at);
   if (Number.isNaN(lastFetch)) return true;
-  return now.getTime() - lastFetch >= backoffMilliseconds(failureCount);
+  const sinceLastAttempt = now.getTime() - lastFetch;
+  // A record from the future is a clock that moved backwards, not a poll we owe a wait for.
+  if (sinceLastAttempt < 0) return true;
+  const failureCount = state.failure_count ?? 0;
+  const wait = Math.max(
+    source.fetchPolicy.minimumIntervalMilliseconds,
+    backoffMilliseconds(failureCount),
+  );
+  return sinceLastAttempt >= wait;
 }
 
-/** Charges one poll to the source's day and records whether it answered. A skipped poll (the
- * request never left) changes nothing but the timestamp. */
+/** Charges one poll to the source's day and records whether it answered. A skipped poll — the
+ * request never left, so nothing was learned — only rolls the day over, and in particular leaves
+ * the last-attempt instant the minimum interval is measured from where it was. */
 export async function recordSourceFetch(result: SourceFetchResult, now: Date): Promise<void> {
   const repos = await getRepos();
   const existing = (await repos.channelState.get(result.sourceId)) ?? blankState(result.sourceId);

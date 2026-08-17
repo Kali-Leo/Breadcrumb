@@ -1,9 +1,9 @@
 /**
  * Purpose: turns candidate items from the channel layer into cards in the local pool (spec 053
- * §3) — one card per item, the source's own summary as the hook, the channel (or, for arXiv,
- * the category) as the topic, and an id that is stable across refetches so polling the same
- * feed again inserts nothing. Cards land ready to display: no embedding, no quality score, no
- * network needed to show them.
+ * §3) — one card per item, the source's own summary as the hook, the channel (for arXiv, the
+ * category; for a feed the reader pasted in, its hostname) as the topic, and an id that is stable
+ * across refetches so polling the same feed again inserts nothing. Cards land ready to display:
+ * no embedding, no quality score, no network needed to show them.
  * Side effects: reads the pool's ids and inserts card rows.
  * Main exports: landCandidateItems, CandidateGroup, cardRowFromCandidate.
  */
@@ -14,6 +14,7 @@ import {
   loadStarterChannelCatalog,
 } from "@breadcrumb/plugin-channels";
 import { getRepos } from "./db";
+import { feedHostLabel, feedUrlFromUserFeedSourceId } from "./discoveryChannelSources";
 import { newId } from "./time";
 
 /** A card's hook is one glance worth of text under the title; feed summaries run to whole
@@ -37,6 +38,24 @@ function clipHook(summary: string): string {
   return `${oneLine.slice(0, HOOK_CHARACTER_CAP).trimEnd()}…`;
 }
 
+/**
+ * A source the shipped catalog does not know is one the reader added themselves, and its id
+ * carries the address they pasted in (`user-feed:https://…`). The settings page already lists
+ * those under their hostname, so their cards are filed under the same hostname: a topic label is
+ * read by people, ranked on, and — until spec 053 T9 finding #1 — sent to third-party search APIs
+ * as a query, none of which an address is fit for.
+ */
+function topicLabelForUnknownSource(sourceId: string): string {
+  const pastedAddress = feedUrlFromUserFeedSourceId(sourceId);
+  return (
+    (pastedAddress === null ? null : feedHostLabel(pastedAddress)) ??
+    // An id that is an address on its own gets the same treatment; one that is a plain name
+    // (a catalog entry this build no longer ships) is already readable.
+    feedHostLabel(sourceId) ??
+    sourceId
+  );
+}
+
 /** arXiv's catalog entries are per category ("arXiv Machine Learning (cs.LG)"), and the
  * category is the interesting part: a reader is interested in machine-learning papers, not in
  * arXiv. Every other channel is its own topic. */
@@ -44,7 +63,7 @@ export function topicLabelForSource(
   source: ChannelSource | undefined,
   item: CandidateItem,
 ): string {
-  if (source === undefined) return item.sourceId;
+  if (source === undefined) return topicLabelForUnknownSource(item.sourceId);
   if (source.adapterType === "arxiv") {
     return source.displayName.replace(/^arXiv\s+/i, "").trim() || source.displayName;
   }

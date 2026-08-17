@@ -233,13 +233,18 @@ describe("refillDiscoveryPool staleness and pool limits", () => {
   });
 });
 
+/**
+ * The topic labels here are fields the first-run panel offers, because that is one of the two
+ * places a query may come from since spec 053 T9 finding #1 — the other being words extracted
+ * locally out of what the reader read. A channel's own name never becomes a search term.
+ */
 describe("refillDiscoveryPool active recall", () => {
   it("goes looking for the reader's own interests when polling left the pool thin", async () => {
     eventRows = [
       {
         id: "e1",
         card_id: "old",
-        topic_label: "编译器",
+        topic_label: "编程与技术",
         kind: "open",
         value_ms: null,
         created_at: "2026-08-16T12:00:00.000Z",
@@ -247,15 +252,15 @@ describe("refillDiscoveryPool active recall", () => {
     ];
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([
-      { query: "编译器", items: [candidate("hn:recalled")] },
+      { query: "编程与技术", items: [candidate("hn:recalled")] },
     ]);
 
     const outcome = await refillDiscoveryPool({ now: NOW });
     expect(searchChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
-    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编译器");
+    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程与技术");
     expect(outcome.landedCount).toBe(2);
     // The term that found it is the card's topic, not the channel that answered.
-    expect(cardRows.find((row) => row.id === "hn:recalled")?.topic_label).toBe("编译器");
+    expect(cardRows.find((row) => row.id === "hn:recalled")?.topic_label).toBe("编程与技术");
   });
 
   it("stops searching once the day's query budget is gone", async () => {
@@ -264,7 +269,7 @@ describe("refillDiscoveryPool active recall", () => {
       {
         id: "e1",
         card_id: "old",
-        topic_label: "编译器",
+        topic_label: "编程与技术",
         kind: "open",
         value_ms: null,
         created_at: "2026-08-16T12:00:00.000Z",
@@ -280,14 +285,14 @@ describe("refillDiscoveryPool active recall", () => {
       {
         id: "e1",
         card_id: "old",
-        topic_label: "编译器",
+        topic_label: "编程与技术",
         kind: "open",
         value_ms: null,
         created_at: "2026-08-16T12:00:00.000Z",
       },
     ];
     pollFound([candidate("hn:1")]);
-    searchChannelsForCandidatesMock.mockResolvedValue([{ query: "编译器", items: [] }]);
+    searchChannelsForCandidatesMock.mockResolvedValue([{ query: "编程与技术", items: [] }]);
     await refillDiscoveryPool({ now: NOW });
     expect(settingRows.get("discoveryRecallBudget")).toMatchObject({ used: 1 });
   });

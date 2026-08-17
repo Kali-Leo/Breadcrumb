@@ -39,6 +39,12 @@ export function userFeedSourceId(feedUrl: string): string {
   return `${USER_FEED_ID_PREFIX}${feedUrl}`;
 }
 
+/** The address behind a self-added source id, or null when the id is a catalog one. */
+export function feedUrlFromUserFeedSourceId(sourceId: string): string | null {
+  if (!sourceId.startsWith(USER_FEED_ID_PREFIX)) return null;
+  return sourceId.slice(USER_FEED_ID_PREFIX.length);
+}
+
 /** Half-hourly at most, forty-eight requests a day — the same restraint the catalog's own blog
  * feeds are held to, since a pasted address is usually one of those. */
 const USER_FEED_POLICY = {
@@ -47,12 +53,18 @@ const USER_FEED_POLICY = {
   userAgentOverride: null,
 } as const;
 
-function hostLabel(feedUrl: string): string {
+/** The hostname a feed address is shown under: what the settings page lists a self-added source
+ * as, and what its cards are filed under. Null when the address is not usable as one. */
+export function feedHostLabel(feedUrl: string): string | null {
   try {
-    return new URL(feedUrl).hostname.replace(/^www\./, "") || feedUrl;
+    return new URL(feedUrl).hostname.replace(/^www\./, "") || null;
   } catch {
-    return feedUrl;
+    return null;
   }
+}
+
+function hostLabel(feedUrl: string): string {
+  return feedHostLabel(feedUrl) ?? feedUrl;
 }
 
 /** A pasted address as a channel source, or null when it is not a usable address — a bad line

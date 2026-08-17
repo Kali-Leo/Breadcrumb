@@ -2,8 +2,8 @@
  * Purpose: the spec-053 §2 抓取纪律 promises, checked against the app's own restock path with a
  * fake socket underneath — conditional requests, the per-channel rate limit, 省流量模式, an
  * unreachable channel costing nothing, the quality check's switch and its 计价 line, and what the
- * high/low watermark does to a reader who never empties the pool. Findings are marked `it.fails`
- * with the reasoning inline; everything else is a trip-wire.
+ * high/low watermark does to a reader who never empties the pool. Every assertion is a trip-wire;
+ * the ones that started life as findings carry the note on what they caught and how it was fixed.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -72,7 +72,12 @@ describe("discovery fetch discipline", () => {
     const run = await freshRun();
     await (await refillDiscoveryPool({ force: true, now: JOURNEY_START })).backgroundWork;
     run.network.clearRequests();
-    const second = await refillDiscoveryPool({ force: true, now: JOURNEY_START });
+    // A second poll only happens once the channel's own minimum interval has passed; the
+    // catalog's half hour for a pasted feed is what makes the round below a real second poll
+    // rather than one the discipline refuses outright.
+    const laterToday = new Date(JOURNEY_START.getTime() + 31 * 60 * 1000);
+    vi.setSystemTime(laterToday);
+    const second = await refillDiscoveryPool({ force: true, now: laterToday });
     await second.backgroundWork;
 
     const compilers = topicFeedByKey("compilers");
@@ -136,17 +141,15 @@ describe("discovery fetch discipline", () => {
   }, 60_000);
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). The per-channel minimum interval is not enforced across
-   * restocks. ChannelFetcher keeps it in a FetchBudgetLedger that lives on the fetcher instance,
-   * and discoveryChannels.resolveAccess builds a brand new ChannelFetcher for every poll, so the
-   * ledger is empty every time. What survives in channel_state is the failure backoff and the
-   * daily budget — not the last-poll instant the interval check needs (isSourceAvailableNow never
-   * looks at fetchPolicy.minimumIntervalMilliseconds). Five forced restocks in the same second
-   * therefore send five polls to every source, where the catalog says at most one per 30 minutes.
-   * Spec 053 §2 lists 每渠道限频 as a hard requirement; the daily budget is the only thing
-   * actually stopping a runaway.
+   * FIXED (2026-08-17, spec 053 T9 finding #9). The per-channel minimum interval used to live only
+   * in the FetchBudgetLedger on the ChannelFetcher instance, and discoveryChannels builds a brand
+   * new fetcher for every round, so the ledger was empty every time: five forced restocks in the
+   * same second sent five polls to every source, against a catalog that says at most one every
+   * thirty minutes. The interval is now read from channel_state's last-attempt instant
+   * (isSourceAvailableNow), which is the same thing that makes it hold across a restart.
+   * Spec 053 §2 每渠道限频.
    */
-  it.fails("waits out a channel's minimum interval between polls", async () => {
+  it("waits out a channel's minimum interval between polls", async () => {
     const run = await freshRun();
     run.network.clearRequests();
     for (let round = 0; round < 5; round += 1) {
@@ -156,16 +159,16 @@ describe("discovery fetch discipline", () => {
   }, 60_000);
 
   /**
-   * FINDING (2026-08-17, spec 053 T9). Active recall sends the reader's own subscription
-   * addresses to third-party search APIs. Cards from a reader-added feed are filed under the
-   * topic label discoveryPoolLanding falls back to when a source is not in the shipped catalog —
-   * the raw source id, which for a pasted feed is `user-feed:<the whole URL>`. selectRecallTerms
-   * then takes the reader's highest-weighted topics as literal search terms, so
-   * `query=user-feed%3Ahttps%3A%2F%2F…` goes out to Hacker News / arXiv / iTunes. It leaks what
-   * the reader subscribes to, and it burns queries out of the day's budget of twelve on a term
-   * that can never match anything.
+   * FIXED (2026-08-17, spec 053 T9 finding #1). Active recall used to send the reader's own
+   * subscription addresses to third-party search APIs: a pasted feed's cards were filed under the
+   * fallback topic label discoveryPoolLanding used for a source outside the shipped catalog — the
+   * raw source id, `user-feed:<the whole URL>` — and selectRecallTerms took the highest-weighted
+   * topics as literal search terms, so `query=user-feed%3Ahttps%3A%2F%2F…` went out to Hacker
+   * News / arXiv / iTunes. A pasted feed is now filed under its hostname, and a query may only
+   * come from the first-run panel's fields or from words extracted locally out of what the reader
+   * read, with anything address-shaped dropped whoever proposed it.
    */
-  it.fails("never sends anything but a topic to a third-party search API", async () => {
+  it("never sends anything but a topic to a third-party search API", async () => {
     const run = await freshRun();
     for (let dayIndex = 0; dayIndex < 4; dayIndex += 1) {
       await runJourneyDay({

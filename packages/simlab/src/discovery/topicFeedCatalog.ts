@@ -12,8 +12,8 @@ export interface TopicFeed {
   /** The address the reader pastes into 设置. */
   feedUrl: string;
   /** The label the pipeline actually files these cards under. Reader-added feeds are not in the
-   * shipped catalog, so discoveryPoolLanding falls back to the source id — see the long-journey
-   * suite's note on what that id turns into downstream. */
+   * shipped catalog, so discoveryPoolLanding files them under the address's hostname — the same
+   * name the settings page lists them by. */
   topicLabel: string;
   format: "rss" | "atom" | "json";
   /** Distinctive vocabulary — what makes items from this feed cluster together once embedded. */
@@ -25,7 +25,7 @@ export interface TopicFeed {
 }
 
 function feed(spec: Omit<TopicFeed, "topicLabel">): TopicFeed {
-  return { ...spec, topicLabel: `user-feed:${spec.feedUrl}` };
+  return { ...spec, topicLabel: new URL(spec.feedUrl).hostname.replace(/^www\./, "") };
 }
 
 export const TOPIC_FEEDS: readonly TopicFeed[] = [

@@ -3,7 +3,7 @@
  * RSS/Atom/JSON channels behind a fake socket, the app's own landing, ranking, paging, silent
  * signals, background passes and restock discipline, over a real migrated SQLite file. The
  * assertions are trip-wires around what the spec promises; the point of the run is what it turns
- * up on the way (see the notes on each `it.fails` — those are findings, not aspirations).
+ * up on the way (the notes on individual tests record what each one caught and how it was fixed).
  * No network, no LLM: the two runtimes are replaced by deterministic local doubles.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -55,14 +55,22 @@ const { recordFeedDialMove } = await import(
  */
 const RANKING_WINDOW = UNSEEN_POOL_CAP;
 
-const COMPILERS = topicFeedByKey("compilers").topicLabel;
-const NEURO = topicFeedByKey("neuro").topicLabel;
-const GARDENING = topicFeedByKey("gardening").topicLabel;
 const GOSSIP = topicFeedByKey("gossip").topicLabel;
+
+/**
+ * What this reader recognizes as one of their subjects: the feeds they subscribe to, plus the
+ * words those feeds are written in. Active recall files a card under the term that found it, and
+ * those terms are pulled out of what the reader read — so a card about 寄存器分配 is one of this
+ * reader's topics whether it arrived from their compiler feed or from a search. Feed labels alone
+ * were enough while every recalled card carried a subscription address as its topic (spec 053 T9
+ * finding #1); now that a term is a subject, the model has to know its subjects.
+ */
+const interestLabels = (keys: readonly string[]): string[] =>
+  keys.flatMap((key) => [topicFeedByKey(key).topicLabel, ...topicFeedByKey(key).vocabulary]);
 
 const persona = {
   name: "长旅程读者",
-  interests: [COMPILERS, NEURO, GARDENING],
+  interests: interestLabels(["compilers", "neuro", "gardening"]),
   aversion: GOSSIP,
   attention: 0.7,
 };
@@ -154,7 +162,6 @@ async function runJourney(): Promise<JourneyResult> {
 const mean = (values: readonly number[]): number =>
   values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
 
-const early = (): DayRecord[] => journey.days.slice(0, 5);
 const late = (): DayRecord[] => journey.days.slice(JOURNEY_DAYS - 5);
 
 let restoreRandomness: () => void = () => undefined;
@@ -317,34 +324,41 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
    * - the last five days are the tail of a week offline, during which nothing new lands and the
    *   reader reads their own topics out of the pool entirely. That measures the network.
    *
-   * So this reads the page the feed leads with each day, and reads it against the reader's very
-   * first sitting — the one where the app knew nothing about them — rather than against days 1-4,
-   * because the growth all happens on day one: the reader's topics go from a third of the first
-   * page to more than half of it and then sit there for a month. What holds them there is the
-   * ceiling, not the evidence: the per-topic quota and the reader's own dial, which they moved to
-   * 新领域多一点 on day 18, together bound how much of a page three topics can hold. The three
-   * assertions are the three things worth knowing — it grew, it did not decay over a month that
-   * included a week offline, and it is nowhere near the pool's own mix, which is where the whole
-   * journey used to sit. Spec 053 验收: "收藏/读完某主题→同主题增多但不独占".
+   * So this reads the page the feed leads with each day against the pool that page was drawn
+   * from, rather than as a bare share. The absolute share of a late page is not comparable to an
+   * early one — the pool's own mix moves by a factor of five over a month, and a week offline
+   * strips it of the reader's topics entirely — and it stopped being comparable across the F2 fix
+   * as well: active recall used to file everything it found under the reader's subscription
+   * addresses, which counted as their topics by construction (spec 053 T9 finding #1), and now
+   * files it under the subject that found it. What survives all of that is the ratio, which is
+   * what the ranking is actually judged on: a day-one page looks like its pool, and a late page
+   * holds several times the reader's share of it. Spec 053 验收:
+   * "收藏/读完某主题→同主题增多但不独占".
    */
   it("lets the reader's own topics grow over the journey", () => {
     const firstPage = (days: readonly DayRecord[]): DiscoveryCardRow[] =>
       days.flatMap((day) => day.shown.slice(0, FEED_PAGE_SIZE));
     const online = journey.days.filter((day) => !OFFLINE_DAYS.has(day.dayIndex));
-    const firstSitting = shareOfTopics(firstPage(journey.days.slice(0, 1)), persona.interests);
-    const interestEarly = shareOfTopics(firstPage(early()), persona.interests);
-    const interestLate = shareOfTopics(firstPage(online.slice(-5)), persona.interests);
-    expect(interestLate, `first sitting ${firstSitting} -> late ${interestLate}`).toBeGreaterThan(
-      firstSitting * 1.3,
-    );
-    expect(interestLate, `early ${interestEarly} -> late ${interestLate}`).toBeGreaterThanOrEqual(
-      interestEarly,
-    );
+    /** How many times more of the reader's topics a day's leading page holds than the pool it was
+     * drawn from. A day whose pool holds none of them at all says nothing about ranking. */
+    const liftsOver = (days: readonly DayRecord[]): number[] =>
+      days
+        .map((day) => ({
+          page: shareOfTopics(firstPage([day]), persona.interests),
+          pool: journey.poolWindowInterestShare[day.dayIndex] ?? 0,
+        }))
+        .filter((day) => day.pool > 0)
+        .map((day) => day.page / day.pool);
+    const earlyLift = mean(liftsOver(online.slice(0, 5)));
+    const lateLift = mean(liftsOver(online.slice(-5)));
+    expect(lateLift, `early ${earlyLift} -> late ${lateLift}`).toBeGreaterThan(earlyLift * 2);
     // And it is not a hair's breadth over the pool it was drawn from either.
-    const poolShare = mean(journey.poolWindowInterestShare.slice(JOURNEY_DAYS - 5));
-    expect(interestLate, `late ${interestLate} vs pool ${poolShare}`).toBeGreaterThan(
-      poolShare * 2,
+    expect(lateLift).toBeGreaterThan(2);
+    const interestLate = shareOfTopics(firstPage(online.slice(-5)), persona.interests);
+    const poolLate = mean(
+      online.slice(-5).map((day) => journey.poolWindowInterestShare[day.dayIndex] ?? 0),
     );
+    expect(interestLate, `late ${interestLate} vs pool ${poolLate}`).toBeGreaterThan(poolLate * 2);
   });
 
   it("spends exactly one quality-check call per fetched batch and nothing else on the LLM", () => {

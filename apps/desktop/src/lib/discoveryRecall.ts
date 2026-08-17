@@ -1,25 +1,17 @@
 /**
- * Purpose: the active half of candidate recall (spec 053 §4) — turns what the reader has shown
- * interest in into a few search terms and spends them, within a daily query budget, on the
- * channels that answer queries. Terms come from three places: the topics their signals already
- * favour (first-run stances included, since those fold into the same weights), the topics
- * Thompson sampling wants to test, and words pulled locally out of what they actually read.
- * No LLM is involved at any step.
+ * Purpose: the active half of candidate recall (spec 053 §4) — spends a few search terms, within
+ * a daily query budget, on the channels that answer queries. Which terms those are is decided
+ * next door (discoveryRecallTerms); this file owns the budget row: how many queries the day has
+ * left and how far the rotation through the reader's terms has got, both of which survive a
+ * restart. No LLM is involved at any step.
  * Side effects: the daily budget row in settings, network requests via discoveryChannels.
- * Main exports: selectRecallTerms, runActiveRecall, DAILY_RECALL_QUERY_BUDGET.
+ * Main exports: runActiveRecall, DAILY_RECALL_QUERY_BUDGET.
  */
-import type { DiscoveryCardRow, DiscoveryEventRow } from "@breadcrumb/core-db";
-import {
-  foldInterestFromEvents,
-  pickExploreTopics,
-  topicStatsFromEvents,
-} from "@breadcrumb/plugin-discovery";
 import { z } from "zod";
 import { getRepos } from "./db";
 import { localDayKey } from "./discoveryChannelState";
 import { searchChannelsForCandidates, type TopicSearchHarvest } from "./discoveryChannels";
-import { extractSalientKeywords } from "./discoveryKeywords";
-import { discoveryRowsToInterestEvents } from "./discoveryOrdering";
+import { selectRecallTerms } from "./discoveryRecallTerms";
 import { nowIso } from "./time";
 
 /**
@@ -33,16 +25,15 @@ export const DAILY_RECALL_QUERY_BUDGET = 12;
 /** At most this many terms per restock, so one refill cannot spend the whole day's budget. */
 const TERMS_PER_REFILL = 3;
 
-/** How many of the reader's recently read items the keyword pass looks at. */
-const READ_ITEMS_FOR_KEYWORDS = 20;
-
 const RECALL_BUDGET_KEY = "discoveryRecallBudget";
 
 /** Comes back from the settings table, so it is parsed rather than trusted; anything unreadable
- * simply means "nothing spent yet today". */
+ * simply means "nothing spent yet today". A row written before the rotation existed carries no
+ * cursor and starts at the front of the list, which is where it left off. */
 const recallBudgetSchema = z.object({
   day: z.string().min(1),
   used: z.number().int().min(0),
+  cursor: z.number().int().min(0).default(0),
 });
 
 type RecallBudget = z.infer<typeof recallBudgetSchema>;
@@ -51,67 +42,21 @@ async function readBudget(day: string): Promise<RecallBudget> {
   const repos = await getRepos();
   const stored = await repos.settings.get<unknown>(RECALL_BUDGET_KEY);
   const parsed = recallBudgetSchema.safeParse(stored);
-  if (!parsed.success || parsed.data.day !== day) return { day, used: 0 };
+  if (!parsed.success) return { day, used: 0, cursor: 0 };
+  // A new day gives the reader their queries back; where the rotation had got to is not a daily
+  // thing, so it carries over rather than sending every morning after the same first term.
+  if (parsed.data.day !== day) return { day, used: 0, cursor: parsed.data.cursor };
   return parsed.data;
 }
 
 async function spendQueries(day: string, count: number): Promise<void> {
   const repos = await getRepos();
   const budget = await readBudget(day);
-  await repos.settings.set(RECALL_BUDGET_KEY, { day, used: budget.used + count }, nowIso());
-}
-
-/** Round-robins the three sources of terms so a single strong interest cannot take every
- * query: familiar topic, then a word from what they read, then a topic worth testing. */
-function roundRobin(lists: readonly (readonly string[])[], limit: number): string[] {
-  const picked: string[] = [];
-  const seen = new Set<string>();
-  const longest = Math.max(0, ...lists.map((list) => list.length));
-  for (let index = 0; index < longest && picked.length < limit; index += 1) {
-    for (const list of lists) {
-      const term = list[index]?.trim();
-      if (term === undefined || term.length === 0 || seen.has(term)) continue;
-      seen.add(term);
-      picked.push(term);
-      if (picked.length >= limit) break;
-    }
-  }
-  return picked;
-}
-
-export interface RecallTermInput {
-  events: readonly DiscoveryEventRow[];
-  /** The pool, used only to look up the titles and hooks of what the reader read. */
-  cards: readonly DiscoveryCardRow[];
-  nowIso: string;
-  /** Injected in tests; production uses Math.random for Thompson's draws. */
-  random?: () => number;
-}
-
-/** The terms this refill should search for, best first. */
-export function selectRecallTerms(input: RecallTermInput, limit: number): string[] {
-  const events = discoveryRowsToInterestEvents(input.events);
-  const favouredTopics = foldInterestFromEvents(events, input.nowIso)
-    .filter((weight) => weight.weight > 0)
-    .map((weight) => weight.topicLabel);
-  const exploreTopics = pickExploreTopics(
-    topicStatsFromEvents(events),
-    limit,
-    input.random ?? Math.random,
+  await repos.settings.set(
+    RECALL_BUDGET_KEY,
+    { day, used: budget.used + count, cursor: budget.cursor + count },
+    nowIso(),
   );
-
-  const readCardIds = new Set(
-    input.events
-      .filter((event) => ["open", "save", "finish"].includes(event.kind))
-      .map((event) => event.card_id),
-  );
-  const readDocuments = input.cards
-    .filter((card) => readCardIds.has(card.id))
-    .slice(0, READ_ITEMS_FOR_KEYWORDS)
-    .map((card) => `${card.title} ${card.hook}`);
-  const keywords = extractSalientKeywords(readDocuments, limit);
-
-  return roundRobin([favouredTopics, keywords, exploreTopics], limit);
 }
 
 export interface ActiveRecallOutcome {
@@ -135,7 +80,10 @@ export async function runActiveRecall(now: Date = new Date()): Promise<ActiveRec
     repos.discovery.listAllEvents(),
     repos.discovery.listNewestCards(150),
   ]);
-  const terms = selectRecallTerms({ events, cards, nowIso: now.toISOString() }, allowance);
+  const terms = selectRecallTerms(
+    { events, cards, nowIso: now.toISOString(), cursor: budget.cursor },
+    allowance,
+  );
   if (terms.length === 0) return { harvests: [], queriesSpent: 0 };
 
   const harvests = await searchChannelsForCandidates(terms, { now: () => now });

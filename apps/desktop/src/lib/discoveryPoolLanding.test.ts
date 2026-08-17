@@ -108,9 +108,27 @@ describe("landCandidateItems", () => {
     expect(row?.topic_label).toBe("Machine Learning (cs.LG)");
   });
 
-  it("falls back to the channel's id when the catalog does not know the source", async () => {
+  /**
+   * The old expectation here — the raw source id as the topic — was the bug's shadow (spec 053 T9
+   * finding #1): a self-added source's id is `user-feed:<the whole address>`, and that string went
+   * on to be shown as a topic and sent to Hacker News as a search term. A pasted feed is filed
+   * under the hostname the settings page already lists it as.
+   */
+  it("files a self-added feed under its hostname, never under its address", async () => {
     const [row] = await landCandidateItems(
-      [{ items: [item({ id: "x:1", sourceId: "a-feed-the-reader-pasted" })] }],
+      [
+        {
+          items: [item({ id: "x:1", sourceId: "user-feed:https://www.blog.example/rss/feed.xml" })],
+        },
+      ],
+      NOW,
+    );
+    expect(row?.topic_label).toBe("blog.example");
+  });
+
+  it("keeps an id that is not an address readable as it is", async () => {
+    const [row] = await landCandidateItems(
+      [{ items: [item({ id: "x:2", sourceId: "a-feed-the-reader-pasted" })] }],
       NOW,
     );
     expect(row?.topic_label).toBe("a-feed-the-reader-pasted");
