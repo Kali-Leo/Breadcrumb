@@ -29,6 +29,7 @@ function item(overrides: Partial<CandidateItem> & { id: string }): CandidateItem
     sourceId: "hacker-news-front-page",
     kind: "discussion",
     url: `https://example.org/${overrides.id}`,
+    mediaUrl: null,
     title: `title ${overrides.id}`,
     summary: "一段摘要。",
     coverUrl: null,
@@ -77,6 +78,26 @@ describe("landCandidateItems", () => {
     // Nothing on the display path waits on these two.
     expect(row?.embedding_json).toBeNull();
     expect(row?.quality_score).toBeNull();
+  });
+
+  it("carries a podcast episode's audio address, so the player has a file to load", async () => {
+    const [row] = await landCandidateItems(
+      [
+        {
+          items: [
+            item({
+              id: "podcast:1",
+              kind: "podcast",
+              url: "https://podcast.example.com/12",
+              mediaUrl: "https://media.example.com/12.m4a",
+            }),
+          ],
+        },
+      ],
+      NOW,
+    );
+    expect(row?.url).toBe("https://podcast.example.com/12");
+    expect(row?.media_url).toBe("https://media.example.com/12.m4a");
   });
 
   it("names an arXiv card after its category, not after arXiv", async () => {

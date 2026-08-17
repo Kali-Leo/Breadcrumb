@@ -45,6 +45,7 @@ function toCandidateDraft(topic: V2exTopic, sourceId: string, observedAtIso: str
     sourceId,
     kind: "discussion",
     url: firstNonEmptyText(topic.url) ?? `${v2exSiteBaseUrl}t/${topic.id}`,
+    mediaUrl: null,
     title: stripHtmlToPlainText(topic.title) || topic.title,
     summary: summaryText.slice(0, maximumSummaryLength).trimEnd(),
     // A member avatar is not a picture of the thread; leaving this null keeps the "has a real

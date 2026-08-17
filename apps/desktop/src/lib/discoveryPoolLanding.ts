@@ -74,6 +74,7 @@ export function cardRowFromCandidate(
     source_id: item.sourceId,
     kind: item.kind,
     url: item.url,
+    media_url: item.mediaUrl,
     cover_url: item.coverUrl,
     author: item.author,
     published_at: item.publishedAt,

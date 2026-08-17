@@ -114,9 +114,9 @@ export async function searchPodcastShows(
 }
 
 /**
- * The episode's own address is the audio file: an episode found this way has no feed behind it
- * yet, and the audio link is the only one the overlay player can use without a second request.
- * The Apple Podcasts page stands in when the audio address is missing.
+ * iTunes answers with both addresses an episode has: the audio file, which is what the overlay
+ * player loads, and the episode's page in Apple Podcasts, which is where "open in browser" should
+ * go. The audio file stands in as the address when Apple publishes no page for the episode.
  */
 function toEpisodeDraft(result: ItunesResult, sourceId: string, observedAtIso: string): unknown {
   const identity = firstNonEmptyText(
@@ -131,7 +131,8 @@ function toEpisodeDraft(result: ItunesResult, sourceId: string, observedAtIso: s
     id: `${sourceId}:${identity}`,
     sourceId,
     kind: "podcast",
-    url: firstNonEmptyText(result.episodeUrl, result.trackViewUrl),
+    url: firstNonEmptyText(result.trackViewUrl, result.episodeUrl),
+    mediaUrl: firstNonEmptyText(result.episodeUrl),
     title: stripHtmlToPlainText(result.trackName),
     summary: summary.slice(0, maximumSummaryLength).trimEnd(),
     coverUrl: firstNonEmptyText(result.artworkUrl600, result.artworkUrl100),

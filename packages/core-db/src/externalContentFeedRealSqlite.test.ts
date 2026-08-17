@@ -1,7 +1,8 @@
 /**
- * Purpose: real-database tests for spec 053's migration 0041 — it applies on a fresh database
- * and on one frozen at 0039 with cards already in it (old rows stay readable, every new column
- * null), and discovery_events keeps accepting new kinds because its kind column has no CHECK.
+ * Purpose: real-database tests for spec 053's migrations on discovery_cards — 0041 applies on a
+ * fresh database and on one frozen at 0039 with cards already in it (old rows stay readable,
+ * every new column null), discovery_events keeps accepting new kinds because its kind column
+ * has no CHECK, and 0043 adds the podcast audio address the same additive way.
  */
 import { afterEach, describe, expect, it } from "vitest";
 import { createDiscoveryRepo } from "./discoveryRepositories";
@@ -56,6 +57,7 @@ describe("migration 0041 (real sqlite)", () => {
         "saved_at",
         "quality_score",
         "upstream_signal",
+        "media_url",
       ]);
 
       const channelColumns = await database.sql.select<{ name: string }>(
@@ -112,6 +114,7 @@ describe("migration 0041 (real sqlite)", () => {
       expect(card?.published_at).toBeNull();
       expect(card?.saved_at).toBeNull();
       expect(card?.quality_score).toBeNull();
+      expect(card?.media_url).toBeNull();
     },
     TEST_TIMEOUT_MS,
   );
@@ -140,6 +143,75 @@ describe("migration 0041 (real sqlite)", () => {
         "unsave",
       ]);
       expect(events.find((event) => event.kind === "dial")?.value_ms).toBe(70);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+describe("migration 0043 (real sqlite)", () => {
+  it(
+    "stores a podcast episode's audio address beside its page address",
+    async () => {
+      database = await openMigratedDatabase();
+      const repo = createDiscoveryRepo(database.sql);
+      await repo.insertCards([
+        {
+          id: "episode-1",
+          title: "El Niño 与气候",
+          hook: "一集播客。",
+          topic_label: "气候",
+          source: "explore",
+          body_md: null,
+          embedding_json: null,
+          batch_id: "batch-1",
+          created_at: "2026-08-17T09:00:00Z",
+          opened_at: null,
+          source_id: "podcast-search",
+          kind: "podcast",
+          url: "https://podcasts.apple.com/us/podcast/super-el-ninos/id1234",
+          media_url: "https://open.live.bbc.co.uk/mediaselector/audio.mp3",
+        },
+      ]);
+
+      const [card] = await repo.listNewestCards(10);
+      expect(card?.url).toBe("https://podcasts.apple.com/us/podcast/super-el-ninos/id1234");
+      expect(card?.media_url).toBe("https://open.live.bbc.co.uk/mediaselector/audio.mp3");
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "leaves a card written before 0043 readable, with no audio address",
+    async () => {
+      database = await openDatabaseMigratedThrough("0042_discovery_upstream_signal");
+      await database.sql.execute(
+        `INSERT INTO discovery_cards
+           (id, title, hook, topic_label, source, body_md, embedding_json, batch_id, created_at,
+            opened_at, source_id, kind, url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          "episode-old",
+          "旧的一集",
+          "在 0043 之前入库。",
+          "气候",
+          "explore",
+          null,
+          null,
+          "batch-old",
+          "2026-08-16T10:00:00Z",
+          null,
+          "podcast-search",
+          "podcast",
+          "https://podcast.example.com/12",
+        ],
+      );
+
+      await runMigrations(database.sql);
+
+      const [card] = await createDiscoveryRepo(database.sql).listNewestCards(10);
+      expect(card?.id).toBe("episode-old");
+      expect(card?.url).toBe("https://podcast.example.com/12");
+      expect(card?.media_url).toBeNull();
     },
     TEST_TIMEOUT_MS,
   );

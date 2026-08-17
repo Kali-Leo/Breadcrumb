@@ -67,6 +67,7 @@ describe("createDiscoveryRepo external cards (real sqlite)", () => {
           saved_at: null,
           quality_score: 0.82,
           upstream_signal: 0.64,
+          media_url: "https://media.example.org/1.mp3",
         },
       ]);
 
@@ -79,6 +80,7 @@ describe("createDiscoveryRepo external cards (real sqlite)", () => {
       expect(card?.published_at).toBe("2026-08-16T20:00:00Z");
       expect(card?.quality_score).toBeCloseTo(0.82);
       expect(card?.upstream_signal).toBeCloseTo(0.64);
+      expect(card?.media_url).toBe("https://media.example.org/1.mp3");
       expect(card?.saved_at).toBeNull();
     },
     TEST_TIMEOUT_MS,

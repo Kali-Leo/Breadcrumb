@@ -16,7 +16,10 @@ import { DiscoveryReaderFallback } from "./DiscoveryReaderFallback";
 const UNPLAYABLE_LINE = "这一集没能在这里播放。";
 
 export function DiscoveryPodcastPlayer({ card }: { card: DiscoveryCardRow }) {
-  const [unplayable, setUnplayable] = useState(card.url === null);
+  // The audio file when the feed published one. Falling back to the page link rarely plays, but
+  // it costs nothing to try and the unplayable state below catches it.
+  const audioSource = card.media_url ?? card.url;
+  const [unplayable, setUnplayable] = useState(audioSource === null);
 
   return (
     <div>
@@ -30,14 +33,14 @@ export function DiscoveryPodcastPlayer({ card }: { card: DiscoveryCardRow }) {
         />
       )}
       <p className="mt-5 font-medium text-lg text-stone-800 leading-snug">{card.title}</p>
-      {unplayable || card.url === null ? (
+      {unplayable || audioSource === null ? (
         <DiscoveryReaderFallback line={UNPLAYABLE_LINE} url={card.url} className="mt-5" />
       ) : (
         // biome-ignore lint/a11y/useMediaCaption: podcast feeds ship no caption track
         <audio
           controls={true}
           preload="none"
-          src={card.url}
+          src={audioSource}
           onError={() => setUnplayable(true)}
           onEnded={() => void useDiscoveryStore.getState().recordFinish(card.id, card.topic_label)}
           className="mt-4 w-full"

@@ -23,6 +23,11 @@ export const candidateItemSchema = z.object({
   kind: candidateItemKindSchema,
   /** Where the item opens. Always absolute — adapters resolve relative feed links first. */
   url: z.url(),
+  /** The direct playable media address, today always an audio enclosure: the file the in-app
+   * player loads, as opposed to url, which is the page a browser opens. Null when the channel
+   * publishes no such address — every article, paper and discussion, and podcast feeds that
+   * link only an episode page. */
+  mediaUrl: z.url().nullable(),
   title: z.string().min(1),
   /** Plain text, HTML already stripped. Empty string when the feed carried no description. */
   summary: z.string(),

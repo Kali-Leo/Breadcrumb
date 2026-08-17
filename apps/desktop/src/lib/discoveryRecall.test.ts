@@ -48,6 +48,7 @@ function card(id: string, title: string, hook: string): DiscoveryCardRow {
     saved_at: null,
     quality_score: null,
     upstream_signal: null,
+    media_url: null,
   };
 }
 

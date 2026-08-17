@@ -1,10 +1,16 @@
 /**
  * Purpose: turn one validated feed entry — RSS/RDF item, Atom entry, or JSON Feed item — into a
  * candidate-item draft. Cover art comes from enclosures, the media namespace or the iTunes image,
- * never from an extra request; upstreamSignal is null because plain feeds publish no crowd number.
+ * never from an extra request; an audio enclosure becomes the draft's mediaUrl so the episode can
+ * be played in the app; upstreamSignal is null because plain feeds publish no crowd number.
  * Main exports: mapRssItem, mapAtomEntry, mapJsonFeedItem, FeedItemMappingContext.
  */
 import type { CandidateItemKind } from "./candidateItem";
+import {
+  audioUrlFromAttachments,
+  imageUrlFromAttachments,
+  kindFromAttachments,
+} from "./feedAttachments";
 import type { AtomEntry, JsonFeedItem, RssItem } from "./feedSchemas";
 import {
   firstNonEmptyText,
@@ -37,11 +43,6 @@ interface MediaLike extends MediaContainer {
   groups?: ReadonlyArray<MediaContainer>;
 }
 
-interface AttachmentLike {
-  url?: string;
-  type?: string;
-}
-
 function shorten(text: string): string {
   return text.length > maximumSummaryLength ? text.slice(0, maximumSummaryLength).trimEnd() : text;
 }
@@ -64,27 +65,12 @@ function descriptionFromMedia(media: MediaLike | undefined): string | null {
   return firstNonEmptyText(media.description?.value, group?.description?.value);
 }
 
-function imageUrlFromAttachments(attachments: ReadonlyArray<AttachmentLike>): string | null {
-  return firstNonEmptyText(attachments.find((one) => one.type?.startsWith("image/"))?.url);
-}
-
-/** An audio or video enclosure is the strongest statement a feed makes about its own kind. */
-function kindFromAttachments(
-  attachments: ReadonlyArray<AttachmentLike>,
-  defaultKind: CandidateItemKind,
-): CandidateItemKind {
-  for (const attachment of attachments) {
-    if (attachment.type?.startsWith("audio/")) return "podcast";
-    if (attachment.type?.startsWith("video/")) return "video";
-  }
-  return defaultKind;
-}
-
 interface CandidateDraft {
   id: string;
   sourceId: string;
   kind: CandidateItemKind;
   url: string | null;
+  mediaUrl: string | null;
   title: string;
   summary: string;
   coverUrl: string | null;
@@ -98,6 +84,7 @@ function assembleDraft(
   parts: {
     identity: string | null;
     url: string | null;
+    mediaUrl: string | null;
     rawTitle: string | null;
     rawSummary: string | null;
     coverUrl: string | null;
@@ -108,12 +95,17 @@ function assembleDraft(
 ): CandidateDraft {
   const summary = shorten(stripHtmlToPlainText(parts.rawSummary));
   const title = stripHtmlToPlainText(parts.rawTitle) || summary.slice(0, 80);
-  const identity = parts.identity ?? parts.url ?? title;
+  const mediaUrl = resolveAbsoluteUrl(parts.mediaUrl, context.baseUrl);
+  // The episode page is the better address to open and to share; the audio file stands in only
+  // for the feeds that link nothing else, where dropping the item would be the alternative.
+  const url = parts.url ?? mediaUrl;
+  const identity = parts.identity ?? url ?? title;
   return {
     id: `${context.sourceId}:${identity}`,
     sourceId: context.sourceId,
     kind: parts.kind,
-    url: parts.url,
+    url,
+    mediaUrl,
     title,
     summary,
     coverUrl: resolveAbsoluteUrl(parts.coverUrl, context.baseUrl),
@@ -129,6 +121,7 @@ export function mapRssItem(item: RssItem, context: FeedItemMappingContext): Cand
   return assembleDraft(context, {
     identity: firstNonEmptyText(item.guid?.value, item.link),
     url: resolveAbsoluteUrl(firstNonEmptyText(item.link, permalinkGuid), context.baseUrl),
+    mediaUrl: audioUrlFromAttachments(enclosures),
     rawTitle: firstNonEmptyText(item.title),
     rawSummary: firstNonEmptyText(
       item.description,
@@ -160,6 +153,7 @@ export function mapAtomEntry(entry: AtomEntry, context: FeedItemMappingContext):
   return assembleDraft(context, {
     identity: firstNonEmptyText(entry.id, alternate?.href),
     url: resolveAbsoluteUrl(firstNonEmptyText(alternate?.href, links[0]?.href), context.baseUrl),
+    mediaUrl: audioUrlFromAttachments(enclosures),
     rawTitle: firstNonEmptyText(entry.title),
     rawSummary: firstNonEmptyText(entry.summary, entry.content, descriptionFromMedia(entry.media)),
     coverUrl: firstNonEmptyText(
@@ -184,6 +178,7 @@ export function mapJsonFeedItem(
   return assembleDraft(context, {
     identity: firstNonEmptyText(item.id, item.url),
     url: resolveAbsoluteUrl(firstNonEmptyText(item.url, item.external_url), context.baseUrl),
+    mediaUrl: audioUrlFromAttachments(attachments),
     rawTitle: firstNonEmptyText(item.title),
     rawSummary: firstNonEmptyText(item.summary, item.content_text, item.content_html),
     coverUrl: firstNonEmptyText(

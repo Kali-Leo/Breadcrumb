@@ -66,6 +66,7 @@ function candidate(id: string): CandidateItem {
     author: null,
     publishedAt: "2026-08-17T09:00:00.000Z",
     upstreamSignal: 0.4,
+    mediaUrl: null,
   };
 }
 
@@ -90,6 +91,7 @@ function pooledCard(id: string, overrides: Partial<DiscoveryCardRow> = {}): Disc
     saved_at: null,
     quality_score: null,
     upstream_signal: null,
+    media_url: null,
     ...overrides,
   };
 }

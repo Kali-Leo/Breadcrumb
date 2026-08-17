@@ -74,6 +74,7 @@ function makeFakeSql() {
           saved_at: values[16] as string | null,
           quality_score: values[17] as number | null,
           upstream_signal: values[18] as number | null,
+          media_url: values[19] as string | null,
         });
       }
       if (sql.startsWith("UPDATE discovery_cards SET body_md")) {
@@ -139,6 +140,7 @@ function makeCard(overrides: Partial<DiscoveryCardRow> = {}): DiscoveryCardRow {
     saved_at: null,
     quality_score: null,
     upstream_signal: null,
+    media_url: null,
     ...overrides,
   };
 }

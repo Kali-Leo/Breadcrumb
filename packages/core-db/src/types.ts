@@ -406,7 +406,9 @@ export type DiscoveryCardKind = "article" | "video" | "podcast" | "discussion" |
  * never merged with any "like" semantics (spec 053 §6). quality_score is the batch LLM quality
  * check (§5): it only ever lowers ranking, it never hides a card. upstream_signal is the crowd
  * number the channel published (points, replies, chart position), normalized to 0..1 by the
- * channel layer and NULL wherever the channel publishes no such number. */
+ * channel layer and NULL wherever the channel publishes no such number. media_url is the direct
+ * audio address of a podcast episode, which is what the in-app player loads — url stays the
+ * episode's page — and is NULL for everything that is not a playable file. */
 export interface DiscoveryCardRow {
   id: string;
   title: string;
@@ -427,6 +429,7 @@ export interface DiscoveryCardRow {
   saved_at: string | null;
   quality_score: number | null;
   upstream_signal: number | null;
+  media_url: string | null;
 }
 
 /** Signal kinds the feed records. Spec 051 §3, all silent: impression = the card sat in

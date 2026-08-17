@@ -53,6 +53,7 @@ function card(id: string, overrides: Partial<DiscoveryCardRow> = {}): DiscoveryC
     saved_at: null,
     quality_score: null,
     upstream_signal: null,
+    media_url: null,
     ...overrides,
   };
 }

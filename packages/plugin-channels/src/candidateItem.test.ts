@@ -11,6 +11,7 @@ const wellFormed: CandidateItem = {
   sourceId: "sspai",
   kind: "article",
   url: "https://sspai.com/post/1",
+  mediaUrl: null,
   title: "一个标题",
   summary: "一段摘要",
   coverUrl: "https://cdn.sspai.com/cover.jpg",
@@ -41,6 +42,14 @@ describe("candidateItemSchema", () => {
   it("rejects a relative url and an unknown kind", () => {
     expect(candidateItemSchema.safeParse({ ...wellFormed, url: "/post/1" }).success).toBe(false);
     expect(candidateItemSchema.safeParse({ ...wellFormed, kind: "tweet" }).success).toBe(false);
+  });
+
+  it("takes an absolute media address and rejects a relative one", () => {
+    const episode = { ...wellFormed, kind: "podcast", mediaUrl: "https://cdn.sspai.com/1.mp3" };
+    expect(candidateItemSchema.parse(episode)).toEqual(episode);
+    expect(candidateItemSchema.safeParse({ ...wellFormed, mediaUrl: "/1.mp3" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects a non-ISO published timestamp", () => {

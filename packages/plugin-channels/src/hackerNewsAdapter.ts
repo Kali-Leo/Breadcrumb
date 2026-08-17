@@ -48,6 +48,7 @@ function toCandidateDraft(hit: AlgoliaHit, sourceId: string, observedAtIso: stri
     sourceId,
     kind: "discussion",
     url: firstNonEmptyText(hit.url) ?? discussionUrl,
+    mediaUrl: null,
     title: stripHtmlToPlainText(hit.title),
     summary: stripHtmlToPlainText(hit.story_text).slice(0, maximumSummaryLength).trimEnd(),
     coverUrl: null,

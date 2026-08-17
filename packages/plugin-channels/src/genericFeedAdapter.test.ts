@@ -69,6 +69,10 @@ describe("parseFeedIntoCandidateItems on RSS 2.0", () => {
     expect(result.items[0]?.upstreamSignal).toBeNull();
   });
 
+  it("leaves the media address empty on an ordinary article", () => {
+    expect(result.items[0]?.mediaUrl).toBeNull();
+  });
+
   it("falls back to the observation time when the item carries no date", () => {
     expect(result.items[1]?.publishedAt).toBe(observedAt.toISOString());
     expect(result.parseError).toBeNull();
@@ -104,6 +108,24 @@ describe("parseFeedIntoCandidateItems on podcast RSS", () => {
     expect(episode?.kind).toBe("podcast");
     expect(episode?.coverUrl).toBe("https://media.example.com/12.jpg");
     expect(episode?.author).toBe("Host Name");
+  });
+
+  it("keeps the episode page as the address and the enclosure as the media address", () => {
+    const [episode] = parse(podcastSample).items;
+    expect(episode?.url).toBe("https://podcast.example.com/12");
+    expect(episode?.mediaUrl).toBe("https://media.example.com/12.m4a");
+  });
+
+  it("uses the enclosure as the address too when the episode links no page", () => {
+    const pageless = podcastSample
+      .replace("<link>https://podcast.example.com/12</link>", "")
+      .replace(
+        "<guid>https://podcast.example.com/12</guid>",
+        `<guid isPermaLink="false">episode-12</guid>`,
+      );
+    const [episode] = parse(pageless).items;
+    expect(episode?.url).toBe("https://media.example.com/12.m4a");
+    expect(episode?.mediaUrl).toBe("https://media.example.com/12.m4a");
   });
 });
 

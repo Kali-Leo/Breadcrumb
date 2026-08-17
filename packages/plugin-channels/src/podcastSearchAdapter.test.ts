@@ -98,11 +98,33 @@ describe("searchPodcastEpisodes", () => {
     expect(items).toHaveLength(1);
     expect(items[0]?.id).toBe("podcast-search:urn:bbc:podcast:w3ct99hn");
     expect(items[0]?.kind).toBe("podcast");
-    expect(items[0]?.url).toBe("https://open.live.bbc.co.uk/mediaselector/audio.mp3");
+    expect(items[0]?.url).toBe("https://podcasts.apple.com/us/podcast/super-el-ninos/id1234");
+    expect(items[0]?.mediaUrl).toBe("https://open.live.bbc.co.uk/mediaselector/audio.mp3");
     expect(items[0]?.summary).toBe("Scientists say the El Niño pattern has started.");
     expect(items[0]?.author).toBe("The Climate Question");
     expect(items[0]?.coverUrl).toBe("https://is1-ssl.mzstatic.com/image/thumb/600.jpg");
     expect(items[0]?.publishedAt).toBe("2026-06-28T13:00:00.000Z");
     expect(items[0]?.upstreamSignal).toBeNull();
+  });
+
+  it("falls back to the audio address when Apple publishes no episode page", async () => {
+    const url = buildItunesSearchUrl(source, "climate", "podcastEpisode");
+    const pageless = JSON.stringify({
+      resultCount: 1,
+      results: [
+        {
+          wrapperType: "podcastEpisode",
+          trackId: 1000774569018,
+          trackName: "An episode with no store page",
+          episodeUrl: "https://open.live.bbc.co.uk/mediaselector/other.mp3",
+          episodeGuid: "urn:bbc:podcast:w3ct99hp",
+        },
+      ],
+    });
+    const { context } = fakeFetchContext({ [url]: pageless });
+    const items = await searchPodcastEpisodes("climate", source, context, { observedAt });
+
+    expect(items[0]?.url).toBe("https://open.live.bbc.co.uk/mediaselector/other.mp3");
+    expect(items[0]?.mediaUrl).toBe("https://open.live.bbc.co.uk/mediaselector/other.mp3");
   });
 });

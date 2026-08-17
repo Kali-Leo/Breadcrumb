@@ -905,6 +905,14 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0042_discovery_upstream_signal",
     statements: [`ALTER TABLE discovery_cards ADD COLUMN upstream_signal REAL;`],
   },
+  {
+    // A podcast card's url is the episode's page; the audio file is a second address the feed
+    // publishes as an enclosure, and 0041 had nowhere to keep it. Without it the in-app player
+    // was handed a web page as its audio source and every episode failed to play (spec 053 §7).
+    // Nullable: only podcasts carry one, and even some podcast feeds link the page alone.
+    id: "0043_discovery_media_url",
+    statements: [`ALTER TABLE discovery_cards ADD COLUMN media_url TEXT;`],
+  },
 ];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
