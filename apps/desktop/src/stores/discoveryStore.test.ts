@@ -105,3 +105,35 @@ describe("loadInitial", () => {
     expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["existing"]);
   });
 });
+
+describe("warm-up and load sharing one generation (handoff 2026-08-17 §五.a)", () => {
+  it("ensureWarm lands its generated batch into display state, not just the DB", async () => {
+    generateBatchMock.mockResolvedValue({ kind: "generated", cards: [card("w1")] });
+    await useDiscoveryStore.getState().ensureWarm();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+
+  it("loadInitial during an in-flight warm-up awaits the same batch instead of showing an empty screen", async () => {
+    let resolveGeneration = (_: unknown): void => {};
+    generateBatchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveGeneration = resolve;
+      }),
+    );
+    const warm = useDiscoveryStore.getState().ensureWarm();
+    const initial = useDiscoveryStore.getState().loadInitial();
+    resolveGeneration({ kind: "generated", cards: [card("w1")] });
+    await Promise.all([warm, initial]);
+    expect(generateBatchMock).toHaveBeenCalledTimes(1);
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["w1"]);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+
+  it("a blocked warm-up stays silent (no banner) when nobody has opened the feed", async () => {
+    generateBatchMock.mockResolvedValue({ kind: "blocked", reason: "翻过的卡片还能读。" });
+    await useDiscoveryStore.getState().ensureWarm();
+    expect(useDiscoveryStore.getState().blockedReason).toBeNull();
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+});
