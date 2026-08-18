@@ -11,6 +11,7 @@ import { ExternalLink } from "lucide-react";
 import { sourceAndAuthorLine } from "../lib/discoveryCardPresentation";
 import { DiscoveryKindIcon } from "./DiscoveryKindIcon";
 import { DiscoverySaveToggle } from "./DiscoverySaveToggle";
+import { screenOverlayAutofocusRef } from "./ScreenOverlay";
 
 interface DiscoveryReaderHeaderProps {
   card: DiscoveryCardRow;
@@ -46,6 +47,9 @@ export function DiscoveryReaderHeader({ card, onClose }: DiscoveryReaderHeaderPr
         )}
         <button
           type="button"
+          // Where the modal dialog puts focus when it opens: nothing in here needs interacting
+          // with first, so the way out is the safe landing (MDN's recommendation).
+          ref={screenOverlayAutofocusRef}
           onClick={onClose}
           className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
         >

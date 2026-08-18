@@ -3,8 +3,9 @@
  * opening into the same reader the feed opens into. Read straight from the pool table rather
  * than from the feed's page, so items kept weeks ago are still here after they left the grid.
  * 收藏 is a bookmark and carries no "like" meaning; nothing here feeds back into ordering.
- * Opens over the window through ScreenOverlay, which also carries Escape, focus and the dialog
- * role; a reader opened from a row stacks on top and returns here when it closes.
+ * Opens over the window through ScreenOverlay as a modal dialog, which also carries Escape, focus
+ * and the dialog role; a reader opened from a row stacks a second dialog on top of this one, and
+ * Escape there closes only the reader and comes back here.
  * Main exports: DiscoverySavedOverlay.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -13,7 +14,7 @@ import { getRepos } from "../lib/db";
 import { sourceAndAuthorLine } from "../lib/discoveryCardPresentation";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryKindIcon } from "./DiscoveryKindIcon";
-import { ScreenOverlay } from "./ScreenOverlay";
+import { ScreenOverlay, screenOverlayAutofocusRef } from "./ScreenOverlay";
 
 const EMPTY_LINE = "还没有收藏。看到想留着的内容，点一下卡片上的收藏。";
 
@@ -92,13 +93,14 @@ export function DiscoverySavedOverlay({ onOpenCard, onClose }: DiscoverySavedOve
         <p className="font-semibold text-stone-800">收藏</p>
         <button
           type="button"
+          ref={screenOverlayAutofocusRef}
           onClick={onClose}
           className="ml-auto rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
         >
           关闭
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-2xl px-6 py-6">
           {cards !== null && cards.length === 0 && <p className="text-stone-500">{EMPTY_LINE}</p>}
           <ul className="space-y-2">

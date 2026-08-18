@@ -2,8 +2,9 @@
  * Purpose: the full-screen layer one discovery item opens into (spec 053 §7). It owns the parts
  * every item shares — marking the card opened, the header, and recording how long the item was
  * open — and hands the middle over to whichever pane the item calls for: the publisher's video
- * player, an audio player, or the reading pane. ScreenOverlay puts it over the window and carries
- * Escape, focus and the dialog role.
+ * player, an audio player, or the reading pane. ScreenOverlay opens it as a modal dialog over the
+ * window, which is where Escape, focus and the dialog role come from. Nothing in here leads to
+ * another item: reaching one goes back through the feed (Apple HIG, spec 054 §a).
  * Main exports: DiscoveryReaderOverlay.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -57,7 +58,7 @@ export function DiscoveryReaderOverlay({ card, onClose }: DiscoveryReaderOverlay
   return (
     <ScreenOverlay label={shownCard.title} onClose={onClose}>
       <DiscoveryReaderHeader card={shownCard} onClose={onClose} />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-2xl px-6 py-6">
           <ReaderBody card={shownCard} />
         </div>

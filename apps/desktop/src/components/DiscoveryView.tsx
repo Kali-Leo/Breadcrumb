@@ -6,9 +6,8 @@
  * Main exports: DiscoveryView.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { hasRecordedOnboardingStances } from "../lib/discoveryFeedbackEvents";
-import { holdScrollPosition } from "../lib/scrollPositionHold";
 import { ensureDiscoveryChannelSettingsLoaded } from "../stores/discoveryChannelSettingsStore";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryCardGrid } from "./DiscoveryCardGrid";
@@ -26,15 +25,6 @@ export function DiscoveryView() {
   /** null while the answer is still being read out of the database — neither surface is shown
    * yet, so the panel cannot flash over a feed that turns out not to need it. */
   const [onboardingNeeded, setOnboardingNeeded] = useState<boolean | null>(null);
-  const feedRef = useRef<HTMLDivElement>(null);
-  const overlayOpen = savedOpen || openCard !== null;
-
-  // The feed keeps its place while a layer is over it: nothing behind can scroll, and the exact
-  // position comes back on close, so closing an item returns to the card it was opened from.
-  useEffect(() => {
-    if (!overlayOpen) return;
-    return holdScrollPosition([feedRef.current, document.body]);
-  }, [overlayOpen]);
 
   useEffect(() => {
     void (async () => {
@@ -63,7 +53,7 @@ export function DiscoveryView() {
   const empty = cards.length === 0 && !loading;
 
   return (
-    <div ref={feedRef} className="h-full overflow-y-auto bg-stone-50 p-6">
+    <div className="h-full overflow-y-auto bg-stone-50 p-6">
       <div className="mb-4 flex items-center gap-3">
         <DiscoveryFeedDial />
         <button
@@ -99,10 +89,11 @@ export function DiscoveryView() {
           <DiscoveryCardGrid cards={cards} loading={loading} onOpen={setOpenCard} />
         </>
       )}
-      {/* Both layers are written here because this is where their state lives, but each renders
-          into the body and covers the window — not this scrolled feed (Leo's report 2026-08-18).
-          A row of the 收藏 list opens the reader on top of the list, and closing it comes back
-          to the list. */}
+      {/* Both layers are written here because this is where their state lives, but each opens as
+          a modal dialog in the browser's top layer, over the window rather than inside this
+          scrolled feed (Leo's report 2026-08-18). The feed is never unmounted, so its scroll
+          position is kept by not being destroyed rather than by being restored. A row of the 收藏
+          list opens the reader on top of the list, and closing it comes back to the list. */}
       {savedOpen && (
         <DiscoverySavedOverlay onOpenCard={setOpenCard} onClose={() => setSavedOpen(false)} />
       )}
