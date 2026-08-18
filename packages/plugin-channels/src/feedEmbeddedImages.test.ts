@@ -114,6 +114,44 @@ const fullTextRss = `<?xml version="1.0" encoding="UTF-8"?>
   </channel>
 </rss>`;
 
+/**
+ * cnBeta's shape, copied from the live 2026-08-18 pull: the description is a CDATA section rather
+ * than escaped HTML, and it holds one teaser paragraph plus an 阅读全文 link back to the article.
+ * The measured feed carries no picture anywhere — every item looks like the first one below — so
+ * this records what the harvester actually has to work with, and the second item records that a
+ * picture inside a CDATA section is read exactly like one inside escaped HTML, should the site
+ * start illustrating the feed the way the survey expected.
+ */
+const cnbetaRss = `<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0" >
+<channel>
+<title>cnBeta.COM.TW RSS订阅</title>
+<link>https://www.cnbeta.com.tw</link>
+<description>cnBeta.COM.TW - 简明IT新闻,网友媒体与言论平台</description>
+<image>
+	<url>https://static.cnbetacdn.com/logo.png</url>
+	<title>cnBeta.COM.TW</title>
+	<link>https://www.cnbeta.com.tw</link>
+</image>
+<item>
+	<title>中国现役最强运载火箭即将出征</title>
+	<link>https://www.cnbeta.com.tw/articles/science/1573790.htm</link>
+	<description><![CDATA[ <p>据报道，<strong>长征五号计划于8月24日在海南文昌航天发射场发射升空。</strong>各项准备工作正在推进。</p> <a href="https://www.cnbeta.com.tw/articles/science/1573790.htm" target="_blank"><strong>阅读全文</strong></a> ]]></description>
+	<author>ugmbbc</author>
+	<pubDate>Tue, 18 Aug 2026 08:38:04 GMT</pubDate>
+	<guid>https://www.cnbeta.com.tw/articles/science/1573790.htm</guid>
+</item>
+<item>
+	<title>AMD 悄悄发布了一款不送评测样品的显卡</title>
+	<link>https://www.cnbeta.com.tw/articles/game/1573630.htm</link>
+	<description><![CDATA[ <p><img src="https://static.cnbetacdn.com/article/2026/0818/7dabbda0ec89c16.jpg" referrerpolicy="no-referrer"></p> <p>这卡只面向拉美、亚太和日本发售。</p> <a href="https://www.cnbeta.com.tw/articles/game/1573630.htm" target="_blank"><strong>阅读全文</strong></a> ]]></description>
+	<author>ugmbbc</author>
+	<pubDate>Tue, 18 Aug 2026 07:12:00 GMT</pubDate>
+	<guid>https://www.cnbeta.com.tw/articles/game/1573630.htm</guid>
+</item>
+</channel>
+</rss>`;
+
 function parse(feedText: string, baseUrl: string) {
   return parseFeedIntoCandidateItems({
     sourceId: "sample",
@@ -140,5 +178,17 @@ describe("covers harvested through the generic adapter", () => {
   it("takes the article's own hero picture out of content:encoded, not the counter", () => {
     const result = parse(fullTextRss, "https://blog.example.com/feed.xml");
     expect(result.items[0]?.coverUrl).toBe("https://cdn.example.com/posts/scheduler-hero.png");
+  });
+
+  it("reads a picture out of a CDATA description and never borrows the channel logo", () => {
+    const result = parse(cnbetaRss, "https://www.cnbeta.com.tw/backend.php");
+    // A teaser with no picture stays cover-less; <image> is the site's logo, not this item's.
+    expect(result.items[0]?.coverUrl).toBeNull();
+    expect(result.items[0]?.summary).toBe(
+      "据报道，长征五号计划于8月24日在海南文昌航天发射场发射升空。各项准备工作正在推进。 阅读全文",
+    );
+    expect(result.items[1]?.coverUrl).toBe(
+      "https://static.cnbetacdn.com/article/2026/0818/7dabbda0ec89c16.jpg",
+    );
   });
 });

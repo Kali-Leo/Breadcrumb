@@ -133,12 +133,17 @@ describe("loadStarterChannelCatalog", () => {
     }
   });
 
-  it("overrides the User-Agent only for linux.do, which 403s a library one", () => {
+  /** Both hosts answer 403 to a library User-Agent and 200 to a browser one — measured on
+   * linux.do in the 2026-08-17 survey and on solidot.org again on 2026-08-18. Nothing else in the
+   * catalog needs the string, and a source that does not need it must not claim to be a browser. */
+  it("overrides the User-Agent only for the two hosts that 403 a library one", () => {
     const overriding = catalog.sources.filter(
       (source) => source.fetchPolicy.userAgentOverride !== null,
     );
-    expect(overriding.map((source) => source.id)).toEqual(["linux-do"]);
-    expect(overriding[0]?.fetchPolicy.userAgentOverride).toMatch(/^Mozilla\/5\.0/);
+    expect(overriding.map((source) => source.id)).toEqual(["solidot", "linux-do"]);
+    for (const source of overriding) {
+      expect(source.fetchPolicy.userAgentOverride).toMatch(/^Mozilla\/5\.0/);
+    }
   });
 
   it("leaves the 豆瓣 entry off until the reader supplies a user id", () => {
@@ -192,6 +197,13 @@ describe("loadStarterChannelCatalog", () => {
     expect(intervalOf("nasa-image-of-the-day")).toBe(12 * 60 * 60 * 1000);
     // 入站必刷 is an evergreen list; the daily rankings move and are read four times a day.
     expect(intervalOf("bilibili-must-watch")).toBeGreaterThan(intervalOf("bilibili-knowledge"));
+    // cnBeta answers with 150 items covering the last 33 hours, about 110 a day — the widest
+    // window in the catalog. Polled every six hours it still brings roughly thirty new items a
+    // round, which is why it is read more rarely than 奇客 Solidot, whose 20-item window holds
+    // three days of posts and would otherwise scroll past unnoticed.
+    expect(intervalOf("cnbeta")).toBe(6 * 60 * 60 * 1000);
+    expect(intervalOf("solidot")).toBe(60 * 60 * 1000);
+    expect(intervalOf("solidot")).toBeLessThan(intervalOf("cnbeta"));
   });
 
   it("enables every other source on a fresh install", () => {

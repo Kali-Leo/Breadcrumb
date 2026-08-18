@@ -179,6 +179,38 @@
       }
     },
     {
+      "id": "solidot",
+      "displayName": "奇客 Solidot",
+      "adapterType": "generic-feed",
+      "endpoint": {
+        "feedUrl": "https://www.solidot.org/index.rss"
+      },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 3600000,
+        "dailyRequestBudget": 24,
+        "userAgentOverride": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "cnbeta",
+      "displayName": "cnBeta",
+      "adapterType": "generic-feed",
+      "endpoint": {
+        "feedUrl": "https://www.cnbeta.com.tw/backend.php"
+      },
+      "language": "zh-CN",
+      "defaultKind": "article",
+      "defaultEnabled": true,
+      "fetchPolicy": {
+        "minimumIntervalMilliseconds": 21600000,
+        "dailyRequestBudget": 4,
+        "userAgentOverride": null
+      }
+    },
+    {
       "id": "bilibili-knowledge",
       "displayName": "哔哩哔哩 知识区排行榜",
       "adapterType": "bilibili-ranking",
