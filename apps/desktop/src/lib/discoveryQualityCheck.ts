@@ -1,6 +1,8 @@
 /**
  * Purpose: the discovery feed's batch quality check (spec 053 §5) — one flash-level call per
- * fetched batch that rates how much substance each item's title + summary promises. The whole
+ * background pass that rates how much substance each item's title + summary promises (which items
+ * those are is the caller's business: discoveryBackgroundPasses hands over the pool's unrated
+ * backlog, newest first, a batch at a time). The whole
  * feature is advisory: the score only demotes an item in ranking and never hides it, so every
  * failure path here returns an empty map, which downstream reads as "this batch is unrated"
  * and orders it exactly as it would have without the call.
@@ -20,7 +22,7 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { recordAiFailure } from "./failureLog";
 import { recordMeteredCall } from "./metering";
 
-/** Rates one fetched batch, returning id → substance (0..1) for the items the model actually
+/** Rates one batch, returning id → substance (0..1) for the items the model actually
  * rated. Returns an empty map — with no LLM call at all — when the batch is empty, the
  * 发现 · 质检 switch is off, networking is off, or there is no API config; returns an empty
  * map and logs to ai_failures on any error. Items past QUALITY_CHECK_BATCH_CAP are left

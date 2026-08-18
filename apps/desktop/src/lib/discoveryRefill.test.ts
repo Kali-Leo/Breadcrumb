@@ -59,7 +59,7 @@ vi.mock("./discoveryChannels", () => ({
   searchChannelsForCandidates: searchChannelsForCandidatesMock,
 }));
 
-const runBackgroundPassesMock = vi.fn(async (_rows: readonly unknown[]) => {});
+const runBackgroundPassesMock = vi.fn(async () => {});
 vi.mock("./discoveryBackgroundPasses", () => ({
   runBackgroundPasses: runBackgroundPassesMock,
 }));
@@ -369,6 +369,21 @@ describe("refillDiscoveryPool when there is nothing to be had", () => {
     const outcome = await refillDiscoveryPool({ now: NOW });
     await outcome.backgroundWork;
     expect(runBackgroundPassesMock).toHaveBeenCalledTimes(1);
-    expect(runBackgroundPassesMock.mock.calls[0]?.[0]).toHaveLength(1);
+  });
+
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). The passes used to be handed the rows a round had just
+   * landed, so a launch onto a stocked pool ran them over an empty list and they did nothing at
+   * all. On a fresh install that is exactly the launch after the first one, and the quality check
+   * — which could not run the first time, before the API key existed — never got a second chance.
+   * The passes read the pool for themselves now, and a stocked round still starts them.
+   */
+  it("runs the passes behind a stocked pool too, where the backlog is", async () => {
+    recallAlreadyRanToday();
+    fillPool(POOL_LOW_WATERMARK + 5);
+    const outcome = await refillDiscoveryPool({ now: NOW });
+    expect(outcome.kind).toBe("stocked");
+    await outcome.backgroundWork;
+    expect(runBackgroundPassesMock).toHaveBeenCalledTimes(1);
   });
 });

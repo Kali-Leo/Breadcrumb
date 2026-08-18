@@ -43,8 +43,9 @@ export interface RefillOutcome {
   unseenCount: number;
   /** Plain-language line for the feed, set only when nothing could be fetched. */
   reason: string | null;
-  /** Quality scoring and embedding, already running behind the cards that just landed. Awaited
-   * only by tests and by callers that have nothing better to do. */
+  /** Quality scoring, embedding and the cover pass, already running behind the pool — including
+   * on a round that landed nothing, because what they work through is the pool's own backlog.
+   * Awaited only by tests and by callers that have nothing better to do. */
   backgroundWork: Promise<void>;
 }
 
@@ -119,7 +120,9 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
       landedCount: 0,
       unseenCount: unseenBefore,
       reason: null,
-      backgroundWork: runBackgroundPasses([]),
+      // A stocked pool is not a pool with nothing left to do: the quality check may never have
+      // run (no API key at first launch), and the cover pass works to a daily budget.
+      backgroundWork: runBackgroundPasses(),
     };
   }
   if (!useSettingsStore.getState().networkEnabled) {
@@ -154,7 +157,7 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
 
   const allLanded = [...landed, ...recalled];
   await pruneDiscoveryPool(now);
-  const backgroundWork = runBackgroundPasses(allLanded);
+  const backgroundWork = runBackgroundPasses();
   if (allLanded.length === 0 && poll.answeredSourceCount === 0) {
     return {
       kind: "unavailable",
