@@ -42,25 +42,79 @@ describe("loadStarterChannelCatalog", () => {
     expect(catalog.sources.length).toBeGreaterThan(0);
   });
 
-  it("ships exactly the feed addresses the channel survey verified", () => {
-    expect(catalog.sources.map((source) => source.endpoint.feedUrl)).toEqual([
-      "https://sspai.com/feed",
-      "https://juejin.cn/rss",
-      "https://segmentfault.com/feeds",
-      "https://www.cnblogs.com/rss",
-      "https://rss.sina.com.cn/tech/rollnews.xml",
-      "https://linux.do/latest.rss",
-      "https://www.v2ex.com/api/topics/hot.json",
-      "https://hn.algolia.com/api/v1/search?tags=front_page",
-      "https://rss.arxiv.org/rss/cs.AI",
-      "https://rss.arxiv.org/rss/cs.LG",
-      "https://rss.arxiv.org/rss/q-bio.NC",
-      "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw",
-      "https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA",
-      "https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q",
-      "https://itunes.apple.com/search",
-      "https://www.douban.com/feed/people/{userId}/interests",
+  it("gives every source a distinct id and a distinct address", () => {
+    const ids = catalog.sources.map((source) => source.id);
+    const urls = catalog.sources.map((source) => source.endpoint.feedUrl);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  /** Every address is fetched over TLS, including the ones whose publisher offers plain http. */
+  it("reaches every source over https", () => {
+    for (const source of catalog.sources) {
+      expect(source.endpoint.feedUrl.startsWith("https://")).toBe(true);
+    }
+  });
+
+  /**
+   * Spec 054, Leo's second point: the feed is about to be filtered by the reader's language, so a
+   * source that does not say what it publishes in would silently vanish or silently intrude. "und"
+   * is allowed only for the search-only entry, whose language is whatever the reader typed.
+   */
+  it("has every source declare the language it publishes in", () => {
+    for (const source of catalog.sources) {
+      const publishesItself = sourceSupportsPolling(source) || isSourceTemplate(source);
+      expect([source.id, source.language]).toEqual([
+        source.id,
+        expect.stringMatching(publishesItself ? /^(zh-CN|en)$/ : /^(zh-CN|en|und)$/),
+      ]);
+    }
+    expect(catalog.sources.filter((source) => source.language === "und")).toHaveLength(1);
+  });
+
+  /** Leo's ninth point was that the sources look few and dated; the answer was not more text
+   * feeds but the two categories that were missing entirely, and pictures on the rest. */
+  it("ships video and podcast channels, not only articles and discussions", () => {
+    const kinds = new Set(catalog.sources.map((source) => source.defaultKind));
+    expect(kinds).toContain("video");
+    expect(kinds).toContain("podcast");
+    const byAdapter = (type: string): string[] =>
+      catalog.sources.filter((source) => source.adapterType === type).map((source) => source.id);
+    expect(byAdapter("bilibili-ranking")).toEqual([
+      "bilibili-knowledge",
+      "bilibili-technology",
+      "bilibili-must-watch",
     ]);
+    expect(byAdapter("podcast-charts")).toEqual([
+      "podcast-chart-education",
+      "podcast-chart-history",
+      "podcast-chart-science",
+    ]);
+    expect(byAdapter("wikipedia-featured")).toEqual(["wikipedia-zh-featured"]);
+  });
+
+  /** The three addresses the 2026-08-18 survey measured answering with no cookie and no wbi
+   * signature. Only a handful of rid values work at all, so these are not interchangeable. */
+  it("ships only the bilibili lists that answer an anonymous request", () => {
+    const bilibili = catalog.sources.filter((source) => source.adapterType === "bilibili-ranking");
+    expect(bilibili.map((source) => source.endpoint.feedUrl)).toEqual([
+      "https://api.bilibili.com/x/web-interface/ranking/v2?rid=36&type=all",
+      "https://api.bilibili.com/x/web-interface/ranking/v2?rid=188&type=all",
+      "https://api.bilibili.com/x/web-interface/popular/precious",
+    ]);
+  });
+
+  /** The country top-50 is deliberately absent: the survey found it dominated by chat shows. */
+  it("takes podcasts from the three learning category charts", () => {
+    const charts = catalog.sources.filter((source) => source.adapterType === "podcast-charts");
+    for (const chart of charts) {
+      expect(chart.endpoint.feedUrl).toMatch(/\/rss\/toppodcasts\/limit=50\/genre=\d+\/json$/);
+      expect(chart.endpoint.showFeedsPerPoll).toBeGreaterThan(0);
+      expect(chart.defaultKind).toBe("podcast");
+    }
+    expect(
+      charts.map((chart) => new URL(chart.endpoint.feedUrl).pathname.split("genre=")[1]),
+    ).toEqual(["1304/json", "1487/json", "1533/json"]);
   });
 
   it("marks as unverified exactly the addresses the survey did not record", () => {
@@ -100,10 +154,15 @@ describe("loadStarterChannelCatalog", () => {
     expect(itunes && sourceSupportsSearch(itunes)).toBe(true);
   });
 
-  /** Spec 053 §1 lists YouTube among the first-wave channels, and until spec 053 T10 the shipped
+  /**
+   * Spec 053 §1 lists YouTube among the first-wave channels, and until spec 053 T10 the shipped
    * catalog had no entry for it at all, so a fresh install saw no video on the grid. Each address
-   * below was fetched on 2026-08-17 and answered with an Atom document carrying 15 entries. */
-  it("ships the three YouTube channels a fresh install starts with", () => {
+   * below was fetched on 2026-08-17 and answered with an Atom document carrying 15 entries.
+   *
+   * The 2026-08-18 survey then found the same addresses answering with nothing minutes later, so
+   * the channels stay and the polls got rarer: half a day between them, four a day at most.
+   */
+  it("ships the three YouTube channels a fresh install starts with, polled rarely", () => {
     const youtube = catalog.sources.filter((source) => source.adapterType === "youtube-channel");
     expect(youtube.map((source) => source.displayName)).toEqual([
       "3Blue1Brown",
@@ -115,7 +174,24 @@ describe("loadStarterChannelCatalog", () => {
       expect(source.defaultKind).toBe("video");
       expect(source.defaultEnabled).toBe(true);
       expect(source.unverified).toBeUndefined();
+      expect(source.fetchPolicy.minimumIntervalMilliseconds).toBe(12 * 60 * 60 * 1000);
     }
+  });
+
+  /** An interval is a promise to the publisher, so it tracks how often they actually publish:
+   * IT之家 ships sixty items a pull and 美团技术 posts weekly, and they must not be polled alike. */
+  it("polls each source about as often as it publishes", () => {
+    const intervalOf = (id: string): number => {
+      const source = catalog.sources.find((one) => one.id === id);
+      if (!source) throw new Error(`missing source ${id}`);
+      return source.fetchPolicy.minimumIntervalMilliseconds;
+    };
+    expect(intervalOf("ithome")).toBeLessThan(intervalOf("geekpark"));
+    expect(intervalOf("geekpark")).toBeLessThan(intervalOf("meituan-tech"));
+    expect(intervalOf("meituan-tech")).toBe(24 * 60 * 60 * 1000);
+    expect(intervalOf("nasa-image-of-the-day")).toBe(12 * 60 * 60 * 1000);
+    // 入站必刷 is an evergreen list; the daily rankings move and are read four times a day.
+    expect(intervalOf("bilibili-must-watch")).toBeGreaterThan(intervalOf("bilibili-knowledge"));
   });
 
   it("enables every other source on a fresh install", () => {
