@@ -32,6 +32,10 @@ export type FetchSkipReason =
   | "minimum-interval"
   | "daily-budget"
   | "backoff"
+  /** A shared per-service ceiling this one source does not own — iTunes' twenty calls a minute,
+   * counted across every catalog entry that talks to it. The poll makes no request at all rather
+   * than waiting for room. */
+  | "service-rate-limit"
   /** The source only answers searches (iTunes podcast discovery); there is nothing to poll. */
   | "not-pollable"
   /** A catalog template whose parameters the reader has not filled in yet (豆瓣 user id). */

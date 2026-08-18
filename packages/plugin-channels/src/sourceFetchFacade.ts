@@ -6,17 +6,20 @@
  */
 import { adapterCapabilities } from "./adapterCapabilities";
 import { fetchArxivSource } from "./arxivAdapter";
+import { fetchBilibiliRankingSource } from "./bilibiliRankingAdapter";
 import { type ChannelSource, isSourceTemplate } from "./channelCatalog";
 import { fetchDiscourseSource } from "./discourseAdapter";
 import type { FetchContext } from "./fetchContract";
 import { parseSourceFeed } from "./genericFeedAdapter";
 import { fetchHackerNewsSource } from "./hackerNewsAdapter";
+import { fetchPodcastChartSource } from "./podcastChartAdapter";
 import {
   outcomeOnlyResult,
   resultFromFeedAdapter,
   type SourceFetchResult,
 } from "./sourceFetchResult";
 import { fetchV2exSource } from "./v2exAdapter";
+import { fetchWikipediaFeaturedSource } from "./wikipediaFeaturedAdapter";
 import { fetchYoutubeChannelSource } from "./youtubeChannelAdapter";
 
 /** RSS, RDF, Atom or JSON Feed at one address — the path most of the catalog takes, and the one
@@ -59,6 +62,12 @@ export async function fetchLatestFromSource(
       return fetchArxivSource(source, context, { observedAt });
     case "youtube-channel":
       return fetchYoutubeChannelSource(source, context, observedAt);
+    case "bilibili-ranking":
+      return fetchBilibiliRankingSource(source, context, observedAt);
+    case "podcast-charts":
+      return fetchPodcastChartSource(source, context, { observedAt });
+    case "wikipedia-featured":
+      return fetchWikipediaFeaturedSource(source, context, observedAt);
     default:
       return fetchGenericFeedSource(source, context, observedAt);
   }

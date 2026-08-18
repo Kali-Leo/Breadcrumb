@@ -26,7 +26,11 @@ export const adapterCapabilities: Readonly<Record<ChannelAdapterType, AdapterCap
   arxiv: { poll: true, search: true },
   /** iTunes Search has no feed of its own; it only resolves terms to shows and episodes. */
   "podcast-search": { poll: false, search: true },
+  /** A category chart is a list that changes daily, so it polls; it takes no query of its own. */
+  "podcast-charts": { poll: true, search: false },
   "youtube-channel": { poll: true, search: false },
+  "bilibili-ranking": { poll: true, search: false },
+  "wikipedia-featured": { poll: true, search: false },
   "douban-user": { poll: true, search: false },
 };
 

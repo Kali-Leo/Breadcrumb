@@ -19,7 +19,10 @@ export const channelAdapterTypes = [
   "hackernews",
   "arxiv",
   "podcast-search",
+  "podcast-charts",
   "youtube-channel",
+  "bilibili-ranking",
+  "wikipedia-featured",
   "douban-user",
 ] as const;
 
@@ -40,6 +43,12 @@ export const channelEndpointSchema = z.object({
    * full post body and the reply count. Zero keeps the poll to the one RSS request.
    */
   fullTextTopicsPerPoll: z.number().int().min(0).max(20).optional(),
+  /**
+   * Podcast category charts only: how many shows from the chart a poll may open for their
+   * episodes. The window moves on each poll, so a small number still reads the whole chart over
+   * time, and a large one costs the reader a slow round for no more variety.
+   */
+  showFeedsPerPoll: z.number().int().min(0).max(10).optional(),
 });
 
 export const fetchPolicySchema = z.object({
@@ -68,7 +77,13 @@ export const channelSourceSchema = z.object({
   displayName: z.string().min(1),
   adapterType: channelAdapterTypeSchema,
   endpoint: channelEndpointSchema,
-  /** BCP 47 tag, e.g. "zh-CN" or "en". */
+  /**
+   * BCP 47 tag, e.g. "zh-CN" or "en" — the language of what this source publishes, which the feed
+   * is filtered by (spec 054, Leo's second point: after choosing a language the reader should not
+   * be shown the others). A source that mixes languages declares the dominant one. "und" is
+   * reserved for the search-only entries, whose language is whatever the reader typed, and means
+   * "no language of its own" rather than "unknown".
+   */
   language: z.string().min(2),
   /** What the items are when the payload itself does not say (a plain blog feed is articles;
    * an audio enclosure still overrides this to "podcast"). */
@@ -79,7 +94,7 @@ export const channelSourceSchema = z.object({
   /** Present and non-empty means the entry is a template: unusable until `fillSourceTemplate`
    * substitutes the reader's values. Absent is the ordinary case. */
   templateParameters: z.array(templateParameterSchema).optional(),
-  /** True when the address was not measured in the 2026-08-17 channel survey. */
+  /** True when the address was not measured in a channel survey (2026-08-17 or 2026-08-18). */
   unverified: z.boolean().optional(),
 });
 

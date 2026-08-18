@@ -18,6 +18,17 @@ export const saturationCounts = {
   v2exReplies: 200,
   /** Hacker News points: the front page runs from a few dozen to a few hundred. */
   hackerNewsPoints: 500,
+  /**
+   * bilibili play counts. Measured on 2026-08-18: the 知识 and 科技数码 daily rankings run from
+   * a few hundred thousand to a couple of million, while 入站必刷 — the evergreen picks — runs
+   * from 3 million to 128 million. Two million is where a daily ranking video is as popular as
+   * that board gets; the evergreens all sit at 1, which is the honest answer for a list whose
+   * entry requirement is being one of the site's hundred best videos ever.
+   */
+  bilibiliViews: 2_000_000,
+  /** A day's page views on Chinese Wikipedia: the most-read list runs from a few thousand to a
+   * few hundred thousand, and the top entry is usually whatever was in the news. */
+  wikipediaDailyViews: 200_000,
 } as const;
 
 /**

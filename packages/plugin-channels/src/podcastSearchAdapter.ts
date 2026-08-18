@@ -19,6 +19,8 @@ const optionalText = z.string().nullish();
 export const itunesResultSchema = z.object({
   wrapperType: optionalText,
   trackId: z.number().nullish(),
+  /** The show's own id — the key the chart pipeline looks shows up by. */
+  collectionId: z.number().nullish(),
   trackName: optionalText,
   collectionName: optionalText,
   artistName: optionalText,
