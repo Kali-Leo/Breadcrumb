@@ -1,9 +1,9 @@
 /**
  * Purpose: the full-screen layer one discovery item opens into (spec 053 §7). It owns the parts
- * every item shares — marking the card opened, the header, closing with Esc (following
- * FocusOverlay's defaultPrevented-respecting pattern), and recording how long the item was open —
- * and hands the middle over to whichever pane the item calls for: the publisher's video player,
- * an audio player, or the reading pane.
+ * every item shares — marking the card opened, the header, and recording how long the item was
+ * open — and hands the middle over to whichever pane the item calls for: the publisher's video
+ * player, an audio player, or the reading pane. ScreenOverlay puts it over the window and carries
+ * Escape, focus and the dialog role.
  * Main exports: DiscoveryReaderOverlay.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -16,6 +16,7 @@ import { DiscoveryGeneratedArticleBody } from "./DiscoveryGeneratedArticleBody";
 import { DiscoveryPodcastPlayer } from "./DiscoveryPodcastPlayer";
 import { DiscoveryReaderHeader } from "./DiscoveryReaderHeader";
 import { DiscoveryVideoPlayer } from "./DiscoveryVideoPlayer";
+import { ScreenOverlay } from "./ScreenOverlay";
 
 interface DiscoveryReaderOverlayProps {
   card: DiscoveryCardRow;
@@ -53,23 +54,14 @@ export function DiscoveryReaderOverlay({ card, onClose }: DiscoveryReaderOverlay
     };
   }, [card.id]);
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-stone-50">
+    <ScreenOverlay label={shownCard.title} onClose={onClose}>
       <DiscoveryReaderHeader card={shownCard} onClose={onClose} />
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-2xl px-6 py-6">
           <ReaderBody card={shownCard} />
         </div>
       </div>
-    </div>
+    </ScreenOverlay>
   );
 }

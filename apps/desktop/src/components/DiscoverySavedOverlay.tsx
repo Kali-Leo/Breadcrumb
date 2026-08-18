@@ -3,6 +3,8 @@
  * opening into the same reader the feed opens into. Read straight from the pool table rather
  * than from the feed's page, so items kept weeks ago are still here after they left the grid.
  * 收藏 is a bookmark and carries no "like" meaning; nothing here feeds back into ordering.
+ * Opens over the window through ScreenOverlay, which also carries Escape, focus and the dialog
+ * role; a reader opened from a row stacks on top and returns here when it closes.
  * Main exports: DiscoverySavedOverlay.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
@@ -11,6 +13,7 @@ import { getRepos } from "../lib/db";
 import { sourceAndAuthorLine } from "../lib/discoveryCardPresentation";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryKindIcon } from "./DiscoveryKindIcon";
+import { ScreenOverlay } from "./ScreenOverlay";
 
 const EMPTY_LINE = "还没有收藏。看到想留着的内容，点一下卡片上的收藏。";
 
@@ -78,22 +81,13 @@ export function DiscoverySavedOverlay({ onOpenCard, onClose }: DiscoverySavedOve
     })();
   }, []);
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
   function remove(card: DiscoveryCardRow): void {
     setCards((current) => (current ?? []).filter((one) => one.id !== card.id));
     void useDiscoveryStore.getState().unsaveCard(card.id, card.topic_label);
   }
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-stone-50">
+    <ScreenOverlay label="收藏" onClose={onClose}>
       <div className="flex shrink-0 items-center gap-4 border-stone-200 border-b px-6 py-3">
         <p className="font-semibold text-stone-800">收藏</p>
         <button
@@ -119,6 +113,6 @@ export function DiscoverySavedOverlay({ onOpenCard, onClose }: DiscoverySavedOve
           </ul>
         </div>
       </div>
-    </div>
+    </ScreenOverlay>
   );
 }
