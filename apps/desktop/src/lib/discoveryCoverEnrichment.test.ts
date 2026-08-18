@@ -20,6 +20,8 @@ vi.mock("./db", () => ({
       listCardsMissingCover: async (limit: number) =>
         cardRows.filter((row) => row.cover_url === null && row.url !== null).slice(0, limit),
       setCardCoverUrl: setCardCoverUrlMock,
+      countCardsWithCoverUrl: async (coverUrl: string) =>
+        cardRows.filter((row) => row.cover_url === coverUrl).length,
       listCardIds: async () => cardRows.map((row) => row.id),
     },
     settings: {
@@ -133,6 +135,7 @@ describe("enrichMissingCovers", () => {
       card("has-cover", { cover_url: "https://cdn.example/x.png" }),
       card("video", { kind: "video" }),
       card("podcast", { kind: "podcast" }),
+      card("paper", { kind: "paper" }),
       card("no-kind", { kind: null }),
       card("not-a-url", { url: "not a url at all" }),
       card("ftp", { url: "ftp://files.example/x" }),
@@ -145,10 +148,52 @@ describe("enrichMissingCovers", () => {
     ]);
   });
 
-  it("reads a discussion and a paper as well as an article", async () => {
-    cardRows = [card("d", { kind: "discussion" }), card("p", { kind: "paper" })];
+  it("reads a discussion as well as an article", async () => {
+    cardRows = [card("d", { kind: "discussion" }), card("a", { kind: "article" })];
     const fetchImpl = fetchDouble(() => pageWithCover("/cover.png"));
     expect(await enrichMissingCovers({ fetchImpl, now: DAY_ONE })).toBe(2);
+  });
+
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). Papers used to be read like articles, and a preprint's
+   * landing page has no cover of its own: every arXiv abstract declares the site logo as its
+   * og:image. Two days of the daily budget went on fetching those pages, and the grid came out as
+   * a wall of the same grey logo. A paper is drawn as a text card, which is what it is.
+   */
+  it("never reads a paper's page: a preprint has no cover, only its site's logo", async () => {
+    cardRows = [card("p1", { kind: "paper" }), card("p2", { kind: "paper" })];
+    const fetchImpl = fetchDouble(() => pageWithCover("https://arxiv.example/logo.png"));
+    expect(await enrichMissingCovers({ fetchImpl, now: DAY_ONE })).toBe(0);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). The same finding on the sites that do serve article pages:
+   * one house image declared on every page of a site filled the grid with itself. A picture the
+   * pool already holds a few of is not this card's picture.
+   */
+  it("refuses a picture the pool is already full of", async () => {
+    const logo = "https://site.example/logo.png";
+    cardRows = [
+      card("has-logo-1", { cover_url: logo }),
+      card("has-logo-2", { cover_url: logo }),
+      card("has-logo-3", { cover_url: logo }),
+      card("next"),
+    ];
+    const fetchImpl = fetchDouble(() => pageWithCover(logo));
+    expect(await enrichMissingCovers({ fetchImpl, now: DAY_ONE })).toBe(0);
+    expect(setCardCoverUrlMock).not.toHaveBeenCalled();
+    // Asked once and answered: the page is not read again for the same logo tomorrow.
+    await enrichMissingCovers({ fetchImpl, now: DAY_TWO });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("still takes a picture two cards happen to share", async () => {
+    const shared = "https://site.example/series-banner.png";
+    cardRows = [card("has-it", { cover_url: shared }), card("next")];
+    const fetchImpl = fetchDouble(() => pageWithCover(shared));
+    expect(await enrichMissingCovers({ fetchImpl, now: DAY_ONE })).toBe(1);
+    expect(setCardCoverUrlMock).toHaveBeenCalledWith("next", shared);
   });
 
   it("spends no more than one pass's worth of requests in one pass", async () => {

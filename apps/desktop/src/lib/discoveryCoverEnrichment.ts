@@ -36,13 +36,25 @@ const CANDIDATE_SCAN_LIMIT = 200;
 
 const COVER_BUDGET_KEY = "discoveryCoverBudget";
 
-/** Kinds whose address is a page with a head to read. A video or a podcast episode gets its
- * picture from the channel layer (oEmbed, the feed's own artwork) and is left alone here. */
-const ENRICHABLE_KINDS: ReadonlySet<DiscoveryCardKind> = new Set([
-  "article",
-  "discussion",
-  "paper",
-]);
+/**
+ * Kinds whose address is a page with a picture of its own to read. A video or a podcast episode
+ * gets its picture from the channel layer (oEmbed, the feed's own artwork) and is left alone here.
+ *
+ * A paper is left alone too, since spec 053 T10b: a preprint's landing page has no cover — every
+ * arXiv abstract declares the site's own logo as its og:image — so the pass spent its budget
+ * fetching dozens of pages to write the same picture onto every paper in the pool, which turned a
+ * screenful of distinct papers into a wall of one identical grey logo.
+ */
+const ENRICHABLE_KINDS: ReadonlySet<DiscoveryCardKind> = new Set(["article", "discussion"]);
+
+/**
+ * How many cards may share one picture before it stops counting as a picture. A site that serves
+ * its own logo (or one house illustration) as every page's og:image is common enough that the
+ * kind check alone does not catch it, and a grid where every tile carries the same image tells the
+ * reader less than a grid of text cards does. Two cards sharing a picture is a plausible
+ * coincidence — a series, a republished piece; three is a site-wide default.
+ */
+const SHARED_COVER_LIMIT = 3;
 
 /**
  * The budget row, parsed rather than trusted like every other stored JSON. `triedCardIds` is the
@@ -152,8 +164,15 @@ async function runCoverPass(options: CoverEnrichmentOptions): Promise<number> {
     let filled = 0;
     for (const card of candidates) {
       const cover = await lookUpCover(card.url ?? "", fetchImpl);
-      if (cover === null) tried.add(card.id);
-      else {
+      // A picture the pool is already full of is the site's furniture, not this card's cover:
+      // the card keeps its text-forward layout, and it is marked as asked so the same page is
+      // never read for the same logo twice.
+      const siteWide =
+        cover !== null &&
+        (await repos.discovery.countCardsWithCoverUrl(cover)) >= SHARED_COVER_LIMIT;
+      if (cover === null || siteWide) {
+        tried.add(card.id);
+      } else {
         await repos.discovery.setCardCoverUrl(card.id, cover);
         filled += 1;
       }
