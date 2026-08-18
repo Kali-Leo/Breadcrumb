@@ -11,6 +11,7 @@ import {
   buildYoutubeOEmbedUrl,
   fetchYoutubeChannelSource,
   fetchYoutubeOEmbed,
+  youtubeEmptyFeedFailureReason,
 } from "./youtubeChannelAdapter";
 
 const observedAt = new Date("2026-08-17T12:00:00.000Z");
@@ -68,6 +69,35 @@ describe("fetchYoutubeChannelSource", () => {
     expect(video?.url).toBe("https://www.youtube.com/watch?v=VIDEOID1");
     expect(video?.author).toBe("Example Channel");
     expect(video?.publishedAt).toBe("2026-08-16T12:00:00.000Z");
+    expect(result.outcome.status).toBe("fetched");
+  });
+
+  /**
+   * The 2026-08-18 survey watched all three shipped channels answer 200 with 15 entries and then,
+   * minutes later, 200 with none — YouTube throttling a datacenter address, not three channels
+   * that stopped publishing on the same afternoon. A poll like that must not read as healthy.
+   */
+  it("treats a feed that parses with no entries as a failed poll, not as an empty success", async () => {
+    const emptyFeed = channelFeed.replace(/<entry>[\s\S]*<\/entry>/, "");
+    const { context } = fakeFetchContext({ [feedUrl]: emptyFeed });
+    const result = await fetchYoutubeChannelSource(source, context, observedAt);
+
+    expect(result.outcome).toEqual({
+      status: "failed",
+      reason: youtubeEmptyFeedFailureReason,
+      httpStatus: 200,
+    });
+    expect(result.items).toEqual([]);
+    expect(result.parseError).toBeNull();
+  });
+
+  it("keeps reporting a body that is not a feed at all as the parse failure it is", async () => {
+    const { context } = fakeFetchContext({ [feedUrl]: "<html>rate limited</html>" });
+    const result = await fetchYoutubeChannelSource(source, context, observedAt);
+
+    expect(result.outcome.status).toBe("fetched");
+    expect(result.parseError).not.toBeNull();
+    expect(result.items).toEqual([]);
   });
 });
 

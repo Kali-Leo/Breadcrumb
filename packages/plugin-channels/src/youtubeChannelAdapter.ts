@@ -44,6 +44,24 @@ export function parseYoutubeChannelFeed(
   });
 }
 
+export const youtubeEmptyFeedFailureReason = "youtube answered with an empty channel feed";
+
+/**
+ * A YouTube channel feed that parses cleanly and holds nothing is YouTube throttling us, not a
+ * channel that has stopped publishing: the 2026-08-18 survey watched all three shipped channels
+ * answer 200 with 15 entries once and then answer 200 with zero entries — or 404, or 500 — minutes
+ * later from the same machine. Reporting that as a successful poll would clear the failure streak,
+ * mark the channel reachable and have us knock again on the next round, which is how a rate limit
+ * turns into a ban. It is reported as a failed poll instead, so the source falls into the ordinary
+ * backoff and whatever cards it already contributed stay in the pool untouched.
+ *
+ * A channel that genuinely has no videos reads the same way; it costs that channel a backoff and
+ * nothing else, which is the cheaper mistake of the two.
+ */
+export function isThrottledEmptyYoutubeFeed(parsed: FeedAdapterResult): boolean {
+  return parsed.parseError === null && parsed.items.length === 0;
+}
+
 export async function fetchYoutubeChannelSource(
   source: ChannelSource,
   context: FetchContext,
@@ -51,11 +69,15 @@ export async function fetchYoutubeChannelSource(
 ): Promise<SourceFetchResult> {
   const outcome = await context.fetchUrl(source.endpoint.feedUrl, { kind: "poll" });
   if (outcome.status !== "fetched") return outcomeOnlyResult(source.id, outcome);
-  return resultFromFeedAdapter(
-    source.id,
-    outcome,
-    parseYoutubeChannelFeed(source, outcome, observedAt),
-  );
+  const parsed = parseYoutubeChannelFeed(source, outcome, observedAt);
+  if (isThrottledEmptyYoutubeFeed(parsed)) {
+    return outcomeOnlyResult(source.id, {
+      status: "failed",
+      reason: youtubeEmptyFeedFailureReason,
+      httpStatus: 200,
+    });
+  }
+  return resultFromFeedAdapter(source.id, outcome, parsed);
 }
 
 export const youtubeOEmbedSchema = z.object({
