@@ -1,11 +1,10 @@
 /**
- * Purpose: a discovery card's cover picture (spec 053 §6) — a fixed 16:9 box so a grid of cards
- * keeps its rhythm whatever the picture's real proportions are, loaded only once the card comes
- * near the screen. A picture that never arrives tells the caller so, and the card then falls back
- * to a text-forward layout: a broken-image mark is never shown, and neither is an empty grey box
- * left by a host that answers nothing (the deadline lives in lib/discoveryCoverLoad). 省流量模式
- * (spec 053 §2) takes the same path on purpose — no picture is requested at all, and the card
- * reads as a text card.
+ * Purpose: a discovery card's cover picture (spec 053 §6) — cropped to fill the card's 16:9 box
+ * whatever the picture's real proportions are, loaded only once the card comes near the screen. A
+ * picture that never arrives tells the caller so, and the card puts its type-toned placeholder in
+ * the same box: a broken-image mark is never shown, and neither is the empty grey box left by a
+ * host that answers nothing (the deadline lives in lib/discoveryCoverLoad). 省流量模式 (spec 053 §2)
+ * takes the same path on purpose — no picture is requested at all.
  * Main exports: DiscoveryCardCover.
  */
 import { useCallback, useEffect, useRef } from "react";
@@ -85,23 +84,24 @@ export function DiscoveryCardCover({ coverUrl, onUnavailable }: DiscoveryCardCov
     else if (naturalWidth === 0) reportUnavailable();
   };
 
+  // The 16:9 box itself belongs to the card (spec 054 §(b)): it is there whether or not a picture
+  // ever arrives, and the card's corner mark is positioned against it, so only the picture is
+  // drawn here.
   return (
-    <div className="aspect-video w-full overflow-hidden bg-stone-100">
-      <img
-        ref={imageRef}
-        src={coverUrl}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
-        onLoad={(event) => settle(event.currentTarget.naturalWidth)}
-        onError={() => {
-          const watch = watchRef.current;
-          if (watch !== null) watch.failed();
-          else reportUnavailable();
-        }}
-        className="size-full object-cover"
-      />
-    </div>
+    <img
+      ref={imageRef}
+      src={coverUrl}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onLoad={(event) => settle(event.currentTarget.naturalWidth)}
+      onError={() => {
+        const watch = watchRef.current;
+        if (watch !== null) watch.failed();
+        else reportUnavailable();
+      }}
+      className="size-full object-cover"
+    />
   );
 }

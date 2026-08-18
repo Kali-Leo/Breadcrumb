@@ -1,19 +1,38 @@
 /**
- * Purpose: the discovery feed's responsive card grid (spec 051 §1) — 2/3/4 columns as the
- * window widens, pulsing skeleton placeholders while a batch generates (no spinner text), and
- * a bottom sentinel that triggers loadMore once it scrolls into view.
+ * Purpose: the discovery feed's card grid (spec 051 §1, regeometried by spec 054 §(b)) — as many
+ * columns as fit at a sensible card width rather than a fixed number per breakpoint, pulsing
+ * skeleton placeholders shaped like real cards while a batch loads (no spinner text), and a bottom
+ * sentinel that triggers loadMore once it scrolls into view.
+ *
+ * The column count and the card width the numbers below produce live in lib/discoveryFeedGrid,
+ * where they can be checked without a browser.
  * Main exports: DiscoveryCardGrid.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { useEffect, useRef } from "react";
+import {
+  FEED_GRID_GAP_PX,
+  FEED_GRID_MAX_CONTENT_PX,
+  FEED_GRID_TEMPLATE_COLUMNS,
+} from "../lib/discoveryFeedGrid";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryCardTile } from "./DiscoveryCardTile";
 
 const SKELETON_COUNT = 8;
 
-/** Roughly a cover card's height, so a loading grid does not jump when real cards land. */
+/** Built from the same parts as a real card — a 16:9 picture area and two lines of text — so a
+ * loading grid is the shape the cards will be and nothing jumps when they land. */
 function SkeletonCard() {
-  return <div className="h-64 animate-pulse rounded-2xl bg-white shadow-sm" />;
+  return (
+    <div className="animate-pulse overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="w-full bg-stone-100 pt-[56.25%]" />
+      <div className="px-4 pt-4 pb-6">
+        <div className="h-3 w-1/3 rounded bg-stone-100" />
+        <div className="mt-3 h-3 w-11/12 rounded bg-stone-100" />
+        <div className="mt-2 h-3 w-2/3 rounded bg-stone-100" />
+      </div>
+    </div>
+  );
 }
 
 interface DiscoveryCardGridProps {
@@ -47,7 +66,15 @@ export function DiscoveryCardGrid({ cards, loading, onOpen }: DiscoveryCardGridP
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div
+        data-testid="discovery-card-grid"
+        className="mx-auto grid"
+        style={{
+          gridTemplateColumns: FEED_GRID_TEMPLATE_COLUMNS,
+          gap: `${FEED_GRID_GAP_PX}px`,
+          maxWidth: `${FEED_GRID_MAX_CONTENT_PX}px`,
+        }}
+      >
         {cards.map((card) => (
           <DiscoveryCardTile key={card.id} card={card} onOpen={onOpen} />
         ))}
