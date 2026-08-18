@@ -17,6 +17,7 @@ const source: ChannelSource = {
   endpoint: { feedUrl: "https://sspai.com/feed" },
   language: "zh-CN",
   defaultKind: "article",
+  tone: "both",
   defaultEnabled: true,
   fetchPolicy: {
     minimumIntervalMilliseconds: 60_000,

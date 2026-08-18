@@ -14,6 +14,7 @@ const source: ChannelSource = {
   endpoint: { feedUrl: "https://juejin.cn/rss" },
   language: "zh-CN",
   defaultKind: "article",
+  tone: "both",
   defaultEnabled: true,
   fetchPolicy: {
     minimumIntervalMilliseconds: 1_800_000,
