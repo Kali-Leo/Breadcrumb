@@ -11,6 +11,7 @@ import {
   type CandidateItem,
   ChannelFetcher,
   type ChannelSource,
+  type FetchContext,
   type FetchImplementation,
   fetchLatestFromSource,
   searchTopics,
@@ -24,6 +25,7 @@ import {
   isSourceAvailableNow,
   readChannelStates,
   recordSourceFetch,
+  recordSourceSearch,
 } from "./discoveryChannelState";
 
 export interface ChannelPollOutcome {
@@ -115,10 +117,38 @@ export interface TopicSearchHarvest {
 }
 
 /**
+ * A search's answer is candidate items and nothing else: a source that is down and a source that
+ * simply has no match for the term both come back empty, so the outcome the channel_state row
+ * needs is read off the requests themselves, through the context every adapter fetches with. One
+ * term can cost a source several requests, and the source counts as reachable if any of them came
+ * back. A source that made no request at all — switched off, out of the fetcher's own allowance —
+ * is left out of the map and out of the bookkeeping, exactly as a skipped poll leaves the
+ * last-attempt instant alone.
+ */
+function watchSearchRequests(
+  context: FetchContext,
+  sourceId: string,
+  answeredBySource: Map<string, boolean>,
+): FetchContext {
+  return {
+    ...context,
+    fetchUrl: async (url, requestOptions) => {
+      const outcome = await context.fetchUrl(url, requestOptions);
+      if (outcome.status === "skipped") return outcome;
+      const answered = outcome.status === "fetched" || outcome.status === "not-modified";
+      answeredBySource.set(sourceId, (answeredBySource.get(sourceId) ?? false) || answered);
+      return outcome;
+    },
+  };
+}
+
+/**
  * Sends the given query terms to the channels that answer queries (Hacker News, arXiv, iTunes),
  * one term at a time so each term's spend is countable against the daily query budget the
  * caller holds. Repeated ids are dropped across terms, so the first term to find an item keeps
- * it.
+ * it. Every term that actually reaches a source writes that source's channel_state row
+ * (recordSourceSearch), so a search-only channel is no longer invisible to freshness, backoff and
+ * the diagnostics (spec 053 T10c).
  */
 export async function searchChannelsForCandidates(
   queries: readonly string[],
@@ -134,8 +164,11 @@ export async function searchChannelsForCandidates(
   const seenIds = new Set<string>();
   const harvests: TopicSearchHarvest[] = [];
   for (const query of queries) {
-    const found = await searchTopics(query, searchable, fetcher.contextForSource(firstSource), {
-      contextForSource: (source) => fetcher.contextForSource(source),
+    const answeredBySource = new Map<string, boolean>();
+    const contextForSource = (source: ChannelSource): FetchContext =>
+      watchSearchRequests(fetcher.contextForSource(source), source.id, answeredBySource);
+    const found = await searchTopics(query, searchable, contextForSource(firstSource), {
+      contextForSource,
       observedAt: now(),
     });
     const items: CandidateItem[] = [];
@@ -145,6 +178,9 @@ export async function searchChannelsForCandidates(
       items.push(item);
     }
     harvests.push({ query, items });
+    for (const [sourceId, answered] of answeredBySource) {
+      await recordSourceSearch(sourceId, answered, now());
+    }
   }
   return harvests;
 }

@@ -6,7 +6,7 @@
  * skipped, a spent budget stay spent, and a channel's minimum interval hold across restocks and
  * restarts. Side effects: reads and writes the channel_state table.
  * Main exports: localDayKey, readChannelStates, createChannelStateConditionalStore,
- * isSourceAvailableNow, recordSourceFetch.
+ * isSourceAvailableNow, recordSourceFetch, recordSourceSearch.
  */
 import type { ChannelStateRow } from "@breadcrumb/core-db";
 import {
@@ -138,5 +138,35 @@ export async function recordSourceFetch(result: SourceFetchResult, now: Date): P
     failure_count: answered ? 0 : (existing.failure_count ?? 0) + 1,
     daily_budget_used: spentToday + 1 + result.followUpRequestCount,
     budget_day: today,
+  });
+}
+
+/**
+ * Records what one recall query learned about a source it queried. The channels that answer
+ * queries used to leave no trace at all here — `podcast-search` landed 59 cards in one launch with
+ * its row still holding a NULL last_fetch_at, an unset reachable and a zero budget (spec 053
+ * T10c) — so nothing downstream could tell a source that had just answered from one nobody had
+ * ever reached.
+ *
+ * The two halves of a poll's bookkeeping split here on purpose. When a source was asked and
+ * whether it answered are facts about the source, and freshness, backoff and the diagnostics all
+ * read them, so a search writes them exactly as a poll does. The daily count is not: it is the
+ * polling allowance isSourceAvailableNow gates the next poll on, and a day's searching is already
+ * capped elsewhere, by the recall budget row (discoveryRecall's DAILY_RECALL_QUERY_BUDGET).
+ * Charging queries to it as well would let one day of recall spend arXiv's eight-request poll
+ * allowance and switch its feed off for the rest of the day.
+ */
+export async function recordSourceSearch(
+  sourceId: string,
+  answered: boolean,
+  now: Date,
+): Promise<void> {
+  const repos = await getRepos();
+  const existing = (await repos.channelState.get(sourceId)) ?? blankState(sourceId);
+  await repos.channelState.upsert({
+    ...existing,
+    last_fetch_at: now.toISOString(),
+    reachable: answered ? 1 : 0,
+    failure_count: answered ? 0 : (existing.failure_count ?? 0) + 1,
   });
 }
