@@ -8,7 +8,7 @@
  * reads as a text card.
  * Main exports: DiscoveryCardCover.
  */
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { type CoverLoadWatch, watchCoverLoad } from "../lib/discoveryCoverLoad";
 import { useDiscoveryChannelSettingsStore } from "../stores/discoveryChannelSettingsStore";
 
@@ -29,14 +29,31 @@ export function DiscoveryCardCover({ coverUrl, onUnavailable }: DiscoveryCardCov
   const imageRef = useRef<HTMLImageElement>(null);
   const watchRef = useRef<CoverLoadWatch | null>(null);
 
+  /**
+   * The caller's callback is kept in a ref and reached through a stable one, so that the effect
+   * below depends on the picture and nothing else. It used to list `onUnavailable` itself, and the
+   * grid hands a fresh closure down on every render: each render tore the watch down and armed a
+   * new eight-second clock, so on a feed that re-renders while the reader scrolls the deadline
+   * never arrived at all — 8-second timer set 270 times and cleared 276 times in 25 seconds of
+   * sitting still, and the grey boxes it exists to replace stayed on the grid (spec 053 T10c).
+   */
+  const latestOnUnavailable = useRef(onUnavailable);
   useEffect(() => {
-    if (dataSaverEnabled) onUnavailable();
-  }, [dataSaverEnabled, onUnavailable]);
+    latestOnUnavailable.current = onUnavailable;
+  }, [onUnavailable]);
+  const reportUnavailable = useCallback(() => {
+    latestOnUnavailable.current();
+  }, []);
 
+  useEffect(() => {
+    if (dataSaverEnabled) reportUnavailable();
+  }, [dataSaverEnabled, reportUnavailable]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: coverUrl is the address the watched <img> fetches, reached through the element
   useEffect(() => {
     const image = imageRef.current;
     if (dataSaverEnabled || image === null) return;
-    const watch = watchCoverLoad(onUnavailable);
+    const watch = watchCoverLoad(reportUnavailable);
     watchRef.current = watch;
     // The picture is lazily loaded, so the browser only asks for it once the card comes near the
     // screen; a card further down the feed is not a picture that is late.
@@ -54,9 +71,9 @@ export function DiscoveryCardCover({ coverUrl, onUnavailable }: DiscoveryCardCov
       watch.cancel();
       watchRef.current = null;
     };
-    // The address is not a dependency: the grid keys a tile by its card's id, so one of these
-    // watches one card's one picture for as long as it exists.
-  }, [dataSaverEnabled, onUnavailable]);
+    // One watch per attempt at one address: a new address is a new attempt and deserves its own
+    // clock, and nothing else here may re-arm it — a re-render is not a picture arriving late.
+  }, [coverUrl, dataSaverEnabled, reportUnavailable]);
 
   if (dataSaverEnabled) return null;
 
@@ -65,7 +82,7 @@ export function DiscoveryCardCover({ coverUrl, onUnavailable }: DiscoveryCardCov
   const settle = (naturalWidth: number): void => {
     const watch = watchRef.current;
     if (watch !== null) watch.loaded(naturalWidth);
-    else if (naturalWidth === 0) onUnavailable();
+    else if (naturalWidth === 0) reportUnavailable();
   };
 
   return (
@@ -81,7 +98,7 @@ export function DiscoveryCardCover({ coverUrl, onUnavailable }: DiscoveryCardCov
         onError={() => {
           const watch = watchRef.current;
           if (watch !== null) watch.failed();
-          else onUnavailable();
+          else reportUnavailable();
         }}
         className="size-full object-cover"
       />

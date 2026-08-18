@@ -11,7 +11,7 @@
  * Main exports: DiscoveryCardTile.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { sourceAndAuthorLine } from "../lib/discoveryCardPresentation";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryCardCover } from "./DiscoveryCardCover";
@@ -61,6 +61,9 @@ function useImpressionObserver(card: DiscoveryCardRow) {
 export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
   const containerRef = useImpressionObserver(card);
   const [coverUnavailable, setCoverUnavailable] = useState(false);
+  /** Stable across renders on purpose: the cover's deadline is armed in an effect, and a fresh
+   * closure here used to re-arm it on every render of the grid (spec 053 T10c). */
+  const handleCoverUnavailable = useCallback(() => setCoverUnavailable(true), []);
   const external = card.source_id !== null;
   const showCover = external && card.cover_url !== null && !coverUnavailable;
   const sourceLine = sourceAndAuthorLine(card);
@@ -78,10 +81,7 @@ export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
         }
       >
         {showCover && card.cover_url !== null && (
-          <DiscoveryCardCover
-            coverUrl={card.cover_url}
-            onUnavailable={() => setCoverUnavailable(true)}
-          />
+          <DiscoveryCardCover coverUrl={card.cover_url} onUnavailable={handleCoverUnavailable} />
         )}
         <div className={external ? (showCover ? "px-5 pt-4" : "px-6 pt-6") : ""}>
           <p
