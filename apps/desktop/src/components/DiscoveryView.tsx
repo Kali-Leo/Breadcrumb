@@ -1,17 +1,20 @@
 /**
- * Purpose: the discovery page (spec 051 §1, spec 053) — a quiet header row (the familiar/new
- * switch on the left, the way into 收藏 on the right) above the card grid, the reader overlay for
- * whichever item is open, and, the very first time, the one-screen panel that asks which fields
- * the reader is interested in before the first cards land.
+ * Purpose: the discovery page (spec 051 §1, spec 053, spec 054) — a quiet header row (the 休闲｜专业
+ * mode with its 学术内容 switch, then the familiar/new dial, and the way into 收藏 on the right)
+ * above the card grid, the reader overlay for whichever item is open, and, the very first time, the
+ * one-screen panel that asks which fields the reader is interested in before the first cards land.
  * Main exports: DiscoveryView.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { useEffect, useState } from "react";
 import { hasRecordedOnboardingStances } from "../lib/discoveryFeedbackEvents";
+import { registerDiscoveryFeedScroller } from "../lib/discoveryFeedScroll";
 import { ensureDiscoveryChannelSettingsLoaded } from "../stores/discoveryChannelSettingsStore";
 import { useDiscoveryStore } from "../stores/discoveryStore";
+import { DiscoveryAcademicContentSwitch } from "./DiscoveryAcademicContentSwitch";
 import { DiscoveryCardGrid } from "./DiscoveryCardGrid";
 import { DiscoveryFeedDial } from "./DiscoveryFeedDial";
+import { DiscoveryFeedModeSwitch } from "./DiscoveryFeedModeSwitch";
 import { DiscoveryOnboarding } from "./DiscoveryOnboarding";
 import { DiscoveryReaderOverlay } from "./DiscoveryReaderOverlay";
 import { DiscoverySavedOverlay } from "./DiscoverySavedOverlay";
@@ -53,8 +56,13 @@ export function DiscoveryView() {
   const empty = cards.length === 0 && !loading;
 
   return (
-    <div className="h-full overflow-y-auto bg-stone-50 p-6">
-      <div className="mb-4 flex items-center gap-3">
+    // This is the element the feed scrolls in, so it is the one a redraw scrolls back to the top.
+    <div ref={registerDiscoveryFeedScroller} className="h-full overflow-y-auto bg-stone-50 p-6">
+      {/* Wraps rather than overflows: on a narrow window the controls take a second line instead
+          of pushing 收藏 off the edge. */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <DiscoveryFeedModeSwitch />
+        <DiscoveryAcademicContentSwitch />
         <DiscoveryFeedDial />
         <button
           type="button"

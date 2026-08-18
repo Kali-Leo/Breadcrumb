@@ -8,8 +8,12 @@
  */
 import type { DiscoveryCardRow, DiscoveryEventKind } from "@breadcrumb/core-db";
 import { defaultFeedPageSize } from "@breadcrumb/plugin-discovery";
-import { ensureFeedLanguagePolicyLoaded } from "../stores/discoveryChannelSettingsStore";
+import {
+  ensureFeedLanguagePolicyLoaded,
+  ensureFeedModePolicyLoaded,
+} from "../stores/discoveryChannelSettingsStore";
 import { getRepos } from "./db";
+import { cardPassesModeFilter } from "./discoveryFeedMode";
 import { cardPassesLanguageFilter } from "./discoveryLanguageFilter";
 import { orderCardsForDisplay } from "./discoveryOrdering";
 import { UNSEEN_POOL_CAP } from "./discoveryPoolPruning";
@@ -26,20 +30,26 @@ export const FEED_PAGE_SIZE = defaultFeedPageSize;
  *
  * The language check happens here rather than at landing (spec 054): the pool keeps whatever it
  * caught, so switching another language on in the language settings makes cards already sitting
- * there appear, with nothing to re-fetch and nothing lost in the meantime. 收藏 is read by another
- * path and stays unfiltered — a saved card was saved on purpose. */
+ * there appear, with nothing to re-fetch and nothing lost in the meantime. The 休闲/专业 check is
+ * here for the same reason and in the same spirit — a mood the reader changes twice an evening must
+ * never cost them cards that were already fetched. 收藏 is read by another path and stays
+ * unfiltered — a saved card was saved on purpose. */
 export async function rankUnshownPoolCards(
   shownIds: ReadonlySet<string>,
   explorationShare: number,
 ): Promise<DiscoveryCardRow[]> {
   const repos = await getRepos();
-  const [pool, events, languagePolicy] = await Promise.all([
+  const [pool, events, languagePolicy, modePolicy] = await Promise.all([
     repos.discovery.listUnseenPoolCards(UNSEEN_POOL_CAP),
     repos.discovery.listAllEvents(),
     ensureFeedLanguagePolicyLoaded(),
+    ensureFeedModePolicyLoaded(),
   ]);
   const fresh = pool.filter(
-    (card) => !shownIds.has(card.id) && cardPassesLanguageFilter(card, languagePolicy),
+    (card) =>
+      !shownIds.has(card.id) &&
+      cardPassesLanguageFilter(card, languagePolicy) &&
+      cardPassesModeFilter(card, modePolicy),
   );
   return orderCardsForDisplay(fresh, events, nowIso(), {
     explorationShare,

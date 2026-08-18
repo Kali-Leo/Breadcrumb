@@ -18,9 +18,12 @@ vi.mock("../lib/db", () => ({
   })),
 }));
 
-const { useDiscoveryChannelSettingsStore, ensureDiscoveryChannelSettingsLoaded } = await import(
-  "./discoveryChannelSettingsStore"
-);
+const {
+  useDiscoveryChannelSettingsStore,
+  ensureDiscoveryChannelSettingsLoaded,
+  ensureFeedLanguagePolicyLoaded,
+  ensureFeedModePolicyLoaded,
+} = await import("./discoveryChannelSettingsStore");
 
 function store() {
   return useDiscoveryChannelSettingsStore.getState();
@@ -36,6 +39,8 @@ beforeEach(() => {
     doubanUserId: "",
     feedLanguage: null,
     additionalFeedLanguages: [],
+    feedMode: "casual",
+    academicContentEnabled: true,
     onboardingDismissed: false,
   });
 });
@@ -103,6 +108,37 @@ describe("discovery source settings", () => {
     await store().setAdditionalFeedLanguageEnabled("en", true);
     await store().setFeedLanguage("en");
     expect(store().additionalFeedLanguages).toEqual([]);
+  });
+
+  /** Spec 054, Leo's seventh and eighth points. Both are read on the feed's own page, so a write
+   * that silently dropped one of them would change the grid on the reader's next launch. */
+  it("keeps the feed's mode and the 学术内容 switch across a reload", async () => {
+    expect(store().feedMode).toBe("casual");
+    expect(store().academicContentEnabled).toBe(true);
+
+    await store().setFeedMode("professional");
+    await store().setAcademicContentEnabled(false);
+    await store().setFeedLanguage("zh");
+
+    useDiscoveryChannelSettingsStore.setState({ loaded: false });
+    await store().loadFromDatabase();
+    expect(store()).toMatchObject({
+      feedMode: "professional",
+      academicContentEnabled: false,
+      feedLanguage: "zh",
+    });
+  });
+
+  it("hands both filters the stored answer, not a fresh default", async () => {
+    await store().setFeedMode("professional");
+    await store().setAcademicContentEnabled(false);
+    await store().setChannelEnabled("juejin", true);
+
+    expect(await ensureFeedModePolicyLoaded()).toEqual({
+      mode: "professional",
+      readerChosenSourceIds: ["juejin"],
+    });
+    expect((await ensureFeedLanguagePolicyLoaded()).academicContentEnabled).toBe(false);
   });
 
   it("reads the row once, however many callers ask for it", async () => {

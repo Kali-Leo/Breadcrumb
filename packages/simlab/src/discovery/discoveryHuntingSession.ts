@@ -8,6 +8,7 @@
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { vi } from "vitest";
+import { useDiscoveryChannelSettingsStore } from "../../../../apps/desktop/src/stores/discoveryChannelSettingsStore";
 import { useDiscoveryStore } from "../../../../apps/desktop/src/stores/discoveryStore";
 import { useSettingsStore } from "../../../../apps/desktop/src/stores/settingsStore";
 import { pickWeighted, randomInt } from "../util/prng";
@@ -27,6 +28,7 @@ type Action =
   | "unsave"
   | "dislike"
   | "dial"
+  | "mode"
   | "connection"
   | "new-day";
 
@@ -43,6 +45,7 @@ const ACTION_WEIGHTS: readonly { item: Action; weight: number }[] = [
   { item: "unsave", weight: 1 },
   { item: "dislike", weight: 2 },
   { item: "dial", weight: 1 },
+  { item: "mode", weight: 1 },
   { item: "connection", weight: 1 },
   { item: "new-day", weight: 1 },
 ];
@@ -138,6 +141,13 @@ export async function runRandomFeedSession(options: SessionOptions): Promise<Ses
             [-1, 0, 0.15, 0.4, 2, Number.NaN][randomInt(random, 0, 5)] ?? 0.25,
           );
         break;
+      case "mode": {
+        // Exactly what the 休闲｜专业 pill does (spec 054): store the other mode, then redraw.
+        const settings = useDiscoveryChannelSettingsStore.getState();
+        await settings.setFeedMode(settings.feedMode === "casual" ? "professional" : "casual");
+        await store.redrawFeed();
+        break;
+      }
       case "connection":
         if (random() < 0.5) network.disconnect();
         else network.reconnect();

@@ -4,15 +4,23 @@
  * the 豆瓣 id that fills the catalog's template entry, the language the feed speaks and any others
  * the reader added to it, and whether the first-run panel has been answered or skipped. Kept out
  * of settingsStore because the background restock reads these before any screen has been opened,
- * so it needs a load it can await (ensureLoaded).
+ * so it needs a load it can await (ensureLoaded). Also the feed's 休闲/专业 mode and the
+ * 学术内容 switch (spec 054), which the same filtering pass reads.
  * Side effects: reads and writes one settings-table row.
  * Main exports: useDiscoveryChannelSettingsStore, ensureDiscoveryChannelSettingsLoaded,
- * ensureFeedLanguagePolicyLoaded, DiscoveryChannelSettings, AddUserFeedOutcome.
+ * ensureFeedLanguagePolicyLoaded, ensureFeedModePolicyLoaded, DiscoveryChannelSettings,
+ * AddUserFeedOutcome.
  */
 
 import { z } from "zod";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import {
+  type FeedMode,
+  type FeedModePolicy,
+  feedModeSchema,
+  resolveFeedModePolicy,
+} from "../lib/discoveryFeedMode";
 import {
   type FeedLanguage,
   type FeedLanguagePolicy,
@@ -37,6 +45,10 @@ const discoveryChannelSettingsSchema = z.object({
   feedLanguage: feedLanguageSchema.nullable().default(null),
   /** The other languages they went on to switch on in the language settings. */
   additionalFeedLanguages: z.array(feedLanguageSchema).default([]),
+  /** Which of the feed's two modes is showing (spec 054, Leo's eighth point). */
+  feedMode: feedModeSchema.default("casual"),
+  /** Whether papers reach the feed at all (Leo's seventh point). On, as the feed has always been. */
+  academicContentEnabled: z.boolean().default(true),
   /** True once the first-run panel was answered or skipped — it never comes back on its own. */
   onboardingDismissed: z.boolean().default(false),
 });
@@ -60,6 +72,8 @@ interface DiscoveryChannelSettingsState extends DiscoveryChannelSettings {
   setDoubanUserId(userId: string): Promise<void>;
   setFeedLanguage(language: FeedLanguage): Promise<void>;
   setAdditionalFeedLanguageEnabled(language: FeedLanguage, enabled: boolean): Promise<void>;
+  setFeedMode(mode: FeedMode): Promise<void>;
+  setAcademicContentEnabled(enabled: boolean): Promise<void>;
   dismissOnboarding(): Promise<void>;
 }
 
@@ -74,6 +88,8 @@ export const useDiscoveryChannelSettingsStore = create<DiscoveryChannelSettingsS
         doubanUserId: state.doubanUserId,
         feedLanguage: state.feedLanguage,
         additionalFeedLanguages: state.additionalFeedLanguages,
+        feedMode: state.feedMode,
+        academicContentEnabled: state.academicContentEnabled,
         onboardingDismissed: state.onboardingDismissed,
         ...patch,
       };
@@ -136,6 +152,14 @@ export const useDiscoveryChannelSettingsStore = create<DiscoveryChannelSettingsS
         await persist({ additionalFeedLanguages: enabled ? [...others, language] : others });
       },
 
+      async setFeedMode(mode) {
+        await persist({ feedMode: mode });
+      },
+
+      async setAcademicContentEnabled(enabled) {
+        await persist({ academicContentEnabled: enabled });
+      },
+
       async dismissOnboarding() {
         await persist({ onboardingDismissed: true });
       },
@@ -163,4 +187,9 @@ export async function ensureDiscoveryChannelSettingsLoaded(): Promise<DiscoveryC
 /** The language half of the same settings, in the shape the two filters take. */
 export async function ensureFeedLanguagePolicyLoaded(): Promise<FeedLanguagePolicy> {
   return resolveFeedLanguagePolicy(await ensureDiscoveryChannelSettingsLoaded());
+}
+
+/** The 休闲/专业 half, in the shape the grid's filter takes. */
+export async function ensureFeedModePolicyLoaded(): Promise<FeedModePolicy> {
+  return resolveFeedModePolicy(await ensureDiscoveryChannelSettingsLoaded());
 }
