@@ -1,8 +1,9 @@
 /**
  * Purpose: unit tests for the page-head side of cover enrichment — which declaration a head is
- * read as the page's picture (present, absent, relative, protocol-relative, malformed, and the
- * ones that are not pictures at all), and that the head read stops where it promises to: at the
- * closing tag, or at the byte ceiling on a page that never closes it.
+ * read as the page's picture (present, absent, relative, protocol-relative, malformed, mangled by
+ * an unterminated attribute, and the ones that are not pictures at all), and that the head read
+ * stops where it promises to: at the closing tag, or at the byte ceiling on a page that never
+ * closes it.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -78,6 +79,59 @@ describe("readCoverDeclaration", () => {
     expect(readCoverDeclaration(head(`<meta content="/c.png" property="OG:IMAGE" />`), PAGE)).toBe(
       "https://blog.example/c.png",
     );
+  });
+
+  it("refuses a declaration that swallowed the markup after it, and takes the next one", () => {
+    // cnBeta article 1573552.htm, in shape: an iframe from the article body escaped into og:image,
+    // whose content attribute is never closed, so the value carries the rest of the iframe's
+    // attributes along with it and resolves to a perfectly valid video-player address.
+    const mangled =
+      `<meta property="og:image" content="//player.bilibili.com/player.html?bvid=BV1GJ411x7h7` +
+      `&amp;page=1&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;true&quot;">`;
+    expect(readCoverDeclaration(head(mangled), PAGE)).toBeNull();
+    expect(
+      readCoverDeclaration(
+        head(mangled, `<meta name="twitter:image" content="https://static.cnbetacdn.com/a.jpg">`),
+        PAGE,
+      ),
+    ).toBe("https://static.cnbetacdn.com/a.jpg");
+    // Same mangling around an address that would have passed every look-like-a-picture test:
+    // the swallowed markup is itself the reason to distrust the value.
+    expect(
+      readCoverDeclaration(
+        head(
+          `<meta property="og:image" content="https://cdn.example/a.jpg&quot; width=&quot;600">`,
+        ),
+        PAGE,
+      ),
+    ).toBeNull();
+  });
+
+  it("refuses a declaration that names a web page rather than a picture", () => {
+    expect(
+      readCoverDeclaration(head(`<meta property="og:image" content="/news/1573552.htm">`), PAGE),
+    ).toBeNull();
+    expect(
+      readCoverDeclaration(
+        head(`<meta property="og:image" content="https://www.youtube.com/watch?v=dQw4w9WgXcQ">`),
+        PAGE,
+      ),
+    ).toBeNull();
+  });
+
+  it("keeps a picture whose address carries no extension at all", () => {
+    expect(
+      readCoverDeclaration(
+        head(`<meta property="og:image" content="https://images.example/opt/aG93ZHk">`),
+        PAGE,
+      ),
+    ).toBe("https://images.example/opt/aG93ZHk");
+    expect(
+      readCoverDeclaration(
+        head(`<meta property="og:image" content="https://cdn.example/thumb.php?src=/a.jpg&w=600">`),
+        PAGE,
+      ),
+    ).toBe("https://cdn.example/thumb.php?src=/a.jpg&w=600");
   });
 
   it("returns nothing for a page that is not markup at all", () => {

@@ -41,16 +41,60 @@ const httpAddressSchema = z
   .url()
   .refine((value) => value.startsWith("http://") || value.startsWith("https://"));
 
+/**
+ * Signs that the value we pulled out of a `content` attribute is not one attribute's worth of
+ * text. A content attribute the page never terminated swallows the markup that followed it, and
+ * that markup comes back out inside the value: cnBeta escapes an iframe from the article body into
+ * og:image often enough to hit roughly one article in twelve, so the value reads
+ * `//player.bilibili.com/player.html?bvid=…&quot; frameborder=&quot;0&quot;` — which resolves to a
+ * completely valid https address pointing at a video player. None of a quote (plain or escaped
+ * back into an entity), an angle bracket, or a run of whitespace followed by another `attribute=`
+ * can survive inside a properly closed attribute value, so any of them means this tag did not
+ * parse and the next candidate should be tried instead.
+ */
+const MARKUP_CONTAMINATION_PATTERN = /["'<>]|&(?:quot|apos|lt|gt|#0*3[49]);|\s[a-zA-Z-]+\s*=/i;
+
+/** Extensions that say "picture" outright, wherever in the address they turn up. */
+const IMAGE_EXTENSION_PATTERN = /\.(?:jpe?g|png|webp|gif|avif)(?:$|[^a-z0-9])/i;
+
+/** Extensions that say "document" outright. A page is never the card's cover. */
+const DOCUMENT_EXTENSION_PATTERN = /\.(?:html?|php|aspx?|jsp|shtml)$/i;
+
+/** File names that name a viewer rather than a file, once an extension is stripped off. */
+const VIEWER_DOCUMENT_NAMES: ReadonlySet<string> = new Set(["player", "watch", "video", "embed"]);
+
+/**
+ * Whether an address plausibly addresses a picture, judged on its shape alone — nothing is
+ * fetched, and no picture is ever proven. The bar is deliberately low in both directions but not
+ * symmetric: plenty of CMSs serve covers from extensionless addresses, so having no extension is
+ * the ordinary case and stays accepted, while an address that names a web page outright is the one
+ * thing worth refusing, because that is what a mangled declaration resolves to. A missing cover
+ * costs the reader a picture; a cover that is a video player costs them a broken box.
+ */
+function addressesAPicture(address: URL): boolean {
+  const fileName = address.pathname.split("/").pop() ?? "";
+  if (IMAGE_EXTENSION_PATTERN.test(fileName)) return true;
+  // Resizers and thumbnailers are scripts, and their own extension says nothing; the picture they
+  // were asked for is named in the query instead, which is enough to keep them.
+  if (IMAGE_EXTENSION_PATTERN.test(address.search)) return true;
+  if (DOCUMENT_EXTENSION_PATTERN.test(fileName)) return false;
+  const baseName = fileName.replace(/\.[^.]*$/, "").toLowerCase();
+  return !(address.search.length > 0 && VIEWER_DOCUMENT_NAMES.has(baseName));
+}
+
 function resolveAgainstPage(declared: string | null, pageUrl: string): string | null {
   const trimmed = declared?.trim() ?? "";
   if (trimmed.length === 0) return null;
-  let absolute: string;
+  if (MARKUP_CONTAMINATION_PATTERN.test(trimmed)) return null;
+  let absolute: URL;
   try {
-    absolute = new URL(trimmed, pageUrl).toString();
+    absolute = new URL(trimmed, pageUrl);
   } catch {
     return null;
   }
-  return httpAddressSchema.safeParse(absolute).success ? absolute : null;
+  const address = absolute.toString();
+  if (!httpAddressSchema.safeParse(address).success) return null;
+  return addressesAPicture(absolute) ? address : null;
 }
 
 /** The picture the given head declares, as an absolute http(s) address, or null when it declares
