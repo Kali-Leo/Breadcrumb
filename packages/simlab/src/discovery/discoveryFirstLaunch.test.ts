@@ -95,7 +95,7 @@ describe("discovery first launch (no key yet, panel not answered yet)", () => {
       })),
     );
     const searchQueriesAfterBoot = searchQueries();
-    await useDiscoveryStore.getState().refillPoolForFirstRunAnswers();
+    await useDiscoveryStore.getState().refillPool({ forceRecall: true });
     await drainBackgroundWork();
     const searchQueriesAfterPanel = searchQueries().slice(searchQueriesAfterBoot.length);
 

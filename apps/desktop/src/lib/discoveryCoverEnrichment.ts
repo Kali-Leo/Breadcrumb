@@ -39,20 +39,17 @@ const COVER_BUDGET_KEY = "discoveryCoverBudget";
 /**
  * Kinds whose address is a page with a picture of its own to read. A video or a podcast episode
  * gets its picture from the channel layer (oEmbed, the feed's own artwork) and is left alone here.
- *
- * A paper is left alone too, since spec 053 T10b: a preprint's landing page has no cover — every
- * arXiv abstract declares the site's own logo as its og:image — so the pass spent its budget
- * fetching dozens of pages to write the same picture onto every paper in the pool, which turned a
- * screenful of distinct papers into a wall of one identical grey logo.
+ * So is a paper, since spec 053 T10b: a preprint's landing page has no cover — every arXiv
+ * abstract declares the site's own logo as its og:image — so the pass spent its budget writing
+ * one identical grey logo onto every paper in the pool.
  */
 const ENRICHABLE_KINDS: ReadonlySet<DiscoveryCardKind> = new Set(["article", "discussion"]);
 
 /**
- * How many cards may share one picture before it stops counting as a picture. A site that serves
- * its own logo (or one house illustration) as every page's og:image is common enough that the
- * kind check alone does not catch it, and a grid where every tile carries the same image tells the
- * reader less than a grid of text cards does. Two cards sharing a picture is a plausible
- * coincidence — a series, a republished piece; three is a site-wide default.
+ * How many cards may share one picture before it stops counting as a picture. Sites serve their
+ * own logo as every page's og:image often enough that the kind check alone does not catch it, and
+ * a grid where every tile carries the same image says less than a grid of text cards. Two cards
+ * sharing one is a plausible coincidence; three is a site-wide default.
  */
 const SHARED_COVER_LIMIT = 3;
 

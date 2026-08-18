@@ -229,7 +229,7 @@ describe("the app-start restock and the feed's first load", () => {
       return refillsWith(["w1"])();
     });
     const warm = useDiscoveryStore.getState().refillPool();
-    const panel = useDiscoveryStore.getState().refillPoolForFirstRunAnswers();
+    const panel = useDiscoveryStore.getState().refillPool({ forceRecall: true });
     release();
     await Promise.all([warm, panel]);
     expect(refillDiscoveryPoolMock).toHaveBeenCalledTimes(2);

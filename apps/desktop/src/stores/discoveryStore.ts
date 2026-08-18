@@ -17,7 +17,7 @@ import {
   recordDiscoveryEvent,
   takeNextPage,
 } from "../lib/discoveryFeedPaging";
-import type { RefillOutcome } from "../lib/discoveryRefill";
+import type { RefillOptions, RefillOutcome } from "../lib/discoveryRefill";
 import { restockBehindTheGrid, runRefill } from "../lib/discoveryRestockTask";
 import { reshapeUpcomingCards } from "../lib/discoveryUpcomingReshape";
 import { nowIso } from "../lib/time";
@@ -36,11 +36,9 @@ interface DiscoveryState {
   sessionImpressedIds: Set<string>;
   loadInitial(): Promise<void>;
   /** Called once at app start (Leo's order): restocks the pool in the background so the page
-   * opens already filled. */
-  refillPool(): Promise<void>;
-  /** The restock right after the first-run panel is answered: the reader has just said what they
-   * want to see, so this round goes looking for it instead of only polling. */
-  refillPoolForFirstRunAnswers(): Promise<void>;
+   * opens already filled. The first-run panel calls it with forceRecall — the reader has just
+   * said what they want to see, and a stocked pool would keep the app from going to look. */
+  refillPool(options?: RefillOptions): Promise<void>;
   loadMore(): Promise<void>;
   /** Re-ranks the not-yet-reached part of the grid, for when the dial moves (spec 053 §6). */
   reshapeUpcoming(): Promise<void>;
@@ -83,15 +81,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
     blockedReason: null,
     sessionImpressedIds: new Set(),
 
-    async refillPool() {
-      const outcome = await runRefill();
+    async refillPool(options) {
+      const outcome = await runRefill(options);
       if (outcome.kind === "unavailable") return; // silent: nobody has opened the feed yet
-      await stagePending();
-    },
-
-    async refillPoolForFirstRunAnswers() {
-      const outcome = await runRefill({ forceRecall: true });
-      if (outcome.kind === "unavailable") return; // silent: the panel has said its piece already
       await stagePending();
     },
 
