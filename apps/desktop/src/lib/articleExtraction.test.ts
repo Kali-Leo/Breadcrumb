@@ -94,6 +94,44 @@ describe("extractArticleAt", () => {
 });
 
 /**
+ * FIXED (2026-08-17, spec 053 T10b). Defuddle works the page's domain out of the page's own
+ * og:url / canonical declaration when the document carries no address of its own — which a
+ * DOMParser document never does — and warns to the console when that declaration is relative.
+ * The URL option we pass does not reach its metadata extractor, and Document.location cannot be
+ * given one, so every article the reader opened wrote those lines into the console and the dev
+ * overlay mirrored them as failures. They are dropped around the parse call and nothing else is.
+ */
+describe("extractArticleAt and Defuddle's console", () => {
+  const PAGE_WITH_RELATIVE_CANONICAL = ARTICLE_HTML.replace(
+    '<meta name="author" content="张三">',
+    '<meta name="author" content="张三"><link rel="canonical" href="/posts/closures">',
+  );
+
+  it("says nothing about a page whose canonical address is relative", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = await extractArticleAt("https://example.com/posts/closures", {
+      fetchImpl: fetchReturning(respondWith(PAGE_WITH_RELATIVE_CANONICAL)),
+    });
+    expect(result.kind).toBe("extracted");
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("leaves the console alone the moment the parse is over", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await extractArticleAt("https://example.com/posts/closures", {
+      fetchImpl: fetchReturning(respondWith(PAGE_WITH_RELATIVE_CANONICAL)),
+    });
+    // Anything else, from anyone else, still reaches the console — including a line that only
+    // starts like the one we drop.
+    console.warn("Failed to parse URL: something of ours");
+    console.warn("Defuddle: Failed to process stylesheet:", new Error("x"));
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+});
+
+/**
  * FIXED (2026-08-17, spec 053 T10). The request carried `AbortSignal.timeout(20_000)`, which
  * stays armed for its full twenty seconds however the request ended. Tauri's HTTP plugin frees a
  * request's resource as soon as its body is read, so the late abort reached a freed id and came

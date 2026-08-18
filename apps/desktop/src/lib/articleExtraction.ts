@@ -81,6 +81,44 @@ async function fetchPageHtml(url: string, fetchImpl: typeof tauriFetch): Promise
 }
 
 /**
+ * The two lines Defuddle 0.19.2 writes to the console for a page whose own og:url or canonical
+ * declaration is a relative address.
+ *
+ * It works out the page's domain from `doc.location?.href` and falls back to those declarations,
+ * parsing each with `new URL(value)` and no base — which throws on a relative one, and it warns.
+ * The `url` option we already pass does not reach that code: MetadataExtractor.extract is called
+ * with the document and its meta tags only (defuddle/dist/defuddle.js), and it is the one place
+ * the option is not threaded through. Nor can a DOMParser document carry the address instead —
+ * `Document.location` is unforgeable, and reads null off a parsed document.
+ *
+ * So the warning is not something this side can answer, and it says nothing about the extraction:
+ * the URL it wants is the one we hand Defuddle for everything else. Meanwhile every article the
+ * reader opened wrote a couple of them into the console and the dev overlay mirrored them as if
+ * something had failed (spec 053 T10b). Only these exact lines are dropped, only while the
+ * synchronous parse call is on the stack — nothing else can be logging in that window — and
+ * anything else Defuddle has to say goes to the console untouched. Worth deleting at the next
+ * Defuddle upgrade: check whether metadata extraction takes the URL by then.
+ */
+const DEFUDDLE_RELATIVE_URL_WARNINGS: readonly string[] = [
+  "Failed to parse URL:",
+  "Failed to parse base URL:",
+];
+
+function withoutDefuddleUrlWarnings<Result>(run: () => Result): Result {
+  const warn = console.warn;
+  console.warn = (...args: unknown[]): void => {
+    const [line] = args;
+    if (typeof line === "string" && DEFUDDLE_RELATIVE_URL_WARNINGS.includes(line)) return;
+    warn(...args);
+  };
+  try {
+    return run();
+  } finally {
+    console.warn = warn;
+  }
+}
+
+/**
  * Loaded on first use: the full Defuddle build carries the Markdown converter and the formula
  * handling, and most sessions never open an article, so it stays out of the app's first paint.
  */
@@ -91,7 +129,9 @@ async function toMarkdown(
 ): Promise<ArticleExtraction> {
   const { default: Defuddle } = await import("defuddle/full");
   const parsed = defuddleResponseSchema.safeParse(
-    new Defuddle(parseHtml(html), { url, markdown: true, useAsync: false }).parse(),
+    withoutDefuddleUrlWarnings(() =>
+      new Defuddle(parseHtml(html), { url, markdown: true, useAsync: false }).parse(),
+    ),
   );
   if (!parsed.success) return { kind: "failed" };
   const markdown = parsed.data.content.trim();
