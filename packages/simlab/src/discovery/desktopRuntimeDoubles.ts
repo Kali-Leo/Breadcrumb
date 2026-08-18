@@ -4,16 +4,23 @@
  * path, answered with simlab's synthetic bigram embedding) and the LLM's `chatJson` (the batch
  * quality check, answered from a hash of the title, no provider involved). Both count their
  * calls so a test can assert "this ran exactly N times" and "no LLM call happened at all".
- * Main exports: invoke, chatJson, runtimeCallCounts, resetRuntimeDoubles, setQualityScorer.
+ * Main exports: invoke, chatJson, runtimeCallCounts, qualityCheckBatches, resetRuntimeDoubles,
+ * setQualityScorer.
  */
 import { computeSyntheticEmbedding } from "../embedding/syntheticEmbedding";
 import { seedFromStrings } from "../util/prng";
 
 export const runtimeCallCounts = { embedTexts: 0, chatJson: 0 };
 
+/** The card ids each quality-check call carried, in call order. A count says how many calls were
+ * billed; this says what they were billed for, which is what catches the same cards being sent
+ * again (spec 053 T10c). */
+export const qualityCheckBatches: string[][] = [];
+
 export function resetRuntimeDoubles(): void {
   runtimeCallCounts.embedTexts = 0;
   runtimeCallCounts.chatJson = 0;
+  qualityCheckBatches.length = 0;
   qualityScorer = defaultQualityScorer;
 }
 
@@ -94,7 +101,9 @@ export async function chatJson<Parsed>(
   schema: ParseLike<Parsed>,
 ): Promise<ChatJsonResultDouble<Parsed>> {
   runtimeCallCounts.chatJson += 1;
-  const scores = idsFromMessages(messages).map((id) => ({ id, substance: qualityScorer(id) }));
+  const batch = idsFromMessages(messages);
+  qualityCheckBatches.push(batch);
+  const scores = batch.map((id) => ({ id, substance: qualityScorer(id) }));
   return {
     parsed: schema.parse({ scores }),
     usage: { inputTokens: 400 + scores.length * 20, outputTokens: 20 + scores.length * 8 },

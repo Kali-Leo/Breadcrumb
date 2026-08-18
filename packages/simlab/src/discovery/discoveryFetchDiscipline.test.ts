@@ -20,7 +20,9 @@ vi.mock("@breadcrumb/core-llm", async (importOriginal) => {
 const { closeDiscoveryDatabase, getRepos } = await import("./desktopDatabase");
 const { installFakeNetwork, fakeNetwork } = await import("./tauriHttpDouble");
 const { createFakeChannelNetwork } = await import("./fakeChannelNetwork");
-const { resetRuntimeDoubles, runtimeCallCounts } = await import("./desktopRuntimeDoubles");
+const { qualityCheckBatches, resetRuntimeDoubles, runtimeCallCounts } = await import(
+  "./desktopRuntimeDoubles"
+);
 const {
   drainBackgroundWork,
   JOURNEY_START,
@@ -32,6 +34,9 @@ const { HACKER_NEWS_SEARCH_PREFIX, JOURNEY_FEEDS, TOPIC_FEEDS, topicFeedByKey } 
   "./syntheticChannelWorld"
 );
 const { refillDiscoveryPool } = await import("../../../../apps/desktop/src/lib/discoveryRefill");
+const { runBackgroundPasses } = await import(
+  "../../../../apps/desktop/src/lib/discoveryBackgroundPasses"
+);
 const { PER_SOURCE_LANDING_CAP } = await import(
   "../../../../apps/desktop/src/lib/discoveryPoolLanding"
 );
@@ -198,6 +203,31 @@ describe("discovery fetch discipline", () => {
     const spend = await repos.llmCalls.sumCostSinceByPurpose("2000-01-01T00:00:00.000Z");
     expect(spend.map((row) => row.purpose)).toEqual(["discovery-quality-check"]);
     expect(runtimeCallCounts.chatJson).toBe(1);
+  }, 60_000);
+
+  /**
+   * FIXED (2026-08-18, spec 053 T10c). Every restock hands a background pass to the grid and does
+   * not wait for it, and a reader scrolling starts restocks faster than a pass finishes. The
+   * quality check read the pool's unrated top for itself with no guard around it, so every one of
+   * those passes sent the same fifty cards to the model: a real first launch billed 203 calls —
+   * ¥0.5547 — to rate 387 cards, about 25 times what the work is worth. What is checked here is
+   * the property the money follows: a card is submitted to the check at most once.
+   */
+  it("never bills the same card to the quality check twice, however the passes overlap", async () => {
+    await freshRun({ feeds: TOPIC_FEEDS });
+    // One round, so the pool holds several batches' worth of unrated cards.
+    await (await refillDiscoveryPool({ force: true, now: JOURNEY_START })).backgroundWork;
+    const callsAfterFirstRound = runtimeCallCounts.chatJson;
+    expect(callsAfterFirstRound).toBe(1);
+
+    // A restock hands its background pass to the grid and does not wait for it (discoveryRefill
+    // returns backgroundWork), so the next restock's pass starts on top of the last one's.
+    await Promise.all([runBackgroundPasses(), runBackgroundPasses(), runBackgroundPasses()]);
+    expect(runtimeCallCounts.chatJson).toBe(callsAfterFirstRound + 1);
+
+    const submitted = qualityCheckBatches.flat();
+    const submittedTwice = submitted.filter((id, index) => submitted.indexOf(id) !== index);
+    expect(submittedTwice).toEqual([]);
   }, 60_000);
 
   /**

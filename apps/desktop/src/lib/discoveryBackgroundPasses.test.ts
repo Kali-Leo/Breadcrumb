@@ -35,8 +35,12 @@ vi.mock("./embeddings", () => ({ embedTexts: embedTextsMock }));
 const recordAiFailureMock = vi.fn();
 vi.mock("./failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
 
-const { QUALITY_CHECK_BATCH_CAP } = await import("@breadcrumb/plugin-discovery");
-const { embedPoolBacklog, scoreQualityBacklog } = await import("./discoveryBackgroundPasses");
+const { contentFeatureParts, defaultContentFeatureWeights, QUALITY_CHECK_BATCH_CAP } = await import(
+  "@breadcrumb/plugin-discovery"
+);
+const { embedPoolBacklog, NEUTRAL_QUALITY_SCORE, scoreQualityBacklog } = await import(
+  "./discoveryBackgroundPasses"
+);
 
 function card(id: string, overrides: Partial<DiscoveryCardRow> = {}): DiscoveryCardRow {
   return {
@@ -77,10 +81,16 @@ afterEach(() => {
 describe("scoreQualityBacklog", () => {
   it("writes a score for every card the check actually rated", async () => {
     missingQualityScore = [card("a"), card("b")];
-    scoreBatchQualityMock.mockResolvedValue(new Map([["a", 0.2]]));
+    scoreBatchQualityMock.mockResolvedValue(
+      new Map([
+        ["a", 0.2],
+        ["b", 0.9],
+      ]),
+    );
     await scoreQualityBacklog();
-    expect(setCardQualityScoreMock).toHaveBeenCalledTimes(1);
+    expect(setCardQualityScoreMock).toHaveBeenCalledTimes(2);
     expect(setCardQualityScoreMock).toHaveBeenCalledWith("a", 0.2);
+    expect(setCardQualityScoreMock).toHaveBeenCalledWith("b", 0.9);
   });
 
   it("leaves a card the check skipped unrated instead of guessing at it", async () => {
@@ -130,6 +140,61 @@ describe("scoreQualityBacklog", () => {
     scoreBatchQualityMock.mockRejectedValue(new Error("database closed"));
     await expect(scoreQualityBacklog()).resolves.toBeUndefined();
     expect(recordAiFailureMock).toHaveBeenCalledWith("discovery", expect.any(Error));
+  });
+
+  /**
+   * FIXED (2026-08-18, spec 053 T10c). A background pass is started behind every restock, and
+   * scrolling starts restocks faster than a pass finishes. Every one of them read the same unrated
+   * top of the pool before any of them had written a score, so the same batch was sent to the
+   * model again and again: a real first launch spent 203 metered calls — ¥0.5547 — rating 387
+   * cards. Whoever arrives while a pass is in the air now joins it.
+   */
+  it("sends one batch however many restocks ask for a pass at once", async () => {
+    missingQualityScore = Array.from({ length: QUALITY_CHECK_BATCH_CAP }, (_unused, index) =>
+      card(`c${index}`),
+    );
+    scoreBatchQualityMock.mockImplementation(
+      async (items: readonly { id: string }[]) =>
+        new Map(items.map((item) => [item.id, 0.6] as const)),
+    );
+    await Promise.all([scoreQualityBacklog(), scoreQualityBacklog(), scoreQualityBacklog()]);
+    expect(scoreBatchQualityMock).toHaveBeenCalledTimes(1);
+    expect(setCardQualityScoreMock).toHaveBeenCalledTimes(QUALITY_CHECK_BATCH_CAP);
+  });
+
+  /**
+   * FIXED (2026-08-18, spec 053 T10c). The model does not always answer for every card in the
+   * batch, and a card it passed over stayed NULL — which is exactly what the next pass reads, so
+   * the same card was submitted and billed for pass after pass. It leaves the backlog with the
+   * neutral score instead, which ranks identically to unrated.
+   */
+  it("does not submit a card the model left out a second time", async () => {
+    missingQualityScore = [card("a"), card("b")];
+    scoreBatchQualityMock.mockResolvedValue(new Map([["a", 0.2]]));
+    await scoreQualityBacklog();
+    expect(setCardQualityScoreMock).toHaveBeenCalledWith("a", 0.2);
+    expect(setCardQualityScoreMock).toHaveBeenCalledWith("b", NEUTRAL_QUALITY_SCORE);
+
+    await scoreQualityBacklog();
+    expect(scoreBatchQualityMock).toHaveBeenCalledTimes(1);
+  });
+
+  /** The neutral score is only honest if the ranking cannot tell it from an unrated card: the
+   * quality check demotes below 0.35 and gives nothing for a high rating, so anything at or above
+   * that floor contributes exactly what NULL does. */
+  it("writes a neutral score the ranking treats exactly like unrated", () => {
+    expect(NEUTRAL_QUALITY_SCORE).toBeGreaterThanOrEqual(
+      defaultContentFeatureWeights.qualityDemotionThreshold,
+    );
+    const signals = { upstreamSignal: null, hasCover: false, publishedAt: null };
+    const nowIso = "2026-08-18T00:00:00.000Z";
+    const neutral = contentFeatureParts(
+      { ...signals, qualityScore: NEUTRAL_QUALITY_SCORE },
+      nowIso,
+    );
+    const unrated = contentFeatureParts({ ...signals, qualityScore: null }, nowIso);
+    expect(neutral.demotion).toBe(0);
+    expect(neutral).toEqual(unrated);
   });
 });
 
