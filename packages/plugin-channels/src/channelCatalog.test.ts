@@ -9,11 +9,13 @@ import {
   type ChannelCatalog,
   type ChannelSource,
   channelSourceSchema,
+  channelToneSchema,
   fillSourceTemplate,
   isSourceTemplate,
   loadStarterChannelCatalog,
   parseChannelCatalog,
 } from "./channelCatalog";
+import starterCatalogJson from "./starterChannelCatalog.json" with { type: "json" };
 
 const exampleSource = {
   id: "example",
@@ -124,6 +126,39 @@ describe("loadStarterChannelCatalog", () => {
       "arxiv-cs-lg",
       "arxiv-q-bio-nc",
     ]);
+  });
+
+  /**
+   * Spec 054, Leo's eighth point: the feed's two modes are a filter, not a preference, so a
+   * source that never said who it is written for would silently pick a side. The schema fills in
+   * "both" for feeds the reader pastes in, which is why this reads the file rather than the
+   * parsed catalog — a new entry that forgets the field must fail here, not default quietly.
+   */
+  it("has every shipped source say which mode it belongs in", () => {
+    for (const source of starterCatalogJson.sources as { id: string; tone?: unknown }[]) {
+      expect([source.id, channelToneSchema.safeParse(source.tone).success]).toEqual([
+        source.id,
+        true,
+      ]);
+    }
+  });
+
+  /** Neither mode may be left with nothing to show, so the split is checked as a split: each
+   * side needs sources of its own, and the sources that genuinely serve both moods stay in both. */
+  it("leaves both modes with sources in every language", () => {
+    const tones = (language: string, tone: string): string[] =>
+      catalog.sources
+        .filter((source) => source.language === language && source.tone === tone)
+        .map((source) => source.id);
+    for (const language of ["zh-CN", "en"]) {
+      expect(tones(language, "professional").length).toBeGreaterThan(2);
+      expect(tones(language, "casual").length).toBeGreaterThan(2);
+      expect(tones(language, "both").length).toBeGreaterThan(2);
+    }
+    // Papers are the clearest case of a source that reads wrong when the reader wanted to browse.
+    for (const source of catalog.sources.filter((one) => one.defaultKind === "paper")) {
+      expect([source.id, source.tone]).toEqual([source.id, "professional"]);
+    }
   });
 
   it("gives every source a positive interval and a daily budget", () => {
@@ -272,5 +307,13 @@ describe("parseChannelCatalog", () => {
       endpoint: { feedUrl: "https://blog.example.org/atom.xml" },
     });
     expect(pasted.id).toBe("my-blog");
+    // Nothing is known about a pasted address, so it is shown in both modes rather than hidden.
+    expect(pasted.tone).toBe("both");
+  });
+
+  it("rejects a mode nobody can filter on", () => {
+    expect(() =>
+      parseChannelCatalog(catalogWith([{ ...exampleSource, tone: "serious" }])),
+    ).toThrow();
   });
 });

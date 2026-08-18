@@ -71,6 +71,18 @@ export const templateParameterSchema = z.object({
 
 export type TemplateParameter = z.infer<typeof templateParameterSchema>;
 
+/**
+ * Who a source is written for (spec 054, Leo's eighth point: 「应该有休闲和专业两个模式，用户想放松的
+ * 时候会非常不想看到专业内容，想阅读专业内容时会非常讨厌休闲内容」). "professional" is a source whose
+ * items assume the reader is working — trade publications, developer communities, papers.
+ * "casual" is one a reader picks up to browse. "both" is the honest answer for the many sources
+ * that serve either mood, and it is what keeps each of the two modes from running dry, so a
+ * source is only pushed to one side when it really does read wrong in the other.
+ */
+export const channelToneSchema = z.enum(["professional", "casual", "both"]);
+
+export type ChannelTone = z.infer<typeof channelToneSchema>;
+
 export const channelSourceSchema = z.object({
   id: z.string().min(1),
   /** Shown to the reader as the source name, in the source's own language. */
@@ -88,6 +100,10 @@ export const channelSourceSchema = z.object({
   /** What the items are when the payload itself does not say (a plain blog feed is articles;
    * an audio enclosure still overrides this to "podcast"). */
   defaultKind: candidateItemKindSchema,
+  /** Which of the feed's two modes this source belongs in. Every entry in the shipped catalog
+   * states it; a feed the reader pasted in themselves says nothing about itself, and an address
+   * we know nothing about is shown in both modes rather than hidden from one. */
+  tone: channelToneSchema.default("both"),
   /** Whether a fresh install polls this source before the reader touches settings. */
   defaultEnabled: z.boolean(),
   fetchPolicy: fetchPolicySchema,
