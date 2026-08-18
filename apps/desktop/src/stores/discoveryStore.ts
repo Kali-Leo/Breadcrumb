@@ -3,29 +3,34 @@
  * at a time out of the local card pool and keeps that pool stocked behind the reader
  * (lib/discoveryRefill). Cards come from external channels now; nothing on the display path
  * waits on the network, on an embedding or on an LLM. The silent signal actions
- * (impression/open/dwell/save/finish/dislike) write into discovery_events; the dial re-ranks
- * what the reader has not reached. Article streaming is a pass-through for retired card pools.
+ * (impression/dwell/save/finish/dislike) write into discovery_events; the three controls on the
+ * feed page redraw the grid (spec 054). Opening a card and reading its text live in
+ * discoveryStoreReading.
  * Main exports: useDiscoveryStore.
  */
 import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
-import { streamCardArticle } from "../lib/discoveryArticleActions";
 import {
   FEED_PAGE_SIZE,
   rankUnshownPoolCards,
   recordDiscoveryEvent,
   takeNextPage,
 } from "../lib/discoveryFeedPaging";
+import { scrollDiscoveryFeedToTop } from "../lib/discoveryFeedScroll";
 import type { RefillOptions, RefillOutcome } from "../lib/discoveryRefill";
 import { restockBehindTheGrid, runRefill } from "../lib/discoveryRestockTask";
 import { reshapeUpcomingCards } from "../lib/discoveryUpcomingReshape";
 import { nowIso } from "../lib/time";
+import {
+  createDiscoveryReadingActions,
+  type DiscoveryReadingActions,
+} from "./discoveryStoreReading";
 import { useSettingsStore } from "./settingsStore";
 
-export type StreamArticleResult = { ok: true; bodyMd: string } | { ok: false; reason: string };
+export type { StreamArticleResult } from "./discoveryStoreReading";
 
-interface DiscoveryState {
+interface DiscoveryState extends DiscoveryReadingActions {
   cards: DiscoveryCardRow[];
   /** Ordered pool cards not on screen yet — the next pages, already ranked. */
   pending: DiscoveryCardRow[];
@@ -40,14 +45,13 @@ interface DiscoveryState {
    * said what they want to see, and a stocked pool would keep the app from going to look. */
   refillPool(options?: RefillOptions): Promise<void>;
   loadMore(): Promise<void>;
-  /** Re-ranks the not-yet-reached part of the grid, for when the dial moves (spec 053 §6). */
+  /** Re-ranks the not-yet-reached part of the grid, for a setting changed on another page while
+   * the feed is not in front of the reader (spec 053 §6). */
   reshapeUpcoming(): Promise<void>;
-  /** Takes the row, not an id: an item opened from 收藏 is off the grid and still records. */
-  openCard(card: DiscoveryCardRow): Promise<void>;
-  streamArticle(cardId: string, onDelta: (delta: string) => void): Promise<StreamArticleResult>;
-  /** Keeps the text an external article was just read from on the row the grid holds, so a
-   * second open in the same session reads it from here rather than off the network again. */
-  noteCardBody(cardId: string, bodyMd: string): void;
+  /** Replaces what the grid is showing, for the three controls on the feed page itself: the
+   * familiar/new dial, the 休闲/专业 mode and the 学术内容 switch (spec 054, Leo's fifth point —
+   * 「整流换掉」). */
+  redrawFeed(): Promise<void>;
   recordImpression(cardId: string, topicLabel: string): Promise<void>;
   recordDwell(cardId: string, topicLabel: string, ms: number): Promise<void>;
   recordFinish(cardId: string, topicLabel: string): Promise<void>;
@@ -73,6 +77,29 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
    * it says nothing, because nothing is missing from the reader's side. */
   const bannerFor = (outcome: RefillOutcome): string | null =>
     get().cards.length === 0 ? outcome.reason : null;
+
+  const readingActions = createDiscoveryReadingActions({
+    read: () => get().cards,
+    patch: (cardId, patch) => {
+      set({ cards: get().cards.map((c) => (c.id === cardId ? { ...c, ...patch } : c)) });
+    },
+  });
+
+  /** Draws the next `count` cards onto the grid, going to the network only when the pool comes
+   * up short of them. Shared by the scroll sentinel and by a redraw, which want the same thing. */
+  const fillGrid = async (count: number): Promise<void> => {
+    const taken = takePage(count);
+    if (taken >= count) {
+      set({ loading: false });
+      restockBehindTheGrid(stagePending);
+      return;
+    }
+    set({ loading: true, blockedReason: null });
+    const outcome = await runRefill({ force: true });
+    await stagePending();
+    takePage(count - taken);
+    set({ loading: false, blockedReason: bannerFor(outcome) });
+  };
 
   return {
     cards: [],
@@ -104,16 +131,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
 
     async loadMore() {
       if (get().loading) return; // guard re-entry (scroll sentinel firing twice)
-      const taken = takePage(FEED_PAGE_SIZE);
-      if (taken >= FEED_PAGE_SIZE) {
-        restockBehindTheGrid(stagePending);
-        return;
-      }
-      set({ loading: true, blockedReason: null });
-      const outcome = await runRefill({ force: true });
-      await stagePending();
-      takePage(FEED_PAGE_SIZE - taken);
-      set({ loading: false, blockedReason: bannerFor(outcome) });
+      await fillGrid(FEED_PAGE_SIZE);
     },
 
     async reshapeUpcoming() {
@@ -121,37 +139,23 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
       set(await reshapeUpcomingCards(get().cards, get().sessionImpressedIds, share));
     },
 
-    async openCard(card) {
-      // The grid hands over a snapshot; the store holds the row as it stands now, and reading
-      // that one back is what stops a re-open writing a second event. A 收藏 row is off the grid.
-      const live = get().cards.find((c) => c.id === card.id) ?? card;
-      if (live.opened_at !== null) return;
-      const repos = await getRepos();
-      const openedAt = nowIso();
-      await repos.discovery.markOpened(card.id, openedAt);
-      await recordDiscoveryEvent(card.id, card.topic_label, "open");
-      set({
-        cards: get().cards.map((c) => (c.id === card.id ? { ...c, opened_at: openedAt } : c)),
-      });
+    /**
+     * The reader changed what the feed should be showing while looking at it, so the feed shows
+     * something else: the grid is emptied, the page goes back to the top, and a fresh first page
+     * is drawn from the pool under the new setting — with a fetch behind it when the pool cannot
+     * fill one. Nothing is deleted: the pool keeps every card, 收藏 and the opened ones are
+     * untouched, and a card that no longer fits the setting is simply not drawn this time.
+     * Losing the reader's place is the accepted cost of Leo's 「整流换掉」, and it is why this
+     * happens only on a control they just touched themselves.
+     */
+    async redrawFeed() {
+      scrollDiscoveryFeedToTop();
+      set({ cards: [], pending: [], loading: true, blockedReason: null });
+      await stagePending();
+      await fillGrid(FEED_PAGE_SIZE);
     },
 
-    async streamArticle(cardId, onDelta) {
-      const card = get().cards.find((c) => c.id === cardId);
-      if (card === undefined) return { ok: false, reason: "这张卡片不在当前列表里了。" };
-      if (card.body_md !== null) return { ok: true, bodyMd: card.body_md };
-      const outcome = await streamCardArticle(card, onDelta);
-      if (outcome.kind === "blocked") return { ok: false, reason: outcome.reason };
-      set({
-        cards: get().cards.map((c) => (c.id === cardId ? { ...c, body_md: outcome.bodyMd } : c)),
-      });
-      return { ok: true, bodyMd: outcome.bodyMd };
-    },
-
-    noteCardBody(cardId, bodyMd) {
-      set({
-        cards: get().cards.map((c) => (c.id === cardId ? { ...c, body_md: bodyMd } : c)),
-      });
-    },
+    ...readingActions,
 
     async recordImpression(cardId, topicLabel) {
       if (get().sessionImpressedIds.has(cardId)) return;

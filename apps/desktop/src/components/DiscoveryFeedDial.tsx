@@ -28,9 +28,10 @@ export function DiscoveryFeedDial() {
     const share = shareForDialPosition(next);
     await useSettingsStore.getState().setDiscoveryExplorationShare(share);
     await recordFeedDialMove(share);
-    // Re-ranks everything the reader has not reached yet — the cards below the fold change on
-    // the spot, the ones already looked at stay where they are (spec 053 验收).
-    await useDiscoveryStore.getState().reshapeUpcoming();
+    // Replaces what the grid is showing and goes back to the top (spec 054, Leo's fifth point —
+    // 「整流换掉」). Re-ranking only the part below the fold, as this did until then, left a reader
+    // sitting at the top of the feed with nothing visibly changed by the switch they had moved.
+    await useDiscoveryStore.getState().redrawFeed();
   }
 
   // Same wrapper as the map's 休闲｜目标 pill: the two buttons name themselves and carry

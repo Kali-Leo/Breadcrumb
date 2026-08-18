@@ -91,8 +91,13 @@ interface JourneyResult {
    * at all" baseline each day's grid is compared against. */
   poolWindowInterestShare: number[];
   poolWindowAversionShare: number[];
-  /** How many upcoming positions actually moved when the dial was flipped. */
-  dialMovedPositions: number;
+  /** What the grid held before and after the dial was flipped (spec 054: 「整流换掉」). */
+  dialFlip: {
+    before: string[];
+    after: string[];
+    saved: { before: number; after: number };
+    pool: { before: number; after: number };
+  };
   /** The instant the last simulated day ended — what "two weeks old" is measured against. */
   lastDayEnd: Date;
 }
@@ -107,7 +112,12 @@ async function runJourney(): Promise<JourneyResult> {
   const unfamiliarByDay: number[] = [];
   const poolWindowInterestShare: number[] = [];
   const poolWindowAversionShare: number[] = [];
-  let dialMovedPositions = -1;
+  let dialFlip = {
+    before: [] as string[],
+    after: [] as string[],
+    saved: { before: 0, after: 0 },
+    pool: { before: 0, after: 0 },
+  };
 
   for (let dayIndex = 0; dayIndex < JOURNEY_DAYS; dayIndex += 1) {
     if (OFFLINE_DAYS.has(dayIndex)) run.network.disconnect();
@@ -127,12 +137,24 @@ async function runJourney(): Promise<JourneyResult> {
       beforeReacting:
         dayIndex === DIAL_FLIP_DAY
           ? async () => {
+              // Exactly the sequence DiscoveryFeedDial runs (spec 054, Leo's fifth point): the
+              // grid is replaced rather than re-ranked below the fold.
               const before = useDiscoveryStore.getState().cards.map((card) => card.id);
+              const savedBefore = (await repos.discovery.listSaved()).length;
+              const poolBefore = (await repos.discovery.listNewestCards(100_000)).length;
               await useSettingsStore.getState().setDiscoveryExplorationShare(0.4);
               await recordFeedDialMove(0.4);
-              await useDiscoveryStore.getState().reshapeUpcoming();
+              await useDiscoveryStore.getState().redrawFeed();
               const after = useDiscoveryStore.getState().cards.map((card) => card.id);
-              dialMovedPositions = before.filter((id, index) => after[index] !== id).length;
+              dialFlip = {
+                before,
+                after,
+                saved: { before: savedBefore, after: (await repos.discovery.listSaved()).length },
+                pool: {
+                  before: poolBefore,
+                  after: (await repos.discovery.listNewestCards(100_000)).length,
+                },
+              };
             }
           : undefined,
     });
@@ -155,7 +177,7 @@ async function runJourney(): Promise<JourneyResult> {
     unfamiliarByDay,
     poolWindowInterestShare,
     poolWindowAversionShare,
-    dialMovedPositions,
+    dialFlip,
   };
 }
 
@@ -292,6 +314,28 @@ describe("discovery long journey (30 simulated days, real sqlite, faked channels
     expect(dialEvents).toHaveLength(1);
     expect(dialEvents[0]?.value_ms).toBe(400);
     expect(dialEvents[0]?.topic_label).toBe("");
+  });
+
+  /**
+   * Spec 054, Leo's fifth point — 「切换熟悉的多一点和新领域多一点之后内容要进行刷新」, and when asked
+   * whether that meant re-sorting or replacing: 「整流换掉」. Until then the dial re-ranked only the
+   * part the reader had not reached, so a reader sitting at the top of the feed saw nothing change.
+   * Losing their place is the accepted cost; losing anything they had kept would not be.
+   */
+  it("replaces the whole grid when the dial is flipped, and keeps everything behind it", async () => {
+    const { before, after, saved, pool } = journey.dialFlip;
+    // Eight pages deep when the dial moved, one page long afterwards: the grid was discarded and
+    // drawn again, not re-ranked in place, and the reader is looking at a first page.
+    expect(before.length).toBeGreaterThan(FEED_PAGE_SIZE);
+    expect(after.length).toBeGreaterThan(0);
+    expect(after.length).toBeLessThanOrEqual(FEED_PAGE_SIZE);
+    expect(after[0]).not.toBe(before[0]);
+    expect(new Set(after).size).toBe(after.length);
+
+    // The pool is a re-draw's source, never its casualty: nothing was deleted to make room, and
+    // the cards the reader had kept are all still kept.
+    expect(pool.after).toBeGreaterThanOrEqual(pool.before);
+    expect(saved.after).toBe(saved.before);
   });
 
   /**

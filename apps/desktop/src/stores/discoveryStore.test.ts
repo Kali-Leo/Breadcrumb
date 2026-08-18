@@ -41,6 +41,14 @@ vi.mock("../lib/discoveryRefill", () => ({ refillDiscoveryPool: refillDiscoveryP
 
 vi.mock("../lib/discoveryArticleActions", () => ({ streamCardArticle: vi.fn() }));
 
+/** A redraw has to put the reader back at the top of the real scrolling element (spec 054); the
+ * store asks this module to do it, and these tests watch that it was asked. */
+const scrollToTopMock = vi.fn();
+vi.mock("../lib/discoveryFeedScroll", () => ({
+  registerDiscoveryFeedScroller: vi.fn(),
+  scrollDiscoveryFeedToTop: () => scrollToTopMock(),
+}));
+
 const { useDiscoveryStore } = await import("./discoveryStore");
 const { useSettingsStore } = await import("./settingsStore");
 
@@ -58,7 +66,9 @@ function card(id: string): DiscoveryCardRow {
     batch_id: "batch",
     created_at: "2026-08-16T00:00:00.000Z",
     opened_at: null,
-    source_id: "hacker-news-front-page",
+    // 少数派 is one of the catalog sources labelled "both", so these cards are shown in either
+    // 休闲 or 专业 and nothing here turns on the mode filter (spec 054).
+    source_id: "sspai",
     kind: "article",
     url: `https://example.org/${id}`,
     cover_url: null,
@@ -118,6 +128,7 @@ beforeEach(() => {
   insertEventMock.mockClear();
   markSavedMock.mockClear();
   markOpenedMock.mockClear();
+  scrollToTopMock.mockClear();
   refillDiscoveryPoolMock.mockReset();
   refillDiscoveryPoolMock.mockResolvedValue(stocked());
   useDiscoveryStore.setState({
@@ -396,6 +407,66 @@ describe("reshapeUpcoming — moving the feed's dial", () => {
     const queued = useDiscoveryStore.getState().pending.map((c) => c.id);
     expect(queued.length).toBeGreaterThan(0);
     expect(queued.some((id) => shown.has(id))).toBe(false);
+  });
+});
+
+/**
+ * Spec 054, Leo's fifth point — 「整流换掉」. The three controls on the feed page itself (the dial,
+ * the 休闲/专业 mode and the 学术内容 switch) do not re-rank what is below the fold: they replace
+ * what is on screen and send the reader back to the top of it.
+ */
+describe("redrawFeed — a control on the feed page was just moved", () => {
+  beforeEach(() => {
+    cardRows = [cardOn("a", "熟悉"), cardOn("b", "熟悉"), cardOn("c", "新领域")];
+    useDiscoveryStore.setState({
+      cards: [cardOn("old-1", "看过的"), cardOn("old-2", "看过的")],
+      pending: [],
+      sessionImpressedIds: new Set(["old-1", "old-2"]),
+    });
+  });
+
+  it("replaces every card on the grid with a fresh page out of the pool", async () => {
+    await useDiscoveryStore.getState().redrawFeed();
+    const ids = useDiscoveryStore.getState().cards.map((c) => c.id);
+    expect(ids).not.toContain("old-1");
+    expect(ids.sort()).toEqual(["a", "b", "c"]);
+    expect(useDiscoveryStore.getState().loading).toBe(false);
+  });
+
+  it("puts the reader back at the top of the feed", async () => {
+    await useDiscoveryStore.getState().redrawFeed();
+    expect(scrollToTopMock).toHaveBeenCalledOnce();
+  });
+
+  it("stages the rest of the pool behind the new page instead of leaving the queue stale", async () => {
+    const wide = Array.from({ length: 30 }, (_, index) => cardOn(`p${index}`, "熟悉"));
+    cardRows = wide;
+    useDiscoveryStore.setState({ pending: [cardOn("stale", "看过的")] });
+    await useDiscoveryStore.getState().redrawFeed();
+    const queued = useDiscoveryStore.getState().pending.map((c) => c.id);
+    expect(queued).not.toContain("stale");
+    expect(queued.length).toBeGreaterThan(0);
+  });
+
+  it("deletes nothing — the pool still holds every card it held", async () => {
+    const before = cardRows.map((row) => row.id);
+    await useDiscoveryStore.getState().redrawFeed();
+    expect(cardRows.map((row) => row.id)).toEqual(before);
+  });
+
+  it("goes and fetches when the pool cannot fill the new page", async () => {
+    cardRows = [];
+    refillDiscoveryPoolMock.mockImplementation(refillsWith(["fresh-1", "fresh-2"]));
+    await useDiscoveryStore.getState().redrawFeed();
+    expect(useDiscoveryStore.getState().cards.map((c) => c.id)).toEqual(["fresh-1", "fresh-2"]);
+  });
+
+  it("says so plainly when the redraw leaves nothing to show", async () => {
+    cardRows = [];
+    refillDiscoveryPoolMock.mockResolvedValue(unavailable());
+    await useDiscoveryStore.getState().redrawFeed();
+    expect(useDiscoveryStore.getState().cards).toEqual([]);
+    expect(useDiscoveryStore.getState().blockedReason).toBe(NOTHING_NEW);
   });
 });
 
