@@ -11,7 +11,7 @@ const searchMock = vi.fn(async (queries: readonly string[]) =>
   queries.map((query) => ({ query, items: [] })),
 );
 
-const events: DiscoveryEventRow[] = ["编程与技术", "科学", "数学", "历史"].map((topic, index) => ({
+const events: DiscoveryEventRow[] = ["编程", "科学", "数学", "历史"].map((topic, index) => ({
   id: `e${index}`,
   card_id: `card-${index}`,
   topic_label: topic,

@@ -15,7 +15,7 @@ const NOW = "2026-08-17T10:00:00.000Z";
 const fixedRandom = (): number => 0.5;
 
 /** A field the first-run panel offers, which is where a topic term is allowed to come from. */
-const FIELD = "编程与技术";
+const FIELD = "编程";
 
 function event(overrides: Partial<DiscoveryEventRow> & { id: string }): DiscoveryEventRow {
   return {
@@ -167,7 +167,7 @@ describe("selectRecallTerms", () => {
   it("never asks for more terms than the budget allows", () => {
     const terms = selectRecallTerms(
       {
-        events: ["编程与技术", "科学", "数学", "历史"].map((topic, index) =>
+        events: ["编程", "科学", "数学", "历史"].map((topic, index) =>
           event({ id: `e${index}`, topic_label: topic, kind: "save" }),
         ),
         cards: [],
@@ -185,7 +185,7 @@ describe("selectRecallTerms", () => {
    * a day held.
    */
   it("works its way through the list as the cursor advances, and wraps around", () => {
-    const events = ["编程与技术", "科学", "数学", "历史"].map((topic, index) =>
+    const events = ["编程", "科学", "数学", "历史"].map((topic, index) =>
       event({ id: `e${index}`, topic_label: topic, kind: "save" }),
     );
     const at = (cursor: number): string[] =>

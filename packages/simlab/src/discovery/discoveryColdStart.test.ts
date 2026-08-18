@@ -33,7 +33,7 @@ const { recordOnboardingStances, hasRecordedOnboardingStances } = await import(
 const { ONBOARDING_FIELDS } = await import("../../../../apps/desktop/src/lib/discoveryOnboarding");
 const { FEED_PAGE_SIZE } = await import("../../../../apps/desktop/src/lib/discoveryFeedPaging");
 
-const WANTED = ["编程与技术", "科学"] as const;
+const WANTED = ["编程", "科学"] as const;
 const AVOIDED = "历史";
 
 const persona = {

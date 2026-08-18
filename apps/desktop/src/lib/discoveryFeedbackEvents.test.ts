@@ -40,31 +40,31 @@ describe("first-run positions", () => {
     await recordOnboardingStances([
       { topicLabel: "历史", stance: "want" },
       { topicLabel: "数学", stance: "neutral" },
-      { topicLabel: "经济与商业", stance: "avoid" },
+      { topicLabel: "经济", stance: "avoid" },
     ]);
 
     expect(eventRows.map((row) => [row.topic_label, row.kind, row.value_ms])).toEqual([
       ["历史", "onboarding", 1],
-      ["经济与商业", "onboarding", -1],
+      ["经济", "onboarding", -1],
     ]);
   });
 
   it("folds into a positive weight for 想看 and a negative one for 不想看", async () => {
     await recordOnboardingStances([
       { topicLabel: "历史", stance: "want" },
-      { topicLabel: "经济与商业", stance: "avoid" },
+      { topicLabel: "经济", stance: "avoid" },
     ]);
 
     const weights = foldInterestFromEvents(discoveryRowsToInterestEvents(eventRows), NOW);
     expect(weights.find((weight) => weight.topicLabel === "历史")?.weight).toBeGreaterThan(0);
-    expect(weights.find((weight) => weight.topicLabel === "经济与商业")?.weight).toBeLessThan(0);
+    expect(weights.find((weight) => weight.topicLabel === "经济")?.weight).toBeLessThan(0);
 
     const stats = topicStatsFromEvents(discoveryRowsToInterestEvents(eventRows));
     expect(stats.find((stat) => stat.topicLabel === "历史")).toMatchObject({
       opens: 1,
       dislikes: 0,
     });
-    expect(stats.find((stat) => stat.topicLabel === "经济与商业")).toMatchObject({
+    expect(stats.find((stat) => stat.topicLabel === "经济")).toMatchObject({
       opens: 0,
       dislikes: 1,
     });

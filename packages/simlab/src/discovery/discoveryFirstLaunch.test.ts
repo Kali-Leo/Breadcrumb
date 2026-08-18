@@ -34,7 +34,7 @@ const { runRefill } = await import("../../../../apps/desktop/src/lib/discoveryRe
 const { useDiscoveryStore } = await import("../../../../apps/desktop/src/stores/discoveryStore");
 const { useSettingsStore } = await import("../../../../apps/desktop/src/stores/settingsStore");
 
-const WANTED = ["编程与技术", "科学"] as const;
+const WANTED = ["编程", "科学"] as const;
 
 interface FirstLaunch {
   poolAfterBoot: number;

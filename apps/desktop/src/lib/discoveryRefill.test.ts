@@ -261,18 +261,18 @@ describe("refillDiscoveryPool staleness and pool limits", () => {
  */
 describe("refillDiscoveryPool active recall", () => {
   it("goes looking for the reader's own interests when polling left the pool thin", async () => {
-    readAbout("编程与技术");
+    readAbout("编程");
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([
-      { query: "编程与技术", items: [candidate("hn:recalled")] },
+      { query: "编程", items: [candidate("hn:recalled")] },
     ]);
 
     const outcome = await refillDiscoveryPool({ now: NOW });
     expect(searchChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
-    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程与技术");
+    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程");
     expect(outcome.landedCount).toBe(2);
     // The term that found it is the card's topic, not the channel that answered.
-    expect(cardRows.find((row) => row.id === "hn:recalled")?.topic_label).toBe("编程与技术");
+    expect(cardRows.find((row) => row.id === "hn:recalled")?.topic_label).toBe("编程");
   });
 
   /**
@@ -284,10 +284,10 @@ describe("refillDiscoveryPool active recall", () => {
    */
   it("asks after the reader's own subjects once a day even from a full pool", async () => {
     fillPool(POOL_LOW_WATERMARK + 40);
-    readAbout("编程与技术");
+    readAbout("编程");
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([
-      { query: "编程与技术", items: [candidate("hn:recalled")] },
+      { query: "编程", items: [candidate("hn:recalled")] },
     ]);
 
     const first = await refillDiscoveryPool({ now: NOW });
@@ -315,13 +315,13 @@ describe("refillDiscoveryPool active recall", () => {
     expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
 
     // The reader answers the first-run panel; the next round searches for what they said.
-    readAbout("编程与技术");
+    readAbout("编程");
     searchChannelsForCandidatesMock.mockResolvedValue([
-      { query: "编程与技术", items: [candidate("hn:recalled")] },
+      { query: "编程", items: [candidate("hn:recalled")] },
     ]);
     const second = await refillDiscoveryPool({ now: NOW });
     expect(second.kind).toBe("refilled");
-    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程与技术");
+    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程");
   });
 
   /** The first-run panel's own restock: the pool the app filled at launch is stocked and the
@@ -329,10 +329,10 @@ describe("refillDiscoveryPool active recall", () => {
   it("runs a recall round on demand for the first-run panel's answers", async () => {
     fillPool(POOL_LOW_WATERMARK + 40);
     recallAlreadyRanToday();
-    readAbout("编程与技术");
+    readAbout("编程");
     pollFound([candidate("hn:1")]);
     searchChannelsForCandidatesMock.mockResolvedValue([
-      { query: "编程与技术", items: [candidate("hn:recalled")] },
+      { query: "编程", items: [candidate("hn:recalled")] },
     ]);
 
     expect((await refillDiscoveryPool({ now: NOW })).kind).toBe("stocked");
@@ -345,16 +345,16 @@ describe("refillDiscoveryPool active recall", () => {
 
   it("stops searching once the day's query budget is gone", async () => {
     settingRows.set("discoveryRecallBudget", { day: "2026-08-17", used: 12 });
-    readAbout("编程与技术");
+    readAbout("编程");
     pollFound([candidate("hn:1")]);
     await refillDiscoveryPool({ now: NOW });
     expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
   });
 
   it("charges the queries it spent against today's budget", async () => {
-    readAbout("编程与技术");
+    readAbout("编程");
     pollFound([candidate("hn:1")]);
-    searchChannelsForCandidatesMock.mockResolvedValue([{ query: "编程与技术", items: [] }]);
+    searchChannelsForCandidatesMock.mockResolvedValue([{ query: "编程", items: [] }]);
     await refillDiscoveryPool({ now: NOW });
     expect(settingRows.get("discoveryRecallBudget")).toMatchObject({ used: 1 });
   });
