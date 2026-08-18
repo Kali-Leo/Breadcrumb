@@ -65,10 +65,11 @@ export interface ActiveRecallOutcome {
 }
 
 /**
- * Whether today's budget row has been written at all — which is to say whether recall has been
- * run once since the day turned over, spending queries or not. The refill next door uses it to
- * make sure a day gets one round of looking for the reader's own subjects even when the pool is
- * full enough that nothing else would ask for one (spec 053 T10).
+ * Whether today's budget row has been written at all — which is to say whether anything was
+ * actually asked since the day turned over. The refill next door uses it to make sure a day gets
+ * one round of looking for the reader's own subjects even when the pool is full enough that
+ * nothing else would ask for one (spec 053 T10). A day where the library had no term to offer
+ * stays untouched, so the first restock after the reader gives it one runs the round.
  */
 export async function recallRanToday(now: Date): Promise<boolean> {
   const repos = await getRepos();
@@ -80,8 +81,15 @@ export async function recallRanToday(now: Date): Promise<boolean> {
 /**
  * Runs one round of active recall. Returns nothing at all — with no queries spent — when the
  * day's budget is gone or the reader's history says nothing yet; the passive polling layer is
- * what fills the pool in that case. The day is marked as asked either way, so a library with no
- * reading history behind it yet does not re-open the same question on every call.
+ * what fills the pool in that case.
+ *
+ * A round that found nothing to ask about does NOT mark the day as asked. It used to, and on a
+ * fresh install that turned the day's one guaranteed round into no round at all (spec 053 T10b):
+ * the restock that runs a few seconds after launch happens before the reader has answered the
+ * first-run panel, so there is not one term in the library, and marking the day spent there meant
+ * every later restock of that day skipped recall — including the one right after the reader said
+ * what they wanted to see. Nothing was asked, so nothing is written down, and the next restock
+ * asks again.
  */
 export async function runActiveRecall(now: Date = new Date()): Promise<ActiveRecallOutcome> {
   const day = localDayKey(now);
@@ -98,10 +106,7 @@ export async function runActiveRecall(now: Date = new Date()): Promise<ActiveRec
     { events, cards, nowIso: now.toISOString(), cursor: budget.cursor },
     allowance,
   );
-  if (terms.length === 0) {
-    await spendQueries(day, 0);
-    return { harvests: [], queriesSpent: 0 };
-  }
+  if (terms.length === 0) return { harvests: [], queriesSpent: 0 };
 
   const harvests = await searchChannelsForCandidates(terms, { now: () => now });
   await spendQueries(day, terms.length);

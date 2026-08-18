@@ -97,6 +97,10 @@ async function pollingHasGoneStale(now: Date): Promise<boolean> {
 export interface RefillOptions {
   /** Skips the watermark check — used by an explicit "give me more" at the end of the feed. */
   force?: boolean;
+  /** Runs a round of active recall whatever the pool and the day's history look like. The
+   * first-run panel sets it: the reader has just said what they want to see, and that answer is
+   * the first thing the app has ever had to search for. */
+  forceRecall?: boolean;
   now?: Date;
 }
 
@@ -113,8 +117,10 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   // returned "stocked" before anything was asked, and the day's query budget went unspent from
   // one morning to the next while the feed kept serving what the world had pushed at it (spec
   // 053 T10). One round a day is the floor, and it is a floor the daily budget already bounds.
-  const recallUntouchedToday = !(await recallRanToday(now));
-  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK && !stale && !recallUntouchedToday) {
+  // A day where recall found nothing to ask about is not a day that has been asked, so the round
+  // right after the first-run panel is answered still runs (spec 053 T10b, discoveryRecall).
+  const recallWanted = options.forceRecall === true || !(await recallRanToday(now));
+  if (!options.force && unseenBefore >= POOL_LOW_WATERMARK && !stale && !recallWanted) {
     return {
       kind: "stocked",
       landedCount: 0,
@@ -145,7 +151,7 @@ export async function refillDiscoveryPool(options: RefillOptions = {}): Promise<
   // one thing the feed stopped looking for (spec 053 T9 findings #6/#7, T10). The day's query
   // budget bounds every case.
   let recalled: typeof landed = [];
-  if (stale || recallUntouchedToday || unseenBefore + landed.length < POOL_TARGET_SIZE) {
+  if (stale || recallWanted || unseenBefore + landed.length < POOL_TARGET_SIZE) {
     const recall = await runActiveRecall(now);
     const groups: CandidateGroup[] = recall.harvests.map((harvest) => ({
       items: harvest.items,

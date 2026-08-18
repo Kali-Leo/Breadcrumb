@@ -7,18 +7,32 @@
  * Side effects: runs a restock round; writes one ai_failures row when one fails.
  * Main exports: runRefill, restockBehindTheGrid.
  */
-import { type RefillOutcome, refillDiscoveryPool } from "./discoveryRefill";
+import { type RefillOptions, type RefillOutcome, refillDiscoveryPool } from "./discoveryRefill";
 import { recordAiFailure } from "./failureLog";
 
 let refillTask: Promise<RefillOutcome> | null = null;
 
-export function runRefill(force: boolean): Promise<RefillOutcome> {
-  if (refillTask === null) {
-    refillTask = refillDiscoveryPool({ force }).finally(() => {
-      refillTask = null;
-    });
-  }
-  return refillTask;
+/**
+ * The round everyone shares. A caller that needs something the round in the air was not asked for
+ * — the first-run panel needs a recall pass, and the boot round ran before there was one term to
+ * search for — queues behind it rather than joining it, so its request is not silently answered by
+ * work that started before the reader said anything.
+ */
+export function runRefill(options: RefillOptions = {}): Promise<RefillOutcome> {
+  const running = refillTask;
+  if (running !== null && options.forceRecall !== true) return running;
+  const task: Promise<RefillOutcome> = (
+    running === null
+      ? refillDiscoveryPool(options)
+      : running.then(
+          () => refillDiscoveryPool(options),
+          () => refillDiscoveryPool(options),
+        )
+  ).finally(() => {
+    if (refillTask === task) refillTask = null;
+  });
+  refillTask = task;
+  return task;
 }
 
 /**
@@ -29,7 +43,7 @@ export function runRefill(force: boolean): Promise<RefillOutcome> {
  * record of what failed.
  */
 export function restockBehindTheGrid(afterStocked: () => Promise<void>): void {
-  void runRefill(false)
+  void runRefill()
     .then(afterStocked)
     .catch((error: unknown) => recordAiFailure("discovery", error));
 }

@@ -301,12 +301,46 @@ describe("refillDiscoveryPool active recall", () => {
     expect(pollChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
   });
 
-  it("marks the day as asked even when the reader has no history to search on", async () => {
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). A round that found nothing to ask about used to mark the
+   * day as asked, and the day's one guaranteed round was gone. On a fresh install the first
+   * restock runs seconds after launch, before the first-run panel has been answered, so it was
+   * always that round — and the restock right after the reader answered found the day already
+   * spent and never searched for a single one of the fields they had just chosen.
+   */
+  it("keeps the day open when the reader had nothing to search on yet", async () => {
     fillPool(POOL_LOW_WATERMARK + 40);
     pollFound([candidate("hn:1")]);
     await refillDiscoveryPool({ now: NOW });
     expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
+
+    // The reader answers the first-run panel; the next round searches for what they said.
+    readAbout("编程与技术");
+    searchChannelsForCandidatesMock.mockResolvedValue([
+      { query: "编程与技术", items: [candidate("hn:recalled")] },
+    ]);
+    const second = await refillDiscoveryPool({ now: NOW });
+    expect(second.kind).toBe("refilled");
+    expect(searchChannelsForCandidatesMock.mock.calls[0]?.[0]).toContain("编程与技术");
+  });
+
+  /** The first-run panel's own restock: the pool the app filled at launch is stocked and the
+   * ordinary round would poll and stop, so the panel asks for a recall pass outright. */
+  it("runs a recall round on demand for the first-run panel's answers", async () => {
+    fillPool(POOL_LOW_WATERMARK + 40);
+    recallAlreadyRanToday();
+    readAbout("编程与技术");
+    pollFound([candidate("hn:1")]);
+    searchChannelsForCandidatesMock.mockResolvedValue([
+      { query: "编程与技术", items: [candidate("hn:recalled")] },
+    ]);
+
     expect((await refillDiscoveryPool({ now: NOW })).kind).toBe("stocked");
+    expect(searchChannelsForCandidatesMock).not.toHaveBeenCalled();
+
+    const forced = await refillDiscoveryPool({ now: NOW, forceRecall: true });
+    expect(forced.kind).toBe("refilled");
+    expect(searchChannelsForCandidatesMock).toHaveBeenCalledTimes(1);
   });
 
   it("stops searching once the day's query budget is gone", async () => {

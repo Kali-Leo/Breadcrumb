@@ -49,8 +49,10 @@ export function DiscoveryOnboarding({ onDone }: DiscoveryOnboardingProps) {
     );
     await useDiscoveryChannelSettingsStore.getState().dismissOnboarding();
     onDone();
-    // The first fetches go looking for what was just said; the feed shows whatever lands.
-    void useDiscoveryStore.getState().refillPool();
+    // The first fetches go looking for what was just said; the feed shows whatever lands. This
+    // round asks for its own recall pass: the pool the app filled at launch is stocked, and a
+    // stocked pool is exactly the case where an ordinary restock would poll and stop there.
+    void useDiscoveryStore.getState().refillPoolForFirstRunAnswers();
   }
 
   async function skip(): Promise<void> {

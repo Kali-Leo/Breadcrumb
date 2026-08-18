@@ -4,7 +4,7 @@
  * every term spent and survives into the next day so the reader's whole list gets its turn.
  */
 import type { DiscoveryEventRow } from "@breadcrumb/core-db";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let settingsRows = new Map<string, unknown>();
 const searchMock = vi.fn(async (queries: readonly string[]) =>
@@ -46,7 +46,15 @@ function queriesOfCall(index: number): string[] {
   return [...((searchMock.mock.calls[index]?.[0] ?? []) as readonly string[])];
 }
 
+/** Term selection draws from Math.random (Thompson sampling picks the topics worth testing), so
+ * an unpinned draw made this suite decide differently from run to run. A fixed draw is what makes
+ * "these two restocks reached all four interests" mean anything. */
+beforeEach(() => {
+  vi.spyOn(Math, "random").mockReturnValue(0.5);
+});
+
 afterEach(() => {
+  vi.restoreAllMocks();
   settingsRows = new Map();
   searchMock.mockClear();
 });
@@ -94,6 +102,30 @@ describe("runActiveRecall", () => {
       cursor: 6,
     });
     expect(queriesOfCall(1)[0]).not.toBe(queriesOfCall(0)[0]);
+  });
+
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). A round that had nothing to ask about used to write the
+   * day's budget row anyway, marking the day as asked. On a fresh install the first such round
+   * runs about four seconds after launch — before the reader has answered the first-run panel, so
+   * the library holds no term at all — and it spent the day's one guaranteed round on nothing:
+   * the restock right after the reader said what they wanted to see skipped recall, and day one
+   * never searched for anything.
+   */
+  it("leaves the day untouched when the library had nothing to ask about", async () => {
+    // A library seconds after a first launch: no positions taken, nothing read, no term anywhere.
+    const remembered = events.splice(0, events.length);
+    try {
+      const outcome = await runActiveRecall(new Date("2026-08-17T09:00:00.000Z"));
+      expect(outcome.queriesSpent).toBe(0);
+      expect(searchMock).not.toHaveBeenCalled();
+      expect(settingsRows.get("discoveryRecallBudget")).toBeUndefined();
+    } finally {
+      events.push(...remembered);
+    }
+
+    // And the very next round, once the reader has said something, asks for real.
+    expect((await runActiveRecall(NOW)).queriesSpent).toBe(3);
   });
 
   /** A row written before the rotation existed has no cursor at all; it reads as "start at the

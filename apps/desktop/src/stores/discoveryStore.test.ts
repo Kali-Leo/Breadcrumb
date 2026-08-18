@@ -213,6 +213,29 @@ describe("the app-start restock and the feed's first load", () => {
     expect(useDiscoveryStore.getState().loading).toBe(false);
   });
 
+  /**
+   * FIXED (2026-08-17, spec 053 T10b). The restock the first-run panel starts used to join
+   * whatever round was already in the air — and on a first launch that round began before the
+   * reader had said a word, so it searched for nothing and the panel's answers waited for the
+   * next day. The panel's round now queues behind it and runs on its own terms.
+   */
+  it("runs the first-run panel's round after the one already in flight, not instead of it", async () => {
+    let release = (): void => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    refillDiscoveryPoolMock.mockImplementation(async (options?: { forceRecall?: boolean }) => {
+      if (options?.forceRecall !== true) await gate;
+      return refillsWith(["w1"])();
+    });
+    const warm = useDiscoveryStore.getState().refillPool();
+    const panel = useDiscoveryStore.getState().refillPoolForFirstRunAnswers();
+    release();
+    await Promise.all([warm, panel]);
+    expect(refillDiscoveryPoolMock).toHaveBeenCalledTimes(2);
+    expect(refillDiscoveryPoolMock.mock.calls[1]?.[0]).toMatchObject({ forceRecall: true });
+  });
+
   it("keeps a failed warm-up silent — nobody has opened the feed yet", async () => {
     refillDiscoveryPoolMock.mockResolvedValue(unavailable());
     await useDiscoveryStore.getState().refillPool();

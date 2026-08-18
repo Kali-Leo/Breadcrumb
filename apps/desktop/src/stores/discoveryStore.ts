@@ -38,6 +38,9 @@ interface DiscoveryState {
   /** Called once at app start (Leo's order): restocks the pool in the background so the page
    * opens already filled. */
   refillPool(): Promise<void>;
+  /** The restock right after the first-run panel is answered: the reader has just said what they
+   * want to see, so this round goes looking for it instead of only polling. */
+  refillPoolForFirstRunAnswers(): Promise<void>;
   loadMore(): Promise<void>;
   /** Re-ranks the not-yet-reached part of the grid, for when the dial moves (spec 053 §6). */
   reshapeUpcoming(): Promise<void>;
@@ -81,8 +84,14 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
     sessionImpressedIds: new Set(),
 
     async refillPool() {
-      const outcome = await runRefill(false);
+      const outcome = await runRefill();
       if (outcome.kind === "unavailable") return; // silent: nobody has opened the feed yet
+      await stagePending();
+    },
+
+    async refillPoolForFirstRunAnswers() {
+      const outcome = await runRefill({ forceRecall: true });
+      if (outcome.kind === "unavailable") return; // silent: the panel has said its piece already
       await stagePending();
     },
 
@@ -95,7 +104,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
         restockBehindTheGrid(stagePending);
         return;
       }
-      const outcome = await runRefill(false);
+      const outcome = await runRefill();
       await stagePending();
       takePage(FEED_PAGE_SIZE);
       set({ loading: false, blockedReason: bannerFor(outcome) });
@@ -109,7 +118,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => {
         return;
       }
       set({ loading: true, blockedReason: null });
-      const outcome = await runRefill(true);
+      const outcome = await runRefill({ force: true });
       await stagePending();
       takePage(FEED_PAGE_SIZE - taken);
       set({ loading: false, blockedReason: bannerFor(outcome) });
