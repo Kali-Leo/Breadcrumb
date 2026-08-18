@@ -27,6 +27,12 @@ vi.mock("../lib/db", () => ({
       markOpened: markOpenedMock,
       markSaved: markSavedMock,
     },
+    // The ranking pass reads the reader's languages (spec 054); an unanswered row means the
+    // default language, which is all these tests need it to mean.
+    settings: {
+      get: async () => null,
+      set: async () => {},
+    },
   })),
 }));
 

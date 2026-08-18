@@ -1,13 +1,19 @@
 /**
- * Purpose: the one screen the discovery feed opens with the first time (spec 053 §6) — the fields
- * to take a position on, grouped, with each chip wearing its own position so the three states are
- * read off the control instead of explained in a paragraph. Positions are a starting point, not a
- * filter: they seed the first fetches and are outweighed by real reading within a week (see
- * interestModel).
+ * Purpose: the one screen the discovery feed opens with the first time (spec 053 §6, spec 054) —
+ * the language the feed should speak, then the fields to take a position on, grouped, with each
+ * chip wearing its own position so the three states are read off the control instead of explained
+ * in a paragraph. Positions are a starting point, not a filter: they seed the first fetches and
+ * are outweighed by real reading within a week (see interestModel). The language is a filter, and
+ * the reader can add more of them later in the language settings.
  * Main exports: DiscoveryOnboarding.
  */
 import { useState } from "react";
 import { recordOnboardingStances } from "../lib/discoveryFeedbackEvents";
+import {
+  defaultFeedLanguage,
+  FEED_LANGUAGE_CHOICES,
+  type FeedLanguage,
+} from "../lib/discoveryLanguages";
 import {
   nextStance,
   ONBOARDING_FIELD_GROUPS,
@@ -18,6 +24,8 @@ import {
 import { useDiscoveryChannelSettingsStore } from "../stores/discoveryChannelSettingsStore";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 
+export const LANGUAGE_HEADING = "选择内容的语言";
+export const LANGUAGE_INTRO = "发现页只显示这种语言的内容。以后可以在语言学习设置里加上其他语言。";
 export const ONBOARDING_HEADING = "选择你感兴趣的领域";
 export const ONBOARDING_INTRO = "发现页会按这些给你推荐文章、视频和播客，不用选全。";
 
@@ -42,10 +50,18 @@ interface DiscoveryOnboardingProps {
 
 export function DiscoveryOnboarding({ onDone }: DiscoveryOnboardingProps) {
   const [stances, setStances] = useState<Readonly<Record<string, OnboardingStance>>>({});
+  const [language, setLanguage] = useState<FeedLanguage>(defaultFeedLanguage);
   const [working, setWorking] = useState(false);
 
   function cycle(field: string): void {
     setStances((current) => ({ ...current, [field]: nextStance(current[field] ?? "neutral") }));
+  }
+
+  /** Written on both ways out. Skipping means "I have no fields to name", not "ignore the
+   * language I just tapped", and a reader who touched neither gets the default written down as
+   * the answer it already was. */
+  async function keepLanguage(): Promise<void> {
+    await useDiscoveryChannelSettingsStore.getState().setFeedLanguage(language);
   }
 
   async function confirm(): Promise<void> {
@@ -56,6 +72,7 @@ export function DiscoveryOnboarding({ onDone }: DiscoveryOnboardingProps) {
         stance: stances[field] ?? "neutral",
       })),
     );
+    await keepLanguage();
     await useDiscoveryChannelSettingsStore.getState().dismissOnboarding();
     onDone();
     // The first fetches go looking for what was just said; the feed shows whatever lands. This
@@ -66,6 +83,7 @@ export function DiscoveryOnboarding({ onDone }: DiscoveryOnboardingProps) {
 
   async function skip(): Promise<void> {
     setWorking(true);
+    await keepLanguage();
     await useDiscoveryChannelSettingsStore.getState().dismissOnboarding();
     onDone();
   }
@@ -76,36 +94,63 @@ export function DiscoveryOnboarding({ onDone }: DiscoveryOnboardingProps) {
   // buttons under the fold on a short one.
   return (
     <div className="-mt-6 mx-auto flex h-full max-w-3xl flex-col">
-      <div className="pt-6 pb-4">
-        <h2 className="font-semibold text-stone-800 text-xl">{ONBOARDING_HEADING}</h2>
-        <p className="mt-2 text-[15px] text-stone-600">{ONBOARDING_INTRO}</p>
-      </div>
-      {/* The groups scroll on a short window; 完成 and 跳过 stay put below them. */}
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-        {ONBOARDING_FIELD_GROUPS.map((group) => (
-          <section key={group.name}>
-            <h3 className="mb-2 text-sm text-stone-400">{group.name}</h3>
-            <div className="flex flex-wrap gap-2">
-              {group.fields.map((field) => {
-                const stance = stances[field] ?? "neutral";
-                return (
-                  <button
-                    key={field}
-                    type="button"
-                    aria-label={`${field}：${stanceLabel(stance)}`}
-                    onClick={() => cycle(field)}
-                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${CHIP_STYLES[stance]}`}
-                  >
-                    <span className={stance === "avoid" ? "line-through" : undefined}>{field}</span>
-                    <span className={`ml-1.5 text-xs ${STANCE_STYLES[stance]}`}>
-                      {stanceLabel(stance)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+      {/* Both blocks scroll on a short window; 完成 and 跳过 stay put below them. */}
+      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pt-6 pr-1 pb-4">
+        <section>
+          <h2 className="font-semibold text-stone-800 text-xl">{LANGUAGE_HEADING}</h2>
+          <p className="mt-2 text-[15px] text-stone-600">{LANGUAGE_INTRO}</p>
+          {/* The same two-segment pill the feed's dial and the composer's mode switch use: both
+              states are named, the chosen one is amber (spec 052's ruling). */}
+          <div className="mt-3 inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-sm shadow-sm">
+            {FEED_LANGUAGE_CHOICES.map((choice) => (
+              <button
+                key={choice.language}
+                type="button"
+                aria-pressed={language === choice.language}
+                onClick={() => setLanguage(choice.language)}
+                className={`px-4 py-1.5 transition-colors ${
+                  language === choice.language
+                    ? "bg-amber-500 text-white"
+                    : "text-stone-500 hover:bg-stone-50"
+                }`}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-semibold text-stone-800 text-xl">{ONBOARDING_HEADING}</h2>
+            <p className="mt-2 text-[15px] text-stone-600">{ONBOARDING_INTRO}</p>
+          </div>
+          {ONBOARDING_FIELD_GROUPS.map((group) => (
+            <section key={group.name}>
+              <h3 className="mb-2 text-sm text-stone-400">{group.name}</h3>
+              <div className="flex flex-wrap gap-2">
+                {group.fields.map((field) => {
+                  const stance = stances[field] ?? "neutral";
+                  return (
+                    <button
+                      key={field}
+                      type="button"
+                      aria-label={`${field}：${stanceLabel(stance)}`}
+                      onClick={() => cycle(field)}
+                      className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${CHIP_STYLES[stance]}`}
+                    >
+                      <span className={stance === "avoid" ? "line-through" : undefined}>
+                        {field}
+                      </span>
+                      <span className={`ml-1.5 text-xs ${STANCE_STYLES[stance]}`}>
+                        {stanceLabel(stance)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </section>
       </div>
       <div className="flex items-center gap-3 border-stone-200 border-t py-4">
         <button

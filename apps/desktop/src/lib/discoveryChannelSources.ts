@@ -2,7 +2,8 @@
  * Purpose: turns the reader's source settings (spec 053 §8) into the list of channel sources one
  * polling round may use — the shipped catalog minus what they switched off, the 豆瓣 template
  * entry once they have supplied an id, and the RSS addresses they pasted in themselves. Pure
- * list building over the static catalog: no network, no DB.
+ * list building over the static catalog: no network, no DB. Channels publishing in a language the
+ * reader does not read are left out here too (spec 054), so they cost no request at all.
  * Main exports: buildEnabledChannelSources, listCatalogChannelChoices, userFeedSourceId.
  */
 import {
@@ -13,6 +14,8 @@ import {
   loadStarterChannelCatalog,
 } from "@breadcrumb/plugin-channels";
 import { z } from "zod";
+import { channelSourcePassesLanguageFilter } from "./discoveryLanguageFilter";
+import { type FeedLanguage, resolveFeedLanguagePolicy } from "./discoveryLanguages";
 
 /** What the settings page needs to know about a source, and nothing more. */
 export interface CatalogChannelChoice {
@@ -29,6 +32,12 @@ export interface ChannelSourceSelection {
   channelEnabledById: Readonly<Record<string, boolean>>;
   userFeedUrls: readonly string[];
   doubanUserId: string;
+  /** The language the first-run panel wrote, and the ones the language settings added. Null
+   * before the reader has been asked; resolveFeedLanguagePolicy fills in the default. */
+  feedLanguage: FeedLanguage | null;
+  additionalFeedLanguages: readonly FeedLanguage[];
+  /** Spec 054's seventh point, whose own switch is a task of its own; absent means on. */
+  academicContentEnabled?: boolean;
 }
 
 /** Ids of self-added feeds carry their address, so the same feed added twice is the same
@@ -101,13 +110,18 @@ function filledTemplateSource(source: ChannelSource, doubanUserId: string): Chan
 
 /**
  * The sources one polling round may use. A source is in when the reader switched it on, or when
- * they never touched it and the catalog says a fresh install polls it.
+ * they never touched it and the catalog says a fresh install polls it — and, either way, when it
+ * publishes in a language the reader reads (spec 054). A channel they switched on by hand keeps
+ * running whatever it publishes in: a switch that does nothing is worse than a stray card.
  */
 export function buildEnabledChannelSources(
   selection: ChannelSourceSelection,
 ): readonly ChannelSource[] {
   const sources: ChannelSource[] = [];
   const doubanUserId = selection.doubanUserId.trim();
+  const policy = resolveFeedLanguagePolicy(selection);
+  const speaksToReader = (source: ChannelSource): boolean =>
+    channelSourcePassesLanguageFilter(source, policy);
 
   for (const source of loadStarterChannelCatalog().sources) {
     const enabled = selection.channelEnabledById[source.id] ?? source.defaultEnabled;
@@ -116,10 +130,10 @@ export function buildEnabledChannelSources(
       // they went on to switch it off.
       if (selection.channelEnabledById[source.id] === false) continue;
       const filled = filledTemplateSource(source, doubanUserId);
-      if (filled !== null) sources.push(filled);
+      if (filled !== null && speaksToReader(filled)) sources.push(filled);
       continue;
     }
-    if (enabled) sources.push(source);
+    if (enabled && speaksToReader(source)) sources.push(source);
   }
 
   const seenIds = new Set(sources.map((source) => source.id));

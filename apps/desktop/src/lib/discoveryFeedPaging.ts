@@ -8,7 +8,9 @@
  */
 import type { DiscoveryCardRow, DiscoveryEventKind } from "@breadcrumb/core-db";
 import { defaultFeedPageSize } from "@breadcrumb/plugin-discovery";
+import { ensureFeedLanguagePolicyLoaded } from "../stores/discoveryChannelSettingsStore";
 import { getRepos } from "./db";
+import { cardPassesLanguageFilter } from "./discoveryLanguageFilter";
 import { orderCardsForDisplay } from "./discoveryOrdering";
 import { UNSEEN_POOL_CAP } from "./discoveryPoolPruning";
 import { newId, nowIso } from "./time";
@@ -20,17 +22,25 @@ export const FEED_PAGE_SIZE = defaultFeedPageSize;
  * screen are left where they are: re-ordering under a reader mid-scroll would move what they
  * were about to click. The read covers the whole unseen pool — the pool is capped, and ranking
  * only the newest slice of it would mean the ranking never chooses, it only re-orders whatever
- * arrived last. */
+ * arrived last.
+ *
+ * The language check happens here rather than at landing (spec 054): the pool keeps whatever it
+ * caught, so switching another language on in the language settings makes cards already sitting
+ * there appear, with nothing to re-fetch and nothing lost in the meantime. 收藏 is read by another
+ * path and stays unfiltered — a saved card was saved on purpose. */
 export async function rankUnshownPoolCards(
   shownIds: ReadonlySet<string>,
   explorationShare: number,
 ): Promise<DiscoveryCardRow[]> {
   const repos = await getRepos();
-  const [pool, events] = await Promise.all([
+  const [pool, events, languagePolicy] = await Promise.all([
     repos.discovery.listUnseenPoolCards(UNSEEN_POOL_CAP),
     repos.discovery.listAllEvents(),
+    ensureFeedLanguagePolicyLoaded(),
   ]);
-  const fresh = pool.filter((card) => !shownIds.has(card.id));
+  const fresh = pool.filter(
+    (card) => !shownIds.has(card.id) && cardPassesLanguageFilter(card, languagePolicy),
+  );
   return orderCardsForDisplay(fresh, events, nowIso(), {
     explorationShare,
     pageSize: FEED_PAGE_SIZE,

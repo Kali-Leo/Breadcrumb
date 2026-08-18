@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let eventRows: DiscoveryEventRow[] = [];
 const dismissOnboarding = vi.fn(async () => undefined);
+const setFeedLanguage = vi.fn(async () => undefined);
 const refillPool = vi.fn(async () => undefined);
 
 vi.mock("../lib/db", () => ({
@@ -25,7 +26,7 @@ vi.mock("../lib/db", () => ({
 }));
 
 vi.mock("../stores/discoveryChannelSettingsStore", () => ({
-  useDiscoveryChannelSettingsStore: { getState: () => ({ dismissOnboarding }) },
+  useDiscoveryChannelSettingsStore: { getState: () => ({ dismissOnboarding, setFeedLanguage }) },
 }));
 
 vi.mock("../stores/discoveryStore", () => ({
@@ -33,9 +34,13 @@ vi.mock("../stores/discoveryStore", () => ({
 }));
 
 const { ONBOARDING_FIELD_GROUPS, ONBOARDING_FIELDS } = await import("../lib/discoveryOnboarding");
-const { DiscoveryOnboarding, ONBOARDING_HEADING, ONBOARDING_INTRO } = await import(
-  "./DiscoveryOnboarding"
-);
+const {
+  DiscoveryOnboarding,
+  LANGUAGE_HEADING,
+  LANGUAGE_INTRO,
+  ONBOARDING_HEADING,
+  ONBOARDING_INTRO,
+} = await import("./DiscoveryOnboarding");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -43,7 +48,11 @@ let root: Root;
 beforeEach(() => {
   eventRows = [];
   dismissOnboarding.mockClear();
+  setFeedLanguage.mockClear();
   refillPool.mockClear();
+  // jsdom claims en-US; this panel's default follows the machine, and the assertions below are
+  // about a Chinese-speaking one.
+  Object.defineProperty(navigator, "language", { value: "zh-CN", configurable: true });
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   container = document.createElement("div");
   document.body.append(container);
@@ -92,11 +101,26 @@ async function clickAndSettle(button: HTMLButtonElement): Promise<void> {
 describe("what the panel says", () => {
   it("asks in a few words and explains in one short sentence", () => {
     mount();
-    expect(container.querySelector("h2")?.textContent).toBe("选择你感兴趣的领域");
+    const headings = [...container.querySelectorAll("h2")].map((h2) => h2.textContent);
+    expect(headings).toEqual([LANGUAGE_HEADING, ONBOARDING_HEADING]);
+    expect(LANGUAGE_HEADING).toBe("选择内容的语言");
+    expect(LANGUAGE_INTRO).toBe(
+      "发现页只显示这种语言的内容。以后可以在语言学习设置里加上其他语言。",
+    );
     expect(ONBOARDING_HEADING).toBe("选择你感兴趣的领域");
     expect(ONBOARDING_INTRO).toBe("发现页会按这些给你推荐文章、视频和播客，不用选全。");
     const paragraphs = [...container.querySelectorAll("p")].map((p) => p.textContent);
-    expect(paragraphs).toEqual([ONBOARDING_INTRO]);
+    expect(paragraphs).toEqual([LANGUAGE_INTRO, ONBOARDING_INTRO]);
+  });
+
+  it("puts the language first, both languages named, one of them already chosen", () => {
+    mount();
+    expect(buttonNamed("中文")).toBeTruthy();
+    expect(buttonNamed("English")).toBeTruthy();
+    const pressed = [...container.querySelectorAll("button[aria-pressed='true']")].map(
+      (button) => button.textContent,
+    );
+    expect(pressed).toEqual(["中文"]);
   });
 
   it("shows every field once, under its group, and 完成 with 跳过", () => {
@@ -161,5 +185,25 @@ describe("what the panel writes", () => {
     expect(refillPool).not.toHaveBeenCalled();
     expect(dismissOnboarding).toHaveBeenCalledOnce();
     expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it("writes the language the reader tapped", async () => {
+    mount();
+    act(() => buttonNamed("English").click());
+    await clickAndSettle(buttonNamed("完成"));
+    expect(setFeedLanguage).toHaveBeenCalledWith("en");
+  });
+
+  it("writes the language even when the reader skips, so a tap is never lost", async () => {
+    mount();
+    act(() => buttonNamed("English").click());
+    await clickAndSettle(buttonNamed("跳过"));
+    expect(setFeedLanguage).toHaveBeenCalledWith("en");
+  });
+
+  it("keeps the default when nobody touches the language", async () => {
+    mount();
+    await clickAndSettle(buttonNamed("完成"));
+    expect(setFeedLanguage).toHaveBeenCalledWith("zh");
   });
 });

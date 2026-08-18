@@ -34,6 +34,8 @@ beforeEach(() => {
     dataSaverEnabled: false,
     userFeedUrls: [],
     doubanUserId: "",
+    feedLanguage: null,
+    additionalFeedLanguages: [],
     onboardingDismissed: false,
   });
 });
@@ -83,6 +85,24 @@ describe("discovery source settings", () => {
     storedRows.discoveryChannelSettings = { dataSaverEnabled: "yes", userFeedUrls: 7 };
     await store().loadFromDatabase();
     expect(store()).toMatchObject({ dataSaverEnabled: false, userFeedUrls: [] });
+  });
+
+  it("keeps the language the first-run panel chose and the ones the settings added", async () => {
+    await store().setFeedLanguage("zh");
+    await store().setAdditionalFeedLanguageEnabled("en", true);
+
+    useDiscoveryChannelSettingsStore.setState({ loaded: false });
+    await store().loadFromDatabase();
+    expect(store()).toMatchObject({ feedLanguage: "zh", additionalFeedLanguages: ["en"] });
+
+    await store().setAdditionalFeedLanguageEnabled("en", false);
+    expect(store().additionalFeedLanguages).toEqual([]);
+  });
+
+  it("never leaves the chosen language sitting in the list of extra ones", async () => {
+    await store().setAdditionalFeedLanguageEnabled("en", true);
+    await store().setFeedLanguage("en");
+    expect(store().additionalFeedLanguages).toEqual([]);
   });
 
   it("reads the row once, however many callers ask for it", async () => {

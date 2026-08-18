@@ -1,17 +1,24 @@
 /**
- * Purpose: zustand store for the discovery feed's source settings (spec 053 §8) — which catalog
- * channels are switched on, 省流量模式, the RSS addresses the reader pasted in themselves, the
- * 豆瓣 id that fills the catalog's template entry, and whether the first-run panel has been
- * answered or skipped. Kept out of settingsStore because the background restock reads these
- * before any screen has been opened, so it needs a load it can await (ensureLoaded).
+ * Purpose: zustand store for the discovery feed's source settings (spec 053 §8, spec 054) — which
+ * catalog channels are switched on, 省流量模式, the RSS addresses the reader pasted in themselves,
+ * the 豆瓣 id that fills the catalog's template entry, the language the feed speaks and any others
+ * the reader added to it, and whether the first-run panel has been answered or skipped. Kept out
+ * of settingsStore because the background restock reads these before any screen has been opened,
+ * so it needs a load it can await (ensureLoaded).
  * Side effects: reads and writes one settings-table row.
  * Main exports: useDiscoveryChannelSettingsStore, ensureDiscoveryChannelSettingsLoaded,
- * DiscoveryChannelSettings, AddUserFeedOutcome.
+ * ensureFeedLanguagePolicyLoaded, DiscoveryChannelSettings, AddUserFeedOutcome.
  */
 
 import { z } from "zod";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import {
+  type FeedLanguage,
+  type FeedLanguagePolicy,
+  feedLanguageSchema,
+  resolveFeedLanguagePolicy,
+} from "../lib/discoveryLanguages";
 import { nowIso } from "../lib/time";
 
 const SETTINGS_KEY = "discoveryChannelSettings";
@@ -25,6 +32,11 @@ const discoveryChannelSettingsSchema = z.object({
   dataSaverEnabled: z.boolean().default(false),
   userFeedUrls: z.array(z.url()).default([]),
   doubanUserId: z.string().default(""),
+  /** The language the reader picked on the first-run panel. Null until they have been asked, and
+   * a null falls back to the app's own default rather than to "show everything". */
+  feedLanguage: feedLanguageSchema.nullable().default(null),
+  /** The other languages they went on to switch on in the language settings. */
+  additionalFeedLanguages: z.array(feedLanguageSchema).default([]),
   /** True once the first-run panel was answered or skipped — it never comes back on its own. */
   onboardingDismissed: z.boolean().default(false),
 });
@@ -46,6 +58,8 @@ interface DiscoveryChannelSettingsState extends DiscoveryChannelSettings {
   addUserFeedUrl(url: string): Promise<AddUserFeedOutcome>;
   removeUserFeedUrl(url: string): Promise<void>;
   setDoubanUserId(userId: string): Promise<void>;
+  setFeedLanguage(language: FeedLanguage): Promise<void>;
+  setAdditionalFeedLanguageEnabled(language: FeedLanguage, enabled: boolean): Promise<void>;
   dismissOnboarding(): Promise<void>;
 }
 
@@ -58,6 +72,8 @@ export const useDiscoveryChannelSettingsStore = create<DiscoveryChannelSettingsS
         dataSaverEnabled: state.dataSaverEnabled,
         userFeedUrls: state.userFeedUrls,
         doubanUserId: state.doubanUserId,
+        feedLanguage: state.feedLanguage,
+        additionalFeedLanguages: state.additionalFeedLanguages,
         onboardingDismissed: state.onboardingDismissed,
         ...patch,
       };
@@ -104,6 +120,22 @@ export const useDiscoveryChannelSettingsStore = create<DiscoveryChannelSettingsS
         await persist({ doubanUserId: userId.trim() });
       },
 
+      async setFeedLanguage(language) {
+        // The language the reader chose is never also in the additional list: it would come back
+        // as a switch they cannot turn off, in the one place those switches are shown.
+        await persist({
+          feedLanguage: language,
+          additionalFeedLanguages: get().additionalFeedLanguages.filter(
+            (entry) => entry !== language,
+          ),
+        });
+      },
+
+      async setAdditionalFeedLanguageEnabled(language, enabled) {
+        const others = get().additionalFeedLanguages.filter((entry) => entry !== language);
+        await persist({ additionalFeedLanguages: enabled ? [...others, language] : others });
+      },
+
       async dismissOnboarding() {
         await persist({ onboardingDismissed: true });
       },
@@ -126,4 +158,9 @@ export async function ensureDiscoveryChannelSettingsLoaded(): Promise<DiscoveryC
     await loadTask;
   }
   return useDiscoveryChannelSettingsStore.getState();
+}
+
+/** The language half of the same settings, in the shape the two filters take. */
+export async function ensureFeedLanguagePolicyLoaded(): Promise<FeedLanguagePolicy> {
+  return resolveFeedLanguagePolicy(await ensureDiscoveryChannelSettingsLoaded());
 }
