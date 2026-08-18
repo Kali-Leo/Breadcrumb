@@ -50,6 +50,12 @@ const ENRICHABLE_KINDS: ReadonlySet<DiscoveryCardKind> = new Set(["article", "di
  * own logo as every page's og:image often enough that the kind check alone does not catch it, and
  * a grid where every tile carries the same image says less than a grid of text cards. Two cards
  * sharing one is a plausible coincidence; three is a site-wide default.
+ *
+ * The rule is scoped to this pass — pictures we went and read off an article page — and to
+ * nothing else, by design. A picture that arrives with the item is that item's real cover however
+ * many cards carry it: every episode of a podcast shares the show's artwork, which is how every
+ * podcast app in the world draws them, and a channel's videos share its thumbnail style. Spec 053
+ * T10c flagged the iTunes artwork under this rule; it is out of the rule's reach on purpose.
  */
 const SHARED_COVER_LIMIT = 3;
 
