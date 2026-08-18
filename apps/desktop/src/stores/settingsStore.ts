@@ -8,6 +8,11 @@ import { defaultExplorationShare, explorationShareBounds } from "@breadcrumb/plu
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import {
+  DEFAULT_DISCOVERY_CARD_SIZE,
+  type DiscoveryCardSize,
+  isDiscoveryCardSize,
+} from "../lib/discoveryFeedGrid";
 import { nowIso } from "../lib/time";
 
 export interface ApiConfig {
@@ -91,6 +96,7 @@ const LEARNING_MODE_KEY = "learningMode";
 const ROUTE_PARAMS_KEY = "routeParams";
 const COMPARE_CATEGORY_KEY = "compareCategory";
 const DISCOVERY_EXPLORATION_SHARE_KEY = "discoveryExplorationShare";
+const DISCOVERY_CARD_SIZE_KEY = "discoveryCardSize";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
  * learner tunes from the middle (spec 017 #1). */
 const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
@@ -147,6 +153,9 @@ interface SettingsState {
   /** How much of the discovery feed goes to topics the reader has no history with (spec 053
    * §4/§6). The two-position switch above the feed writes it; the ordering reads it. */
   discoveryExplorationShare: number;
+  /** How big the discovery feed draws its cards (spec 054 §(b)). The grid still fits as many
+   * columns as the window allows; this picks which minimum it fits them to. */
+  discoveryCardSize: DiscoveryCardSize;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
@@ -156,6 +165,7 @@ interface SettingsState {
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
   setDiscoveryExplorationShare(share: number): Promise<void>;
+  setDiscoveryCardSize(size: DiscoveryCardSize): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -168,6 +178,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
   discoveryExplorationShare: defaultExplorationShare,
+  discoveryCardSize: DEFAULT_DISCOVERY_CARD_SIZE,
 
   async loadFromDatabase() {
     const repos = await getRepos();
@@ -180,6 +191,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       routeParams,
       compareCategory,
       discoveryExplorationShare,
+      discoveryCardSize,
     ] = await Promise.all([
       repos.settings.get<ApiConfig>(API_CONFIG_KEY),
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
@@ -189,6 +201,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
       repos.settings.get<number>(DISCOVERY_EXPLORATION_SHARE_KEY),
+      repos.settings.get<string>(DISCOVERY_CARD_SIZE_KEY),
     ]);
     set({
       loaded: true,
@@ -200,6 +213,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
       discoveryExplorationShare: clampExplorationShare(discoveryExplorationShare),
+      // A row written by some other build must not leave the feed with no grid at all.
+      discoveryCardSize: isDiscoveryCardSize(discoveryCardSize)
+        ? discoveryCardSize
+        : DEFAULT_DISCOVERY_CARD_SIZE,
     });
   },
 
@@ -251,5 +268,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(DISCOVERY_EXPLORATION_SHARE_KEY, clamped, nowIso());
     set({ discoveryExplorationShare: clamped });
+  },
+
+  async setDiscoveryCardSize(size) {
+    const repos = await getRepos();
+    await repos.settings.set(DISCOVERY_CARD_SIZE_KEY, size, nowIso());
+    set({ discoveryCardSize: size });
   },
 }));

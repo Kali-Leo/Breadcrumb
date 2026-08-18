@@ -20,6 +20,7 @@ import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { mediaBadgeForCard } from "../lib/discoveryCardMediaBadge";
 import { sourceAndAuthorLine } from "../lib/discoveryCardPresentation";
+import { FEED_GRID_MAXIMUM_CARD_PX } from "../lib/discoveryFeedGrid";
 import { useDiscoveryStore } from "../stores/discoveryStore";
 import { DiscoveryCardCover } from "./DiscoveryCardCover";
 import { DiscoveryCardMediaBadge } from "./DiscoveryCardMediaBadge";
@@ -66,8 +67,12 @@ function useImpressionObserver(card: DiscoveryCardRow) {
   return containerRef;
 }
 
+/** `w-full` plus the ceiling from lib/discoveryFeedGrid: the card fills its grid track until the
+ * track is wider than a card should ever be, which happens on a window too narrow to fit two
+ * columns. */
 const TILE_SHELL =
-  "group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md";
+  "group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md";
+const TILE_STYLE = { maxWidth: `${FEED_GRID_MAXIMUM_CARD_PX}px` };
 
 export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
   const containerRef = useImpressionObserver(card);
@@ -82,7 +87,7 @@ export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
 
   if (!external) {
     return (
-      <div ref={containerRef} className={TILE_SHELL}>
+      <div ref={containerRef} className={TILE_SHELL} style={TILE_STYLE}>
         <button
           type="button"
           onClick={() => onOpen(card)}
@@ -98,7 +103,7 @@ export function DiscoveryCardTile({ card, onOpen }: DiscoveryCardTileProps) {
   }
 
   return (
-    <div ref={containerRef} className={TILE_SHELL}>
+    <div ref={containerRef} className={TILE_SHELL} style={TILE_STYLE}>
       {/* The button grows to the row's height so the whole card face opens the item, and the
           strip holding 收藏 stays pinned to the bottom edge whatever the title's length. */}
       <button type="button" onClick={() => onOpen(card)} className="flex flex-1 flex-col text-left">

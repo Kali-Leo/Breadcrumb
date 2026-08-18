@@ -1,8 +1,8 @@
 /**
- * Purpose: the settings page for the discovery feed's sources (spec 053 §8) — one switch per
- * channel the app ships with, 省流量模式, the reader's own feeds, and the 豆瓣 id that turns the
- * catalog's 豆瓣 entry on. Everything here takes effect on the next restock; nothing already
- * fetched is thrown away.
+ * Purpose: the settings page for the discovery feed (spec 053 §8, spec 054 §(b)) — how big the
+ * cards are drawn, one switch per channel the app ships with, 省流量模式, the reader's own feeds,
+ * and the 豆瓣 id that turns the catalog's 豆瓣 entry on. The source settings take effect on the
+ * next restock; nothing already fetched is thrown away. The card size takes effect at once.
  * Main exports: DiscoverySettingsPanel.
  */
 import { useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import {
   ensureDiscoveryChannelSettingsLoaded,
   useDiscoveryChannelSettingsStore,
 } from "../stores/discoveryChannelSettingsStore";
+import { CARD_SIZE_EXPLANATION, DiscoveryCardSizeSwitch } from "./DiscoveryCardSizeSwitch";
 import { DiscoveryUserFeedsSection } from "./DiscoveryUserFeedsSection";
 import { Toggle } from "./SettingsToggle";
 
@@ -109,6 +110,13 @@ export function DiscoverySettingsPanel() {
 
   return (
     <>
+      <section className="flex items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm">
+        <div>
+          <h3 className="font-medium text-stone-700">卡片大小</h3>
+          <p className="text-sm text-stone-500">{CARD_SIZE_EXPLANATION}</p>
+        </div>
+        <DiscoveryCardSizeSwitch />
+      </section>
       <ChannelSwitches />
       <section className="flex items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm">
         <div>

@@ -13,9 +13,11 @@ import { useEffect, useRef } from "react";
 import {
   FEED_GRID_GAP_PX,
   FEED_GRID_MAX_CONTENT_PX,
-  FEED_GRID_TEMPLATE_COLUMNS,
+  FEED_GRID_MAXIMUM_CARD_PX,
+  feedGridTemplateColumns,
 } from "../lib/discoveryFeedGrid";
 import { useDiscoveryStore } from "../stores/discoveryStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { DiscoveryCardTile } from "./DiscoveryCardTile";
 
 const SKELETON_COUNT = 8;
@@ -24,7 +26,10 @@ const SKELETON_COUNT = 8;
  * loading grid is the shape the cards will be and nothing jumps when they land. */
 function SkeletonCard() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl bg-white shadow-sm">
+    <div
+      className="w-full animate-pulse overflow-hidden rounded-2xl bg-white shadow-sm"
+      style={{ maxWidth: `${FEED_GRID_MAXIMUM_CARD_PX}px` }}
+    >
       <div className="w-full bg-stone-100 pt-[56.25%]" />
       <div className="px-4 pt-4 pb-6">
         <div className="h-3 w-1/3 rounded bg-stone-100" />
@@ -43,6 +48,7 @@ interface DiscoveryCardGridProps {
 
 export function DiscoveryCardGrid({ cards, loading, onOpen }: DiscoveryCardGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const cardSize = useSettingsStore((state) => state.discoveryCardSize);
 
   // Re-created whenever the card count changes: an IntersectionObserver only fires on
   // visibility CROSSINGS, so a sentinel that stays in view after a load would never fire
@@ -70,9 +76,12 @@ export function DiscoveryCardGrid({ cards, loading, onOpen }: DiscoveryCardGridP
         data-testid="discovery-card-grid"
         className="mx-auto grid"
         style={{
-          gridTemplateColumns: FEED_GRID_TEMPLATE_COLUMNS,
+          gridTemplateColumns: feedGridTemplateColumns(cardSize),
           gap: `${FEED_GRID_GAP_PX}px`,
           maxWidth: `${FEED_GRID_MAX_CONTENT_PX}px`,
+          // Cards carry their own ceiling; on a window too narrow for two columns the one card
+          // sits centred at that ceiling instead of stretching across the whole feed.
+          justifyItems: "center",
         }}
       >
         {cards.map((card) => (

@@ -9,6 +9,7 @@ import type { DiscoveryCardRow } from "@breadcrumb/core-db";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { DiscoveryCardSize } from "../lib/discoveryFeedGrid";
 
 vi.mock("../stores/discoveryStore", () => ({
   useDiscoveryStore: { getState: () => ({ loadMore: vi.fn(), recordImpression: vi.fn() }) },
@@ -18,6 +19,12 @@ vi.mock("../stores/discoveryChannelSettingsStore", () => ({
   useDiscoveryChannelSettingsStore: <Slice,>(
     select: (state: { dataSaverEnabled: boolean }) => Slice,
   ) => select({ dataSaverEnabled: false }),
+}));
+
+let cardSize: DiscoveryCardSize = "medium";
+vi.mock("../stores/settingsStore", () => ({
+  useSettingsStore: <Slice,>(select: (state: { discoveryCardSize: DiscoveryCardSize }) => Slice) =>
+    select({ discoveryCardSize: cardSize }),
 }));
 
 const { DiscoveryCardGrid } = await import("./DiscoveryCardGrid");
@@ -33,6 +40,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  cardSize = "medium";
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   (globalThis as { IntersectionObserver?: unknown }).IntersectionObserver =
     SilentIntersectionObserver;
@@ -53,14 +61,23 @@ function grid(): HTMLElement | null {
 }
 
 describe("DiscoveryCardGrid", () => {
-  it("lays cards into as many 320px columns as fit, 20px apart, capped at 1680px", () => {
+  it("lays cards into as many columns as fit, 20px apart, capped at 1680px", () => {
     act(() =>
       root.render(<DiscoveryCardGrid cards={cards} loading={false} onOpen={() => undefined} />),
     );
     const style = grid()?.getAttribute("style") ?? "";
-    expect(style).toContain("repeat(auto-fill, minmax(320px, 1fr))");
+    expect(style).toContain("repeat(auto-fill, minmax(300px, 1fr))");
     expect(style).toContain("gap: 20px");
     expect(style).toContain("max-width: 1680px");
+  });
+
+  /** The switch on the 发现 settings page has to reach the grid, not just the database. */
+  it("follows the card size the reader chose", () => {
+    cardSize = "small";
+    act(() =>
+      root.render(<DiscoveryCardGrid cards={cards} loading={false} onOpen={() => undefined} />),
+    );
+    expect(grid()?.getAttribute("style") ?? "").toContain("minmax(230px, 1fr)");
   });
 
   /** auto-fit would collapse the empty tracks and stretch the last row's cards across them. */
