@@ -47,7 +47,7 @@ function looksLikeAddress(term: string): boolean {
 /**
  * The topic labels allowed to become a query. Cards are filed under the channel that published
  * them — a display name, or the hostname of a feed the reader pasted in — and none of that is a
- * subject, nor ours to hand out. What is left is the vocabulary the first-run panel offered,
+ * subject. What is left is the vocabulary the first-run panel offered,
  * whatever the reader answered it with, and the terms that already went out and came back with
  * cards (a recalled card carries the term that found it as its topic).
  */
