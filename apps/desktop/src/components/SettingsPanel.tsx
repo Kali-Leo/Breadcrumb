@@ -1,15 +1,13 @@
 /**
- * Purpose: settings view with four pages — 通用 (API config, network, diglot core,
- * mainland mode), 开关与计价 (the per-feature billing page, Leo 2026-08-12), 研究课题
- * (the research task platform, moved here from the top level by spec 044), and 发现 (where the
- * discovery feed's content comes from, spec 053 §8).
+ * Purpose: settings view with three pages — 通用 (API config, network, diglot core,
+ * mainland mode), 开关与计价 (the per-feature billing page, Leo 2026-08-12), and 研究课题
+ * (the research task platform, moved here from the top level by spec 044).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
 import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
-import { DiscoverySettingsPanel } from "./DiscoverySettingsPanel";
 import { ResearchPanel } from "./ResearchPanel";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
 // The same switch every settings row uses; this page carried its own copy of it until now.
@@ -19,13 +17,12 @@ interface SettingsPanelProps {
   onClose(): void;
 }
 
-type SettingsPage = "general" | "billing" | "research" | "discovery";
+type SettingsPage = "general" | "billing" | "research";
 
 const PAGE_TABS: readonly (readonly [SettingsPage, string])[] = [
   ["general", "通用"],
   ["billing", "开关与计价"],
   ["research", "研究课题"],
-  ["discovery", "发现"],
 ];
 
 /** The API form's unsaved edits, module-level so switching views (which unmounts this
@@ -102,7 +99,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
       {page === "billing" && <BillingSettingsPanel />}
       {page === "research" && <ResearchPanel />}
-      {page === "discovery" && <DiscoverySettingsPanel />}
 
       {page === "general" && (
         <>

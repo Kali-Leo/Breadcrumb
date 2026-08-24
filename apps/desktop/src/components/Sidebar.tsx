@@ -6,7 +6,7 @@
  * different things — the roster lives behind 👥, not inside the list.)
  * Main exports: Sidebar.
  */
-import { ALargeSmall, Compass, Map as MapIcon, Settings, Users } from "lucide-react";
+import { ALargeSmall, Map as MapIcon, Settings, Users } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -14,13 +14,12 @@ import { PalaceRail } from "./map/PalaceRail";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "vocab" | "discovery";
+  activeView: "chat" | "settings" | "map" | "vocab";
   companionsOpen: boolean;
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenVocab(): void;
-  onOpenDiscovery(): void;
   onToggleCompanions(): void;
 }
 
@@ -71,7 +70,6 @@ export function Sidebar({
   onOpenSettings,
   onOpenMap,
   onOpenVocab,
-  onOpenDiscovery,
   onToggleCompanions,
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
@@ -102,15 +100,12 @@ export function Sidebar({
         )}
       </nav>
       {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友.
-          One Lucide line-icon set (emoji mixed with a text glyph could never look uniform).
-          发现 (Compass) lands leftmost per spec 051 §1 — position pending Leo's visual
-          acceptance, same as every other art decision in this row. */}
+          One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
       <div className="flex items-center border-t border-stone-100 px-2 py-2">
         <ConnectivityDot />
         <div className="flex flex-1 items-center justify-evenly">
           {(
             [
-              [Compass, "发现", onOpenDiscovery, activeView === "discovery"],
               [Settings, "设置", onOpenSettings, activeView === "settings"],
               [ALargeSmall, "词汇", onOpenVocab, activeView === "vocab"],
               [MapIcon, "地图", onOpenMap, activeView === "map"],

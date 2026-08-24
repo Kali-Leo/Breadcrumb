@@ -5,14 +5,11 @@
  */
 export * from "./aiFailureRepositories";
 export * from "./canonicalRepositories";
-export * from "./channelStateRepositories";
-export * from "./channelTypes";
 export * from "./companionRepositories";
 export * from "./companionTypes";
 export * from "./comparisonRepositories";
 export * from "./diglotRepositories";
 export * from "./diglotTypes";
-export * from "./discoveryRepositories";
 export * from "./featureRepositories";
 export * from "./focusRepositories";
 export * from "./goalRepositories";

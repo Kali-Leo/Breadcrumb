@@ -9,7 +9,6 @@ import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { CompanionChatPopup } from "./components/CompanionChatPopup";
 import { CompanionSection } from "./components/CompanionSection";
-import { DiscoveryView } from "./components/DiscoveryView";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -18,7 +17,6 @@ import { VocabPanel } from "./components/VocabPanel";
 import { runDedupSweep } from "./lib/dedupSweep";
 import { backfillMissingEmbeddings } from "./lib/embeddings";
 import { appEventBus, useChatStore } from "./stores/chatStore";
-import { useDiscoveryStore } from "./stores/discoveryStore";
 // Side-effect only: registers edgeStore's knowledge:nodesExtracted subscription.
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
@@ -38,7 +36,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
-  const [view, setView] = useState<"chat" | "settings" | "map" | "vocab" | "discovery">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "vocab">("chat");
   const [companionsOpen, setCompanionsOpen] = useState(false);
   const [helperPopup, setHelperPopup] = useState<{ conversationId: string; title: string } | null>(
     null,
@@ -57,9 +55,6 @@ export default function App() {
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
       void backfillMissingEmbeddings().then(() => runDedupSweep());
-      // Discovery preload from the first moment the app is up (Leo's order, 2026-08-17):
-      // the feed should open already filled, never on a cold spinner.
-      void useDiscoveryStore.getState().refillPool();
     })();
   }, []);
 
@@ -118,7 +113,6 @@ export default function App() {
           onOpenSettings={() => setView("settings")}
           onOpenMap={() => setView("map")}
           onOpenVocab={() => setView("vocab")}
-          onOpenDiscovery={() => setView("discovery")}
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1">
@@ -126,7 +120,6 @@ export default function App() {
           {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
           {view === "map" && <MapView />}
           {view === "vocab" && <VocabPanel />}
-          {view === "discovery" && <DiscoveryView />}
           {/* The companions roster pops out at the center area's lower-left, sized to its
               three rows; clicking anywhere else dismisses it (Leo's design). */}
           {companionsOpen && (

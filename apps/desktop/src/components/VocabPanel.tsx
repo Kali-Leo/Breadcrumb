@@ -1,10 +1,9 @@
 /**
  * Purpose: the vocabulary page (spec 050 §6, own bottom-left icon) — the language-weave
- * settings, the discovery feed's language (spec 054: the reader picks one when the feed first
- * opens and lets the others back in here), the learning-words list (word states joined with the
- * pack's gloss, newest first) and the word trend chart (memory + intuition layers and the settled
- * line — words have no claim data, so no understanding line) live together here, out of settings
- * and out of the palace rail.
+ * settings, the learning-words list (word states joined with the pack's gloss, newest first)
+ * and the word trend chart (memory + intuition layers and the settled line — words have no
+ * claim data, so no understanding line) live together here, out of settings and out of the
+ * palace rail.
  * Main exports: VocabPanel.
  */
 import { DIGLOT_UI_COPY } from "@breadcrumb/plugin-diglot-weave";
@@ -14,7 +13,6 @@ import { getRepos } from "../lib/db";
 import { useDiglotStore } from "../stores/diglotStore";
 import { useFeedbackStore } from "../stores/feedbackStore";
 import { DiglotSettingsSection } from "./DiglotSettingsSection";
-import { FeedLanguageSettingsSection } from "./FeedLanguageSettingsSection";
 import { TrendLineChart } from "./TrendLineChart";
 
 interface LearningWordRow {
@@ -145,7 +143,6 @@ export function VocabPanel() {
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto bg-stone-50 p-6">
       <DiglotSettingsSection />
-      <FeedLanguageSettingsSection />
       <LearningWordsSection />
       <VocabTrendCard />
     </div>

@@ -110,16 +110,6 @@ const FEATURE_ROWS: Array<{
     hint: "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释；每条只标一次。",
     purposes: ["term-marking"],
   },
-  // The two self-generated-content rows (发现页新卡片 / 发现页正文) were retired by spec 053:
-  // the feed shows external content now, so those switches no longer describe anything the
-  // user can turn on. Their historical spend still counts toward the totals below, and
-  // PURPOSE_NAMES still names them wherever an old row is listed.
-  {
-    feature: "discoveryQualityCheck",
-    name: "🧭 发现 · 质检",
-    hint: "发现页每取回一批新内容，AI 会看一遍标题和摘要，判断里面有没有实质内容。看着空洞的排得靠后一些，但一条都不会被藏起来。一批一次调用。",
-    purposes: ["discovery-quality-check"],
-  },
 ];
 
 /** "今日 X · 累计 Y" for a purpose set; empty string while loading or when never used. */

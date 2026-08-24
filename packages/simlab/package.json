@@ -16,9 +16,7 @@
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-teaching": "workspace:*",
-    "@breadcrumb/plugin-channels": "workspace:*",
     "@breadcrumb/plugin-diglot-weave": "workspace:*",
-    "@breadcrumb/plugin-discovery": "workspace:*",
     "@breadcrumb/plugin-explore": "workspace:*",
     "@breadcrumb/plugin-feedback": "workspace:*",
     "@breadcrumb/plugin-graph": "workspace:*",
@@ -33,11 +31,7 @@
     "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@fast-check/vitest": "^0.4.1",
-    "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-http": "^2.5.9",
     "@types/better-sqlite3": "^9.6.0",
-    "fast-check": "^4.9.0",
     "tsx": "^4.23.1",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
