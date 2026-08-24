@@ -20,8 +20,6 @@ export const channelAdapterTypes = [
   "arxiv",
   "podcast-search",
   "podcast-charts",
-  "youtube-channel",
-  "bilibili-ranking",
   "wikipedia-featured",
   "douban-user",
 ] as const;

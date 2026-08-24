@@ -58,9 +58,6 @@ function catalogSwitches(includeHackerNews: boolean): Record<string, boolean> {
     "arxiv-cs-ai": false,
     "arxiv-cs-lg": false,
     "arxiv-q-bio-nc": false,
-    "youtube-3blue1brown": false,
-    "youtube-veritasium": false,
-    "youtube-kurzgesagt": false,
     "podcast-search": false,
     "douban-interests": false,
   };

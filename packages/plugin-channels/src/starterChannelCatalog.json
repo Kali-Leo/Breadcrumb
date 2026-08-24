@@ -224,57 +224,6 @@
       }
     },
     {
-      "id": "bilibili-knowledge",
-      "displayName": "哔哩哔哩 知识区排行榜",
-      "adapterType": "bilibili-ranking",
-      "endpoint": {
-        "feedUrl": "https://api.bilibili.com/x/web-interface/ranking/v2?rid=36&type=all"
-      },
-      "language": "zh-CN",
-      "defaultKind": "video",
-      "tone": "both",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 21600000,
-        "dailyRequestBudget": 4,
-        "userAgentOverride": null
-      }
-    },
-    {
-      "id": "bilibili-technology",
-      "displayName": "哔哩哔哩 科技数码排行榜",
-      "adapterType": "bilibili-ranking",
-      "endpoint": {
-        "feedUrl": "https://api.bilibili.com/x/web-interface/ranking/v2?rid=188&type=all"
-      },
-      "language": "zh-CN",
-      "defaultKind": "video",
-      "tone": "both",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 21600000,
-        "dailyRequestBudget": 4,
-        "userAgentOverride": null
-      }
-    },
-    {
-      "id": "bilibili-must-watch",
-      "displayName": "哔哩哔哩 入站必刷",
-      "adapterType": "bilibili-ranking",
-      "endpoint": {
-        "feedUrl": "https://api.bilibili.com/x/web-interface/popular/precious"
-      },
-      "language": "zh-CN",
-      "defaultKind": "video",
-      "tone": "casual",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 86400000,
-        "dailyRequestBudget": 2,
-        "userAgentOverride": null
-      }
-    },
-    {
       "id": "wikipedia-zh-featured",
       "displayName": "维基百科每日精选",
       "adapterType": "wikipedia-featured",
@@ -632,57 +581,6 @@
       "fetchPolicy": {
         "minimumIntervalMilliseconds": 43200000,
         "dailyRequestBudget": 2,
-        "userAgentOverride": null
-      }
-    },
-    {
-      "id": "youtube-3blue1brown",
-      "displayName": "3Blue1Brown",
-      "adapterType": "youtube-channel",
-      "endpoint": {
-        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw"
-      },
-      "language": "en",
-      "defaultKind": "video",
-      "tone": "both",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 43200000,
-        "dailyRequestBudget": 4,
-        "userAgentOverride": null
-      }
-    },
-    {
-      "id": "youtube-veritasium",
-      "displayName": "Veritasium",
-      "adapterType": "youtube-channel",
-      "endpoint": {
-        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA"
-      },
-      "language": "en",
-      "defaultKind": "video",
-      "tone": "both",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 43200000,
-        "dailyRequestBudget": 4,
-        "userAgentOverride": null
-      }
-    },
-    {
-      "id": "youtube-kurzgesagt",
-      "displayName": "Kurzgesagt – In a Nutshell",
-      "adapterType": "youtube-channel",
-      "endpoint": {
-        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q"
-      },
-      "language": "en",
-      "defaultKind": "video",
-      "tone": "casual",
-      "defaultEnabled": true,
-      "fetchPolicy": {
-        "minimumIntervalMilliseconds": 43200000,
-        "dailyRequestBudget": 4,
         "userAgentOverride": null
       }
     },

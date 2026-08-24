@@ -82,28 +82,12 @@ describe("loadStarterChannelCatalog", () => {
     expect(kinds).toContain("podcast");
     const byAdapter = (type: string): string[] =>
       catalog.sources.filter((source) => source.adapterType === type).map((source) => source.id);
-    expect(byAdapter("bilibili-ranking")).toEqual([
-      "bilibili-knowledge",
-      "bilibili-technology",
-      "bilibili-must-watch",
-    ]);
     expect(byAdapter("podcast-charts")).toEqual([
       "podcast-chart-education",
       "podcast-chart-history",
       "podcast-chart-science",
     ]);
     expect(byAdapter("wikipedia-featured")).toEqual(["wikipedia-zh-featured"]);
-  });
-
-  /** The three addresses the 2026-08-18 survey measured answering with no cookie and no wbi
-   * signature. Only a handful of rid values work at all, so these are not interchangeable. */
-  it("ships only the bilibili lists that answer an anonymous request", () => {
-    const bilibili = catalog.sources.filter((source) => source.adapterType === "bilibili-ranking");
-    expect(bilibili.map((source) => source.endpoint.feedUrl)).toEqual([
-      "https://api.bilibili.com/x/web-interface/ranking/v2?rid=36&type=all",
-      "https://api.bilibili.com/x/web-interface/ranking/v2?rid=188&type=all",
-      "https://api.bilibili.com/x/web-interface/popular/precious",
-    ]);
   });
 
   /** The country top-50 is deliberately absent: the survey found it dominated by chat shows. */
@@ -194,30 +178,6 @@ describe("loadStarterChannelCatalog", () => {
     expect(itunes && sourceSupportsSearch(itunes)).toBe(true);
   });
 
-  /**
-   * Spec 053 §1 lists YouTube among the first-wave channels, and until spec 053 T10 the shipped
-   * catalog had no entry for it at all, so a fresh install saw no video on the grid. Each address
-   * below was fetched on 2026-08-17 and answered with an Atom document carrying 15 entries.
-   *
-   * The 2026-08-18 survey then found the same addresses answering with nothing minutes later, so
-   * the channels stay and the polls got rarer: half a day between them, four a day at most.
-   */
-  it("ships the three YouTube channels a fresh install starts with, polled rarely", () => {
-    const youtube = catalog.sources.filter((source) => source.adapterType === "youtube-channel");
-    expect(youtube.map((source) => source.displayName)).toEqual([
-      "3Blue1Brown",
-      "Veritasium",
-      "Kurzgesagt – In a Nutshell",
-    ]);
-    for (const source of youtube) {
-      expect(new URL(source.endpoint.feedUrl).searchParams.get("channel_id")).toMatch(/^UC/);
-      expect(source.defaultKind).toBe("video");
-      expect(source.defaultEnabled).toBe(true);
-      expect(source.unverified).toBeUndefined();
-      expect(source.fetchPolicy.minimumIntervalMilliseconds).toBe(12 * 60 * 60 * 1000);
-    }
-  });
-
   /** An interval is a promise to the publisher, so it tracks how often they actually publish:
    * IT之家 ships sixty items a pull and 美团技术 posts weekly, and they must not be polled alike. */
   it("polls each source about as often as it publishes", () => {
@@ -230,8 +190,6 @@ describe("loadStarterChannelCatalog", () => {
     expect(intervalOf("geekpark")).toBeLessThan(intervalOf("meituan-tech"));
     expect(intervalOf("meituan-tech")).toBe(24 * 60 * 60 * 1000);
     expect(intervalOf("nasa-image-of-the-day")).toBe(12 * 60 * 60 * 1000);
-    // 入站必刷 is an evergreen list; the daily rankings move and are read four times a day.
-    expect(intervalOf("bilibili-must-watch")).toBeGreaterThan(intervalOf("bilibili-knowledge"));
     // cnBeta answers with 150 items covering the last 33 hours, about 110 a day — the widest
     // window in the catalog. Polled every six hours it still brings roughly thirty new items a
     // round, which is why it is read more rarely than 奇客 Solidot, whose 20-item window holds

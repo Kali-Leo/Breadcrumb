@@ -14,7 +14,6 @@ import type { ConditionalRequestStore } from "./fetchContract";
 import { searchPodcastShows } from "./podcastSearchAdapter";
 import { fetchLatestFromSource } from "./sourceFetchFacade";
 import { fakeChannelSource } from "./testDoubles";
-import { buildYoutubeChannelFeedUrl, fetchYoutubeOEmbed } from "./youtubeChannelAdapter";
 
 const live = process.env.RUN_LIVE_CHANNEL_TESTS === "1";
 const timeoutMilliseconds = 45_000;
@@ -147,29 +146,6 @@ describe.skipIf(!live)("live channel smoke", () => {
     timeoutMilliseconds,
   );
 
-  /**
-   * bilibili's risk control answers 200 with `code: -352` once one address has asked a few times
-   * in a row, which the survey hit on 2026-08-18 and which the adapter reports as a failed poll.
-   * That is a correct outcome, not a broken adapter, so the assertion splits on it.
-   */
-  it(
-    "reads the bilibili knowledge ranking, or is turned away by risk control",
-    async () => {
-      const source = starterSource("bilibili-knowledge");
-      const result = await fetchLatestFromSource(source, fetcher().contextForSource(source));
-
-      if (result.outcome.status !== "fetched") {
-        expect(result.items).toEqual([]);
-        return;
-      }
-      expect(result.items.length).toBeGreaterThan(0);
-      expect(result.items[0]?.kind).toBe("video");
-      expect(result.items[0]?.url).toMatch(/^https:\/\/www\.bilibili\.com\/video\/BV/);
-      expect(result.items[0]?.coverUrl).toMatch(/^https:\/\//);
-    },
-    timeoutMilliseconds,
-  );
-
   /** Three requests deep — chart, lookup, one show feed — which is the whole point of testing it
    * live: each step is a different host with a different way of going wrong. */
   it(
@@ -196,25 +172,6 @@ describe.skipIf(!live)("live channel smoke", () => {
       expect(result.outcome.status).toBe("fetched");
       expect(result.items.length).toBeGreaterThan(0);
       for (const item of result.items) expect(item.coverUrl).not.toBeNull();
-    },
-    timeoutMilliseconds,
-  );
-
-  it(
-    "fills in a YouTube video's title and cover through oEmbed",
-    async () => {
-      const source = fakeChannelSource({
-        id: "youtube-oembed",
-        adapterType: "youtube-channel",
-        endpoint: { feedUrl: buildYoutubeChannelFeedUrl("UCsample") },
-        defaultKind: "video",
-      });
-      const preview = await fetchYoutubeOEmbed(
-        "https://www.youtube.com/watch?v=jNQXAC9IVRw",
-        fetcher().contextForSource(source),
-      );
-      expect(preview?.title).toBe("Me at the zoo");
-      expect(preview?.thumbnailUrl).toMatch(/^https?:\/\//);
     },
     timeoutMilliseconds,
   );
