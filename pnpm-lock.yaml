@@ -44,6 +44,9 @@ importers:
       '@breadcrumb/core-teaching':
         specifier: workspace:*
         version: link:../../packages/core-teaching
+      '@breadcrumb/plugin-browsing-interest':
+        specifier: workspace:*
+        version: link:../../packages/plugin-browsing-interest
       '@breadcrumb/plugin-companion':
         specifier: workspace:*
         version: link:../../packages/plugin-companion
@@ -229,6 +232,19 @@ importers:
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/core-teaching:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+
+  packages/plugin-browsing-interest:
+    dependencies:
+      zod:
+        specifier: ^4.1.0
+        version: 4.4.3
     devDependencies:
       typescript:
         specifier: ^5.9.0

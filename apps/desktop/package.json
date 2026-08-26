@@ -16,6 +16,7 @@
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-teaching": "workspace:*",
+    "@breadcrumb/plugin-browsing-interest": "workspace:*",
     "@breadcrumb/plugin-companion": "workspace:*",
     "@breadcrumb/plugin-compare": "workspace:*",
     "@breadcrumb/plugin-diglot-weave": "workspace:*",

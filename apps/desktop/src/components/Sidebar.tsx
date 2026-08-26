@@ -6,7 +6,7 @@
  * different things — the roster lives behind 👥, not inside the list.)
  * Main exports: Sidebar.
  */
-import { ALargeSmall, Map as MapIcon, Settings, Users } from "lucide-react";
+import { ALargeSmall, Compass, Map as MapIcon, Settings, Users } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -14,12 +14,13 @@ import { PalaceRail } from "./map/PalaceRail";
 import { TrailList } from "./TrailList";
 
 interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "vocab";
+  activeView: "chat" | "settings" | "map" | "vocab" | "discovery";
   companionsOpen: boolean;
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenVocab(): void;
+  onOpenDiscovery(): void;
   onToggleCompanions(): void;
 }
 
@@ -70,6 +71,7 @@ export function Sidebar({
   onOpenSettings,
   onOpenMap,
   onOpenVocab,
+  onOpenDiscovery,
   onToggleCompanions,
 }: SidebarProps) {
   const startNewConversation = useChatStore((state) => state.startNewConversation);
@@ -99,7 +101,8 @@ export function Sidebar({
           <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
         )}
       </nav>
-      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友.
+      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友,
+          with 发现 added in front of the map (spec 057).
           One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
       <div className="flex items-center border-t border-stone-100 px-2 py-2">
         <ConnectivityDot />
@@ -108,6 +111,7 @@ export function Sidebar({
             [
               [Settings, "设置", onOpenSettings, activeView === "settings"],
               [ALargeSmall, "词汇", onOpenVocab, activeView === "vocab"],
+              [Compass, "发现", onOpenDiscovery, activeView === "discovery"],
               [MapIcon, "地图", onOpenMap, activeView === "map"],
             ] as const
           ).map(([Icon, name, onClick, active]) => (

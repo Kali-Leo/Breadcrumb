@@ -10,7 +10,8 @@
       "!**/*.svg",
       "!**/src-tauri/gen",
       "!**/src/data/generated",
-      "!.claude"
+      "!.claude",
+      "!specs/**/*.html"
     ]
   },
   "formatter": {

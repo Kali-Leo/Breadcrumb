@@ -1,9 +1,10 @@
 // Purpose: Tauri application entry — registers plugins (sql, http, opener) and the
-// local embeddings + piper TTS + atomic SQL transaction commands. The Rust shell stays
+// local embeddings + piper TTS + atomic SQL transaction + interest-service token commands. The Rust shell stays
 // thin: business logic lives in TS packages.
 
 mod embeddings;
 mod fsrs_optim;
+mod interest_service;
 mod transactions;
 mod tts;
 
@@ -33,6 +34,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
             fsrs_optim::optimize_fsrs_parameters,
+            interest_service::read_interest_service_token,
             transactions::execute_sql_transaction,
             tts::piper_synthesize
         ])
