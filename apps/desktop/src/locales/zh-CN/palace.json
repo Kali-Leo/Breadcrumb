@@ -158,6 +158,21 @@
     "treeAria": "对比树",
     "nodeNotDecomposed": "{{label}} 还没细分",
     "nodeOverlap": "{{label}} 重合 {{percent}}",
-    "notDecomposedShort": "还没细分"
+    "notDecomposedShort": "还没细分",
+    "buildNeedsNetwork": "需要联网和 API 配置才能检索构建",
+    "buildCost": "本次构建花费 {{cost}}",
+    "buildCostUnknown": "未知",
+    "buildDraftFailed": "AI 起草资料清单这一步没能完成，可以点一下重试",
+    "buildSourcesFailed": "引用的资料大多没能核验通过，这次构建整体作废",
+    "buildDropped": "；有 {{count}} 条因资料没核验通过被丢弃",
+    "goalNeedsNetwork": "需要联网和 API 配置才能生成目标",
+    "goalTitle": "胜任 {{profile}}",
+    "goalText": "{{title}}。该方向的官方知识与工具清单（{{profile}}，供选取，不必全收）：{{leaves}}"
+  },
+  "frontier": {
+    "openerWithPrereq": "接下来可以看看「{{label}}」——你已经掌握的 {{labels}} 就在它旁边。想从哪里聊起都行。",
+    "opener": "接下来可以看看「{{label}}」。想从哪里聊起都行。",
+    "practiceTitle": "【实践】{{label}}",
+    "practiceOpener": "这里探讨怎么完成这条实践——{{sourceRef}}。先说说你目前做到哪一步，或者手头有什么环境，从那里开始。"
   }
 }

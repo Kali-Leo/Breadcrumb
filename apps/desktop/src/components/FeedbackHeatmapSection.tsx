@@ -24,23 +24,16 @@ function levelForCount(count: number): number {
 // Amber scale (product's accent color): empty cell, then four deepening steps.
 const AMBER_THEME = { light: ["#f5f5f4", "#fde68a", "#fbbf24", "#d97706", "#92400e"] };
 
-const MONTH_LABELS = [
-  "1月",
-  "2月",
-  "3月",
-  "4月",
-  "5月",
-  "6月",
-  "7月",
-  "8月",
-  "9月",
-  "10月",
-  "11月",
-  "12月",
-];
+/** The calendar's month names in the reader's language — Intl knows them, we do not. */
+function monthLabels(locale: string): string[] {
+  const format = new Intl.DateTimeFormat(locale, { month: "short" });
+  return Array.from({ length: 12 }, (_, month) =>
+    format.format(new Date(Date.UTC(2026, month, 1))),
+  );
+}
 
 export function FeedbackHeatmapSection() {
-  const { t } = useTranslation(["palace", "common"]);
+  const { t, i18n } = useTranslation(["palace", "common"]);
   const copy = useCopyMessage();
   const cells = useFeedbackStore((state) => state.cells);
   const continuity = useFeedbackStore((state) => state.continuity);
@@ -84,7 +77,7 @@ export function FeedbackHeatmapSection() {
               blockSize={10}
               blockMargin={3}
               fontSize={10}
-              labels={{ months: MONTH_LABELS }}
+              labels={{ months: monthLabels(i18n.language) }}
               renderBlock={(block, activity) =>
                 cloneElement(
                   block,

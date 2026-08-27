@@ -5,12 +5,14 @@
  * is active. Main exports: CompanionChatBanners.
  */
 import { BREAK_REMINDER_COPY, COMPANION_COPY, CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
-import { COMPANION_DESKTOP_COPY, getCompanionCardById } from "../lib/companionActions";
+import { useTranslation } from "react-i18next";
+import { getCompanionCardById } from "../lib/companionActions";
 import { teachTopicFromTitle } from "../lib/teachActions";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 
 export function CompanionChatBanners() {
+  const { t } = useTranslation(["chat", "common"]);
   const activeKind = useChatStore((state) => state.activeKind);
   const activeCompanionId = useChatStore((state) => state.activeCompanionId);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -51,7 +53,7 @@ export function CompanionChatBanners() {
             onClick={() => activeConversationId !== null && dismissCrisis(activeConversationId)}
             className="mt-1 text-stone-400 text-xs underline"
           >
-            {COMPANION_DESKTOP_COPY.dismiss}
+            {t("common:actions.gotIt")}
           </button>
         </div>
       )}
@@ -63,7 +65,7 @@ export function CompanionChatBanners() {
             onClick={dismissBreakReminder}
             className="text-stone-400 text-xs underline"
           >
-            {COMPANION_DESKTOP_COPY.dismiss}
+            {t("common:actions.gotIt")}
           </button>
         </div>
       )}

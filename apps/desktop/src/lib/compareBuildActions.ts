@@ -24,6 +24,7 @@ import {
 } from "@breadcrumb/plugin-compare";
 import { createBingProvider } from "@breadcrumb/plugin-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
@@ -36,8 +37,10 @@ export type ExperimentalBuildOutcome =
 
 function costLineOf(model: string, usage: TokenUsage): string {
   const price = BUILTIN_MODEL_PRICES[model];
-  const cost = price ? formatCost(calculateCostMicros(usage, price), price.currency) : "未知";
-  return `本次构建花费 ${cost}`;
+  const cost = price
+    ? formatCost(calculateCostMicros(usage, price), price.currency)
+    : i18next.t("palace:compare.buildCostUnknown");
+  return i18next.t("palace:compare.buildCost", { cost });
 }
 
 /** Fetches one cited URL and checks the page mentions the cited material's title tokens.
@@ -96,7 +99,11 @@ export async function runProposalPipeline(
     });
   } catch (error) {
     void recordAiFailure("compare-profile", error);
-    return { ok: false, reason: "AI 起草资料清单这一步没能完成，可以点一下重试", costLine: null };
+    return {
+      ok: false,
+      reason: i18next.t("palace:compare.buildDraftFailed"),
+      costLine: null,
+    };
   }
 
   // Verify each unique cited URL once; an item may share a source with its siblings.
@@ -144,7 +151,11 @@ export async function runProposalPipeline(
         `build discarded: ${surviving.length}/${items.length} items verified; failed sources: ${failedSamples}`,
       ),
     );
-    return { ok: false, reason: "引用的资料大多没能核验通过，这次构建整体作废", costLine };
+    return {
+      ok: false,
+      reason: i18next.t("palace:compare.buildSourcesFailed"),
+      costLine,
+    };
   }
   return {
     ok: true,

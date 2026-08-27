@@ -4,6 +4,8 @@
  * the active-session mirror in sync by construction.
  * Main exports: createSessionWriters, SessionWriters, SessionSliceState.
  */
+
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import { type ActiveMirror, type ChatSession, mirrorOf } from "./chatSessions";
 
 /** The slice of chatStore state these writers read and produce. */
@@ -18,7 +20,7 @@ export interface SessionWriters {
   putSession(id: string, session: ChatSession, makeActive: boolean): void;
   /** Routes a round failure into its own session; a conversation that never got a session
    * (guards failed before creation) degrades to the active mirror's error field. */
-  setRoundError(conversationId: string | null, errorText: string): void;
+  setRoundError(conversationId: string | null, errorText: CopyMessage): void;
 }
 
 export function createSessionWriters(

@@ -6,6 +6,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { type DisplayClaim, useFactcheckStore } from "../stores/factcheckStore";
 import { useSettingsStore } from "../stores/settingsStore";
 
@@ -25,6 +26,7 @@ interface FactcheckBadgeProps {
 
 export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProps) {
   const { t } = useTranslation("chat");
+  const copy = useCopyMessage();
   const enabled = useSettingsStore((state) => state.featureSwitches.factcheck);
   const claims = useFactcheckStore((state) =>
     conversationId === null
@@ -54,7 +56,7 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
         >
           🔍 {t("factcheck.ask")}
         </button>
-        {notice && <span className="ml-2 text-xs text-stone-400">{notice}</span>}
+        {notice && <span className="ml-2 text-xs text-stone-400">{copy(notice)}</span>}
       </div>
     );
   }

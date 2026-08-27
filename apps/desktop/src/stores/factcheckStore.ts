@@ -6,6 +6,7 @@
  * Main exports: useFactcheckStore, DisplayClaim.
  */
 import type { FactcheckClaimRow, MessageRow } from "@breadcrumb/core-db";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   createDefaultEvidenceProviders,
   type EvidenceItem,
@@ -28,16 +29,16 @@ export interface DisplayClaim {
   evidence: EvidenceItem[];
 }
 
-const OFFLINE_NOTICE = "网络总开关是关着的——打开它，我才能出门查资料。";
-const NO_API_NOTICE = "先在设置里配好 AI 服务，我才能帮你查证。";
-const FAILED_NOTICE = "这次核查没能完成（网络波动），稍后可以再试一次。";
+const OFFLINE_NOTICE: CopyMessage = { key: "chat:factcheck.offlineNotice" };
+const NO_API_NOTICE: CopyMessage = { key: "chat:factcheck.noApiNotice" };
+const FAILED_NOTICE: CopyMessage = { key: "chat:factcheck.failedNotice" };
 
 interface FactcheckState {
   /** Checked claims per conversation, then per assistant message (an empty claim array =
    * checked, nothing to verify). Source of truth — badges read their conversation's layer. */
   claimsByConversation: ReadonlyMap<string, ReadonlyMap<string, DisplayClaim[]>>;
   checkingMessageIds: ReadonlySet<string>;
-  noticeByMessageId: Record<string, string>;
+  noticeByMessageId: Record<string, CopyMessage>;
   /** Fill-on-first-visit: loads a conversation's layer once; revisits are instant cache hits. */
   ensureLoaded(conversationId: string | null): Promise<void>;
   checkMessage(conversationId: string, messageId: string): Promise<void>;
@@ -182,13 +183,13 @@ function rowToDisplayClaim(row: FactcheckClaimRow): DisplayClaim {
   };
 }
 
-function setNotice(messageId: string, text: string): void {
+function setNotice(messageId: string, text: CopyMessage): void {
   useFactcheckStore.setState((state) => ({
     noticeByMessageId: { ...state.noticeByMessageId, [messageId]: text },
   }));
 }
 
-function withoutKey(record: Record<string, string>, key: string): Record<string, string> {
+function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _removed, ...rest } = record;
   return rest;
 }

@@ -2,10 +2,17 @@
  * Purpose: unit tests for formatFocusSessionTimestamp — today, yesterday, and older-date forms,
  * all relative to an injected `now`.
  */
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { initI18n } from "../i18n";
 import { formatFocusSessionTimestamp } from "./focusSessionTime";
 
 describe("formatFocusSessionTimestamp", () => {
+  // The label is a catalogue sentence now, so the messages have to be loaded — which also
+  // makes these assertions check the real wording rather than a template in this file.
+  beforeAll(async () => {
+    await initI18n();
+  });
+
   const now = new Date(2026, 7, 14, 15, 30); // 2026-08-14 15:30 local
 
   it("renders today's timestamp as 今天 HH:mm", () => {

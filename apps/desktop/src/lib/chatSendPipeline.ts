@@ -5,6 +5,8 @@
  * under the file-size cap.
  * Main exports: runChatSendPipeline, ChatSendDeps.
  */
+
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   type AssistantRoundDeps,
   CHAT_ROUND_GUARD_COPY,
@@ -14,7 +16,6 @@ import { ensureChatConversationId } from "./chatRoundContext";
 import { appendUserMessage } from "./chatSendRound";
 import { type ChatSession, freshChatSession } from "./chatSessions";
 import { foldAppendedMessage } from "./chatTreeActions";
-import { COMPANION_DESKTOP_COPY } from "./companionActions";
 import { getRepos } from "./db";
 
 /** What the pipeline needs from the store — session access, drafts, and the global meters. */
@@ -22,7 +23,7 @@ export interface ChatSendDeps extends AssistantRoundDeps {
   activeConversationId(): string | null;
   ensureSession(id: string): Promise<ChatSession>;
   putSession(id: string, session: ChatSession, makeActive: boolean): void;
-  setRoundError(conversationId: string | null, errorText: string): void;
+  setRoundError(conversationId: string | null, errorText: CopyMessage): void;
   /** Clears the draft of the composer this send was bound to (null = new-conversation). */
   clearDraft(conversationKey: string | null): void;
   /** The new-conversation composer's 学习模式 state (spec 052) — a brand-new conversation
@@ -68,7 +69,7 @@ export async function runChatSendPipeline(
 
   const kind = session.kind;
   if (kind === "companion" && !settings.featureSwitches.companionChat) {
-    deps.setRoundError(conversationId, COMPANION_DESKTOP_COPY.chatDisabled);
+    deps.setRoundError(conversationId, { key: "chat:companion.chatDisabled" });
     return;
   }
   const { useCompanionStore } = await import("../stores/companionStore");

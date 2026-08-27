@@ -63,8 +63,10 @@ export async function initI18n(): Promise<void> {
   applyLanguageToDocument(DEFAULT_LANGUAGE_CODE);
 }
 
-/** Writing direction and script font follow the language; both are document-level facts. */
+/** Writing direction and script font follow the language; both are document-level facts.
+ * No-ops where there is no document (tests, any headless use of the message catalogues). */
 export function applyLanguageToDocument(code: string): void {
+  if (typeof document === "undefined") return;
   const language = languageOf(code);
   const root = document.documentElement;
   root.lang = code;

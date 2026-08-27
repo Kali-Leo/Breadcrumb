@@ -7,6 +7,7 @@
  * loadChatSession.
  */
 import type { ConversationKind, Currency, MessageRow } from "@breadcrumb/core-db";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import { deriveActiveMessages } from "./chatTreeActions";
 import type { Repos } from "./db";
 import { newestLeafId } from "./messageTree";
@@ -28,7 +29,7 @@ export interface ChatSession {
   /** The active path — renders and feeds LLM history. */
   messages: MessageRow[];
   streamingText: string | null;
-  errorText: string | null;
+  errorText: CopyMessage | null;
   conversationCost: CostByCurrency;
 }
 
@@ -41,7 +42,7 @@ export interface ActiveMirror {
   currentLeafId: string | null;
   messages: MessageRow[];
   streamingText: string | null;
-  errorText: string | null;
+  errorText: CopyMessage | null;
   conversationCost: CostByCurrency;
 }
 

@@ -6,6 +6,7 @@
  * CHAT_ROUND_GUARD_COPY.
  */
 import type { ConversationKind, ConversationRow, MessageRow } from "@breadcrumb/core-db";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import type { ApiConfig } from "../stores/settingsStore";
 import { runSendRound } from "./chatSendRound";
@@ -16,10 +17,11 @@ import { getRepos, type Repos } from "./db";
 import { recordAiFailure } from "./failureLog";
 
 /** Round guards shared by first send and retry — one wording, one place. */
+/** The two reasons a round cannot start, as catalogue keys — the components render them. */
 export const CHAT_ROUND_GUARD_COPY = {
-  offline: "当前处于离线模式。想继续对话，去设置里打开网络开关",
-  noApiConfig: "还没有配置 API。去设置页填写服务地址和密钥",
-} as const;
+  offline: { key: "chat:errors.offline" },
+  noApiConfig: { key: "chat:errors.noApiConfig" },
+} as const satisfies Record<string, CopyMessage>;
 
 /** What the assistant half needs from the store — a subset of the pipeline's ChatSendDeps. */
 export interface AssistantRoundDeps {
@@ -117,7 +119,7 @@ export async function runAssistantRound(
     deps.patchSession(conversationId, (current) => ({
       ...current,
       streamingText: null,
-      errorText: "这次请求没有成功。休息一下再试，或检查设置里的 AI 服务配置。",
+      errorText: { key: "chat:errors.requestFailed" },
     }));
   } finally {
     endStreamControl(conversationId, controller);
@@ -142,7 +144,7 @@ export function findRetryUserLeaf(
  * appended; guards mirror the send pipeline's. */
 export async function runChatRetryRound(
   deps: AssistantRoundDeps & {
-    setRoundError(conversationId: string | null, errorText: string): void;
+    setRoundError(conversationId: string | null, errorText: CopyMessage): void;
   },
   conversationId: string,
   session: ChatSession,

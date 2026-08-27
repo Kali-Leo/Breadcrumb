@@ -20,6 +20,7 @@ import {
   ScriptResultSchema,
 } from "@breadcrumb/plugin-companion";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import i18next from "i18next";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
@@ -31,18 +32,12 @@ import { newId, nowIso } from "./time";
 export const COMPANION_IDS = ["shichimi", "pepper", "cumin"] as const;
 export type CompanionId = (typeof COMPANION_IDS)[number];
 
-/** Desktop-only companion copy — everything plugin-companion's COMPANION_COPY does not already
- * cover. Plain statements only; scanned by companionActions.test.ts's copy gate. */
+/** Desktop-only companion prompt text. What the user reads (role tags, the switched-off
+ * notice, the dismiss action, the credits line) lives in chat.json under companion.*;
+ * what the model reads stays here, authored in Chinese like every other prompt. */
 export const COMPANION_DESKTOP_COPY = {
-  /** Per-row AI-disclosure tag: each companion's own positioning (Leo 2026-08-15),
-   * keyed by the card's extensions.breadcrumb.role. */
-  roleLabels: { student: "AI 学生", peer: "AI 同学", mentor: "AI 导师" } as Record<string, string>,
-  chatDisabled: "伙伴聊天已关闭。想继续,去设置里打开「伙伴聊天」",
   crisisInterruptSystemLine:
     "学习者提到了伤害自己。放下角色,用一两句平实的话回应:说明你是 AI、帮不上这件事,值得找真的人聊,不展开、不扮演。",
-  dismiss: "知道了",
-  credits:
-    "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com),CC-BY 4.0;文字人设为衍生创作,有改动;不代表原作者对本产品的背书。",
 } as const;
 
 let cachedCards: CompanionCard[] | null = null;
@@ -102,7 +97,7 @@ export async function startHelperConversation(helperId: string, topic: string): 
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,
-    title: `换你讲·${topic}`,
+    title: i18next.t("learning:teach.conversationTitle", { topic }),
     created_at: createdAt,
     updated_at: createdAt,
     kind: "teach",

@@ -6,7 +6,6 @@
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { LanguageSettingsSection } from "./LanguageSettingsSection";
@@ -29,7 +28,7 @@ const PAGE_TABS: readonly SettingsPage[] = ["general", "billing", "research"];
 let apiFormDraft: { baseUrl: string; apiKey: string; model: string } | null = null;
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
-  const { t } = useTranslation(["settings", "common"]);
+  const { t } = useTranslation(["settings", "common", "chat"]);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const networkEnabled = useSettingsStore((state) => state.networkEnabled);
   const saveApiConfig = useSettingsStore((state) => state.saveApiConfig);
@@ -173,7 +172,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         </>
       )}
 
-      <p className="text-center text-[11px] text-stone-300">{COMPANION_DESKTOP_COPY.credits}</p>
+      <p className="text-center text-[11px] text-stone-300">{t("chat:companion.credits")}</p>
     </div>
   );
 }

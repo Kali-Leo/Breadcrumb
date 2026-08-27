@@ -7,6 +7,7 @@
  */
 import type { ComparisonProfileRow } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
+import i18next from "i18next";
 import { create } from "zustand";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
 import { runAnchorSweep } from "../lib/compareAlignActions";
@@ -201,7 +202,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.compareProfileBuild) return;
     if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ buildNote: "需要联网和 API 配置才能检索构建" });
+      set({ buildNote: i18next.t("palace:compare.buildNeedsNetwork") });
       return;
     }
     set({ building: true, buildNote: null });
@@ -211,7 +212,9 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     });
     if (outcome.ok) {
       const dropped =
-        outcome.droppedCount > 0 ? `；有 ${outcome.droppedCount} 条因资料没核验通过被丢弃` : "";
+        outcome.droppedCount > 0
+          ? i18next.t("palace:compare.buildDropped", { count: outcome.droppedCount })
+          : "";
       set({ building: false, buildNote: `${outcome.costLine}${dropped}` });
       await get().load();
       await get().selectProfile(outcome.profileId);
@@ -268,7 +271,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.compareProfileBuild) return;
     if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ buildNote: "需要联网和 API 配置才能检索构建" });
+      set({ buildNote: i18next.t("palace:compare.buildNeedsNetwork") });
       return;
     }
     const profileId = get().selectedProfileId;
@@ -282,7 +285,9 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     });
     if (outcome.ok) {
       const dropped =
-        outcome.droppedCount > 0 ? `；有 ${outcome.droppedCount} 条因资料没核验通过被丢弃` : "";
+        outcome.droppedCount > 0
+          ? i18next.t("palace:compare.buildDropped", { count: outcome.droppedCount })
+          : "";
       const tree = await computeComparisonTree(profileId);
       set({
         decomposingHub: false,
@@ -298,7 +303,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
   async generateGoalFromProfile() {
     const settings = useSettingsStore.getState();
     if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ goalNote: "需要联网和 API 配置才能生成目标" });
+      set({ goalNote: i18next.t("palace:compare.goalNeedsNetwork") });
       return;
     }
     const selected = get().selectedProfileId;
@@ -317,10 +322,12 @@ export const useCompareStore = create<CompareState>((set, get) => ({
         for (const child of node.children) walk(child);
       };
       walk(tree);
-      const goalTitle = `胜任 ${profile.title}`;
-      const goalText = `${goalTitle}。该方向的官方知识与工具清单（${profile.title}，供选取，不必全收）：${leafLabels
-        .slice(0, 60)
-        .join("、")}`;
+      const goalTitle = i18next.t("palace:compare.goalTitle", { profile: profile.title });
+      const goalText = i18next.t("palace:compare.goalText", {
+        title: goalTitle,
+        profile: profile.title,
+        leaves: leafLabels.slice(0, 60).join(i18next.t("common:list.separator")),
+      });
       const planner = usePlannerStore.getState();
       const mapping = await requestGoalMapping(
         settings.apiConfig,

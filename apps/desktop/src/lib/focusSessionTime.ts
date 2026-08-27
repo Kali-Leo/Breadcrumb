@@ -4,6 +4,7 @@
  * otherwise a plain YYYY-MM-DD date.
  * Main exports: formatFocusSessionTimestamp.
  */
+import i18next from "i18next";
 
 function sameLocalDay(a: Date, b: Date): boolean {
   return (
@@ -22,11 +23,12 @@ function twoDigits(value: number): string {
 export function formatFocusSessionTimestamp(createdAtIso: string, now: Date = new Date()): string {
   const createdAt = new Date(createdAtIso);
   const time = `${twoDigits(createdAt.getHours())}:${twoDigits(createdAt.getMinutes())}`;
-  if (sameLocalDay(createdAt, now)) return `今天 ${time}`;
+  if (sameLocalDay(createdAt, now)) return i18next.t("learning:focus.timeToday", { time });
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (sameLocalDay(createdAt, yesterday)) return `昨天 ${time}`;
+  if (sameLocalDay(createdAt, yesterday))
+    return i18next.t("learning:focus.timeYesterday", { time });
 
   return `${createdAt.getFullYear()}-${twoDigits(createdAt.getMonth() + 1)}-${twoDigits(createdAt.getDate())}`;
 }

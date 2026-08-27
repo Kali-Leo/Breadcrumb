@@ -4,12 +4,7 @@
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import {
-  buildTeachSystemPrompt,
-  pickTeachCandidates,
-  TEACH_COPY,
-  teachTopicFromTitle,
-} from "./teachActions";
+import { buildTeachSystemPrompt, pickTeachCandidates, teachTopicFromTitle } from "./teachActions";
 
 function node(id: string, label: string): KnowledgeNodeRow {
   return { id, label, summary: "", parent_id: null, kind: "concept", created_at: "t" };
@@ -31,19 +26,22 @@ describe("pickTeachCandidates", () => {
 describe("teach topic round-trip", () => {
   it("recovers the topic from the conversation title", () => {
     expect(teachTopicFromTitle("回讲·闭包")).toBe("闭包");
+    expect(teachTopicFromTitle("换你讲·闭包")).toBe("闭包");
+    // Whatever language wrote the prefix, the separator is what carries the topic.
+    expect(teachTopicFromTitle("Explaining · closures")).toBe("closures");
     expect(teachTopicFromTitle("别的标题")).toBe("别的标题");
   });
 });
 
-describe("teach copy", () => {
-  it("keeps the opener and prompt plain — no praise words", () => {
+describe("teach prompt", () => {
+  // The opener moved into the catalogue, where locales/copyGate.test.ts scans it (along with
+  // every other user-visible string) against the pressure lexicon and the praise list.
+  it("keeps the student prompt plain — no praise words", () => {
     const praise = ["真棒", "太棒", "厉害", "优秀", "了不起"];
-    const texts = [TEACH_COPY.opener("闭包"), buildTeachSystemPrompt("闭包")];
-    for (const text of texts) {
-      for (const word of praise) {
-        expect(text).not.toContain(word);
-      }
+    const prompt = buildTeachSystemPrompt("闭包");
+    for (const word of praise) {
+      expect(prompt).not.toContain(word);
     }
-    expect(buildTeachSystemPrompt("闭包")).toContain("闭包");
+    expect(prompt).toContain("闭包");
   });
 });

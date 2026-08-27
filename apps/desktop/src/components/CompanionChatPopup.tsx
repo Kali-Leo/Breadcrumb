@@ -8,6 +8,7 @@
 import { CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { Composer } from "./Composer";
@@ -22,6 +23,7 @@ interface CompanionChatPopupProps {
 
 export function CompanionChatPopup({ conversationId, title, onClose }: CompanionChatPopupProps) {
   const { t } = useTranslation(["chat", "common"]);
+  const copy = useCopyMessage();
 
   const session = useChatStore((state) => state.sessions.get(conversationId));
   const draft = useChatStore((state) => state.drafts.get(conversationId) ?? "");
@@ -93,7 +95,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           )}
           {(session?.errorText != null || (!streaming && messages.at(-1)?.role === "user")) && (
             <p className="text-xs text-rose-500">
-              {session?.errorText ?? t("noReplyYet")}
+              {session?.errorText ? copy(session.errorText) : t("noReplyYet")}
               {!streaming && messages.at(-1)?.role === "user" && (
                 <button
                   type="button"

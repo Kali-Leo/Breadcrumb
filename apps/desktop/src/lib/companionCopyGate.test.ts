@@ -40,12 +40,11 @@ const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不�
 
 describe("desktop companion copy gate", () => {
   const pressureLexicon = loadSharedPressureLexicon();
+  // What the user reads moved into the catalogues, where locales/copyGate.test.ts scans it
+  // (pressure lexicon, manipulation lexicon, praise words). What is left here is what the
+  // model reads: the crisis interrupt line and the assembled chat system prompt.
   const allCopy: string[] = [
-    ...Object.values(COMPANION_DESKTOP_COPY.roleLabels),
-    COMPANION_DESKTOP_COPY.chatDisabled,
     COMPANION_DESKTOP_COPY.crisisInterruptSystemLine,
-    COMPANION_DESKTOP_COPY.dismiss,
-    COMPANION_DESKTOP_COPY.credits,
     buildCompanionChatSystemPrompt(sampleCompanionCard(), ["示例记忆"]),
   ];
 

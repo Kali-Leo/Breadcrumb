@@ -158,6 +158,21 @@
     "treeAria": "Comparison tree",
     "nodeNotDecomposed": "{{label}} not broken down",
     "nodeOverlap": "{{label}} overlap {{percent}}",
-    "notDecomposedShort": "Not broken down"
+    "notDecomposedShort": "Not broken down",
+    "buildNeedsNetwork": "This needs the internet and an AI service to build",
+    "buildCost": "This build cost {{cost}}",
+    "buildCostUnknown": "unknown",
+    "buildDraftFailed": "The AI could not draft the source list this time; you can retry",
+    "buildSourcesFailed": "Most of the cited sources did not check out, so this build was discarded",
+    "buildDropped": "; {{count}} entries were dropped because their sources did not check out",
+    "goalNeedsNetwork": "This needs the internet and an AI service to build a goal",
+    "goalTitle": "Be capable as a {{profile}}",
+    "goalText": "{{title}}. The official knowledge and tool list for this direction ({{profile}}; pick from it, you do not need all of it): {{leaves}}"
+  },
+  "frontier": {
+    "openerWithPrereq": "\"{{label}}\" could be next — {{labels}}, which you already have, sits right beside it. Start wherever you like.",
+    "opener": "\"{{label}}\" could be next. Start wherever you like.",
+    "practiceTitle": "[Practice] {{label}}",
+    "practiceOpener": "This is about how to actually do it — {{sourceRef}}. Tell me how far you have got, or what you have to work with, and we start there."
   }
 }

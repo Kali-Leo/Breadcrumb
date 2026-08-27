@@ -45,6 +45,17 @@
     "errorWithReason": "This stop did not come out: {{reason}}. You can try again, or leave focus.",
     "badgeLine": "🔎 Explored: {{label}} · {{count}} stops",
     "barTitle": "🔎 Focus trails in this chat ({{count}})",
-    "errorNoApi": "This stop did not come out: no AI service is set up yet. Add one in settings, then try again."
+    "errorNoApi": "This stop did not come out: no AI service is set up yet. Add one in settings, then try again.",
+    "timeToday": "Today {{time}}",
+    "timeYesterday": "Yesterday {{time}}"
+  },
+  "teach": {
+    "sectionTitle": "Your turn to explain (experimental)",
+    "sectionHint": "Explain something you have learned to a beginner. Saying it out loud is the sturdiest review there is.",
+    "freeTopicPlaceholder": "Or pick your own topic",
+    "startButton": "Start explaining",
+    "recentTitle": "Recently explained",
+    "opener": "I am learning \"{{topic}}\" and have not really got it yet. Could you explain it in your own words? Starting from what it is would be great.",
+    "conversationTitle": "Explaining · {{topic}}"
   }
 }

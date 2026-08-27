@@ -25,6 +25,21 @@
     "insufficient": "No supporting source found — worth confirming",
     "contradicted": "The sources disagree; here is both sides",
     "allSupported": "All {{count}} claims have supporting sources",
-    "someSupported": "{{supported}} of {{total}} claims have supporting sources"
+    "someSupported": "{{supported}} of {{total}} claims have supporting sources",
+    "offlineNotice": "The internet switch is off — turn it on and I can go look things up.",
+    "noApiNotice": "Set up the AI service in settings first, and I can check this for you.",
+    "failedNotice": "The check did not finish (the network wobbled). You can try again later."
+  },
+  "companion": {
+    "roleStudent": "AI student",
+    "rolePeer": "AI classmate",
+    "roleMentor": "AI mentor",
+    "chatDisabled": "Companion chat is off. To carry on, turn \"Companion chat\" back on in settings",
+    "credits": "The companions come from David Revoy's Pepper&Carrot (peppercarrot.com), CC-BY 4.0; their written personalities are a derivative work with changes, and imply no endorsement by the original author."
+  },
+  "errors": {
+    "offline": "You are offline. To carry on, turn the internet switch back on in settings",
+    "noApiConfig": "No AI service is set up yet. Add the address and key on the settings page",
+    "requestFailed": "That request did not go through. Take a break and try again, or check the AI service in settings."
   }
 }

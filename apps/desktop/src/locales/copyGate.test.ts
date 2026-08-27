@@ -2,8 +2,10 @@
  * Purpose: the pressure-language gate over everything the user reads. It used to run inside
  * simlab against four per-plugin copy modules; now that all wording lives in the catalogues
  * (spec 058 §2), one scan covers every string in the app — including the ones those modules
- * never held — plus the bundled research task's own display text.
+ * never held — plus the bundled research task's own display text. The companion modules'
+ * manipulation lexicon runs over the same set, so moving their copy here lost no gate.
  */
+import { containsManipulation } from "@breadcrumb/plugin-companion";
 import { findPressureLexiconHits, loadPressureLexicon } from "@breadcrumb/simlab";
 import { describe, expect, it } from "vitest";
 import { resources } from "../i18n";
@@ -44,6 +46,12 @@ describe("everything the user reads", () => {
   it("hits zero pressure-lexicon entries", () => {
     for (const entry of entries) {
       expect(findPressureLexiconHits(entry.text, lexicon), entry.path).toEqual([]);
+    }
+  });
+
+  it("hits zero manipulation-lexicon entries", () => {
+    for (const entry of entries) {
+      expect(containsManipulation(entry.text), entry.path).toBeNull();
     }
   });
 

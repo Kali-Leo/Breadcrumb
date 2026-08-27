@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { newestLeafId } from "../lib/messageTree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
@@ -25,6 +26,7 @@ const LOCATE_HIGHLIGHT_MS = 2000;
 
 export function ChatView() {
   const { t } = useTranslation(["chat", "common"]);
+  const copy = useCopyMessage();
 
   const messages = useChatStore((state) => state.messages);
   const streamingText = useChatStore((state) => state.streamingText);
@@ -144,7 +146,7 @@ export function ChatView() {
           )}
           {(errorText !== null || canRetry) && (
             <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
-              {errorText ?? t("noReplyYet")}
+              {errorText === null ? t("noReplyYet") : copy(errorText)}
               {canRetry && activeConversationId !== null && (
                 <button
                   type="button"
