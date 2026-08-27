@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
+import { BackArrow } from "./DirectionalArrow";
 import { LanguageSettingsSection } from "./LanguageSettingsSection";
 import { ResearchPanel } from "./ResearchPanel";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
@@ -91,7 +92,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           onClick={onClose}
           className="ms-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
         >
-          {t("back")}
+          <BackArrow /> {t("back")}
         </button>
       </div>
 

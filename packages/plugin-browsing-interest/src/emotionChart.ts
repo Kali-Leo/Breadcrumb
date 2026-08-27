@@ -2,7 +2,7 @@
  * Purpose: geometry for the two emotion curves (fed vs chosen) — turns the service's daily
  * points into SVG coordinates, grid lines and the nearest-point lookup the tooltip needs.
  * Ported from the dashboard the service ships, so the shape on screen stays identical.
- * Main exports: buildEmotionChart, findNearestChartPoint, formatDayLabel.
+ * Main exports: buildEmotionChart, findNearestChartPoint.
  */
 import type { EmotionPoint, EmotionSeries } from "./schemas";
 
@@ -42,15 +42,11 @@ export interface EmotionChart {
   height: number;
   isEmpty: boolean;
   gridLines: EmotionChartGridLine[];
-  firstDayLabel: string;
-  lastDayLabel: string;
+  /** Day timestamps (seconds) of the axis ends — formatting them is the reader's language's
+   * business, so it happens in the app, not here. */
+  firstDay: number | null;
+  lastDay: number | null;
   lines: EmotionChartLine[];
-}
-
-/** Day timestamps are seconds at UTC midnight; the label is the local month.day. */
-export function formatDayLabel(daySeconds: number): string {
-  const date = new Date(daySeconds * 1000);
-  return `${date.getMonth() + 1}.${date.getDate()}`;
 }
 
 function gridLines(): EmotionChartGridLine[] {
@@ -96,8 +92,8 @@ export function buildEmotionChart(series: EmotionSeries): EmotionChart {
     height: EMOTION_CHART_HEIGHT,
     isEmpty: days.length === 0,
     gridLines: gridLines(),
-    firstDayLabel: days.length ? formatDayLabel(days[0] as number) : "",
-    lastDayLabel: days.length ? formatDayLabel(days.at(-1) as number) : "",
+    firstDay: days.length ? (days[0] as number) : null,
+    lastDay: days.length ? (days.at(-1) as number) : null,
     lines,
   };
 }

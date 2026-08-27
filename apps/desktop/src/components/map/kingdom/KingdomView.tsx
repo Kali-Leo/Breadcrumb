@@ -25,6 +25,7 @@ import { nowIso } from "../../../lib/time";
 import { appEventBus, useChatStore } from "../../../stores/chatStore";
 import { usePlannerStore } from "../../../stores/plannerStore";
 import { useSettingsStore } from "../../../stores/settingsStore";
+import { BackArrow } from "../../DirectionalArrow";
 import { KingdomNodeCard, type NodeRelations } from "./KingdomNodeCard";
 import { KingdomTreeSvg } from "./KingdomTreeSvg";
 
@@ -274,7 +275,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
             onClick={onClose}
             className="ms-auto rounded-lg px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
           >
-            {t("kingdom.backToIsland")}
+            <BackArrow /> {t("kingdom.backToIsland")}
           </button>
         </div>
         <div className="min-h-0 flex-1 bg-stone-50">

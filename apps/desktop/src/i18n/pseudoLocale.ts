@@ -6,7 +6,9 @@
  * Main exports: PSEUDO_LOCALE_CODE, isPseudoLocale, buildPseudoCatalogue.
  */
 
-export const PSEUDO_LOCALE_CODE = "qps-Ploc-RTL";
+/** Microsoft's pseudo-locale convention, and — unlike "qps-Ploc-RTL" — a tag Intl accepts.
+ * The right-to-left part is applied by us, not by the tag. */
+export const PSEUDO_LOCALE_CODE = "qps-Ploc";
 
 export function isPseudoLocale(code: string): boolean {
   return code === PSEUDO_LOCALE_CODE;

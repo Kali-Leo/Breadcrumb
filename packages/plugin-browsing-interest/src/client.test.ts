@@ -75,7 +75,7 @@ describe("browsing interest client", () => {
     });
     const profile = await healthy.profile();
     expect(profile.n_events).toBe(4352);
-    expect(profile.drivers["编程与软件开发"]?.[0]?.title).toBe("Rust 所有权");
+    expect(profile.drivers.编程与软件开发?.[0]?.title).toBe("Rust 所有权");
 
     // 5. Restarted after a taxonomy change that drops a required field.
     const { topics: _dropped, ...withoutTopics } = profilePayload;

@@ -8,6 +8,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusStore } from "../stores/focusStore";
+import { BackArrow } from "./DirectionalArrow";
 import { FocusContentPane } from "./FocusContentPane";
 import { FocusMap } from "./FocusMap";
 
@@ -48,7 +49,7 @@ export function FocusOverlay() {
               onClick={() => jumpTo(parentId)}
               className="rounded-lg px-2 py-1 text-sm text-stone-500 hover:bg-stone-100"
             >
-              {t("learning:focus.upButton")}
+              <BackArrow /> {t("learning:focus.upButton")}
             </button>
           )}
           <span className="font-semibold text-stone-800">{rootLabel}</span>

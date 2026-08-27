@@ -5,12 +5,7 @@
  * real point.
  */
 import { describe, expect, it } from "vitest";
-import {
-  buildEmotionChart,
-  EMOTION_CHART_WIDTH,
-  findNearestChartPoint,
-  formatDayLabel,
-} from "./emotionChart";
+import { buildEmotionChart, EMOTION_CHART_WIDTH, findNearestChartPoint } from "./emotionChart";
 import type { EmotionPoint, EmotionSeries } from "./schemas";
 
 const DAY = 86_400;
@@ -50,8 +45,8 @@ describe("emotion chart", () => {
     const exposeAtLastDay = chart.lines[0]?.points.at(-1)?.x;
     const engageAtLastDay = chart.lines[1]?.points.at(-1)?.x;
     expect(exposeAtLastDay).toBe(engageAtLastDay);
-    expect(chart.firstDayLabel).toBe(formatDayLabel(START));
-    expect(chart.lastDayLabel).toBe(formatDayLabel(START + 3 * DAY));
+    expect(chart.firstDay).toBe(START);
+    expect(chart.lastDay).toBe(START + 3 * DAY);
   });
 
   it("puts a happier day higher on the chart, and the zero line in the middle", () => {
@@ -65,12 +60,13 @@ describe("emotion chart", () => {
   it("stays drawable when there is nothing, or only one day, to draw", () => {
     const empty = buildEmotionChart(series([], []));
     expect(empty.isEmpty).toBe(true);
+    expect(empty.firstDay).toBeNull();
     expect(empty.lines.every((line) => line.path === "" && line.labelAnchor === null)).toBe(true);
 
     const single = buildEmotionChart(series([point(0, 0.5)], []));
     expect(single.isEmpty).toBe(false);
     expect(Number.isFinite(single.lines[0]?.points[0]?.x)).toBe(true);
-    expect(single.firstDayLabel).toBe(single.lastDayLabel);
+    expect(single.firstDay).toBe(single.lastDay);
   });
 
   it("only reports a nearby point to the tooltip", () => {

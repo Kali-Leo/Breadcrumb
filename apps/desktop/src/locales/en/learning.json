@@ -38,7 +38,7 @@
     "guessSkipButton": "Just show the explanation",
     "retryButton": "Try again",
     "entryReturnButton": "Back to focus",
-    "upButton": "← Up one level",
+    "upButton": "Up one level",
     "mapHint": "Tap a stop to jump there. Solid lines grew from a word you picked; dashed ones grew from a question.",
     "selectHint": "Press Enter to explain \"{{text}}\"",
     "errorPlain": "This stop did not come out. You can try again, or leave focus.",

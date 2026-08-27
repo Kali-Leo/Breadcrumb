@@ -19,7 +19,6 @@ export {
   type EmotionChartLine,
   type EmotionSeriesKey,
   findNearestChartPoint,
-  formatDayLabel,
   type NearestChartPoint,
 } from "./emotionChart";
 export {

@@ -14,6 +14,7 @@ import {
   type RegionFeedbackSources,
 } from "../../lib/regionFeedbackData";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { ForwardArrow } from "../DirectionalArrow";
 import { findIsland, type MapLevel } from "./levels";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
@@ -151,7 +152,9 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
               )}
               {/* Only an island can be entered — the island view is the deepest one. */}
               {settledHover.kind === "island" && (
-                <p className="text-xs text-stone-400">{t("map.zoomInPrompt")}</p>
+                <p className="text-xs text-stone-400">
+                  {t("map.zoomInPrompt")} <ForwardArrow />
+                </p>
               )}
             </>
           )

@@ -38,7 +38,7 @@
     "guessSkipButton": "直接看解释",
     "retryButton": "重试",
     "entryReturnButton": "回到专注",
-    "upButton": "← 上一级",
+    "upButton": "上一级",
     "mapHint": "点一个站可以跳过去。实线是从文中选词长出来的，虚线是提问长出来的。",
     "selectHint": "按 Enter 解释「{{text}}」",
     "errorPlain": "这一站没有生成成功。可以重试，或退出专注。",

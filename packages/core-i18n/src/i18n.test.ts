@@ -134,6 +134,12 @@ describe("did the model answer in that language", () => {
 });
 
 describe("formatting in the reader's conventions", () => {
+  it("falls back instead of throwing on a locale Intl cannot parse", () => {
+    // Pseudo-locales and stored junk both end up here; a date must never take the screen down.
+    expect(() => formatDayMonth("qps-Ploc-RTL", new Date())).not.toThrow();
+    expect(formatCount("not a locale at all", 12345)).toBe(formatCount("zh-CN", 12345));
+  });
+
   it("writes the same day and the same number differently per language", () => {
     const day = new Date(Date.UTC(2026, 7, 27, 12));
     expect(formatDayMonth("zh-CN", day)).not.toBe(formatDayMonth("en", day));

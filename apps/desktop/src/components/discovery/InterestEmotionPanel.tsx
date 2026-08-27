@@ -118,10 +118,14 @@ export function InterestEmotionPanel() {
               </g>
             ))}
             <text x={26} y={chart.height - 4} className="fill-stone-400 text-[10px]">
-              {chart.firstDayLabel}
+              {chart.firstDay === null
+                ? ""
+                : formatDayMonth(i18n.language, new Date(chart.firstDay * 1000))}
             </text>
             <text x={790} y={chart.height - 4} className="fill-stone-400 text-[10px]">
-              {chart.lastDayLabel}
+              {chart.lastDay === null
+                ? ""
+                : formatDayMonth(i18n.language, new Date(chart.lastDay * 1000))}
             </text>
             {chart.lines.map((line) => (
               <g key={line.key}>

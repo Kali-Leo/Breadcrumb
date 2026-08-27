@@ -3,23 +3,36 @@
  * platform's Intl so no format is hand-written for one language and wrong in the next.
  * Main exports: formatDayMonth, formatDate, formatCount, formatPercent, fontStackFor.
  */
-import type { ScriptFamily } from "./languages";
+import { DEFAULT_LANGUAGE_CODE, type ScriptFamily } from "./languages";
+
+/** A stored or test locale can be anything; a date that cannot be formatted must not take
+ * the screen down with it, so an unusable tag falls back to the default language. */
+function safeLocale(locale: string): string {
+  try {
+    new Intl.DateTimeFormat(locale);
+    return locale;
+  } catch {
+    return DEFAULT_LANGUAGE_CODE;
+  }
+}
 
 /** Short "August 27" / "8月27日" — used on chart axes and card metadata. */
 export function formatDayMonth(locale: string, date: Date): string {
-  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(date);
+  return new Intl.DateTimeFormat(safeLocale(locale), { month: "short", day: "numeric" }).format(
+    date,
+  );
 }
 
 export function formatDate(locale: string, date: Date): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
+  return new Intl.DateTimeFormat(safeLocale(locale), { dateStyle: "medium" }).format(date);
 }
 
 export function formatCount(locale: string, value: number): string {
-  return new Intl.NumberFormat(locale).format(value);
+  return new Intl.NumberFormat(safeLocale(locale)).format(value);
 }
 
 export function formatPercent(locale: string, ratio: number, fractionDigits = 0): string {
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(safeLocale(locale), {
     style: "percent",
     maximumFractionDigits: fractionDigits,
   }).format(ratio);

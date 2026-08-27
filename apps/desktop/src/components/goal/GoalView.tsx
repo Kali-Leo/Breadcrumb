@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
+import { BackArrow } from "../DirectionalArrow";
 import { CompareSection } from "./CompareSection";
 import { GoalComposition } from "./GoalComposition";
 import { GoalGapActions } from "./GoalGapActions";
@@ -36,7 +37,7 @@ export function GoalView({ onClose }: GoalViewProps) {
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100"
           >
-            {t("goal.backToMap")}
+            <BackArrow /> {t("goal.backToMap")}
           </button>
         </div>
 
