@@ -1,0 +1,139 @@
+{
+  "title": "设置",
+  "back": "← 返回对话",
+  "tabs": {
+    "general": "通用",
+    "billing": "开关与计价",
+    "research": "研究课题"
+  },
+  "api": {
+    "title": "AI 服务（OpenAI 兼容）",
+    "hint": "在这里填入你的 AI 服务账号；对话和其他 AI 功能都靠它工作。",
+    "baseUrl": "服务地址 Base URL",
+    "apiKey": "API Key",
+    "model": "模型名",
+    "saved": "已保存 ✓",
+    "unsaved": "有修改还没保存"
+  },
+  "network": {
+    "title": "网络总开关",
+    "hint": "关闭后，所有需要联网的功能（包括 API 调用）都会安静地停下。"
+  },
+  "mainland": {
+    "title": "大陆网络模式",
+    "hint": "事实核查只使用大陆可访问的资料源（必应）；关闭后优先维基百科。"
+  },
+  "language": {
+    "title": "语言",
+    "interface": "界面语言",
+    "answer": "AI 回答的语言",
+    "sameAsInterface": "跟界面一样",
+    "thinNote": "AI 用{{language}}回答，不如用{{fallback}}准。你可以把回答的语言单独改掉，界面保持不变。"
+  },
+  "quietIssues": {
+    "title": "后台任务",
+    "allGood": "后台一切正常。",
+    "summary": "最近有 {{count}} 件后台小事没做成，不影响你的学习。点开看看是哪些",
+    "fallbackPurpose": "后台任务"
+  },
+  "purposes": {
+    "chat": "对话",
+    "knowledge-tree": "知识树",
+    "trail": "对话摘要",
+    "factcheck": "事实核查",
+    "knowledge-edges": "知识关系",
+    "interest": "兴趣画像",
+    "self-report-mapping": "「我学过」识别",
+    "goal-planning": "目标规划",
+    "ladder": "排位榜",
+    "ladder-naming": "排位起名",
+    "compare-profile": "对比资料构建",
+    "compare-align": "对比匹配",
+    "map-naming": "地图起名",
+    "diglot-weave": "语言学习·智能替换",
+    "teach-quality": "讲解反馈",
+    "companion-chat": "伙伴聊天",
+    "companion-memory": "伙伴记忆",
+    "companion-script": "伙伴预习",
+    "focus-explain": "专注讲解",
+    "term-marking": "生词标注"
+  },
+  "billing": {
+    "intro": "每个会花钱的环节在这里独立开关、独立看账。放心打开——花了多少，这一页永远说实话。",
+    "grandTotal": "今日合计 {{today}} · 累计 {{total}}",
+    "nothingSpent": "还没花钱",
+    "neverUsed": "尚未产生费用",
+    "spendLine": "今日 {{today}} · 累计 {{total}}",
+    "diglot": {
+      "name": "🧵 语言学习·智能替换",
+      "hint": "语言学习的加强版：AI 按上下文挑更准确的译法，偶尔换上一句地道短语。每条消息一次小额调用。",
+      "toggleLabel": "语言学习智能替换"
+    },
+    "chat": {
+      "name": "💬 聊天",
+      "hint": "和 AI 的日常对话。这是核心功能，一直开启；花费同样记在这里。"
+    },
+    "features": {
+      "knowledgeTree": {
+        "name": "🌳 知识整理",
+        "hint": "每次对话结束后，AI 会把这次聊到的知识点整理进你的地图。每轮一次调用。"
+      },
+      "factcheck": {
+        "name": "🔍 事实核查",
+        "hint": "在 AI 回答下方点「求证」，AI 会去公开资料里查证回答中的说法。"
+      },
+      "knowledgeEdges": {
+        "name": "🕸️ 知识关联",
+        "hint": "记下新知识点后，AI 会看看它和你学过的内容有什么联系。每次一小笔。"
+      },
+      "interest": {
+        "name": "💡 个性化推荐",
+        "hint": "AI 会留意你对哪些内容感兴趣、哪里有困惑，用来调整推荐；你说「我学过…」时也靠它来识别对应的知识点。"
+      },
+      "goalPlanning": {
+        "name": "🎯 目标规划",
+        "hint": "你定下一个目标后，AI 会把它变成一份要学的清单；建目标时用一次。"
+      },
+      "compareProfileBuild": {
+        "name": "🌲 对比资料构建（实验）",
+        "hint": "想对比职业名录之外的主题时，AI 会检索公开资料整理出一份对照清单，并逐条核对来源；需要几分钟。"
+      },
+      "compareAlignment": {
+        "name": "🌉 对比匹配",
+        "hint": "对比时，AI 会判断你的说法和资料里的说法是不是同一个概念；同样的一对只判断一次。"
+      },
+      "teachQuality": {
+        "name": "🎓 讲解反馈",
+        "hint": "你讲给伙伴听之后，AI 会看一遍你讲得怎么样；讲得清楚的部分会被记下来。"
+      },
+      "mapTopicNaming": {
+        "name": "🗺️ 地图起名（实验）",
+        "hint": "在地图里，AI 会给自动聚在一起的一片内容起名字；每片只起一次。"
+      },
+      "feedbackLab": {
+        "name": "🪞 这段时间",
+        "hint": "地图右栏的回顾内容：全部由本地数据算出，不花钱。"
+      },
+      "companionChat": {
+        "name": "🎭 伙伴聊天",
+        "hint": "三位 AI 学习伙伴：打开对话、偶尔主动邀请你讲给它听或一起回顾。"
+      },
+      "companionMemory": {
+        "name": "🧠 伙伴记忆",
+        "hint": "伙伴会记住和你聊过的内容；偶尔整理一次，让记忆更连贯。"
+      },
+      "companionScript": {
+        "name": "📜 伙伴预习",
+        "hint": "你开讲之前，要听你讲的伙伴会先预习一下这个主题，听的时候更能接上话；你讲的过程中每轮一小笔。"
+      },
+      "focusExplain": {
+        "name": "🔎 专注解释",
+        "hint": "在专注模式里选中词语或提问时，AI 会生成一段讲解；每个词讲一次。"
+      },
+      "termMarking": {
+        "name": "🖊️ 生词标注",
+        "hint": "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释；每条只标一次。"
+      }
+    }
+  }
+}

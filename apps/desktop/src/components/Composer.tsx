@@ -6,17 +6,13 @@
  * Main exports: Composer.
  */
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { appEventBus } from "../stores/chatStore";
 
-/** 学习模式 switch copy (spec 052, redesigned per Leo 2026-08-17: a pill segmented switch
- * above the input box, both states named — the same form as the map's 休闲|目标 pill and
- * ChatGPT's composer mode chips). Hover hints are full sentences for first-time visitors. */
-const STUDY_MODE_COPY = {
-  freeLabel: "自由对话",
-  freeHint: "自由聊天，任何话题、任何形式都可以。",
-  studyLabel: "学习模式",
-  studyHint: "回复会引导你思考和练习，帮你把学到的记牢。",
-} as const;
+/* Study-mode switch (spec 052, redesigned per Leo 2026-08-17: a pill segmented switch above
+   the input box, both states named — the same form as the map's 休闲|目标 pill and ChatGPT's
+   composer mode chips). Its wording lives in chat.json under composer.*, hover hints
+   included: they are full sentences for first-time visitors. */
 
 interface ComposerProps {
   /** The conversation this composer is bound to; null = the new-conversation composer.
@@ -36,6 +32,8 @@ interface ComposerProps {
 }
 
 export function Composer(props: ComposerProps) {
+  const { t } = useTranslation(["chat", "common"]);
+
   const { conversationId, value, streaming, disabled, onChange, onSend, onStop } = props;
   const { studyMode, onSetStudyMode } = props;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,8 +65,8 @@ export function Composer(props: ComposerProps) {
           <div className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm">
             {(
               [
-                [false, STUDY_MODE_COPY.freeLabel, STUDY_MODE_COPY.freeHint],
-                [true, STUDY_MODE_COPY.studyLabel, STUDY_MODE_COPY.studyHint],
+                [false, t("composer.freeLabel"), t("composer.freeHint")],
+                [true, t("composer.studyLabel"), t("composer.studyHint")],
               ] as const
             ).map(([on, label, title]) => (
               <button
@@ -100,7 +98,7 @@ export function Composer(props: ComposerProps) {
           }}
           rows={2}
           disabled={disabled}
-          placeholder="想学点什么？说说看…（Enter 发送，Shift+Enter 换行）"
+          placeholder={t("composer.placeholder")}
           className="flex-1 resize-none rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 disabled:bg-stone-50"
         />
         {streaming ? (
@@ -109,7 +107,7 @@ export function Composer(props: ComposerProps) {
             onClick={onStop}
             className="rounded-xl border border-stone-300 px-4 py-2 text-stone-600 transition-colors hover:bg-stone-100"
           >
-            停止
+            {t("common:actions.stop")}
           </button>
         ) : (
           <button
@@ -118,7 +116,7 @@ export function Composer(props: ComposerProps) {
             disabled={disabled || value.trim() === ""}
             className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-stone-300"
           >
-            发送
+            {t("common:actions.send")}
           </button>
         )}
       </div>

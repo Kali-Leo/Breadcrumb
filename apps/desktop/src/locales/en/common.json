@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "retry": "Try again",
+    "stop": "Stop",
+    "send": "Send",
+    "gotIt": "Got it",
+    "copy": "Copy",
+    "copied": "Copied",
+    "cancel": "Cancel",
+    "save": "Save",
+    "expand": "Show more",
+    "collapse": "Show less"
+  },
+  "nav": {
+    "newChat": "New learning chat",
+    "settings": "Settings",
+    "vocabulary": "Vocabulary",
+    "discover": "Discover",
+    "map": "Map",
+    "friends": "Friends",
+    "offline": "Offline. Anything that needs the internet is quietly paused; your learning is not affected."
+  },
+  "state": {
+    "loading": "Loading…",
+    "empty": "Nothing here yet"
+  }
+}

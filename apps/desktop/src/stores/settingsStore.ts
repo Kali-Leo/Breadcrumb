@@ -1,11 +1,18 @@
 /**
  * Purpose: zustand store for user settings (API config, network switch, per-feature
- * switches, route params), persisted in the settings table. Load once at startup;
+ * switches, route params, interface and answer language), persisted in the settings table. Load once at startup;
  * changes write through. (Learning mode was retired by spec 045 — goals are objects now.)
  * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams.
  */
+import {
+  DEFAULT_LANGUAGE_CODE,
+  isLanguageCode,
+  negotiateLanguage,
+  UI_LANGUAGE_CODES,
+} from "@breadcrumb/core-i18n";
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
+import { changeLanguage } from "../i18n";
 import { getRepos } from "../lib/db";
 import { nowIso } from "../lib/time";
 
@@ -80,6 +87,8 @@ const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 const LEARNING_MODE_KEY = "learningMode";
 const ROUTE_PARAMS_KEY = "routeParams";
 const COMPARE_CATEGORY_KEY = "compareCategory";
+const LANGUAGE_KEY = "language";
+const ANSWER_LANGUAGE_KEY = "answerLanguage";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
  * learner tunes from the middle (spec 017 #1). */
 const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
@@ -106,6 +115,12 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   termMarking: true,
 };
 
+/** First run: start in whatever language the machine is set to, if we have that interface. */
+function guessLanguage(): string {
+  const preferred = typeof navigator === "undefined" ? [] : [...(navigator.languages ?? [])];
+  return negotiateLanguage(preferred.length > 0 ? preferred : [navigator?.language ?? ""]);
+}
+
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
 function guessMainlandNetwork(): boolean {
   return navigator.language.toLowerCase() === "zh-cn";
@@ -124,6 +139,11 @@ interface SettingsState {
   routeParams: RouteParams;
   /** 教材/真人 display filter for the comparison tree — occupation (真人) by default. */
   compareCategory: CompareCategory;
+  /** Interface language (spec 058) — what the app's own text is written in. */
+  language: string;
+  /** Answer language, when the user asked the model to write in a different one than the
+   * interface. Null means "same as the interface", which is the normal case. */
+  answerLanguage: string | null;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
@@ -132,6 +152,8 @@ interface SettingsState {
   setLearningMode(mode: LearningMode): Promise<void>;
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
+  setLanguage(code: string): Promise<void>;
+  setAnswerLanguage(code: string | null): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -143,6 +165,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   learningMode: "casual",
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
+  language: DEFAULT_LANGUAGE_CODE,
+  answerLanguage: null,
 
   async loadFromDatabase() {
     const repos = await getRepos();
@@ -154,6 +178,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       learningMode,
       routeParams,
       compareCategory,
+      storedLanguage,
+      storedAnswerLanguage,
     ] = await Promise.all([
       repos.settings.get<ApiConfig>(API_CONFIG_KEY),
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
@@ -162,7 +188,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
       repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
+      repos.settings.get<string>(LANGUAGE_KEY),
+      repos.settings.get<string>(ANSWER_LANGUAGE_KEY),
     ]);
+    // An interface language that was removed (or was never ours) must not leave the app
+    // showing raw message keys — fall back to the machine's own language.
+    const language =
+      storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage)
+        ? storedLanguage
+        : guessLanguage();
+    await changeLanguage(language);
     set({
       loaded: true,
       apiConfig,
@@ -172,6 +207,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       learningMode: learningMode ?? "casual",
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
+      language,
+      answerLanguage:
+        storedAnswerLanguage && isLanguageCode(storedAnswerLanguage) ? storedAnswerLanguage : null,
     });
   },
 
@@ -216,5 +254,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(COMPARE_CATEGORY_KEY, category, nowIso());
     set({ compareCategory: category });
+  },
+
+  /** Switches the running interface first, then remembers it: a language picker that needs
+   * a restart to take effect is a language picker nobody trusts. */
+  async setLanguage(code) {
+    if (!UI_LANGUAGE_CODES.includes(code)) return;
+    await changeLanguage(code);
+    const repos = await getRepos();
+    await repos.settings.set(LANGUAGE_KEY, code, nowIso());
+    set({ language: code });
+  },
+
+  async setAnswerLanguage(code) {
+    const next = code && isLanguageCode(code) ? code : null;
+    const repos = await getRepos();
+    await repos.settings.set(ANSWER_LANGUAGE_KEY, next, nowIso());
+    set({ answerLanguage: next });
   },
 }));

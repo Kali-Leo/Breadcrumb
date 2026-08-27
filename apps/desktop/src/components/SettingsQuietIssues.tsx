@@ -5,18 +5,20 @@
  * Main exports: SettingsQuietIssues.
  */
 import type { AiFailureRow } from "@breadcrumb/core-db";
+import { formatDayMonth } from "@breadcrumb/core-i18n";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getRepos } from "../lib/db";
-import { PURPOSE_NAMES } from "../lib/purposeNames";
 
 const RECENT_LIMIT = 20;
 
-function plainDate(iso: string): string {
+function plainDate(iso: string, locale: string): string {
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? "" : `${date.getMonth() + 1}月${date.getDate()}日`;
+  return Number.isNaN(date.getTime()) ? "" : formatDayMonth(locale, date);
 }
 
 export function SettingsQuietIssues() {
+  const { t, i18n } = useTranslation("settings");
   const [failures, setFailures] = useState<AiFailureRow[]>([]);
 
   useEffect(() => {
@@ -33,18 +35,21 @@ export function SettingsQuietIssues() {
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <h3 className="font-medium text-stone-700">后台任务</h3>
+      <h3 className="font-medium text-stone-700">{t("quietIssues.title")}</h3>
       {failures.length === 0 ? (
-        <p className="mt-1 text-sm text-stone-500">后台一切正常。</p>
+        <p className="mt-1 text-sm text-stone-500">{t("quietIssues.allGood")}</p>
       ) : (
         <details className="mt-1 text-sm text-stone-500">
           <summary className="cursor-pointer list-none">
-            最近有 {failures.length} 件后台小事没做成,不影响你的学习。点开看看是哪些
+            {t("quietIssues.summary", { count: failures.length })}
           </summary>
           <ul className="mt-2 space-y-1 text-xs text-stone-400">
             {failures.map((failure) => (
               <li key={failure.id}>
-                {PURPOSE_NAMES[failure.purpose] ?? "后台任务"} · {plainDate(failure.created_at)}
+                {t(`purposes.${failure.purpose}` as never, {
+                  defaultValue: t("quietIssues.fallbackPurpose"),
+                })}{" "}
+                · {plainDate(failure.created_at, i18n.language)}
               </li>
             ))}
           </ul>

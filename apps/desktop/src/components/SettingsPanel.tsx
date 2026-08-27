@@ -1,13 +1,15 @@
 /**
- * Purpose: settings view with three pages — 通用 (API config, network, diglot core,
- * mainland mode), 开关与计价 (the per-feature billing page, Leo 2026-08-12), and 研究课题
- * (the research task platform, moved here from the top level by spec 044).
+ * Purpose: settings view with three pages — general (API config, language, network,
+ * mainland mode), switches-and-spending (the per-feature billing page, Leo 2026-08-12), and
+ * research (the research task platform, moved here from the top level by spec 044).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { COMPANION_DESKTOP_COPY } from "../lib/companionActions";
 import { useSettingsStore } from "../stores/settingsStore";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
+import { LanguageSettingsSection } from "./LanguageSettingsSection";
 import { ResearchPanel } from "./ResearchPanel";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
 // The same switch every settings row uses; this page carried its own copy of it until now.
@@ -19,11 +21,7 @@ interface SettingsPanelProps {
 
 type SettingsPage = "general" | "billing" | "research";
 
-const PAGE_TABS: readonly (readonly [SettingsPage, string])[] = [
-  ["general", "通用"],
-  ["billing", "开关与计价"],
-  ["research", "研究课题"],
-];
+const PAGE_TABS: readonly SettingsPage[] = ["general", "billing", "research"];
 
 /** The API form's unsaved edits, module-level so switching views (which unmounts this
  * panel) does not silently discard them — they come back on the next visit until saved
@@ -31,6 +29,7 @@ const PAGE_TABS: readonly (readonly [SettingsPage, string])[] = [
 let apiFormDraft: { baseUrl: string; apiKey: string; model: string } | null = null;
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
+  const { t } = useTranslation(["settings", "common"]);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const networkEnabled = useSettingsStore((state) => state.networkEnabled);
   const saveApiConfig = useSettingsStore((state) => state.saveApiConfig);
@@ -77,15 +76,15 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto bg-stone-50 p-6">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-stone-700">设置</h2>
-        {PAGE_TABS.map(([target, label]) => (
+        <h2 className="text-lg font-semibold text-stone-700">{t("title")}</h2>
+        {PAGE_TABS.map((target) => (
           <button
             key={target}
             type="button"
             onClick={() => setPage(target)}
             className={tabClass(page === target)}
           >
-            {label}
+            {t(`tabs.${target}` as const)}
           </button>
         ))}
         <button
@@ -93,7 +92,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           onClick={onClose}
           className="ml-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
         >
-          ← 返回对话
+          {t("back")}
         </button>
       </div>
 
@@ -103,12 +102,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       {page === "general" && (
         <>
           <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
-            <h3 className="font-medium text-stone-700">AI 服务（OpenAI 兼容）</h3>
-            <p className="text-sm text-stone-500">
-              在这里填入你的 AI 服务账号；对话和其他 AI 功能都靠它工作。
-            </p>
+            <h3 className="font-medium text-stone-700">{t("api.title")}</h3>
+            <p className="text-sm text-stone-500">{t("api.hint")}</p>
             <label className="block space-y-1 text-sm text-stone-500">
-              服务地址 Base URL
+              {t("api.baseUrl")}
               <input
                 value={baseUrl}
                 onChange={(e) => editBaseUrl(e.target.value)}
@@ -116,7 +113,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               />
             </label>
             <label className="block space-y-1 text-sm text-stone-500">
-              API Key
+              {t("api.apiKey")}
               <input
                 type="password"
                 value={apiKey}
@@ -126,7 +123,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               />
             </label>
             <label className="block space-y-1 text-sm text-stone-500">
-              模型名
+              {t("api.model")}
               <input
                 value={model}
                 onChange={(e) => editModel(e.target.value)}
@@ -138,41 +135,39 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               onClick={() => void save()}
               className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600"
             >
-              保存
+              {t("common:actions.save")}
             </button>
-            {savedHint && <span className="ml-3 text-sm text-amber-600">已保存 ✓</span>}
+            {savedHint && <span className="ml-3 text-sm text-amber-600">{t("api.saved")}</span>}
             {!savedHint && dirty && (
-              <span className="ml-3 text-sm text-stone-400">有修改还没保存</span>
+              <span className="ml-3 text-sm text-stone-400">{t("api.unsaved")}</span>
             )}
           </section>
 
           <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
             <div>
-              <h3 className="font-medium text-stone-700">网络总开关</h3>
-              <p className="text-sm text-stone-500">
-                关闭后，所有需要联网的功能（包括 API 调用）都会安静地停下。
-              </p>
+              <h3 className="font-medium text-stone-700">{t("network.title")}</h3>
+              <p className="text-sm text-stone-500">{t("network.hint")}</p>
             </div>
             <Toggle
               on={networkEnabled}
               onClick={() => void setNetworkEnabled(!networkEnabled)}
-              label="网络总开关"
+              label={t("network.title")}
             />
           </section>
 
           <section className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
             <div>
-              <h3 className="font-medium text-stone-700">大陆网络模式</h3>
-              <p className="text-sm text-stone-500">
-                事实核查只使用大陆可访问的资料源（必应）；关闭后优先维基百科。
-              </p>
+              <h3 className="font-medium text-stone-700">{t("mainland.title")}</h3>
+              <p className="text-sm text-stone-500">{t("mainland.hint")}</p>
             </div>
             <Toggle
               on={mainlandNetwork}
               onClick={() => void setMainlandNetwork(!mainlandNetwork)}
-              label="大陆网络模式"
+              label={t("mainland.title")}
             />
           </section>
+
+          <LanguageSettingsSection />
 
           <SettingsQuietIssues />
         </>

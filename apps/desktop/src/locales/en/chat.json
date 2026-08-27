@@ -1,0 +1,30 @@
+{
+  "emptyLine": "Every conversation leaves a breadcrumb behind.",
+  "noReplyYet": "This message has no reply yet",
+  "resumedFromMiddle": "Continuing from an earlier point · the later messages are all still here",
+  "backToLatest": "Back to the latest",
+  "composer": {
+    "placeholder": "What would you like to learn? Just say it… (Enter to send, Shift+Enter for a new line)",
+    "freeLabel": "Free chat",
+    "freeHint": "Talk about anything, in any way you like.",
+    "studyLabel": "Study mode",
+    "studyHint": "Replies guide you to think and practise, so what you learn stays with you."
+  },
+  "trail": {
+    "search": "Search chats",
+    "noMatches": "No chats match that"
+  },
+  "popup": {
+    "close": "Close this chat window"
+  },
+  "factcheck": {
+    "checking": "Looking things up…",
+    "ask": "Check this",
+    "nothingToCheck": "There is no factual claim in this reply to check",
+    "supported": "Found supporting sources",
+    "insufficient": "No supporting source found — worth confirming",
+    "contradicted": "The sources disagree; here is both sides",
+    "allSupported": "All {{count}} claims have supporting sources",
+    "someSupported": "{{supported}} of {{total}} claims have supporting sources"
+  }
+}

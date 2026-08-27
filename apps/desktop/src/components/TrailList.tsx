@@ -8,6 +8,7 @@
  */
 import type { ConversationRow } from "@breadcrumb/core-db";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { displayTrailTitle } from "../lib/trailNaming";
 import { useChatStore } from "../stores/chatStore";
 
@@ -17,6 +18,8 @@ interface TrailListProps {
 }
 
 export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
+  const { t } = useTranslation(["chat", "common"]);
+
   const conversations = useChatStore((state) => state.conversations);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const openConversation = useChatStore((state) => state.openConversation);
@@ -40,8 +43,8 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="搜索对话"
-        aria-label="搜索对话"
+        placeholder={t("trail.search")}
+        aria-label={t("trail.search")}
         className="mb-1 w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-700 placeholder:text-stone-400 focus:border-amber-300 focus:outline-none"
       />
       {visibleConversations.map((conversation) => {
@@ -60,7 +63,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
         );
       })}
       {trimmedQuery !== "" && visibleConversations.length === 0 && (
-        <p className="px-3 py-2 text-sm text-stone-400">没有找到相关对话</p>
+        <p className="px-3 py-2 text-sm text-stone-400">{t("trail.noMatches")}</p>
       )}
     </div>
   );

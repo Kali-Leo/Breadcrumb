@@ -1,0 +1,19 @@
+{
+  "name": "@breadcrumb/core-i18n",
+  "version": "0.0.1",
+  "description": "Headless language layer: the supported-language registry, locale negotiation, the answer-language directive injected into prompts, and the runtime check that the model actually answered in that language.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "franc": "^6.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

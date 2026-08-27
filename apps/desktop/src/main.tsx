@@ -9,7 +9,7 @@ function showFatal(message: string) {
     box.id = "fatal-error-box";
     box.style.cssText =
       "position:fixed;inset:auto 8px 8px 8px;max-height:45vh;overflow:auto;background:#7f1d1d;color:#fff;padding:10px;font-size:12px;z-index:99999;white-space:pre-wrap;border-radius:8px";
-    box.title = "点击关闭";
+    box.title = "Click to dismiss";
     box.addEventListener("click", () => box?.remove());
     document.body.appendChild(box);
   }
@@ -37,9 +37,13 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 
 import App from "./App";
+import { initI18n } from "./i18n";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+// Messages must be loaded before the first render, or the first paint is raw keys.
+void initI18n().then(() => {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+});

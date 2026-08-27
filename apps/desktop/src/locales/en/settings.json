@@ -1,0 +1,139 @@
+{
+  "title": "Settings",
+  "back": "← Back to the chat",
+  "tabs": {
+    "general": "General",
+    "billing": "Switches and spending",
+    "research": "Research"
+  },
+  "api": {
+    "title": "AI service (OpenAI-compatible)",
+    "hint": "Put your AI service account here; the chat and every other AI feature runs on it.",
+    "baseUrl": "Base URL",
+    "apiKey": "API key",
+    "model": "Model name",
+    "saved": "Saved ✓",
+    "unsaved": "Changes not saved yet"
+  },
+  "network": {
+    "title": "Internet",
+    "hint": "Turn this off and everything that needs the internet, API calls included, quietly stops."
+  },
+  "mainland": {
+    "title": "Mainland China network",
+    "hint": "Fact-checking uses only sources reachable from mainland China (Bing); turned off, it prefers Wikipedia."
+  },
+  "language": {
+    "title": "Language",
+    "interface": "Interface language",
+    "answer": "Language the AI answers in",
+    "sameAsInterface": "Same as the interface",
+    "thinNote": "The AI writes {{language}} less well than it writes {{fallback}}. You can change the answer language on its own and leave the interface as it is."
+  },
+  "quietIssues": {
+    "title": "Background work",
+    "allGood": "Everything in the background is fine.",
+    "summary": "{{count}} small background jobs did not finish recently. Your learning is unaffected — open to see which ones",
+    "fallbackPurpose": "Background job"
+  },
+  "purposes": {
+    "chat": "Chat",
+    "knowledge-tree": "Knowledge map",
+    "trail": "Chat summary",
+    "factcheck": "Fact-checking",
+    "knowledge-edges": "Knowledge links",
+    "interest": "Interest profile",
+    "self-report-mapping": "\"I already know this\" matching",
+    "goal-planning": "Goal planning",
+    "ladder": "Ladder",
+    "ladder-naming": "Ladder naming",
+    "compare-profile": "Comparison research",
+    "compare-align": "Comparison matching",
+    "map-naming": "Map naming",
+    "diglot-weave": "Language learning · smart swaps",
+    "teach-quality": "Teach-back feedback",
+    "companion-chat": "Companion chat",
+    "companion-memory": "Companion memory",
+    "companion-script": "Companion prep",
+    "focus-explain": "Focus explanations",
+    "term-marking": "Word marking"
+  },
+  "billing": {
+    "intro": "Every step that costs money has its own switch and its own bill here. Turn things on without worry — this page always tells you what was actually spent.",
+    "grandTotal": "Today {{today}} · all time {{total}}",
+    "nothingSpent": "nothing spent yet",
+    "neverUsed": "Nothing spent yet",
+    "spendLine": "Today {{today}} · all time {{total}}",
+    "diglot": {
+      "name": "🧵 Language learning · smart swaps",
+      "hint": "The stronger version of language learning: the AI picks the translation that fits the sentence and occasionally swaps in a natural phrase. One small call per message.",
+      "toggleLabel": "Language learning smart swaps"
+    },
+    "chat": {
+      "name": "💬 Chat",
+      "hint": "Your everyday conversation with the AI. This is the core feature and stays on; what it costs is listed here too."
+    },
+    "features": {
+      "knowledgeTree": {
+        "name": "🌳 Knowledge map",
+        "hint": "After each exchange, the AI files what you talked about into your map. One call per round."
+      },
+      "factcheck": {
+        "name": "🔍 Fact-checking",
+        "hint": "Tap \"Check this\" under a reply and the AI looks up the claims in public sources."
+      },
+      "knowledgeEdges": {
+        "name": "🕸️ Knowledge links",
+        "hint": "When something new is filed, the AI looks at how it connects to what you already know. A small charge each time."
+      },
+      "interest": {
+        "name": "💡 Personal recommendations",
+        "hint": "The AI notices what interests you and where you get stuck, and uses that to adjust what it suggests; it is also what recognises which topic you mean when you say \"I already know this\"."
+      },
+      "goalPlanning": {
+        "name": "🎯 Goal planning",
+        "hint": "When you set a goal, the AI turns it into a list of things to learn. One call per goal."
+      },
+      "compareProfileBuild": {
+        "name": "🌲 Comparison research (experimental)",
+        "hint": "For comparisons outside the built-in occupation list, the AI searches public sources, builds the list and checks each source. Takes a few minutes."
+      },
+      "compareAlignment": {
+        "name": "🌉 Comparison matching",
+        "hint": "During a comparison, the AI decides whether your wording and the source's wording mean the same thing. Each pair is judged once."
+      },
+      "teachQuality": {
+        "name": "🎓 Teach-back feedback",
+        "hint": "After you explain something to a companion, the AI reads how it went; the parts you explained clearly are recorded."
+      },
+      "mapTopicNaming": {
+        "name": "🗺️ Map naming (experimental)",
+        "hint": "On the map, the AI names each area that formed on its own. Each area is named once."
+      },
+      "feedbackLab": {
+        "name": "🪞 Recently",
+        "hint": "The review panel beside the map: computed entirely from local data, costs nothing."
+      },
+      "companionChat": {
+        "name": "🎭 Companion chat",
+        "hint": "Three AI study companions: open a chat, and now and then one asks you to explain something or to review together."
+      },
+      "companionMemory": {
+        "name": "🧠 Companion memory",
+        "hint": "Companions remember what you talked about, and tidy those memories now and then so they stay coherent."
+      },
+      "companionScript": {
+        "name": "📜 Companion prep",
+        "hint": "Before you start explaining, the companion who will listen reads up on the topic so it can follow you. A small charge per round while you explain."
+      },
+      "focusExplain": {
+        "name": "🔎 Focus explanations",
+        "hint": "In focus mode, picking a word or asking a question gets you an explanation. Each word is explained once."
+      },
+      "termMarking": {
+        "name": "🖊️ Word marking",
+        "hint": "The AI marks the words in a reply you may not know yet; tap one to see what it means. Each reply is marked once."
+      }
+    }
+  }
+}

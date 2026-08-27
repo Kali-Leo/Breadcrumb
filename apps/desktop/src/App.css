@@ -8,10 +8,16 @@
   font-display: swap;
 }
 
+/* The stack follows the interface language's script; i18n/index.ts sets the variable, and
+   the value here is only what the very first paint uses. */
+:root {
+  --app-font-stack: system-ui, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+}
+
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
-  font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: var(--app-font-stack);
 }

@@ -7,6 +7,7 @@
 
 import { CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { Composer } from "./Composer";
@@ -20,6 +21,8 @@ interface CompanionChatPopupProps {
 }
 
 export function CompanionChatPopup({ conversationId, title, onClose }: CompanionChatPopupProps) {
+  const { t } = useTranslation(["chat", "common"]);
+
   const session = useChatStore((state) => state.sessions.get(conversationId));
   const draft = useChatStore((state) => state.drafts.get(conversationId) ?? "");
   const setDraft = useChatStore((state) => state.setDraft);
@@ -48,7 +51,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
         <button
           type="button"
           onClick={onClose}
-          aria-label="关闭对话窗口"
+          aria-label={t("popup.close")}
           className="rounded px-2 text-stone-400 hover:bg-stone-100"
         >
           ✕
@@ -62,7 +65,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
             onClick={() => useCompanionStore.getState().dismissCrisis(conversationId)}
             className="mt-1 text-stone-400 underline"
           >
-            知道了
+            {t("common:actions.gotIt")}
           </button>
         </div>
       )}
@@ -90,14 +93,14 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           )}
           {(session?.errorText != null || (!streaming && messages.at(-1)?.role === "user")) && (
             <p className="text-xs text-rose-500">
-              {session?.errorText ?? "这条消息还没有得到回复"}
+              {session?.errorText ?? t("noReplyYet")}
               {!streaming && messages.at(-1)?.role === "user" && (
                 <button
                   type="button"
                   onClick={() => void useChatStore.getState().retryRound(conversationId)}
                   className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200"
                 >
-                  重试
+                  {t("common:actions.retry")}
                 </button>
               )}
             </p>

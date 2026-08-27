@@ -5,13 +5,15 @@
  */
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type DisplayClaim, useFactcheckStore } from "../stores/factcheckStore";
 import { useSettingsStore } from "../stores/settingsStore";
 
-const RELATIONSHIP_BADGES: Record<string, { icon: string; label: string; tone: string }> = {
-  supported: { icon: "✓", label: "找到了佐证", tone: "text-emerald-600" },
-  insufficient: { icon: "◌", label: "没找到佐证，值得再确认", tone: "text-stone-500" },
-  contradicted: { icon: "≈", label: "查到的说法不太一致，两边都给你看", tone: "text-amber-700" },
+/** The three verdicts, each with its icon and tone; the wording comes from the catalogue. */
+const RELATIONSHIP_BADGES: Record<string, { icon: string; labelKey: string; tone: string }> = {
+  supported: { icon: "✓", labelKey: "factcheck.supported", tone: "text-emerald-600" },
+  insufficient: { icon: "◌", labelKey: "factcheck.insufficient", tone: "text-stone-500" },
+  contradicted: { icon: "≈", labelKey: "factcheck.contradicted", tone: "text-amber-700" },
 };
 
 interface FactcheckBadgeProps {
@@ -22,6 +24,7 @@ interface FactcheckBadgeProps {
 }
 
 export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProps) {
+  const { t } = useTranslation("chat");
   const enabled = useSettingsStore((state) => state.featureSwitches.factcheck);
   const claims = useFactcheckStore((state) =>
     conversationId === null
@@ -36,7 +39,9 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
   if (!enabled || conversationId === null) return null;
 
   if (checking) {
-    return <p className="animate-pulse pl-1 text-xs text-stone-400">🔍 正在查资料…</p>;
+    return (
+      <p className="animate-pulse pl-1 text-xs text-stone-400">🔍 {t("factcheck.checking")}</p>
+    );
   }
 
   if (claims === undefined) {
@@ -47,7 +52,7 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
           onClick={() => void checkMessage(conversationId, messageId)}
           className="text-xs text-stone-400 transition-colors hover:text-amber-600"
         >
-          🔍 求证
+          🔍 {t("factcheck.ask")}
         </button>
         {notice && <span className="ml-2 text-xs text-stone-400">{notice}</span>}
       </div>
@@ -55,14 +60,14 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
   }
 
   if (claims.length === 0) {
-    return <p className="pl-1 text-xs text-stone-400">🔍 这条回答没有需要核查的客观事实</p>;
+    return <p className="pl-1 text-xs text-stone-400">🔍 {t("factcheck.nothingToCheck")}</p>;
   }
 
   const supportedCount = claims.filter((claim) => claim.relationship === "supported").length;
   const summary =
     supportedCount === claims.length
-      ? `${supportedCount} 条说法都找到了佐证`
-      : `${supportedCount}/${claims.length} 条说法找到了佐证`;
+      ? t("factcheck.allSupported", { count: supportedCount })
+      : t("factcheck.someSupported", { supported: supportedCount, total: claims.length });
 
   return (
     <div className="max-w-[76%] space-y-1 pl-1">
@@ -85,12 +90,13 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
 }
 
 function ClaimLine({ claim }: { claim: DisplayClaim }) {
+  const { t } = useTranslation("chat");
   const badge = RELATIONSHIP_BADGES[claim.relationship] ?? RELATIONSHIP_BADGES.insufficient;
   return (
     <li className="space-y-0.5 text-xs">
       <p className="text-stone-600">
         <span className={badge?.tone}>{badge?.icon}</span> {claim.text}
-        <span className={`ml-1 ${badge?.tone}`}>（{badge?.label}）</span>
+        <span className={`ml-1 ${badge?.tone}`}>（{badge ? t(badge.labelKey as never) : ""}）</span>
       </p>
       <p className="pl-4 text-stone-500">{claim.reasoning}</p>
       {claim.evidence.map((item) => (

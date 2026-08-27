@@ -6,6 +6,7 @@
  * Main exports: ChatView.
  */
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { newestLeafId } from "../lib/messageTree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useFactcheckStore } from "../stores/factcheckStore";
@@ -23,6 +24,8 @@ import { BackToBottomPill, useScrollPinning } from "./scrollPinning";
 const LOCATE_HIGHLIGHT_MS = 2000;
 
 export function ChatView() {
+  const { t } = useTranslation(["chat", "common"]);
+
   const messages = useChatStore((state) => state.messages);
   const streamingText = useChatStore((state) => state.streamingText);
   const errorText = useChatStore((state) => state.errorText);
@@ -95,7 +98,7 @@ export function ChatView() {
           {messages.length === 0 && !isStreaming && (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">
               <span className="text-4xl">🍞</span>
-              <p>每一次对话，都会留下一枚面包屑。</p>
+              <p>{t("emptyLine")}</p>
             </div>
           )}
           {messages.map((message) => {
@@ -141,14 +144,14 @@ export function ChatView() {
           )}
           {(errorText !== null || canRetry) && (
             <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
-              {errorText ?? "这条消息还没有得到回复"}
+              {errorText ?? t("noReplyYet")}
               {canRetry && activeConversationId !== null && (
                 <button
                   type="button"
                   onClick={() => void retryRound(activeConversationId)}
                   className="ml-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
                 >
-                  重试
+                  {t("common:actions.retry")}
                 </button>
               )}
             </div>
@@ -180,19 +183,20 @@ export function ChatView() {
 /** Shown while continuing from a mid-tree station (spec 040 §2): the newer branch that used to
  * follow the old leaf isn't gone, just off the active path — "回到最新" jumps back to it. */
 function ContinuationBanner() {
+  const { t } = useTranslation(["chat", "common"]);
   const allMessages = useChatStore((state) => state.allMessages);
   const currentLeafId = useChatStore((state) => state.currentLeafId);
   const returnToLatest = useChatStore((state) => state.returnToLatest);
   if (currentLeafId === newestLeafId(allMessages)) return null;
   return (
     <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-stone-600">
-      <span>正在从中途继续 · 后来的消息都还在</span>
+      <span>{t("resumedFromMiddle")}</span>
       <button
         type="button"
         onClick={returnToLatest}
         className="ml-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
       >
-        回到最新
+        {t("backToLatest")}
       </button>
     </div>
   );

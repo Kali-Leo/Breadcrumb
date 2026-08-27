@@ -1,0 +1,30 @@
+{
+  "emptyLine": "每一次对话，都会留下一枚面包屑。",
+  "noReplyYet": "这条消息还没有得到回复",
+  "resumedFromMiddle": "正在从中途继续 · 后来的消息都还在",
+  "backToLatest": "回到最新",
+  "composer": {
+    "placeholder": "想学点什么？说说看…（Enter 发送，Shift+Enter 换行）",
+    "freeLabel": "自由对话",
+    "freeHint": "自由聊天，任何话题、任何形式都可以。",
+    "studyLabel": "学习模式",
+    "studyHint": "回复会引导你思考和练习，帮你把学到的记牢。"
+  },
+  "trail": {
+    "search": "搜索对话",
+    "noMatches": "没有找到相关对话"
+  },
+  "popup": {
+    "close": "关闭对话窗口"
+  },
+  "factcheck": {
+    "checking": "正在查资料…",
+    "ask": "求证",
+    "nothingToCheck": "这条回答没有需要核查的客观事实",
+    "supported": "找到了佐证",
+    "insufficient": "没找到佐证，值得再确认",
+    "contradicted": "查到的说法不太一致，两边都给你看",
+    "allSupported": "{{count}} 条说法都找到了佐证",
+    "someSupported": "{{supported}}/{{total}} 条说法找到了佐证"
+  }
+}
