@@ -9,13 +9,14 @@
 import {
   computeScopedDailyActivity,
   computeScopedLayerTrendSeries,
-  FEEDBACK_COPY,
-  heatmapCellLine,
+  heatmapCellMessage,
   TREND_WINDOW_DAYS,
   type TrendPoint,
 } from "@breadcrumb/plugin-feedback";
 import { cloneElement, useEffect, useMemo, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
+import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../../i18n/useCopyMessage";
 import type { RegionFeedbackSources } from "../../lib/regionFeedbackData";
 import { nowIso } from "../../lib/time";
 import { TrendLineChart } from "../TrendLineChart";
@@ -54,6 +55,8 @@ export function RegionMirror({
   sources,
   emptyLine,
 }: RegionMirrorProps) {
+  const { t } = useTranslation(["palace", "common"]);
+  const copy = useCopyMessage();
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const data = useMemo(() => {
@@ -98,7 +101,7 @@ export function RegionMirror({
     return (
       <>
         {header}
-        <p className="text-xs text-stone-400">{FEEDBACK_COPY.loading}</p>
+        <p className="text-xs text-stone-400">{t("palace:mirror.loading")}</p>
       </>
     );
   }
@@ -126,11 +129,11 @@ export function RegionMirror({
     <>
       {header}
       <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
-        <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.heatmapTitle}</h3>
+        <h3 className="font-semibold text-stone-600">{t("palace:mirror.heatmapTitle")}</h3>
         <div
           ref={scrollRef}
           className="mt-2 overflow-x-auto"
-          title={FEEDBACK_COPY.heatmapHoverNote}
+          title={t("palace:mirror.heatmapHoverNote")}
         >
           <ActivityCalendar
             data={activities}
@@ -144,7 +147,7 @@ export function RegionMirror({
               cloneElement(
                 block,
                 {},
-                <title>{heatmapCellLine(activity.date, activity.count)}</title>,
+                <title>{copy(heatmapCellMessage(activity.date, activity.count))}</title>,
               )
             }
             showColorLegend={false}
@@ -154,31 +157,31 @@ export function RegionMirror({
         </div>
       </section>
       <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
-        <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.trendsTitle}</h3>
+        <h3 className="font-semibold text-stone-600">{t("palace:mirror.trendsTitle")}</h3>
         <div className="mt-2">
           <TrendLineChart
             valueDecimals={1}
             series={[
               {
                 key: "memory",
-                label: FEEDBACK_COPY.trendLayersMemoryLabel,
+                label: t("palace:mirror.trendLayersMemoryLabel"),
                 color: MEMORY_COLOR,
                 data: toSeries((point) => point.memory),
-                explanation: FEEDBACK_COPY.trendLayersMemoryNote,
+                explanation: t("palace:mirror.trendLayersMemoryNote"),
               },
               {
                 key: "understanding",
-                label: FEEDBACK_COPY.trendLayersUnderstandingLabel,
+                label: t("palace:mirror.trendLayersUnderstandingLabel"),
                 color: UNDERSTANDING_COLOR,
                 data: toSeries((point) => point.understanding),
-                explanation: FEEDBACK_COPY.trendLayersUnderstandingNote,
+                explanation: t("palace:mirror.trendLayersUnderstandingNote"),
               },
               {
                 key: "intuition",
-                label: FEEDBACK_COPY.trendLayersIntuitionLabel,
+                label: t("palace:mirror.trendLayersIntuitionLabel"),
                 color: INTUITION_COLOR,
                 data: toSeries((point) => point.intuition),
-                explanation: FEEDBACK_COPY.trendLayersIntuitionNote,
+                explanation: t("palace:mirror.trendLayersIntuitionNote"),
               },
             ]}
           />

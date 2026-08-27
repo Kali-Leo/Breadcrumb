@@ -2,14 +2,14 @@
  * Purpose: pure zero-LLM trail grouping (spec 041 §2) — each trail's dominant knowledge node,
  * that node's top ancestor as the group label, and the sidebar's two-tier shape ("正在进行"
  * preview + topic groups). No I/O.
- * Main exports: CASUAL_CHAT_GROUP_LABEL, computeDominantNodes, topAncestorOf, groupTrails.
+ * Main exports: CASUAL_CHAT_GROUP_KEY, computeDominantNodes, topAncestorOf, groupTrails.
  */
 import type { ConversationRow, KnowledgeNodeRow, NodeSightingRow } from "@breadcrumb/core-db";
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
 
 /** The group a trail with no knowledge node lands in — spec 041 §2's explicit fallback. Reads
  * from the gated copy module so this label and the sidebar's rendered text can never drift. */
-export const CASUAL_CHAT_GROUP_LABEL: string = EXPLORE_UI_COPY.casualChatGroupLabel;
+/** Catalogue key for the group that holds trails with no dominant knowledge node. */
+export const CASUAL_CHAT_GROUP_KEY = "learning:trail.casualChatGroupLabel";
 
 /** Above this count, "正在进行" stops growing — it is a preview of recent activity, not the
  * whole day's list (the topic groups below hold every trail regardless). */
@@ -112,9 +112,8 @@ export function groupTrails(input: GroupTrailsInput): GroupedTrails {
     const dominantNodeId = dominantNodeByConversation.get(conversation.id) ?? null;
     const label =
       dominantNodeId === null
-        ? CASUAL_CHAT_GROUP_LABEL
-        : (nodesById.get(topAncestorOf(dominantNodeId, nodesById))?.label ??
-          CASUAL_CHAT_GROUP_LABEL);
+        ? CASUAL_CHAT_GROUP_KEY
+        : (nodesById.get(topAncestorOf(dominantNodeId, nodesById))?.label ?? CASUAL_CHAT_GROUP_KEY);
     const bucket = trailsByLabel.get(label) ?? [];
     bucket.push(conversation);
     trailsByLabel.set(label, bucket);

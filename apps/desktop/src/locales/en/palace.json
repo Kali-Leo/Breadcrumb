@@ -1,1 +1,34 @@
-{}
+{
+  "mirror": {
+    "loading": "Loading…",
+    "heatmapTitle": "Learning heatmap",
+    "heatmapHoverNote": "Each square is a day; the darker it is, the more you learned that day.",
+    "heatmapEmpty": "No traces yet. Start a learning chat and the first square appears here.",
+    "heatmapCell": "{{date}}, {{count}} traces left behind",
+    "heatmapCellEmpty": "{{date}}",
+    "activeDays": "Active on {{count}} days",
+    "trendsTitle": "Trends",
+    "trendsEmpty": "The lines appear as you learn.",
+    "trendLayersMemoryLabel": "Memory",
+    "trendLayersUnderstandingLabel": "Understanding",
+    "trendLayersIntuitionLabel": "Intuition",
+    "trendLayersMemoryNote": "An estimate of how many concepts you could still recall that day; without contact, it fades on its own over time.",
+    "trendLayersUnderstandingNote": "The share of what you remember that is backed by your own explanation or by you saying you had learned it. Also an estimate.",
+    "trendLayersIntuitionNote": "The roughest estimate: the part that has been stable for a long time and that you have used yourself in conversation.",
+    "trendWordsTitle": "Vocabulary",
+    "trendWordsSettledLabel": "Words stable for over a month",
+    "trendWordsMemoryNote": "An estimate of how many words you could still recall that day; without contact, it fades on its own over time.",
+    "trendWordsIntuitionNote": "The roughest estimate: words that have been stable for a long time and that you have used in your own sentences.",
+    "trendWordsSettledNote": "Counts words that have been stable for over a month; new words take time to settle, so a flat start at zero is normal.",
+    "reunionOpener": "Let's revisit \"{{title}}\". Say what you still remember about it in your own words — start wherever your memory starts, and I will fill in the rest.",
+    "newConcept": "First met: {{title}}",
+    "reencounter": "Met again: {{title}}",
+    "wordGuessCorrect": "Vocabulary: guessed \"{{word}}\" right",
+    "wordGuessClose": "Vocabulary: came close on \"{{word}}\"",
+    "teachSession": "Explained once: {{title}}",
+    "evidenceClaimLearned": "You said you had learned this",
+    "evidenceClaimFamiliar": "You said you were fairly familiar with this",
+    "evidenceClaimTaughtPrincipled": "You explained how it works",
+    "evidenceClaimTaughtSurface": "You retold it once"
+  }
+}

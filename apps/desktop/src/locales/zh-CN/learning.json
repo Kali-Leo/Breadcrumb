@@ -1,1 +1,50 @@
-{}
+{
+  "diglot": {
+    "guessPrompt": "这个词是什么意思？先猜一次，再看释义。",
+    "guessPlaceholder": "你的猜测",
+    "guessSubmit": "提交",
+    "alsoTranslatedAs": "也作",
+    "settingsTitle": "语言学习",
+    "settingsHint": "对话里会有部分词替换为你正在学的另一种语言",
+    "pairStatus": "从中文学 English",
+    "llmRefineLabel": "智能替换",
+    "llmRefineHint": "让 AI 按上下文挑更合适的词替换，效果更准，但每条消息花一小笔。",
+    "learningWordsTitle": "正在学的词",
+    "learningWordsEmpty": "开始对话后，学到的词会出现在这里。",
+    "contrastLabel": "易混对比",
+    "guessCorrect": "是「{{word}}」。",
+    "guessClose": "接近——它是「{{word}}」。",
+    "guessWrong": "它是「{{word}}」。"
+  },
+  "door": {
+    "guessPrompt": "先猜猜：一句话说它是什么？",
+    "guessPlaceholder": "你的猜测",
+    "guessSubmit": "提交",
+    "expandButton": "展开聊聊",
+    "directReveal": "它是指：{{summary}}",
+    "expandPrefill": "关于「{{label}}」，我想继续深入：",
+    "guessCorrect": "对。{{summary}}",
+    "guessClose": "接近。它是指：{{summary}}",
+    "guessWrong": "它是指：{{summary}}"
+  },
+  "trail": {
+    "ongoingSectionLabel": "正在进行",
+    "casualChatGroupLabel": "随手聊",
+    "timelineToggleLabel": "按时间浏览"
+  },
+  "focus": {
+    "exitButton": "退出专注",
+    "askPlaceholder": "对当前内容提问…",
+    "guessSkipButton": "直接看解释",
+    "retryButton": "重试",
+    "entryReturnButton": "回到专注",
+    "upButton": "← 上一级",
+    "mapHint": "点一个站可以跳过去。实线是从文中选词长出来的，虚线是提问长出来的。",
+    "selectHint": "按 Enter 解释「{{text}}」",
+    "errorPlain": "这一站没有生成成功。可以重试，或退出专注。",
+    "errorWithReason": "这一站没有生成成功：{{reason}}。可以重试，或退出专注。",
+    "badgeLine": "🔎 探索过：{{label}} · {{count}} 站",
+    "barTitle": "🔎 本对话的专注探索（{{count}}）",
+    "errorNoApi": "这一站没有生成成功：还没有配置 AI 服务。可以到设置里填好，再回来重试。"
+  }
+}

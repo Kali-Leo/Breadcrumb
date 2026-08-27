@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-i18n": "workspace:*",
     "@breadcrumb/plugin-diglot-weave": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",
     "ts-fsrs": "^5.2.1"

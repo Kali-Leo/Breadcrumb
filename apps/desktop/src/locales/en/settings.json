@@ -135,5 +135,28 @@
         "hint": "The AI marks the words in a reply you may not know yet; tap one to see what it means. Each reply is marked once."
       }
     }
+  },
+  "research": {
+    "panelTitle": "🔬 Research",
+    "panelIntro": "Every number here was computed by this computer. The tasks are reviewed and their sources can be checked; the data does not leave this device on its own, and none of this costs anything.",
+    "offNotice": "Research tasks are off: no new task will run. Results you already have are kept, and you can read or delete them one by one.",
+    "loading": "Loading…",
+    "emptyTitle": "No results yet",
+    "emptyHint": "While the app is idle it computes signed research tasks locally; results appear here when they are done.",
+    "cardInstitutionLabel": "Institution",
+    "cardPurposeLabel": "Purpose",
+    "cardEthicsLabel": "Ethics note",
+    "cardComputedAtLabel": "Computed",
+    "deleteAction": "Delete this result",
+    "deleteConfirmPrompt": "Deleting this result cannot be undone. Delete it?",
+    "deleteConfirmAction": "Delete",
+    "settingsRowTitle": "🔬 Research",
+    "settingsRowHint": "Runs reviewed research tasks locally and shows the results; the data does not leave this device on its own and it costs nothing",
+    "closeConfirmTitle": "Turning off research tasks",
+    "closeConfirmWhatItDoes": "The research platform runs reviewed, project-signed tasks locally, computes the statistics and shows them to you.",
+    "closeConfirmDataStaysLocal": "All of it is computed here; the data does not leave this device on its own.",
+    "closeConfirmResearchValue": "Local aggregate statistics like these are one of the few ways researchers can study how people learn without collecting anyone's personal data, and they matter for education research in places with few resources.",
+    "closeConfirmWhatChanges": "Once off, no task will run and you will not be asked about this again. Results you already have are untouched and stay in the panel.",
+    "closeConfirmAction": "Turn it off"
   }
 }

@@ -6,11 +6,12 @@
  * Main exports: gradeFocusGuess, recordMatchedGuess, FocusGuessResult.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   type ConceptGuessGrade,
-  conceptDirectRevealLine,
+  conceptDirectRevealMessage,
   gradeConceptGuess,
-  guessFeedbackLine,
+  guessFeedbackMessage,
 } from "@breadcrumb/plugin-explore";
 import { cosineSimilarity } from "@breadcrumb/plugin-knowledge-tree";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
@@ -21,7 +22,7 @@ import { newId, nowIso } from "./time";
 export interface FocusGuessResult {
   /** null = ungraded direct reveal (embedding unavailable) — no score, no record. */
   grade: ConceptGuessGrade | null;
-  feedback: string;
+  feedback: CopyMessage;
 }
 
 /** Grades a guess against a matched knowledge node's embedding; a correct/close grade records
@@ -43,7 +44,7 @@ export async function gradeFocusGuess(input: {
     ]);
     const guessVector = guessVectors?.[0] ?? null;
     if (guessVector === null || embeddingRow === null) {
-      return { grade: null, feedback: conceptDirectRevealLine(input.summary) };
+      return { grade: null, feedback: conceptDirectRevealMessage(input.summary) };
     }
     const nodeVector = JSON.parse(embeddingRow.vector_json) as number[];
     const grade = gradeConceptGuess(cosineSimilarity(guessVector, nodeVector));
@@ -57,10 +58,10 @@ export async function gradeFocusGuess(input: {
         origin_node_id: input.originNodeId,
       });
     }
-    return { grade, feedback: guessFeedbackLine(grade, input.summary) };
+    return { grade, feedback: guessFeedbackMessage(grade, input.summary) };
   } catch (error) {
     console.warn("focus guess grading skipped:", error);
-    return { grade: null, feedback: conceptDirectRevealLine(input.summary) };
+    return { grade: null, feedback: conceptDirectRevealMessage(input.summary) };
   }
 }
 

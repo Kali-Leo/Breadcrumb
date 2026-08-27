@@ -2,14 +2,14 @@
  * Purpose: guess submission for the mandatory guess card (spec 033 T8) — grades the guess
  * (zero LLM), persists the verbatim row for confusion mining, and maps grade → signal kind.
  * Side effect: DB write (diglot_word_guesses).
- * Main exports: submitDiglotGuess (feedback copy lives in the plugin's uiCopy).
+ * Main exports: submitDiglotGuess, guessFeedbackMessage (the wording lives in learning.json).
  */
 import type { DiglotEventKind, DiglotGuessGrade } from "@breadcrumb/core-db";
 import { gradeGuess, type LoadedLanguagePack } from "@breadcrumb/plugin-diglot-weave";
 import { getRepos } from "./db";
 import { nowIso } from "./time";
 
-export { feedbackTextFor } from "@breadcrumb/plugin-diglot-weave";
+export { guessFeedbackMessage } from "@breadcrumb/plugin-diglot-weave";
 
 /** Grades and persists one guess; returns the grade and its event kind. */
 export async function submitDiglotGuess(input: {

@@ -5,7 +5,8 @@
  * self, no target lines.
  * Main exports: FeedbackTrendsSection.
  */
-import { FEEDBACK_COPY, type TrendPoint } from "@breadcrumb/plugin-feedback";
+import type { TrendPoint } from "@breadcrumb/plugin-feedback";
+import { useTranslation } from "react-i18next";
 import { useFeedbackStore } from "../stores/feedbackStore";
 import { TrendLineChart } from "./TrendLineChart";
 
@@ -17,6 +18,7 @@ const INTUITION_COLOR = "#6d28d9";
 const LAYERS_CHART_HEIGHT = 200;
 
 export function FeedbackTrendsSection() {
+  const { t } = useTranslation(["palace", "common"]);
   const trends = useFeedbackStore((state) => state.trends);
   // memory bounds the other two layers by construction, so it alone decides emptiness.
   const isEmpty = trends.layers.every((point) => point.memory === 0);
@@ -36,9 +38,9 @@ export function FeedbackTrendsSection() {
 
   return (
     <section className="rounded-xl bg-white p-3 shadow-sm">
-      <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.trendsTitle}</h3>
+      <h3 className="font-semibold text-stone-600">{t("palace:mirror.trendsTitle")}</h3>
       {isEmpty ? (
-        <p className="mt-2 text-stone-400">{FEEDBACK_COPY.trendsEmpty}</p>
+        <p className="mt-2 text-stone-400">{t("palace:mirror.trendsEmpty")}</p>
       ) : (
         <div className="mt-2">
           <TrendLineChart
@@ -47,24 +49,24 @@ export function FeedbackTrendsSection() {
             series={[
               {
                 key: "memory",
-                label: FEEDBACK_COPY.trendLayersMemoryLabel,
+                label: t("palace:mirror.trendLayersMemoryLabel"),
                 color: MEMORY_COLOR,
                 data: memorySeries,
-                explanation: FEEDBACK_COPY.trendLayersMemoryNote,
+                explanation: t("palace:mirror.trendLayersMemoryNote"),
               },
               {
                 key: "understanding",
-                label: FEEDBACK_COPY.trendLayersUnderstandingLabel,
+                label: t("palace:mirror.trendLayersUnderstandingLabel"),
                 color: UNDERSTANDING_COLOR,
                 data: understandingSeries,
-                explanation: FEEDBACK_COPY.trendLayersUnderstandingNote,
+                explanation: t("palace:mirror.trendLayersUnderstandingNote"),
               },
               {
                 key: "intuition",
-                label: FEEDBACK_COPY.trendLayersIntuitionLabel,
+                label: t("palace:mirror.trendLayersIntuitionLabel"),
                 color: INTUITION_COLOR,
                 data: intuitionSeries,
-                explanation: FEEDBACK_COPY.trendLayersIntuitionNote,
+                explanation: t("palace:mirror.trendLayersIntuitionNote"),
               },
             ]}
           />

@@ -8,7 +8,8 @@
  * FocusSessionGet. Side effect: holds the module-level record of the in-flight explain run.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
-import { type FocusPromptMessage, focusErrorLine } from "@breadcrumb/plugin-explore";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
+import { type FocusPromptMessage, focusErrorMessage } from "@breadcrumb/plugin-explore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
@@ -22,7 +23,7 @@ export interface FocusSessionRuntimeState {
   nodes: FocusNodeRow[];
   currentNodeId: string | null;
   streamingText: string | null;
-  errorText: string | null;
+  errorText: CopyMessage | null;
   pendingGuess: { word: string; matchedNodeId: string | null } | null;
   guessedNodeIds: ReadonlySet<string>;
   recentConsecutiveAbandons: number;
@@ -78,7 +79,7 @@ export async function runExplain(
   const state = get();
   const apiConfig = useSettingsStore.getState().apiConfig;
   if (apiConfig === null || state.conversationId === null) {
-    set({ streamingText: null, errorText: focusErrorLine("还没有配置 API") });
+    set({ streamingText: null, errorText: { key: "learning:focus.errorNoApi" } });
     return;
   }
   // The run stays bound to the session it started in — after an exit-and-reopen the old
@@ -119,7 +120,7 @@ export async function runExplain(
     await recordAiFailure("focus-explain", error);
     setIfLive({
       streamingText: null,
-      errorText: focusErrorLine(error instanceof Error ? error.message : String(error)),
+      errorText: focusErrorMessage(error instanceof Error ? error.message : String(error)),
     });
   } finally {
     if (activeExplainRun === run) activeExplainRun = null;

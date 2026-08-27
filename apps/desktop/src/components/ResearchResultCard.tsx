@@ -6,8 +6,8 @@
  */
 import type { ResearchResultRow } from "@breadcrumb/core-db";
 import type { DisplayBlock } from "@breadcrumb/plugin-research";
-import { RESEARCH_COPY } from "@breadcrumb/plugin-research";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type ParsedStatResult, parseResearchResultDisplay } from "../lib/researchDisplay";
 import { useResearchStore } from "../stores/researchStore";
 
@@ -63,6 +63,7 @@ function DisplayBlockView({
 }
 
 export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
+  const { t } = useTranslation(["settings", "common"]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const deleteResult = useResearchStore((state) => state.deleteResult);
   const parsed = parseResearchResultDisplay(result);
@@ -71,19 +72,19 @@ export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
     <div className="rounded border border-stone-200 bg-white p-3">
       <div className="flex flex-wrap items-baseline gap-x-3 text-stone-500">
         <span>
-          {RESEARCH_COPY.cardInstitutionLabel}:{result.institution}
+          {t("research.cardInstitutionLabel")}:{result.institution}
         </span>
         <span>
-          {RESEARCH_COPY.cardComputedAtLabel}:{result.computed_at}
+          {t("research.cardComputedAtLabel")}:{result.computed_at}
         </span>
       </div>
       <p className="mt-1 font-semibold text-stone-700">{result.title}</p>
       <p className="mt-1 text-stone-600">
-        {RESEARCH_COPY.cardPurposeLabel}:{result.purpose}
+        {t("research.cardPurposeLabel")}:{result.purpose}
       </p>
       {result.ethics_note !== null && (
         <p className="mt-1 text-stone-500">
-          {RESEARCH_COPY.cardEthicsLabel}:{result.ethics_note}
+          {t("research.cardEthicsLabel")}:{result.ethics_note}
         </p>
       )}
       {parsed !== null && (
@@ -97,20 +98,20 @@ export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
       <div className="mt-3 border-t border-stone-100 pt-2">
         {confirmingDelete ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-stone-500">{RESEARCH_COPY.deleteConfirmPrompt}</span>
+            <span className="text-stone-500">{t("research.deleteConfirmPrompt")}</span>
             <button
               type="button"
               onClick={() => void deleteResult(result.id)}
               className="rounded bg-red-500 px-2 py-1 text-white"
             >
-              {RESEARCH_COPY.deleteConfirmAction}
+              {t("research.deleteConfirmAction")}
             </button>
             <button
               type="button"
               onClick={() => setConfirmingDelete(false)}
               className="rounded border border-stone-200 px-2 py-1 text-stone-500"
             >
-              {RESEARCH_COPY.deleteCancelAction}
+              {t("common:actions.cancel")}
             </button>
           </div>
         ) : (
@@ -119,7 +120,7 @@ export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
             onClick={() => setConfirmingDelete(true)}
             className="text-stone-400 hover:text-red-500"
           >
-            {RESEARCH_COPY.deleteAction}
+            {t("research.deleteAction")}
           </button>
         )}
       </div>

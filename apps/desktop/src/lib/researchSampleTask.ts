@@ -2,7 +2,7 @@
  * Purpose: the bundled demo research task (spec 036 #6) — one project-signed task that
  * exercises the full pipeline end to end (three whitelisted stat calls, a matching display
  * template). Side effect: none, this is a static payload only.
- * Main exports: SIGNED_RESEARCH_TASKS.
+ * Main exports: SIGNED_RESEARCH_TASKS, DEMO_RESEARCH_TASK_TEXT.
  */
 
 // Signed with packages/plugin-research/scripts/signResearchTask.mjs against
@@ -42,6 +42,20 @@ const DEMO_RESEARCH_TASK = {
   signature:
     "b48d93352c681842608bc2f86e85f7e63ff6c0e93cd44a94fc5012fe7dab16b3ab337dc51ca40e4e1f7371ba2956a1c52159dee920a4ab8c15dc6be9228a8206",
 };
+
+/** The demo task's own user-visible text. It is *content*, not interface copy: the bytes are
+ * covered by the publisher's signature, so it cannot be translated — a real task carries its
+ * own wording in its own language (spec 058 §3). Exported so the copy gate can still scan it. */
+export const DEMO_RESEARCH_TASK_TEXT: readonly string[] = [
+  DEMO_RESEARCH_TASK.payload.title,
+  DEMO_RESEARCH_TASK.payload.purpose,
+  DEMO_RESEARCH_TASK.payload.ethicsNote,
+  ...DEMO_RESEARCH_TASK.payload.display.flatMap((item) =>
+    ["text" in item ? item.text : undefined, "label" in item ? item.label : undefined].filter(
+      (value): value is string => typeof value === "string",
+    ),
+  ),
+];
 
 /** Raw candidates the executor validates and verifies itself — never trusted as-is. */
 export const SIGNED_RESEARCH_TASKS: unknown[] = [DEMO_RESEARCH_TASK];

@@ -4,9 +4,11 @@
  * target line, no comparison to anyone else.
  * Main exports: FeedbackHeatmapSection.
  */
-import { activityLine, FEEDBACK_COPY, heatmapCellLine } from "@breadcrumb/plugin-feedback";
+import { activityMessage, heatmapCellMessage } from "@breadcrumb/plugin-feedback";
 import { cloneElement, useEffect, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
+import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { useFeedbackStore } from "../stores/feedbackStore";
 
 /** Fixed count→level buckets driving block color intensity only — never rendered as text,
@@ -38,6 +40,8 @@ const MONTH_LABELS = [
 ];
 
 export function FeedbackHeatmapSection() {
+  const { t } = useTranslation(["palace", "common"]);
+  const copy = useCopyMessage();
   const cells = useFeedbackStore((state) => state.cells);
   const continuity = useFeedbackStore((state) => state.continuity);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -61,9 +65,9 @@ export function FeedbackHeatmapSection() {
 
   return (
     <section className="rounded-xl bg-white p-3 shadow-sm">
-      <h3 className="font-semibold text-stone-600">{FEEDBACK_COPY.heatmapTitle}</h3>
+      <h3 className="font-semibold text-stone-600">{t("palace:mirror.heatmapTitle")}</h3>
       {continuity.activeDays === 0 ? (
-        <p className="mt-2 text-stone-400">{FEEDBACK_COPY.heatmapEmpty}</p>
+        <p className="mt-2 text-stone-400">{t("palace:mirror.heatmapEmpty")}</p>
       ) : (
         <>
           {/* How-to-read note lives on hover over the calendar area (progressive
@@ -71,7 +75,7 @@ export function FeedbackHeatmapSection() {
           <div
             ref={scrollRef}
             className="mt-2 overflow-x-auto"
-            title={FEEDBACK_COPY.heatmapHoverNote}
+            title={t("palace:mirror.heatmapHoverNote")}
           >
             <ActivityCalendar
               data={activities}
@@ -85,7 +89,7 @@ export function FeedbackHeatmapSection() {
                 cloneElement(
                   block,
                   {},
-                  <title>{heatmapCellLine(activity.date, activity.count)}</title>,
+                  <title>{copy(heatmapCellMessage(activity.date, activity.count))}</title>,
                 )
               }
               showColorLegend={false}
@@ -93,7 +97,7 @@ export function FeedbackHeatmapSection() {
               showWeekdayLabels={false}
             />
           </div>
-          <p className="mt-2 text-stone-500">{activityLine(continuity.activeDays)}</p>
+          <p className="mt-2 text-stone-500">{copy(activityMessage(continuity.activeDays))}</p>
         </>
       )}
     </section>

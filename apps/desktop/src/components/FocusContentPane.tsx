@@ -7,8 +7,10 @@
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import type { DoorCandidate } from "@breadcrumb/plugin-explore";
-import { EXPLORE_UI_COPY, focusSelectHint } from "@breadcrumb/plugin-explore";
+import { focusSelectHintMessage } from "@breadcrumb/plugin-explore";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { computeFocusDoorPatches } from "../lib/focusDoors";
 import { useFocusStore } from "../stores/focusStore";
 import { FocusAskBar } from "./FocusAskBar";
@@ -24,6 +26,8 @@ interface SelectionHint {
 }
 
 export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | null }) {
+  const copy = useCopyMessage();
+  const { t } = useTranslation(["learning", "common"]);
   const streamingText = useFocusStore((state) => state.streamingText);
   const errorText = useFocusStore((state) => state.errorText);
   const pendingGuess = useFocusStore((state) => state.pendingGuess);
@@ -122,13 +126,13 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
         )}
         {errorText !== null && (
           <div className="mx-auto mt-3 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
-            {errorText}
+            {copy(errorText)}
             <button
               type="button"
               onClick={() => void useFocusStore.getState().retryCurrent()}
               className="ml-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
             >
-              {EXPLORE_UI_COPY.focusRetryButton}
+              {t("learning:focus.retryButton")}
             </button>
           </div>
         )}
@@ -138,10 +142,12 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
           style={{ position: "fixed", left: hint.left, top: hint.top }}
           className="z-20 rounded-lg border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 shadow-lg"
         >
-          {focusSelectHint(
-            hint.text.length > SELECTION_HINT_MAX_CHARS
-              ? `${hint.text.slice(0, SELECTION_HINT_MAX_CHARS)}…`
-              : hint.text,
+          {copy(
+            focusSelectHintMessage(
+              hint.text.length > SELECTION_HINT_MAX_CHARS
+                ? `${hint.text.slice(0, SELECTION_HINT_MAX_CHARS)}…`
+                : hint.text,
+            ),
           )}
         </div>
       )}

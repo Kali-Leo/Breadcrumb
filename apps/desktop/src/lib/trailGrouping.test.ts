@@ -6,7 +6,7 @@
 import type { ConversationRow, KnowledgeNodeRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
 import {
-  CASUAL_CHAT_GROUP_LABEL,
+  CASUAL_CHAT_GROUP_KEY,
   computeDominantNodes,
   groupTrails,
   topAncestorOf,
@@ -108,7 +108,7 @@ describe("groupTrails", () => {
       todaySinceIso: today,
     });
     const labels = result.groups.map((group) => group.label).sort();
-    expect(labels).toEqual(["JavaScript", CASUAL_CHAT_GROUP_LABEL]);
+    expect(labels).toEqual(["JavaScript", CASUAL_CHAT_GROUP_KEY]);
   });
 
   it("caps 正在进行 at 3 while every today conversation still appears in its group", () => {

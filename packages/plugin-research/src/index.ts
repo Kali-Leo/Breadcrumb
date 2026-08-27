@@ -8,4 +8,3 @@ export * from "./statistics";
 export * from "./statResults";
 export * from "./taskSchema";
 export * from "./taskSignature";
-export * from "./uiCopy";

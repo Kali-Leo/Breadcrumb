@@ -5,13 +5,14 @@
  * no session is open; mounted once at the app shell's top level.
  * Main exports: FocusOverlay.
  */
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useFocusStore } from "../stores/focusStore";
 import { FocusContentPane } from "./FocusContentPane";
 import { FocusMap } from "./FocusMap";
 
 export function FocusOverlay() {
+  const { t } = useTranslation(["learning", "common"]);
   const open = useFocusStore((state) => state.open);
   const rootLabel = useFocusStore((state) => state.rootLabel);
   const nodes = useFocusStore((state) => state.nodes);
@@ -47,7 +48,7 @@ export function FocusOverlay() {
               onClick={() => jumpTo(parentId)}
               className="rounded-lg px-2 py-1 text-sm text-stone-500 hover:bg-stone-100"
             >
-              {EXPLORE_UI_COPY.focusUpButton}
+              {t("learning:focus.upButton")}
             </button>
           )}
           <span className="font-semibold text-stone-800">{rootLabel}</span>
@@ -57,7 +58,7 @@ export function FocusOverlay() {
           onClick={exitFocus}
           className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
         >
-          {EXPLORE_UI_COPY.focusExitButton}
+          {t("learning:focus.exitButton")}
         </button>
       </div>
       <div className="flex min-h-0 flex-1">

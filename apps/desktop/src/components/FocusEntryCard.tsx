@@ -4,10 +4,12 @@
  * both restored as they were).
  * Main exports: FocusEntryCard.
  */
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
+
+import { useTranslation } from "react-i18next";
 import { useFocusStore } from "../stores/focusStore";
 
 export function FocusEntryCard({ content, sessionId }: { content: string; sessionId: string }) {
+  const { t } = useTranslation(["learning", "common"]);
   const reopen = useFocusStore((state) => state.reopen);
   return (
     <div className="flex justify-start">
@@ -18,7 +20,7 @@ export function FocusEntryCard({ content, sessionId }: { content: string; sessio
           onClick={() => void reopen(sessionId)}
           className="rounded-lg bg-amber-100 px-2.5 py-1 text-stone-700 text-xs hover:bg-amber-200"
         >
-          {EXPLORE_UI_COPY.focusEntryReturnButton}
+          {t("learning:focus.entryReturnButton")}
         </button>
       </div>
     </div>

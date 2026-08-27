@@ -1,1 +1,34 @@
-{}
+{
+  "mirror": {
+    "loading": "加载中…",
+    "heatmapTitle": "学习热力图",
+    "heatmapHoverNote": "每格是一天，颜色越深，那天学得越多。",
+    "heatmapEmpty": "还没有痕迹。开始一段学习对话，这里会出现第一格。",
+    "heatmapCell": "{{date}}，留下 {{count}} 个学习痕迹",
+    "heatmapCellEmpty": "{{date}}",
+    "activeDays": "活跃 {{count}} 天",
+    "trendsTitle": "趋势",
+    "trendsEmpty": "线条会随学习慢慢出现。",
+    "trendLayersMemoryLabel": "记忆",
+    "trendLayersUnderstandingLabel": "理解",
+    "trendLayersIntuitionLabel": "直觉",
+    "trendLayersMemoryNote": "估算这一天你还能想起来的概念有多少；一阵子不接触，会随时间自然消退。",
+    "trendLayersUnderstandingNote": "记得的概念里，有你自己讲解过或说过学过作支撑的那部分，也是估算。",
+    "trendLayersIntuitionNote": "最粗略的估算：已经长期稳固、而且你在对话里自己用过的那部分。",
+    "trendWordsTitle": "词汇",
+    "trendWordsSettledLabel": "已稳固超过一个月的词",
+    "trendWordsMemoryNote": "估算这一天你还能想起来的词有多少；一阵子不接触，会随时间自然消退。",
+    "trendWordsIntuitionNote": "最粗略的估算：已经长期稳固、而且你在自己的话里用过的那部分词。",
+    "trendWordsSettledNote": "数的是已经稳固超过一个月的词；新词稳固需要时间，这条线前段为 0 是正常的。",
+    "reunionOpener": "这次来重逢「{{title}}」。先用自己的话说说你对它还有什么印象，从记得的部分开始就好；剩下的我来补。",
+    "newConcept": "新认识：{{title}}",
+    "reencounter": "重逢：{{title}}",
+    "wordGuessCorrect": "词汇：「{{word}}」猜对了",
+    "wordGuessClose": "词汇：「{{word}}」接近了",
+    "teachSession": "讲了一次：{{title}}",
+    "evidenceClaimLearned": "你说过：这个学过",
+    "evidenceClaimFamiliar": "你说过：这个比较熟",
+    "evidenceClaimTaughtPrincipled": "你讲过它的原理",
+    "evidenceClaimTaughtSurface": "你把它复述过一遍"
+  }
+}

@@ -5,8 +5,9 @@
  * or a pointer press outside the current selection, dismisses the hint without side effects.
  * Main exports: SelectionFocusCatcher.
  */
-import { focusSelectHint } from "@breadcrumb/plugin-explore";
+import { focusSelectHintMessage } from "@breadcrumb/plugin-explore";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 
 /** Selections longer than this are truncated before becoming a focus session's root label
  * (spec 042 §5: "选区文本截 24 字"). */
@@ -30,6 +31,7 @@ export function SelectionFocusCatcher({
   /** Called with the truncated selection text on Enter. */
   onConfirm: (rootLabel: string) => void;
 }) {
+  const copy = useCopyMessage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hint, setHint] = useState<SelectionHint | null>(null);
   // Refs, not deps entries: onConfirm is a fresh closure every render, and the listeners
@@ -96,7 +98,7 @@ export function SelectionFocusCatcher({
           style={{ position: "fixed", left: hint.left, top: hint.top }}
           className="z-20 rounded-lg border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 shadow-lg"
         >
-          {focusSelectHint(hint.quotedText)}
+          {copy(focusSelectHintMessage(hint.quotedText))}
         </div>
       )}
     </div>

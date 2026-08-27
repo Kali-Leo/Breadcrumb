@@ -6,7 +6,8 @@
  * algorithm self-adjusts, and audio either works out of the box or stays hidden.
  * Main exports: DiglotSettingsSection.
  */
-import { DIGLOT_UI_COPY } from "@breadcrumb/plugin-diglot-weave";
+
+import { useTranslation } from "react-i18next";
 import { useDiglotStore } from "../stores/diglotStore";
 
 function ToggleSwitch({
@@ -33,6 +34,7 @@ function ToggleSwitch({
 }
 
 export function DiglotSettingsSection() {
+  const { t } = useTranslation(["learning", "common"]);
   const settings = useDiglotStore((state) => state.settings);
   const saveSettings = useDiglotStore((state) => state.saveSettings);
 
@@ -40,8 +42,8 @@ export function DiglotSettingsSection() {
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium text-stone-700">{DIGLOT_UI_COPY.settingsTitle}</h3>
-          <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.settingsHint}</p>
+          <h3 className="font-medium text-stone-700">{t("learning:diglot.settingsTitle")}</h3>
+          <p className="text-xs text-stone-400">{t("learning:diglot.settingsHint")}</p>
         </div>
         <ToggleSwitch
           on={settings.enabled}
@@ -51,11 +53,11 @@ export function DiglotSettingsSection() {
       </div>
       {settings.enabled && (
         <div className="space-y-3 text-sm text-stone-600">
-          <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.pairStatus}</p>
+          <p className="text-xs text-stone-400">{t("learning:diglot.pairStatus")}</p>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <span>{DIGLOT_UI_COPY.llmRefineLabel}</span>
-              <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.llmRefineHint}</p>
+              <span>{t("learning:diglot.llmRefineLabel")}</span>
+              <p className="text-xs text-stone-400">{t("learning:diglot.llmRefineHint")}</p>
             </div>
             <ToggleSwitch
               on={settings.llmRefineEnabled}

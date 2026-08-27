@@ -4,11 +4,12 @@
  * possible but submit waits (single-buffer guard) and a 停止 button appears instead.
  * Main exports: FocusAskBar.
  */
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useFocusStore } from "../stores/focusStore";
 
 export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
+  const { t } = useTranslation(["learning", "common"]);
   const [draft, setDraft] = useState("");
   const streaming = useFocusStore((state) => state.streamingText !== null);
 
@@ -27,7 +28,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
       <input
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
-        placeholder={EXPLORE_UI_COPY.focusAskPlaceholder}
+        placeholder={t("learning:focus.askPlaceholder")}
         className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm"
       />
       {streaming && (

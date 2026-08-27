@@ -6,9 +6,8 @@
  * palace rail.
  * Main exports: VocabPanel.
  */
-import { DIGLOT_UI_COPY } from "@breadcrumb/plugin-diglot-weave";
-import { FEEDBACK_COPY } from "@breadcrumb/plugin-feedback";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getRepos } from "../lib/db";
 import { useDiglotStore } from "../stores/diglotStore";
 import { useFeedbackStore } from "../stores/feedbackStore";
@@ -26,6 +25,7 @@ interface LearningWordRow {
 /** The words currently being learned: diglot word states (newest introduced first) joined
  * with the language pack's entries for the foreign word and its gloss. */
 function LearningWordsSection() {
+  const { t } = useTranslation(["learning", "palace", "common"]);
   const enabled = useDiglotStore((state) => state.settings.enabled);
   const pairId = useDiglotStore((state) => state.settings.pairId);
   const loaded = useDiglotStore((state) => state.loaded);
@@ -59,9 +59,11 @@ function LearningWordsSection() {
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-medium text-stone-700">{DIGLOT_UI_COPY.learningWordsTitle}</h3>
+      <h3 className="text-sm font-medium text-stone-700">
+        {t("learning:diglot.learningWordsTitle")}
+      </h3>
       {rows.length === 0 ? (
-        <p className="mt-1 text-xs text-stone-400">{DIGLOT_UI_COPY.learningWordsEmpty}</p>
+        <p className="mt-1 text-xs text-stone-400">{t("learning:diglot.learningWordsEmpty")}</p>
       ) : (
         <ul className="mt-2 max-h-80 space-y-1 overflow-y-auto text-sm">
           {rows.map((row) => (
@@ -85,6 +87,7 @@ const WORD_INTUITION_COLOR = "#6d28d9";
 const WORDS_SETTLED_COLOR = "#92400e";
 
 function VocabTrendCard() {
+  const { t } = useTranslation(["learning", "palace", "common"]);
   const trends = useFeedbackStore((state) => state.trends);
   const hasWordData =
     trends.wordsSettled.some((point) => point.value > 0) ||
@@ -96,7 +99,7 @@ function VocabTrendCard() {
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm text-xs">
-      <h3 className="text-sm font-medium text-stone-700">{FEEDBACK_COPY.trendWordsTitle}</h3>
+      <h3 className="text-sm font-medium text-stone-700">{t("palace:mirror.trendWordsTitle")}</h3>
       {hasWordData ? (
         <div className="mt-2">
           <TrendLineChart
@@ -104,36 +107,36 @@ function VocabTrendCard() {
             series={[
               {
                 key: "wordMemory",
-                label: FEEDBACK_COPY.trendLayersMemoryLabel,
+                label: t("palace:mirror.trendLayersMemoryLabel"),
                 color: WORD_MEMORY_COLOR,
                 data: trends.wordLayers.map((point) => ({
                   date: point.date,
                   value: point.memory,
                 })),
-                explanation: FEEDBACK_COPY.trendWordsMemoryNote,
+                explanation: t("palace:mirror.trendWordsMemoryNote"),
               },
               {
                 key: "wordIntuition",
-                label: FEEDBACK_COPY.trendLayersIntuitionLabel,
+                label: t("palace:mirror.trendLayersIntuitionLabel"),
                 color: WORD_INTUITION_COLOR,
                 data: trends.wordLayers.map((point) => ({
                   date: point.date,
                   value: point.intuition,
                 })),
-                explanation: FEEDBACK_COPY.trendWordsIntuitionNote,
+                explanation: t("palace:mirror.trendWordsIntuitionNote"),
               },
               {
                 key: "wordsSettled",
-                label: FEEDBACK_COPY.trendWordsSettledLabel,
+                label: t("palace:mirror.trendWordsSettledLabel"),
                 color: WORDS_SETTLED_COLOR,
                 data: trends.wordsSettled,
-                explanation: FEEDBACK_COPY.trendWordsSettledNote,
+                explanation: t("palace:mirror.trendWordsSettledNote"),
               },
             ]}
           />
         </div>
       ) : (
-        <p className="mt-1 text-stone-400">{FEEDBACK_COPY.trendsEmpty}</p>
+        <p className="mt-1 text-stone-400">{t("palace:mirror.trendsEmpty")}</p>
       )}
     </section>
   );

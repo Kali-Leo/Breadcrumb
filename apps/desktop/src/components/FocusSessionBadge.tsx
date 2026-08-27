@@ -5,7 +5,8 @@
  * inline bar; clicking a row reopens that session.
  * Main exports: FocusSessionBadge.
  */
-import { focusBadgeLine } from "@breadcrumb/plugin-explore";
+import { focusBadgeMessage } from "@breadcrumb/plugin-explore";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { useFocusSessionsStore } from "../stores/focusSessionsStore";
 import { useFocusStore } from "../stores/focusStore";
 
@@ -14,6 +15,7 @@ interface FocusSessionBadgeProps {
 }
 
 export function FocusSessionBadge({ messageId }: FocusSessionBadgeProps) {
+  const copy = useCopyMessage();
   const sessions = useFocusSessionsStore((state) => state.sessionsByMessageId.get(messageId));
   const reopen = useFocusStore((state) => state.reopen);
 
@@ -28,7 +30,7 @@ export function FocusSessionBadge({ messageId }: FocusSessionBadgeProps) {
           onClick={() => void reopen(session.sessionId)}
           className="block text-xs text-stone-400 transition-colors hover:text-amber-600"
         >
-          {focusBadgeLine(session.rootLabel, session.answeredCount)}
+          {copy(focusBadgeMessage(session.rootLabel, session.answeredCount))}
         </button>
       ))}
     </div>

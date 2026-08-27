@@ -7,8 +7,8 @@
  * dashed = 3 3), spec 040's provenance-tree view that spec 042 §6 retired.
  * Main exports: FocusMap.
  */
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { layoutFocusMap } from "../lib/focusMapLayout";
 import { useFocusStore } from "../stores/focusStore";
 
@@ -59,6 +59,7 @@ function useElementSize<T extends HTMLElement>(): [
 }
 
 export function FocusMap() {
+  const { t } = useTranslation(["learning", "common"]);
   const nodes = useFocusStore((state) => state.nodes);
   const currentNodeId = useFocusStore((state) => state.currentNodeId);
   const jumpTo = useFocusStore((state) => state.jumpTo);
@@ -160,7 +161,7 @@ export function FocusMap() {
         </svg>
       </div>
       <p className="shrink-0 border-stone-200 border-t px-3 py-2 text-[11px] text-stone-400">
-        {EXPLORE_UI_COPY.focusMapHint}
+        {t("learning:focus.mapHint")}
       </p>
     </aside>
   );

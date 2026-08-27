@@ -5,12 +5,14 @@
  * already used for the continuation/companion banners (border-b, text-xs).
  * Main exports: FocusSessionsBar.
  */
-import { focusBarTitle } from "@breadcrumb/plugin-explore";
+import { focusBarTitleMessage } from "@breadcrumb/plugin-explore";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { formatFocusSessionTimestamp } from "../lib/focusSessionTime";
 import { useFocusSessionsStore } from "../stores/focusSessionsStore";
 import { useFocusStore } from "../stores/focusStore";
 
 export function FocusSessionsBar() {
+  const copy = useCopyMessage();
   const allSessions = useFocusSessionsStore((state) => state.allSessions);
   const reopen = useFocusStore((state) => state.reopen);
 
@@ -18,7 +20,9 @@ export function FocusSessionsBar() {
 
   return (
     <details className="border-stone-100 border-b bg-white px-4 py-1.5 text-stone-500 text-xs">
-      <summary className="cursor-pointer select-none">{focusBarTitle(allSessions.length)}</summary>
+      <summary className="cursor-pointer select-none">
+        {copy(focusBarTitleMessage(allSessions.length))}
+      </summary>
       <ul className="mt-1 space-y-1 pb-1">
         {allSessions.map((session) => (
           <li key={session.sessionId}>

@@ -72,7 +72,11 @@ describe("computeSmallWins", () => {
       window: WINDOW,
     });
     expect(wins).toEqual([
-      { kind: "new-concept", label: "新认识:递归", occurredAtIso: "2026-08-10T00:00:00.000Z" },
+      {
+        kind: "new-concept",
+        message: { key: "palace:mirror.newConcept", params: { title: "递归" } },
+        occurredAtIso: "2026-08-10T00:00:00.000Z",
+      },
     ]);
   });
 
@@ -87,7 +91,11 @@ describe("computeSmallWins", () => {
       window: WINDOW,
     });
     expect(wins).toEqual([
-      { kind: "reencounter", label: "重逢:递归", occurredAtIso: "2026-08-11T00:00:00.000Z" },
+      {
+        kind: "reencounter",
+        message: { key: "palace:mirror.reencounter", params: { title: "递归" } },
+        occurredAtIso: "2026-08-11T00:00:00.000Z",
+      },
     ]);
   });
 
@@ -123,7 +131,7 @@ describe("computeSmallWins", () => {
     expect(wins).toEqual([
       {
         kind: "word-guess",
-        label: "词汇:「book」接近了",
+        message: { key: "palace:mirror.wordGuessClose", params: { word: "book" } },
         occurredAtIso: "2026-08-10T00:00:00.000Z",
       },
     ]);
@@ -136,7 +144,10 @@ describe("computeSmallWins", () => {
       guesses: [guess("dog", "correct", "2026-08-08T00:00:00.000Z")],
       window: WINDOW,
     });
-    expect(wins[0]?.label).toBe("词汇:「dog」猜对了");
+    expect(wins[0]?.message).toEqual({
+      key: "palace:mirror.wordGuessCorrect",
+      params: { word: "dog" },
+    });
   });
 
   it("includes teach-kind conversations inside the window and excludes other kinds", () => {
@@ -152,7 +163,7 @@ describe("computeSmallWins", () => {
     expect(wins).toEqual([
       {
         kind: "teach-session",
-        label: "讲了一次:回讲:递归",
+        message: { key: "palace:mirror.teachSession", params: { title: "回讲:递归" } },
         occurredAtIso: "2026-08-09T00:00:00.000Z",
       },
     ]);

@@ -4,14 +4,14 @@
  * 🔊 renders only for a VERIFIED audio provider (canSpeak); IPA shows regardless.
  * Main exports: DiglotWordCard.
  */
-import {
-  DIGLOT_UI_COPY,
-  type PackEntry,
-  type ReplacementPatch,
-} from "@breadcrumb/plugin-diglot-weave";
+
+import type { CopyMessage } from "@breadcrumb/core-i18n";
+import type { PackEntry, ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { canSpeak, speakWord, subscribeVoicesChanged } from "../lib/diglotAudio";
-import { feedbackTextFor, submitDiglotGuess } from "../lib/diglotGuess";
+import { guessFeedbackMessage, submitDiglotGuess } from "../lib/diglotGuess";
 import { useDiglotStore } from "../stores/diglotStore";
 
 interface DiglotWordCardProps {
@@ -34,8 +34,10 @@ export function DiglotWordCard({
   guessFirst,
   onGuessResolved,
 }: DiglotWordCardProps) {
+  const { t } = useTranslation(["learning", "common"]);
+  const copy = useCopyMessage();
   const [guessDone, setGuessDone] = useState(!guessFirst);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<CopyMessage | null>(null);
   const [guessText, setGuessText] = useState("");
   const openedAt = useRef(Date.now());
   /** One hover signal per card-open — guards against StrictMode double effects and
@@ -80,7 +82,7 @@ export function DiglotWordCard({
     onGuessResolved();
     void useDiglotStore.getState().refreshConfusions();
     void recordSignal(patch.lemma, eventKind, messageId, context, latencyMs);
-    setFeedback(feedbackTextFor(grade, patch.original));
+    setFeedback(guessFeedbackMessage(grade, patch.original));
     setGuessDone(true);
   };
 
@@ -119,7 +121,7 @@ export function DiglotWordCard({
   if (!guessDone) {
     return (
       <div className="w-64 space-y-2 p-3 text-sm text-stone-700">
-        <p className="text-xs text-stone-400">{DIGLOT_UI_COPY.guessPrompt}</p>
+        <p className="text-xs text-stone-400">{t("learning:diglot.guessPrompt")}</p>
         <p className="rounded bg-stone-50 px-2 py-1 text-xs leading-relaxed">{context}</p>
         <form
           className="flex gap-1.5"
@@ -134,14 +136,14 @@ export function DiglotWordCard({
             value={guessText}
             onChange={(event) => setGuessText(event.target.value)}
             className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm"
-            placeholder={DIGLOT_UI_COPY.guessPlaceholder}
+            placeholder={t("learning:diglot.guessPlaceholder")}
           />
           <button
             type="submit"
             disabled={guessText.trim().length === 0}
             className="rounded bg-amber-100 px-2 py-1 text-xs text-stone-700 disabled:opacity-40"
           >
-            {DIGLOT_UI_COPY.guessSubmit}
+            {t("learning:diglot.guessSubmit")}
           </button>
         </form>
       </div>
@@ -150,7 +152,7 @@ export function DiglotWordCard({
 
   return (
     <div className="w-64 space-y-1.5 p-3 text-sm text-stone-700">
-      {feedback !== null && <p className="text-stone-600">{feedback}</p>}
+      {feedback !== null && <p className="text-stone-600">{copy(feedback)}</p>}
       <div className="flex items-baseline gap-2">
         <span className="text-base font-medium">{patch.replacement}</span>
         {entry.reading !== "" && <span className="text-xs text-stone-400">{entry.reading}</span>}
@@ -175,7 +177,7 @@ export function DiglotWordCard({
       </div>
       {confusion !== undefined && (
         <p className="text-stone-400 text-xs">
-          {DIGLOT_UI_COPY.contrastLabel}:「{confusion.lemma}」是 {confusion.target}
+          {t("learning:diglot.contrastLabel")}:「{confusion.lemma}」是 {confusion.target}
         </p>
       )}
       <p>
@@ -183,7 +185,7 @@ export function DiglotWordCard({
         {entry.altTargets.length > 0 && (
           <span className="text-xs text-stone-400">
             {" "}
-            · {DIGLOT_UI_COPY.alsoTranslatedAs} {entry.altTargets.join(", ")}
+            · {t("learning:diglot.alsoTranslatedAs")} {entry.altTargets.join(", ")}
           </span>
         )}
       </p>

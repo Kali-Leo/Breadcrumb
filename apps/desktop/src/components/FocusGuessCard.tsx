@@ -4,8 +4,8 @@
  * matches a known concept) and either way moves on to the new station's explanation.
  * Main exports: FocusGuessCard.
  */
-import { EXPLORE_UI_COPY } from "@breadcrumb/plugin-explore";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function FocusGuessCard({
   word,
@@ -16,12 +16,13 @@ export function FocusGuessCard({
   onSubmit: (guessText: string) => void;
   onSkip: () => void;
 }) {
+  const { t } = useTranslation(["learning", "common"]);
   const [guessText, setGuessText] = useState("");
 
   return (
     <div className="mb-3 space-y-2 rounded-xl border border-stone-200 bg-stone-50 p-3 text-sm">
       <p className="text-xs text-stone-400">
-        {EXPLORE_UI_COPY.doorGuessPrompt}（「{word}」）
+        {t("learning:door.guessPrompt")}（「{word}」）
       </p>
       <form
         className="flex gap-1.5"
@@ -37,21 +38,21 @@ export function FocusGuessCard({
           value={guessText}
           onChange={(event) => setGuessText(event.target.value)}
           className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm"
-          placeholder={EXPLORE_UI_COPY.doorGuessPlaceholder}
+          placeholder={t("learning:door.guessPlaceholder")}
         />
         <button
           type="submit"
           disabled={guessText.trim().length === 0}
           className="rounded bg-amber-100 px-2 py-1 text-xs text-stone-700 disabled:opacity-40"
         >
-          {EXPLORE_UI_COPY.doorGuessSubmit}
+          {t("learning:door.guessSubmit")}
         </button>
         <button
           type="button"
           onClick={onSkip}
           className="rounded px-2 py-1 text-xs text-stone-500 hover:bg-stone-100"
         >
-          {EXPLORE_UI_COPY.focusGuessSkipButton}
+          {t("learning:focus.guessSkipButton")}
         </button>
       </form>
     </div>

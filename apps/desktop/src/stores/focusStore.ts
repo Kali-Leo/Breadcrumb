@@ -6,6 +6,7 @@
  * Main exports: useFocusStore.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   buildQuestionMessages,
   buildWordExplainMessages,
@@ -37,7 +38,8 @@ interface FocusState {
   nodes: FocusNodeRow[];
   currentNodeId: string | null;
   streamingText: string | null;
-  errorText: string | null;
+  /** The failure to state, as a catalogue key (spec 058 §2); null while nothing failed. */
+  errorText: CopyMessage | null;
   pendingGuess: FocusGuessState | null;
   guessedNodeIds: ReadonlySet<string>;
   recentConsecutiveAbandons: number;

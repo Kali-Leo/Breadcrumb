@@ -4,13 +4,20 @@
  * Main exports: SmallWin, SmallWinKind, SmallWinsInput, computeSmallWins.
  */
 import type { ConversationRow, DiglotWordGuessRow, NodeSightingRow } from "@breadcrumb/core-db";
-import { newConceptLabel, reencounterLabel, teachSessionLabel, wordGuessLabel } from "./uiCopy";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
+import {
+  newConceptMessage,
+  reencounterMessage,
+  teachSessionMessage,
+  wordGuessMessage,
+} from "./uiCopy";
 
 export type SmallWinKind = "new-concept" | "reencounter" | "word-guess" | "teach-session";
 
 export interface SmallWin {
   kind: SmallWinKind;
-  label: string;
+  /** The sentence to render, as a catalogue key plus its values (spec 058 §2). */
+  message: CopyMessage;
   occurredAtIso: string;
 }
 
@@ -52,11 +59,15 @@ export function computeSmallWins(input: SmallWinsInput): SmallWin[] {
     const firstEver = firstSightingByNode.get(nodeId);
     const latestInWindow = times[times.length - 1] ?? window.sinceIso;
     if (firstEver !== undefined && firstEver >= window.sinceIso) {
-      wins.push({ kind: "new-concept", label: newConceptLabel(title), occurredAtIso: firstEver });
+      wins.push({
+        kind: "new-concept",
+        message: newConceptMessage(title),
+        occurredAtIso: firstEver,
+      });
     } else {
       wins.push({
         kind: "reencounter",
-        label: reencounterLabel(title),
+        message: reencounterMessage(title),
         occurredAtIso: latestInWindow,
       });
     }
@@ -74,7 +85,7 @@ export function computeSmallWins(input: SmallWinsInput): SmallWin[] {
   for (const guess of latestGuessByLemma.values()) {
     wins.push({
       kind: "word-guess",
-      label: wordGuessLabel(guess.lemma, guess.grade === "close"),
+      message: wordGuessMessage(guess.lemma, guess.grade === "close"),
       occurredAtIso: guess.created_at,
     });
   }
@@ -84,7 +95,7 @@ export function computeSmallWins(input: SmallWinsInput): SmallWin[] {
     if (!inWindow(conversation.created_at)) continue;
     wins.push({
       kind: "teach-session",
-      label: teachSessionLabel(conversation.title),
+      message: teachSessionMessage(conversation.title),
       occurredAtIso: conversation.created_at,
     });
   }

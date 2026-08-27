@@ -3,9 +3,10 @@
  * cutoffs are an empirical starting point for e5-small embeddings, tunable constants, not a
  * calibrated model. Feedback is plain statement only (product principle 1: no praise, no
  * pressure).
- * Main exports: gradeConceptGuess, guessFeedbackLine, ConceptGuessGrade,
+ * Main exports: gradeConceptGuess, guessFeedbackMessage, ConceptGuessGrade,
  * CORRECT_COSINE_THRESHOLD, CLOSE_COSINE_THRESHOLD.
  */
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 
 export type ConceptGuessGrade = "correct" | "close" | "wrong";
 
@@ -22,14 +23,16 @@ export function gradeConceptGuess(cosine: number): ConceptGuessGrade {
   return "wrong";
 }
 
-/** Plain-statement feedback line for a graded concept guess (no praise, no pressure). */
-export function guessFeedbackLine(grade: ConceptGuessGrade, summary: string): string {
+/** Plain-statement feedback for a graded concept guess (no praise, no pressure) — which of
+ * the three lines applies; the app writes it (spec 058 §2). */
+export function guessFeedbackMessage(grade: ConceptGuessGrade, summary: string): CopyMessage {
+  const params = { summary };
   switch (grade) {
     case "correct":
-      return `对。${summary}`;
+      return { key: "learning:door.guessCorrect", params };
     case "close":
-      return `接近。它是指：${summary}`;
+      return { key: "learning:door.guessClose", params };
     case "wrong":
-      return `它是指：${summary}`;
+      return { key: "learning:door.guessWrong", params };
   }
 }

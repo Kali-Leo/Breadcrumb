@@ -1,1 +1,50 @@
-{}
+{
+  "diglot": {
+    "guessPrompt": "What does this word mean? Have a guess first, then look.",
+    "guessPlaceholder": "Your guess",
+    "guessSubmit": "Submit",
+    "alsoTranslatedAs": "also",
+    "settingsTitle": "Language learning",
+    "settingsHint": "Some words in the chat are replaced with the language you are learning",
+    "pairStatus": "Learning English from Chinese",
+    "llmRefineLabel": "Smart swaps",
+    "llmRefineHint": "Lets the AI pick the word that fits the sentence. More accurate, and it costs a little on each message.",
+    "learningWordsTitle": "Words you are learning",
+    "learningWordsEmpty": "Once you start chatting, the words you pick up appear here.",
+    "contrastLabel": "Easily confused",
+    "guessCorrect": "It is \"{{word}}\".",
+    "guessClose": "Close — it is \"{{word}}\".",
+    "guessWrong": "It is \"{{word}}\"."
+  },
+  "door": {
+    "guessPrompt": "Have a guess first: what is it, in one sentence?",
+    "guessPlaceholder": "Your guess",
+    "guessSubmit": "Submit",
+    "expandButton": "Talk it through",
+    "directReveal": "It means: {{summary}}",
+    "expandPrefill": "About \"{{label}}\", I would like to go deeper:",
+    "guessCorrect": "Right. {{summary}}",
+    "guessClose": "Close. It means: {{summary}}",
+    "guessWrong": "It means: {{summary}}"
+  },
+  "trail": {
+    "ongoingSectionLabel": "In progress",
+    "casualChatGroupLabel": "Just chatting",
+    "timelineToggleLabel": "Browse by time"
+  },
+  "focus": {
+    "exitButton": "Leave focus",
+    "askPlaceholder": "Ask about what you are reading…",
+    "guessSkipButton": "Just show the explanation",
+    "retryButton": "Try again",
+    "entryReturnButton": "Back to focus",
+    "upButton": "← Up one level",
+    "mapHint": "Tap a stop to jump there. Solid lines grew from a word you picked; dashed ones grew from a question.",
+    "selectHint": "Press Enter to explain \"{{text}}\"",
+    "errorPlain": "This stop did not come out. You can try again, or leave focus.",
+    "errorWithReason": "This stop did not come out: {{reason}}. You can try again, or leave focus.",
+    "badgeLine": "🔎 Explored: {{label}} · {{count}} stops",
+    "barTitle": "🔎 Focus trails in this chat ({{count}})",
+    "errorNoApi": "This stop did not come out: no AI service is set up yet. Add one in settings, then try again."
+  }
+}
