@@ -11,7 +11,6 @@ import {
   extractionResponseSchema,
   planNodeChanges,
 } from "@breadcrumb/plugin-knowledge-tree";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { anchorNodesByAlias } from "./compareAlignActions";
@@ -19,6 +18,7 @@ import { getRepos } from "./db";
 import { embedNodes } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
 import { foldExtractionIntoTrailState } from "./knowledgeTrailFold";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { runSynonymGate } from "./synonymGate";
 import { newId, nowIso } from "./time";
@@ -43,7 +43,7 @@ export async function extractFromFinishedRound(
     const existingNodes = await repos.knowledgeNodes.listAll();
     const aliases = await repos.nodeAliases.listAll();
     const aliasNodeIdByLabel = new Map(aliases.map((alias) => [alias.alias_label, alias.node_id]));
-    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(settings.apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       buildExtractionMessages(existingNodes, question.content, answer.content),

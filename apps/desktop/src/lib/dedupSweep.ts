@@ -17,12 +17,12 @@ import {
   type SynonymJudgePairText,
   synonymJudgeSchema,
 } from "@breadcrumb/plugin-knowledge-tree";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { appEventBus } from "../stores/chatStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { type ApiConfig, useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { nowIso } from "./time";
 
@@ -111,7 +111,7 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
     existingSummary: nodesById.get(pair.nodeBId)?.summary ?? "",
   }));
 
-  const config = { ...apiConfig, fetchImpl: tauriFetch };
+  const config = llmConfigFrom(apiConfig);
   const { parsed, usage } = await chatJson(
     config,
     buildSynonymJudgeMessages(pairTexts),

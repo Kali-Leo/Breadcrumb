@@ -19,6 +19,7 @@ import zhDiscovery from "../locales/zh-CN/discovery.json";
 import zhLearning from "../locales/zh-CN/learning.json";
 import zhPalace from "../locales/zh-CN/palace.json";
 import zhSettings from "../locales/zh-CN/settings.json";
+import { buildPseudoCatalogue, isPseudoLocale, PSEUDO_LOCALE_CODE } from "./pseudoLocale";
 
 export const resources = {
   "zh-CN": {
@@ -39,6 +40,18 @@ export const resources = {
   },
 } as const;
 
+/** Development builds get one extra, deliberately unreadable locale for layout testing. */
+export const DEV_LOCALES: Record<string, Record<string, unknown>> = import.meta.env.DEV
+  ? {
+      [PSEUDO_LOCALE_CODE]: Object.fromEntries(
+        Object.entries(resources.en).map(([namespace, catalogue]) => [
+          namespace,
+          buildPseudoCatalogue(catalogue as never),
+        ]),
+      ),
+    }
+  : {};
+
 export const NAMESPACES = [
   "common",
   "chat",
@@ -52,7 +65,7 @@ export const NAMESPACES = [
 export async function initI18n(): Promise<void> {
   if (i18next.isInitialized) return;
   await i18next.use(initReactI18next).init({
-    resources,
+    resources: { ...resources, ...DEV_LOCALES },
     lng: DEFAULT_LANGUAGE_CODE,
     fallbackLng: DEFAULT_LANGUAGE_CODE,
     defaultNS: "common",
@@ -70,7 +83,7 @@ export function applyLanguageToDocument(code: string): void {
   const language = languageOf(code);
   const root = document.documentElement;
   root.lang = code;
-  root.dir = language?.direction ?? "ltr";
+  root.dir = isPseudoLocale(code) ? "rtl" : (language?.direction ?? "ltr");
   root.style.setProperty("--app-font-stack", fontStackFor(language?.script ?? "latin"));
 }
 

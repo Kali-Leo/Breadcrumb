@@ -151,7 +151,7 @@ export function ChatView() {
                 <button
                   type="button"
                   onClick={() => void retryRound(activeConversationId)}
-                  className="ml-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
+                  className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
                 >
                   {t("common:actions.retry")}
                 </button>
@@ -196,7 +196,7 @@ function ContinuationBanner() {
       <button
         type="button"
         onClick={returnToLatest}
-        className="ml-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
+        className="ms-auto rounded px-2 py-0.5 text-stone-400 hover:bg-amber-100"
       >
         {t("backToLatest")}
       </button>

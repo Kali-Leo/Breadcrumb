@@ -28,6 +28,7 @@ import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -76,7 +77,7 @@ export async function runProposalPipeline(
   apiConfig: ApiConfig,
   input: { topic: string; mainland: boolean },
 ): Promise<VerifiedProposal> {
-  const config = { ...apiConfig, fetchImpl: tauriFetch };
+  const config = llmConfigFrom(apiConfig);
   let usage: TokenUsage;
   let items: readonly SearchedProposalItem[];
   let title: string;

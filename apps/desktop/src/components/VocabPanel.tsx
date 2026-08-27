@@ -70,7 +70,7 @@ function LearningWordsSection() {
             <li key={row.lemma} className="flex items-baseline gap-2">
               <span className="font-medium text-stone-700">{row.target}</span>
               {row.reading !== "" && <span className="text-xs text-stone-400">{row.reading}</span>}
-              <span className="ml-auto text-stone-500">{row.lemma}</span>
+              <span className="ms-auto text-stone-500">{row.lemma}</span>
             </li>
           ))}
         </ul>

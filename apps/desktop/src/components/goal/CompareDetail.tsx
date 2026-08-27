@@ -92,9 +92,9 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
       <p className="font-medium text-stone-700">
         {node.label}
         {node.isLeaf && (node.kind === "hub" || node.kind === "tool") ? (
-          <span className="ml-2 text-stone-400">{t("compare.notDecomposed")}</span>
+          <span className="ms-2 text-stone-400">{t("compare.notDecomposed")}</span>
         ) : (
-          <span className="ml-2 text-stone-400">
+          <span className="ms-2 text-stone-400">
             {t("compare.overlap")}{" "}
             {Number.isInteger(node.matchedLeafCount)
               ? node.matchedLeafCount

@@ -22,7 +22,7 @@ export function FocusSessionBadge({ messageId }: FocusSessionBadgeProps) {
   if (sessions === undefined || sessions.length === 0) return null;
 
   return (
-    <div className="space-y-0.5 pl-1">
+    <div className="space-y-0.5 ps-1">
       {sessions.map((session) => (
         <button
           key={session.sessionId}

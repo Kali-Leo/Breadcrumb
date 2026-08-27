@@ -13,6 +13,7 @@ import {
   UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
 import { useTranslation } from "react-i18next";
+import { PSEUDO_LOCALE_CODE } from "../i18n/pseudoLocale";
 import { useSettingsStore } from "../stores/settingsStore";
 
 const SAME_AS_INTERFACE = "";
@@ -45,6 +46,8 @@ export function LanguageSettingsSection() {
               {languageOf(code)?.endonym ?? code}
             </option>
           ))}
+          {/* Layout testing only: never built into what a user installs (spec 058 §2). */}
+          {import.meta.env.DEV && <option value={PSEUDO_LOCALE_CODE}>Pseudo (RTL)</option>}
         </select>
       </label>
 

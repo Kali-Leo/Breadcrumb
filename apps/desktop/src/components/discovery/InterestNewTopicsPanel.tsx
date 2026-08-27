@@ -23,7 +23,7 @@ export function InterestNewTopicsPanel() {
           {interests.map((interest) => (
             <li key={interest.topic} className="py-2">
               <span className="font-semibold text-sm text-stone-700">{interest.topic}</span>
-              <span className="ml-2 font-semibold text-blue-600 text-xs">
+              <span className="ms-2 font-semibold text-blue-600 text-xs">
                 {(interest.share * 100).toFixed(0)}%↑
               </span>
               {interest.items.length > 0 && (

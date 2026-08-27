@@ -10,10 +10,10 @@ import {
   type GoalMappingResult,
   goalMappingSchema,
 } from "@breadcrumb/plugin-planner";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { appEventBus } from "../stores/chatStore";
 import type { ApiConfig } from "../stores/settingsStore";
 import type { Repos } from "./db";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -24,7 +24,7 @@ export async function requestGoalMapping(
   goalText: string,
   existingNodeLabels: readonly string[],
 ): Promise<GoalMappingResult> {
-  const config = { ...apiConfig, fetchImpl: tauriFetch };
+  const config = llmConfigFrom(apiConfig);
   const { parsed, usage } = await chatJson(
     config,
     buildGoalMappingMessages(goalText, existingNodeLabels),

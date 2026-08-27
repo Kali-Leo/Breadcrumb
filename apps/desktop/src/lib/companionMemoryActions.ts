@@ -17,10 +17,10 @@ import {
   ReflectionResultSchema,
   shouldReflect,
 } from "@breadcrumb/plugin-companion";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -67,7 +67,7 @@ export async function recordCompanionMemoryForFinishedRound(conversationId: stri
   if (lastUser === undefined || lastAssistant === undefined) return;
 
   try {
-    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(settings.apiConfig);
     const observationContent = buildObservationContent(lastUser.content, lastAssistant.content);
     const { parsed: importanceResult, usage: importanceUsage } = await chatJson(
       config,

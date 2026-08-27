@@ -272,7 +272,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto rounded-lg px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
+            className="ms-auto rounded-lg px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
           >
             {t("kingdom.backToIsland")}
           </button>
@@ -289,7 +289,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
           />
         </div>
       </div>
-      <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-l border-stone-200 bg-stone-50 p-4">
+      <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-s border-stone-200 bg-stone-50 p-4">
         {recommendation.regionDone && (
           <p className="rounded-xl bg-white p-3 text-xs text-stone-500 shadow-sm">
             {t("kingdom.areaDone")}

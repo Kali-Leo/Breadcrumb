@@ -89,7 +89,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
+          className="ms-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
         >
           {t("back")}
         </button>
@@ -136,9 +136,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             >
               {t("common:actions.save")}
             </button>
-            {savedHint && <span className="ml-3 text-sm text-amber-600">{t("api.saved")}</span>}
+            {savedHint && <span className="ms-3 text-sm text-amber-600">{t("api.saved")}</span>}
             {!savedHint && dirty && (
-              <span className="ml-3 text-sm text-stone-400">{t("api.unsaved")}</span>
+              <span className="ms-3 text-sm text-stone-400">{t("api.unsaved")}</span>
             )}
           </section>
 

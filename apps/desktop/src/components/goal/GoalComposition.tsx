@@ -53,7 +53,7 @@ export function GoalComposition() {
               {isNewDirection && (
                 <span
                   title={t("goal.compositionNewDirection")}
-                  className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle"
+                  className="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle"
                 />
               )}
             </li>

@@ -73,7 +73,7 @@ export function InterestEmotionPanel() {
             value={category}
             onChange={(next) => void setCategory(next)}
           />
-          <div className="ml-auto flex gap-4 text-stone-500 text-xs">
+          <div className="ms-auto flex gap-4 text-stone-500 text-xs">
             {(["expose", "engage"] as const).map((key) => (
               <span key={key} className="flex items-center gap-1.5">
                 <i

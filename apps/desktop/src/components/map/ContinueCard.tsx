@@ -62,7 +62,7 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
               onClick={() =>
                 void open(candidate.nodeId, candidate.label, candidate.reason.litPrerequisiteLabels)
               }
-              className="w-full rounded border border-stone-200 px-2 py-1.5 text-left transition-colors hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50"
+              className="w-full rounded border border-stone-200 px-2 py-1.5 text-start transition-colors hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50"
             >
               <span className="flex items-center gap-1 font-medium text-stone-700">
                 {candidate.label}

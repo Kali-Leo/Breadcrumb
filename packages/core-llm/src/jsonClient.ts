@@ -5,7 +5,7 @@
  * Main exports: chatJson, ChatJsonResult.
  */
 import { z } from "zod";
-import type { ChatMessage, LlmClientConfig } from "./client";
+import { type ChatMessage, type LlmClientConfig, withLanguageDirective } from "./client";
 import type { TokenUsage } from "./pricing";
 
 export interface ChatJsonResult<Parsed> {
@@ -42,7 +42,7 @@ async function requestCompletion(
     },
     body: JSON.stringify({
       model: config.model,
-      messages,
+      messages: withLanguageDirective(messages, config.answerLanguageDirective),
       stream: false,
       response_format: { type: "json_object" },
     }),

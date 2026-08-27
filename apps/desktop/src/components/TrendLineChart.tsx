@@ -94,7 +94,7 @@ function TrendLegend({ series }: { series: readonly TrendSeries[] }) {
           {oneSeries.explanation !== undefined && (
             <span
               role="tooltip"
-              className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-56 -translate-x-1/2 rounded border border-stone-200 bg-white p-2 text-left leading-relaxed text-stone-600 shadow-sm group-hover:block group-focus-visible:block"
+              className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-56 -translate-x-1/2 rounded border border-stone-200 bg-white p-2 text-start leading-relaxed text-stone-600 shadow-sm group-hover:block group-focus-visible:block"
             >
               {oneSeries.explanation}
             </span>

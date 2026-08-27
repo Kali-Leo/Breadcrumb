@@ -15,10 +15,10 @@ import {
   termMarkResponseSchema,
 } from "@breadcrumb/plugin-explore";
 import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -83,7 +83,7 @@ async function computeTermMarks(
     const lookedUpLabels = lookedUpLabelsAll.slice(0, LABEL_LIST_CAP);
     const evidenceCount = computeEvidenceCount(sightings, claims, lookedUpLabelsAll);
 
-    const config = { ...apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       buildTermMarkingMessages(answerText, litLabels, lookedUpLabels),

@@ -49,7 +49,7 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
           <button
             type="button"
             onClick={() => void openUrl(url)}
-            className="line-clamp-2 text-left text-blue-700 text-sm hover:underline"
+            className="line-clamp-2 text-start text-blue-700 text-sm hover:underline"
           >
             {item.title}
           </button>

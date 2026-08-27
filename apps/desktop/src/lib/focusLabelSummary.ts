@@ -9,10 +9,10 @@
  * Main exports: summarizeFocusLabel.
  */
 import { chatJson } from "@breadcrumb/core-llm";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { z } from "zod";
 import type { ApiConfig } from "../stores/settingsStore";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 
 /** Labels this short already fit the map; asking the model would spend tokens for no visible
@@ -27,7 +27,7 @@ export async function summarizeFocusLabel(
 ): Promise<string | null> {
   if (rawLabel.length <= RAW_LABEL_SHORT_ENOUGH) return null;
   try {
-    const config = { ...apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       [

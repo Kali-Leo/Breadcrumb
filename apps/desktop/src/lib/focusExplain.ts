@@ -5,8 +5,8 @@
  * Main exports: streamFocusAnswer.
  */
 import { type ChatMessage, createLlmClient, type TokenUsage } from "@breadcrumb/core-llm";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 
 export interface StreamFocusAnswerInput {
@@ -34,7 +34,7 @@ const STREAM_TOTAL_TIMEOUT_MS = 180_000;
 export async function streamFocusAnswer(
   input: StreamFocusAnswerInput,
 ): Promise<StreamFocusAnswerResult> {
-  const client = createLlmClient({ ...input.apiConfig, fetchImpl: tauriFetch });
+  const client = createLlmClient(llmConfigFrom(input.apiConfig));
   let abandoned = false;
   let sawDelta = false;
   const stream = client.chatStream(

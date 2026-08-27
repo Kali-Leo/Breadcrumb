@@ -42,13 +42,13 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
 
   if (checking) {
     return (
-      <p className="animate-pulse pl-1 text-xs text-stone-400">🔍 {t("factcheck.checking")}</p>
+      <p className="animate-pulse ps-1 text-xs text-stone-400">🔍 {t("factcheck.checking")}</p>
     );
   }
 
   if (claims === undefined) {
     return (
-      <div className="pl-1">
+      <div className="ps-1">
         <button
           type="button"
           onClick={() => void checkMessage(conversationId, messageId)}
@@ -56,13 +56,13 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
         >
           🔍 {t("factcheck.ask")}
         </button>
-        {notice && <span className="ml-2 text-xs text-stone-400">{copy(notice)}</span>}
+        {notice && <span className="ms-2 text-xs text-stone-400">{copy(notice)}</span>}
       </div>
     );
   }
 
   if (claims.length === 0) {
-    return <p className="pl-1 text-xs text-stone-400">🔍 {t("factcheck.nothingToCheck")}</p>;
+    return <p className="ps-1 text-xs text-stone-400">🔍 {t("factcheck.nothingToCheck")}</p>;
   }
 
   const supportedCount = claims.filter((claim) => claim.relationship === "supported").length;
@@ -72,7 +72,7 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
       : t("factcheck.someSupported", { supported: supportedCount, total: claims.length });
 
   return (
-    <div className="max-w-[76%] space-y-1 pl-1">
+    <div className="max-w-[76%] space-y-1 ps-1">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -98,15 +98,15 @@ function ClaimLine({ claim }: { claim: DisplayClaim }) {
     <li className="space-y-0.5 text-xs">
       <p className="text-stone-600">
         <span className={badge?.tone}>{badge?.icon}</span> {claim.text}
-        <span className={`ml-1 ${badge?.tone}`}>（{badge ? t(badge.labelKey as never) : ""}）</span>
+        <span className={`ms-1 ${badge?.tone}`}>（{badge ? t(badge.labelKey as never) : ""}）</span>
       </p>
-      <p className="pl-4 text-stone-500">{claim.reasoning}</p>
+      <p className="ps-4 text-stone-500">{claim.reasoning}</p>
       {claim.evidence.map((item) => (
         <button
           key={item.url}
           type="button"
           onClick={() => void openUrl(item.url)}
-          className="block pl-4 text-left text-stone-400 underline decoration-stone-300 hover:text-amber-600"
+          className="block ps-4 text-start text-stone-400 underline decoration-stone-300 hover:text-amber-600"
         >
           {item.title}
         </button>

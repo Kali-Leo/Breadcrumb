@@ -92,7 +92,7 @@ function RelationRow({
           key={item.id}
           type="button"
           onClick={() => onJump(item.id)}
-          className="ml-1 rounded bg-stone-100 px-1 py-0.5 text-stone-600 hover:bg-stone-200"
+          className="ms-1 rounded bg-stone-100 px-1 py-0.5 text-stone-600 hover:bg-stone-200"
         >
           {item.label}
         </button>
@@ -179,7 +179,7 @@ export function KingdomNodeCard({
                 <button
                   type="button"
                   onClick={() => onJump(alternate.nodeId)}
-                  className="w-full rounded border border-stone-200 px-2 py-1 text-left text-stone-600 hover:border-amber-400"
+                  className="w-full rounded border border-stone-200 px-2 py-1 text-start text-stone-600 hover:border-amber-400"
                 >
                   <span className="font-medium">{alternate.label}</span>
                   <span className="mt-0.5 block text-stone-400">

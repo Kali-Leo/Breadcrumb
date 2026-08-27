@@ -7,13 +7,13 @@
  * Main exports: judgeTeachRound (exported for reuse; subscription wires it).
  */
 import { chatJson } from "@breadcrumb/core-llm";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { z } from "zod";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { teachTopicFromTitle } from "./teachActions";
 import { newId, nowIso } from "./time";
@@ -55,7 +55,7 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
   if (explanation === undefined || explanation.trim().length < 20) return;
 
   try {
-    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(settings.apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       [

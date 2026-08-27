@@ -96,7 +96,7 @@ export function DiglotWordCard({
           {showSpeaker && (
             <button
               type="button"
-              className="ml-auto rounded px-1 text-base hover:bg-stone-100"
+              className="ms-auto rounded px-1 text-base hover:bg-stone-100"
               onClick={() =>
                 void speakWord(
                   patch.replacement,
@@ -160,7 +160,7 @@ export function DiglotWordCard({
         {showSpeaker && (
           <button
             type="button"
-            className="ml-auto rounded px-1 text-base hover:bg-stone-100"
+            className="ms-auto rounded px-1 text-base hover:bg-stone-100"
             onClick={() => {
               void recordSignal(patch.lemma, "audio", messageId, context, null);
               void speakWord(

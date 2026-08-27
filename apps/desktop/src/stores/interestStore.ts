@@ -15,10 +15,10 @@ import {
   interestSignalsSchema,
   selfReportMappingSchema,
 } from "@breadcrumb/plugin-interest";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
+import { llmConfigFrom } from "../lib/llmConfig";
 import { recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
@@ -55,7 +55,7 @@ export const useInterestStore = create<InterestState>(() => ({
       const allNodes = await repos.knowledgeNodes.listAll();
       if (allNodes.length === 0) return;
 
-      const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+      const config = llmConfigFrom(settings.apiConfig);
       const { parsed, usage } = await chatJson(
         config,
         buildSelfReportMessages(
@@ -125,7 +125,7 @@ async function extractInterestFromRound(
       .map((node) => ({ nodeId: node.id, label: node.label }));
     if (touchedNodes.length === 0) return;
 
-    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(settings.apiConfig);
     const { parsed, usage } = await retryOnce(() =>
       chatJson(
         config,

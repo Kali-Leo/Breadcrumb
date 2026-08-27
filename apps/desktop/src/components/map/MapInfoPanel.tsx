@@ -130,7 +130,7 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
     settledHover !== null && feedbackLabEnabled ? regionNodeIds(world, level, settledHover) : null;
 
   return (
-    <aside className="flex h-full w-full flex-col border-l border-stone-200 bg-stone-50">
+    <aside className="flex h-full w-full flex-col border-s border-stone-200 bg-stone-50">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
         {settledHover !== null ? (
           settledHover.kind === "islet" ? (

@@ -100,7 +100,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
                 <button
                   type="button"
                   onClick={() => void useChatStore.getState().retryRound(conversationId)}
-                  className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200"
+                  className="ms-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200"
                 >
                   {t("common:actions.retry")}
                 </button>

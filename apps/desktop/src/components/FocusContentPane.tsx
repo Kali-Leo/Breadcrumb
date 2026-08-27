@@ -130,7 +130,7 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
             <button
               type="button"
               onClick={() => void useFocusStore.getState().retryCurrent()}
-              className="ml-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
+              className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
             >
               {t("learning:focus.retryButton")}
             </button>

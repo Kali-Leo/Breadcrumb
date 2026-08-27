@@ -16,10 +16,10 @@ import {
   continentNameCacheKey,
   continentNamingSchema,
 } from "@breadcrumb/plugin-map";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { nowIso } from "./time";
 
@@ -38,7 +38,7 @@ async function requestNames(
   apiConfig: ApiConfig,
   requests: readonly { id: string; memberLabels: string[] }[],
 ): Promise<Map<string, string>> {
-  const config = { ...apiConfig, fetchImpl: tauriFetch };
+  const config = llmConfigFrom(apiConfig);
   const { parsed, usage } = await chatJson(
     config,
     buildContinentNamingMessages(requests),

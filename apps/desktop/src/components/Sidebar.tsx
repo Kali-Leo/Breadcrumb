@@ -78,7 +78,7 @@ export function Sidebar({
   const startNewConversation = useChatStore((state) => state.startNewConversation);
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-stone-200 bg-white">
+    <aside className="flex h-full w-60 flex-col border-e border-stone-200 bg-white">
       <div className="flex items-center gap-2 p-3">
         <span className="text-xl">🍞</span>
         <span className="font-semibold text-stone-700">Breadcrumb</span>

@@ -27,7 +27,6 @@ import {
   ReflectResultSchema,
   retrieveMemories,
 } from "@breadcrumb/plugin-companion";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import {
   buildCompanionChatSystemPrompt,
@@ -37,6 +36,7 @@ import {
 import type { Repos } from "./db";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { buildTeachSystemPrompt, teachTopicFromTitle } from "./teachActions";
 import { nowIso } from "./time";
@@ -148,7 +148,7 @@ async function reflectAndBuildStudentMessage(
   const repos = await getRepos();
   let state = KnowledgeStateSchema.parse(JSON.parse(stateJson));
   try {
-    const config = { ...apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       [

@@ -101,11 +101,11 @@ function renderNode(
     }
     case "list":
       return node.ordered === true ? (
-        <ol key={key} className="my-1 list-decimal space-y-0.5 pl-5">
+        <ol key={key} className="my-1 list-decimal space-y-0.5 ps-5">
           {children()}
         </ol>
       ) : (
-        <ul key={key} className="my-1 list-disc space-y-0.5 pl-5">
+        <ul key={key} className="my-1 list-disc space-y-0.5 ps-5">
           {children()}
         </ul>
       );
@@ -113,7 +113,7 @@ function renderNode(
       return <li key={key}>{children()}</li>;
     case "blockquote":
       return (
-        <blockquote key={key} className="my-1 border-stone-200 border-l-2 pl-3 text-stone-600">
+        <blockquote key={key} className="my-1 border-stone-200 border-s-2 ps-3 text-stone-600">
           {children()}
         </blockquote>
       );

@@ -7,8 +7,8 @@
  */
 import type { ConversationKind, MessageRow } from "@breadcrumb/core-db";
 import { type ChatMessage, createLlmClient, type TokenUsage } from "@breadcrumb/core-llm";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
+import { noteReplyLanguage, shouldUseFirmDirective } from "./answerLanguageWatch";
 import {
   buildAnchoredNodeSystemMessage,
   buildFocusContextSystemMessage,
@@ -19,6 +19,7 @@ import { isAbortError } from "./chatStreamControl";
 import { resolveSendParentId, type TreeSlice } from "./chatTreeActions";
 import { buildRoundSystemMessages } from "./companionChatPrompt";
 import type { Repos } from "./db";
+import { llmConfigFrom } from "./llmConfig";
 import { newId, nowIso } from "./time";
 import { refreshConversationAutoTitle } from "./trailNamingActions";
 
@@ -100,7 +101,9 @@ export async function runSendRound(params: {
     if (learnerContextMessage) history.unshift(learnerContextMessage);
   }
 
-  const client = createLlmClient({ ...apiConfig, fetchImpl: tauriFetch });
+  const client = createLlmClient(
+    llmConfigFrom(apiConfig, { firm: shouldUseFirmDirective(conversationId) }),
+  );
   let content: string;
   let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
   let stoppedEarly = false;
@@ -124,6 +127,9 @@ export async function runSendRound(params: {
     content = streamedSoFar;
     stoppedEarly = true;
   }
+
+  // Did it write in the language we asked for? (spec 058 §1 — the check, not a rewrite.)
+  if (!stoppedEarly) noteReplyLanguage(conversationId, content);
 
   const assistantMessage: MessageRow = {
     id: newId(),

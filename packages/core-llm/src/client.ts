@@ -18,6 +18,19 @@ export interface LlmClientConfig {
   apiKey: string;
   model: string;
   fetchImpl: typeof fetch;
+  /** Appended as a final system message on every request: which language to write in
+   * (spec 058 §1). Undefined leaves the messages exactly as the caller built them. */
+  answerLanguageDirective?: string;
+}
+
+/** The language directive goes last so it is the most recent instruction the model reads. */
+export function withLanguageDirective(
+  messages: readonly ChatMessage[],
+  directive: string | undefined,
+): readonly ChatMessage[] {
+  return directive === undefined || directive === ""
+    ? messages
+    : [...messages, { role: "system", content: directive }];
 }
 
 export interface ChatStreamResult {
@@ -53,6 +66,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
   return {
     async chatStream(messages, onDelta, options) {
       const signal = options?.signal;
+      const withLanguage = withLanguageDirective(messages, config.answerLanguageDirective);
       const response = await config.fetchImpl(
         `${config.baseUrl.replace(/\/$/, "")}/chat/completions`,
         {
@@ -63,7 +77,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
           },
           body: JSON.stringify({
             model: config.model,
-            messages,
+            messages: withLanguage,
             stream: true,
             stream_options: { include_usage: true },
           }),

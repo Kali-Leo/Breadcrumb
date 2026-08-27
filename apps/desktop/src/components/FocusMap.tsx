@@ -98,7 +98,7 @@ export function FocusMap() {
   return (
     <aside
       style={{ width: `${paneWidth}px`, maxWidth: PANE_MAX_WIDTH_PERCENT }}
-      className="flex shrink-0 flex-col border-stone-200 border-l"
+      className="flex shrink-0 flex-col border-stone-200 border-s"
     >
       <div ref={paneRef} className="flex-1 overflow-auto p-3">
         <svg

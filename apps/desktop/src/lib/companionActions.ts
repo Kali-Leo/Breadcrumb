@@ -19,11 +19,11 @@ import {
   SCRIPT_PROMPT,
   ScriptResultSchema,
 } from "@breadcrumb/plugin-companion";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import i18next from "i18next";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { newestLeafId } from "./messageTree";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
@@ -178,7 +178,7 @@ export async function seedTeachScriptForConversation(
     return;
   try {
     const repos = await getRepos();
-    const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(settings.apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       [

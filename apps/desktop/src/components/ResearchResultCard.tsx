@@ -31,7 +31,7 @@ function DisplayBlockView({
     return (
       <p className="text-stone-700">
         {block.label}
-        <span className="ml-2 font-semibold">{result.value}</span>
+        <span className="ms-2 font-semibold">{result.value}</span>
       </p>
     );
   }
@@ -51,7 +51,7 @@ function DisplayBlockView({
                   style={{ width: `${(bar.value / maxValue) * 100}%` }}
                 />
               </div>
-              <span className="w-8 shrink-0 text-right text-stone-500">{bar.value}</span>
+              <span className="w-8 shrink-0 text-end text-stone-500">{bar.value}</span>
             </div>
           ))}
         </div>

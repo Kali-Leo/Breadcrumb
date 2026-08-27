@@ -22,12 +22,12 @@ import {
   type ProfileItemDefinition,
   validateAlignmentVerdicts,
 } from "@breadcrumb/plugin-compare";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { CANONICAL_CONCEPTS } from "../data/generated/canonicalConcepts";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { embedTexts } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { nowIso } from "./time";
 
@@ -213,7 +213,7 @@ export async function runAnchorSweep(): Promise<number | null> {
   });
   if (candidates.length === 0) return 0;
 
-  const config = { ...settings.apiConfig, fetchImpl: tauriFetch };
+  const config = llmConfigFrom(settings.apiConfig);
   let judgedCount = 0;
   for (const batch of chunkPairs<AlignmentCandidatePair>(candidates, ALIGNMENT_JUDGE_BATCH_SIZE)) {
     try {

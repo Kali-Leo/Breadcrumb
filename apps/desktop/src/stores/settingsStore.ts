@@ -13,6 +13,8 @@ import {
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { changeLanguage } from "../i18n";
+import { isPseudoLocale } from "../i18n/pseudoLocale";
+import { forgetAnswerLanguageWatch } from "../lib/answerLanguageWatch";
 import { getRepos } from "../lib/db";
 import { nowIso } from "../lib/time";
 
@@ -259,7 +261,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   /** Switches the running interface first, then remembers it: a language picker that needs
    * a restart to take effect is a language picker nobody trusts. */
   async setLanguage(code) {
-    if (!UI_LANGUAGE_CODES.includes(code)) return;
+    if (!UI_LANGUAGE_CODES.includes(code) && !isPseudoLocale(code)) return;
+    forgetAnswerLanguageWatch();
     await changeLanguage(code);
     const repos = await getRepos();
     await repos.settings.set(LANGUAGE_KEY, code, nowIso());
@@ -267,6 +270,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   async setAnswerLanguage(code) {
+    // The escalation was about the old language; the new one starts from the plain directive.
+    forgetAnswerLanguageWatch();
     const next = code && isLanguageCode(code) ? code : null;
     const repos = await getRepos();
     await repos.settings.set(ANSWER_LANGUAGE_KEY, next, nowIso());

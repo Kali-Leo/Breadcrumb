@@ -13,9 +13,9 @@ import {
   llmRefineResponseSchema,
   type ReplacementPatch,
 } from "@breadcrumb/plugin-diglot-weave";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import { recordAiFailure } from "./failureLog";
+import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 
 export async function refineWeavePatches(
@@ -27,7 +27,7 @@ export async function refineWeavePatches(
   const wordPatches = patches.filter((patch) => patch.kind === "word");
   if (wordPatches.length === 0) return [...patches];
   try {
-    const config = { ...apiConfig, fetchImpl: tauriFetch };
+    const config = llmConfigFrom(apiConfig);
     const { parsed, usage } = await chatJson(
       config,
       buildLlmRefineMessages({
