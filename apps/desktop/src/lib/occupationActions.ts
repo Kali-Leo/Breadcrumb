@@ -16,6 +16,7 @@ import {
   type TimelinessPatchItem,
 } from "@breadcrumb/plugin-compare";
 import { CANONICAL_MOUNTS } from "../data/canonicalMounts";
+import { bundledContentMatches } from "../data/contentLanguage";
 import escoDataset from "../data/generated/escoDataset.json";
 import onetDataset from "../data/generated/onetDataset.json";
 import timelinessPatches from "../data/generated/timelinessPatches.json";
@@ -43,6 +44,10 @@ export interface OccupationHit {
  * UI shows these候选 and only an explicit pick builds anything.
  */
 export function searchOccupations(query: string, limit = 6): OccupationHit[] {
+  // The directory is Chinese material; in another interface language the search finds
+  // nothing and the page falls through to "build a comparison with the AI", which works in
+  // any language (spec 058 §3).
+  if (!bundledContentMatches()) return [];
   const needle = normalizeLabel(query);
   if (needle.length < 2) return [];
   const hits: OccupationHit[] = [];
@@ -75,7 +80,11 @@ export async function createOccupationProfile(code: string): Promise<string | nu
     patch,
     escoEntry === undefined
       ? null
-      : { entry: escoEntry, concepts: ESCO.concepts, mounts: CANONICAL_MOUNTS },
+      : {
+          entry: escoEntry,
+          concepts: ESCO.concepts,
+          mounts: bundledContentMatches() ? CANONICAL_MOUNTS : new Map(),
+        },
   );
   const repos = await getRepos();
   await repos.comparisons.replaceProfile(
