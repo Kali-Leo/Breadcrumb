@@ -8,6 +8,7 @@
  */
 import type { WorldModel } from "@breadcrumb/plugin-map";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   loadRegionFeedbackSources,
   type RegionFeedbackSources,
@@ -53,27 +54,35 @@ function regionNodeIds(
 
 /** An islet is one node with nothing around it — a plain line, not a region readout. */
 function IsletCard({ hover }: { hover: HoverInfo }) {
+  const { t } = useTranslation("palace");
   return (
     <div className="rounded-xl bg-white p-3 shadow-sm">
-      <p className="text-sm text-stone-600">无名小岛 · {hover.label}</p>
-      <p className="mt-1.5 text-xs leading-5 text-stone-400">你偶尔接触过、还没有深入学的内容</p>
+      <p className="text-sm text-stone-600">{t("map.unnamedIsle", { label: hover.label })}</p>
+      <p className="mt-1.5 text-xs leading-5 text-stone-400">{t("map.unnamedIsleHint")}</p>
     </div>
   );
 }
 
-const KIND_NAMES = { island: "岛屿", islet: "岛屿", kingdom: "国度" } as const;
+const KIND_KEYS = {
+  island: "map.kindIsland",
+  islet: "map.kindIsland",
+  kingdom: "map.kindKingdom",
+} as const;
 
 /** Fallback place card when the mirror modules are switched off — name and residents only. */
 function PlaceCards({ hover }: { hover: HoverInfo }) {
+  const { t } = useTranslation("palace");
   return (
     <>
       <div className="rounded-xl bg-white p-3 shadow-sm">
-        <p className="text-xs text-stone-400">{KIND_NAMES[hover.kind]}</p>
+        <p className="text-xs text-stone-400">{t(KIND_KEYS[hover.kind])}</p>
         <p className="mt-0.5 text-base font-semibold text-stone-700">{hover.label}</p>
-        <p className="mt-1 text-sm text-stone-500">{hover.memberCount} 个知识点</p>
+        <p className="mt-1 text-sm text-stone-500">
+          {t("map.memberCount", { count: hover.memberCount })}
+        </p>
       </div>
       <div className="rounded-xl bg-white p-3 shadow-sm">
-        <p className="mb-1.5 text-xs font-medium text-stone-600">这里住着</p>
+        <p className="mb-1.5 text-xs font-medium text-stone-600">{t("map.livesHere")}</p>
         <div className="flex flex-wrap gap-1.5">
           {hover.pointLabels.slice(0, 12).map((label) => (
             <span
@@ -85,7 +94,7 @@ function PlaceCards({ hover }: { hover: HoverInfo }) {
           ))}
           {hover.pointLabels.length > 12 && (
             <span className="px-1 text-xs text-stone-400">
-              …还有 {hover.pointLabels.length - 12} 个
+              {t("map.andMore", { count: hover.pointLabels.length - 12 })}
             </span>
           )}
         </div>
@@ -95,6 +104,7 @@ function PlaceCards({ hover }: { hover: HoverInfo }) {
 }
 
 export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelProps) {
+  const { t } = useTranslation("palace");
   const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
   const [sources, setSources] = useState<RegionFeedbackSources | null>(null);
   const [settledHover, setSettledHover] = useState<HoverInfo | null>(null);
@@ -134,14 +144,14 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
                   memberCount={settledHover.memberCount}
                   nodeIds={region}
                   sources={sources}
-                  emptyLine={goalScope !== null ? "目标里的这片还没开始学" : undefined}
+                  emptyLine={goalScope !== null ? t("map.goalAreaNotStarted") : undefined}
                 />
               ) : (
                 <PlaceCards hover={settledHover} />
               )}
               {/* Only an island can be entered — the island view is the deepest one. */}
               {settledHover.kind === "island" && (
-                <p className="text-xs text-stone-400">滚轮向上，深入这里 →</p>
+                <p className="text-xs text-stone-400">{t("map.zoomInPrompt")}</p>
               )}
             </>
           )
@@ -152,7 +162,7 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
             memberCount={goalScope.nodeIds.size}
             nodeIds={goalScope.nodeIds}
             sources={sources}
-            emptyLine="这个目标还没开始；开始学习后，记录会出现在这里"
+            emptyLine={t("map.goalNotStarted")}
           />
         ) : level.kind === "world" ? (
           <MirrorStack />

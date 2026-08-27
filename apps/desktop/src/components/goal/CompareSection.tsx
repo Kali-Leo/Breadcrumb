@@ -7,6 +7,7 @@
  */
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type OccupationHit, searchOccupations } from "../../lib/occupationActions";
 import { useCompareStore } from "../../stores/compareStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -23,6 +24,7 @@ function findNode(roots: readonly OverlapNode[], key: string): OverlapNode | nul
 }
 
 function OccupationPicker() {
+  const { t } = useTranslation("palace");
   const createOccupation = useCompareStore((state) => state.createOccupation);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<OccupationHit[]>([]);
@@ -34,12 +36,12 @@ function OccupationPicker() {
           setQuery(event.target.value);
           setHits(searchOccupations(event.target.value));
         }}
-        placeholder="输入职业，比如「前端工程师」"
+        placeholder={t("compare.searchPlaceholder")}
         className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
       />
       {hits.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-stone-400">你是指：</span>
+          <span className="text-stone-400">{t("compare.didYouMean")}</span>
           {hits.map((hit) => (
             <button
               key={hit.code}
@@ -51,21 +53,21 @@ function OccupationPicker() {
               }}
               className="rounded border border-amber-300 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
             >
-              {hit.title}（{hit.code}）{hit.matchedAlt !== null && ` · 又称 ${hit.matchedAlt}`}
+              {hit.title}（{hit.code}）
+              {hit.matchedAlt !== null && ` · ${t("compare.alsoCalled", { name: hit.matchedAlt })}`}
             </button>
           ))}
         </div>
       )}
       {query.trim().length >= 2 && hits.length === 0 && (
-        <p className="text-stone-400">
-          职业名录里没找到。换个说法试试，或在下方输入主题，让 AI 生成一份新的对照。
-        </p>
+        <p className="text-stone-400">{t("compare.notFound")}</p>
       )}
     </div>
   );
 }
 
 function GoalFromProfile() {
+  const { t } = useTranslation("palace");
   const generatingGoal = useCompareStore((state) => state.generatingGoal);
   const goalNote = useCompareStore((state) => state.goalNote);
   const generateGoalFromProfile = useCompareStore((state) => state.generateGoalFromProfile);
@@ -74,9 +76,7 @@ function GoalFromProfile() {
     <div className="space-y-1">
       {confirming ? (
         <div className="space-y-1 rounded border border-amber-200 bg-amber-50 px-2 py-1.5">
-          <p className="text-stone-600">
-            会按照你的特质与知识基础，转化成适合你的方案；之后随时可以回对比树查看重合比例。
-          </p>
+          <p className="text-stone-600">{t("compare.goalNote")}</p>
           <div className="flex gap-1">
             <button
               type="button"
@@ -87,14 +87,14 @@ function GoalFromProfile() {
               }}
               className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
             >
-              生成
+              {t("compare.generate")}
             </button>
             <button
               type="button"
               onClick={() => setConfirming(false)}
               className="rounded border border-stone-200 px-2 py-0.5 text-stone-500"
             >
-              先不了
+              {t("compare.notNow")}
             </button>
           </div>
         </div>
@@ -105,7 +105,7 @@ function GoalFromProfile() {
           onClick={() => setConfirming(true)}
           className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
         >
-          {generatingGoal ? "生成中…" : "以此生成学习目标"}
+          {generatingGoal ? t("compare.generating") : t("compare.generateGoal")}
         </button>
       )}
       {goalNote !== null && <p className="text-stone-500">{goalNote}</p>}
@@ -114,6 +114,7 @@ function GoalFromProfile() {
 }
 
 export function CompareSection() {
+  const { t } = useTranslation("palace");
   const compareCategory = useSettingsStore((state) => state.compareCategory);
   const setCompareCategory = useSettingsStore((state) => state.setCompareCategory);
   const profiles = useCompareStore((state) => state.profiles);
@@ -140,15 +141,13 @@ export function CompareSection() {
 
   return (
     <section className="space-y-2">
-      <h3 className="font-semibold text-stone-600">对比树</h3>
-      <p className="text-sm text-stone-500">
-        把你学过的内容，和一个职业或一套教材需要的知识放在一起对比，看看已经重合了多少。
-      </p>
+      <h3 className="font-semibold text-stone-600">{t("compare.title")}</h3>
+      <p className="text-sm text-stone-500">{t("compare.intro")}</p>
       <div className="flex overflow-hidden rounded-full border border-stone-200 self-start w-fit">
         {(
           [
-            ["occupation", "真实职业"],
-            ["curriculum", "教材知识"],
+            ["occupation", t("compare.categoryOccupation")],
+            ["curriculum", t("compare.categoryCurriculum")],
           ] as const
         ).map(([category, label]) => (
           <button
@@ -185,7 +184,7 @@ export function CompareSection() {
         </div>
       )}
       {loading ? (
-        <ul className="space-y-1" aria-label="对比树加载中">
+        <ul className="space-y-1" aria-label={t("compare.loadingAria")}>
           {[0, 1, 2].map((index) => (
             <li key={index} className="h-7 animate-pulse rounded bg-stone-100" />
           ))}
@@ -202,10 +201,12 @@ export function CompareSection() {
           />
         )
       )}
-      {aligning && <p className="text-stone-400">正在对应你学过的内容…</p>}
+      {aligning && <p className="text-stone-400">{t("compare.aligning")}</p>}
       {detailNode !== null && <CompareNodeDetail node={detailNode} />}
       {selectedVisible && selectedProfile !== null && (
-        <p className="text-[11px] text-stone-400">资料出处：{selectedProfile.source_note}</p>
+        <p className="text-[11px] text-stone-400">
+          {t("compare.sourceNote", { source: selectedProfile.source_note })}
+        </p>
       )}
       {selectedVisible && <GoalFromProfile />}
       <ExperimentalBuildForm />

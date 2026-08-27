@@ -4,6 +4,8 @@
  * fractions, no denominators (ladder rule: assessment is never displayed as a mechanism).
  * Main exports: GoalCard.
  */
+
+import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 interface GoalCardProps {
@@ -11,13 +13,14 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ onOpenGoalView }: GoalCardProps) {
+  const { t } = useTranslation(["palace", "common"]);
   const goals = usePlannerStore((state) => state.goals);
 
   return (
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
-      <h3 className="font-semibold text-stone-600">学习目标</h3>
+      <h3 className="font-semibold text-stone-600">{t("palace:goalCard.title")}</h3>
       {goals.length === 0 ? (
-        <p className="mt-1 text-stone-400">有想去的方向？建一个目标,我来拆解成知识点。</p>
+        <p className="mt-1 text-stone-400">{t("palace:goalCard.empty")}</p>
       ) : (
         <ul className="mt-1 flex flex-wrap gap-1">
           {goals.map((goal) => (
@@ -34,7 +37,7 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
           onClick={onOpenGoalView}
           className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600"
         >
-          目标设置
+          {t("palace:goalCard.settings")}
         </button>
       </div>
     </section>

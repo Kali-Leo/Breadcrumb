@@ -6,6 +6,7 @@
  * Main exports: ContinueCard.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { startLearningForConcept } from "../../lib/focusLearning";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { usePlannerStore } from "../../stores/plannerStore";
@@ -19,6 +20,8 @@ interface ContinueCardProps {
 }
 
 export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
+  const { t } = useTranslation(["palace", "common"]);
+  const listSeparator = t("common:list.separator");
   const candidates = usePlannerStore((state) => state.frontierCandidates);
   const [openingNodeId, setOpeningNodeId] = useState<string | null>(null);
 
@@ -49,7 +52,7 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
 
   return (
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
-      <h3 className="font-semibold text-stone-600">从这里继续</h3>
+      <h3 className="font-semibold text-stone-600">{t("continue.title")}</h3>
       <ul className="mt-1 space-y-1">
         {shown.map((candidate) => (
           <li key={candidate.nodeId}>
@@ -65,23 +68,27 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
                 {candidate.label}
                 {candidate.reason.wasLitBefore && (
                   <span className="rounded bg-stone-100 px-1 text-[10px] text-stone-500">
-                    重逢 · 以前学过
+                    {t("continue.reunion")}
                   </span>
                 )}
               </span>
               {candidate.reason.litPrerequisiteLabels.length > 0 && (
                 <span className="mt-0.5 block text-stone-400">
-                  因为你已掌握 {candidate.reason.litPrerequisiteLabels.join("、")}
+                  {t("continue.becausePrereq", {
+                    labels: candidate.reason.litPrerequisiteLabels.join(listSeparator),
+                  })}
                 </span>
               )}
               {candidate.reason.gatewayTo && (
                 <span className="mt-0.5 block text-stone-400">
-                  通往你感兴趣的「{candidate.reason.gatewayTo.label}」
+                  {t("continue.gatewayTo", { label: candidate.reason.gatewayTo.label })}
                 </span>
               )}
               {/* Click feedback only — the whole row is the action, no standing verb. */}
               {openingNodeId === candidate.nodeId && (
-                <span className="mt-0.5 block text-[10px] text-amber-600">打开中…</span>
+                <span className="mt-0.5 block text-[10px] text-amber-600">
+                  {t("continue.opening")}
+                </span>
               )}
             </button>
           </li>

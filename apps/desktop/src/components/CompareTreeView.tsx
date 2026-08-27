@@ -8,6 +8,7 @@
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { hierarchy, tree } from "d3-hierarchy";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const NODE_WIDTH = 168;
 const NODE_HEIGHT = 34;
@@ -45,6 +46,7 @@ export function CompareTreeView({
   onToggle(key: string): void;
   onSelectDetail(key: string): void;
 }) {
+  const { t } = useTranslation("palace");
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     x: number;
@@ -202,7 +204,7 @@ export function CompareTreeView({
         width={Math.max(width, 320)}
         height={Math.max(height, 80)}
         role="img"
-        aria-label="对比树"
+        aria-label={t("compare.treeAria")}
       >
         {layout.visible.map((point) => {
           const parent = point.parent;
@@ -243,8 +245,11 @@ export function CompareTreeView({
               tabIndex={0}
               aria-label={
                 (node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? `${node.label} 还没细分`
-                  : `${node.label} 重合 ${percentOf(node.ratio)}`
+                  ? t("compare.nodeNotDecomposed", { label: node.label })
+                  : t("compare.nodeOverlap", {
+                      label: node.label,
+                      percent: percentOf(node.ratio),
+                    })
               }
               style={{
                 transform: `translate(${x}px, ${y}px)`,
@@ -276,7 +281,7 @@ export function CompareTreeView({
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {(node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? "还没细分"
+                  ? t("compare.notDecomposedShort")
                   : percentOf(node.ratio)}
                 {point.data.hasHiddenChildren ? " ▸" : ""}
               </text>

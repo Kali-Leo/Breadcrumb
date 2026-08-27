@@ -13,18 +13,18 @@ import {
 } from "@breadcrumb/plugin-browsing-interest";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine, InterestSegmentedControl } from "./InterestPanel";
 
-const TABS = [
-  { value: "unfinished", label: "没看完" },
-  { value: "finished", label: "看完" },
-] as const;
-type Tab = (typeof TABS)[number]["value"];
+const TAB_VALUES = ["unfinished", "finished"] as const;
+type Tab = (typeof TAB_VALUES)[number];
 
-const ALL_GROUPS = "全部";
+/** Sentinel for "no group filter" — never displayed, so it needs no translation. */
+const ALL_GROUPS = "*";
 
 function ProContentCard({ item, finished }: { item: ProContentItem; finished: boolean }) {
+  const { t } = useTranslation("discovery");
   const url = videoUrl(item.site, item.id);
   const cover = thumbnailUrl(item.pic);
   const percent = watchedPercent(item) ?? (finished ? 100 : 0);
@@ -61,7 +61,7 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
             item.up,
             item.topic,
             `${date.getMonth() + 1}.${date.getDate()}`,
-            minutes ? `${minutes.watched}/${minutes.total} 分钟` : null,
+            minutes ? t("proContent.minutes", minutes) : null,
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -79,13 +79,14 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
 }
 
 export function InterestProContentPanel() {
+  const { t } = useTranslation("discovery");
   const proContent = useBrowsingInterestStore((state) => state.proContent);
   const [tab, setTab] = useState<Tab>("unfinished");
   const [group, setGroup] = useState<string>(ALL_GROUPS);
 
   const everything = [...(proContent?.unfinished ?? []), ...(proContent?.finished ?? [])];
   const groups = [
-    { value: ALL_GROUPS, label: ALL_GROUPS },
+    { value: ALL_GROUPS, label: t("proContent.allGroups") },
     ...groupCounts(everything).map((entry) => ({
       value: entry.group,
       label: `${entry.group} ${entry.count}`,
@@ -97,10 +98,14 @@ export function InterestProContentPanel() {
 
   return (
     <InterestPanel
-      title="专业内容"
+      title={t("proContent.title")}
       controls={
         <>
-          <InterestSegmentedControl options={TABS} value={tab} onChange={(next) => setTab(next)} />
+          <InterestSegmentedControl
+            options={TAB_VALUES.map((value) => ({ value, label: t(`proContent.${value}`) }))}
+            value={tab}
+            onChange={(next) => setTab(next)}
+          />
           <InterestSegmentedControl
             options={groups}
             value={groups.some((entry) => entry.value === group) ? group : ALL_GROUPS}
@@ -110,7 +115,7 @@ export function InterestProContentPanel() {
       }
     >
       {items.length === 0 ? (
-        <InterestPanelEmptyLine>这段时间没有看过的专业内容</InterestPanelEmptyLine>
+        <InterestPanelEmptyLine>{t("proContent.empty")}</InterestPanelEmptyLine>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-3">
           {items.map((item) => (

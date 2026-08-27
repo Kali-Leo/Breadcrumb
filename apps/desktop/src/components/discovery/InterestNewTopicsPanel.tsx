@@ -5,17 +5,19 @@
  */
 import { videoUrl } from "@breadcrumb/plugin-browsing-interest";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine } from "./InterestPanel";
 
 export function InterestNewTopicsPanel() {
+  const { t } = useTranslation("discovery");
   const newInterests = useBrowsingInterestStore((state) => state.newInterests);
   const interests = newInterests?.interests ?? [];
 
   return (
-    <InterestPanel title="新的兴趣">
+    <InterestPanel title={t("newTopics.title")}>
       {interests.length === 0 ? (
-        <InterestPanelEmptyLine>最近没有明显冒头的主题</InterestPanelEmptyLine>
+        <InterestPanelEmptyLine>{t("newTopics.empty")}</InterestPanelEmptyLine>
       ) : (
         <ul className="divide-y divide-stone-100">
           {interests.map((interest) => (

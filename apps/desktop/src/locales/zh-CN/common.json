@@ -23,5 +23,8 @@
   "state": {
     "loading": "正在加载…",
     "empty": "还没有内容"
+  },
+  "list": {
+    "separator": "、"
   }
 }

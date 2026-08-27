@@ -1,1 +1,47 @@
-{}
+{
+  "title": "发现",
+  "intro": "这一页显示你在 B站 和 YouTube 上看过什么、对什么感兴趣。整理都在你自己这台电脑上完成，内容不会送到别的地方去。",
+  "action": "还差浏览器那一步：装一个能运行脚本的插件，再装两个脚本。",
+  "installButton": "在浏览器里安装",
+  "afterClick": "浏览器里会打开三个页面：先装 Violentmonkey，再回到另外两页各点一次「安装此脚本」。装好之后照常刷 B站 和 YouTube 就行，这一页会自己变成你的兴趣。",
+  "token": "还有一步：在 B站 首页左下角的开关条上点 🔗，把下面这串字粘贴进去，YouTube 首页上同样做一次。",
+  "projectHomepage": "打开项目主页",
+  "service": {
+    "starting": "正在启动这台电脑上的兴趣程序…",
+    "notFound": "没在这台电脑上找到那个兴趣程序。它在 feed-mode 项目里，下载到主目录或桌面即可，之后回到这一页。",
+    "pythonMissing": "这台电脑上没有 Python，兴趣程序需要它才能运行。",
+    "failed": "兴趣程序没能启动起来。多半是缺几个 Python 包，在项目文件夹里运行这行命令，然后回到这一页："
+  },
+  "emotion": {
+    "title": "内容情绪",
+    "all": "全部",
+    "pro": "专业",
+    "ent": "娱乐",
+    "gent": "精选娱乐",
+    "expose": "投喂",
+    "engage": "选择",
+    "chartAria": "投喂与选择的内容情绪曲线",
+    "tooltip": "{{date}} {{line}} {{value}}（{{count}} 条）",
+    "empty": "这段时间还没有记下内容"
+  },
+  "wordCloud": {
+    "title": "词云",
+    "empty": "这段时间还没有点开过内容",
+    "window7": "7天",
+    "window30": "30天",
+    "window90": "90天",
+    "window365": "一年"
+  },
+  "newTopics": {
+    "title": "新的兴趣",
+    "empty": "最近没有明显冒头的主题"
+  },
+  "proContent": {
+    "title": "专业内容",
+    "unfinished": "没看完",
+    "finished": "看完",
+    "allGroups": "全部",
+    "minutes": "{{watched}}/{{total}} 分钟",
+    "empty": "这段时间没有看过的专业内容"
+  }
+}

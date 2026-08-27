@@ -16,6 +16,7 @@
 
 import type { ContinentAssignment } from "@breadcrumb/plugin-map";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/mapNamingActions";
 import { appEventBus } from "../../stores/chatStore";
@@ -36,6 +37,7 @@ import { cachedWorldModel } from "./mapWorldCache";
 import { useMapApplication } from "./useMapApplication";
 
 export function MapView() {
+  const { t } = useTranslation(["palace", "common"]);
   const previousIdsRef = useRef(new Map<string, ReadonlySet<string>>());
 
   const storeNodes = useKnowledgeStore((state) => state.nodes);
@@ -202,7 +204,7 @@ export function MapView() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
         <span className="text-4xl">🏛️</span>
-        <p className="text-sm">地图没有加载成功。离开这一页再回来，会重新尝试。</p>
+        <p className="text-sm">{t("palace:map.loadFailed")}</p>
       </div>
     );
   }
@@ -210,8 +212,10 @@ export function MapView() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
         <span className="text-4xl">🏛️</span>
-        <p className="text-sm">这里还是一片海——去聊聊天，第一座岛屿会浮现</p>
-        {import.meta.env.DEV && <p className="text-xs text-stone-300">DEV：按 0 载入演示海图</p>}
+        <p className="text-sm">{t("palace:map.emptySea")}</p>
+        {import.meta.env.DEV && (
+          <p className="text-xs text-stone-300">{t("palace:map.devDemoHint")}</p>
+        )}
       </div>
     );
   }
@@ -254,9 +258,9 @@ export function MapView() {
           {/* Operation hints live on the map itself (owner fix 5) — quiet ink in the
               bottom-left corner of the parchment, never a rail resident. */}
           <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded bg-stone-100/60 px-2 py-1 text-[11px] leading-4 text-stone-600/75">
-            <p>滚轮向上：深入指针所指的地方</p>
-            <p>滚轮向下：返回上一层</p>
-            <p>点击地名：直接前往</p>
+            <p>{t("palace:map.zoomInHint")}</p>
+            <p>{t("palace:map.zoomOutHint")}</p>
+            <p>{t("palace:map.clickNameHint")}</p>
           </div>
         </div>
         <div className="h-full min-w-64 flex-1 overflow-y-auto">

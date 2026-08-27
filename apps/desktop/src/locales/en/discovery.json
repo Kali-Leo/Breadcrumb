@@ -1,1 +1,47 @@
-{}
+{
+  "title": "Discover",
+  "intro": "This page shows what you have been watching on Bilibili and YouTube, and what interests you. All of it is worked out on this computer; nothing is sent anywhere else.",
+  "action": "One step left, in the browser: install an extension that runs scripts, then the two scripts.",
+  "installButton": "Install in the browser",
+  "afterClick": "Three pages open in your browser: install Violentmonkey first, then go back to the other two and press \"Install this script\" on each. After that, just browse Bilibili and YouTube as usual and this page turns into your interests.",
+  "token": "One more step: on the Bilibili home page, click 🔗 on the switch bar at the bottom left and paste the code below; do the same on the YouTube home page.",
+  "projectHomepage": "Open the project page",
+  "service": {
+    "starting": "Starting the interest program on this computer…",
+    "notFound": "The interest program is not on this computer. It comes with the feed-mode project — download it to your home or desktop folder, then come back to this page.",
+    "pythonMissing": "There is no Python on this computer, and the interest program needs it.",
+    "failed": "The interest program did not start. It is most likely missing a few Python packages; run this in the project folder, then come back to this page:"
+  },
+  "emotion": {
+    "title": "How the content felt",
+    "all": "All",
+    "pro": "Learn",
+    "ent": "Fun",
+    "gent": "Feel-good",
+    "expose": "Fed to you",
+    "engage": "Chosen",
+    "chartAria": "How fed and chosen content felt over time",
+    "tooltip": "{{date}} {{line}} {{value}} ({{count}} items)",
+    "empty": "Nothing was recorded in this period"
+  },
+  "wordCloud": {
+    "title": "Word cloud",
+    "empty": "Nothing was opened in this period",
+    "window7": "7 days",
+    "window30": "30 days",
+    "window90": "90 days",
+    "window365": "1 year"
+  },
+  "newTopics": {
+    "title": "New interests",
+    "empty": "Nothing new has come up lately"
+  },
+  "proContent": {
+    "title": "Learning content",
+    "unfinished": "Unfinished",
+    "finished": "Finished",
+    "allGroups": "All",
+    "minutes": "{{watched}}/{{total}} min",
+    "empty": "No learning content was watched in this period"
+  }
+}

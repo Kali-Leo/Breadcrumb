@@ -5,7 +5,11 @@
  * conversation is deliberately never a single click on the map.
  * Main exports: KingdomNodeCard, reasonLine.
  */
+
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import type { FrontierCandidate } from "@breadcrumb/plugin-planner";
+import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../../../i18n/useCopyMessage";
 import type { KingdomViewNode } from "../../../lib/kingdomView";
 
 export interface NodeRelations {
@@ -33,24 +37,42 @@ interface KingdomNodeCardProps {
 }
 
 /** One plain, suggest-only sentence for why this node is the current invitation. */
-export function reasonLine(candidate: FrontierCandidate): string {
+export function reasonMessage(candidate: FrontierCandidate, listSeparator: string): CopyMessage {
   if (candidate.reason.litPrerequisiteLabels.length > 0) {
-    return `学它之前需要的 ${candidate.reason.litPrerequisiteLabels.join("、")} 已经完成。`;
+    return {
+      key: "palace:kingdom.reasonPrereq",
+      params: { labels: candidate.reason.litPrerequisiteLabels.join(listSeparator) },
+    };
   }
-  if (candidate.reason.wasLitBefore) return "以前学过,有阵子没见了。";
-  if (candidate.reason.gatewayTo) return `通往你感兴趣的「${candidate.reason.gatewayTo.label}」。`;
-  return "可以从这里进入这片区域。";
+  if (candidate.reason.wasLitBefore) return { key: "palace:kingdom.reasonWasLit" };
+  if (candidate.reason.gatewayTo) {
+    return {
+      key: "palace:kingdom.reasonGateway",
+      params: { label: candidate.reason.gatewayTo.label },
+    };
+  }
+  return { key: "palace:kingdom.reasonDefault" };
 }
 
-function stateStatement(node: KingdomViewNode, lastSeenDate: string | null): string {
-  if (node.state === "done")
-    return lastSeenDate === null ? "已完成。" : `已完成 · 上次接触 ${lastSeenDate}。`;
-  if (node.state === "visited")
-    return lastSeenDate === null ? "走过。" : `走过 · 上次接触 ${lastSeenDate}。`;
-  return "尚未开始。";
+function stateMessage(node: KingdomViewNode, lastSeenDate: string | null): CopyMessage {
+  if (node.state === "done") {
+    return lastSeenDate === null
+      ? { key: "palace:kingdom.stateDone" }
+      : { key: "palace:kingdom.stateDoneSeen", params: { date: lastSeenDate } };
+  }
+  if (node.state === "visited") {
+    return lastSeenDate === null
+      ? { key: "palace:kingdom.stateVisited" }
+      : { key: "palace:kingdom.stateVisitedSeen", params: { date: lastSeenDate } };
+  }
+  return { key: "palace:kingdom.stateUntouched" };
 }
 
-const MAIN_ACTION_LABEL = { untouched: "开始学习", visited: "继续", done: "换你来讲讲" } as const;
+const MAIN_ACTION_KEY = {
+  untouched: "kingdom.actionUntouched",
+  visited: "kingdom.actionVisited",
+  done: "kingdom.actionDone",
+} as const;
 
 function RelationRow({
   title,
@@ -93,24 +115,39 @@ export function KingdomNodeCard({
   onMainAction,
   onToggleCollapse,
 }: KingdomNodeCardProps) {
+  const { t } = useTranslation(["palace", "common"]);
+  const copy = useCopyMessage();
+  const listSeparator = t("common:list.separator");
   return (
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
       <h3 className="text-sm font-semibold text-stone-700">{node.label}</h3>
       {isPrimary && candidate !== null && (
-        <p className="mt-1 text-amber-700">{reasonLine(candidate)}</p>
+        <p className="mt-1 text-amber-700">{copy(reasonMessage(candidate, listSeparator))}</p>
       )}
-      <p className="mt-1 text-stone-500">{stateStatement(node, lastSeenDate)}</p>
+      <p className="mt-1 text-stone-500">{copy(stateMessage(node, lastSeenDate))}</p>
       {node.summary !== "" && <p className="mt-1 text-stone-500">{node.summary}</p>}
 
       <div className="mt-2 space-y-1">
         <RelationRow
-          title="属于"
+          title={t("kingdom.relationBelongsTo")}
           items={relations.parent ? [relations.parent] : []}
           onJump={onJump}
         />
-        <RelationRow title="包含" items={relations.children} onJump={onJump} />
-        <RelationRow title="需要先会" items={relations.prerequisites} onJump={onJump} />
-        <RelationRow title="对它有帮助的" items={relations.helpers} onJump={onJump} />
+        <RelationRow
+          title={t("kingdom.relationContains")}
+          items={relations.children}
+          onJump={onJump}
+        />
+        <RelationRow
+          title={t("kingdom.relationPrerequisites")}
+          items={relations.prerequisites}
+          onJump={onJump}
+        />
+        <RelationRow
+          title={t("kingdom.relationHelpers")}
+          items={relations.helpers}
+          onJump={onJump}
+        />
       </div>
 
       <div className="mt-3 flex items-center gap-2">
@@ -120,7 +157,7 @@ export function KingdomNodeCard({
           onClick={onMainAction}
           className="rounded bg-amber-500 px-3 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
         >
-          {opening ? "打开中…" : MAIN_ACTION_LABEL[node.state]}
+          {opening ? t("kingdom.opening") : t(MAIN_ACTION_KEY[node.state])}
         </button>
         {hasChildren && (
           <button
@@ -128,14 +165,14 @@ export function KingdomNodeCard({
             onClick={onToggleCollapse}
             className="rounded border border-stone-200 px-2 py-1 text-stone-500 hover:border-amber-400"
           >
-            {collapsed ? "展开这一支" : "折叠这一支"}
+            {collapsed ? t("kingdom.expandBranch") : t("kingdom.collapseBranch")}
           </button>
         )}
       </div>
 
       {isPrimary && alternates.length > 0 && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-stone-400">其他入口</summary>
+          <summary className="cursor-pointer text-stone-400">{t("kingdom.otherEntries")}</summary>
           <ul className="mt-1 space-y-1">
             {alternates.map((alternate) => (
               <li key={alternate.nodeId}>
@@ -145,7 +182,9 @@ export function KingdomNodeCard({
                   className="w-full rounded border border-stone-200 px-2 py-1 text-left text-stone-600 hover:border-amber-400"
                 >
                   <span className="font-medium">{alternate.label}</span>
-                  <span className="mt-0.5 block text-stone-400">{reasonLine(alternate)}</span>
+                  <span className="mt-0.5 block text-stone-400">
+                    {copy(reasonMessage(alternate, listSeparator))}
+                  </span>
                 </button>
               </li>
             ))}

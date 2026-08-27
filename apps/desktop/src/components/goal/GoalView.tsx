@@ -7,6 +7,7 @@
  * Main exports: GoalView.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { CompareSection } from "./CompareSection";
 import { GoalComposition } from "./GoalComposition";
@@ -19,6 +20,7 @@ interface GoalViewProps {
 }
 
 export function GoalView({ onClose }: GoalViewProps) {
+  const { t } = useTranslation("palace");
   const goals = usePlannerStore((state) => state.goals);
   const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
   const selectGoal = usePlannerStore((state) => state.selectGoal);
@@ -28,21 +30,17 @@ export function GoalView({ onClose }: GoalViewProps) {
     <div className="h-full overflow-y-auto bg-stone-50">
       <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4 text-xs">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-700">学习目标</h2>
+          <h2 className="text-sm font-semibold text-stone-700">{t("goal.title")}</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100"
           >
-            ← 返回地图
+            {t("goal.backToMap")}
           </button>
         </div>
 
-        {selectedGoalId === null && (
-          <p className="text-sm text-stone-500">
-            写下你想达成的目标，AI 会把它变成一份要学的知识点清单。
-          </p>
-        )}
+        {selectedGoalId === null && <p className="text-sm text-stone-500">{t("goal.intro")}</p>}
         <GoalMappingForm goalText={goalText} onGoalTextChange={setGoalText} />
 
         {goals.length > 0 && (

@@ -7,9 +7,11 @@
  * Main exports: KingdomView, KingdomRef.
  */
 
+import { formatDayMonth } from "@breadcrumb/core-i18n";
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getRepos } from "../../../lib/db";
 import { startLearningForConcept } from "../../../lib/focusLearning";
 import {
@@ -42,12 +44,13 @@ interface CollapsePersist {
   expanded: string[];
 }
 
-function plainDate(iso: string): string {
+function plainDate(iso: string, locale: string): string {
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? "" : `${date.getMonth() + 1}月${date.getDate()}日`;
+  return Number.isNaN(date.getTime()) ? "" : formatDayMonth(locale, date);
 }
 
 export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
+  const { t, i18n } = useTranslation("palace");
   const nodes = usePlannerStore((state) => state.nodes);
   const edges = usePlannerStore((state) => state.edges);
   const masteryByNode = usePlannerStore((state) => state.masteryByNode);
@@ -255,7 +258,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
               onClick={scrollToPrimary}
               className="rounded border border-amber-400 px-2 py-0.5 text-xs text-amber-700 hover:bg-amber-50"
             >
-              去下一步
+              {t("kingdom.nextStep")}
             </button>
           )}
           <label className="flex items-center gap-1 text-xs text-stone-500">
@@ -264,14 +267,14 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
               checked={showAllEdges}
               onChange={(event) => setShowAllEdges(event.target.checked)}
             />
-            显示全部关系
+            {t("kingdom.showAllRelations")}
           </label>
           <button
             type="button"
             onClick={onClose}
             className="ml-auto rounded-lg px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
           >
-            ← 回到岛屿
+            {t("kingdom.backToIsland")}
           </button>
         </div>
         <div className="min-h-0 flex-1 bg-stone-50">
@@ -289,7 +292,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
       <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-l border-stone-200 bg-stone-50 p-4">
         {recommendation.regionDone && (
           <p className="rounded-xl bg-white p-3 text-xs text-stone-500 shadow-sm">
-            这片区域已完成。
+            {t("kingdom.areaDone")}
           </p>
         )}
         {cardNode !== null && (
@@ -300,7 +303,10 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
             alternates={recommendation.alternates}
             lastSeenDate={
               lastSeenByNode.has(cardNode.id)
-                ? plainDate((lastSeenByNode.get(cardNode.id) as { createdAt: string }).createdAt)
+                ? plainDate(
+                    (lastSeenByNode.get(cardNode.id) as { createdAt: string }).createdAt,
+                    i18n.language,
+                  )
                 : null
             }
             relations={relations}

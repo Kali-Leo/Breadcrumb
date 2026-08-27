@@ -6,6 +6,7 @@
  * Main exports: GoalMappingForm.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 const inputClass =
@@ -19,6 +20,7 @@ interface GoalMappingFormProps {
 }
 
 export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormProps) {
+  const { t } = useTranslation("palace");
   const mapGoalText = usePlannerStore((state) => state.mapGoalText);
   const createGoal = usePlannerStore((state) => state.createGoal);
 
@@ -31,16 +33,16 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
     const trimmedTitle = goalText.trim();
     if (trimmedTitle.length === 0 || busy) return;
     setBusy(true);
-    setHint("拆解中…");
+    setHint(t("goal.mappingWorking"));
     try {
       const mapping = await mapGoalText(trimmedTitle);
       if (mapping === null) {
-        setHint("这次没能拆解,稍后再试。若一直如此,可以去设置看看 AI 服务是否配置好了。");
+        setHint(t("goal.mappingFailed"));
         return;
       }
       await createGoal(trimmedTitle, mapping);
       const total = mapping.existing.length + mapping.suggested.length;
-      setHint(`已按目标自动圈定 ${total} 个知识点（其中 ${mapping.suggested.length} 个是新方向）`);
+      setHint(t("goal.mappingDone", { total, fresh: mapping.suggested.length }));
       onGoalTextChange("");
     } finally {
       setBusy(false);
@@ -59,7 +61,7 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
               void runMapping();
             }
           }}
-          placeholder="比如：通过考研数学"
+          placeholder={t("goal.mappingPlaceholder")}
           className={inputClass}
         />
         <button
@@ -68,7 +70,7 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
           onClick={() => void runMapping()}
           className={buttonClass}
         >
-          拆解目标
+          {t("goal.mappingSubmit")}
         </button>
       </div>
       {hint !== "" && <p className="text-stone-400">{hint}</p>}

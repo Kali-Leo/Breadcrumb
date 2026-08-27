@@ -6,10 +6,12 @@
  * Main exports: GoalComposition.
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+import { useTranslation } from "react-i18next";
 import { masteryAsSeenByGoal } from "../../lib/plannerGapActions";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 export function GoalComposition() {
+  const { t } = useTranslation("palace");
   const goals = usePlannerStore((state) => state.goals);
   const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
   const nodes = usePlannerStore((state) => state.nodes);
@@ -30,7 +32,7 @@ export function GoalComposition() {
 
   return (
     <div className="space-y-1">
-      <p className="text-stone-500">这个目标包含 {goalNodeIds.length} 个知识点</p>
+      <p className="text-stone-500">{t("goal.compositionCount", { count: goalNodeIds.length })}</p>
       <ul className="flex flex-wrap gap-1">
         {goalNodeIds.map((nodeId) => {
           const lit = (goalMasteryByNode.get(nodeId) ?? 0) >= LIT_THRESHOLD;
@@ -50,7 +52,7 @@ export function GoalComposition() {
               {labelById.get(nodeId) ?? nodeId}
               {isNewDirection && (
                 <span
-                  title="还没接触过的新方向"
+                  title={t("goal.compositionNewDirection")}
                   className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle"
                 />
               )}

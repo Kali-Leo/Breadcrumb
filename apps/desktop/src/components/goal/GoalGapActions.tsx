@@ -6,12 +6,15 @@
  * neutrally, never "你还不会" (2026-08-02, spec 012 §2).
  * Main exports: GoalGapActions.
  */
+
+import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 const actionButtonClass =
   "rounded border border-stone-200 px-1.5 py-0.5 text-stone-500 transition-colors hover:border-amber-400 hover:text-amber-700";
 
 export function GoalGapActions() {
+  const { t } = useTranslation("palace");
   const nodes = usePlannerStore((state) => state.nodes);
   const gap = usePlannerStore((state) => state.gap);
   const claimNodeLearned = usePlannerStore((state) => state.claimNodeLearned);
@@ -23,7 +26,7 @@ export function GoalGapActions() {
 
   return (
     <div className="space-y-1 rounded border border-stone-200 p-2">
-      <p className="text-stone-500">这些还没点亮：</p>
+      <p className="text-stone-500">{t("goal.gapTitle")}</p>
       <ul className="space-y-1">
         {gap.gapNodeIds.map((nodeId) => (
           <li key={nodeId} className="flex items-center justify-between gap-2">
@@ -34,20 +37,20 @@ export function GoalGapActions() {
                 className={actionButtonClass}
                 onClick={() => void claimNodeLearned(nodeId)}
               >
-                我已经会了
+                {t("goal.gapAlreadyKnow")}
               </button>
               <button
                 type="button"
                 className={actionButtonClass}
                 onClick={() => void skipGoalNode(nodeId)}
               >
-                先跳过
+                {t("goal.gapSkip")}
               </button>
             </span>
           </li>
         ))}
       </ul>
-      <p className="text-stone-400">改主意了？重新拆解一次目标即可恢复。</p>
+      <p className="text-stone-400">{t("goal.gapChangedMind")}</p>
     </div>
   );
 }

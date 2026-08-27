@@ -7,6 +7,7 @@
  * Main exports: KingdomTreeSvg.
  */
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { layoutFocusMap } from "../../../lib/focusMapLayout";
 import type { LateralEdgeView, VisibleTreeNode } from "../../../lib/kingdomView";
 
@@ -65,6 +66,7 @@ export function KingdomTreeSvg({
   onHover,
   onExpandAggregate,
 }: KingdomTreeSvgProps) {
+  const { t } = useTranslation("palace");
   const [paneRef, paneSize] = usePaneSize();
   const layout = layoutFocusMap(
     visibleNodes.map((node) => ({
@@ -79,7 +81,7 @@ export function KingdomTreeSvg({
   const nodeById = new Map(visibleNodes.map((node) => [node.id, node]));
 
   if (layout.stations.length === 0) {
-    return <p className="p-4 text-sm text-stone-400">这片区域还没有记下的知识点。</p>;
+    return <p className="p-4 text-sm text-stone-400">{t("kingdom.treeEmpty")}</p>;
   }
 
   // Shrink to fit the pane (never grow); past the floor the pane scrolls (spec 050 §1).
@@ -100,7 +102,7 @@ export function KingdomTreeSvg({
         height={layout.height * scale}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         role="img"
-        aria-label="这片区域的知识网络"
+        aria-label={t("kingdom.treeAria")}
       >
         <defs>
           <marker
@@ -157,7 +159,11 @@ export function KingdomTreeSvg({
               key={station.id}
               role="button"
               tabIndex={0}
-              aria-label={isAggregate ? `展开「${node.label}」` : `查看「${node.label}」`}
+              aria-label={
+                isAggregate
+                  ? t("kingdom.expandNode", { label: node.label })
+                  : t("kingdom.viewNode", { label: node.label })
+              }
               data-station-id={station.id}
               style={{ cursor: "pointer" }}
               onClick={activate}
@@ -211,12 +217,15 @@ export function KingdomTreeSvg({
               )}
               <text x={station.x + 10} y={station.y + 4} fontSize={11} fill={TEXT}>
                 {isAggregate
-                  ? `${truncate(node.label)} · ${node.collapsedCount} 个概念`
+                  ? t("kingdom.aggregateLabel", {
+                      label: truncate(node.label),
+                      count: node.collapsedCount,
+                    })
                   : truncate(node.label)}
               </text>
               {isPrimary && (
                 <text x={station.x + 10} y={station.y + 17} fontSize={9} fill={AMBER}>
-                  下一步
+                  {t("kingdom.nextStepBadge")}
                 </text>
               )}
             </g>

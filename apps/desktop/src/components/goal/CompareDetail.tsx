@@ -10,15 +10,20 @@
  */
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCompareStore } from "../../stores/compareStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 function ClueLine({ node }: { node: OverlapNode }) {
+  const { t } = useTranslation("palace");
   if (node.match === null) return null;
-  return <p className="text-stone-400">线索：你的地图里有「{node.match.nodeLabel}」</p>;
+  return (
+    <p className="text-stone-400">{t("compare.hintInMap", { label: node.match.nodeLabel })}</p>
+  );
 }
 
 function ExperienceDetail({ node }: { node: OverlapNode }) {
+  const { t } = useTranslation("palace");
   const scoreByItemId = useCompareStore((state) => state.scoreByItemId);
   const setPracticeScore = useCompareStore((state) => state.setPracticeScore);
   const discussPractice = useCompareStore((state) => state.discussPractice);
@@ -34,7 +39,7 @@ function ExperienceDetail({ node }: { node: OverlapNode }) {
           done ? "bg-amber-500 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
         }`}
       >
-        {done ? "✓ 已完成" : "勾选为完成"}
+        {done ? t("compare.markedDone") : t("compare.markDone")}
       </button>
       <ClueLine node={node} />
       <button
@@ -42,21 +47,22 @@ function ExperienceDetail({ node }: { node: OverlapNode }) {
         onClick={() => void discussPractice(node)}
         className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
       >
-        想深入的话，和 AI 聊聊这里
+        {t("compare.discuss")}
       </button>
     </div>
   );
 }
 
 function HubDetail({ node }: { node: OverlapNode }) {
+  const { t } = useTranslation("palace");
   const buildEnabled = useSettingsStore((state) => state.featureSwitches.compareProfileBuild);
   const decomposingHub = useCompareStore((state) => state.decomposingHub);
   const decomposeHub = useCompareStore((state) => state.decomposeHub);
   return (
     <div className="space-y-1.5">
-      <p className="text-stone-500">这是一整片领域，先细分成具体知识点，才看得清重合</p>
+      <p className="text-stone-500">{t("compare.hubHint")}</p>
       <ClueLine node={node} />
-      <p className="text-stone-400">佐证：{node.sourceRef}</p>
+      <p className="text-stone-400">{t("compare.evidence", { ref: node.sourceRef })}</p>
       {buildEnabled ? (
         <button
           type="button"
@@ -64,10 +70,10 @@ function HubDetail({ node }: { node: OverlapNode }) {
           onClick={() => void decomposeHub(node)}
           className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
         >
-          {decomposingHub ? "正在细分…" : "细分这片领域（会逐条核对资料来源）"}
+          {decomposingHub ? t("compare.decomposing") : t("compare.decompose")}
         </button>
       ) : (
-        <p className="text-stone-400">想细分它？去设置里开启「对比资料构建（实验）」</p>
+        <p className="text-stone-400">{t("compare.enableExperiment")}</p>
       )}
     </div>
   );
@@ -79,16 +85,17 @@ function countStubs(node: OverlapNode): number {
 }
 
 export function CompareNodeDetail({ node }: { node: OverlapNode }) {
+  const { t } = useTranslation("palace");
   const stubCount = node.isLeaf ? 0 : countStubs(node);
   return (
     <div className="space-y-1 rounded border border-stone-200 bg-stone-50 px-2 py-1.5">
       <p className="font-medium text-stone-700">
         {node.label}
         {node.isLeaf && (node.kind === "hub" || node.kind === "tool") ? (
-          <span className="ml-2 text-stone-400">还没细分成具体知识点</span>
+          <span className="ml-2 text-stone-400">{t("compare.notDecomposed")}</span>
         ) : (
           <span className="ml-2 text-stone-400">
-            重合{" "}
+            {t("compare.overlap")}{" "}
             {Number.isInteger(node.matchedLeafCount)
               ? node.matchedLeafCount
               : node.matchedLeafCount.toFixed(1)}
@@ -106,21 +113,25 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
             (node.match !== null ? (
               node.match.via === "semantic" ? (
                 <p className="text-stone-500">
-                  对应你学过的「{node.match.nodeLabel}」：{node.match.matchedText}
+                  {t("compare.matchedVia", {
+                    label: node.match.nodeLabel,
+                    text: node.match.matchedText,
+                  })}
                 </p>
               ) : (
                 <p className="text-stone-500">
-                  对上了你的「{node.match.nodeLabel}」
-                  {node.match.via === "alias" && `（经由资料里的「${node.match.matchedText}」）`}
+                  {t("compare.matched", { label: node.match.nodeLabel })}
+                  {node.match.via === "alias" &&
+                    t("compare.viaAlias", { text: node.match.matchedText })}
                 </p>
               )
             ) : (
-              <p className="text-stone-400">还没对上你的知识点</p>
+              <p className="text-stone-400">{t("compare.noMatch")}</p>
             ))}
           {stubCount > 0 && (
-            <p className="text-stone-400">还有 {stubCount} 片领域可以细分——在图里点开它们就可以</p>
+            <p className="text-stone-400">{t("compare.moreHubs", { count: stubCount })}</p>
           )}
-          <p className="text-stone-400">佐证：{node.sourceRef}</p>
+          <p className="text-stone-400">{t("compare.evidence", { ref: node.sourceRef })}</p>
         </>
       )}
     </div>
@@ -128,6 +139,7 @@ export function CompareNodeDetail({ node }: { node: OverlapNode }) {
 }
 
 export function ExperimentalBuildForm() {
+  const { t } = useTranslation("palace");
   const buildEnabled = useSettingsStore((state) => state.featureSwitches.compareProfileBuild);
   const building = useCompareStore((state) => state.building);
   const buildNote = useCompareStore((state) => state.buildNote);
@@ -135,22 +147,18 @@ export function ExperimentalBuildForm() {
   const [topic, setTopic] = useState("");
 
   if (!buildEnabled) {
-    return (
-      <p className="text-stone-400">
-        想对比职业名录之外的对象？去设置里开启「对比资料构建（实验）」
-      </p>
-    );
+    return <p className="text-stone-400">{t("compare.customIntro")}</p>;
   }
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-1">
         <span className="rounded bg-stone-100 px-1 py-0.5 text-[10px] text-stone-500">
-          实验功能
+          {t("compare.experimental")}
         </span>
         <input
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
-          placeholder="输入想对比的主题，比如「数据分析」"
+          placeholder={t("compare.customPlaceholder")}
           className="flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
         />
         <button
@@ -159,10 +167,10 @@ export function ExperimentalBuildForm() {
           onClick={() => void buildFromTopic(topic.trim())}
           className="rounded bg-amber-500 px-2 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
         >
-          生成
+          {t("compare.generate")}
         </button>
       </div>
-      <p className="text-stone-400">生成时会逐条核对资料来源，预计需要几分钟。</p>
+      <p className="text-stone-400">{t("compare.customNote")}</p>
       {buildNote !== null && <p className="text-stone-500">{buildNote}</p>}
     </div>
   );

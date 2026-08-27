@@ -23,5 +23,8 @@
   "state": {
     "loading": "Loading…",
     "empty": "Nothing here yet"
+  },
+  "list": {
+    "separator": ", "
   }
 }

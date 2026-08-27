@@ -6,19 +6,15 @@
  */
 import { layoutWordCloud, wordFontWeight } from "@breadcrumb/plugin-browsing-interest";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore, WORD_CLOUD_WINDOWS } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine, InterestSegmentedControl } from "./InterestPanel";
 
 const CANVAS_HEIGHT = 380;
 const FONT_FAMILY = 'system-ui, "PingFang SC", "Microsoft YaHei", sans-serif';
 
-const WINDOW_LABELS: Record<number, string> = { 7: "7天", 30: "30天", 90: "90天", 365: "一年" };
-const WINDOWS = WORD_CLOUD_WINDOWS.map((days) => ({
-  value: days,
-  label: WINDOW_LABELS[days] ?? `${days}天`,
-}));
-
 export function InterestWordCloudPanel() {
+  const { t } = useTranslation("discovery");
   const cloud = useBrowsingInterestStore((state) => state.wordCloud);
   const days = useBrowsingInterestStore((state) => state.wordCloudDays);
   const setDays = useBrowsingInterestStore((state) => state.setWordCloudDays);
@@ -74,17 +70,20 @@ export function InterestWordCloudPanel() {
 
   return (
     <InterestPanel
-      title="词云"
+      title={t("wordCloud.title")}
       controls={
         <InterestSegmentedControl
-          options={WINDOWS}
+          options={WORD_CLOUD_WINDOWS.map((value) => ({
+            value,
+            label: t(`wordCloud.window${value}` as const),
+          }))}
           value={days}
           onChange={(next) => void setDays(next)}
         />
       }
     >
       {cloud && cloud.words.length === 0 && (
-        <InterestPanelEmptyLine>这段时间还没有点开过内容</InterestPanelEmptyLine>
+        <InterestPanelEmptyLine>{t("wordCloud.empty")}</InterestPanelEmptyLine>
       )}
       <canvas
         ref={canvasRef}
