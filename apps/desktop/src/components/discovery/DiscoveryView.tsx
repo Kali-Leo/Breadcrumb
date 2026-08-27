@@ -1,7 +1,8 @@
 /**
- * Purpose: the discovery page — setup steps until the local interest service answers, the
- * four interest panels once it does. It re-probes on a timer, so starting the service while
- * this page is open swaps it over without the user touching anything (spec 057 §2).
+ * Purpose: the discovery page — the setup card until the local interest service is running
+ * and has some browsing to show, the four interest panels once it does. Opening the page
+ * starts the service by itself, and it re-probes on a timer, so the page swaps over on its
+ * own (spec 057 §2).
  * Main exports: DiscoveryView.
  */
 import { useEffect } from "react";
@@ -20,10 +21,11 @@ const CONNECTED_INTERVAL_MS = 60_000;
 export function DiscoveryView() {
   const connected = useBrowsingInterestStore((state) => state.connected);
   const probed = useBrowsingInterestStore((state) => state.probed);
+  const eventCount = useBrowsingInterestStore((state) => state.profile?.n_events ?? 0);
 
   useEffect(() => {
     const store = useBrowsingInterestStore.getState();
-    void store.refresh();
+    void store.refresh().then(() => store.ensureServiceRunning());
     void store.loadConnectionToken();
   }, []);
 
@@ -34,15 +36,17 @@ export function DiscoveryView() {
         void store.refresh();
         if (!store.connected) void store.loadConnectionToken();
       },
-      connected ? CONNECTED_INTERVAL_MS : WAITING_INTERVAL_MS,
+      connected && eventCount > 0 ? CONNECTED_INTERVAL_MS : WAITING_INTERVAL_MS,
     );
     return () => clearInterval(timer);
-  }, [connected]);
+  }, [connected, eventCount]);
 
   // Nothing at all until the first probe answers: a setup page that flashes away half a
   // second later is worse than a moment of quiet.
   if (!probed) return <div className="h-full" />;
-  if (!connected) {
+  // A service that is up but has never been told anything means the browser side is not
+  // set up yet — the same page that gets the user there.
+  if (!connected || eventCount === 0) {
     return (
       <div className="h-full overflow-y-auto">
         <DiscoverySetupSteps />

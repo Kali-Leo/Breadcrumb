@@ -35,6 +35,7 @@ pub fn run() {
             embeddings::embed_texts,
             fsrs_optim::optimize_fsrs_parameters,
             interest_service::read_interest_service_token,
+            interest_service::start_interest_service,
             transactions::execute_sql_transaction,
             tts::piper_synthesize
         ])

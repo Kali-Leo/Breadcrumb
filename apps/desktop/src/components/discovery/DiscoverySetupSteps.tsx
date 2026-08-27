@@ -1,7 +1,8 @@
 /**
- * Purpose: what the discovery page shows before the local interest service is reachable —
- * the four things the user does once, each with the button that does it. Written for someone
- * who has never heard of userscripts (spec 057 §2).
+ * Purpose: what the discovery page shows until the interest service is running and has some
+ * browsing to show. The app starts the service itself, so the only thing left for the user
+ * is the browser side — one button that opens everything that has to be installed there,
+ * because a browser will only install things the user confirms in the browser's own dialog.
  * Main exports: DiscoverySetupSteps.
  */
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -13,21 +14,23 @@ const VIOLENTMONKEY_URL = "https://violentmonkey.github.io/";
 const BILIBILI_SCRIPT_URL = "https://greasyfork.org/zh-CN/scripts/592929";
 const YOUTUBE_SCRIPT_URL = "https://greasyfork.org/zh-CN/scripts/592932";
 const PROJECT_URL = "https://github.com/Kali-Leo/feed-mode";
-const START_COMMAND = "python3 interest-model/daemon/app.py";
+const DEPENDENCY_COMMAND = "pip install numpy scikit-learn jieba sentence-transformers";
 
 // Written out as whole strings: JSX turns a line break inside Chinese text into a stray space.
 const COPY = {
   intro:
-    "这一页显示你在 B站 和 YouTube 上看过什么、对什么感兴趣。做这件事的是两个东西：一个装在你浏览器里的脚本，在这两个网站的首页上整理推荐内容；一个跑在你这台电脑上的小程序，把看过的内容归成主题。两个都在本机，内容不会送到别的地方去。下面四步做完，这一页就会变成你的兴趣。",
-  violentmonkey: "Violentmonkey 是一个免费的浏览器插件。装了它，浏览器才能运行下一步的两个脚本。",
-  scripts:
-    "脚本会在 B站 和 YouTube 的首页把推荐内容分成专业、精选娱乐、娱乐三档，你可以随时切换；它同时把你看过的标题记在这台电脑上。",
-  service:
-    "这个程序把记下来的内容归成主题。它只监听本机，不联网。在下载好的项目文件夹里运行这行命令：",
+    "这一页显示你在 B站 和 YouTube 上看过什么、对什么感兴趣。整理都在你自己这台电脑上完成，内容不会送到别的地方去。",
+  action: "还差浏览器那一步：装一个能运行脚本的插件，再装两个脚本。",
+  afterClick:
+    "浏览器里会打开三个页面：先装 Violentmonkey，再回到另外两页各点一次「安装此脚本」。装好之后照常刷 B站 和 YouTube 就行，这一页会自己变成你的兴趣。",
   token:
-    "连接码让脚本确认，它是在把记录交给你自己的电脑。在 B站 首页左下角的开关条上点 🔗，把这串字粘贴进去；YouTube 首页上同样做一次。填好刷新页面后，把鼠标停在 🔗 上就能看到有没有连上。",
-  tokenPending: "上一步的程序启动之后，这里会出现要填的连接码。",
-  waiting: "还没连上电脑上的兴趣程序。它一启动，这一页会自动换成你的兴趣。",
+    "还有一步：在 B站 首页左下角的开关条上点 🔗，把下面这串字粘贴进去，YouTube 首页上同样做一次。",
+  starting: "正在启动这台电脑上的兴趣程序…",
+  notFound:
+    "没在这台电脑上找到那个兴趣程序。它在 feed-mode 项目里，下载到主目录或桌面即可，之后回到这一页。",
+  pythonMissing: "这台电脑上没有 Python，兴趣程序需要它才能运行。",
+  failed:
+    "兴趣程序没能启动起来。多半是缺几个 Python 包，在项目文件夹里运行这行命令，然后回到这一页：",
 } as const;
 
 function LinkButton({ label, url }: { label: string; url: string }) {
@@ -35,7 +38,7 @@ function LinkButton({ label, url }: { label: string; url: string }) {
     <button
       type="button"
       onClick={() => void openUrl(url)}
-      className="rounded-full bg-amber-500 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-amber-600"
+      className="rounded-full border border-stone-300 px-3 py-1.5 text-stone-600 text-xs transition-colors hover:bg-stone-50"
     >
       {label}
     </button>
@@ -65,73 +68,72 @@ function CopyRow({ value }: { value: string }) {
   );
 }
 
-function SetupStep({
-  index,
-  title,
-  children,
-}: {
-  index: number;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <li className="flex gap-3">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-stone-100 font-semibold text-stone-500 text-xs">
-        {index}
-      </span>
-      <div className="min-w-0 flex-1 space-y-2 pb-5">
-        <h2 className="font-semibold text-sm text-stone-700">{title}</h2>
-        {children}
-      </div>
-    </li>
-  );
+function Note({ children }: { children: ReactNode }) {
+  return <p className="text-sm text-stone-500 leading-relaxed">{children}</p>;
 }
 
-function StepText({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-stone-500 leading-relaxed">{children}</p>;
+/** The service is the app's job, not the user's — this only speaks up when it went wrong. */
+function ServiceNote() {
+  const status = useBrowsingInterestStore((state) => state.serviceStatus);
+  if (status === "running" || status === "unknown") return null;
+  return (
+    <div className="mt-8 space-y-2 rounded-xl bg-stone-50 px-4 py-3">
+      {status === "starting" && <Note>{COPY.starting}</Note>}
+      {status === "notFound" && (
+        <>
+          <Note>{COPY.notFound}</Note>
+          <LinkButton label="打开项目主页" url={PROJECT_URL} />
+        </>
+      )}
+      {status === "pythonMissing" && <Note>{COPY.pythonMissing}</Note>}
+      {status === "failed" && (
+        <>
+          <Note>{COPY.failed}</Note>
+          <CopyRow value={DEPENDENCY_COMMAND} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export function DiscoverySetupSteps() {
   const connectionToken = useBrowsingInterestStore((state) => state.connectionToken);
+  const [opened, setOpened] = useState(false);
+
+  function installInBrowser() {
+    // Order matters only for what ends up focused: the extension page is opened last so it
+    // is the tab in front. The two script pages install fine once the extension is there.
+    void openUrl(YOUTUBE_SCRIPT_URL);
+    void openUrl(BILIBILI_SCRIPT_URL);
+    void openUrl(VIOLENTMONKEY_URL);
+    setOpened(true);
+  }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
+    <div className="mx-auto max-w-2xl px-6 py-10">
       <h1 className="font-semibold text-lg text-stone-700">发现</h1>
-      <p className="mt-2 text-sm text-stone-500 leading-relaxed">{COPY.intro}</p>
+      <Note>{COPY.intro}</Note>
 
-      <ol className="mt-7">
-        <SetupStep index={1} title="装 Violentmonkey">
-          <StepText>{COPY.violentmonkey}</StepText>
-          <LinkButton label="打开 Violentmonkey 官网" url={VIOLENTMONKEY_URL} />
-        </SetupStep>
+      <div className="mt-7 space-y-3">
+        <Note>{COPY.action}</Note>
+        <button
+          type="button"
+          onClick={installInBrowser}
+          className="rounded-full bg-amber-500 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-amber-600"
+        >
+          在浏览器里安装
+        </button>
+        {opened && <Note>{COPY.afterClick}</Note>}
+      </div>
 
-        <SetupStep index={2} title="装上两个网站的脚本">
-          <StepText>{COPY.scripts}</StepText>
-          <div className="flex gap-2">
-            <LinkButton label="安装 B站 版" url={BILIBILI_SCRIPT_URL} />
-            <LinkButton label="安装 YouTube 版" url={YOUTUBE_SCRIPT_URL} />
-          </div>
-        </SetupStep>
+      {connectionToken && (
+        <div className="mt-6 space-y-2">
+          <Note>{COPY.token}</Note>
+          <CopyRow value={connectionToken} />
+        </div>
+      )}
 
-        <SetupStep index={3} title="启动电脑上的兴趣程序">
-          <StepText>{COPY.service}</StepText>
-          <CopyRow value={START_COMMAND} />
-          <LinkButton label="打开项目主页" url={PROJECT_URL} />
-        </SetupStep>
-
-        <SetupStep index={4} title="把连接码填进脚本设置">
-          {connectionToken ? (
-            <>
-              <StepText>{COPY.token}</StepText>
-              <CopyRow value={connectionToken} />
-            </>
-          ) : (
-            <StepText>{COPY.tokenPending}</StepText>
-          )}
-        </SetupStep>
-      </ol>
-
-      <p className="rounded-xl bg-stone-50 px-4 py-3 text-sm text-stone-500">{COPY.waiting}</p>
+      <ServiceNote />
     </div>
   );
 }
