@@ -41,6 +41,65 @@ describe("research task schema", () => {
     expect(() => researchTaskSchema.parse(excessive)).toThrow();
   });
 
+  it("rejects a correlation of a series with itself", () => {
+    const selfPaired = {
+      ...validTask,
+      calls: [
+        {
+          fn: "correlation",
+          xMetric: "daily_encounters",
+          yMetric: "daily_encounters",
+          windowDays: 60,
+        },
+      ],
+    };
+    expect(() => researchTaskSchema.parse(selfPaired)).toThrow();
+  });
+
+  it("rejects the mechanically coupled encounters × messages pair, in either order", () => {
+    // Sightings are extracted from messages, so this correlation measures the extractor.
+    for (const [xMetric, yMetric] of [
+      ["daily_encounters", "daily_messages"],
+      ["daily_messages", "daily_encounters"],
+    ]) {
+      const coupled = {
+        ...validTask,
+        calls: [{ fn: "correlation", xMetric, yMetric, windowDays: 60 }],
+      };
+      expect(() => researchTaskSchema.parse(coupled)).toThrow();
+    }
+  });
+
+  it("accepts an independent metric pair over a long enough window", () => {
+    const sound = {
+      ...validTask,
+      calls: [
+        {
+          fn: "correlation",
+          xMetric: "daily_encounters",
+          yMetric: "daily_word_events",
+          windowDays: 60,
+        },
+      ],
+    };
+    expect(researchTaskSchema.parse(sound).calls).toHaveLength(1);
+  });
+
+  it("rejects a correlation window too short to ever clear the sample-size floor", () => {
+    const tooShort = {
+      ...validTask,
+      calls: [
+        {
+          fn: "correlation",
+          xMetric: "daily_encounters",
+          yMetric: "daily_word_events",
+          windowDays: 7,
+        },
+      ],
+    };
+    expect(() => researchTaskSchema.parse(tooShort)).toThrow();
+  });
+
   it("rejects envelopes with malformed signatures", () => {
     expect(() => parseSignedResearchTask({ payload: validTask, signature: "not-hex" })).toThrow();
   });

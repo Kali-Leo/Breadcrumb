@@ -50,7 +50,13 @@ export interface ScheduledReplacement extends CandidateOccurrence {
 
 /** Daily new-word cap that tightens as review debt grows: base minus one per
  * `debtPerSlot` due-but-unmet words, never below zero. (5, not 10: with 10 the intake
- * only closed after debt had saturated the whole vocabulary — 30-day journey sim.) */
+ * only closed after debt had saturated the whole vocabulary — 30-day journey sim.)
+ *
+ * `reviewDebtCount` must be MEETABLE debt — due words the conversation can still deliver
+ * (callers intersect the due set with the recent messages' candidate lemmas). Counting every
+ * due word made the throttle self-locking: words whose topic had left the chat could never
+ * be re-met, so they sat in the debt forever and pinned intake at 1 word/day from day 7
+ * (audit 2026-08-28 #3). */
 export function adaptiveNewWordCap(baseCap: number, reviewDebtCount: number): number {
   const debtPerSlot = 5;
   return Math.max(0, baseCap - Math.floor(reviewDebtCount / debtPerSlot));

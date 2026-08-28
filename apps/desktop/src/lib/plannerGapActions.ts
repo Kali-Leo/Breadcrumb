@@ -2,7 +2,7 @@
  * Purpose: pure gap/coverage/route computation for a selected goal, split out of
  * plannerStore.ts to keep that file under the file-size ceiling. No React/zustand here.
  * Main exports: computeGapForGoal, computeRouteForGoal, deriveGoalView, GoalView,
- * masteryAsSeenByGoal.
+ * goalSatisfiedNodeIds.
  */
 import type {
   GoalRow,
@@ -20,23 +20,17 @@ import {
   recommendRoute,
 } from "@breadcrumb/plugin-planner";
 
-/** Goal views believe the user's own word: a node with a 'learned' self-report claim counts
- * as satisfied FOR THE GOAL, while global mastery stays honest (ADR-0009 keeps self-report
- * capped below real-footprint evidence, so review can still gently resurface it later).
- * Exported so every other milestone/coverage readout (the goal overlay, the lab's goal
- * composition chips) uses the exact same boosted view coverage() does here (spec 016 binding
- * decision — milestone must never silently disagree with the coverage percentage). */
-export function masteryAsSeenByGoal(
-  masteryByNode: ReadonlyMap<string, number>,
-  claims: readonly MasteryClaimRow[],
-): Map<string, number> {
-  const boosted = new Map(masteryByNode);
-  for (const claim of claims) {
-    if (claim.level !== "learned") continue;
-    const current = boosted.get(claim.node_id) ?? 0;
-    if (current < LIT_THRESHOLD) boosted.set(claim.node_id, LIT_THRESHOLD);
-  }
-  return boosted;
+/** Goal views believe the user's own word: a node with a 'learned' self-report claim leaves
+ * THIS GOAL's remaining work and counts toward its coverage (vision/07 §4 — the goal trusts
+ * you, memory stays honest). It is an id set, not a mastery number: the earlier version wrote
+ * a fake LIT-threshold value into a copied mastery map, which both contradicted spec 011's own
+ * acceptance criterion (self-report must weigh less than real footprints) and made one click
+ * mean two different things on two screens — the goal page dropped the node while the palace's
+ * frontier still treated its dependents as locked (2026-08-28 audit, planning gap 5).
+ * Exported so every goal readout (coverage, the composition chips) applies the identical
+ * belief — they must never silently disagree. */
+export function goalSatisfiedNodeIds(claims: readonly MasteryClaimRow[]): Set<string> {
+  return new Set(claims.filter((claim) => claim.level === "learned").map((claim) => claim.node_id));
 }
 
 export function computeGapForGoal(
@@ -49,21 +43,22 @@ export function computeGapForGoal(
 ): { gap: GapAndPathResult | null; coverageFraction: number | null } {
   if (goal === null) return { gap: null, coverageFraction: null };
   const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-  const goalMasteryByNode = masteryAsSeenByGoal(masteryByNode, claims);
+  const satisfiedNodeIds = goalSatisfiedNodeIds(claims);
   return {
     gap: gapAndPath({
       nodes,
       edges,
-      masteryByNode: goalMasteryByNode,
+      masteryByNode,
       interestByNode,
       goalNodeIds,
       litThreshold: LIT_THRESHOLD,
+      satisfiedNodeIds,
     }),
-    coverageFraction: coverage(goalNodeIds, goalMasteryByNode, LIT_THRESHOLD),
+    coverageFraction: coverage(goalNodeIds, masteryByNode, LIT_THRESHOLD, satisfiedNodeIds),
   };
 }
 
-/** Same single-goal-view mastery as computeGapForGoal, but returns the one recommended route
+/** Same single-goal-view belief as computeGapForGoal, but returns the one recommended route
  * (spec 017 #1) instead of the legacy three. Null when no goal is selected. */
 export function computeRouteForGoal(
   goal: GoalRow | null,
@@ -76,15 +71,15 @@ export function computeRouteForGoal(
 ): RecommendedRouteStep[] | null {
   if (goal === null) return null;
   const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
-  const goalMasteryByNode = masteryAsSeenByGoal(masteryByNode, claims);
   return recommendRoute(
     {
       nodes,
       edges,
-      masteryByNode: goalMasteryByNode,
+      masteryByNode,
       interestByNode,
       goalNodeIds,
       litThreshold: LIT_THRESHOLD,
+      satisfiedNodeIds: goalSatisfiedNodeIds(claims),
     },
     routeParams,
   );

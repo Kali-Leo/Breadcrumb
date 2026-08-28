@@ -29,7 +29,7 @@ describe("summarizeCommand", () => {
       completedJourneys: 1,
       totalCostCny: 0.1,
       budgetCny: 5,
-      edgeNetwork: { cycleRejectionCount: 0, targetConceptsRecall: 1 },
+      edgeNetwork: { cycleRejectionCount: 0, targetConceptsEcho: 1 },
       mastery: { reencounterBoostValid: true, idleDecayValid: true, detail: [] },
       interest: { note: "n/a" },
       planner: {

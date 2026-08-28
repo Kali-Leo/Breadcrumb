@@ -6,9 +6,14 @@
  * defaulted unknown models to USD; chatRoundMetering.ts's hand-rolled copy defaulted to
  * CNY — a real bug, mixed-currency ledgers for anyone on an unlisted model). Also flags a
  * metering under-count instead of silently trusting it.
- * Main exports: recordMeteredCall.
+ * Main exports: recordMeteredCall, recordFailedCallUsage.
  */
-import { BUILTIN_MODEL_PRICES, calculateCostMicros, type TokenUsage } from "@breadcrumb/core-llm";
+import {
+  BUILTIN_MODEL_PRICES,
+  ChatJsonError,
+  calculateCostMicros,
+  type TokenUsage,
+} from "@breadcrumb/core-llm";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { newId, nowIso } from "./time";
@@ -55,5 +60,26 @@ export async function recordMeteredCall(input: {
       "metering",
       `zero input/output tokens recorded for purpose "${input.purpose}" (model "${input.model}") despite a non-empty response — the provider likely ignored stream_options usage reporting, so this call's cost is under-counted as 0`,
     );
+  }
+}
+
+/**
+ * Records what a chatJson call had already cost when it gave up. chatJson throws a
+ * ChatJsonError carrying the usage of every request that actually reached the provider —
+ * the malformed and Zod-rejected ones are billed exactly like the good ones, so dropping
+ * them under-states the user's spend (宪法原则 2). Best-effort and safe to `void`: any other
+ * error carries no usage (the request never reached the provider), a zero-token failure has
+ * nothing to record, and recording must never compound the failure it is reporting.
+ */
+export async function recordFailedCallUsage(
+  error: unknown,
+  input: { purpose: string; model: string; conversationId: string | null },
+): Promise<void> {
+  if (!(error instanceof ChatJsonError)) return;
+  if (error.usage.inputTokens === 0 && error.usage.outputTokens === 0) return;
+  try {
+    await recordMeteredCall({ ...input, usage: error.usage });
+  } catch {
+    // best-effort: the caller is already inside a catch that is degrading silently.
   }
 }

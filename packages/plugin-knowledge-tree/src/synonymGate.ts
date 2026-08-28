@@ -3,9 +3,9 @@
  * against existing nodes by embedding cosine similarity (findSynonymCandidates), the
  * anchored same/different LLM contract for the survivors (synonymJudgeSchema,
  * buildSynonymJudgeMessages), and the plan adjustment once verdicts come back
- * (planSynonymGateResult): "同一" drops the new node, redirects its footprint to the
- * existing node, and records an alias; "不同" leaves the original plan untouched.
- * Main exports: SYNONYM_SIMILARITY_THRESHOLD, findSynonymCandidates, SynonymCandidatePair,
+ * (planSynonymGateResult): "same" drops the new node, redirects its footprint to the
+ * existing node, and records an alias; "different" leaves the original plan untouched.
+ * Main exports: SYNONYM_CANDIDATE_TOP_K, findSynonymCandidates, SynonymCandidatePair,
  * synonymJudgeSchema, buildSynonymJudgeMessages, SynonymJudgePairText, planSynonymGateResult,
  * SynonymGatePlan, JudgedSynonymPair.
  */
@@ -18,11 +18,13 @@ import type {
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import type { NodeChangePlan } from "./attach";
+import { cosineSimilarity, topByRelativeGate } from "./similarityGate";
 
-/** Cosine-similarity floor a would-be-new node's single best existing match must clear
- * before it even enters LLM judgment — below this, two concepts are assumed unrelated and
- * the gate costs nothing (spec 015, tuned via plugin-knowledge-tree/productParams). */
-export const SYNONYM_SIMILARITY_THRESHOLD = 0.85;
+/** At most this many existing nodes per would-be-new node reach LLM judgment. Top-1 was the
+ * old rule; in a space where every true pair sits between 0.80 and 0.95 a real synonym lands
+ * second or third routinely, and that miss was silent and unrecorded (design audit
+ * 2026-08-28 #8). Same k the alignment layer already used. */
+export const SYNONYM_CANDIDATE_TOP_K = 3;
 
 export interface SynonymCandidatePair {
   newNodeId: string;
@@ -30,56 +32,40 @@ export interface SynonymCandidatePair {
   similarity: number;
 }
 
-/** For each new node's embedding, its single best-matching existing node by cosine
- * similarity — kept only when it clears `threshold`. Pure math, no DB. */
+/** For each new node's embedding, the existing nodes that stand out in ITS OWN similarity
+ * landscape (relativeGate), most similar first, at most SYNONYM_CANDIDATE_TOP_K of them.
+ * Pure math, no DB. Every stored vector is parsed exactly once, outside the per-new-node
+ * loop — it used to be re-parsed for every (new, existing) combination. */
 export function findSynonymCandidates(
   newNodeVectors: ReadonlyMap<string, readonly number[]>,
   existingEmbeddings: readonly NodeEmbeddingRow[],
-  threshold: number,
+  topK: number = SYNONYM_CANDIDATE_TOP_K,
 ): SynonymCandidatePair[] {
+  const existingVectors: { existingNodeId: string; vector: number[] }[] = [];
+  for (const existing of existingEmbeddings) {
+    existingVectors.push({
+      existingNodeId: existing.node_id,
+      vector: JSON.parse(existing.vector_json) as number[],
+    });
+  }
+
   const candidates: SynonymCandidatePair[] = [];
   for (const [newNodeId, newVector] of newNodeVectors) {
-    let best: { existingNodeId: string; similarity: number } | null = null;
-    for (const existing of existingEmbeddings) {
-      const existingVector = JSON.parse(existing.vector_json) as number[];
-      const similarity = cosineSimilarity(newVector, existingVector);
-      if (best === null || similarity > best.similarity) {
-        best = { existingNodeId: existing.node_id, similarity };
-      }
-    }
-    if (best !== null && best.similarity >= threshold) {
-      candidates.push({
-        newNodeId,
-        existingNodeId: best.existingNodeId,
-        similarity: best.similarity,
-      });
-    }
+    const scored = existingVectors.map((existing) => ({
+      newNodeId,
+      existingNodeId: existing.existingNodeId,
+      similarity: cosineSimilarity(newVector, existing.vector),
+    }));
+    candidates.push(...topByRelativeGate(scored, topK));
   }
   return candidates;
 }
 
-// Cosine helper, exported for in-package reuse (suspectPairs.ts) — mirrors
-// plugin-graph/src/similarity.ts and plugin-interest/src/spread.ts's own local copies
-// rather than adding a cross-package dep for this one piece of math.
-export function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dotProduct += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
 /** Anchored verdict tier (spec 014 style): the model picks one of two labeled outcomes
- * instead of a bare boolean, for cross-call consistency. */
-export const synonymVerdictSchema = z.enum(["同一", "不同"]);
+ * instead of a bare boolean, for cross-call consistency. ASCII values (design audit
+ * 2026-08-28, 多语言 B6): the enum travels inside a JSON contract the model is separately
+ * told to answer in the learner's language, so Chinese literals here fight that directive. */
+export const synonymVerdictSchema = z.enum(["same", "different"]);
 export type SynonymVerdict = z.infer<typeof synonymVerdictSchema>;
 
 export const synonymJudgeSchema = z.object({
@@ -104,11 +90,17 @@ export interface SynonymJudgePairText {
   existingSummary: string;
 }
 
+// "拿不准就判 different" is not politeness — a "same" verdict here irreversibly deletes a
+// node and folds its history away, while a "different" verdict costs nothing but one extra
+// node. The alignment judge (plugin-compare/src/alignment.ts) has always carried this
+// abstention line; the judge that actually destroys data did not (design audit 2026-08-28 #8).
 const SYSTEM_PROMPT = `你是一个概念查重器。给定若干候选对，每对是「新概念」与「已有节点」，判断新概念是否只是已有节点的另一种说法，以 JSON 返回：
-{"verdicts":[{"pairId":"候选对编号(原样返回)","verdict":"同一|不同"}]}
+{"verdicts":[{"pairId":"候选对编号(原样返回)","verdict":"same|different"}]}
 判定规则：
-- 同一：新概念和已有节点讲的是同一件事，只是措辞、角度或详略不同
-- 不同：新概念虽然相关但确实是独立的知识点，值得单独成节点`;
+- same：新概念和已有节点讲的是同一件事，只是措辞、角度或详略不同
+- different：新概念虽然相关但确实是独立的知识点，值得单独成节点
+- 仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different
+- 拿不准就判 different`;
 
 export function buildSynonymJudgeMessages(pairs: readonly SynonymJudgePairText[]): ChatMessage[] {
   const pairsText = pairs
@@ -151,14 +143,18 @@ export interface SynonymGatePlan {
 }
 
 /** Turns the synonym-judge LLM result into the final insert plan. A judgment with an
- * unknown pairId, or "不同", changes nothing for that pair — the original plan wins. */
+ * unknown pairId, or "different", changes nothing for that pair — the original plan wins.
+ * With top-3 candidates a new node can appear in several pairs; the first "same" verdict
+ * wins and later ones for the same new node are ignored (Map.set order), so a node is never
+ * folded into two different existing nodes at once. */
 export function planSynonymGateResult(input: SynonymGatePlanInput): SynonymGatePlan {
   const pairById = new Map(input.pairs.map((pair) => [pair.pairId, pair]));
   const existingNodeIdByDroppedNewNodeId = new Map<string, string>();
   for (const verdict of input.judged.verdicts) {
-    if (verdict.verdict !== "同一") continue;
+    if (verdict.verdict !== "same") continue;
     const pair = pairById.get(verdict.pairId);
     if (pair === undefined) continue;
+    if (existingNodeIdByDroppedNewNodeId.has(pair.newNodeId)) continue;
     existingNodeIdByDroppedNewNodeId.set(pair.newNodeId, pair.existingNodeId);
   }
 

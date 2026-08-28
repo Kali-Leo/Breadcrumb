@@ -8,14 +8,11 @@
  * alignmentTextOfItem, ALIGNMENT_CANDIDATE_THRESHOLD, ALIGNMENT_TOP_K, ALIGNMENT_JUDGE_BATCH_SIZE.
  */
 import type { ChatMessage } from "@breadcrumb/core-llm";
-import { cosineSimilarity } from "@breadcrumb/plugin-knowledge-tree";
+import { cosineSimilarity, topByRelativeGate } from "@breadcrumb/plugin-knowledge-tree";
 import { z } from "zod";
 import { leafKeysOf } from "./matching";
 import type { ProfileItemDefinition } from "./profileSchema";
 
-/** Wider than the synonym gate's 0.85: recall is cheap (local embeddings), precision is the
- * LLM judge's job. */
-export const ALIGNMENT_CANDIDATE_THRESHOLD = 0.72;
 /** At most this many candidate nodes per profile leaf enter judgment. */
 export const ALIGNMENT_TOP_K = 3;
 /** Pairs per judge call — one batched call instead of dozens of small ones. */
@@ -41,6 +38,13 @@ export interface AlignmentCandidatePair {
  * Deterministic candidate pairs for judgment. Only leaves; items that already string-matched
  * are excluded (nothing to align); pairs already judged (either verdict) are excluded — the
  * crosswalk is asked once per pair, ever. Order: item authored order, then similarity desc.
+ *
+ * The cutoff is each item's OWN similarity landscape (topByRelativeGate), not a fixed cosine
+ * floor. The old ALIGNMENT_CANDIDATE_THRESHOLD = 0.72 passed 100% of pairs on the live
+ * database — a blocker with reduction ratio 0 is not a blocker, and it made compare-align the
+ * single largest LLM bill in the app for a 0.023% useful-output rate (design audit 2026-08-28
+ * #1/#2). With top-k applied AFTER a relative gate, an item whose matches are all equally
+ * mediocre now contributes far fewer pairs instead of always contributing exactly k.
  */
 export function generateAlignmentCandidates(input: {
   items: readonly ProfileItemDefinition[];
@@ -62,7 +66,6 @@ export function generateAlignmentCandidates(input: {
       const nodeVector = input.nodeVectors.get(node.id);
       if (nodeVector === undefined) continue;
       const similarity = cosineSimilarity(itemVector, nodeVector);
-      if (similarity < ALIGNMENT_CANDIDATE_THRESHOLD) continue;
       scored.push({
         itemKey: item.key,
         itemLabel: alignmentTextOfItem(item),
@@ -74,7 +77,7 @@ export function generateAlignmentCandidates(input: {
       });
     }
     scored.sort((a, b) => b.similarity - a.similarity || a.nodeId.localeCompare(b.nodeId));
-    pairs.push(...scored.slice(0, ALIGNMENT_TOP_K));
+    pairs.push(...topByRelativeGate(scored, ALIGNMENT_TOP_K));
   }
   return pairs;
 }
@@ -92,7 +95,10 @@ export const alignmentJudgeSchema = z.object({
     z.object({
       pair: z.number().int().min(1),
       verdict: z.enum(["same", "different"]),
-      confidence: z.enum(["高", "中", "低"]),
+      // ASCII tier (migration 0047): this enum sits inside a JSON contract the model is
+      // separately instructed to answer in the learner's language, so a Chinese literal here
+      // fought that directive (design audit 2026-08-28, 多语言 B6).
+      confidence: z.enum(["high", "medium", "low"]),
       reason: z.string().min(1).max(120),
     }),
   ),
@@ -102,10 +108,11 @@ export type AlignmentJudgeResult = z.infer<typeof alignmentJudgeSchema>;
 export type AlignmentJudgeVerdict = AlignmentJudgeResult["verdicts"][number];
 
 const JUDGE_SYSTEM_PROMPT = `你是一个概念对齐判官。给定若干对条目——A 来自一份公开资料的知识大纲，B 来自一位学习者自己的知识树——逐对判断 A 和 B 是否指同一个知识概念，以 JSON 返回：
-{"verdicts":[{"pair":1,"verdict":"same","confidence":"高","reason":"一句话理由，不超过60字"}]}
+{"verdicts":[{"pair":1,"verdict":"same","confidence":"high","reason":"一句话理由，不超过60字"}]}
 判定规则（严格执行）：
 - 只有当 A 与 B 本质上是同一个概念、名称可以互换时才判 same（例：导数 与 一元函数的导数）
 - 仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different（例：函数 与 闭包；作用域 与 作用域链）
+- confidence 三档：high=非常确定，medium=比较确定，low=只是倾向
 - 拿不准就判 different
 - verdicts 的数量与 pair 序号必须与给出的对一一对应，不许遗漏或多出`;
 
@@ -147,5 +154,5 @@ export function validateAlignmentVerdicts(
 /** Scoring rule (spec 024): only a confident "same" counts as overlap — a low-confidence
  * same is stored but never scored (存疑不记分). */
 export function alignmentCountsAsOverlap(verdict: string, confidence: string): boolean {
-  return verdict === "same" && confidence !== "低";
+  return verdict === "same" && confidence !== "low";
 }

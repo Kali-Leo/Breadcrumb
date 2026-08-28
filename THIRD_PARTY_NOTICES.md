@@ -14,8 +14,7 @@ from the following open-source projects.
 | [rough-stuff/rough](https://github.com/rough-stuff/rough) | MIT | 手绘颤线渲染（npm 依赖 roughjs） |
 
 依赖库（npm，见各 package.json）：pixi.js、pixi-viewport、d3-delaunay、simplex-noise、
-poisson-disk-sampling、polygon-clipping、polygon-offset、feedsmith（RSS/Atom/JSON Feed 解析，
-`packages/plugin-channels/`）等，均为 MIT/ISC 许可证。
+poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC 许可证。
 
 注：watabou 的 CompassOS 与 RuneGeneratorOS 仓库无许可证文件，未采用其任何内容。
 

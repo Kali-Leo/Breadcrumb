@@ -3,6 +3,7 @@
  * a filter by top-level group, and a card per item with its cover and how far it got.
  * Main exports: InterestProContentPanel.
  */
+import { formatDayMonth } from "@breadcrumb/core-i18n";
 import {
   groupCounts,
   type ProContentItem,
@@ -16,6 +17,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine, InterestSegmentedControl } from "./InterestPanel";
+import { useTopicName } from "./topicNames";
 
 const TAB_VALUES = ["unfinished", "finished"] as const;
 type Tab = (typeof TAB_VALUES)[number];
@@ -24,7 +26,8 @@ type Tab = (typeof TAB_VALUES)[number];
 const ALL_GROUPS = "*";
 
 function ProContentCard({ item, finished }: { item: ProContentItem; finished: boolean }) {
-  const { t } = useTranslation("discovery");
+  const { t, i18n } = useTranslation("discovery");
+  const topicName = useTopicName();
   const url = videoUrl(item.site, item.id);
   const cover = thumbnailUrl(item.pic);
   const percent = watchedPercent(item) ?? (finished ? 100 : 0);
@@ -59,8 +62,8 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
         <div className="mt-1 text-[11px] text-stone-400">
           {[
             item.up,
-            item.topic,
-            `${date.getMonth() + 1}.${date.getDate()}`,
+            topicName(item.topic),
+            formatDayMonth(i18n.language, date),
             minutes ? t("proContent.minutes", minutes) : null,
           ]
             .filter(Boolean)

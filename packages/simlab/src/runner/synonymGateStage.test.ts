@@ -1,6 +1,6 @@
 /**
  * Purpose: unit tests for runSynonymGateStage (spec 015) — candidate filtering by synthetic
- * embedding similarity, and the 同一/不同/degraded verdict branches, against a real temp
+ * embedding similarity, and the same/different/degraded verdict branches, against a real temp
  * SQLite database for node_embeddings.
  */
 
@@ -76,16 +76,14 @@ describe("runSynonymGateStage", () => {
     expect(result).toEqual({ newNodes: [], sightings: [], aliasesToInsert: [] });
   });
 
-  it("passes through when no existing embedding is similar enough", async () => {
+  it("passes through when the tree has no embeddings to compare against yet", async () => {
     temp = await setupBase();
+    // The existing node deliberately gets NO embedding row. A lone stored vector would clear
+    // its own relative gate (mean === best) and reach the judge, which is correct behaviour:
+    // one point is not an outlier in any landscape. "Nothing to compare against" is the real
+    // free-pass case now that the absolute cosine floor is gone.
     const existing = existingNode("existing-1", "作用域", "变量可见的范围");
     await temp.repos.knowledgeNodes.insert(existing);
-    await temp.repos.nodeEmbeddings.upsert({
-      node_id: existing.id,
-      model: SYNTHETIC_EMBEDDING_MODEL,
-      vector_json: JSON.stringify(computeSyntheticNodeEmbedding(existing.label, existing.summary)),
-      created_at: now,
-    });
     const newNode = existingNode("new-1", "完全不相关的概念xyz", "一个完全无关的东西");
     const plan: NodeChangePlan = {
       newNodes: [newNode],
@@ -114,7 +112,7 @@ describe("runSynonymGateStage", () => {
     expect(failures).toEqual([]);
   });
 
-  it("同一 verdict: drops the new node, redirects the sighting, writes an alias", async () => {
+  it("same verdict: drops the new node, redirects the sighting, writes an alias", async () => {
     temp = await setupBase();
     const existing = existingNode("existing-1", "if语句为什么要缩进", "缩进决定代码块归属");
     await temp.repos.knowledgeNodes.insert(existing);
@@ -144,7 +142,7 @@ describe("runSynonymGateStage", () => {
       Response.json({
         choices: [
           {
-            message: { content: JSON.stringify({ verdicts: [{ pairId: "p0", verdict: "同一" }] }) },
+            message: { content: JSON.stringify({ verdicts: [{ pairId: "p0", verdict: "same" }] }) },
           },
         ],
         usage: { prompt_tokens: 3, completion_tokens: 2 },
@@ -165,7 +163,7 @@ describe("runSynonymGateStage", () => {
     expect(failures).toEqual([]);
   });
 
-  it("不同 verdict: leaves the plan untouched", async () => {
+  it("different verdict: leaves the plan untouched", async () => {
     temp = await setupBase();
     const existing = existingNode("existing-1", "if语句为什么要缩进", "缩进决定代码块归属");
     await temp.repos.knowledgeNodes.insert(existing);
@@ -193,7 +191,9 @@ describe("runSynonymGateStage", () => {
       Response.json({
         choices: [
           {
-            message: { content: JSON.stringify({ verdicts: [{ pairId: "p0", verdict: "不同" }] }) },
+            message: {
+              content: JSON.stringify({ verdicts: [{ pairId: "p0", verdict: "different" }] }),
+            },
           },
         ],
         usage: { prompt_tokens: 3, completion_tokens: 2 },

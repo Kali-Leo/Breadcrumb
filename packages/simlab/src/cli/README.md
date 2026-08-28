@@ -75,8 +75,12 @@ Grouped by the four features this phase built, plus one cross-cutting section (s
 `specs/013-simlab/spec.md` §4). Shape: `RunMetrics` in `src/judges/metrics.ts`. Top level:
 `runId`, `requestedJourneys`, `completedJourneys`, `totalCostCny`, `budgetCny`, then:
 
-- **`edgeNetwork`**: `cycleRejectionCount` (sum across journeys), `targetConceptsRecall`
-  (average across journeys — see `src/judges/targetConceptsRecall.ts` for the matching rule).
+- **`edgeNetwork`**: `cycleRejectionCount` (sum across journeys), `targetConceptsEcho`
+  (average across journeys — see `src/judges/targetConceptsEcho.ts` for the matching rule).
+  `targetConceptsEcho` is written here but **not** reported by `sim summarize`: the persona's
+  target concepts go into the student's own prompt and are then used as the ground truth for
+  matching them back, so it measures input echo rather than extraction (design audit
+  2026-08-28). Every run to date scored 1.0. A drop below 1.0 is still worth a look.
 - **`mastery`**: `reencounterBoostValid`, `idleDecayValid`, `detail` — a pure plugin-memory
   self-check (not journey-specific data; FSRS math doesn't depend on which journey ran).
 - **`interest`**: `note` pointing at `sim recovery`'s `recovery-result.json` (scripted
@@ -105,7 +109,7 @@ Grouped by the four features this phase built, plus one cross-cutting section (s
     live goals state (`src/judges/invariants.ts`); nonzero means the P6 idempotency fix
     regressed.
 - **`journeys`**: one row per completed journey (id, persona, days, conversations, rounds,
-  new-node count, per-journey `targetConceptsRecall`).
+  new-node count, rejected cyclic edges, pipeline failures, per-journey `targetConceptsEcho`).
 
 ## `flagged/`
 

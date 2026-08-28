@@ -1,7 +1,7 @@
 /**
  * Purpose: desktop-side wiring for spec 015's node-dedup synonym gate — runs strictly
  * between planNodeChanges and the store's insert loop: embed the would-be-new nodes, filter
- * by cosine similarity, ask one batched anchored verdict, and turn "同一" into a dropped
+ * by cosine similarity, ask one batched anchored verdict, and turn "same" into a dropped
  * node + redirected sighting + alias. Any failure (no embeddings, LLM error, parse fail)
  * degrades to the pre-gate plan unchanged and records one ai_failures row — the gate must
  * never block a chat round from finishing its extraction.
@@ -14,14 +14,13 @@ import {
   findSynonymCandidates,
   type NodeChangePlan,
   planSynonymGateResult,
-  SYNONYM_SIMILARITY_THRESHOLD,
   type SynonymJudgePairText,
   synonymJudgeSchema,
 } from "@breadcrumb/plugin-knowledge-tree";
 import { getRepos } from "./db";
 import { embedTexts } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
 export interface SynonymGateOutcome {
@@ -60,11 +59,10 @@ export async function runSynonymGate(context: SynonymGateContext): Promise<Synon
     const newNodeVectors = new Map(
       context.plan.newNodes.map((node, index) => [node.id, vectors[index] ?? []]),
     );
-    const candidates = findSynonymCandidates(
-      newNodeVectors,
-      existingEmbeddings,
-      SYNONYM_SIMILARITY_THRESHOLD,
-    );
+    // Relative gate + top-3 (design audit 2026-08-28 #1/#8): the old absolute 0.85 floor
+    // matched every node in the live database, and top-1 silently lost real synonyms that
+    // happened to rank second in a band only 0.147 wide.
+    const candidates = findSynonymCandidates(newNodeVectors, existingEmbeddings);
     if (candidates.length === 0) return passthrough(context.plan);
 
     const newNodeById = new Map(context.plan.newNodes.map((node) => [node.id, node]));
@@ -100,6 +98,11 @@ export async function runSynonymGate(context: SynonymGateContext): Promise<Synon
     });
   } catch (error) {
     void recordAiFailure("knowledge-tree", error);
+    void recordFailedCallUsage(error, {
+      purpose: "knowledge-tree",
+      model: context.config.model,
+      conversationId: context.conversationId,
+    });
     return passthrough(context.plan);
   }
 }

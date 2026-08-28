@@ -29,7 +29,7 @@ import type { JourneyResult } from "../runner/journey";
 import { runJourney } from "../runner/journey";
 import { runPool } from "../runner/pool";
 import { parseRunFlags } from "./flags";
-import { printRunSummary } from "./runSummaryLog";
+import { hardFailureReasons, printRunSummary } from "./runSummaryLog";
 import { selectPersonas } from "./selectPersonas";
 
 function newRunId(): string {
@@ -169,6 +169,15 @@ export async function runCommand(argv: readonly string[]): Promise<void> {
   });
   artifacts.writeMetrics(metrics);
   printRunSummary(metrics, flags.journeys, completed.length, costGuard.totalCny(), artifacts.dir);
+
+  // A quality conclusion has to be able to turn the command red, or the green means nothing
+  // (design audit 2026-08-28, simlab与测试策略 #1).
+  const failures = hardFailureReasons(metrics);
+  if (failures.length > 0) {
+    console.error(`simlab run ${runId} FAILED — ${failures.length} hard gate(s) tripped:`);
+    for (const reason of failures) console.error(`  - ${reason}`);
+    process.exitCode = 1;
+  }
 }
 
 /** Reads one journey's JSONL log back into parsed records for the post-run log tripwires.

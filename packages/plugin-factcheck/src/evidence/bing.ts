@@ -5,8 +5,9 @@
  * decoding and fetch-and-verify. Main exports: createBingProvider.
  */
 import { load } from "cheerio";
-import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
+import type { EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
+import { type ResultCandidate, verifyCandidates } from "./verify";
 
 const SNIPPET_MAX_LENGTH = 600;
 
@@ -20,32 +21,36 @@ export function createBingProvider(options: BingProviderOptions): EvidenceProvid
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   return {
     name: "bing",
-    async search(query: string, limit: number): Promise<EvidenceItem[]> {
+    async search(query: string, limit: number): Promise<EvidenceSearchResult> {
       try {
         const response = await options.fetchImpl(
           `https://cn.bing.com/search?q=${encodeURIComponent(query)}`,
           { signal: AbortSignal.timeout(timeoutMs), headers: { "Accept-Language": "zh-CN,zh" } },
         );
-        if (!response.ok) return [];
+        if (!response.ok) return { items: [], failed: true };
         const candidates = parseResults(await response.text());
         if (candidates.length === 0) {
-          // Headless package: no DB, so this can't reach recordAiFailure (app-side, see
-          // apps/desktop/src/lib/failureLog.ts) — a distinctive prefix is the next best
-          // signal that Bing's markup drifted out from under the cheerio selectors.
+          // A search engine answering 200 with no result block at all is markup drift far
+          // more often than a genuinely empty result set, and the two are indistinguishable
+          // from here — so this counts as a failed search, never as "nothing exists".
+          // The console line stays because this headless package has no DB; the host reads
+          // `failed` and writes the ai_failures row (apps/desktop/src/lib/failureLog.ts).
           console.warn("[factcheck:bing] parsed 0 result candidates from a 200 response");
+          return { items: [], failed: true };
         }
-        return await verifyCandidates(options.fetchImpl, timeoutMs, candidates, limit);
+        return await verifyCandidates(
+          options.fetchImpl,
+          timeoutMs,
+          candidates,
+          limit,
+          "bing",
+          query,
+        );
       } catch {
-        return [];
+        return { items: [], failed: true };
       }
     },
   };
-}
-
-interface ResultCandidate {
-  url: string;
-  title: string;
-  snippet: string;
 }
 
 function parseResults(html: string): ResultCandidate[] {
@@ -84,24 +89,4 @@ function decodeBingUrl(rawHref: string): string | null {
   } catch {
     return null;
   }
-}
-
-async function verifyCandidates(
-  fetchImpl: FetchLike,
-  timeoutMs: number,
-  candidates: readonly ResultCandidate[],
-  limit: number,
-): Promise<EvidenceItem[]> {
-  const verified: EvidenceItem[] = [];
-  for (const candidate of candidates) {
-    if (verified.length >= limit) break;
-    try {
-      const response = await fetchImpl(candidate.url, { signal: AbortSignal.timeout(timeoutMs) });
-      if (!response.ok) continue;
-      verified.push({ ...candidate, source: "bing" });
-    } catch {
-      // Unreachable page: never surface a link we could not open ourselves.
-    }
-  }
-  return verified;
 }

@@ -89,43 +89,43 @@ describe("which language the model answers in", () => {
 });
 
 describe("did the model answer in that language", () => {
-  it("accepts a reply in the language asked for", () => {
+  it("accepts a reply in the language asked for", async () => {
     expect(
-      checkReplyLanguage(
+      await checkReplyLanguage(
         "闭包是函数和它捕获的环境组成的整体，所以它能在离开定义位置之后继续读到那些变量。",
         chinese as never,
       ),
     ).toBe("matches");
     expect(
-      checkReplyLanguage(
+      await checkReplyLanguage(
         "A closure is a function together with the environment it captured, which is why it can still read those variables later.",
         english as never,
       ),
     ).toBe("matches");
   });
 
-  it("catches the reply that drifted into another language", () => {
+  it("catches the reply that drifted into another language", async () => {
     expect(
-      checkReplyLanguage(
+      await checkReplyLanguage(
         "闭包是函数和它捕获的环境组成的整体，所以它能在离开定义位置之后继续读到那些变量。",
         english as never,
       ),
     ).toBe("differs");
   });
 
-  it("refuses to judge what carries no language", () => {
-    expect(checkReplyLanguage("", english as never)).toBe("unknown");
-    expect(checkReplyLanguage("42", english as never)).toBe("unknown");
-    expect(checkReplyLanguage("```js\nconst a = 1;\n```", english as never)).toBe("unknown");
-    expect(checkReplyLanguage("$$E = mc^2$$", chinese as never)).toBe("unknown");
-    expect(checkReplyLanguage("https://example.com/a/b/c", english as never)).toBe("unknown");
+  it("refuses to judge what carries no language", async () => {
+    expect(await checkReplyLanguage("", english as never)).toBe("unknown");
+    expect(await checkReplyLanguage("42", english as never)).toBe("unknown");
+    expect(await checkReplyLanguage("```js\nconst a = 1;\n```", english as never)).toBe("unknown");
+    expect(await checkReplyLanguage("$$E = mc^2$$", chinese as never)).toBe("unknown");
+    expect(await checkReplyLanguage("https://example.com/a/b/c", english as never)).toBe("unknown");
   });
 
-  it("judges prose that merely contains code, not the code itself", () => {
+  it("judges prose that merely contains code, not the code itself", async () => {
     const reply =
       "Here is the shortest version that still reads well, and the reason it works is that the callback keeps its own scope alive:\n\n```js\nconst add = (a) => (b) => a + b;\n```";
-    expect(checkReplyLanguage(reply, english as never)).toBe("matches");
-    expect(checkReplyLanguage(reply, chinese as never)).toBe("differs");
+    expect(await checkReplyLanguage(reply, english as never)).toBe("matches");
+    expect(await checkReplyLanguage(reply, chinese as never)).toBe("differs");
   });
 
   it("has a row for every language it might be asked to verify", () => {

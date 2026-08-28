@@ -9,9 +9,11 @@ export {
   type DefaultProvidersOptions,
 } from "./evidence/defaults";
 export { createDuckDuckGoProvider, type DuckDuckGoProviderOptions } from "./evidence/duckduckgo";
+export { EVIDENCE_WINDOW_LENGTH, extractKeywordWindow } from "./evidence/pageText";
 export {
   type EvidenceItem,
   type EvidenceProvider,
+  type EvidenceSearchResult,
   type FetchLike,
   stripHtml,
 } from "./evidence/provider";
@@ -21,10 +23,18 @@ export {
   claimExtractionSchema,
   type ExtractedClaim,
 } from "./extraction";
+export { type GatheredEvidence, gatherEvidence } from "./gathering";
 export {
   type CheckedClaim,
   type FactCheckDeps,
   type FactCheckReport,
   runFactCheck,
 } from "./pipeline";
-export { buildVerdictMessages, type ClaimRelationship, verdictSchema } from "./verdict";
+export { seededShuffle } from "./shuffle";
+export {
+  buildVerdictMessages,
+  type ClaimRelationship,
+  createVerdictSchema,
+  VERDICT_RELATIONSHIPS,
+  type VerdictRelationship,
+} from "./verdict";

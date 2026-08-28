@@ -5,8 +5,9 @@
  * the invitation lives in the chat like any message; replying starts the teach-back there).
  * Side effects: DB writes on openCompanionConversation / appendCompanionInvitation /
  * seedTeachScriptForConversation.
- * Main exports: COMPANION_IDS, COMPANION_DESKTOP_COPY, getCompanionCardById,
- * openCompanionConversation, appendCompanionInvitation, seedTeachScriptForConversation,
+ * Main exports: COMPANION_IDS, COMPANION_DESKTOP_COPY, helperInvitation, helperThanks,
+ * getCompanionCardById, openCompanionConversation, startHelperConversation,
+ * appendHelperThanks, appendCompanionInvitation, seedTeachScriptForConversation,
  * buildCompanionChatSystemPrompt.
  */
 import { chatJson } from "@breadcrumb/core-llm";
@@ -20,12 +21,14 @@ import {
   ScriptResultSchema,
 } from "@breadcrumb/plugin-companion";
 import i18next from "i18next";
+import { asStoredText } from "../i18n/storedText";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
 import { newestLeafId } from "./messageTree";
 import { recordMeteredCall } from "./metering";
+import { teachConversationTitle } from "./teachActions";
 import { newId, nowIso } from "./time";
 
 /** The cast is fixed (spec 037 — three roles, never interchangeable). */
@@ -85,6 +88,18 @@ export async function openCompanionConversation(companionId: string): Promise<st
   return conversationId;
 }
 
+/** The helper's own chat messages, composed locally with zero LLM calls and written into the
+ * conversation — so, like the teach opener, they are rendered here at creation time rather
+ * than at display time, and go through asStoredText because they become database rows and
+ * part of every prompt built from that conversation. */
+export function helperInvitation(topic: string): string {
+  return asStoredText(i18next.t("chat:companion.helperInvitation", { topic }));
+}
+
+export function helperThanks(topic: string): string {
+  return asStoredText(i18next.t("chat:companion.helperThanks", { topic }));
+}
+
 /** Creates a daily helper's conversation (spec 050 §9): kind 'teach' so the whole proven
  * teach-back pipeline (student prompt from the title's topic, quality judgment, metering)
  * applies untouched; companion_id links it to its roster row. The opener is the helper's
@@ -97,7 +112,7 @@ export async function startHelperConversation(helperId: string, topic: string): 
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,
-    title: i18next.t("learning:teach.conversationTitle", { topic }),
+    title: teachConversationTitle(topic),
     created_at: createdAt,
     updated_at: createdAt,
     kind: "teach",
@@ -107,7 +122,7 @@ export async function startHelperConversation(helperId: string, topic: string): 
     id: newId(),
     conversation_id: conversationId,
     role: "assistant",
-    content: COMPANION_COPY.invitation(topic),
+    content: helperInvitation(topic),
     created_at: createdAt,
     teaching_mode: null,
     parent_id: null,
@@ -124,7 +139,7 @@ export async function appendHelperThanks(conversationId: string, topic: string):
     id: newId(),
     conversation_id: conversationId,
     role: "assistant" as const,
-    content: COMPANION_COPY.helperThanks(topic),
+    content: helperThanks(topic),
     created_at: nowIso(),
     teaching_mode: null,
     parent_id: newestLeafId(allMessages),
@@ -150,10 +165,7 @@ export async function appendCompanionInvitation(
     id: newId(),
     conversation_id: conversationId,
     role: "assistant" as const,
-    content:
-      kind === "reunion"
-        ? COMPANION_COPY.reunionInvitation(topic)
-        : COMPANION_COPY.invitation(topic),
+    content: kind === "reunion" ? COMPANION_COPY.reunionInvitation(topic) : helperInvitation(topic),
     created_at: nowIso(),
     teaching_mode: null,
     parent_id: newestLeafId(allMessages),

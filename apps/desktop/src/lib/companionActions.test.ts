@@ -4,7 +4,8 @@
  * seeding's switch-off no-op, and the chat system prompt's card/memory inclusion. The
  * copy-safety gate lives in companionCopyGate.test.ts, split out for the line-count cap.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { initI18n } from "../i18n";
 import { useSettingsStore } from "../stores/settingsStore";
 import { sampleCompanionCard } from "./companionTestFixtures";
 
@@ -60,6 +61,12 @@ const {
   seedTeachScriptForConversation,
   buildCompanionChatSystemPrompt,
 } = await import("./companionActions");
+
+// The helper's messages are rendered from the catalogues at creation time, so the catalogues
+// have to be loaded before any of them is composed.
+beforeAll(async () => {
+  await initI18n();
+});
 
 afterEach(() => {
   conversationRows.length = 0;

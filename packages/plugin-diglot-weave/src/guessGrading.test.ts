@@ -1,10 +1,45 @@
 /**
- * Purpose: tests for zero-LLM guess grading — exact, dictionary-synonym, character-overlap
- * and edit-distance closeness, and the wrong fallback (spec 033, acceptance 2/3).
+ * Purpose: tests for zero-LLM guess grading — exact and dictionary-synonym correctness,
+ * morphological closeness, embedding-based closeness with its offline degradation, and the
+ * antonym regression the character-overlap measure used to produce (spec 033, acceptance
+ * 2/3; audit 2026-08-28 #4).
  */
 import { describe, expect, it } from "vitest";
-import { gradeGuess } from "./guessGrading";
+import { gradeGuess, SEMANTIC_CLOSE_THRESHOLD } from "./guessGrading";
+import { type LoadedLanguagePack, loadLanguagePack } from "./packSchema";
 import { makeEnFrPack, makeZhEnPack } from "./testFixture";
+
+/** The audit's real-pack counter-examples: Chinese antonyms share a morpheme. */
+function makeAntonymPack(): LoadedLanguagePack {
+  const entry = (target: string, freqRank: number) => ({
+    target,
+    pos: "n",
+    reading: "",
+    altTargets: [],
+    freqRank,
+    t1Safe: true,
+  });
+  return loadLanguagePack({
+    schemaVersion: 1,
+    id: "zh:en",
+    sourceLang: "zh",
+    targetLang: "en",
+    version: "test",
+    attribution: ["test fixture"],
+    capabilities: { t1Safe: true, rtl: false, ruby: false },
+    forms: {},
+    entries: {
+      父亲: entry("father", 700),
+      母亲: entry("mother", 710),
+      敌人: entry("enemy", 800),
+      朋友: entry("friend", 120),
+      男孩: entry("boy", 300),
+      女孩: entry("girl", 310),
+      昨天: entry("yesterday", 200),
+      明天: entry("tomorrow", 210),
+    },
+  });
+}
 
 describe("gradeGuess", () => {
   it("grades the exact original word as correct", () => {
@@ -18,10 +53,38 @@ describe("gradeGuess", () => {
     expect(gradeGuess("tome", "books", "book", makeEnFrPack())).toBe("correct");
   });
 
-  it("grades strong partial matches as close", () => {
-    // Shares 本 with 书本: 50% character overlap.
-    expect(gradeGuess("本子", "书本", "书本", makeZhEnPack())).toBe("close");
+  it("grades morphological variants as close", () => {
     expect(gradeGuess("booke", "books", "book", makeEnFrPack())).toBe("close");
+    expect(gradeGuess("reading", "read", "read", makeEnFrPack())).toBe("close");
+  });
+
+  it("grades a semantically near guess as close only when the embedding says so", () => {
+    const pack = makeZhEnPack();
+    const near = { similarity: SEMANTIC_CLOSE_THRESHOLD + 0.02 };
+    // 本子 (notebook) is not in the pack, shares no morpheme rule — meaning is the only clue.
+    expect(gradeGuess("本子", "书本", "书本", pack, near)).toBe("close");
+    expect(gradeGuess("本子", "书本", "书本", pack, { similarity: 0.6 })).toBe("wrong");
+  });
+
+  it("degrades to correct-or-wrong when embeddings are unavailable", () => {
+    const pack = makeZhEnPack();
+    expect(gradeGuess("本子", "书本", "书本", pack, { similarity: null })).toBe("wrong");
+    expect(gradeGuess("本子", "书本", "书本", pack)).toBe("wrong");
+  });
+
+  it("never grades an antonym as close, whatever the embedding says", () => {
+    const pack = makeAntonymPack();
+    const veryNear = { similarity: 0.99 };
+    for (const [original, guess] of [
+      ["父亲", "母亲"],
+      ["敌人", "朋友"],
+      ["男孩", "女孩"],
+      ["昨天", "明天"],
+    ]) {
+      expect(original).toBeDefined();
+      expect(gradeGuess(guess ?? "", original ?? "", original ?? "", pack, veryNear)).toBe("wrong");
+      expect(gradeGuess(guess ?? "", original ?? "", original ?? "", pack)).toBe("wrong");
+    }
   });
 
   it("grades unrelated or empty guesses as wrong", () => {

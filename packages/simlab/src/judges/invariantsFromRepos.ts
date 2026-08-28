@@ -24,5 +24,6 @@ export async function runInvariantsFromRepos(
     frontierCandidates: snapshot.frontierCandidates,
     goals,
     litThreshold: LIT_THRESHOLD,
+    previouslyLitNodeIds: snapshot.previouslyLitNodeIds,
   });
 }

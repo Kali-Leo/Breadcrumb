@@ -6,7 +6,12 @@
 import { describe, expect, it } from "vitest";
 import { createCanonicalRepo } from "./canonicalRepositories";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { CanonicalConceptRow, NodeConceptAnchorRow, SqlClient } from "./types";
+import type {
+  AlignmentConfidence,
+  CanonicalConceptRow,
+  NodeConceptAnchorRow,
+  SqlClient,
+} from "./types";
 
 function makeFakeSql() {
   const conceptRows = new Map<string, CanonicalConceptRow>();
@@ -40,7 +45,7 @@ function makeFakeSql() {
           string,
           string,
           "same" | "different",
-          "高" | "中" | "低",
+          AlignmentConfidence,
           "alias" | "judge",
           string,
           string,
@@ -77,7 +82,7 @@ function anchor(overrides: Partial<NodeConceptAnchorRow> = {}): NodeConceptAncho
     node_id: "node1",
     concept_id: "concept-data-structures",
     verdict: "same",
-    confidence: "高",
+    confidence: "high",
     method: "alias",
     reason: "标签完全一致",
     anchored_at: "2026-08-09T11:00:00.000Z",
@@ -118,11 +123,11 @@ describe("createCanonicalRepo", () => {
   it("re-upserting the same (node_id, concept_id) pair overwrites instead of duplicating", async () => {
     const { client } = makeFakeSql();
     const repo = createCanonicalRepo(client);
-    await repo.upsertAnchors([anchor({ verdict: "same", confidence: "高", method: "alias" })]);
+    await repo.upsertAnchors([anchor({ verdict: "same", confidence: "high", method: "alias" })]);
     await repo.upsertAnchors([
       anchor({
         verdict: "different",
-        confidence: "中",
+        confidence: "medium",
         method: "judge",
         reason: "重新判定为不同概念",
       }),
@@ -131,7 +136,7 @@ describe("createCanonicalRepo", () => {
     const stored = await repo.listAnchors();
     expect(stored).toHaveLength(1);
     expect(stored[0]?.verdict).toBe("different");
-    expect(stored[0]?.confidence).toBe("中");
+    expect(stored[0]?.confidence).toBe("medium");
     expect(stored[0]?.method).toBe("judge");
     expect(stored[0]?.reason).toBe("重新判定为不同概念");
   });

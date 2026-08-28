@@ -3,10 +3,12 @@
  * review-candidate picking, and session creation. The opener is composed locally (zero
  * LLM calls); mastery signals free-ride the existing knowledge-tree pipeline.
  * Side effects: DB writes on startTeachSession.
- * Main exports: teachOpener, buildTeachSystemPrompt, pickTeachCandidates, startTeachSession.
+ * Main exports: teachOpener, teachConversationTitle, buildTeachSystemPrompt,
+ * pickTeachCandidates, startTeachSession.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import i18next from "i18next";
+import { asStoredText } from "../i18n/storedText";
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
 
@@ -15,7 +17,13 @@ import { newId, nowIso } from "./time";
  * locally with no LLM call (spec 034 验收 1) and written into the conversation, so it is
  * rendered here rather than at display time. */
 export function teachOpener(topic: string): string {
-  return i18next.t("learning:teach.opener", { topic });
+  return asStoredText(i18next.t("learning:teach.opener", { topic }));
+}
+
+/** The title a teach conversation is stored under. Exported because two entry points create
+ * one, and because a stored title has to be one string, spelled one way. */
+export function teachConversationTitle(topic: string): string {
+  return asStoredText(i18next.t("learning:teach.conversationTitle", { topic }));
 }
 
 /** Student-role system prompt: one positive instruction block (tone contract 2026-08-02). */
@@ -51,7 +59,7 @@ export async function startTeachSession(topic: string): Promise<string> {
   const createdAt = nowIso();
   await repos.conversations.create({
     id: conversationId,
-    title: i18next.t("learning:teach.conversationTitle", { topic: topic }),
+    title: teachConversationTitle(topic),
     created_at: createdAt,
     updated_at: createdAt,
     kind: "teach",

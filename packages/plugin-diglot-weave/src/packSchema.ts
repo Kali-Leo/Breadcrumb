@@ -1,8 +1,8 @@
 /**
  * Purpose: the language-pack contract (spec 033) — Zod schema every pack file must pass at
  * load time, plus the loaded in-memory shape with derived indexes (reverse target→lemmas).
- * Main exports: LanguagePackSchema, loadLanguagePack, LanguagePack, LoadedLanguagePack,
- * PackEntry.
+ * Main exports: LanguagePackSchema, loadLanguagePack, resolveLemma, LanguagePack,
+ * LoadedLanguagePack, PackEntry.
  */
 import { z } from "zod";
 
@@ -59,6 +59,22 @@ export interface LoadedLanguagePack {
   lemmasByTarget: Map<string, string[]>;
   /** t1Safe lemmas sorted by freqRank ascending — the new-word introduction queue. */
   introductionQueue: string[];
+  /** lemma → its index in introductionQueue. The queue is thousands of entries long and
+   * both the weave and every signal event need this lookup, so it is indexed once at load
+   * instead of scanned (audit 2026-08-28 #11). */
+  introductionRankByLemma: Map<string, number>;
+}
+
+/** Resolves a surface form to its dictionary lemma, or null when unknown. Shared by
+ * candidate extraction, guess grading and confusion mining so all three agree on what
+ * counts as "a word this pack knows". */
+export function resolveLemma(surface: string, loaded: LoadedLanguagePack): string | null {
+  const viaForms = loaded.pack.forms[surface];
+  if (viaForms !== undefined) return viaForms;
+  if (loaded.pack.entries[surface] !== undefined) return surface;
+  const lowercased = surface.toLowerCase();
+  if (lowercased !== surface && loaded.pack.entries[lowercased] !== undefined) return lowercased;
+  return null;
 }
 
 /** Validates raw JSON (throws ZodError on contract violation) and builds derived indexes. */
@@ -77,5 +93,6 @@ export function loadLanguagePack(rawJson: unknown): LoadedLanguagePack {
     .filter(([, entry]) => entry.t1Safe)
     .sort((a, b) => a[1].freqRank - b[1].freqRank || a[0].localeCompare(b[0]))
     .map(([lemma]) => lemma);
-  return { pack, lemmasByTarget, introductionQueue };
+  const introductionRankByLemma = new Map(introductionQueue.map((lemma, rank) => [lemma, rank]));
+  return { pack, lemmasByTarget, introductionQueue, introductionRankByLemma };
 }

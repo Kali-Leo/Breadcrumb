@@ -57,6 +57,12 @@ vi.mock("../stores/doorStore", () => ({
   useDoorStore: { getState: () => ({ openedFor: () => new Set() }) },
 }));
 
+/** Door picking reads the cached retention map instead of replaying FSRS per rendered
+ * message; empty here, so every candidate node looks un-refreshed and stays eligible. */
+vi.mock("../stores/memoryStore", () => ({
+  useMemoryStore: { getState: () => ({ retentionByNode: new Map<string, number>() }) },
+}));
+
 const { computeDoorPatches } = await import("./conceptDoors");
 
 afterEach(() => {

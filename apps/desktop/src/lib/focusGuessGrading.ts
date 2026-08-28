@@ -1,11 +1,13 @@
 /**
- * Purpose: embedding-based grading for a focus-session concept guess (spec 042 §3) — a
- * focus-scoped twin of doorStore's submitConceptGuess kept separate rather than shared
- * (CLAUDE.md #1: behavioral locality over DRY): focus sightings have no message id, and their
- * provenance is the focus station the guess was asked under, not a sibling sighting.
+ * Purpose: embedding-based grading for a focus-session concept guess (spec 042 §3) — the only
+ * concept guess left in the app. Chat doors used to ask for one too, and this file began as
+ * the focus-scoped twin of doorStore.submitConceptGuess; spec 042 §5 then made a door click
+ * open a focus session directly (no guess, no popover) and that store method is gone. What
+ * stays true of the sightings written here: they have no message id, and their provenance is
+ * the focus station the guess was asked under, not a sibling sighting.
  * Main exports: gradeFocusGuess, recordMatchedGuess, FocusGuessResult.
  */
-import type { FocusNodeRow } from "@breadcrumb/core-db";
+import type { FocusNodeRow, NodeSightingGrade } from "@breadcrumb/core-db";
 import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   type ConceptGuessGrade,
@@ -19,15 +21,28 @@ import { getRepos } from "./db";
 import { embedTexts } from "./embeddings";
 import { newId, nowIso } from "./time";
 
+/** A concept guess is the only place in the app where the learner is asked to produce a
+ * concept from memory and the answer is graded — i.e. the one real retrieval signal there is.
+ * Design audit 2026-08-28 (记忆与遗忘模型 #1, 掌握度评估 G2): all three outcomes are now
+ * recorded, wrong included. The wrong branch is the first negative evidence in the system;
+ * it only moves the internal FSRS estimate down, and changes nothing the learner is told
+ * (guessFeedbackMessage is untouched). */
+const SIGHTING_GRADE_BY_GUESS: Record<ConceptGuessGrade, NodeSightingGrade> = {
+  correct: "easy",
+  close: "hard",
+  wrong: "again",
+};
+
 export interface FocusGuessResult {
   /** null = ungraded direct reveal (embedding unavailable) — no score, no record. */
   grade: ConceptGuessGrade | null;
   feedback: CopyMessage;
 }
 
-/** Grades a guess against a matched knowledge node's embedding; a correct/close grade records
- * a sighting (spec 042 §3: "猜对记 sighting"). Degrades to an ungraded reveal on any failure —
- * never blocks, never penalizes. */
+/** Grades a guess against a matched knowledge node's embedding and records the outcome as one
+ * graded sighting (spec 042 §3 "猜对记 sighting", widened to all three outcomes by the
+ * 2026-08-28 audit). Degrades to an ungraded reveal on any failure — never blocks, and the
+ * learner-facing wording never penalizes. */
 export async function gradeFocusGuess(input: {
   nodeId: string;
   guess: string;
@@ -48,16 +63,15 @@ export async function gradeFocusGuess(input: {
     }
     const nodeVector = JSON.parse(embeddingRow.vector_json) as number[];
     const grade = gradeConceptGuess(cosineSimilarity(guessVector, nodeVector));
-    if (grade === "correct" || grade === "close") {
-      await repos.nodeSightings.record({
-        id: newId(),
-        node_id: input.nodeId,
-        conversation_id: input.conversationId,
-        message_id: null,
-        created_at: nowIso(),
-        origin_node_id: input.originNodeId,
-      });
-    }
+    await repos.nodeSightings.record({
+      id: newId(),
+      node_id: input.nodeId,
+      conversation_id: input.conversationId,
+      message_id: null,
+      created_at: nowIso(),
+      origin_node_id: input.originNodeId,
+      grade: SIGHTING_GRADE_BY_GUESS[grade],
+    });
     return { grade, feedback: guessFeedbackMessage(grade, input.summary) };
   } catch (error) {
     console.warn("focus guess grading skipped:", error);

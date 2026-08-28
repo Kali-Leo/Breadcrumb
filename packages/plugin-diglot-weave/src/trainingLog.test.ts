@@ -32,16 +32,36 @@ describe("buildTrainingItems", () => {
       event("w", "exposure", 0),
       // day 3: fast correct guess → Easy, delta 3 → one training item (2 reviews)
       event("w", "guess_correct", 3, 1200),
-      // day 3 again: another rated review same day → no additional item terminal
+      // day 3 again: a same-day repeat — dropped, as the fsrs optimizer convention requires
       event("w", "productive_use", 3),
     ];
     const { items, reviewCount } = buildTrainingItems(events);
-    expect(reviewCount).toBe(3);
+    expect(reviewCount).toBe(2);
     expect(items).toHaveLength(1);
     expect(items[0]?.reviews).toEqual([
       { rating: 3, delta_t: 0 },
       { rating: 4, delta_t: 3 },
     ]);
+  });
+
+  it("drops same-day repeats but keeps the deltas of the reviews around them", () => {
+    const events = [
+      event("w", "exposure", 0),
+      event("w", "exposure", 0), // first review, delta 0
+      event("w", "guess_wrong", 2), // delta 2
+      event("w", "guess_wrong", 2), // same day → dropped
+      event("w", "guess_correct", 5, 9000), // delta 3 measured from day 2 either way
+    ];
+    const { items, reviewCount } = buildTrainingItems(events);
+    expect(reviewCount).toBe(3);
+    expect(items.at(-1)?.reviews).toEqual([
+      { rating: 3, delta_t: 0 },
+      { rating: 1, delta_t: 2 },
+      { rating: 3, delta_t: 3 },
+    ]);
+    for (const item of items) {
+      expect(item.reviews.slice(1).every((review) => review.delta_t > 0)).toBe(true);
+    }
   });
 
   it("ignores unrated events and words with a single review", () => {

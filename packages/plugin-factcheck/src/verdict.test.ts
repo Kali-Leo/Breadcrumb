@@ -1,10 +1,10 @@
 /**
- * Purpose: unit tests for the verdict contract — schema boundaries and evidence
- * formatting in the prompt.
+ * Purpose: unit tests for the verdict contract — schema boundaries, citation-index range
+ * checking, and evidence formatting in the prompt.
  */
 import { describe, expect, it } from "vitest";
 import type { EvidenceItem } from "./evidence/provider";
-import { buildVerdictMessages, verdictSchema } from "./verdict";
+import { buildVerdictMessages, createVerdictSchema } from "./verdict";
 
 const EVIDENCE: EvidenceItem[] = [
   {
@@ -15,17 +15,34 @@ const EVIDENCE: EvidenceItem[] = [
   },
 ];
 
-describe("verdictSchema", () => {
+describe("createVerdictSchema", () => {
+  const schema = createVerdictSchema(2);
+
   it("accepts the three relationships", () => {
     for (const relationship of ["supported", "contradicted", "insufficient"] as const) {
-      expect(verdictSchema.parse({ reasoning: "资料显示一致。", relationship }).relationship).toBe(
-        relationship,
-      );
+      expect(
+        schema.parse({ reasoning: "资料显示一致。", relationship, supportingEvidence: [1] })
+          .relationship,
+      ).toBe(relationship);
     }
   });
 
   it("rejects unknown relationships", () => {
-    expect(() => verdictSchema.parse({ reasoning: "x", relationship: "maybe" })).toThrow();
+    expect(() => schema.parse({ reasoning: "x", relationship: "maybe" })).toThrow();
+  });
+
+  it("defaults supportingEvidence to an empty list rather than failing the verdict", () => {
+    const parsed = schema.parse({ reasoning: "资料不足。", relationship: "insufficient" });
+    expect(parsed.supportingEvidence).toEqual([]);
+  });
+
+  it("rejects a citation index outside the evidence actually given to the judge", () => {
+    expect(() =>
+      schema.parse({ reasoning: "x", relationship: "supported", supportingEvidence: [3] }),
+    ).toThrow();
+    expect(() =>
+      schema.parse({ reasoning: "x", relationship: "supported", supportingEvidence: [0] }),
+    ).toThrow();
   });
 });
 
@@ -37,5 +54,10 @@ describe("buildVerdictMessages", () => {
     expect(userContent).toContain("[1]");
     expect(userContent).toContain("https://zh.wikipedia.org/wiki/光速");
     expect(userContent).toContain("光速是每秒 299792458 米。");
+  });
+
+  it("asks the judge which evidence carried the conclusion", () => {
+    const messages = buildVerdictMessages("任意声明", EVIDENCE);
+    expect(messages[0]?.content ?? "").toContain("supportingEvidence");
   });
 });

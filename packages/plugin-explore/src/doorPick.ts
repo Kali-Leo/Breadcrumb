@@ -33,6 +33,12 @@ export interface DoorPickInput {
 export const DOOR_LIT_THRESHOLD = 0.85;
 /** Density cap: never more than three doors per message. */
 export const MAX_DOORS_PER_MESSAGE = 3;
+/** How many of those doors are awarded on curiosity rank alone. The remaining one is the
+ * exploration slot (2026-08-28 audit): filled from the candidates curiosity did NOT pick, so
+ * a learner isn't offered the same narrow neighborhood forever and the system gets to see a
+ * reaction to something it did not already believe was interesting. Deterministic — lowest
+ * retention among the leftovers (hungriest for review), no randomness, no bandit. */
+export const CURIOSITY_RANKED_DOORS = MAX_DOORS_PER_MESSAGE - 1;
 
 /** Labels shorter than this are too ambiguous to safely mark (e.g. single CJK characters
  * or single Latin letters collide constantly with ordinary prose). */
@@ -77,9 +83,10 @@ function findFirstMatch(
 }
 
 /** Selects up to MAX_DOORS_PER_MESSAGE door candidates from a message's sighted nodes.
- * Priority for the density cut is curiosity desc, then retention asc (hungriest first);
- * candidates are then greedily placed in priority order, skipping anything that would
- * overlap an already-placed span (reserved or previously picked). */
+ * The first CURIOSITY_RANKED_DOORS go to curiosity desc, then retention asc (hungriest
+ * first), greedily placed and skipping anything that would overlap an already-placed span
+ * (reserved or previously picked). The last door is the exploration slot: the lowest-retention
+ * candidate curiosity did not already pick. */
 /** pickDoors only ever matches against `input.messageNodes`, whose nodeId is a plain string —
  * narrower than DoorCandidate's public (nullable) nodeId, which exists for termAnnotator's
  * node-less term doors instead. */
@@ -109,12 +116,34 @@ export function pickDoors(input: DoorPickInput): DoorCandidate[] {
 
   const placed: MatchedCandidate[] = [];
   const occupied: { start: number; end: number }[] = [...reserved];
-  for (const candidate of prioritized) {
-    if (placed.length >= MAX_DOORS_PER_MESSAGE) break;
-    if (occupied.some((span) => spansOverlap(span, candidate))) continue;
+  const fits = (candidate: MatchedCandidate) =>
+    !occupied.some((span) => spansOverlap(span, candidate));
+  const place = (candidate: MatchedCandidate) => {
     placed.push(candidate);
     occupied.push(candidate);
+  };
+
+  for (const candidate of prioritized) {
+    if (placed.length >= CURIOSITY_RANKED_DOORS) break;
+    if (!fits(candidate)) continue;
+    place(candidate);
   }
+
+  // The exploration slot: whatever curiosity ranking left over, lowest retention first.
+  // Ties keep curiosity order, so the pick is a pure function of the input either way.
+  const leftover = prioritized.filter(
+    (candidate) => !placed.includes(candidate) && fits(candidate),
+  );
+  const explorer = leftover.reduce<MatchedCandidate | null>(
+    (best, candidate) =>
+      best === null ||
+      (input.retentionByNode.get(candidate.nodeId) ?? 0) <
+        (input.retentionByNode.get(best.nodeId) ?? 0)
+        ? candidate
+        : best,
+    null,
+  );
+  if (explorer !== null && placed.length < MAX_DOORS_PER_MESSAGE) place(explorer);
 
   return placed.sort((a, b) => a.start - b.start);
 }

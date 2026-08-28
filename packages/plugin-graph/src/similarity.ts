@@ -26,6 +26,14 @@ const RELATIVE_GATE = 0.5;
  * existing nodes each new node gets paired against, alongside its tree siblings. */
 export const DEFAULT_FALLBACK_RECENT_N = 5;
 
+/** Upper bound on the tree siblings the fallback pairs a new node against — the same number
+ * as DEFAULT_TOP_K_SIMILAR, so the degraded path can never be more expensive than the
+ * embedding path it stands in for. Unbounded before (design audit 2026-08-28 #4): a parent
+ * with 40 children produced 40 pairs for ONE new node, and the edge-judge schema only accepts
+ * 20 verdicts per call, so the surplus was silently dropped after being paid for. Newest
+ * siblings win, matching the recent-N pool's own bias. */
+export const MAX_FALLBACK_SIBLINGS = DEFAULT_TOP_K_SIMILAR;
+
 export interface CandidatePair {
   newNodeId: string;
   existingNodeId: string;
@@ -107,8 +115,9 @@ function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
 }
 
 /** Degraded-mode candidate generation for when embeddings are unavailable: each new node
- * is paired with its tree siblings (same parent_id) plus the recentN most recently created
- * existing nodes overall. */
+ * is paired with up to MAX_FALLBACK_SIBLINGS of its newest tree siblings (same parent_id)
+ * plus the recentN most recently created existing nodes overall. Both pools are bounded, so
+ * this path's pair count is bounded too. */
 export function fallbackCandidatePairs(
   nodes: readonly KnowledgeNodeRow[],
   newNodeIds: readonly string[],
@@ -117,18 +126,17 @@ export function fallbackCandidatePairs(
   const newNodeIdSet = new Set(newNodeIds);
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const existingNodes = nodes.filter((node) => !newNodeIdSet.has(node.id));
-  const mostRecentIds = [...existingNodes]
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .slice(0, recentN)
-    .map((node) => node.id);
+  const newestFirst = [...existingNodes].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const mostRecentIds = newestFirst.slice(0, recentN).map((node) => node.id);
 
   const pairs: CandidatePair[] = [];
   for (const newNodeId of newNodeIds) {
     const newNode = nodeById.get(newNodeId);
     const siblingIds =
       newNode?.parent_id != null
-        ? existingNodes
+        ? newestFirst
             .filter((node) => node.parent_id === newNode.parent_id)
+            .slice(0, MAX_FALLBACK_SIBLINGS)
             .map((node) => node.id)
         : [];
     const candidateIds = new Set([...siblingIds, ...mostRecentIds]);

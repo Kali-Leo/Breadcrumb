@@ -3,14 +3,17 @@
  * each with the three most recent things opened under it.
  * Main exports: InterestNewTopicsPanel.
  */
+import { formatPercent } from "@breadcrumb/core-i18n";
 import { videoUrl } from "@breadcrumb/plugin-browsing-interest";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine } from "./InterestPanel";
+import { useTopicName } from "./topicNames";
 
 export function InterestNewTopicsPanel() {
-  const { t } = useTranslation("discovery");
+  const { t, i18n } = useTranslation("discovery");
+  const topicName = useTopicName();
   const newInterests = useBrowsingInterestStore((state) => state.newInterests);
   const interests = newInterests?.interests ?? [];
 
@@ -22,9 +25,11 @@ export function InterestNewTopicsPanel() {
         <ul className="divide-y divide-stone-100">
           {interests.map((interest) => (
             <li key={interest.topic} className="py-2">
-              <span className="font-semibold text-sm text-stone-700">{interest.topic}</span>
+              <span className="font-semibold text-sm text-stone-700">
+                {topicName(interest.topic, interest.topic_en)}
+              </span>
               <span className="ms-2 font-semibold text-blue-600 text-xs">
-                {(interest.share * 100).toFixed(0)}%↑
+                {formatPercent(i18n.language, interest.share)}↑
               </span>
               {interest.items.length > 0 && (
                 <div className="mt-1 text-stone-400 text-xs">

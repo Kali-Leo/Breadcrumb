@@ -36,6 +36,10 @@ export interface InvariantInput {
   frontierCandidates: readonly FrontierCandidate[];
   goals: readonly GoalRow[];
   litThreshold: number;
+  /** The other half of frontier()'s hard gate: a prerequisite counts as satisfied if it is
+   * lit now OR was ever lit. Optional so a fixture that only cares about current mastery can
+   * omit it and get the stricter check. */
+  previouslyLitNodeIds?: ReadonlySet<string>;
 }
 
 export function runInvariants(input: InvariantInput): Violation[] {
@@ -85,18 +89,21 @@ function checkRange(
   return violations;
 }
 
-/** Independently recomputes the requires-prerequisite set and lit status for each frontier
- * candidate — frontier() already only returns candidates whose prereqs are all lit; this
- * re-derives that from raw edges/mastery so a regression there is caught, not assumed away. */
+/** Independently recomputes the requires-prerequisite set and satisfaction status for each
+ * frontier candidate — frontier() already only returns candidates whose prereqs have all been
+ * lit at some point; this re-derives that from raw edges/mastery/history so a regression there
+ * is caught, not assumed away. */
 function checkFrontier(input: InvariantInput): Violation[] {
   const { edges, masteryByNode, litThreshold, frontierCandidates, nodes } = input;
-  const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
+  const wasEverLit = (nodeId: string) =>
+    (masteryByNode.get(nodeId) ?? 0) >= litThreshold ||
+    (input.previouslyLitNodeIds?.has(nodeId) ?? false);
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const violations: Violation[] = [];
 
   for (const candidate of frontierCandidates) {
     const truePrereqIds = incomingNeighbors(edges, candidate.nodeId, "requires");
-    const unlit = truePrereqIds.filter((id) => !isLit(id));
+    const unlit = truePrereqIds.filter((id) => !wasEverLit(id));
     if (unlit.length > 0) {
       violations.push({
         kind: "frontier-hard-gate",

@@ -7,6 +7,12 @@
  */
 import { z } from "zod";
 import type { TokenUsage } from "./pricing";
+import {
+  fetchWithRetry,
+  LlmTimeoutError,
+  llmAbortError,
+  STREAM_FIRST_BYTE_TIMEOUT_MS,
+} from "./retry";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -67,7 +73,10 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
     async chatStream(messages, onDelta, options) {
       const signal = options?.signal;
       const withLanguage = withLanguageDirective(messages, config.answerLanguageDirective);
-      const response = await config.fetchImpl(
+      // Retries live in the transport layer (retry.ts); the deadline here is FIRST BYTE only,
+      // cleared as soon as a chunk arrives — a total budget would kill long healthy answers.
+      const { response, clearDeadline, release, timedOut } = await fetchWithRetry(
+        config.fetchImpl,
         `${config.baseUrl.replace(/\/$/, "")}/chat/completions`,
         {
           method: "POST",
@@ -81,10 +90,11 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
             stream: true,
             stream_options: { include_usage: true },
           }),
-          signal,
         },
+        { signal, timeoutMs: STREAM_FIRST_BYTE_TIMEOUT_MS },
       );
-      if (!response.ok || response.body === null) {
+      if (response.body === null) {
+        release();
         throw new Error(`LLM request failed: HTTP ${response.status}`);
       }
 
@@ -92,6 +102,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
       let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
       try {
         for await (const dataLine of readSseDataLines(response.body)) {
+          clearDeadline();
           const chunk = streamChunkSchema.parse(JSON.parse(dataLine));
           const delta = chunk.choices[0]?.delta?.content;
           if (delta) {
@@ -111,9 +122,16 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
         // the fetch implementation throws for its own teardown (Tauri's http plugin surfaces
         // internal resource errors, not AbortError) is normalized to one recognizable shape.
         if (signal?.aborted) {
-          throw new DOMException("chatStream aborted by its caller", "AbortError");
+          throw llmAbortError("chatStream aborted by its caller");
+        }
+        // The other abort we can cause ourselves: the first-byte deadline fired before any
+        // chunk arrived, so the stream died from a hang rather than from the user.
+        if (timedOut()) {
+          throw new LlmTimeoutError(STREAM_FIRST_BYTE_TIMEOUT_MS);
         }
         throw error;
+      } finally {
+        release();
       }
       return { content, usage };
     },

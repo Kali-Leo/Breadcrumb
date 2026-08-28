@@ -5,6 +5,7 @@
  * Main exports: streamFocusAnswer.
  */
 import { type ChatMessage, createLlmClient, type TokenUsage } from "@breadcrumb/core-llm";
+import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
 import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
@@ -50,9 +51,12 @@ export async function streamFocusAnswer(
   const watchdog = new Promise<never>((_, reject) => {
     timers.push(
       window.setTimeout(() => {
-        if (!sawDelta) reject(new Error("一直没有收到响应"));
+        if (!sawDelta) reject(new Error(i18next.t("learning:focus.errorNoResponse")));
       }, FIRST_DELTA_TIMEOUT_MS),
-      window.setTimeout(() => reject(new Error("响应超时")), STREAM_TOTAL_TIMEOUT_MS),
+      window.setTimeout(
+        () => reject(new Error(i18next.t("learning:focus.errorTimedOut"))),
+        STREAM_TOTAL_TIMEOUT_MS,
+      ),
     );
   });
   try {

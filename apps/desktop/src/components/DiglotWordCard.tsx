@@ -17,7 +17,8 @@ import { useDiglotStore } from "../stores/diglotStore";
 interface DiglotWordCardProps {
   patch: ReplacementPatch;
   entry: PackEntry | null;
-  /** The full sentence the word appeared in (guess cards always show context). */
+  /** The full sentence the word appeared in, WOVEN as it is rendered on screen — a raw
+   * sentence would print the source word the guess card is asking for. */
   context: string;
   messageId: string;
   /** Whether this card opened in guess mode (decided once at open by the policy). */

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-i18n": "workspace:*",
     "@breadcrumb/plugin-memory": "workspace:*",
     "@noble/curves": "^2.3.0",
     "zod": "^4.4.3"

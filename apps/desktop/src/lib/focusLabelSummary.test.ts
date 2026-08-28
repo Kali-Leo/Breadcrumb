@@ -9,7 +9,11 @@ const recordAiFailureMock = vi.fn();
 vi.mock("./failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
 
 const recordMeteredCallMock = vi.fn();
-vi.mock("./metering", () => ({ recordMeteredCall: recordMeteredCallMock }));
+const recordFailedCallUsageMock = vi.fn();
+vi.mock("./metering", () => ({
+  recordMeteredCall: recordMeteredCallMock,
+  recordFailedCallUsage: recordFailedCallUsageMock,
+}));
 
 const chatJsonMock = vi.fn();
 vi.mock("@breadcrumb/core-llm", async () => {
@@ -23,6 +27,7 @@ const { summarizeFocusLabel } = await import("./focusLabelSummary");
 afterEach(() => {
   recordAiFailureMock.mockReset();
   recordMeteredCallMock.mockReset();
+  recordFailedCallUsageMock.mockReset();
   chatJsonMock.mockReset();
 });
 

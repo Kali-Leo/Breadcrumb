@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { createDiglotRepo } from "./diglotRepositories";
 import type {
+  DiglotContextEmbeddingRow,
   DiglotLanguagePackRow,
   DiglotWordEventRow,
   DiglotWordGuessRow,
@@ -18,14 +19,21 @@ function makeFakeSql() {
   const events: DiglotWordEventRow[] = [];
   const guesses: DiglotWordGuessRow[] = [];
   const packs = new Map<string, DiglotLanguagePackRow>();
+  const contextEmbeddings: DiglotContextEmbeddingRow[] = [];
   const client: SqlClient = withSequentialTransactions({
     select: <Row>(sql: string, params?: readonly unknown[]) => {
       const p = (params ?? []) as string[];
       if (sql.includes("FROM diglot_word_states WHERE pair = ? AND due <= ?")) {
         const rows = [...states.values()]
           .filter((row) => row.pair === p[0] && row.due <= String(p[1]))
-          .sort((a, b) => a.due.localeCompare(b.due))
-          .slice(0, Number(p[2]));
+          .sort((a, b) => a.due.localeCompare(b.due));
+        return Promise.resolve((p[2] === undefined ? rows : rows.slice(0, Number(p[2]))) as Row[]);
+      }
+      if (sql.includes("FROM diglot_context_embeddings WHERE pair = ? AND lemma IN")) {
+        const lemmas = new Set(p.slice(1));
+        const rows = contextEmbeddings
+          .filter((row) => row.pair === p[0] && lemmas.has(row.lemma))
+          .sort((a, b) => b.created_at.localeCompare(a.created_at));
         return Promise.resolve(rows as Row[]);
       }
       if (sql.includes("FROM diglot_word_states WHERE pair = ?")) {
@@ -110,13 +118,23 @@ function makeFakeSql() {
         ];
         packs.set(id, { id, source_lang, target_lang, version, meta_json, installed_at });
       }
+      if (sql.includes("INTO diglot_context_embeddings")) {
+        const [lemma, pair, context_hash, vector_json, created_at] = params as [
+          string,
+          string,
+          string,
+          string,
+          string,
+        ];
+        contextEmbeddings.push({ lemma, pair, context_hash, vector_json, created_at });
+      }
       if (sql.startsWith("DELETE FROM diglot_language_packs")) {
         packs.delete(String((params as string[])[0]));
       }
       return Promise.resolve();
     },
   });
-  return { client, states, events, guesses, packs };
+  return { client, states, events, guesses, packs, contextEmbeddings };
 }
 
 function stateRow(overrides: Partial<DiglotWordStateRow>): DiglotWordStateRow {
@@ -150,6 +168,41 @@ describe("createDiglotRepo", () => {
     const due = await repo.listDueStates("zh:en", "2026-08-12T00:00:00.000Z", 1);
     expect(due).toHaveLength(1);
     expect(due[0]?.lemma).toBe("late");
+  });
+
+  it("returns the whole due set when no limit is given", async () => {
+    const repo = createDiglotRepo(makeFakeSql().client);
+    await repo.upsertState(stateRow({ lemma: "late", due: "2026-08-10T00:00:00.000Z" }));
+    await repo.upsertState(stateRow({ lemma: "later", due: "2026-08-11T00:00:00.000Z" }));
+    await repo.upsertState(stateRow({ lemma: "future", due: "2026-09-01T00:00:00.000Z" }));
+    const due = await repo.listDueStates("zh:en", "2026-08-12T00:00:00.000Z");
+    expect(due.map((row) => row.lemma)).toEqual(["late", "later"]);
+  });
+
+  it("reads the context vectors of many lemmas in one query", async () => {
+    const repo = createDiglotRepo(makeFakeSql().client);
+    const base = { pair: "zh:en" as const, vector_json: "[1]" };
+    await repo.upsertContextEmbedding({
+      ...base,
+      lemma: "book",
+      context_hash: "h1",
+      created_at: "t1",
+    });
+    await repo.upsertContextEmbedding({
+      ...base,
+      lemma: "friend",
+      context_hash: "h2",
+      created_at: "t2",
+    });
+    await repo.upsertContextEmbedding({
+      ...base,
+      lemma: "ignored",
+      context_hash: "h3",
+      created_at: "t3",
+    });
+    const rows = await repo.listContextEmbeddingsForLemmas("zh:en", ["book", "friend"]);
+    expect(rows.map((row) => row.lemma)).toEqual(["friend", "book"]);
+    expect(await repo.listContextEmbeddingsForLemmas("zh:en", [])).toEqual([]);
   });
 
   it("keeps the event log append-only and lists newest first with a limit", async () => {

@@ -2,7 +2,8 @@
  * Purpose: pure goal-gap query — given goal nodes, computes the unmastered requires-closure
  * gap and three deterministic full orderings of it (shortest / steadiest / interest-first),
  * plus a coverage fraction. No DB, no I/O; mastery/interest are pre-computed maps.
- * Main exports: gapAndPath, coverage, GapAndPathInput, GapAndPathResult, GapRoutes.
+ * Main exports: gapAndPath, coverage, isSatisfiedBy, GapAndPathInput, GapAndPathResult,
+ * GapRoutes.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors, prerequisiteClosure } from "@breadcrumb/plugin-graph";
@@ -15,6 +16,25 @@ export interface GapAndPathInput {
   goalNodeIds: readonly string[];
   /** Mastery value at/above which a node counts as lit. Caller-supplied, mirrors frontier(). */
   litThreshold: number;
+  /** Nodes the learner has declared done FOR THIS GOAL ("我已经会了"), regardless of what
+   * mastery says. Goal views believe the user's word — the node leaves this goal's remaining
+   * work and counts toward its coverage — while mastery itself stays untouched, so review can
+   * still resurface the node later and the frontier is not handed a fabricated number
+   * (2026-08-28 audit: the previous version wrote a fake LIT-threshold mastery value into a
+   * copied map, which made one click mean two different things on two screens). */
+  satisfiedNodeIds?: ReadonlySet<string>;
+}
+
+/** The "counts as done" predicate every goal-scoped query shares: lit by real mastery, or
+ * declared done by the learner for this goal. */
+export function isSatisfiedBy(input: {
+  masteryByNode: ReadonlyMap<string, number>;
+  litThreshold: number;
+  satisfiedNodeIds?: ReadonlySet<string>;
+}): (nodeId: string) => boolean {
+  return (nodeId: string) =>
+    (input.satisfiedNodeIds?.has(nodeId) ?? false) ||
+    (input.masteryByNode.get(nodeId) ?? 0) >= input.litThreshold;
 }
 
 export interface GapRoutes {
@@ -33,16 +53,18 @@ export interface GapAndPathResult {
   routes: GapRoutes;
 }
 
-/** 0..1 fraction of the given node set that's already lit. 1 for an empty set (nothing left
- * to cover — vacuously complete). */
+/** 0..1 fraction of the given node set that's already lit, or declared done by the learner
+ * (satisfiedNodeIds — same goal-local belief gapAndPath applies). 1 for an empty set (nothing
+ * left to cover — vacuously complete). */
 export function coverage(
   nodeIds: readonly string[],
   masteryByNode: ReadonlyMap<string, number>,
   litThreshold: number,
+  satisfiedNodeIds?: ReadonlySet<string>,
 ): number {
   if (nodeIds.length === 0) return 1;
-  const litCount = nodeIds.filter((id) => (masteryByNode.get(id) ?? 0) >= litThreshold).length;
-  return litCount / nodeIds.length;
+  const isSatisfied = isSatisfiedBy({ masteryByNode, litThreshold, satisfiedNodeIds });
+  return nodeIds.filter(isSatisfied).length / nodeIds.length;
 }
 
 /** The goal's requires-closure plus the goal nodes themselves, minus whatever's already lit —
@@ -116,9 +138,9 @@ export function helpsSupportWeight(
 }
 
 export function gapAndPath(input: GapAndPathInput): GapAndPathResult {
-  const { nodes, edges, masteryByNode, interestByNode, goalNodeIds, litThreshold } = input;
+  const { nodes, edges, interestByNode, goalNodeIds } = input;
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
-  const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
+  const isLit = isSatisfiedBy(input);
   const byLabel = (a: string, b: string) =>
     (labelById.get(a) ?? a).localeCompare(labelById.get(b) ?? b);
 

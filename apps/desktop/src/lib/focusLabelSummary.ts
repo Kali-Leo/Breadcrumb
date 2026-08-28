@@ -13,7 +13,7 @@ import { z } from "zod";
 import type { ApiConfig } from "../stores/settingsStore";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 
 /** Labels this short already fit the map; asking the model would spend tokens for no visible
  * change. */
@@ -48,6 +48,11 @@ export async function summarizeFocusLabel(
     return short.length > 0 ? short : null;
   } catch (error) {
     void recordAiFailure("focus-explain", error);
+    void recordFailedCallUsage(error, {
+      purpose: "focus-explain",
+      model: apiConfig.model,
+      conversationId,
+    });
     return null;
   }
 }

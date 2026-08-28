@@ -9,14 +9,21 @@ import type { DiglotWordStateRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { cardFromJson } from "@breadcrumb/plugin-diglot-weave";
 
 /** Node settle bar (spec 035 #7): at least 4 real encounters — one encounter is too thin a
- * sample to trust — and current retention at/above 90%, matching the FSRS true-retention
- * target systemGauge.ts evaluates the schedule against. */
+ * sample to trust — and current retention at/above 90%, which is FSRS's own default
+ * request_retention (ts-fsrs `default_request_retention = 0.9`): the rate the schedule is
+ * built to hold, so "at or above it" means the schedule considers this one safe.
+ * (Earlier this comment cited a systemGauge.ts as the source of that target; no such module
+ * exists in this repo — 2026-08-28 design audit.) */
 export const NODE_SETTLED_ENCOUNTER_COUNT = 4;
 export const NODE_SETTLED_RETENTION = 0.9;
 
 /** Word settle bar (spec 035 #7): FSRS stability at/above 30 days — a month-plus forgetting
- * half-life is the same long-horizon bar WaniKani's "Burned" tier uses to say a word no
- * longer needs review. */
+ * half-life. The anchor is the Anki community's "mature = interval >= 21 days" convention,
+ * which this repo's own survey (docs/research/2026-08-13-折线指标-纵向学习度量调研.md) took as
+ * the honest lower bound for "actually learned"; 30 days sits just past it.
+ * (Earlier this comment credited WaniKani's "Burned" tier. That is wrong: Burned is reached
+ * at roughly 4 months; the tier that sits near 30 days is "Master" — 2026-08-28 design audit.
+ * The number is unchanged, only the citation.) */
 export const WORD_SETTLED_STABILITY_DAYS = 30;
 
 export interface SettledNode {

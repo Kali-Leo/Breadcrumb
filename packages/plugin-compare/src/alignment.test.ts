@@ -1,7 +1,8 @@
 /**
- * Purpose: unit tests for the semantic-alignment engine (spec 024) — candidate thresholding,
- * top-k, the double pruning (string-matched items, already-judged pairs), batch chunking,
- * judge-verdict validation, and the low-confidence scoring rule.
+ * Purpose: unit tests for the semantic-alignment engine (spec 024) — relative-gate candidate
+ * selection on vectors shaped like the REAL local model's output, top-k, the double pruning
+ * (string-matched items, already-judged pairs), batch chunking, judge-verdict validation, and
+ * the low-confidence scoring rule.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -28,8 +29,22 @@ function item(overrides: Partial<ProfileItemDefinition>): ProfileItemDefinition 
   };
 }
 
-/** Unit vectors on axes: identical axis = similarity 1, different axis = 0, mix in between. */
-const vec = (x: number, y: number): number[] => [x, y];
+const DIMENSIONS = 8;
+
+/**
+ * A vector inside the narrow high-cosine band the real local e5 model produces (every pair of
+ * live nodes measured between 0.802 and 0.949 on 2026-08-28): a shared centroid plus a small
+ * lean along one axis. Same axis = near-duplicate; different axes still land around 0.82-0.85,
+ * i.e. ABOVE the absolute 0.72 floor this engine used to prune with — which is exactly why
+ * that floor turned out to be a no-op on real data and why these tests must not use
+ * orthogonal `[1,0]`/`[0,1]` fixtures.
+ */
+function packedVector(axis: number, lean: number): number[] {
+  const base = 1 / Math.sqrt(DIMENSIONS);
+  const vector = new Array<number>(DIMENSIONS).fill(base);
+  vector[axis % DIMENSIONS] = base + lean;
+  return vector;
+}
 
 describe("alignmentTextOfItem", () => {
   it("embeds label alone or label with aliases", () => {
@@ -48,9 +63,9 @@ describe("generateAlignmentCandidates", () => {
     item({ key: "child", parentKey: "parent", label: "丙" }),
   ];
   const itemVectors = new Map<string, readonly number[]>([
-    ["leaf-a", vec(1, 0)],
-    ["leaf-b", vec(0, 1)],
-    ["child", vec(1, 0)],
+    ["leaf-a", packedVector(0, 0.5)],
+    ["leaf-b", packedVector(1, 0.5)],
+    ["child", packedVector(0, 0.5)],
   ]);
   const nodes = [
     { id: "n1", label: "近甲", summary: "" },
@@ -58,12 +73,12 @@ describe("generateAlignmentCandidates", () => {
     { id: "n3", label: "无关", summary: "" },
   ];
   const nodeVectors = new Map<string, readonly number[]>([
-    ["n1", vec(0.95, 0.05)],
-    ["n2", vec(0.05, 0.95)],
-    ["n3", vec(0.5, 0.5)], // cosine vs axis ≈ 0.707 < 0.72
+    ["n1", packedVector(0, 0.62)], // same axis as leaf-a: the real match
+    ["n2", packedVector(1, 0.62)], // same axis as leaf-b
+    ["n3", packedVector(5, 0.55)], // different axis — still ~0.84 cosine to everything
   ]);
 
-  it("keeps only above-threshold pairs for unmatched leaves", () => {
+  it("keeps the standout node per leaf and drops the merely-in-band one", () => {
     const pairs = generateAlignmentCandidates({
       items,
       itemVectors,
@@ -75,7 +90,10 @@ describe("generateAlignmentCandidates", () => {
     const keys = pairs.map((pair) => `${pair.itemKey}:${pair.nodeId}`);
     expect(keys).toContain("leaf-a:n1");
     expect(keys).toContain("leaf-b:n2");
-    expect(keys).not.toContain("leaf-a:n3"); // below threshold
+    // n3 is NOT below any absolute floor — its cosine to leaf-a is ~0.84, comfortably past
+    // both the old 0.72 and the synonym gate's 0.85-era thinking. Only the relative gate,
+    // which sees that n1 is far better for this leaf, rejects it.
+    expect(keys).not.toContain("leaf-a:n3");
     expect(keys).not.toContain("parent:n1"); // internal node, never a candidate
   });
 
@@ -99,8 +117,10 @@ describe("generateAlignmentCandidates", () => {
       label: `节点${index}`,
       summary: "",
     }));
+    // Ten equally-good matches: the relative gate cannot separate them (mean === best), so
+    // the absolute top-k cap is what has to hold the line.
     const manyVectors = new Map<string, readonly number[]>(
-      manyNodes.map((node) => [node.id, vec(1, 0.01)]),
+      manyNodes.map((node) => [node.id, packedVector(0, 0.5)]),
     );
     const pairs = generateAlignmentCandidates({
       items: [item({ key: "leaf-a", label: "甲" })],
@@ -143,7 +163,7 @@ describe("validateAlignmentVerdicts", () => {
   const verdict = (pair: number) => ({
     pair,
     verdict: "same" as const,
-    confidence: "高" as const,
+    confidence: "high" as const,
     reason: "同一概念",
   });
 
@@ -161,9 +181,9 @@ describe("validateAlignmentVerdicts", () => {
 
 describe("alignmentCountsAsOverlap", () => {
   it("counts confident sames only", () => {
-    expect(alignmentCountsAsOverlap("same", "高")).toBe(true);
-    expect(alignmentCountsAsOverlap("same", "中")).toBe(true);
-    expect(alignmentCountsAsOverlap("same", "低")).toBe(false);
-    expect(alignmentCountsAsOverlap("different", "高")).toBe(false);
+    expect(alignmentCountsAsOverlap("same", "high")).toBe(true);
+    expect(alignmentCountsAsOverlap("same", "medium")).toBe(true);
+    expect(alignmentCountsAsOverlap("same", "low")).toBe(false);
+    expect(alignmentCountsAsOverlap("different", "high")).toBe(false);
   });
 });

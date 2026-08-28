@@ -28,15 +28,33 @@ export const statCallSchema = z.discriminatedUnion("fn", [
     // Aggregate FSRS retrievability across all known nodes: mean, median, share above threshold.
     threshold: z.number().min(0.5).max(0.99).default(0.9),
   }),
-  z.object({
-    fn: z.literal("correlation"),
-    // Pearson correlation between two per-day series; only the coefficient and n leave the call.
-    xMetric: z.enum(["daily_encounters", "daily_word_events", "daily_messages"]),
-    yMetric: z.enum(["daily_encounters", "daily_word_events", "daily_messages"]),
-    windowDays: z.number().int().min(7).max(180).default(60),
-  }),
+  z
+    .object({
+      fn: z.literal("correlation"),
+      // Pearson correlation between two per-day series; only the coefficient and n leave the call.
+      xMetric: z.enum(["daily_encounters", "daily_word_events", "daily_messages"]),
+      yMetric: z.enum(["daily_encounters", "daily_word_events", "daily_messages"]),
+      // Floor matches statistics.ts's CORRELATION_MIN_DAYS_WITH_DATA: a window that cannot
+      // possibly hold enough days with data would only ever produce a suppressed result.
+      windowDays: z.number().int().min(30).max(180).default(60),
+    })
+    .refine((call) => call.xMetric !== call.yMetric, {
+      message: "correlation of a series with itself is always 1 and measures nothing",
+    })
+    .refine((call) => !isMechanicallyCoupled(call.xMetric, call.yMetric), {
+      message:
+        "daily_encounters and daily_messages are mechanically coupled: sightings are extracted " +
+        "from messages, so their correlation measures the extractor, not the learner",
+    }),
 ]);
 export type StatCall = z.infer<typeof statCallSchema>;
+
+/** Metric pairs where one series is derived from the other, so a high coefficient is an
+ * artifact of the pipeline rather than a finding about the learner. */
+function isMechanicallyCoupled(xMetric: string, yMetric: string): boolean {
+  const pair = new Set([xMetric, yMetric]);
+  return pair.has("daily_encounters") && pair.has("daily_messages");
+}
 
 /** Constrained result template: text, single stats, or bar lists — no markup, no code. */
 export const displayBlockSchema = z.discriminatedUnion("kind", [

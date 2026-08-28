@@ -1,33 +1,28 @@
 /**
  * Purpose: zustand store for fact-check runs — manual per-message checking through the
- * plugin-factcheck pipeline, persistence, metering (purpose "factcheck"), gentle notices.
- * Claims are layered per conversation, filled on first visit and never wiped on switch;
- * layers accumulate for every conversation visited this app session (the Discord tradeoff).
+ * plugin-factcheck pipeline, metering (purpose "factcheck"), gentle notices. Claims are
+ * layered per conversation, filled on first visit and never wiped on switch; layers
+ * accumulate for every conversation visited this app session (the Discord tradeoff). The
+ * database side lives in lib/factcheckRecords.ts.
  * Main exports: useFactcheckStore, DisplayClaim.
  */
-import type { FactcheckClaimRow, MessageRow } from "@breadcrumb/core-db";
 import type { CopyMessage } from "@breadcrumb/core-i18n";
-import {
-  createDefaultEvidenceProviders,
-  type EvidenceItem,
-  runFactCheck,
-} from "@breadcrumb/plugin-factcheck";
+import { createDefaultEvidenceProviders, runFactCheck } from "@breadcrumb/plugin-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
 import { createSingleFlightLoader, setConversationLayer } from "../lib/conversationLayers";
-import { getRepos } from "../lib/db";
+import {
+  type DisplayClaim,
+  loadConversationLayer,
+  persistRun,
+  resolveRoundMessages,
+} from "../lib/factcheckRecords";
 import { recordAiFailure } from "../lib/failureLog";
-import { recordMeteredCall } from "../lib/metering";
-import { newId, nowIso } from "../lib/time";
+import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
-export interface DisplayClaim {
-  text: string;
-  relationship: string;
-  reasoning: string;
-  evidence: EvidenceItem[];
-}
+export type { DisplayClaim } from "../lib/factcheckRecords";
 
 const OFFLINE_NOTICE: CopyMessage = { key: "chat:factcheck.offlineNotice" };
 const NO_API_NOTICE: CopyMessage = { key: "chat:factcheck.noApiNotice" };
@@ -55,14 +50,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
     if (conversationId === null || get().claimsByConversation.has(conversationId)) return;
     await singleFlightLoad(conversationId, async () => {
       if (get().claimsByConversation.has(conversationId)) return;
-      const repos = await getRepos();
-      const runs = await repos.factcheck.listRunsByConversation(conversationId);
-      const layer = new Map<string, DisplayClaim[]>();
-      for (const run of runs) {
-        // Oldest-first iteration: the newest run per message naturally wins.
-        const rows = await repos.factcheck.listClaimsByRun(run.id);
-        layer.set(run.message_id, rows.map(rowToDisplayClaim));
-      }
+      const layer = await loadConversationLayer(conversationId);
       // A check that finished while we loaded already wrote its layer — the fresher
       // in-memory entries win over this DB snapshot.
       const existing = get().claimsByConversation.get(conversationId);
@@ -82,7 +70,11 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
     if (!settings.networkEnabled) return setNotice(messageId, OFFLINE_NOTICE);
     if (!settings.apiConfig) return setNotice(messageId, NO_API_NOTICE);
 
-    const { answer, question } = await resolveRoundMessages(conversationId, messageId);
+    const { answer, question } = await resolveRoundMessages(
+      conversationId,
+      useChatStore.getState().messagesFor(conversationId),
+      messageId,
+    );
     if (answer === undefined || question === undefined) return;
 
     set({ checkingMessageIds: new Set([...get().checkingMessageIds, messageId]) });
@@ -105,33 +97,14 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
         conversationId,
         usage: report.usage,
       });
+      recordProviderFailures(report.failedProviders);
 
-      const runId = newId();
-      const createdAt = nowIso();
-      const claimRows: FactcheckClaimRow[] = report.claims.map((claim) => ({
-        id: newId(),
-        run_id: runId,
-        claim_text: claim.text,
-        relationship: claim.relationship,
-        reasoning: claim.reasoning,
-        evidence_json: JSON.stringify(claim.evidence),
-        created_at: createdAt,
-      }));
-      const repos = await getRepos();
-      await repos.factcheck.recordRun(
-        {
-          id: runId,
-          message_id: messageId,
-          conversation_id: conversationId,
-          created_at: createdAt,
-        },
-        claimRows,
-      );
+      const { runId, displayClaims } = await persistRun(conversationId, messageId, report.claims);
       appEventBus.emit("factcheck:finished", { conversationId, messageId, runId });
 
       // The result lands in ITS conversation's layer — correct even if the user switched away.
       const layer = new Map(get().claimsByConversation.get(conversationId) ?? []);
-      layer.set(messageId, claimRows.map(rowToDisplayClaim));
+      layer.set(messageId, displayClaims);
       set({
         claimsByConversation: setConversationLayer(
           get().claimsByConversation,
@@ -143,6 +116,13 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
     } catch (error) {
       console.warn("factcheck skipped:", error);
       void recordAiFailure("factcheck", error);
+      // The claim-extraction call may have reached the provider (and been billed) before it
+      // gave up; recordMeteredCall above is never reached on this path.
+      void recordFailedCallUsage(error, {
+        purpose: "factcheck",
+        model: settings.apiConfig.model,
+        conversationId,
+      });
       setNotice(messageId, FAILED_NOTICE);
     } finally {
       set({
@@ -152,35 +132,15 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
   },
 }));
 
-/** Resolves the checked assistant message and its preceding user question from the message's
- * OWN conversation (never the active mirror); falls back to the DB when the chat session
- * isn't loaded (a badge can outlive its session in a popup or after a reload race). */
-async function resolveRoundMessages(
-  conversationId: string,
-  messageId: string,
-): Promise<{ answer: MessageRow | undefined; question: MessageRow | undefined }> {
-  let chatMessages = useChatStore.getState().messagesFor(conversationId);
-  if (chatMessages.length === 0) {
-    const repos = await getRepos();
-    chatMessages = await repos.messages.listByConversation(conversationId);
+/** A search source going dark is exactly the silent degradation spec 014's debug table exists
+ * for — the headless plugin can only report it, the host has the database. */
+function recordProviderFailures(failedProviders: readonly string[]): void {
+  for (const provider of failedProviders) {
+    void recordAiFailure(
+      "factcheck",
+      `evidence provider "${provider}" could not complete a search (blocked network, non-OK response, markup drift, or no candidate page openable)`,
+    );
   }
-  const answerIndex = chatMessages.findIndex((message) => message.id === messageId);
-  const answer = chatMessages[answerIndex];
-  if (answer?.role !== "assistant") return { answer: undefined, question: undefined };
-  const question = chatMessages
-    .slice(0, answerIndex)
-    .reverse()
-    .find((message) => message.role === "user");
-  return { answer, question };
-}
-
-function rowToDisplayClaim(row: FactcheckClaimRow): DisplayClaim {
-  return {
-    text: row.claim_text,
-    relationship: row.relationship,
-    reasoning: row.reasoning,
-    evidence: JSON.parse(row.evidence_json) as EvidenceItem[],
-  };
 }
 
 function setNotice(messageId: string, text: CopyMessage): void {

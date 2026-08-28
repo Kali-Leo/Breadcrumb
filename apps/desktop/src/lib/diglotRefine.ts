@@ -16,7 +16,7 @@ import {
 import type { ApiConfig } from "../stores/settingsStore";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 
 export async function refineWeavePatches(
   apiConfig: ApiConfig,
@@ -51,6 +51,11 @@ export async function refineWeavePatches(
     return applyLlmRefinement(content, patches, parsed).patches;
   } catch (error) {
     void recordAiFailure("diglot-weave", error);
+    void recordFailedCallUsage(error, {
+      purpose: "diglot-weave",
+      model: apiConfig.model,
+      conversationId: null,
+    });
     return [...patches];
   }
 }

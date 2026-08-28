@@ -1,12 +1,14 @@
 /**
- * Purpose: every pair of EXISTING nodes whose embeddings clear SYNONYM_SIMILARITY_THRESHOLD,
- * excluding pairs already formally linked via node_aliases — the candidate list spec 015 #4's
- * auto-merge sweep hands to the synonym-judge LLM tier (mergePlan.ts's
- * planSynonymVerdictMerges turns the "同一" verdicts into merge instructions).
+ * Purpose: pairs of EXISTING nodes that stand out in each node's own similarity landscape —
+ * the candidate list spec 015 #4's auto-merge sweep hands to the synonym-judge LLM tier
+ * (mergePlan.ts's planSynonymVerdictMerges turns the "same" verdicts into merge
+ * instructions). Pairs already linked via node_aliases, and pairs already judged once
+ * (either verdict), never re-enter.
  * Main exports: findSuspectSynonymPairs, SuspectSynonymPair.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
-import { cosineSimilarity } from "./synonymGate";
+import { cosineSimilarity, topByRelativeGate } from "./similarityGate";
+import { SYNONYM_CANDIDATE_TOP_K } from "./synonymGate";
 
 export interface SuspectSynonymPair {
   nodeAId: string;
@@ -16,52 +18,75 @@ export interface SuspectSynonymPair {
   similarity: number;
 }
 
-/** Every existing-node pair whose embeddings clear `threshold`, most similar first. A pair
- * is skipped when node_aliases already links the two labels — that synonymy is already
- * formally recorded, not merely "suspected". */
-export function findSuspectSynonymPairs(
-  nodes: readonly KnowledgeNodeRow[],
-  embeddings: readonly NodeEmbeddingRow[],
-  aliasNodeIdByLabel: ReadonlyMap<string, string>,
-  threshold: number,
-): SuspectSynonymPair[] {
-  const nodeById = new Map(nodes.map((node) => [node.id, node]));
-  const vectorByNodeId = new Map(
-    embeddings.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
-  );
-  const ids = [...vectorByNodeId.keys()].filter((id) => nodeById.has(id));
+export interface SuspectSynonymPairInput {
+  nodes: readonly KnowledgeNodeRow[];
+  embeddings: readonly NodeEmbeddingRow[];
+  /** alias label -> node id; a pair whose two labels are already formally linked is skipped —
+   * that synonymy is recorded, not merely "suspected". */
+  aliasNodeIdByLabel: ReadonlyMap<string, string>;
+  /** Keys of pairs already judged, normalized as `${smallerId}:${largerId}` (migration 0045's
+   * node_pair_verdicts). Both verdicts count: "different" is exactly the answer that used to
+   * be forgotten and re-bought on every startup. */
+  judgedPairKeys: ReadonlySet<string>;
+  /** At most this many partners per node survive the relative gate. */
+  topK?: number;
+}
 
-  const pairs: SuspectSynonymPair[] = [];
-  for (let i = 0; i < ids.length; i += 1) {
-    for (let j = i + 1; j < ids.length; j += 1) {
-      const idA = ids[i];
-      const idB = ids[j];
-      const nodeA = idA !== undefined ? nodeById.get(idA) : undefined;
-      const nodeB = idB !== undefined ? nodeById.get(idB) : undefined;
-      const vectorA = idA !== undefined ? vectorByNodeId.get(idA) : undefined;
-      const vectorB = idB !== undefined ? vectorByNodeId.get(idB) : undefined;
-      if (
-        nodeA === undefined ||
-        nodeB === undefined ||
-        vectorA === undefined ||
-        vectorB === undefined
-      ) {
-        continue;
-      }
-      if (isAlreadyAliasLinked(nodeA, nodeB, aliasNodeIdByLabel)) continue;
-      const similarity = cosineSimilarity(vectorA, vectorB);
-      if (similarity >= threshold) {
-        pairs.push({
-          nodeAId: nodeA.id,
-          nodeALabel: nodeA.label,
-          nodeBId: nodeB.id,
-          nodeBLabel: nodeB.label,
-          similarity,
-        });
-      }
+/** Pair key with a stable order regardless of which side generated it. */
+function pairKey(nodeIdA: string, nodeIdB: string): string {
+  return nodeIdA <= nodeIdB ? `${nodeIdA}:${nodeIdB}` : `${nodeIdB}:${nodeIdA}`;
+}
+
+/**
+ * For each node, the partners that clear ITS OWN relative gate (mean + half the gap to its
+ * best match), capped at topK, deduplicated across the two directions and returned most
+ * similar first. Replaces an absolute 0.85 cutoff that let 59% of all pairs through on the
+ * live database — the e5 model's similarities are packed too tightly for any fixed number to
+ * mean anything (design audit 2026-08-28 #1).
+ */
+export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): SuspectSynonymPair[] {
+  const nodeById = new Map(input.nodes.map((node) => [node.id, node]));
+  const vectors: { nodeId: string; vector: number[] }[] = [];
+  for (const row of input.embeddings) {
+    if (!nodeById.has(row.node_id)) continue;
+    vectors.push({ nodeId: row.node_id, vector: JSON.parse(row.vector_json) as number[] });
+  }
+
+  const topK = input.topK ?? SYNONYM_CANDIDATE_TOP_K;
+  const byKey = new Map<string, SuspectSynonymPair>();
+  for (const subject of vectors) {
+    const scored: { partnerId: string; similarity: number }[] = [];
+    for (const partner of vectors) {
+      if (partner.nodeId === subject.nodeId) continue;
+      const nodeA = nodeById.get(subject.nodeId);
+      const nodeB = nodeById.get(partner.nodeId);
+      if (nodeA === undefined || nodeB === undefined) continue;
+      if (isAlreadyAliasLinked(nodeA, nodeB, input.aliasNodeIdByLabel)) continue;
+      if (input.judgedPairKeys.has(pairKey(nodeA.id, nodeB.id))) continue;
+      scored.push({
+        partnerId: partner.nodeId,
+        similarity: cosineSimilarity(subject.vector, partner.vector),
+      });
+    }
+    for (const entry of topByRelativeGate(scored, topK)) {
+      const nodeA = nodeById.get(subject.nodeId);
+      const nodeB = nodeById.get(entry.partnerId);
+      if (nodeA === undefined || nodeB === undefined) continue;
+      const key = pairKey(nodeA.id, nodeB.id);
+      if (byKey.has(key)) continue;
+      const [first, second] = nodeA.id <= nodeB.id ? [nodeA, nodeB] : [nodeB, nodeA];
+      byKey.set(key, {
+        nodeAId: first.id,
+        nodeALabel: first.label,
+        nodeBId: second.id,
+        nodeBLabel: second.label,
+        similarity: entry.similarity,
+      });
     }
   }
-  return pairs.sort((a, b) => b.similarity - a.similarity);
+  return [...byKey.values()].sort(
+    (a, b) => b.similarity - a.similarity || a.nodeAId.localeCompare(b.nodeAId),
+  );
 }
 
 function isAlreadyAliasLinked(

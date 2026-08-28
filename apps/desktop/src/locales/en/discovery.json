@@ -21,7 +21,8 @@
     "expose": "Fed to you",
     "engage": "Chosen",
     "chartAria": "How fed and chosen content felt over time",
-    "tooltip": "{{date}} {{line}} {{value}} ({{count}} items)",
+    "tooltip_one": "{{date}} {{line}} {{value}} ({{count}} item)",
+    "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} items)",
     "empty": "Nothing was recorded in this period"
   },
   "wordCloud": {

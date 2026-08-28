@@ -10,7 +10,7 @@
  * context keep the original text untouched.
  * Main exports: MessageBubble.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { recordMessageReencounter } from "../lib/reencounter";
 import { useDiglotStore } from "../stores/diglotStore";
@@ -30,7 +30,7 @@ interface MessageBubbleProps {
   messageId?: string;
 }
 
-export function MessageBubble({ author, content, conversationId, messageId }: MessageBubbleProps) {
+function MessageBubbleBody({ author, content, conversationId, messageId }: MessageBubbleProps) {
   const isUser = author === "user";
   const bubbleRef = useRef<HTMLDivElement>(null);
   const diglotEnabled = useDiglotStore((state) => state.settings.enabled);
@@ -164,3 +164,10 @@ export function MessageBubble({ author, content, conversationId, messageId }: Me
     </div>
   );
 }
+
+/** Streaming writes the store once per delta and ChatView re-maps the whole message list, so
+ * without this every settled bubble re-parsed its markdown and re-rendered its KaTeX on every
+ * token of the reply being typed (design audit 2026-08-28, 数据层与性能 #3). Every prop is a
+ * primitive (author, content, conversationId, messageId) — the default shallow comparison is
+ * exactly the right one, so no custom comparator. */
+export const MessageBubble = memo(MessageBubbleBody);

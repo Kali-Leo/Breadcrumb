@@ -28,39 +28,39 @@ describe("answer-language watch", () => {
     recordAiFailureMock.mockClear();
   });
 
-  it("walks a conversation that drifts, gets corrected, and drifts again", () => {
+  it("walks a conversation that drifts, gets corrected, and drifts again", async () => {
     expect(shouldUseFirmDirective("c1")).toBe(false);
 
-    expect(noteReplyLanguage("c1", ENGLISH_REPLY)).toBe("matches");
+    expect(await noteReplyLanguage("c1", ENGLISH_REPLY)).toBe("matches");
     expect(shouldUseFirmDirective("c1")).toBe(false);
     expect(recordAiFailureMock).not.toHaveBeenCalled();
 
-    expect(noteReplyLanguage("c1", CHINESE_REPLY)).toBe("differs");
+    expect(await noteReplyLanguage("c1", CHINESE_REPLY)).toBe("differs");
     expect(shouldUseFirmDirective("c1")).toBe(true);
     expect(recordAiFailureMock).toHaveBeenCalledTimes(1);
 
     // The harder instruction stays until a reply actually comes back right.
-    expect(noteReplyLanguage("c1", "```js\nconst a = 1;\n```")).toBe("unknown");
+    expect(await noteReplyLanguage("c1", "```js\nconst a = 1;\n```")).toBe("unknown");
     expect(shouldUseFirmDirective("c1")).toBe(true);
 
-    expect(noteReplyLanguage("c1", ENGLISH_REPLY)).toBe("matches");
+    expect(await noteReplyLanguage("c1", ENGLISH_REPLY)).toBe("matches");
     expect(shouldUseFirmDirective("c1")).toBe(false);
   });
 
-  it("keeps conversations apart", () => {
-    noteReplyLanguage("c1", CHINESE_REPLY);
+  it("keeps conversations apart", async () => {
+    await noteReplyLanguage("c1", CHINESE_REPLY);
     expect(shouldUseFirmDirective("c1")).toBe(true);
     expect(shouldUseFirmDirective("c2")).toBe(false);
   });
 
-  it("still judges a reply that belongs to no conversation, without blowing up", () => {
-    expect(noteReplyLanguage(null, CHINESE_REPLY)).toBe("differs");
+  it("still judges a reply that belongs to no conversation, without blowing up", async () => {
+    expect(await noteReplyLanguage(null, CHINESE_REPLY)).toBe("differs");
     expect(recordAiFailureMock).toHaveBeenCalledTimes(1);
     expect(shouldUseFirmDirective(null)).toBe(false);
   });
 
-  it("records the language it wanted, so the log says what actually went wrong", () => {
-    noteReplyLanguage("c1", CHINESE_REPLY);
+  it("records the language it wanted, so the log says what actually went wrong", async () => {
+    await noteReplyLanguage("c1", CHINESE_REPLY);
     const [purpose, error] = recordAiFailureMock.mock.calls[0] as [string, Error];
     expect(purpose).toBe("chat");
     expect(error.message).toContain("en");

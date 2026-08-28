@@ -5,7 +5,7 @@
  * Main exports: InterestEmotionPanel.
  */
 
-import { formatDayMonth } from "@breadcrumb/core-i18n";
+import { formatDayMonth, formatSignedDecimal } from "@breadcrumb/core-i18n";
 import {
   buildEmotionChart,
   type EmotionCategory,
@@ -57,7 +57,7 @@ export function InterestEmotionPanel() {
       text: t("emotion.tooltip", {
         date: formatDayMonth(i18n.language, new Date(nearest.point.day * 1000)),
         line: t(`emotion.${nearest.key}`),
-        value: `${valence > 0 ? "+" : ""}${valence.toFixed(2)}`,
+        value: formatSignedDecimal(i18n.language, valence),
         count: nearest.point.n,
       }),
     });

@@ -35,8 +35,14 @@ function makeFakeSql() {
         return Promise.resolve(rows as Row[]);
       }
       if (sql.includes("SUM(importance)")) {
+        const observationsOnly = sql.includes("kind = 'observation'");
         const total = [...memories.values()]
-          .filter((row) => row.companion_id === p[0] && row.created_at >= String(p[1]))
+          .filter(
+            (row) =>
+              row.companion_id === p[0] &&
+              row.created_at >= String(p[1]) &&
+              (!observationsOnly || row.kind === "observation"),
+          )
           .reduce((sum, row) => sum + row.importance, 0);
         return Promise.resolve([{ total }] as Row[]);
       }
@@ -203,6 +209,41 @@ describe("companion memories repo", () => {
     expect(listed.map((row) => row.id)).toEqual(["m1", "m2"]);
     expect(await repo.sumImportanceSince("pepper", "2026-08-03T00:00:00.000Z")).toBe(6);
     expect(await repo.sumImportanceSince("pepper", "2026-01-01T00:00:00.000Z")).toBe(10);
+  });
+
+  it("excludes reflections from the importance sum, so a reflection cannot re-trip itself", async () => {
+    const repo = createCompanionMemoriesRepo(makeFakeSql());
+    // The window starts at the last reflection's own created_at, so its rows land inside it.
+    await repo.insert({
+      id: "r1",
+      companion_id: "pepper",
+      kind: "reflection",
+      content: "keeps stalling on the recursive step",
+      importance: 8,
+      created_at: "2026-08-10T00:00:00.000Z",
+      last_accessed_at: "2026-08-10T00:00:00.000Z",
+    });
+    await repo.insert({
+      id: "r2",
+      companion_id: "pepper",
+      kind: "reflection",
+      content: "prefers worked examples",
+      importance: 8,
+      created_at: "2026-08-10T00:00:01.000Z",
+      last_accessed_at: "2026-08-10T00:00:01.000Z",
+    });
+    await repo.insert({
+      id: "m4",
+      companion_id: "pepper",
+      kind: "observation",
+      content: "asked about tail calls",
+      importance: 5,
+      created_at: "2026-08-11T00:00:00.000Z",
+      last_accessed_at: "2026-08-11T00:00:00.000Z",
+    });
+
+    // 16 points of reflection sit in the window; only the observation may count.
+    expect(await repo.sumImportanceSince("pepper", "2026-08-10T00:00:00.000Z")).toBe(5);
   });
 
   it("advances last_accessed_at only for the touched ids", async () => {

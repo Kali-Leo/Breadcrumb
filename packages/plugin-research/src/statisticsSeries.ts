@@ -1,13 +1,14 @@
 /**
  * Purpose: shared helpers for the research statistic functions (spec 036) — local calendar
- * day-bucketing, equal-width histogram binning under the MIN_CELL_COUNT disclosure floor,
- * Pearson correlation, and the one thin per-day SQL fetch correlation reuses for both series.
+ * day-bucketing, equal-width histogram binning, Pearson correlation, and the one thin per-day
+ * SQL fetch correlation reuses for both series. Bucket labels leave as catalogue keys: this
+ * package writes no wording (spec 058 §2).
  * Main exports: localDateKey, buildDayKeys, windowStartIso, countsByLocalDay,
  * fetchDailyCounts, buildEqualWidthHistogram, buildWeekdayHistogram, pearsonCorrelation,
  * roundTo3.
  */
 import type { SqlClient } from "@breadcrumb/core-db";
-import { MIN_CELL_COUNT } from "./statResults";
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 import type { StatCall } from "./taskSchema";
 
 const DAILY_METRIC_TABLE: Record<Extract<StatCall, { fn: "correlation" }>["xMetric"], string> = {
@@ -112,14 +113,19 @@ export function roundTo3(value: number): number {
   return Math.round(value * 1000) / 1000;
 }
 
-/** Equal-width histogram over `values`, split into `bucketCount` buckets spanning `domain`
- * (or the data's own [min, max] when omitted). Buckets below MIN_CELL_COUNT are dropped —
- * every bucketed research result goes through this same disclosure floor. */
+/**
+ * Equal-width histogram over `values`, split into `bucketCount` buckets spanning `domain`
+ * (or the data's own [min, max] when omitted). Every bucket is kept, including the empty
+ * ones: results here are only ever shown on the machine that computed them, so dropping
+ * small buckets bought no privacy and cost the picture its arithmetic — the bars stopped
+ * summing to the count printed next to them (审计统计分报告差距 4). The disclosure floor
+ * belongs on a future upload path, not on the local display path.
+ */
 export function buildEqualWidthHistogram(
   values: readonly number[],
   bucketCount: number,
   domain?: readonly [number, number],
-): Array<{ label: string; value: number }> {
+): Array<{ label: CopyMessage; value: number }> {
   if (values.length === 0) return [];
   const min = domain?.[0] ?? Math.min(...values);
   const max = domain?.[1] ?? Math.max(...values);
@@ -130,33 +136,44 @@ export function buildEqualWidthHistogram(
     const index = Math.min(bucketCount - 1, Math.max(0, rawIndex));
     counts[index] = (counts[index] ?? 0) + 1;
   }
-  const bars: Array<{ label: string; value: number }> = [];
+  const bars: Array<{ label: CopyMessage; value: number }> = [];
   for (let bucketIndex = 0; bucketIndex < bucketCount; bucketIndex += 1) {
-    const count = counts[bucketIndex] ?? 0;
-    if (count < MIN_CELL_COUNT) continue;
     const low = width === 0 ? min : min + (width * bucketIndex) / bucketCount;
     const high = width === 0 ? max : min + (width * (bucketIndex + 1)) / bucketCount;
-    bars.push({ label: `${low.toFixed(2)}–${high.toFixed(2)}`, value: count });
+    bars.push({
+      label: {
+        key: "settings:research.barRange",
+        params: { low: low.toFixed(2), high: high.toFixed(2) },
+      },
+      value: counts[bucketIndex] ?? 0,
+    });
   }
   return bars;
 }
 
-const WEEKDAY_LABELS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+/** Sunday-first, matching JS `getDay()`. */
+const WEEKDAY_KEYS = [
+  "settings:research.weekdaySunday",
+  "settings:research.weekdayMonday",
+  "settings:research.weekdayTuesday",
+  "settings:research.weekdayWednesday",
+  "settings:research.weekdayThursday",
+  "settings:research.weekdayFriday",
+  "settings:research.weekdaySaturday",
+] as const;
 
-/** Fixed 7-category local-weekday histogram, same disclosure floor as the numeric bins. */
+/** Fixed 7-category local-weekday histogram; all seven days are always shown, a quiet day
+ * being a fact about the week rather than something to hide. */
 export function buildWeekdayHistogram(
   timestampsIso: readonly string[],
-): Array<{ label: string; value: number }> {
+): Array<{ label: CopyMessage; value: number }> {
   const counts = new Array<number>(7).fill(0);
   for (const iso of timestampsIso) {
     const weekday = new Date(iso).getDay();
     counts[weekday] = (counts[weekday] ?? 0) + 1;
   }
-  const bars: Array<{ label: string; value: number }> = [];
-  for (let weekday = 0; weekday < 7; weekday += 1) {
-    const count = counts[weekday] ?? 0;
-    if (count < MIN_CELL_COUNT) continue;
-    bars.push({ label: WEEKDAY_LABELS[weekday] ?? String(weekday), value: count });
-  }
-  return bars;
+  return WEEKDAY_KEYS.map((key, weekday) => ({
+    label: { key },
+    value: counts[weekday] ?? 0,
+  }));
 }

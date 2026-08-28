@@ -4,7 +4,7 @@
  * capitalized surfaces, first-occurrence-only per lemma).
  * Main exports: extractCandidates, CandidateOccurrence.
  */
-import type { LoadedLanguagePack } from "./packSchema";
+import { type LoadedLanguagePack, resolveLemma } from "./packSchema";
 import type { WordToken } from "./tokenize";
 
 export interface CandidateOccurrence {
@@ -15,16 +15,6 @@ export interface CandidateOccurrence {
   start: number;
   end: number;
   clauseIndex: number;
-}
-
-/** Resolves a surface form to its dictionary lemma, or null when unknown. */
-function resolveLemma(surface: string, loaded: LoadedLanguagePack): string | null {
-  const viaForms = loaded.pack.forms[surface];
-  if (viaForms !== undefined) return viaForms;
-  if (loaded.pack.entries[surface] !== undefined) return surface;
-  const lowercased = surface.toLowerCase();
-  if (lowercased !== surface && loaded.pack.entries[lowercased] !== undefined) return lowercased;
-  return null;
 }
 
 /** True when the token together with an adjacent word token forms a longer dictionary

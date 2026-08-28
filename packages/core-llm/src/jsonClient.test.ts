@@ -4,7 +4,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { chatJson } from "./jsonClient";
+import { ChatJsonError, chatJson } from "./jsonClient";
 
 const petSchema = z.object({ name: z.string(), age: z.number() });
 
@@ -44,14 +44,24 @@ describe("chatJson", () => {
     ).rejects.toThrow();
   });
 
-  it("throws a clear error on non-2xx responses (no retry — the endpoint itself is broken)", async () => {
+  it("throws a clear error on a non-retryable non-2xx response (a bad key fails twice too)", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(new Response("nope", { status: 500 }));
+      .mockResolvedValue(new Response("nope", { status: 401 }));
     await expect(
       chatJson(makeConfig(fetchImpl), [{ role: "user", content: "pet?" }], petSchema),
-    ).rejects.toThrow("HTTP 500");
+    ).rejects.toThrow("HTTP 401");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("pins temperature to 0 — every chatJson call is a judgement, not a generation", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(completionResponse('{"name":"Momo","age":3}'));
+    await chatJson(makeConfig(fetchImpl), [{ role: "user", content: "pet?" }], petSchema);
+
+    const sentBody = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(sentBody.temperature).toBe(0);
   });
 
   it("throws when the response has no message content", async () => {
@@ -107,5 +117,53 @@ describe("chatJson", () => {
       chatJson(makeConfig(fetchImpl), [{ role: "user", content: "pet?" }], petSchema),
     ).rejects.toThrow();
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("carries the usage of BOTH rejected calls on the error, so nothing goes unmetered", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(completionResponse('{"name":"Momo"}'))
+      .mockResolvedValueOnce(completionResponse('{"name":"Momo"}'));
+
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ChatJsonError);
+    expect((error as ChatJsonError).usage).toEqual({ inputTokens: 60, outputTokens: 24 });
+  });
+
+  it("carries the first call's usage when the corrective retry dies in transport", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(completionResponse("not json at all"))
+      .mockResolvedValue(new Response("nope", { status: 401 }));
+
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ChatJsonError);
+    expect((error as ChatJsonError).message).toContain("HTTP 401");
+    // The first call was billed even though its reply was unusable.
+    expect((error as ChatJsonError).usage).toEqual({ inputTokens: 30, outputTokens: 12 });
+  });
+
+  it("reports zero usage when the very first call never reached the provider", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response("nope", { status: 401 }));
+
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect((error as ChatJsonError).usage).toEqual({ inputTokens: 0, outputTokens: 0 });
   });
 });

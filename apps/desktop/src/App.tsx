@@ -5,6 +5,7 @@
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./App.css";
 import { ChatView } from "./components/ChatView";
 import { CompanionChatPopup } from "./components/CompanionChatPopup";
@@ -37,6 +38,7 @@ import { useSettingsStore } from "./stores/settingsStore";
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
+  const { t } = useTranslation("chat");
   const [view, setView] = useState<"chat" | "settings" | "map" | "vocab" | "discovery">("chat");
   const [companionsOpen, setCompanionsOpen] = useState(false);
   const [helperPopup, setHelperPopup] = useState<{ conversationId: string; title: string } | null>(
@@ -129,11 +131,11 @@ export default function App() {
             <>
               <button
                 type="button"
-                aria-label="关闭伙伴列表"
+                aria-label={t("companion.closeRoster")}
                 onClick={() => setCompanionsOpen(false)}
                 className="absolute inset-0 z-20 cursor-default"
               />
-              <div className="absolute bottom-2 left-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+              <div className="absolute bottom-2 start-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
                 <CompanionSection onPicked={() => setCompanionsOpen(false)} />
               </div>
             </>

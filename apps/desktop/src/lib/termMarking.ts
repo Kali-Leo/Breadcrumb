@@ -19,7 +19,7 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
 /** Both evidence lists handed to the model are capped here (spec 043 §2). */
@@ -112,6 +112,11 @@ async function computeTermMarks(
     return clipped;
   } catch (error) {
     void recordAiFailure("term-marking", error);
+    void recordFailedCallUsage(error, {
+      purpose: "term-marking",
+      model: apiConfig.model,
+      conversationId,
+    });
     return [];
   }
 }

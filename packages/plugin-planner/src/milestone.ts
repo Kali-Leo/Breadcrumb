@@ -1,8 +1,9 @@
 /**
  * Purpose: pure "milestone" scoring for a goal's progress readout (spec 016) — a single
  * 0..100 number summarizing progress toward one goal, plus its band word. No DB, no I/O;
- * goalMasteryByNode must already be the SAME goal-view-boosted mastery map coverage() uses
- * (self-report claims believed), so the two numbers never silently disagree.
+ * goalMasteryByNode must be read under the SAME goal-local belief coverage() applies — a node
+ * the learner declared done counts as lit for the goal — so the two numbers never silently
+ * disagree. (Currently unconsumed by any UI; see the 2026-08-28 audit's planning gap 8.)
  * Main exports: milestone, milestoneBand, MilestoneBand, MILESTONE_BAND_THRESHOLDS,
  * MILESTONE_LIT_WEIGHT, MILESTONE_DIM_WEIGHT, MILESTONE_DIM_DISCOUNT.
  */

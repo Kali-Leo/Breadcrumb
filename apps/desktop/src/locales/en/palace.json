@@ -4,9 +4,11 @@
     "heatmapTitle": "Learning heatmap",
     "heatmapHoverNote": "Each square is a day; the darker it is, the more you learned that day.",
     "heatmapEmpty": "No traces yet. Start a learning chat and the first square appears here.",
-    "heatmapCell": "{{date}}, {{count}} traces left behind",
+    "heatmapCell_one": "{{date}}, {{count}} trace left behind",
+    "heatmapCell_other": "{{date}}, {{count}} traces left behind",
     "heatmapCellEmpty": "{{date}}",
-    "activeDays": "Active on {{count}} days",
+    "activeDays_one": "Active on {{count}} day",
+    "activeDays_other": "Active on {{count}} days",
     "trendsTitle": "Trends",
     "trendsEmpty": "The lines appear as you learn.",
     "trendLayersMemoryLabel": "Memory",
@@ -29,7 +31,8 @@
     "evidenceClaimLearned": "You said you had learned this",
     "evidenceClaimFamiliar": "You said you were fairly familiar with this",
     "evidenceClaimTaughtPrincipled": "You explained how it works",
-    "evidenceClaimTaughtSurface": "You retold it once"
+    "evidenceClaimTaughtSurface": "You retold it once",
+    "regionEmpty": "No learning recorded in this area yet"
   },
   "map": {
     "loadFailed": "The map did not load. Leave this page and come back, and it will try again.",
@@ -42,9 +45,11 @@
     "unnamedIsleHint": "Things you have brushed against but not studied yet",
     "kindIsland": "Island",
     "kindKingdom": "Kingdom",
-    "memberCount": "{{count}} concepts",
+    "memberCount_one": "{{count}} concept",
+    "memberCount_other": "{{count}} concepts",
     "livesHere": "Lives here",
-    "andMore": "…and {{count}} more",
+    "andMore_one": "…and {{count}} more",
+    "andMore_other": "…and {{count}} more",
     "goalAreaNotStarted": "This part of the goal has not been started",
     "zoomInPrompt": "Scroll up to go in",
     "goalNotStarted": "This goal has not started; once you begin, what happens shows up here",
@@ -94,7 +99,8 @@
     "treeAria": "The knowledge network of this area",
     "expandNode": "Expand \"{{label}}\"",
     "viewNode": "Open \"{{label}}\"",
-    "aggregateLabel": "{{label}} · {{count}} concepts",
+    "aggregateLabel_one": "{{label}} · {{count}} concept",
+    "aggregateLabel_other": "{{label}} · {{count}} concepts",
     "nextStepBadge": "Next step"
   },
   "goal": {
@@ -115,7 +121,8 @@
     "gapAlreadyKnow": "I already know this",
     "gapSkip": "Skip for now",
     "gapChangedMind": "Changed your mind? Breaking the goal down again brings them back.",
-    "compositionCount": "This goal covers {{count}} concepts",
+    "compositionCount_one": "This goal covers {{count}} concept",
+    "compositionCount_other": "This goal covers {{count}} concepts",
     "compositionNewDirection": "New ground you have not touched"
   },
   "compare": {
@@ -150,7 +157,8 @@
     "matched": "Matches your \"{{label}}\"",
     "viaAlias": "(via \"{{text}}\" in the source)",
     "noMatch": "No match in your concepts yet",
-    "moreHubs": "{{count}} more areas can be broken down — open them in the tree",
+    "moreHubs_one": "{{count}} more area can be broken down — open it in the tree",
+    "moreHubs_other": "{{count}} more areas can be broken down — open them in the tree",
     "customIntro": "Want to compare against something outside the occupation directory? Turn on \"Comparison research (experimental)\" in settings",
     "experimental": "Experimental",
     "customPlaceholder": "Type a topic to compare against, for example \"data analysis\"",
@@ -164,10 +172,13 @@
     "buildCostUnknown": "unknown",
     "buildDraftFailed": "The AI could not draft the source list this time; you can retry",
     "buildSourcesFailed": "Most of the cited sources did not check out, so this build was discarded",
-    "buildDropped": "; {{count}} entries were dropped because their sources did not check out",
+    "buildDropped_one": "; {{count}} entry was dropped because its sources did not check out",
+    "buildDropped_other": "; {{count}} entries were dropped because their sources did not check out",
     "goalNeedsNetwork": "This needs the internet and an AI service to build a goal",
     "goalTitle": "Be capable as a {{profile}}",
-    "goalText": "{{title}}. The official knowledge and tool list for this direction ({{profile}}; pick from it, you do not need all of it): {{leaves}}"
+    "goalText": "{{title}}. The official knowledge and tool list for this direction ({{profile}}; pick from it, you do not need all of it): {{leaves}}",
+    "goalCreated": "Goal created — the recommendations take it from here; come back any time to see the overlap.",
+    "goalFailed": "That did not go through this time; you can retry."
   },
   "frontier": {
     "openerWithPrereq": "\"{{label}}\" could be next — {{labels}}, which you already have, sits right beside it. Start wherever you like.",

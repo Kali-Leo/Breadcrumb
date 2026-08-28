@@ -11,6 +11,7 @@ let idCounter = 0;
 const testDefaults = {
   newId: () => `id-${++idCounter}`,
   nowIso: () => "2026-08-01T12:00:00Z",
+  sourceMessageId: "msg-1",
 };
 
 function emptyJudged(): EdgeJudgeResult {
@@ -214,7 +215,7 @@ describe("planEdgeJudgeResult helps edges", () => {
           pairId: "p0",
           relation: "helps",
           direction: null,
-          weight: "强",
+          weight: "strong",
           confidence: 0.6,
           reasoning: "x",
         },
@@ -268,7 +269,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           label: "费曼技巧",
           summary: "用简单语言复述",
           helpsLabels: ["导数"],
-          weight: "强",
+          weight: "strong",
           confidence: 0.7,
         },
       ],
@@ -299,7 +300,7 @@ describe("planEdgeJudgeResult method nodes", () => {
           label: "费曼技巧",
           summary: "s",
           helpsLabels: ["不存在的知识点"],
-          weight: "强",
+          weight: "strong",
           confidence: 0.7,
         },
       ],
@@ -320,12 +321,18 @@ describe("planEdgeJudgeResult method nodes", () => {
     const judged: EdgeJudgeResult = {
       edges: [],
       methodNodes: [
-        { label: "间隔重复", summary: "s1", helpsLabels: ["导数"], weight: "中", confidence: 0.6 },
+        {
+          label: "间隔重复",
+          summary: "s1",
+          helpsLabels: ["导数"],
+          weight: "medium",
+          confidence: 0.6,
+        },
         {
           label: "衍生方法",
           summary: "s2",
           helpsLabels: ["间隔重复"],
-          weight: "弱",
+          weight: "weak",
           confidence: 0.5,
         },
       ],
@@ -353,7 +360,7 @@ describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
           label: "拉格朗日乘数法",
           summary: "带约束的极值问题求解方法",
           connectsToLabel: "导数",
-          helpsLevel: "中",
+          helpsLevel: "medium",
         },
       ],
     };
@@ -383,7 +390,7 @@ describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
       edges: [],
       methodNodes: [],
       adjacentConcepts: [
-        { label: "导数", summary: "s", connectsToLabel: "极限", helpsLevel: "强" },
+        { label: "导数", summary: "s", connectsToLabel: "极限", helpsLevel: "strong" },
       ],
     };
     const plan = planEdgeJudgeResult({
@@ -405,7 +412,7 @@ describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
       edges: [],
       methodNodes: [],
       adjacentConcepts: [
-        { label: "新概念", summary: "s", connectsToLabel: "不存在", helpsLevel: "强" },
+        { label: "新概念", summary: "s", connectsToLabel: "不存在", helpsLevel: "strong" },
       ],
     };
     const plan = planEdgeJudgeResult({
@@ -424,8 +431,8 @@ describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
       edges: [],
       methodNodes: [],
       adjacentConcepts: [
-        { label: "新概念", summary: "s1", connectsToLabel: "导数", helpsLevel: "弱" },
-        { label: "新概念", summary: "s2", connectsToLabel: "导数", helpsLevel: "强" },
+        { label: "新概念", summary: "s1", connectsToLabel: "导数", helpsLevel: "weak" },
+        { label: "新概念", summary: "s2", connectsToLabel: "导数", helpsLevel: "strong" },
       ],
     };
     const plan = planEdgeJudgeResult({

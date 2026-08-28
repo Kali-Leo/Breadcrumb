@@ -4,7 +4,7 @@
  * occupation's profile fully offline from the bundled dataset (plus its timeliness patch
  * when one exists), registering tool/knowledge leaf concepts so the anchor sweep can judge
  * them. Main exports: searchOccupations, createOccupationProfile, openPracticeConversation,
- * OccupationHit.
+ * practiceConversationTitle, OccupationHit.
  */
 import type { CanonicalConceptRow } from "@breadcrumb/core-db";
 import {
@@ -15,21 +15,42 @@ import {
   type OnetOccupation,
   type TimelinessPatchItem,
 } from "@breadcrumb/plugin-compare";
+import i18next from "i18next";
 import { CANONICAL_MOUNTS } from "../data/canonicalMounts";
 import { bundledContentMatches } from "../data/contentLanguage";
-import escoDataset from "../data/generated/escoDataset.json";
-import onetDataset from "../data/generated/onetDataset.json";
 import timelinessPatches from "../data/generated/timelinessPatches.json";
+import { asStoredText } from "../i18n/storedText";
 import { definitionToItemRows } from "./compareActions";
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
 
-const OCCUPATIONS = (onetDataset as { occupations: OnetOccupation[] }).occupations;
 const PATCHES = timelinessPatches as Record<string, TimelinessPatchItem[]>;
-const ESCO = escoDataset as unknown as {
+
+interface EscoData {
   concepts: EscoConceptDict;
   occupations: Record<string, EscoOccupationEntry | undefined>;
-};
+}
+
+/** The two reference datasets are 13.8 MB of JSON that only the occupation page ever reads.
+ * Loading them through `await import()` keeps them out of the startup chunk — on a slow
+ * machine that parse cost is paid once, on demand, instead of before the first paint. Same
+ * cached-promise shape as the bundled language pack in diglotWeave.ts. */
+let onetPromise: Promise<readonly OnetOccupation[]> | null = null;
+let escoPromise: Promise<EscoData> | null = null;
+
+function loadOccupations(): Promise<readonly OnetOccupation[]> {
+  onetPromise ??= import("../data/generated/onetDataset.json").then(
+    (module) => (module.default as unknown as { occupations: OnetOccupation[] }).occupations,
+  );
+  return onetPromise;
+}
+
+function loadEsco(): Promise<EscoData> {
+  escoPromise ??= import("../data/generated/escoDataset.json").then(
+    (module) => module.default as unknown as EscoData,
+  );
+  return escoPromise;
+}
 
 export interface OccupationHit {
   code: string;
@@ -43,15 +64,16 @@ export interface OccupationHit {
  * titles first, then alternate titles. Deterministic, local, zero cost — the confirmation
  * UI shows these候选 and only an explicit pick builds anything.
  */
-export function searchOccupations(query: string, limit = 6): OccupationHit[] {
+export async function searchOccupations(query: string, limit = 6): Promise<OccupationHit[]> {
   // The directory is Chinese material; in another interface language the search finds
   // nothing and the page falls through to "build a comparison with the AI", which works in
   // any language (spec 058 §3).
   if (!bundledContentMatches()) return [];
   const needle = normalizeLabel(query);
   if (needle.length < 2) return [];
+  const occupations = await loadOccupations();
   const hits: OccupationHit[] = [];
-  for (const occupation of OCCUPATIONS) {
+  for (const occupation of occupations) {
     if (normalizeLabel(occupation.title).includes(needle)) {
       hits.push({ code: occupation.code, title: occupation.title, matchedAlt: null });
       continue;
@@ -71,10 +93,12 @@ export function searchOccupations(query: string, limit = 6): OccupationHit[] {
  * sweep can judge user nodes against them later. Returns the profile id.
  */
 export async function createOccupationProfile(code: string): Promise<string | null> {
-  const occupation = OCCUPATIONS.find((candidate) => candidate.code === code);
+  const occupations = await loadOccupations();
+  const occupation = occupations.find((candidate) => candidate.code === code);
   if (occupation === undefined) return null;
   const patch = PATCHES[code] ?? [];
-  const escoEntry = ESCO.occupations[code];
+  const esco = await loadEsco();
+  const escoEntry = esco.occupations[code];
   const definition = buildOccupationProfile(
     occupation,
     patch,
@@ -82,7 +106,7 @@ export async function createOccupationProfile(code: string): Promise<string | nu
       ? null
       : {
           entry: escoEntry,
-          concepts: ESCO.concepts,
+          concepts: esco.concepts,
           mounts: bundledContentMatches() ? CANONICAL_MOUNTS : new Map(),
         },
   );
@@ -120,6 +144,14 @@ export async function createOccupationProfile(code: string): Promise<string | nu
   return definition.id;
 }
 
+/** The title a practice conversation is stored under — and the string
+ * openPracticeConversation compares against to decide whether one already exists. It is that
+ * comparison that makes the isolates unacceptable here: an invisible character is enough to
+ * make an existing conversation look like a different one and be created a second time. */
+export function practiceConversationTitle(label: string): string {
+  return asStoredText(i18next.t("palace:frontier.practiceTitle", { label }));
+}
+
 /**
  * Finds or creates the saved-but-sidebar-hidden discussion for a practice item. A new
  * conversation is seeded with one opener message quoting the task's verbatim citation, so
@@ -127,7 +159,7 @@ export async function createOccupationProfile(code: string): Promise<string | nu
  */
 export async function openPracticeConversation(label: string, sourceRef: string): Promise<string> {
   const repos = await getRepos();
-  const title = `【实践】${label}`;
+  const title = practiceConversationTitle(label);
   const existing = (await repos.conversations.listByKind("practice")).find(
     (conversation) => conversation.title === title,
   );
@@ -144,7 +176,7 @@ export async function openPracticeConversation(label: string, sourceRef: string)
     id: newId(),
     conversation_id: conversationId,
     role: "assistant",
-    content: `这里探讨怎么完成这条实践——${sourceRef}。先说说你目前做到哪一步，或者手头有什么环境，从那里开始。`,
+    content: asStoredText(i18next.t("palace:frontier.practiceOpener", { sourceRef })),
     created_at: nowIso(),
     teaching_mode: null,
     parent_id: null,

@@ -2,10 +2,12 @@
  * Purpose: teach-back explanation quality → mastery evidence (vision/09 #2). After each
  * round in a teach conversation, one metered call judges the learner's explanation
  * (principled / surface / flawed, Chi's distinction); principled and surface land as
- * high-weight mastery claims on the topic's node. Fails soft into ai_failures.
+ * high-weight mastery claims on the topic's node, and every verdict — flawed included — lands
+ * as one FSRS-graded sighting. Fails soft into ai_failures.
  * Side effect on import: subscribes to chat:responseFinished.
  * Main exports: judgeTeachRound (exported for reuse; subscription wires it).
  */
+import type { NodeSightingGrade } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import { appEventBus, useChatStore } from "../stores/chatStore";
@@ -14,7 +16,7 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 import { teachTopicFromTitle } from "./teachActions";
 import { newId, nowIso } from "./time";
 
@@ -24,6 +26,17 @@ const verdictSchema = z.object({
   grade: z.enum(["principled", "surface", "flawed"]),
   reason: z.string().max(200),
 });
+
+type TeachVerdictGrade = z.infer<typeof verdictSchema>["grade"];
+
+/** The verdict is a graded retrieval, so it also becomes one FSRS-rated footprint: explaining
+ * the principle is an easy retrieval, a correct retelling an ordinary one, and an explanation
+ * containing a real error is a failed one. */
+const SIGHTING_GRADE_BY_VERDICT: Record<TeachVerdictGrade, NodeSightingGrade> = {
+  principled: "easy",
+  surface: "good",
+  flawed: "again",
+};
 
 /** Judges the learner's latest explanation in a teach-back round and records mastery
  * evidence for the matching node (exact label match; no node → no spend). Covers both
@@ -76,7 +89,22 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
       conversationId,
       usage,
     });
-    if (parsed.grade === "flawed") return; // no positive evidence; the student's follow-up probes it
+    // A teach-back is a retrieval attempt, so every verdict — flawed included — lands as one
+    // graded sighting feeding the FSRS estimate (design audit 2026-08-28, 记忆与遗忘模型 #1).
+    await repos.nodeSightings.record({
+      id: newId(),
+      node_id: node.id,
+      conversation_id: conversationId,
+      message_id: null,
+      created_at: nowIso(),
+      origin_node_id: null,
+      grade: SIGHTING_GRADE_BY_VERDICT[parsed.grade],
+    });
+    // A flawed explanation still writes no claim and still emits nothing: the negative signal
+    // belongs to the internal estimate only, and the student persona's follow-up is what probes
+    // the misconception. The 2026-08-28 audit named this boundary as correct — keep it.
+    // (memoryStore's post-round refresh picks the sighting up on its own timer.)
+    if (parsed.grade === "flawed") return;
     await repos.masteryClaims.insert({
       id: newId(),
       node_id: node.id,
@@ -87,6 +115,11 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
     appEventBus.emit("mastery:updated", { changedNodeIds: [node.id] });
   } catch (error) {
     void recordAiFailure("teach-quality", error);
+    void recordFailedCallUsage(error, {
+      purpose: "teach-quality",
+      model: settings.apiConfig.model,
+      conversationId,
+    });
   }
 }
 

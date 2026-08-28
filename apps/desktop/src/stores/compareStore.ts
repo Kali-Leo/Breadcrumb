@@ -9,6 +9,7 @@ import type { ComparisonProfileRow } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
 import i18next from "i18next";
 import { create } from "zustand";
+import { asStoredText } from "../i18n/storedText";
 import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
 import { runAnchorSweep } from "../lib/compareAlignActions";
 import { runExperimentalProfileBuild } from "../lib/compareBuildActions";
@@ -322,12 +323,18 @@ export const useCompareStore = create<CompareState>((set, get) => ({
         for (const child of node.children) walk(child);
       };
       walk(tree);
-      const goalTitle = i18next.t("palace:compare.goalTitle", { profile: profile.title });
-      const goalText = i18next.t("palace:compare.goalText", {
-        title: goalTitle,
-        profile: profile.title,
-        leaves: leafLabels.slice(0, 60).join(i18next.t("common:list.separator")),
-      });
+      // Stored text: the title is written to the goal row and the text goes to the model, so
+      // neither may carry t()'s bidirectional isolates (see i18n/storedText.ts).
+      const goalTitle = asStoredText(
+        i18next.t("palace:compare.goalTitle", { profile: profile.title }),
+      );
+      const goalText = asStoredText(
+        i18next.t("palace:compare.goalText", {
+          title: goalTitle,
+          profile: profile.title,
+          leaves: leafLabels.slice(0, 60).join(i18next.t("common:list.separator")),
+        }),
+      );
       const planner = usePlannerStore.getState();
       const mapping = await requestGoalMapping(
         settings.apiConfig,
@@ -339,11 +346,11 @@ export const useCompareStore = create<CompareState>((set, get) => ({
       await planner.recompute();
       set({
         generatingGoal: false,
-        goalNote: "目标已生成——学习引导交给推荐系统；这里随时可以回来看重合比例",
+        goalNote: i18next.t("palace:compare.goalCreated"),
       });
     } catch (error) {
       console.warn("goal generation from profile skipped:", error);
-      set({ generatingGoal: false, goalNote: "这一步没能完成，可以点一下重试" });
+      set({ generatingGoal: false, goalNote: i18next.t("palace:compare.goalFailed") });
     }
   },
 }));

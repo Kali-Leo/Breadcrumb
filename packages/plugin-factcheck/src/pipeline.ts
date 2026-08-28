@@ -4,6 +4,7 @@
  * Main exports: runFactCheck, FactCheckDeps, FactCheckReport, CheckedClaim.
  */
 import {
+  ChatJsonError,
   type ChatMessage,
   chatJson,
   type LlmClientConfig,
@@ -11,7 +12,9 @@ import {
 } from "@breadcrumb/core-llm";
 import type { EvidenceItem, EvidenceProvider } from "./evidence/provider";
 import { buildClaimExtractionMessages, claimExtractionSchema } from "./extraction";
-import { buildVerdictMessages, type ClaimRelationship, verdictSchema } from "./verdict";
+import { gatherEvidence } from "./gathering";
+import { seededShuffle } from "./shuffle";
+import { buildVerdictMessages, type ClaimRelationship, createVerdictSchema } from "./verdict";
 
 export interface FactCheckDeps {
   llmConfig: LlmClientConfig;
@@ -24,17 +27,27 @@ export interface FactCheckDeps {
 export interface CheckedClaim {
   text: string;
   relationship: ClaimRelationship;
+  /**
+   * The judge's own sentence, in the answer's language — and the empty string whenever the
+   * pipeline rather than the judge decided this claim, because a headless package holds no
+   * wording (spec 058 §2). The app writes those sentences from its catalogue; `relationship`
+   * plus whether any evidence is in hand tells the three cases apart, so no extra field is
+   * needed: `unavailable` = the search never got out; `insufficient` with no evidence = the
+   * search completed and found nothing; `insufficient` with evidence = the judging call
+   * itself failed. The judge's own reasoning is never empty (the schema demands min(1)).
+   */
   reasoning: string;
+  /** Ordered cited-first — the links the judge actually leaned on come before the rest. */
   evidence: EvidenceItem[];
 }
 
 export interface FactCheckReport {
   claims: CheckedClaim[];
   usage: TokenUsage;
+  /** Evidence providers that failed at least once during this run. The headless package has
+   * no DB; the host records these in ai_failures (spec 014). */
+  failedProviders: string[];
 }
-
-const NO_EVIDENCE_REASONING = "我没有找到能佐证这一条的公开资料，值得再确认一下。";
-const VERDICT_FAILED_REASONING = "核查中途遇到了网络波动，这一条暂时没能完成判定。";
 
 export async function runFactCheck(
   deps: FactCheckDeps,
@@ -43,6 +56,7 @@ export async function runFactCheck(
 ): Promise<FactCheckReport> {
   const maxEvidence = deps.maxEvidencePerClaim ?? 3;
   const usages: TokenUsage[] = [];
+  const failedProviders = new Set<string>();
 
   const extraction = await chatJson(
     deps.llmConfig,
@@ -53,53 +67,48 @@ export async function runFactCheck(
 
   const claims: CheckedClaim[] = [];
   for (const claim of extraction.parsed.claims) {
-    const evidence = await gatherEvidence(deps.providers, claim.queries, maxEvidence);
-    if (evidence.length === 0) {
-      claims.push({
-        text: claim.text,
-        relationship: "insufficient",
-        reasoning: NO_EVIDENCE_REASONING,
-        evidence: [],
-      });
+    const gathered = await gatherEvidence(deps.providers, claim.queries, maxEvidence);
+    for (const name of gathered.failedProviders) failedProviders.add(name);
+    if (gathered.items.length === 0) {
+      claims.push(emptyEvidenceClaim(claim.text, gathered.searchFailed));
       continue;
     }
+    // Shuffled before judging, seeded by the claim so a re-run of the same claim gets the
+    // same order: the judge's position bias must not track provider priority.
+    const evidence = seededShuffle(gathered.items, claim.text);
     claims.push(await judgeClaim(deps.llmConfig, claim.text, evidence, usages));
   }
 
-  return { claims, usage: sumUsages(usages) };
+  return { claims, usage: sumUsages(usages), failedProviders: [...failedProviders] };
 }
 
-async function gatherEvidence(
-  providers: readonly EvidenceProvider[],
-  queries: readonly string[],
-  maxEvidence: number,
-): Promise<EvidenceItem[]> {
-  const evidence: EvidenceItem[] = [];
-  const seenUrls = new Set<string>();
-  // Fair share per query: one badly-phrased query must not fill the whole quota.
-  const perQueryCap = Math.ceil(maxEvidence / Math.max(queries.length, 1));
-  for (const query of queries) {
-    let takenForQuery = 0;
-    for (const provider of providers) {
-      if (evidence.length >= maxEvidence || takenForQuery >= perQueryCap) break;
-      const items = await provider.search(
-        query,
-        Math.min(perQueryCap - takenForQuery, maxEvidence - evidence.length),
-      );
-      for (const item of items) {
-        if (
-          !seenUrls.has(item.url) &&
-          evidence.length < maxEvidence &&
-          takenForQuery < perQueryCap
-        ) {
-          seenUrls.add(item.url);
-          evidence.push(item);
-          takenForQuery += 1;
-        }
-      }
+/** No evidence in hand — either the search came back empty, or it never came back at all.
+ * No judge spoke here, so no reasoning is written: the app says it in the reader's language. */
+function emptyEvidenceClaim(text: string, searchFailed: boolean): CheckedClaim {
+  return {
+    text,
+    relationship: searchFailed ? "unavailable" : "insufficient",
+    reasoning: "",
+    evidence: [],
+  };
+}
+
+/** Cited evidence first (in the judge's own citation order), everything else after. */
+function citedFirst(
+  evidence: readonly EvidenceItem[],
+  supporting: readonly number[],
+): EvidenceItem[] {
+  const cited: EvidenceItem[] = [];
+  const takenIndices = new Set<number>();
+  for (const oneBasedIndex of supporting) {
+    const item = evidence[oneBasedIndex - 1];
+    if (item !== undefined && !takenIndices.has(oneBasedIndex)) {
+      takenIndices.add(oneBasedIndex);
+      cited.push(item);
     }
   }
-  return evidence;
+  const rest = evidence.filter((_item, index) => !takenIndices.has(index + 1));
+  return [...cited, ...rest];
 }
 
 async function judgeClaim(
@@ -110,21 +119,21 @@ async function judgeClaim(
 ): Promise<CheckedClaim> {
   const messages: ChatMessage[] = buildVerdictMessages(claimText, evidence);
   try {
-    const verdict = await chatJson(llmConfig, messages, verdictSchema);
+    const verdict = await chatJson(llmConfig, messages, createVerdictSchema(evidence.length));
     usages.push(verdict.usage);
     return {
       text: claimText,
       relationship: verdict.parsed.relationship,
       reasoning: verdict.parsed.reasoning,
-      evidence,
+      evidence: citedFirst(evidence, verdict.parsed.supportingEvidence),
     };
-  } catch {
-    return {
-      text: claimText,
-      relationship: "insufficient",
-      reasoning: VERDICT_FAILED_REASONING,
-      evidence,
-    };
+  } catch (error) {
+    // The provider billed us for every attempt that reached it, including the ones we then
+    // rejected — dropping that usage would under-state the user's spend (宪法原则 2).
+    if (error instanceof ChatJsonError) usages.push(error.usage);
+    // Evidence in hand but no reasoning: the app reads that pair as "the judging call did
+    // not finish" and writes the sentence itself.
+    return { text: claimText, relationship: "insufficient", reasoning: "", evidence };
   }
 }
 

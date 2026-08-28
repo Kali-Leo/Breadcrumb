@@ -11,12 +11,15 @@ import type { ReplacementPatch } from "@breadcrumb/plugin-diglot-weave";
 import { applyPatches } from "@breadcrumb/plugin-diglot-weave";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { contextSentenceFor } from "../lib/contextSentence";
+import { wovenContextSentenceFor } from "../lib/contextSentence";
 import { computeDiglotCardPosition } from "../lib/diglotCardPosition";
 import { useDiglotStore } from "../stores/diglotStore";
 import { DiglotWordCard } from "./DiglotWordCard";
 
-/** Messages whose exposure signals already fired this session. */
+/** Runs whose exposure signals already fired this session — a duplicate-event guard only.
+ * It is deliberately not persisted and not pruned; placement no longer trusts it, because a
+ * restart replays exposures for old messages: the store re-checks the event log before any
+ * exposure counts as first-encounter evidence (audit 2026-08-28 #2d). */
 const exposedMessages = new Set<string>();
 
 /** Rendered card width (Tailwind w-64) — used for horizontal clamping. */
@@ -78,7 +81,7 @@ export function DiglotText({
                   patch.lemma,
                   "exposure",
                   messageId,
-                  contextSentenceFor(content, patch),
+                  wovenContextSentenceFor(content, patches, patch),
                   null,
                 );
               }
@@ -108,7 +111,7 @@ export function DiglotText({
           patch.lemma,
           "guess_abandoned",
           messageId,
-          contextSentenceFor(content, patch),
+          wovenContextSentenceFor(content, patches, patch),
           null,
         );
       }
@@ -228,8 +231,9 @@ export function DiglotText({
                   <DiglotWordCard
                     patch={segment.patch}
                     entry={loaded.pack.entries[segment.patch.lemma] ?? null}
-                    context={contextSentenceFor(content, {
-                      ...segment.patch,
+                    // The WOVEN sentence: the raw one would print the source word the
+                    // card is asking the learner to recall (audit 2026-08-28 #1).
+                    context={wovenContextSentenceFor(content, patches, {
                       start: segment.patch.start + base,
                       end: segment.patch.end + base,
                     })}

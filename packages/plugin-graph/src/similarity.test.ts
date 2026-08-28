@@ -4,7 +4,7 @@
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { fallbackCandidatePairs, rankCandidatePairs } from "./similarity";
+import { fallbackCandidatePairs, MAX_FALLBACK_SIBLINGS, rankCandidatePairs } from "./similarity";
 
 function embedding(nodeId: string, vector: number[]): NodeEmbeddingRow {
   return {
@@ -128,5 +128,47 @@ describe("fallbackCandidatePairs", () => {
   it("returns [] for a root new node with no existing siblings and recentN 0", () => {
     const nodes = [node("new1", null, "2026-08-01T00:00:00Z")];
     expect(fallbackCandidatePairs(nodes, ["new1"], 0)).toEqual([]);
+  });
+
+  it("caps siblings at MAX_FALLBACK_SIBLINGS, newest first", () => {
+    // A parent with 40 children used to produce 40 pairs for ONE new node, while the edge
+    // judge's schema accepts at most 20 verdicts per call (design audit 2026-08-28 #4).
+    const nodes = [
+      node("parent", null, "2026-01-01T00:00:00Z"),
+      ...Array.from({ length: 40 }, (_unused, index) =>
+        node(
+          `sibling-${index}`,
+          "parent",
+          `2026-02-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+        ),
+      ),
+      node("new1", "parent", "2026-08-01T00:00:00Z"),
+    ];
+    const pairs = fallbackCandidatePairs(nodes, ["new1"], 0);
+    expect(pairs).toHaveLength(MAX_FALLBACK_SIBLINGS);
+    // Newest siblings win, matching the recent-N pool's own bias.
+    expect(pairs[0]?.existingNodeId).toBe("sibling-39");
+  });
+
+  it("stays bounded for a whole batch of new nodes under the same crowded parent", () => {
+    const nodes = [
+      node("parent", null, "2026-01-01T00:00:00Z"),
+      ...Array.from({ length: 40 }, (_unused, index) =>
+        node(
+          `sibling-${index}`,
+          "parent",
+          `2026-02-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+        ),
+      ),
+      ...Array.from({ length: 5 }, (_unused, index) =>
+        node(`new-${index}`, "parent", "2026-08-01T00:00:00Z"),
+      ),
+    ];
+    const newIds = Array.from({ length: 5 }, (_unused, index) => `new-${index}`);
+    const pairs = fallbackCandidatePairs(nodes, newIds, 5);
+    // 5 new nodes x (<=8 siblings + <=5 recent, deduplicated) — bounded, and far below the
+    // 200 pairs the unbounded version produced.
+    expect(pairs.length).toBeLessThanOrEqual(5 * (MAX_FALLBACK_SIBLINGS + 5));
+    expect(pairs.length).toBeLessThan(200);
   });
 });

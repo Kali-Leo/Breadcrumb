@@ -1,6 +1,6 @@
 /**
  * Purpose: unit tests for runSynonymGate (spec 015 desktop wiring) — candidate filtering,
- * 同一/不同/degraded verdict branches, and that a gate failure never throws (mocks embedTexts,
+ * same/different/degraded verdict branches, and that a gate failure never throws (mocks embedTexts,
  * the DB, metering, failure logging, and chatJson).
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -22,7 +22,11 @@ const recordAiFailureMock = vi.fn();
 vi.mock("./failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
 
 const recordMeteredCallMock = vi.fn();
-vi.mock("./metering", () => ({ recordMeteredCall: recordMeteredCallMock }));
+const recordFailedCallUsageMock = vi.fn();
+vi.mock("./metering", () => ({
+  recordMeteredCall: recordMeteredCallMock,
+  recordFailedCallUsage: recordFailedCallUsageMock,
+}));
 
 const chatJsonMock = vi.fn();
 vi.mock("@breadcrumb/core-llm", async () => {
@@ -39,6 +43,7 @@ afterEach(() => {
   embedTextsMock.mockReset();
   recordAiFailureMock.mockReset();
   recordMeteredCallMock.mockReset();
+  recordFailedCallUsageMock.mockReset();
   chatJsonMock.mockReset();
 });
 
@@ -89,11 +94,13 @@ describe("runSynonymGate", () => {
     expect(recordAiFailureMock).not.toHaveBeenCalled();
   });
 
-  it("passes through when no existing embedding is similar enough", async () => {
+  it("passes through when the tree has no embeddings at all to compare against", async () => {
+    // A single existing node always clears its own relative gate (mean === best), which is
+    // correct — one point has no landscape to be an outlier in. The pass-through case is an
+    // empty candidate pool, not a "far enough away" one; the audit's whole point is that the
+    // real model never puts anything far away.
     embedTextsMock.mockResolvedValueOnce([[1, 0]]);
-    listAllMock.mockResolvedValueOnce([
-      { node_id: "existing-1", model: "m", vector_json: JSON.stringify([0, 1]), created_at: "t" },
-    ]);
+    listAllMock.mockResolvedValueOnce([]);
     const plan = {
       newNodes: [newNode("new-1", "if缩进", "s")],
       sightings: [
@@ -118,13 +125,13 @@ describe("runSynonymGate", () => {
     expect(chatJsonMock).not.toHaveBeenCalled();
   });
 
-  it("同一 verdict: drops the new node, redirects the sighting, and returns an alias to insert", async () => {
+  it("same verdict: drops the new node, redirects the sighting, and returns an alias to insert", async () => {
     embedTextsMock.mockResolvedValueOnce([[1, 0]]);
     listAllMock.mockResolvedValueOnce([
       { node_id: "existing-1", model: "m", vector_json: JSON.stringify([1, 0]), created_at: "t" },
     ]);
     chatJsonMock.mockResolvedValueOnce({
-      parsed: { verdicts: [{ pairId: "p0", verdict: "同一" }] },
+      parsed: { verdicts: [{ pairId: "p0", verdict: "same" }] },
       usage: { inputTokens: 5, outputTokens: 3 },
     });
     const plan = {
@@ -157,13 +164,13 @@ describe("runSynonymGate", () => {
     );
   });
 
-  it("不同 verdict: leaves the plan untouched", async () => {
+  it("different verdict: leaves the plan untouched", async () => {
     embedTextsMock.mockResolvedValueOnce([[1, 0]]);
     listAllMock.mockResolvedValueOnce([
       { node_id: "existing-1", model: "m", vector_json: JSON.stringify([1, 0]), created_at: "t" },
     ]);
     chatJsonMock.mockResolvedValueOnce({
-      parsed: { verdicts: [{ pairId: "p0", verdict: "不同" }] },
+      parsed: { verdicts: [{ pairId: "p0", verdict: "different" }] },
       usage: { inputTokens: 5, outputTokens: 3 },
     });
     const plan = {

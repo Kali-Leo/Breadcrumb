@@ -6,7 +6,7 @@
  * Main exports: mineConfusionPairs, ConfusionPartner, CONFUSION_THRESHOLD.
  */
 import type { DiglotWordGuessRow } from "@breadcrumb/core-db";
-import type { LoadedLanguagePack } from "./packSchema";
+import { type LoadedLanguagePack, resolveLemma } from "./packSchema";
 
 /** A pair needs this many occurrences to count as systematic (one slip is noise). */
 export const CONFUSION_THRESHOLD = 2;
@@ -23,9 +23,7 @@ export interface ConfusionPartner {
 function guessAsLemma(guess: string, loaded: LoadedLanguagePack): string | null {
   const trimmed = guess.trim();
   if (trimmed.length === 0) return null;
-  if (loaded.pack.entries[trimmed] !== undefined) return trimmed;
-  const viaForm = loaded.pack.forms[trimmed];
-  return viaForm ?? null;
+  return resolveLemma(trimmed, loaded);
 }
 
 /** Mines the guess log: for every word, its most-often-confused partner (≥ threshold).

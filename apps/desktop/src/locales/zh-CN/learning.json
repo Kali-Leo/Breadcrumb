@@ -14,7 +14,10 @@
     "contrastLabel": "易混对比",
     "guessCorrect": "是「{{word}}」。",
     "guessClose": "接近——它是「{{word}}」。",
-    "guessWrong": "它是「{{word}}」。"
+    "guessWrong": "它是「{{word}}」。",
+    "enableAria": "语言学习开关",
+    "llmRefineAria": "智能替换开关",
+    "dataSources": "词典与发音数据来自这些开源项目:CC-CEDICT · FrequencyWords · CMUdict"
   },
   "door": {
     "guessPrompt": "先猜猜：一句话说它是什么？",
@@ -47,7 +50,10 @@
     "barTitle": "🔎 本对话的专注探索（{{count}}）",
     "errorNoApi": "这一站没有生成成功：还没有配置 AI 服务。可以到设置里填好，再回来重试。",
     "timeToday": "今天 {{time}}",
-    "timeYesterday": "昨天 {{time}}"
+    "timeYesterday": "昨天 {{time}}",
+    "errorNoResponse": "一直没有收到响应",
+    "errorTimedOut": "响应超时",
+    "mapAria": "专注站点图"
   },
   "teach": {
     "sectionTitle": "换你讲（实验）",

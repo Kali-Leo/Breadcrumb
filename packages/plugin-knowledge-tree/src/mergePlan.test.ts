@@ -41,6 +41,24 @@ describe("normalizeLabel", () => {
     expect(normalizeLabel("闭包")).toBe("闭包");
   });
 
+  it("folds the optional space at a CJK/latin boundary, either side", () => {
+    expect(normalizeLabel("if 缩进")).toBe(normalizeLabel("if缩进"));
+    expect(normalizeLabel("缩进 if")).toBe(normalizeLabel("缩进if"));
+    expect(normalizeLabel("用 Python 写脚本")).toBe(normalizeLabel("用Python写脚本"));
+  });
+
+  it("keeps whitespace between latin words, where it carries meaning", () => {
+    expect(normalizeLabel("machine learning")).toBe("machine learning");
+    expect(normalizeLabel("machine learning")).not.toBe(normalizeLabel("machinelearning"));
+  });
+
+  it("does NOT fold traditional into simplified — a known, documented gap", () => {
+    // No maintained, small, cleanly-licensed mapping table exists on npm as of 2026-08-28;
+    // the embedding tier is what catches these today. Asserted so the gap stays visible
+    // instead of being rediscovered.
+    expect(normalizeLabel("財務報表")).not.toBe(normalizeLabel("财务报表"));
+  });
+
   it("keeps a label that is only a parenthetical instead of collapsing to empty", () => {
     expect(normalizeLabel("(Apple)")).toBe("(apple)");
   });
@@ -102,7 +120,7 @@ describe("planSynonymVerdictMerges", () => {
     const pairs: JudgedNodePair[] = [{ pairId: "p0", nodeAId: "a", nodeBId: "b" }];
     const instructions = planSynonymVerdictMerges(
       pairs,
-      [{ pairId: "p0", verdict: "同一" }],
+      [{ pairId: "p0", verdict: "same" }],
       nodesById,
     );
     expect(instructions).toEqual([
@@ -114,7 +132,7 @@ describe("planSynonymVerdictMerges", () => {
     const pairs: JudgedNodePair[] = [{ pairId: "p0", nodeAId: "a", nodeBId: "b" }];
     const instructions = planSynonymVerdictMerges(
       pairs,
-      [{ pairId: "p0", verdict: "不同" }],
+      [{ pairId: "p0", verdict: "different" }],
       nodesById,
     );
     expect(instructions).toEqual([]);
@@ -123,7 +141,7 @@ describe("planSynonymVerdictMerges", () => {
   it("ignores a verdict whose pairId is unknown", () => {
     const instructions = planSynonymVerdictMerges(
       [],
-      [{ pairId: "missing", verdict: "同一" }],
+      [{ pairId: "missing", verdict: "same" }],
       nodesById,
     );
     expect(instructions).toEqual([]);
@@ -140,8 +158,8 @@ describe("planSynonymVerdictMerges", () => {
     const instructions = planSynonymVerdictMerges(
       chainedPairs,
       [
-        { pairId: "p0", verdict: "同一" },
-        { pairId: "p1", verdict: "同一" },
+        { pairId: "p0", verdict: "same" },
+        { pairId: "p1", verdict: "same" },
       ],
       nodesById,
     );

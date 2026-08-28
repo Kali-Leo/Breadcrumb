@@ -221,6 +221,9 @@ export function pickRecommendation(input: {
     primary: {
       nodeId: entry.id,
       label: entry.label,
+      // Synthesised, not produced by frontier(): an entry node stands in for a region nobody
+      // has touched yet, and entry nodes are always concepts.
+      kind: "concept",
       score: 0,
       reason: { litPrerequisiteLabels: [], litHelpsSources: [], wasLitBefore: false },
     },

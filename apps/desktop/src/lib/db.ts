@@ -27,6 +27,7 @@ import {
   createNodeAliasesRepo,
   createNodeEmbeddingsRepo,
   createNodeMergeRepo,
+  createNodePairVerdictsRepo,
   createNodeSightingsRepo,
   createPracticeRepo,
   createResearchRepo,
@@ -50,6 +51,7 @@ export interface Repos {
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
   nodeAliases: ReturnType<typeof createNodeAliasesRepo>;
   nodeMerge: ReturnType<typeof createNodeMergeRepo>;
+  nodePairVerdicts: ReturnType<typeof createNodePairVerdictsRepo>;
   knowledgeEdges: ReturnType<typeof createKnowledgeEdgesRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
@@ -98,6 +100,7 @@ async function buildRepos(): Promise<Repos> {
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
     nodeAliases: createNodeAliasesRepo(sqlClient),
     nodeMerge: createNodeMergeRepo(sqlClient),
+    nodePairVerdicts: createNodePairVerdictsRepo(sqlClient),
     knowledgeEdges: createKnowledgeEdgesRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
@@ -145,6 +148,29 @@ async function openAndMigrate(): Promise<SqlClient> {
       });
     },
   };
+  await applyPragmas(sqlClient);
   await runMigrations(sqlClient);
   return sqlClient;
+}
+
+/** States the two PRAGMAs this app wants rather than inheriting them (design audit 2026-08-28,
+ * 数据层与性能 #4). The file is already WAL — sqlx sets that once at creation and it persists —
+ * and under WAL `synchronous=NORMAL` is the documented recommendation: a crash can lose the
+ * last few committed transactions but cannot corrupt the database, and it drops one fsync per
+ * commit, which is the dominant cost of bulk writes on a slow disk. busy_timeout is restated
+ * at sqlx's own default so a dependency change cannot silently shorten it.
+ *
+ * Honest about the reach: both are per-connection settings and tauri-plugin-sql's pool holds
+ * up to 10 connections, so this arms the connection these two calls land on — the one that
+ * then serves sequential traffic — not the whole pool. Arming every connection would need
+ * SqlitePoolOptions::after_connect on the Rust side, which the plugin does not expose.
+ *
+ * `foreign_keys` is deliberately absent for the same reason: arming one connection out of ten
+ * with the constraint the whole schema depends on would buy a false sense of coverage. It is
+ * on because sqlx sends `PRAGMA foreign_keys=ON` when it opens EVERY connection — a default
+ * pinned by sqlx_enables_foreign_keys_on_every_connection in src-tauri/src/pragma_defaults.rs,
+ * so an upgrade that changes it turns red instead of silently dropping referential integrity. */
+async function applyPragmas(sqlClient: SqlClient): Promise<void> {
+  await sqlClient.execute("PRAGMA busy_timeout = 5000");
+  await sqlClient.execute("PRAGMA synchronous = NORMAL");
 }

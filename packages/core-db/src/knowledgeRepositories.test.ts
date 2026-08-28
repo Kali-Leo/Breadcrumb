@@ -35,17 +35,29 @@ function makeFakeEdgesSql() {
     },
     execute: (sql: string, params?: readonly unknown[]) => {
       if (sql.startsWith("INSERT INTO knowledge_edges")) {
-        const [id, source_id, target_id, edge_type, weight, confidence, origin, created_at] =
-          params as [
-            string,
-            string,
-            string,
-            "requires" | "helps",
-            number,
-            number,
-            "llm" | "user",
-            string,
-          ];
+        const [
+          id,
+          source_id,
+          target_id,
+          edge_type,
+          weight,
+          confidence,
+          origin,
+          created_at,
+          reasoning,
+          source_message_id,
+        ] = params as [
+          string,
+          string,
+          string,
+          "requires" | "helps",
+          number,
+          number,
+          "llm" | "user",
+          string,
+          string | null,
+          string | null,
+        ];
         const key = `${source_id}::${target_id}::${edge_type}`;
         const existing = rows.get(key);
         if (existing === undefined || confidence > existing.confidence) {
@@ -58,6 +70,8 @@ function makeFakeEdgesSql() {
             confidence,
             origin,
             created_at,
+            reasoning,
+            source_message_id,
           });
         }
         return Promise.resolve();
@@ -82,6 +96,8 @@ const baseEdge: Omit<KnowledgeEdgeRow, "id" | "confidence"> = {
   weight: 1,
   origin: "llm",
   created_at: "2026-08-01T10:00:00Z",
+  reasoning: "求导的定义就写在极限上",
+  source_message_id: "msg-1",
 };
 
 describe("createKnowledgeEdgesRepo upsert", () => {

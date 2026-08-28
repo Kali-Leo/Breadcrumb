@@ -6,7 +6,7 @@
  * Main exports: CompareSection.
  */
 import type { OverlapNode } from "@breadcrumb/plugin-compare";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type OccupationHit, searchOccupations } from "../../lib/occupationActions";
 import { useCompareStore } from "../../stores/compareStore";
@@ -28,13 +28,20 @@ function OccupationPicker() {
   const createOccupation = useCompareStore((state) => state.createOccupation);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<OccupationHit[]>([]);
+  const latestQuery = useRef("");
   return (
     <div className="space-y-1">
       <input
         value={query}
         onChange={(event) => {
-          setQuery(event.target.value);
-          setHits(searchOccupations(event.target.value));
+          const next = event.target.value;
+          setQuery(next);
+          latestQuery.current = next;
+          // The directory loads on first keystroke; a slow load must not overwrite the hits
+          // of a query the user has since typed past.
+          void searchOccupations(next).then((found) => {
+            setHits((current) => (latestQuery.current === next ? found : current));
+          });
         }}
         placeholder={t("compare.searchPlaceholder")}
         className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"

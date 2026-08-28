@@ -15,14 +15,18 @@ describe("formatFocusSessionTimestamp", () => {
 
   const now = new Date(2026, 7, 14, 15, 30); // 2026-08-14 15:30 local
 
+  /** Every interpolated value comes back wrapped in U+2068…U+2069 (i18n/index.ts): invisible
+   * in a left-to-right interface, but really part of the string. */
+  const isolated = (value: string): string => `\u2068${value}\u2069`;
+
   it("renders today's timestamp as 今天 HH:mm", () => {
     const createdAt = new Date(2026, 7, 14, 9, 5).toISOString();
-    expect(formatFocusSessionTimestamp(createdAt, now)).toBe("今天 09:05");
+    expect(formatFocusSessionTimestamp(createdAt, now)).toBe(`今天 ${isolated("09:05")}`);
   });
 
   it("renders yesterday's timestamp as 昨天 HH:mm", () => {
     const createdAt = new Date(2026, 7, 13, 22, 0).toISOString();
-    expect(formatFocusSessionTimestamp(createdAt, now)).toBe("昨天 22:00");
+    expect(formatFocusSessionTimestamp(createdAt, now)).toBe(`昨天 ${isolated("22:00")}`);
   });
 
   it("renders anything older as a plain date", () => {

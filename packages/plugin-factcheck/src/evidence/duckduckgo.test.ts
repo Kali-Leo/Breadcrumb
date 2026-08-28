@@ -30,7 +30,7 @@ describe("createDuckDuckGoProvider", () => {
     });
     const provider = createDuckDuckGoProvider({ fetchImpl });
 
-    const items = await provider.search("speed of light", 3);
+    const { items } = await provider.search("speed of light", 3);
 
     expect(items).toEqual([
       {
@@ -42,11 +42,11 @@ describe("createDuckDuckGoProvider", () => {
     ]);
   });
 
-  it("returns [] when the search endpoint fails", async () => {
+  it("reports failed (not merely empty) when the search endpoint fails", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
     const provider = createDuckDuckGoProvider({ fetchImpl });
 
-    expect(await provider.search("anything", 3)).toEqual([]);
+    expect(await provider.search("anything", 3)).toEqual({ items: [], failed: true });
   });
 
   it("keeps a title paired with ITS OWN snippet even when a result block is nested oddly", async () => {
@@ -74,7 +74,7 @@ describe("createDuckDuckGoProvider", () => {
     });
     const provider = createDuckDuckGoProvider({ fetchImpl });
 
-    const items = await provider.search("speed of light", 3);
+    const { items } = await provider.search("speed of light", 3);
 
     expect(items).toEqual([
       {
@@ -86,14 +86,15 @@ describe("createDuckDuckGoProvider", () => {
     ]);
   });
 
-  it("warns with a distinctive prefix when a 200 response yields zero candidates", async () => {
+  it("warns and reports failed when a 200 response yields zero candidates", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response("<html></html>", { status: 200 }));
     const provider = createDuckDuckGoProvider({ fetchImpl });
 
-    expect(await provider.search("anything", 3)).toEqual([]);
+    // Rate limiting and markup drift both land here; neither says anything about the world.
+    expect(await provider.search("anything", 3)).toEqual({ items: [], failed: true });
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("[factcheck:duckduckgo]"));
     warn.mockRestore();
   });

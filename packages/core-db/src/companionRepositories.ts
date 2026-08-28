@@ -48,13 +48,17 @@ export function createCompanionMemoriesRepo(sql: SqlClient) {
         [isoNow, ...ids],
       );
     },
-    /** Sum of importance across every memory (observation or reflection) recorded since the
-     * companion's last reflection — the reflection trigger fires once this crosses a threshold
-     * (Stanford generative agents). */
+    /** Sum of OBSERVATION importance recorded since the companion's last reflection — the
+     * reflection trigger fires once this crosses a threshold (Stanford generative agents).
+     * Reflections are excluded on purpose: the window starts at the last reflection's own
+     * created_at, so counting reflections would feed their own importance (a reflection round
+     * writes several, each scored high) straight back into the next window and every single
+     * observation afterwards would re-trip the threshold — reflection every round, on one
+     * observation's worth of material. */
     async sumImportanceSince(companionId: string, isoSince: string): Promise<number> {
       const rows = await sql.select<{ total: number | null }>(
         `SELECT SUM(importance) AS total FROM companion_memories
-         WHERE companion_id = ? AND created_at >= ?`,
+         WHERE companion_id = ? AND kind = 'observation' AND created_at >= ?`,
         [companionId, isoSince],
       );
       return rows[0]?.total ?? 0;

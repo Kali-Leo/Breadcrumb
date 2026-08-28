@@ -1,7 +1,7 @@
 /**
  * Purpose: deterministic 30-day diglot journey simulator (spec 033 acceptance 6) — a
- * synthetic Zipf corpus flows through the real weave pipeline with a behavioral user
- * model; collects debt, starvation and constraint metrics. Zero LLM, zero DB, seeded PRNG.
+ * synthetic corpus flows through the real weave pipeline with a behavioral user model;
+ * collects debt, starvation and constraint metrics. Zero LLM, zero DB, seeded PRNG.
  * Main exports: simulateDiglotJourney, DiglotJourneyReport.
  */
 import type { DiglotPairId } from "@breadcrumb/core-db";
@@ -9,9 +9,8 @@ import {
   adaptiveNewWordCap,
   type CandidateOccurrence,
   countWordLikeTokens,
+  createMeetableDebtWindow,
   extractCandidates,
-  type LoadedLanguagePack,
-  loadLanguagePack,
   newWordCard,
   ratingForSignal,
   retrievabilityOf,
@@ -20,58 +19,20 @@ import {
   tokenizeMessage,
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
+import { mulberry32 } from "../util/prng";
+import { makeChatCorpus, makeSyntheticPack, SIM_PACK_WORDS } from "./diglotJourneyCorpus";
 
-/** Deterministic LCG so runs are replayable. */
-function makeRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 0x100000000;
-  };
-}
-
-/** A synthetic pack: `word001…wordN` → `t-word001…`, all t1Safe, rank = index. */
-export function makeSyntheticPack(wordCount: number): LoadedLanguagePack {
-  const entries: Record<string, unknown> = {};
-  for (let index = 0; index < wordCount; index += 1) {
-    const lemma = `word${String(index + 1).padStart(3, "0")}`;
-    entries[lemma] = {
-      target: `t-${lemma}`,
-      pos: "n",
-      reading: "",
-      altTargets: [],
-      freqRank: index + 1,
-      t1Safe: true,
-    };
-  }
-  return loadLanguagePack({
-    schemaVersion: 1,
-    id: "en:fr",
-    sourceLang: "en",
-    targetLang: "fr",
-    version: "sim",
-    attribution: ["synthetic"],
-    capabilities: { t1Safe: true, rtl: false, ruby: false },
-    forms: {},
-    entries,
-  });
-}
-
-/** Zipf-ish message: frequent words recur, rare words trail off — like real conversation. */
-function sampleMessage(random: () => number, wordCount: number, length: number): string {
-  const words: string[] = [];
-  for (let position = 0; position < length; position += 1) {
-    const zipf = Math.floor(wordCount ** random());
-    words.push(`word${String(Math.min(zipf + 1, wordCount)).padStart(3, "0")}`);
-    if (position % 8 === 7) words.push(",");
-  }
-  return `${words.join(" ")}.`;
-}
+/** FSRS stability (in days) at which a word counts as actually held, not just met once —
+ * the memory model expects ~90% recall a week later. */
+const HELD_STABILITY_DAYS = 7;
 
 export interface DiglotJourneyReport {
   days: number;
   /** Due-but-not-yet-rewoven word count sampled at the end of each day. */
   debtByDay: number[];
+  /** The part of that debt the conversation can still deliver — what the new-word throttle
+   * reads. Debt outside it is unpayable by construction: those words have left the chat. */
+  meetableDebtByDay: number[];
   /** Per re-encounter of a due word: days the learner actually waited for it — measured
    * from the later of (due date, previous encounter), so a word that keeps being shown
    * but keeps a past-due date is not miscounted as starved. */
@@ -81,6 +42,9 @@ export interface DiglotJourneyReport {
   /** Words introduced per day. */
   newWordsByDay: number[];
   totalWordsLearning: number;
+  /** Of those, the ones whose memory state actually grew (see HELD_STABILITY_DAYS) —
+   * introducing a word the chat never repeats does not teach it. */
+  wordsHeld: number;
 }
 
 /** Runs the journey: each day, several assistant messages get woven; the simulated user
@@ -93,8 +57,9 @@ export function simulateDiglotJourney(input: {
   density: number;
   newWordDailyBase: number;
 }): DiglotJourneyReport {
-  const pack = makeSyntheticPack(200);
-  const random = makeRandom(input.seed);
+  const pack = makeSyntheticPack(SIM_PACK_WORDS);
+  const corpus = makeChatCorpus({ seed: input.seed, wordCount: SIM_PACK_WORDS });
+  const random = mulberry32(input.seed);
   const cards = new Map<string, Card>();
   const recentKinds = new Map<string, string[]>();
   const encounters = new Map<string, number>();
@@ -103,12 +68,17 @@ export function simulateDiglotJourney(input: {
   const report: DiglotJourneyReport = {
     days: input.days,
     debtByDay: [],
+    meetableDebtByDay: [],
     overdueDaysAtReencounter: [],
     maxObservedDensity: 0,
     newWordsByDay: [],
     totalWordsLearning: 0,
+    wordsHeld: 0,
   };
-  const introductionRank = new Map(pack.introductionQueue.map((lemma, rank) => [lemma, rank]));
+  const introductionRank = pack.introductionRankByLemma;
+  // Same measure as the app layer (lib/diglotWeave.ts): debt counts only words the recent
+  // conversation can still deliver.
+  const debtWindow = createMeetableDebtWindow();
   // The journey simulates one learner on one language pair; FSRS state is keyed by it.
   const journeyPair: DiglotPairId = "sim-zh-en";
 
@@ -118,10 +88,12 @@ export function simulateDiglotJourney(input: {
       const now = new Date(startTime + day * 86400000 + messageIndex * 3600000);
       // Realistic assistant replies vary widely: 40–200 word tokens (tutoring replies are
       // often long-form), i.e. 1–4 weave slots at 2% density.
-      const content = sampleMessage(random, 200, 40 + Math.floor(random() * 160));
+      const content = corpus.message(random, 40 + Math.floor(random() * 160));
       const tokens = tokenizeMessage(content, pack.pack.sourceLang);
       const candidates: CandidateOccurrence[] = extractCandidates(tokens, pack);
-      const reviewDebt = [...cards.values()].filter((card) => card.due <= now).length;
+      debtWindow.noteMessageCandidates(candidates.map((candidate) => candidate.lemma));
+      const dueLemmas = [...cards].filter(([, card]) => card.due <= now).map(([lemma]) => lemma);
+      const reviewDebt = debtWindow.countMeetable(dueLemmas);
       const scheduled = scheduleReplacements({
         pairId: journeyPair,
         candidates,
@@ -169,9 +141,14 @@ export function simulateDiglotJourney(input: {
       }
     }
     const endOfDay = new Date(startTime + (day + 1) * 86400000);
-    report.debtByDay.push([...cards.values()].filter((card) => card.due <= endOfDay).length);
+    const due = [...cards].filter(([, card]) => card.due <= endOfDay).map(([lemma]) => lemma);
+    report.debtByDay.push(due.length);
+    report.meetableDebtByDay.push(debtWindow.countMeetable(due));
     report.newWordsByDay.push(newToday);
   }
   report.totalWordsLearning = cards.size;
+  report.wordsHeld = [...cards.values()].filter(
+    (card) => card.stability >= HELD_STABILITY_DAYS,
+  ).length;
   return report;
 }

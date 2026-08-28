@@ -84,10 +84,10 @@ function makeFakeFetch(): typeof fetch {
         signals: [
           {
             label: "测试概念",
-            curiosity: "中",
-            confusion: "弱",
-            boredom: "弱",
-            confidence: "中",
+            curiosity: "medium",
+            confusion: "weak",
+            boredom: "weak",
+            confidence: "medium",
             styles: [],
           },
         ],
@@ -225,10 +225,10 @@ describe("runJourney", () => {
           signals: [
             {
               label: "测试概念",
-              curiosity: "中",
-              confusion: "无",
-              boredom: "无",
-              confidence: "中",
+              curiosity: "medium",
+              confusion: "none",
+              boredom: "none",
+              confidence: "medium",
               styles: [],
             },
           ],

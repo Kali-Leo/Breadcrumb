@@ -24,6 +24,9 @@ export interface PlannerSnapshot {
   masteryByNode: Map<string, number>;
   interestByNode: Map<string, number>;
   frontierCandidates: FrontierCandidate[];
+  /** Half of frontier()'s hard gate — exposed so the invariant suite can re-derive the same
+   * gate instead of assuming the stricter "lit right now" version. */
+  previouslyLitNodeIds: Set<string>;
 }
 
 export async function computePlannerSnapshot(
@@ -71,5 +74,12 @@ export async function computePlannerSnapshot(
     evidenceWeightByNode,
   });
 
-  return { nodes, edges, masteryByNode, interestByNode, frontierCandidates };
+  return {
+    nodes,
+    edges,
+    masteryByNode,
+    interestByNode,
+    frontierCandidates,
+    previouslyLitNodeIds,
+  };
 }

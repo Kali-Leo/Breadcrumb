@@ -4,6 +4,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { createLlmClient } from "./client";
+import { STREAM_FIRST_BYTE_TIMEOUT_MS } from "./retry";
 
 function sseResponseFromLines(lines: readonly string[]): Response {
   const encoder = new TextEncoder();
@@ -16,6 +17,16 @@ function sseResponseFromLines(lines: readonly string[]): Response {
     },
   });
   return new Response(body, { status: 200 });
+}
+
+/** A client over an arbitrary fetch — for the tests that need to watch or fail the call. */
+function clientWith(fetchImpl: typeof fetch) {
+  return createLlmClient({
+    baseUrl: "https://api.example.com/v1",
+    apiKey: "test-key",
+    model: "test-model",
+    fetchImpl,
+  });
 }
 
 function makeClient(response: Response, capturedRequests: RequestInit[] = []) {
@@ -82,18 +93,13 @@ describe("createLlmClient.chatStream", () => {
         bodyController = controller;
       },
     });
-    const client = createLlmClient({
-      baseUrl: "https://api.example.com/v1",
-      apiKey: "test-key",
-      model: "test-model",
-      fetchImpl: (_url, init) => {
-        init?.signal?.addEventListener("abort", () => {
-          // Tauri's http plugin surfaces an internal resource error here, not AbortError —
-          // the client must normalize it regardless.
-          bodyController?.error(new Error("The resource id 7 is invalid"));
-        });
-        return Promise.resolve(new Response(body, { status: 200 }));
-      },
+    const client = clientWith((_url, init) => {
+      init?.signal?.addEventListener("abort", () => {
+        // Tauri's http plugin surfaces an internal resource error here, not AbortError —
+        // the client must normalize it regardless.
+        bodyController?.error(new Error("The resource id 7 is invalid"));
+      });
+      return Promise.resolve(new Response(body, { status: 200 }));
     });
 
     const abortController = new AbortController();
@@ -119,6 +125,62 @@ describe("createLlmClient.chatStream", () => {
       { signal: new AbortController().signal },
     );
     expect(result.content).toBe("ok");
+  });
+
+  it("retries a transient 503 before the stream ever opens", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(new Response("busy", { status: 503 }))
+        .mockResolvedValueOnce(
+          sseResponseFromLines(['data: {"choices":[{"delta":{"content":"ok"}}]}', "data: [DONE]"]),
+        );
+      const hi = [{ role: "user" as const, content: "hi" }];
+      const streaming = clientWith(fetchImpl).chatStream(hi, () => undefined);
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      expect((await streaming).content).toBe("ok");
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clears the first-byte deadline once a chunk lands, so a long answer is never cut off", async () => {
+    vi.useFakeTimers();
+    try {
+      const encoder = new TextEncoder();
+      let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          bodyController = controller;
+        },
+      });
+      const client = clientWith((_url, init) => {
+        init?.signal?.addEventListener("abort", () =>
+          bodyController?.error(new Error("aborted by the deadline")),
+        );
+        return Promise.resolve(new Response(body, { status: 200 }));
+      });
+
+      const deltas: string[] = [];
+      const streaming = client.chatStream([{ role: "user", content: "hi" }], (t) => deltas.push(t));
+      bodyController?.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"一"}}]}\n'));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(deltas).toEqual(["一"]);
+
+      // Far past the first-byte budget: a total-duration timeout would have killed this.
+      await vi.advanceTimersByTimeAsync(STREAM_FIRST_BYTE_TIMEOUT_MS * 3);
+      bodyController?.enqueue(
+        encoder.encode('data: {"choices":[{"delta":{"content":"二"}}]}\ndata: [DONE]\n'),
+      );
+      bodyController?.close();
+
+      expect((await streaming).content).toBe("一二");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("sends model, messages and stream flags in the request body", async () => {

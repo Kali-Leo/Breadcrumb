@@ -8,9 +8,12 @@
 import type { MasteryClaimRow, NodeSightingRow } from "@breadcrumb/core-db";
 import { fsrs } from "ts-fsrs";
 import { computeClaimScore } from "./mastery";
-import { buildNodeCheckpoints } from "./retention";
+import { buildNodeCheckpoints, gradedSightingsOf } from "./retention";
 
-const scheduler = fsrs();
+// Same explicit configuration as retention.ts's scheduler — the two must stay identical, since
+// this file samples the retrievability of cards that file's semantics produced. See the comment
+// there for why enable_short_term is stated rather than inherited (design audit 2026-08-28 #7).
+const scheduler = fsrs({ enable_short_term: false });
 
 /** memory(t) = Σ retrievability; understanding(t) = Σ claimScore × retrievability;
  * intuition(t) = Σ retrievability over nodes whose stability has cleared the automation
@@ -28,12 +31,14 @@ export interface KnowledgeLayerPoint {
  * (the learner producing the concept unprompted) is also required. */
 export const INTUITION_STABILITY_THRESHOLD_DAYS = 30;
 
-function groupSightingsByNode(sightings: readonly NodeSightingRow[]): Map<string, string[]> {
-  const byNode = new Map<string, string[]>();
+function groupSightingsByNode(
+  sightings: readonly NodeSightingRow[],
+): Map<string, NodeSightingRow[]> {
+  const byNode = new Map<string, NodeSightingRow[]>();
   for (const sighting of sightings) {
-    const times = byNode.get(sighting.node_id) ?? [];
-    times.push(sighting.created_at);
-    byNode.set(sighting.node_id, times);
+    const forNode = byNode.get(sighting.node_id) ?? [];
+    forNode.push(sighting);
+    byNode.set(sighting.node_id, forNode);
   }
   return byNode;
 }
@@ -65,7 +70,7 @@ export function computeKnowledgeLayerSeries(input: {
   const { sightings, claims, productiveUseTimesByNode, sampleInstantsIso } = input;
   if (sampleInstantsIso.length === 0) return [];
 
-  const timesByNode = groupSightingsByNode(sightings);
+  const sightingsByNode = groupSightingsByNode(sightings);
   const claimsByNode = groupClaimsByNode(claims);
 
   const samplesAscending = sampleInstantsIso
@@ -76,8 +81,8 @@ export function computeKnowledgeLayerSeries(input: {
   const understanding = new Array<number>(sampleInstantsIso.length).fill(0);
   const intuition = new Array<number>(sampleInstantsIso.length).fill(0);
 
-  for (const [nodeId, times] of timesByNode) {
-    const checkpoints = buildNodeCheckpoints([...times].sort());
+  for (const [nodeId, nodeSightings] of sightingsByNode) {
+    const checkpoints = buildNodeCheckpoints(gradedSightingsOf(nodeSightings));
     const nodeClaims = claimsByNode.get(nodeId) ?? [];
     const productiveMsAscending = [...(productiveUseTimesByNode.get(nodeId) ?? [])]
       .map((iso) => Date.parse(iso))

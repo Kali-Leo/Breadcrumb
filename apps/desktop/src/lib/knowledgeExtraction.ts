@@ -13,13 +13,13 @@ import {
 } from "@breadcrumb/plugin-knowledge-tree";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useSettingsStore } from "../stores/settingsStore";
-import { anchorNodesByAlias } from "./compareAlignActions";
+import { anchorNodesByAlias } from "./canonicalConcepts";
 import { getRepos } from "./db";
 import { embedNodes } from "./embeddings";
 import { recordAiFailure } from "./failureLog";
 import { foldExtractionIntoTrailState } from "./knowledgeTrailFold";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 import { runSynonymGate } from "./synonymGate";
 import { newId, nowIso } from "./time";
 import { refreshConversationAutoTitle } from "./trailNamingActions";
@@ -119,6 +119,7 @@ export async function extractFromFinishedRound(
         conversationId,
         freshNodeIds: plan.newNodes.map((node) => node.id),
         touchedNodeIds: plan.sightings.map((sighting) => sighting.node_id),
+        sourceMessageId: answer.id,
       });
       // Trail-card auto-naming (spec 041 §1): this round's new stations, if any, may move the
       // "first -> last" name; refresh the one card, then reload the sidebar's list to show it.
@@ -129,5 +130,10 @@ export async function extractFromFinishedRound(
   } catch (error) {
     console.warn("knowledge extraction skipped:", error);
     void recordAiFailure("knowledge-tree", error);
+    void recordFailedCallUsage(error, {
+      purpose: "knowledge-tree",
+      model: settings.apiConfig.model,
+      conversationId,
+    });
   }
 }

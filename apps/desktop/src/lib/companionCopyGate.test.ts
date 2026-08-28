@@ -26,14 +26,19 @@ const SHARED_PRESSURE_LEXICON_PATH = join(
   "pressure-lexicon.json",
 );
 
+/** The shared file holds one list per interface language; everything scanned here is
+ * Chinese, so this reads the Chinese list. */
 function loadSharedPressureLexicon(): string[] {
   const raw = readFileSync(SHARED_PRESSURE_LEXICON_PATH, "utf-8");
-  const parsed = z.object({ entries: z.array(z.string().min(1)) }).parse(JSON.parse(raw));
-  return parsed.entries;
+  const parsed = z
+    .object({ entries: z.record(z.string(), z.array(z.string().min(1))) })
+    .parse(JSON.parse(raw));
+  return parsed.entries["zh-CN"] ?? [];
 }
 
 function findPressureLexiconHits(text: string, lexicon: readonly string[]): string[] {
-  return lexicon.filter((entry) => text.includes(entry));
+  const haystack = text.toLowerCase();
+  return lexicon.filter((entry) => haystack.includes(entry.toLowerCase()));
 }
 
 const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不起", "真聪明"];

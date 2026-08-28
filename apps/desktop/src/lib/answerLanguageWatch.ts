@@ -24,12 +24,12 @@ export function shouldUseFirmDirective(conversationId: string | null): boolean {
  * Judges one finished reply. "unknown" (too short, all code) changes nothing — an honest
  * non-verdict must not escalate anything.
  */
-export function noteReplyLanguage(
+export async function noteReplyLanguage(
   conversationId: string | null,
   reply: string,
-): ReplyLanguageVerdict {
+): Promise<ReplyLanguageVerdict> {
   const expected = currentAnswerLanguage();
-  const verdict = checkReplyLanguage(reply, expected);
+  const verdict = await checkReplyLanguage(reply, expected);
   if (verdict === "differs") {
     if (conversationId !== null) conversationsNeedingFirmDirective.add(conversationId);
     void recordAiFailure(

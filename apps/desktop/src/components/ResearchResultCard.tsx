@@ -8,6 +8,7 @@ import type { ResearchResultRow } from "@breadcrumb/core-db";
 import type { DisplayBlock } from "@breadcrumb/plugin-research";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { type ParsedStatResult, parseResearchResultDisplay } from "../lib/researchDisplay";
 import { useResearchStore } from "../stores/researchStore";
 
@@ -21,11 +22,24 @@ function DisplayBlockView({
   block: DisplayBlock;
   results: ParsedStatResult[];
 }) {
+  const { t } = useTranslation(["settings", "common"]);
+  const copy = useCopyMessage();
   if (block.kind === "text") {
     return <p className="text-stone-600">{block.text}</p>;
   }
   const result = results[block.callIndex];
   if (result === undefined) return null;
+
+  // The statistic was not computed because the data does not support it. Saying so is the
+  // whole point: the alternative — printing 0 — is a finding nobody arrived at.
+  if (result.kind === "suppressed") {
+    return (
+      <p className="text-stone-700">
+        {block.label}
+        <span className="ms-2 text-stone-500">{t("research.notEnoughData")}</span>
+      </p>
+    );
+  }
 
   if (block.kind === "stat" && result.kind === "number") {
     return (
@@ -43,8 +57,11 @@ function DisplayBlockView({
         <p className="text-stone-700">{block.label}</p>
         <div className="mt-1 flex flex-col gap-1">
           {result.bars.map((bar) => (
-            <div key={bar.label} className="flex items-center gap-2">
-              <span className="w-28 shrink-0 truncate text-stone-500">{bar.label}</span>
+            <div
+              key={`${bar.label.key}-${JSON.stringify(bar.label.params ?? {})}`}
+              className="flex items-center gap-2"
+            >
+              <span className="w-28 shrink-0 truncate text-stone-500">{copy(bar.label)}</span>
               <div className="h-2 flex-1 rounded bg-stone-100">
                 <div
                   className="h-2 rounded bg-amber-400"

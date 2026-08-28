@@ -47,7 +47,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
   }, [messages.length, streamingText, pinned, scrollToBottom]);
 
   return (
-    <div className="absolute bottom-3 right-3 z-40 flex h-[26rem] w-96 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+    <div className="absolute bottom-3 end-3 z-40 flex h-[26rem] w-96 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-stone-100 px-3 py-2">
         <span className="truncate text-sm font-medium text-stone-700">{title}</span>
         <button
@@ -61,7 +61,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
       </div>
       {crisisHere && (
         <div className="border-b border-rose-100 bg-rose-50 px-3 py-2 text-xs text-stone-700">
-          <p>{CRISIS_RESPONSE}</p>
+          <p>{copy(CRISIS_RESPONSE)}</p>
           <button
             type="button"
             onClick={() => useCompanionStore.getState().dismissCrisis(conversationId)}

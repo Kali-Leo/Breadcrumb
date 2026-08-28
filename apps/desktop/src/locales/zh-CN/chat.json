@@ -24,6 +24,11 @@
     "supported": "找到了佐证",
     "insufficient": "没找到佐证，值得再确认",
     "contradicted": "查到的说法不太一致，两边都给你看",
+    "unavailable": "这次没能出门查资料",
+    "unavailableNextStep": "稍后可以再试一次。",
+    "noEvidenceReasoning": "我没有找到能佐证这一条的公开资料，值得再确认一下。",
+    "verdictFailedReasoning": "查到了资料，但这一条的判定中途没能完成，稍后可以再试一次。",
+    "noneChecked": "这次没能出门查资料，稍后可以再试一次",
     "allSupported": "{{count}} 条说法都找到了佐证",
     "someSupported": "{{supported}}/{{total}} 条说法找到了佐证",
     "offlineNotice": "网络总开关是关着的——打开它，我才能出门查资料。",
@@ -35,7 +40,14 @@
     "rolePeer": "AI 同学",
     "roleMentor": "AI 导师",
     "chatDisabled": "伙伴聊天已关闭。想继续，去设置里打开「伙伴聊天」",
-    "credits": "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com)，CC-BY 4.0；文字人设为衍生创作，有改动；不代表原作者对本产品的背书。"
+    "credits": "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com)，CC-BY 4.0；文字人设为衍生创作，有改动；不代表原作者对本产品的背书。",
+    "closeRoster": "关闭伙伴列表",
+    "aiLabel": "AI 学习伙伴",
+    "rosterEmpty": "今天没有来请教的伙伴了。",
+    "breakReminder": "伙伴对话已经持续两小时。可以先离开休息，内容都会留在这里。",
+    "crisisResponse": "看到你提到了伤害自己。我是 AI，帮不上这样的忙——这件事值得找真的人聊聊。中国大陆：心理援助热线 12356；美国：988；其他地区可访问 findahelpline.com。这个对话随时都在。",
+    "helperInvitation": "「{{topic}}」这部分我还没弄懂。你有空的时候，能用你自己的话给我讲讲吗？从它是什么讲起就好。",
+    "helperThanks": "谢谢你！「{{topic}}」这块我明白多了。我先去自己练练，回头见。"
   },
   "errors": {
     "offline": "当前处于离线模式。想继续对话，去设置里打开网络开关",

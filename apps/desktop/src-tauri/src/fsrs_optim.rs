@@ -47,8 +47,10 @@ pub fn optimize_fsrs_parameters(items: Vec<TrainItem>) -> Result<Vec<f32>, Strin
 mod tests {
     use super::*;
 
-    /// End-to-end smoke: a small synthetic review log yields a finite parameter vector
-    /// (fsrs-rs falls back to pretrain below 512 items — still a valid fit path).
+    /// End-to-end smoke: a small synthetic review log yields a finite parameter vector.
+    /// fsrs-rs picks its fit path by item count (see its `training.rs`): below 8 items it
+    /// returns DEFAULT_PARAMETERS untouched, below 64 it pretrains only w0..w3, and at 64 or
+    /// more it runs the full training. This log has 80 items, so it takes the full path.
     #[test]
     fn optimizes_synthetic_log() {
         // Prefix convention (matches the TS builder): every review index with delta_t > 0

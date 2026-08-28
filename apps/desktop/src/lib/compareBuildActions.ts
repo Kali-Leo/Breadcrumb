@@ -122,7 +122,9 @@ export async function runProposalPipeline(
   const verdicts = await Promise.all(
     [...titlesByUrl.entries()].map(async ([url, titles]) => {
       if (await verifyUrl(url, titles)) return { url, ok: true, rescueUrl: null };
-      const results = await bing.search(titles[0] ?? "", 3);
+      // A failed search yields no items, and no rescue — same outcome as no hit, so the
+      // branch dies either way (宁缺毋假); only the items are of interest here.
+      const { items: results } = await bing.search(titles[0] ?? "", 3);
       const rescueUrl = findRescueUrl(results, titles);
       return { url, ok: rescueUrl !== null, rescueUrl };
     }),

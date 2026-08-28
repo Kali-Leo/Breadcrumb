@@ -165,6 +165,29 @@ describe("runPendingResearchTasks", () => {
     expect(taskRuns).toHaveLength(0);
   });
 
+  it("still runs a task on its own expiry date", async () => {
+    // expiresAt is a date, not an instant: "2026-08-13" used to sort before
+    // "2026-08-13T10:00:00.000Z", retiring every task a full day early.
+    const { client, taskRuns, results } = makeFakeSql();
+    const expiringToday: ResearchTask = { ...baseTask, expiresAt: "2026-08-13" };
+    const deps = makeDeps(client, "2026-08-13T10:00:00.000Z");
+
+    const executed = await runPendingResearchTasks([sign(expiringToday)], deps);
+
+    expect(executed).toBe(1);
+    expect(results).toHaveLength(1);
+    expect(taskRuns.map((row) => row.task_id)).toEqual([baseTask.id]);
+  });
+
+  it("skips a task the day after it expired", async () => {
+    const { client, results } = makeFakeSql();
+    const expiredYesterday: ResearchTask = { ...baseTask, expiresAt: "2026-08-12" };
+    const deps = makeDeps(client, "2026-08-13T10:00:00.000Z");
+
+    expect(await runPendingResearchTasks([sign(expiredYesterday)], deps)).toBe(0);
+    expect(results).toHaveLength(0);
+  });
+
   it("stores a research_results row for a valid, unexpired, unrun task", async () => {
     const { client, taskRuns, results } = makeFakeSql({ knowledgeNodeCount: 7 });
     const deps = makeDeps(client);

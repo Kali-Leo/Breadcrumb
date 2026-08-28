@@ -14,7 +14,6 @@ import {
   findSynonymCandidates,
   type NodeChangePlan,
   planSynonymGateResult,
-  SYNONYM_SIMILARITY_THRESHOLD,
   type SynonymJudgePairText,
   synonymJudgeSchema,
 } from "@breadcrumb/plugin-knowledge-tree";
@@ -48,11 +47,7 @@ export async function runSynonymGateStage(
         computeSyntheticNodeEmbedding(node.label, node.summary),
       ]),
     );
-    const candidates = findSynonymCandidates(
-      newNodeVectors,
-      existingEmbeddings,
-      SYNONYM_SIMILARITY_THRESHOLD,
-    );
+    const candidates = findSynonymCandidates(newNodeVectors, existingEmbeddings);
     if (candidates.length === 0) return passthrough(plan);
 
     const newNodeById = new Map(plan.newNodes.map((node) => [node.id, node]));

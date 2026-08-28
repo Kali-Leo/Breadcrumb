@@ -25,14 +25,38 @@ describe("buildInterestMessages", () => {
     expect(messages[1]?.content).toContain("闭包是什么？");
   });
 
-  it("instructs the model to discriminate impatient/dismissive brevity from efficient engagement", () => {
+  it("requires content-level evidence before a mid/high boredom read, and never treats brevity as one", () => {
+    // The constitution's one red line is 永不评判用户. The prompt used to hand "懂了懂了" /
+    // "行吧行吧" / "知道了知道了" straight to the strongest boredom tier, which reads an ADHD
+    // learner's or an ordinary Chinese speaker's acknowledgement token as contempt for the
+    // material (2026-08-28 audit, interest gap 4). Boredom now needs something the learner
+    // actually said about the topic.
     const messages = buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答");
     const systemContent = messages[0]?.content ?? "";
-    expect(systemContent).toContain("懂了懂了");
-    expect(systemContent).toContain("别讲概念");
-    expect(systemContent).toContain("直接来例子");
-    expect(systemContent).toContain("行吧行吧");
-    expect(systemContent).toContain("高效投入");
+    expect(systemContent).toContain("明确说要跳过");
+    expect(systemContent).toContain("反复表达不耐烦");
+    expect(systemContent).toContain("主动把话题转到别处");
+    expect(systemContent).toContain("回复简短本身不是证据");
+    for (const acknowledgement of ["懂了懂了", "行吧行吧", "知道了知道了", "直接来例子"]) {
+      expect(systemContent).not.toContain(acknowledgement);
+    }
+  });
+
+  it("names the ASCII tier values and tells the model not to translate them", () => {
+    // jsonClient appends an answer-language directive to every call, so a Chinese tier literal
+    // makes an English-locale model answer "none"/"weak" into a schema that only accepts
+    // 无/弱 — Zod fails, the retry fails the same way, and interest extraction goes silently
+    // dark (2026-08-28 audit, 多语言 B6).
+    const systemContent =
+      buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答")[0]?.content ?? "";
+    expect(systemContent).toContain("none|weak|medium|strong");
+    expect(systemContent).toContain("low|medium|high");
+    expect(systemContent).toContain("不要翻译成中文或其他语言");
+    // No tier value in the contract line may be a non-ASCII literal.
+    const contractLine = systemContent.split("\n").find((line) => line.includes('"signals"')) ?? "";
+    for (const tier of ["无", "弱", "中", "强", "低", "高"]) {
+      expect(contractLine).not.toContain(`"${tier}`);
+    }
   });
 });
 
@@ -42,10 +66,10 @@ describe("interestSignalsSchema", () => {
       signals: [
         {
           label: "闭包",
-          curiosity: "强",
-          confusion: "弱",
-          boredom: "无",
-          confidence: "高",
+          curiosity: "strong",
+          confusion: "weak",
+          boredom: "none",
+          confidence: "high",
           styles: ["类比"],
         },
       ],
@@ -64,9 +88,9 @@ describe("interestSignalsSchema", () => {
           {
             label: "闭包",
             curiosity: 0.8,
-            confusion: "无",
-            boredom: "无",
-            confidence: "中",
+            confusion: "none",
+            boredom: "none",
+            confidence: "medium",
             styles: [],
           },
         ],
@@ -80,10 +104,27 @@ describe("interestSignalsSchema", () => {
         signals: [
           {
             label: "闭包",
-            curiosity: "无",
+            curiosity: "none",
+            confusion: "none",
+            boredom: "none",
+            confidence: 0.5,
+            styles: [],
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("rejects the old Chinese tier literals, so a stale prompt cannot half-work", () => {
+    expect(() =>
+      interestSignalsSchema.parse({
+        signals: [
+          {
+            label: "闭包",
+            curiosity: "强",
             confusion: "无",
             boredom: "无",
-            confidence: 0.5,
+            confidence: "高",
             styles: [],
           },
         ],
@@ -94,7 +135,14 @@ describe("interestSignalsSchema", () => {
 
 describe("INTEREST_LEVEL_SCORES / CONFIDENCE_LEVEL_SCORES", () => {
   it("maps every anchored tier to its documented number", () => {
-    expect(INTEREST_LEVEL_SCORES).toEqual({ 无: 0, 弱: 0.3, 中: 0.6, 强: 0.9 });
-    expect(CONFIDENCE_LEVEL_SCORES).toEqual({ 低: 0.3, 中: 0.6, 高: 0.9 });
+    expect(INTEREST_LEVEL_SCORES).toEqual({ none: 0, weak: 0.3, medium: 0.6, strong: 0.9 });
+    expect(CONFIDENCE_LEVEL_SCORES).toEqual({ low: 0.3, medium: 0.6, high: 0.9 });
+  });
+
+  it("keys every tier with an ASCII-only value (多语言 B6)", () => {
+    const keys = [...Object.keys(INTEREST_LEVEL_SCORES), ...Object.keys(CONFIDENCE_LEVEL_SCORES)];
+    for (const key of keys) {
+      expect(key).toMatch(/^[a-z]+$/);
+    }
   });
 });

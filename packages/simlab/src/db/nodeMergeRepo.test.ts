@@ -78,7 +78,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const sightings = await temp.repos.nodeSightings.listAll();
     expect(sightings).toHaveLength(1);
@@ -111,7 +111,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const nodes = await temp.repos.knowledgeNodes.listAll();
     expect(nodes.map((node) => node.id).sort()).toEqual(["canonical", "child"]);
@@ -137,7 +137,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const edges = await temp.repos.knowledgeEdges.listAll();
     expect(edges).toEqual([]);
@@ -159,7 +159,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const edges = await temp.repos.knowledgeEdges.listAll();
     expect(edges).toHaveLength(1);
@@ -196,7 +196,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const edges = await temp.repos.knowledgeEdges.listAll();
     expect(edges).toHaveLength(1);
@@ -230,7 +230,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
       created_at: now,
     });
 
-    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now);
+    await temp.repos.nodeMerge.mergeNode("canonical", "duplicate", "苹果（Apple）", now, "merge-1");
 
     const edgesAfterHigherDuplicateWins = await temp.repos.knowledgeEdges.listAll();
     expect(edgesAfterHigherDuplicateWins).toHaveLength(1);

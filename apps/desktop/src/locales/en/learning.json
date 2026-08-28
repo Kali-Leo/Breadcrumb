@@ -14,7 +14,10 @@
     "contrastLabel": "Easily confused",
     "guessCorrect": "It is \"{{word}}\".",
     "guessClose": "Close — it is \"{{word}}\".",
-    "guessWrong": "It is \"{{word}}\"."
+    "guessWrong": "It is \"{{word}}\".",
+    "enableAria": "Language learning switch",
+    "llmRefineAria": "Smart swaps switch",
+    "dataSources": "Dictionary and pronunciation data come from these open-source projects: CC-CEDICT · FrequencyWords · CMUdict"
   },
   "door": {
     "guessPrompt": "Have a guess first: what is it, in one sentence?",
@@ -43,11 +46,16 @@
     "selectHint": "Press Enter to explain \"{{text}}\"",
     "errorPlain": "This stop did not come out. You can try again, or leave focus.",
     "errorWithReason": "This stop did not come out: {{reason}}. You can try again, or leave focus.",
-    "badgeLine": "🔎 Explored: {{label}} · {{count}} stops",
-    "barTitle": "🔎 Focus trails in this chat ({{count}})",
+    "badgeLine_one": "🔎 Explored: {{label}} · {{count}} stop",
+    "badgeLine_other": "🔎 Explored: {{label}} · {{count}} stops",
+    "barTitle_one": "🔎 Focus trails in this chat ({{count}})",
+    "barTitle_other": "🔎 Focus trails in this chat ({{count}})",
     "errorNoApi": "This stop did not come out: no AI service is set up yet. Add one in settings, then try again.",
     "timeToday": "Today {{time}}",
-    "timeYesterday": "Yesterday {{time}}"
+    "timeYesterday": "Yesterday {{time}}",
+    "errorNoResponse": "nothing came back",
+    "errorTimedOut": "the response timed out",
+    "mapAria": "Focus stop map"
   },
   "teach": {
     "sectionTitle": "Your turn to explain (experimental)",

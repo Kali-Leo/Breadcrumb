@@ -96,6 +96,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
     const candidate: FrontierCandidate = {
       nodeId: "b",
       label: "B",
+      kind: "concept",
       score: 1,
       reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
     };
@@ -115,6 +116,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
     const candidate: FrontierCandidate = {
       nodeId: "b",
       label: "B",
+      kind: "concept",
       score: 1,
       reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
     };
@@ -133,6 +135,7 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
     const candidate: FrontierCandidate = {
       nodeId: "b",
       label: "B",
+      kind: "concept",
       score: 1,
       reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false }, // no real requires edge exists
     };

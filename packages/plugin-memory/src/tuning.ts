@@ -7,11 +7,7 @@
  * what gets passed in, never this file's shape.
  * Main exports: userModelParams, productParams.
  */
-import {
-  ALIGNMENT_CANDIDATE_THRESHOLD,
-  ALIGNMENT_JUDGE_BATCH_SIZE,
-  ALIGNMENT_TOP_K,
-} from "@breadcrumb/plugin-compare";
+import { ALIGNMENT_JUDGE_BATCH_SIZE, ALIGNMENT_TOP_K } from "@breadcrumb/plugin-compare";
 import {
   ADJACENT_CONCEPT_EDGE_CONFIDENCE,
   DEFAULT_FALLBACK_RECENT_N,
@@ -25,7 +21,7 @@ import {
   INTEREST_LEVEL_SCORES,
   K_PSEUDO,
 } from "@breadcrumb/plugin-interest";
-import { SYNONYM_SIMILARITY_THRESHOLD } from "@breadcrumb/plugin-knowledge-tree";
+import { RELATIVE_GATE_FRACTION, SYNONYM_CANDIDATE_TOP_K } from "@breadcrumb/plugin-knowledge-tree";
 import {
   GOAL_GAP_SCORE_BOOST,
   MILESTONE_DIM_DISCOUNT,
@@ -80,8 +76,9 @@ export const productParams = {
    * interest signal. plugin-interest/spread.ts. */
   interestSpreadFactor: DEFAULT_SPREAD_FACTOR,
   /** Anchored-tier -> number maps the LLM extraction/judging prompts are built around, so a
-   * label like "强" always means the same 0.9 everywhere it's asked for (spec 014 #1).
-   * plugin-interest/extraction.ts, plugin-graph/edgeJudge.ts. */
+   * label like "strong" always means the same 0.9 everywhere it's asked for (spec 014 #1;
+   * tier labels are ASCII since the 2026-08-28 audit — non-ASCII enum values collided with
+   * the answer-language directive). plugin-interest/extraction.ts, plugin-graph/edgeJudge.ts. */
   interestLevelScores: INTEREST_LEVEL_SCORES,
   confidenceLevelScores: CONFIDENCE_LEVEL_SCORES,
   helpsWeightScores: HELPS_WEIGHT_SCORES,
@@ -94,10 +91,13 @@ export const productParams = {
    * plugin-planner/propagate.ts. */
   propagationInterestThreshold: PROPAGATION_INTEREST_THRESHOLD,
   propagationInheritFactor: PROPAGATION_INHERIT_FACTOR,
-  /** Node-dedup synonym gate (spec 015): cosine-similarity floor a would-be-new node's best
-   * existing match must clear before it costs one LLM verdict call.
-   * plugin-knowledge-tree/synonymGate.ts. */
-  synonymSimilarityThreshold: SYNONYM_SIMILARITY_THRESHOLD,
+  /** Node-dedup candidate selection (spec 015): how many existing nodes per would-be-new node
+   * reach the LLM verdict call, and the fraction of the mean->best gap a candidate must clear
+   * in that node's own similarity landscape. The absolute cosine floor this replaced was
+   * meaningless against the local model's real distribution (design audit 2026-08-28 #1).
+   * plugin-knowledge-tree/similarityGate.ts. */
+  synonymCandidateTopK: SYNONYM_CANDIDATE_TOP_K,
+  relativeGateFraction: RELATIVE_GATE_FRACTION,
   /** Casual-mode adjacent-concept proposals (spec 016) carry no separate confidence tier —
    * this fixed mid value keeps their helps edge from silently outweighing an
    * explicitly-judged one. plugin-graph/plan.ts. */
@@ -113,10 +113,9 @@ export const productParams = {
   /** Single-route recommendation (spec 017): interest score a route step needs before the
    * lab UI's "兴趣" reason chip shows. plugin-planner/recommendRoute.ts. */
   routeInterestChipThreshold: ROUTE_INTEREST_CHIP_THRESHOLD,
-  /** Comparison-tree semantic alignment (spec 024): local-embedding recall floor (wider than
-   * the synonym gate's 0.85 — the LLM judge restores precision), candidates per profile leaf,
+  /** Comparison-tree semantic alignment (spec 024): candidates per profile leaf (after the
+   * shared relative gate above — the absolute 0.72 floor was removed, it passed every pair),
    * and pairs per batched judge call. plugin-compare/alignment.ts. */
-  alignmentCandidateThreshold: ALIGNMENT_CANDIDATE_THRESHOLD,
   alignmentTopK: ALIGNMENT_TOP_K,
   alignmentJudgeBatchSize: ALIGNMENT_JUDGE_BATCH_SIZE,
 } as const;

@@ -4,7 +4,12 @@
  * same-title update), claimNodeAsLearned's direct mastery-claim insert + event emission, and
  * removeNodeFromGoal's node_ids_json update. Fake repos are plain in-memory objects, no DB.
  */
-import type { GoalRow, KnowledgeNodeRow, MasteryClaimRow } from "@breadcrumb/core-db";
+import type {
+  GoalRow,
+  KnowledgeEdgeRow,
+  KnowledgeNodeRow,
+  MasteryClaimRow,
+} from "@breadcrumb/core-db";
 import type { GoalMappingResult } from "@breadcrumb/plugin-planner";
 import { describe, expect, it } from "vitest";
 import { appEventBus } from "../stores/chatStore";
@@ -14,16 +19,28 @@ import {
   removeNodeFromGoal,
 } from "./plannerGoalActions";
 
-/** In-memory fake covering only the knowledgeNodes/goals/masteryClaims methods these actions
- * use; inserted rows are exposed as plain arrays/maps for assertions. */
-function makeFakeRepos(initialGoals: readonly GoalRow[] = []) {
+/** In-memory fake covering only the knowledgeNodes/knowledgeEdges/goals/masteryClaims methods
+ * these actions use; inserted rows are exposed as plain arrays/maps for assertions. */
+function makeFakeRepos(
+  initialGoals: readonly GoalRow[] = [],
+  initialEdges: readonly KnowledgeEdgeRow[] = [],
+) {
   const knowledgeNodeRows: KnowledgeNodeRow[] = [];
+  const knowledgeEdgeRows: KnowledgeEdgeRow[] = [...initialEdges];
   const goalRows = new Map(initialGoals.map((goal) => [goal.id, goal]));
   const masteryClaimRows: MasteryClaimRow[] = [];
   return {
     knowledgeNodes: {
       async insert(row: KnowledgeNodeRow) {
         knowledgeNodeRows.push(row);
+      },
+    },
+    knowledgeEdges: {
+      async listAll() {
+        return [...knowledgeEdgeRows];
+      },
+      async upsert(row: KnowledgeEdgeRow) {
+        knowledgeEdgeRows.push(row);
       },
     },
     goals: {
@@ -49,8 +66,20 @@ function makeFakeRepos(initialGoals: readonly GoalRow[] = []) {
       },
     },
     knowledgeNodeRows,
+    knowledgeEdgeRows,
     goalRows,
     masteryClaimRows,
+  };
+}
+
+/** Records what persistCalibratedGoal asked to embed, without touching the Tauri command. */
+function makeEmbedSpy() {
+  const embedded: KnowledgeNodeRow[][] = [];
+  return {
+    embedded,
+    embed: async (nodes: readonly KnowledgeNodeRow[]) => {
+      embedded.push([...nodes]);
+    },
   };
 }
 
@@ -70,9 +99,13 @@ describe("persistCalibratedGoal", () => {
       suggested: [{ label: "积分", summary: "微积分的另一半" }],
     };
 
-    const { goalId, insertedNodes } = await persistCalibratedGoal(fake, "通过考研数学", mapping, [
-      existingNode,
-    ]);
+    const { goalId, insertedNodes } = await persistCalibratedGoal(
+      fake,
+      "通过考研数学",
+      mapping,
+      [existingNode],
+      makeEmbedSpy().embed,
+    );
 
     expect(insertedNodes).toBe(true);
     expect(fake.knowledgeNodeRows).toHaveLength(1);
@@ -95,12 +128,84 @@ describe("persistCalibratedGoal", () => {
     const fake = makeFakeRepos([existingGoal]);
     const mapping: GoalMappingResult = { existing: [], suggested: [] };
 
-    const { goalId } = await persistCalibratedGoal(fake, "通过考研数学", mapping, []);
+    const { goalId } = await persistCalibratedGoal(
+      fake,
+      "通过考研数学",
+      mapping,
+      [],
+      makeEmbedSpy().embed,
+    );
 
     expect(goalId).toBe("g1");
     const all = await fake.goals.listAll();
     expect(all).toHaveLength(1);
     expect(JSON.parse(all[0]?.node_ids_json ?? "[]")).toEqual([]);
+  });
+});
+
+describe("persistCalibratedGoal: prerequisite edges and immediate embedding", () => {
+  const existingNode: KnowledgeNodeRow = {
+    id: "n-derivative",
+    parent_id: null,
+    label: "导数",
+    summary: "s",
+    kind: "concept",
+    created_at: "2026-08-01T00:00:00Z",
+  };
+
+  it("writes a requires edge from a suggested node's declared prerequisite", async () => {
+    const fake = makeFakeRepos();
+    const mapping: GoalMappingResult = {
+      existing: ["导数"],
+      suggested: [
+        { label: "多元函数微分", summary: "多变量函数的微分学", requires: ["导数"] },
+        { label: "重积分", summary: "多重积分", requires: ["多元函数微分"] },
+      ],
+    };
+
+    await persistCalibratedGoal(
+      fake,
+      "通过考研数学",
+      mapping,
+      [existingNode],
+      makeEmbedSpy().embed,
+    );
+
+    const idByLabel = new Map(fake.knowledgeNodeRows.map((row) => [row.label, row.id]));
+    idByLabel.set("导数", existingNode.id);
+    expect(fake.knowledgeEdgeRows).toHaveLength(2);
+    expect(
+      fake.knowledgeEdgeRows.map((edge) => [edge.source_id, edge.target_id, edge.edge_type]),
+    ).toEqual([
+      [idByLabel.get("导数"), idByLabel.get("多元函数微分"), "requires"],
+      [idByLabel.get("多元函数微分"), idByLabel.get("重积分"), "requires"],
+    ]);
+  });
+
+  it("drops a requires label that names nothing in this mapping", async () => {
+    const fake = makeFakeRepos();
+    const mapping: GoalMappingResult = {
+      existing: [],
+      suggested: [{ label: "重积分", summary: "多重积分", requires: ["量子色动力学"] }],
+    };
+
+    await persistCalibratedGoal(fake, "通过考研数学", mapping, [], makeEmbedSpy().embed);
+
+    expect(fake.knowledgeEdgeRows).toEqual([]);
+  });
+
+  it("embeds the suggested nodes immediately instead of waiting for the startup backfill", async () => {
+    const fake = makeFakeRepos();
+    const spy = makeEmbedSpy();
+    const mapping: GoalMappingResult = {
+      existing: [],
+      suggested: [{ label: "重积分", summary: "多重积分" }],
+    };
+
+    await persistCalibratedGoal(fake, "通过考研数学", mapping, [], spy.embed);
+
+    expect(spy.embedded).toHaveLength(1);
+    expect(spy.embedded[0]?.map((node) => node.label)).toEqual(["重积分"]);
   });
 });
 

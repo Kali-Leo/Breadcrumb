@@ -7,7 +7,7 @@
  * of which journey produced the sightings).
  * Main exports: checkMasteryTripwires, MasteryTripwireResult.
  */
-import { computeNodeRetention } from "@breadcrumb/plugin-memory";
+import { computeNodeRetention, type GradedSighting } from "@breadcrumb/plugin-memory";
 
 export interface MasteryTripwireResult {
   reencounterBoostValid: boolean;
@@ -18,6 +18,11 @@ export interface MasteryTripwireResult {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const START = Date.parse("2026-01-01T00:00:00.000Z");
 
+/** A passive footprint at `ms` — the grade the extraction and re-encounter paths write. */
+function met(ms: number): GradedSighting {
+  return { createdAtIso: new Date(ms).toISOString(), grade: "good" };
+}
+
 function iso(ms: number): string {
   return new Date(ms).toISOString();
 }
@@ -27,10 +32,10 @@ export function checkMasteryTripwires(): MasteryTripwireResult {
   const evaluationInstant = iso(START + 40 * DAY_MS);
 
   // Control: sighted once at day 0, never re-encountered, evaluated 40 days later.
-  const controlRetention = computeNodeRetention([iso(START)], evaluationInstant);
+  const controlRetention = computeNodeRetention([met(START)], evaluationInstant);
   // Re-encountered: sighted again at day 20, evaluated at the same instant as the control.
   const reencounteredRetention = computeNodeRetention(
-    [iso(START), iso(START + 20 * DAY_MS)],
+    [met(START), met(START + 20 * DAY_MS)],
     evaluationInstant,
   );
   const reencounterBoostValid = reencounteredRetention > controlRetention;
@@ -41,7 +46,7 @@ export function checkMasteryTripwires(): MasteryTripwireResult {
   }
 
   // Idle decay: retention right after sighting must exceed retention 40 days of silence later.
-  const freshRetention = computeNodeRetention([iso(START)], iso(START + 1000));
+  const freshRetention = computeNodeRetention([met(START)], iso(START + 1000));
   const idleDecayValid = freshRetention > controlRetention;
   if (!idleDecayValid) {
     detail.push(`idle decay did not occur: fresh=${freshRetention}, after40d=${controlRetention}`);

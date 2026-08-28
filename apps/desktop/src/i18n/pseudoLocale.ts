@@ -14,12 +14,21 @@ export function isPseudoLocale(code: string): boolean {
   return code === PSEUDO_LOCALE_CODE;
 }
 
-/** Latin letters are padded so every string grows ~35%, the usual worst case for German
- * and Finnish; placeholders and markup-ish runs are left exactly as they are. */
+/** One non-Latin letter is mixed into the padding of every word, cycling through these:
+ * Greek and Cyrillic fall outside a Latin-only font, so a font stack missing its fallback
+ * shows tofu boxes here rather than in front of a Greek or Russian reader. */
+const FOREIGN_PADDING = ["α", "ж", "ю", "δ"] as const;
+
+/** Latin letters are padded so every string grows ~35%, the usual worst case for German and
+ * Finnish, and each word carries a combining acute so accented glyphs get their real line
+ * height; placeholders and markup-ish runs are left exactly as they are. */
 function pseudoText(text: string): string {
+  let padIndex = 0;
   const padded = text.replace(/[a-zA-Z]+/g, (word) => {
     const extra = Math.max(1, Math.round(word.length * 0.35));
-    return word + "́".repeat(0) + word.slice(-1).repeat(extra);
+    const foreign = FOREIGN_PADDING[padIndex % FOREIGN_PADDING.length] as string;
+    padIndex += 1;
+    return `${word}́${foreign}${word.slice(-1).repeat(extra - 1)}`;
   });
   return `⟦${padded}⟧`;
 }

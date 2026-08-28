@@ -14,6 +14,7 @@ export {
   formatDate,
   formatDayMonth,
   formatPercent,
+  formatSignedDecimal,
 } from "./format";
 export {
   DEFAULT_LANGUAGE_CODE,

@@ -1,11 +1,13 @@
 /**
  * Purpose: companion-cast safety module (spec 037) — the manipulation-lexicon gate applied to
- * all companion copy/cards, local crisis-keyword detection with an out-of-persona response,
- * a pure continuous-session break reminder, and every other companion-introduced UI string.
+ * all companion copy/cards, local crisis-keyword detection naming the out-of-persona response
+ * to show instead, and a pure continuous-session break reminder. The responses themselves are
+ * CopyMessages: this package decides *which* sentence applies, apps/desktop renders it (ADR-0031).
  * Main exports: MANIPULATION_LEXICON, containsManipulation, detectCrisis, CRISIS_RESPONSE,
  * shouldRemindBreak, BREAK_REMINDER_COPY, BREAK_REMINDER_INTERVAL_MS, nextBreakReminderAt,
  * COMPANION_COPY.
  */
+import type { CopyMessage } from "@breadcrumb/core-i18n";
 
 /** Farewell/absence-manipulation phrases banned from all companion copy and cards — the six
  * HBS companion-app audit tactics (guilt appeal, neediness, pressure to respond, FOMO, coercive
@@ -74,10 +76,11 @@ export function detectCrisis(text: string): boolean {
   return CRISIS_KEYWORDS_EN.some((keyword) => lowered.includes(keyword));
 }
 
-/** Plain, out-of-persona response shown instead of any companion reply once detectCrisis
- * fires — no role-play, states the limitation, points to offline crisis resources. */
-export const CRISIS_RESPONSE =
-  "看到你提到了伤害自己。我是 AI,帮不上这样的忙——这件事值得找真的人聊聊。中国大陆:心理援助热线 12356;美国:988;其他地区可访问 findahelpline.com。这个对话随时都在。";
+/** The plain, out-of-persona response shown instead of any companion reply once detectCrisis
+ * fires — no role-play, states the limitation, points to offline crisis resources. Named
+ * here, worded in chat.json under companion.crisisResponse (ADR-0031: packages carry no
+ * wording), where locales/copyGate.test.ts scans it in every shipped language. */
+export const CRISIS_RESPONSE: CopyMessage = { key: "chat:companion.crisisResponse" };
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 export const BREAK_REMINDER_INTERVAL_MS = 2 * 60 * 60 * 1000;
@@ -110,19 +113,18 @@ export function nextBreakReminderAt(sessionStartMs: number): number {
   return sessionStartMs + BREAK_REMINDER_INTERVAL_MS;
 }
 
-export const BREAK_REMINDER_COPY = "伙伴对话已经持续两小时。可以先离开休息,内容都会留在这里。";
+/** Shown once shouldRemindBreak fires. Worded in chat.json under companion.breakReminder. */
+export const BREAK_REMINDER_COPY: CopyMessage = { key: "chat:companion.breakReminder" };
 
-/** Every other companion-introduced user-visible string not covered above. */
+/** What is left here after the interface wording moved to the catalogues (ADR-0031): one
+ * template still reachable only from a dead path, and the helper-name pool, which is content
+ * rather than copy. Everything the live UI renders is a catalogue key now. */
 export const COMPANION_COPY = {
-  sectionTitle: "好友",
-  aiLabel: "AI 学习伙伴",
-  /** The teach-back invitation as the companion's own ordinary chat message (Leo 2026-08-15:
-   * no cards, no buttons — replying starts the teach-back, ignoring lets it expire).
-   * Zero-LLM template; mirrors the plain teach opener's register. */
-  invitation: (topic: string): string =>
-    `「${topic}」这部分我还没弄懂。你有空的时候,能用你自己的话给我讲讲吗?从它是什么讲起就好。`,
   /** The reunion invitation as the companion's own ordinary chat message (spec 048 §5 —
-   * same no-cards-no-buttons contract: replying accepts, ignoring lets it expire). */
+   * no cards, no buttons: replying accepts, ignoring lets it expire). Its only caller,
+   * appendCompanionInvitation, is unreachable from the shipped UI (audit 2026-08-28), so the
+   * sentence stayed here rather than entering the catalogues ahead of a decision on the
+   * feature itself. */
   reunionInvitation: (topic: string): string =>
     `「${topic}」有阵子没一起聊过了。想回顾的话,回我一句就行,我们从你还记得的部分开始。`,
   /** Daily helper roster (spec 050 §9): each helper is a peer who wants to understand one
@@ -131,13 +133,12 @@ export const COMPANION_COPY = {
    * deterministically from the pool so the same helper always keeps the same name. */
   helperName: (topic: string): string =>
     HELPER_PERSON_NAMES[hashText(topic) % HELPER_PERSON_NAMES.length] as string,
-  helperThanks: (topic: string): string =>
-    `谢谢你!「${topic}」这块我明白多了。我先去自己练练,回头见。`,
-  rosterEmpty: "今天没有来请教的伙伴了。",
 } as const;
 
 /** Everyday plants, animals and fruits (Leo 2026-08-16) — real, common, instantly
- * picturable; enough that three concurrent helpers rarely collide. */
+ * picturable; enough that three concurrent helpers rarely collide.
+ * Content, not UI copy; localization deferred — these are the cast's names, and renaming a
+ * cast is a content decision, not a translation. */
 const HELPER_PERSON_NAMES = [
   "苹果",
   "柠檬",

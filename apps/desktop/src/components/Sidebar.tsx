@@ -57,9 +57,7 @@ function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void 
       }`}
     >
       <Users size={19} strokeWidth={1.8} />
-      {unread && (
-        <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-rose-400" />
-      )}
+      {unread && <span className="absolute end-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-rose-400" />}
     </button>
   );
 }

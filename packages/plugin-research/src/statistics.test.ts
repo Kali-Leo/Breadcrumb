@@ -1,7 +1,9 @@
 /**
  * Purpose: unit tests for every whitelisted StatCall implementation, against an in-memory
- * fake SqlClient keyed by table name — covers each count metric, the MIN_CELL_COUNT
- * disclosure floor on histograms and retention_summary, and correlation's small-sample guard.
+ * fake SqlClient keyed by table name — covers each count metric, histograms keeping every
+ * bucket now that the local display path carries no disclosure floor, and the explicit
+ * `suppressed` result that retention_summary and correlation return below their sample-size
+ * floors instead of the sentinel 0.
  */
 
 import type { SqlClient } from "@breadcrumb/core-db";
@@ -119,9 +121,10 @@ describe("count", () => {
 });
 
 describe("histogram", () => {
-  it("drops encounters_per_node buckets below MIN_CELL_COUNT", async () => {
+  it("keeps every encounters_per_node bucket, so the bars sum to the node count", async () => {
+    // A lone outlier used to be silently dropped, leaving a chart whose bars did not add up
+    // to the "concepts known" number printed beside it (审计统计分报告差距 4).
     const sightings: { node_id: string; created_at: string }[] = [];
-    // 5 nodes seen once, 3 nodes seen twice: all land in the low bucket (8 >= 5, kept).
     for (let index = 0; index < 5; index += 1) {
       sightings.push({ node_id: `low-${index}`, created_at: localNoonIso("2026-08-01") });
     }
@@ -131,7 +134,6 @@ describe("histogram", () => {
         { node_id: `mid-${index}`, created_at: localNoonIso("2026-08-02") },
       );
     }
-    // 1 node seen 10 times: alone in the high bucket (1 < 5, dropped).
     for (let index = 0; index < 10; index += 1) {
       sightings.push({ node_id: "outlier", created_at: localNoonIso("2026-08-01") });
     }
@@ -143,13 +145,25 @@ describe("histogram", () => {
     );
     expect(result.kind).toBe("bars");
     if (result.kind !== "bars") throw new Error("unreachable");
-    expect(result.bars).toHaveLength(1);
-    expect(result.bars[0]?.value).toBe(8);
+    expect(result.bars).toHaveLength(2);
+    expect(result.bars.reduce((sum, bar) => sum + bar.value, 0)).toBe(9);
+    expect(result.bars[1]?.value).toBe(1);
   });
 
-  it("drops retention_per_node buckets below MIN_CELL_COUNT", async () => {
-    // Only 3 known nodes, each with one sighting right at `now` — high, recent retention,
-    // but too few nodes for the bucket to clear the disclosure floor.
+  it("labels buckets with catalogue keys, never with wording", async () => {
+    const sightings = [{ node_id: "a", created_at: localNoonIso("2026-08-01") }];
+    const sql = makeFakeSql({ node_sightings: sightings });
+    const result = await executeStatCall(
+      { fn: "histogram", metric: "encounters_per_node", bucketCount: 2 },
+      sql,
+      NOW,
+    );
+    if (result.kind !== "bars") throw new Error("unreachable");
+    expect(result.bars[0]?.label.key).toBe("settings:research.barRange");
+    expect(result.bars[0]?.label.params).toEqual({ low: "1.00", high: "1.00" });
+  });
+
+  it("keeps every retention_per_node bucket even with only three known nodes", async () => {
     const sightings = [
       { node_id: "a", created_at: NOW.toISOString() },
       { node_id: "b", created_at: NOW.toISOString() },
@@ -161,7 +175,9 @@ describe("histogram", () => {
       sql,
       NOW,
     );
-    expect(result).toEqual({ kind: "bars", bars: [] });
+    if (result.kind !== "bars") throw new Error("unreachable");
+    expect(result.bars).toHaveLength(6);
+    expect(result.bars.reduce((sum, bar) => sum + bar.value, 0)).toBe(3);
   });
 
   it("keeps a retention_per_node bucket once enough nodes clear the floor", async () => {
@@ -181,8 +197,8 @@ describe("histogram", () => {
     expect(total).toBe(6);
   });
 
-  it("drops events_per_weekday buckets below MIN_CELL_COUNT", async () => {
-    // 2026-08-01 is a Saturday; put 6 events on it (kept) and 2 events on Sunday (dropped).
+  it("always reports all seven weekdays, quiet days included", async () => {
+    // 2026-08-01 is a Saturday, 2026-08-02 a Sunday.
     const events = [
       ...Array.from({ length: 6 }, () => ({ created_at: localNoonIso("2026-08-01") })),
       ...Array.from({ length: 2 }, () => ({ created_at: localNoonIso("2026-08-02") })),
@@ -193,29 +209,33 @@ describe("histogram", () => {
       sql,
       NOW,
     );
-    expect(result.kind).toBe("bars");
     if (result.kind !== "bars") throw new Error("unreachable");
-    expect(result.bars).toHaveLength(1);
-    expect(result.bars[0]?.value).toBe(6);
+    expect(result.bars).toHaveLength(7);
+    expect(result.bars.map((bar) => bar.label.key)).toEqual([
+      "settings:research.weekdaySunday",
+      "settings:research.weekdayMonday",
+      "settings:research.weekdayTuesday",
+      "settings:research.weekdayWednesday",
+      "settings:research.weekdayThursday",
+      "settings:research.weekdayFriday",
+      "settings:research.weekdaySaturday",
+    ]);
+    expect(result.bars[0]?.value).toBe(2);
+    expect(result.bars[6]?.value).toBe(6);
   });
 });
 
 describe("retention_summary", () => {
-  it("suppresses mean/median/share to 0 below MIN_CELL_COUNT known concepts", async () => {
+  it("reports suppressed — never three 0 bars — below the sample-size floor", async () => {
+    // Three bars reading 0 are indistinguishable from three genuine zeros, and a learner
+    // with two concepts would read them as "you remember nothing" (审计统计分报告差距 3).
     const sightings = [
       { node_id: "a", created_at: NOW.toISOString() },
       { node_id: "b", created_at: NOW.toISOString() },
     ];
     const sql = makeFakeSql({ node_sightings: sightings });
     const result = await executeStatCall({ fn: "retention_summary", threshold: 0.9 }, sql, NOW);
-    expect(result).toEqual({
-      kind: "bars",
-      bars: [
-        { label: "均值", value: 0 },
-        { label: "中位数", value: 0 },
-        { label: "高于基准线的占比", value: 0 },
-      ],
-    });
+    expect(result).toEqual({ kind: "suppressed", n: 2 });
   });
 
   it("aggregates mean/median/share once enough concepts clear the floor", async () => {
@@ -228,9 +248,9 @@ describe("retention_summary", () => {
     expect(result.kind).toBe("bars");
     if (result.kind !== "bars") throw new Error("unreachable");
     const [mean, median, share] = result.bars;
-    expect(mean?.label).toBe("均值");
-    expect(median?.label).toBe("中位数");
-    expect(share?.label).toBe("高于基准线的占比");
+    expect(mean?.label.key).toBe("settings:research.retentionMean");
+    expect(median?.label.key).toBe("settings:research.retentionMedian");
+    expect(share?.label.key).toBe("settings:research.retentionAboveThreshold");
     for (const bar of result.bars) {
       expect(bar.value).toBeGreaterThanOrEqual(0);
       expect(bar.value).toBeLessThanOrEqual(1);
@@ -239,8 +259,10 @@ describe("retention_summary", () => {
 });
 
 describe("correlation", () => {
-  it("returns value 0 with n = actual days-with-data below the 7-day guard", async () => {
-    const dayKeys = buildDayKeys(7, NOW.toISOString());
+  it("reports suppressed — never the sentinel 0 — below the 30-day guard", async () => {
+    // 0 is a valid coefficient meaning "these move independently"; printing it for "we do
+    // not know" is a research finding nobody computed (审计统计分报告差距 3).
+    const dayKeys = buildDayKeys(30, NOW.toISOString());
     const first = dayKeys[0] ?? "";
     const last = dayKeys[dayKeys.length - 1] ?? "";
     const sql = makeFakeSql({
@@ -255,17 +277,17 @@ describe("correlation", () => {
         fn: "correlation",
         xMetric: "daily_encounters",
         yMetric: "daily_word_events",
-        windowDays: 7,
+        windowDays: 30,
       },
       sql,
       NOW,
     );
-    expect(result).toEqual({ kind: "number", value: 0, n: 2 });
+    expect(result).toEqual({ kind: "suppressed", n: 2 });
   });
 
   it("computes a perfect Pearson coefficient for identical daily patterns", async () => {
-    const dayKeys = buildDayKeys(10, NOW.toISOString());
-    const pattern = [1, 2, 3, 4, 5, 4, 3, 2, 1, 2];
+    const dayKeys = buildDayKeys(40, NOW.toISOString());
+    const pattern = Array.from({ length: 40 }, (_, index) => (index % 5) + 1);
     const sightings: { node_id: string; created_at: string }[] = [];
     const events: { created_at: string }[] = [];
     dayKeys.forEach((dayKey, index) => {
@@ -281,11 +303,11 @@ describe("correlation", () => {
         fn: "correlation",
         xMetric: "daily_encounters",
         yMetric: "daily_word_events",
-        windowDays: 10,
+        windowDays: 40,
       },
       sql,
       NOW,
     );
-    expect(result).toEqual({ kind: "number", value: 1, n: 10 });
+    expect(result).toEqual({ kind: "number", value: 1, n: 40 });
   });
 });

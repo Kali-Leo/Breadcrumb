@@ -19,11 +19,11 @@ import {
   type LoadedLanguagePack,
   mineConfusionPairs,
   type ReplacementPatch,
-  updatePlacement,
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { create } from "zustand";
 import { getRepos } from "../lib/db";
+import { nextPlacementState } from "../lib/diglotPlacement";
 import { refineWeavePatches } from "../lib/diglotRefine";
 import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "../lib/diglotReveal";
 import {
@@ -272,31 +272,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     const { settings, cardsByLemma, loaded } = get();
     const card = cardsByLemma.get(lemma);
     if (card === undefined) return;
-    // Behavioral placement: a word's first encounter is objective vocabulary evidence
-    // (clean read = known on sight). Persisted quietly — no weave invalidation needed,
-    // the floor only affects FUTURE new-word picks.
-    if (card.reps === 0 && loaded !== null) {
-      const rank = loaded.introductionQueue.indexOf(lemma);
-      const placed = updatePlacement(
-        {
-          introductionRankFloor: settings.introductionRankFloor,
-          placementStep: settings.placementStep,
-        },
-        { kind, cardReps: card.reps, wordRank: rank === -1 ? null : rank },
-        loaded.introductionQueue.length,
-      );
-      if (
-        placed.introductionRankFloor !== settings.introductionRankFloor ||
-        placed.placementStep !== settings.placementStep
-      ) {
-        const repos = await getRepos();
-        // Merge onto the settings AS THEY ARE NOW — a concurrent saveSettings between the
-        // entry snapshot and this write must not be silently reverted.
-        const nextSettings = { ...get().settings, ...placed };
-        await repos.settings.set(SETTINGS_KEY, nextSettings, nowIso());
-        set({ settings: nextSettings });
-      }
-    }
+    if (loaded !== null) await foldPlacement({ lemma, kind, messageId, card, loaded });
     const updated = await applyDiglotSignal({
       pair: settings.pairId,
       lemma,
@@ -338,6 +314,37 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     });
   },
 }));
+
+/** Persists what the placement rules made of one signal (see lib/diglotPlacement.ts). */
+async function foldPlacement(input: {
+  lemma: string;
+  kind: DiglotEventKind;
+  messageId: string | null;
+  card: Card;
+  loaded: LoadedLanguagePack;
+}): Promise<void> {
+  const { settings, cardsByLemma } = useDiglotStore.getState();
+  const placed = await nextPlacementState({
+    pairId: settings.pairId,
+    state: {
+      introductionRankFloor: settings.introductionRankFloor,
+      placementStep: settings.placementStep,
+    },
+    lemma: input.lemma,
+    kind: input.kind,
+    messageId: input.messageId,
+    card: input.card,
+    loaded: input.loaded,
+    introducedWordCount: cardsByLemma.size,
+  });
+  if (placed === null) return;
+  // Merge onto the settings AS THEY ARE NOW — a concurrent saveSettings between the entry
+  // snapshot and this write must not be silently reverted.
+  const nextSettings = { ...useDiglotStore.getState().settings, ...placed };
+  const repos = await getRepos();
+  await repos.settings.set(SETTINGS_KEY, nextSettings, nowIso());
+  useDiglotStore.setState({ settings: nextSettings });
+}
 
 /** Message ids with a weave in flight — single-flight guard that stays OUT of
  * patchesByMessage, so subscribers (MessageBubble's blank-until-woven gate, the doors

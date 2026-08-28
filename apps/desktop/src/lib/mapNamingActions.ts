@@ -20,7 +20,7 @@ import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
 import { nowIso } from "./time";
 
 const NAME_CACHE_KEY = "mapTopicNameCache";
@@ -137,6 +137,11 @@ async function applyNamesOnce(
     return changed ? { continents, islets: assignment.islets } : assignment;
   } catch (error) {
     void recordAiFailure(NAMING_PURPOSE, error);
+    void recordFailedCallUsage(error, {
+      purpose: NAMING_PURPOSE,
+      model: apiConfig.model,
+      conversationId: null,
+    });
     return assignment;
   }
 }

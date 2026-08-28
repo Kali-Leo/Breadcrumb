@@ -19,6 +19,12 @@ import { createSimlabRepos, type SimlabRepos } from "./repos";
  * executeTransaction() is genuinely atomic via better-sqlite3's transaction(): any
  * statement error rolls the whole batch back, matching the desktop's Rust command. */
 export function createSqliteClient(db: Database.Database): SqlClient {
+  // Foreign keys ON, deliberately: better-sqlite3 defaults them OFF, node:sqlite (core-db's
+  // fixture) defaults them ON, and the real app's sqlx pool sends PRAGMA foreign_keys=ON on
+  // every connection. That split is why the 2026-08-27 merge failure was invisible to the
+  // tests — a DELETE that threw 787 in production "succeeded" here and merely left orphan
+  // rows behind. All three hosts now agree (design audit 2026-08-28, 数据层 B1).
+  db.pragma("foreign_keys = ON");
   const runStatement = (statement: SqlTransactionStatement): void => {
     const params = statement.params;
     if ((params === undefined || params.length === 0) && !statement.sql.includes("?")) {

@@ -4,6 +4,7 @@
  * currency for unknown models, and the zero-token/non-empty-response under-count flag that
  * writes to ai_failures instead of silently recording a free call.
  */
+import { ChatJsonError } from "@breadcrumb/core-llm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const recordCallMock = vi.fn();
@@ -16,7 +17,7 @@ vi.mock("./failureLog", () => ({
   recordAiFailure: recordAiFailureMock,
 }));
 
-const { recordMeteredCall } = await import("./metering");
+const { recordFailedCallUsage, recordMeteredCall } = await import("./metering");
 
 afterEach(() => {
   recordCallMock.mockReset();
@@ -96,5 +97,33 @@ describe("recordMeteredCall", () => {
       responseHadContent: true,
     });
     expect(recordAiFailureMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordFailedCallUsage", () => {
+  const target = { purpose: "knowledge-tree", model: "deepseek-v4-flash", conversationId: "c1" };
+
+  it("records what a failed chatJson call already cost", async () => {
+    const error = new ChatJsonError(
+      "invalid json",
+      { inputTokens: 400, outputTokens: 90 },
+      new Error("boom"),
+    );
+    await recordFailedCallUsage(error, target);
+
+    expect(recordCallMock).toHaveBeenCalledTimes(1);
+    const row = recordCallMock.mock.calls[0]?.[0];
+    expect(row.input_tokens).toBe(400);
+    expect(row.output_tokens).toBe(90);
+    expect(row.purpose).toBe("knowledge-tree");
+  });
+
+  it("stays quiet for a failure that never reached the provider", async () => {
+    await recordFailedCallUsage(new Error("offline"), target);
+    await recordFailedCallUsage(
+      new ChatJsonError("HTTP 401", { inputTokens: 0, outputTokens: 0 }, new Error("401")),
+      target,
+    );
+    expect(recordCallMock).not.toHaveBeenCalled();
   });
 });

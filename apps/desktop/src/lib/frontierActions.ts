@@ -4,16 +4,24 @@
  * why this concept came up (same purposeful-entry pattern as reunion/teach/practice).
  * Main exports: startFrontierSession, frontierOpener.
  */
+import i18next from "i18next";
+import { asStoredText } from "../i18n/storedText";
 import { getRepos } from "./db";
 import { newId, nowIso } from "./time";
 
 /** Plain, suggest-only opener: names the concept and (when present) the already-mastered
- * neighbours that make it reachable — never "you should" or "you're behind". */
+ * neighbours that make it reachable — never "you should" or "you're behind". Stored text:
+ * this becomes a message row and part of the model's context, so it carries no isolates. */
 export function frontierOpener(label: string, litPrerequisiteLabels: readonly string[]): string {
   if (litPrerequisiteLabels.length > 0) {
-    return `接下来可以看看「${label}」——你已经掌握的 ${litPrerequisiteLabels.join("、")} 就在它旁边。想从哪里聊起都行。`;
+    return asStoredText(
+      i18next.t("palace:frontier.openerWithPrereq", {
+        label,
+        labels: litPrerequisiteLabels.join(i18next.t("common:list.separator")),
+      }),
+    );
   }
-  return `接下来可以看看「${label}」。想从哪里聊起都行。`;
+  return asStoredText(i18next.t("palace:frontier.opener", { label }));
 }
 
 /** Creates a kind='chat' conversation titled after the concept, seeded with the local

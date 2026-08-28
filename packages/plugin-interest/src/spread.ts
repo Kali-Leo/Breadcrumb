@@ -3,13 +3,26 @@
  * signal but close (by cosine similarity) to interested nodes inherits some of that
  * interest. Pure math, no DB, no I/O. Local cosine helper per 行为局部性 > DRY (mirrors
  * plugin-graph/src/similarity.ts without depending on that package).
- * Main exports: spreadInterest, DEFAULT_SPREAD_FACTOR.
+ * Main exports: spreadInterest, DEFAULT_SPREAD_FACTOR, SPREAD_SIMILARITY_FLOOR,
+ * SPREAD_NEIGHBOR_TOP_K.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 
 /** How much of the similarity-weighted neighborhood average bleeds into a node's own
  * score; 0 = no diffusion, 1 = a node with no signal fully inherits its neighbors'. */
 export const DEFAULT_SPREAD_FACTOR = 0.3;
+
+/** A neighbor below this cosine similarity is not a neighbor. Without a floor, every node in
+ * the tree joins every other node's weighted average, so diffusion degenerates into adding a
+ * global mean interest to everything and loses the locality that is its whole point. */
+export const SPREAD_SIMILARITY_FLOOR = 0.5;
+
+/** However many neighbors clear the floor, only the closest this many diffuse — the same
+ * absolute cost ceiling plugin-graph's DEFAULT_TOP_K_SIMILAR (= 8) puts on its own candidate
+ * pool, for the same reason: it bounds the worst case (a node sitting in a dense cluster of
+ * near-equal matches) without being the primary cutoff. Also caps the O(n²) sweep's damage as
+ * the tree grows. */
+export const SPREAD_NEIGHBOR_TOP_K = 8;
 
 /** Diffuses per-node scores (e.g. curiosity) across the embedding neighborhood. Nodes
  * without an embedding pass through unchanged (own score, or 0 if absent). Diffusion only
@@ -52,16 +65,23 @@ function weightedNeighborAverage(
   vectorByNodeId: ReadonlyMap<string, number[]>,
   scoresByNodeId: ReadonlyMap<string, number>,
 ): number {
-  let weightedSum = 0;
-  let weightTotal = 0;
+  const neighbors: { id: string; similarity: number }[] = [];
   for (const otherId of allNodeIds) {
     if (otherId === nodeId) continue;
     const otherVector = vectorByNodeId.get(otherId);
     if (otherVector === undefined) continue;
     const similarity = cosineSimilarity(vector, otherVector);
-    if (similarity <= 0) continue;
-    weightedSum += similarity * (scoresByNodeId.get(otherId) ?? 0);
-    weightTotal += similarity;
+    if (similarity < SPREAD_SIMILARITY_FLOOR) continue;
+    neighbors.push({ id: otherId, similarity });
+  }
+  // Closest first, node id as the tie-break so the top-K cut is deterministic.
+  neighbors.sort((a, b) => b.similarity - a.similarity || a.id.localeCompare(b.id));
+
+  let weightedSum = 0;
+  let weightTotal = 0;
+  for (const neighbor of neighbors.slice(0, SPREAD_NEIGHBOR_TOP_K)) {
+    weightedSum += neighbor.similarity * (scoresByNodeId.get(neighbor.id) ?? 0);
+    weightTotal += neighbor.similarity;
   }
   return weightTotal > 0 ? weightedSum / weightTotal : 0;
 }

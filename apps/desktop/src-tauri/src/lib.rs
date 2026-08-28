@@ -5,6 +5,9 @@
 mod embeddings;
 mod fsrs_optim;
 mod interest_service;
+// Test-only: asserts sqlx still enables foreign keys on every connection it opens.
+#[cfg(test)]
+mod pragma_defaults;
 mod transactions;
 mod tts;
 

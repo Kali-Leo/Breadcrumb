@@ -44,6 +44,7 @@ export {
   type WordCloud,
   wordCloudSchema,
 } from "./schemas";
+export { englishTopicNames, topicLabel } from "./topicNames";
 export {
   layoutWordCloud,
   type PlacedWord,

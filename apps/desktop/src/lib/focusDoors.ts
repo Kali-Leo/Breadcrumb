@@ -34,8 +34,12 @@ export async function computeFocusDoorPatches(
       repos.nodeSightings.listAll(),
       repos.masteryClaims.listAll(),
     ]);
-    const masteryByNode = computeMastery(sightings, claims, nowIso());
+    // memoryStore's cached retention instead of a second full FSRS replay over the same
+    // sightings (design audit 2026-08-28, 记忆与遗忘模型 #8) — the same substitution
+    // conceptDoors.ts makes. It was replayed from exactly this footprint set (listAll), and
+    // door ranking is coarse enough that its few seconds of staleness cannot change the pick.
     const retentionByNode = useMemoryStore.getState().retentionByNode;
+    const masteryByNode = computeMastery(sightings, claims, nowIso(), retentionByNode);
 
     // Primary source (spec 043 §6).
     const terms = await ensureTermMarks("focus_node", focusNodeId, answerText, conversationId);

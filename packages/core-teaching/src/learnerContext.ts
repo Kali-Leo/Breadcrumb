@@ -18,9 +18,16 @@ export interface LearnerContext {
   confusionDetected: boolean;
 }
 
-/** Retention below this: teach directly from basics, small steps (ZPD grey-area floor). */
+// Both numbers are PROVISIONAL AND UNSOURCED. The three-band stance they produce follows a
+// real direction — the expertise reversal effect says assistance that helps a novice starts
+// hurting once the learner has schemas of their own — but no literature gives a threshold
+// with memory retention as the independent variable, so 0.4 and 0.7 were picked by hand, not
+// derived. They are placeholders to be calibrated against this app's own data; do not cite
+// them as findings and do not build anything that assumes they are exact.
+
+/** Retention below this: teach directly from basics, small steps. Provisional, see above. */
 const LOW_RETENTION_CEILING = 0.4;
-/** Retention above this: skip basics, drop assistance (expertise reversal). */
+/** Retention above this: skip basics, drop assistance. Provisional, see above. */
 const HIGH_RETENTION_FLOOR = 0.7;
 
 function retentionStanceLine(label: string, retention: number, principled: boolean): string {

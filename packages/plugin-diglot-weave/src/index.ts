@@ -14,6 +14,7 @@ export * from "./memoryState";
 export * from "./packSchema";
 export * from "./placement";
 export * from "./replace";
+export * from "./reviewDebt";
 export * from "./scheduler";
 export * from "./tokenize";
 export * from "./trainingLog";

@@ -8,7 +8,14 @@
 import type { InterestSignalRow } from "@breadcrumb/core-db";
 
 /** Older signals fade out of the aggregate on this half-life — recent psychology matters
- * more than what was true a month ago. */
+ * more than what was true a month ago.
+ *
+ * HONESTY NOTE (2026-08-28 audit): 14 days is a product intuition, not an empirical value.
+ * Its only source is docs/vision/07 «两周前的兴趣只算一半», which cites nothing. Half-lives in
+ * the literature are fitted per dataset (one recommender paper fits ~150 days on movie
+ * ratings), and a single user's signal is far too sparse to fit one here — so this is not a
+ * number to defend, just one to state plainly. Splitting it into a short/long pair is a
+ * separate open design item, deliberately not done in this pass. */
 export const INTEREST_HALF_LIFE_DAYS = 14;
 
 /** Shrinkage pseudo-count (spec 014): a node's score is pulled toward a 0 prior until its

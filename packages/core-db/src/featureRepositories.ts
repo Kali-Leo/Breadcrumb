@@ -94,5 +94,27 @@ export function createFactcheckRepo(sql: SqlClient) {
         [runId],
       );
     },
+    /** Every claim of a set of runs in one round trip. Loading a conversation's fact-check
+     * layer used to issue one query per run; the caller groups the rows by `run_id`. */
+    async listClaimsByRuns(runIds: readonly string[]): Promise<FactcheckClaimRow[]> {
+      const rows: FactcheckClaimRow[] = [];
+      // Chunked to stay well under SQLite's bound-parameter ceiling however many runs a
+      // long-lived conversation accumulates.
+      for (let start = 0; start < runIds.length; start += RUN_ID_CHUNK_SIZE) {
+        const chunk = runIds.slice(start, start + RUN_ID_CHUNK_SIZE);
+        const placeholders = chunk.map(() => "?").join(", ");
+        rows.push(
+          ...(await sql.select<FactcheckClaimRow>(
+            `SELECT * FROM factcheck_claims WHERE run_id IN (${placeholders})
+             ORDER BY created_at ASC, id ASC`,
+            chunk,
+          )),
+        );
+      }
+      return rows;
+    },
   };
 }
+
+/** Bound parameters per batched claim query. */
+const RUN_ID_CHUNK_SIZE = 400;

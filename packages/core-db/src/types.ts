@@ -110,6 +110,15 @@ export interface KnowledgeEdgeRow {
   confidence: number;
   origin: KnowledgeEdgeOrigin;
   created_at: string;
+  /** The judge's one-sentence justification (migration 0048). NULL for edges recorded before
+   * the column existed. Optional only at construction time, same convention as
+   * NodeSightingRow.grade (0044): callers with no justification to record omit it and the
+   * upsert writes NULL; every row read back from SQLite carries the key. */
+  reasoning?: string | null;
+  /** The assistant reply whose round produced this edge (migration 0048) — provenance, so an
+   * edge can be traced back to the text it was inferred from. NULL when unknown. Optional at
+   * construction time for the same reason as `reasoning`. */
+  source_message_id?: string | null;
 }
 
 /** Locally-computed embedding of one knowledge node (vector stored as a JSON array). */
@@ -129,6 +138,11 @@ export interface MapPlaceNameRow {
   updated_at: string;
 }
 
+/** How well the learner actually retrieved the concept at a footprint. Mirrors the four FSRS
+ * ratings, because that is exactly what it is fed to. 'good' is the passive default: the
+ * concept was merely met (extraction, re-encounter), with no retrieval attempt to grade. */
+export type NodeSightingGrade = "again" | "hard" | "good" | "easy";
+
 /** One footprint: a conversation touched (learned or re-met) a knowledge node. */
 export interface NodeSightingRow {
   id: string;
@@ -139,6 +153,11 @@ export interface NodeSightingRow {
   /** Spec 040 §7 provenance: the station this node grew from (the round's anchored node, or a
    * door's host station). NULL = unknown/legacy — the station map falls back to edge inference. */
   origin_node_id: string | null;
+  /** Migration 0044. Optional only at construction time — callers that have no retrieval
+   * signal omit it and the insert path writes 'good'. Every row read back from SQLite carries
+   * a value (NOT NULL DEFAULT 'good'). The union is the whole validation: no CHECK constraint,
+   * same TypeScript-side convention as conversations.kind (0029) and term_marks.target_kind. */
+  grade?: NodeSightingGrade;
 }
 
 /** A label the node-dedup synonym gate (spec 015) judged identical to an existing node —
@@ -291,7 +310,10 @@ export interface ComparisonProfileItemRow {
 }
 
 export type AlignmentVerdict = "same" | "different";
-export type AlignmentConfidence = "高" | "中" | "低";
+/** ASCII on purpose (migration 0047): this tier travels inside a JSON contract the judge is
+ * separately instructed to answer in the learner's own language, so Chinese literals here
+ * would fight that directive. */
+export type AlignmentConfidence = "high" | "medium" | "low";
 
 /** A concept-space anchor point, independent of any one comparison profile (spec 025) — the
  * unit every profile item and every knowledge node ultimately crosswalks against. */
@@ -382,5 +404,37 @@ export interface TermMarkRow {
   target_kind: TermMarkTargetKind;
   target_id: string;
   terms_json: string;
+  created_at: string;
+}
+
+/** One executed duplicate-node merge (migration 0045). duplicate_snapshot_json is the whole
+ * knowledge_nodes row as it stood immediately before deletion, so a wrong merge stays
+ * auditable and reversible. No foreign keys: duplicate_id names a row that no longer exists. */
+export interface NodeMergeRow {
+  id: string;
+  canonical_id: string;
+  duplicate_id: string;
+  duplicate_snapshot_json: string;
+  merged_at: string;
+}
+
+/** One cached synonym-judge verdict over a pair of EXISTING nodes (migration 0045). The pair
+ * is stored normalized (node_a_id < node_b_id) so it has exactly one key regardless of which
+ * order the sweep happened to generate it in. 'different' rows are the point: without them
+ * the sweep re-asks the LLM about the same pairs on every startup, forever. */
+export interface NodePairVerdictRow {
+  node_a_id: string;
+  node_b_id: string;
+  verdict: AlignmentVerdict;
+  judged_at: string;
+}
+
+/** Cached local embedding of one canonical concept (migration 0046). content_hash is a hash
+ * of the exact text that was embedded, so only concepts whose text actually changed get
+ * re-embedded. */
+export interface CanonicalConceptEmbeddingRow {
+  concept_id: string;
+  content_hash: string;
+  vector_json: string;
   created_at: string;
 }

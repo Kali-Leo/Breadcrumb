@@ -252,12 +252,12 @@ export function MapView() {
             className="h-full w-full overflow-hidden"
             onClick={onCanvasClick}
           />
-          <div className="absolute left-3 top-3 z-10">
+          <div className="absolute start-3 top-3 z-10">
             <MapModeToggle />
           </div>
           {/* Operation hints live on the map itself (owner fix 5) — quiet ink in the
               bottom-left corner of the parchment, never a rail resident. */}
-          <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded bg-stone-100/60 px-2 py-1 text-[11px] leading-4 text-stone-600/75">
+          <div className="pointer-events-none absolute bottom-3 start-3 z-10 rounded bg-stone-100/60 px-2 py-1 text-[11px] leading-4 text-stone-600/75">
             <p>{t("palace:map.zoomInHint")}</p>
             <p>{t("palace:map.zoomOutHint")}</p>
             <p>{t("palace:map.clickNameHint")}</p>

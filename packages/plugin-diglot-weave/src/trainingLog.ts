@@ -7,7 +7,10 @@
 import type { DiglotEventKind, DiglotWordEventRow } from "@breadcrumb/core-db";
 import { ratingForSignal } from "./memoryState";
 
-/** Anki's guidance: parameter fitting below ~400 reviews overfits. */
+/** Reviews required before fitting personal parameters. Anki removed its hard minimum in
+ * 24.06.3 (400 was the 24.04 version's gate), so this is our own floor, not a citation: it
+ * buys robustness against the synthetic ratings this log is made of — exposures folded into
+ * Good carry far less information per row than a real Anki answer. */
 export const MIN_REVIEWS_FOR_FITTING = 400;
 
 export interface TrainingReview {
@@ -56,13 +59,16 @@ export function buildTrainingItems(events: readonly DiglotWordEventRow[]): {
   const items: TrainingItem[] = [];
   let reviewCount = 0;
   for (const eventsAsc of byLemma.values()) {
-    const reviews = reviewsForWord(eventsAsc);
+    // Same-day repeats are dropped (the first review keeps its conventional delta_t = 0):
+    // fsrs-rs and the srs-benchmark corpus both exclude same-day reviews, and this log
+    // produces plenty of them — several exposures of one word inside one reading session.
+    // Dropping them is lossless for the surviving deltas, which are day-granular anyway.
+    const reviews = reviewsForWord(eventsAsc).filter(
+      (review, index) => index === 0 || review.delta_t > 0,
+    );
     reviewCount += reviews.length;
     for (let index = 1; index < reviews.length; index += 1) {
-      const last = reviews[index];
-      if (last !== undefined && last.delta_t > 0) {
-        items.push({ reviews: reviews.slice(0, index + 1) });
-      }
+      items.push({ reviews: reviews.slice(0, index + 1) });
     }
   }
   return { items, reviewCount };

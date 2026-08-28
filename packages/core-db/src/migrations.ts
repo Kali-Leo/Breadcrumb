@@ -806,7 +806,130 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0040_study_mode",
     statements: [`ALTER TABLE conversations ADD COLUMN study_mode INTEGER NOT NULL DEFAULT 0;`],
   },
+  {
+    // Design audit 2026-08-28 (记忆与遗忘模型 #1, 掌握度评估 G2): every footprint used to be fed
+    // to FSRS as a fixed "Good" review, so the one real retrieval signal the product has — the
+    // concept guess, the teach-back judgment — was thrown away and difficulty never moved.
+    // grade carries it: 'again' | 'hard' | 'good' | 'easy', the four FSRS ratings. 'good' is the
+    // passive default (mere exposure), which is also what every pre-0044 row was, hence the
+    // DEFAULT backfill. Value range is validated in TypeScript, not by a CHECK constraint —
+    // same convention as conversations.kind (0029) and term_marks.target_kind (0036).
+    id: "0044_sighting_grades",
+    statements: [`ALTER TABLE node_sightings ADD COLUMN grade TEXT NOT NULL DEFAULT 'good';`],
+  },
+  {
+    // Design audit 2026-08-28 (知识图谱与去重 #3 and #5): the dedup sweep's two missing
+    // memories. node_merges snapshots the whole duplicate row before mergeNode deletes it, so
+    // a wrong merge is auditable and undoable (until now the duplicate's summary, created_at
+    // and history vanished with no record at all). node_pair_verdicts caches the "different"
+    // verdicts too — before this, only "same" produced a node_aliases row, so the same top-10
+    // suspect pairs were re-sent to the LLM on every single startup, forever.
+    // Deliberately NO foreign keys on either table: both reference node ids that the merge
+    // executor is in the middle of deleting, and a FK here would reintroduce exactly the
+    // constraint failure this audit round is fixing.
+    id: "0045_dedup_bookkeeping",
+    statements: [
+      `CREATE TABLE node_merges (
+        id TEXT PRIMARY KEY,
+        canonical_id TEXT NOT NULL,
+        duplicate_id TEXT NOT NULL,
+        duplicate_snapshot_json TEXT NOT NULL,
+        merged_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX idx_node_merges_canonical ON node_merges(canonical_id);`,
+      `CREATE TABLE node_pair_verdicts (
+        node_a_id TEXT NOT NULL,
+        node_b_id TEXT NOT NULL,
+        verdict TEXT NOT NULL CHECK (verdict IN ('same','different')),
+        judged_at TEXT NOT NULL,
+        PRIMARY KEY (node_a_id, node_b_id)
+      );`,
+    ],
+  },
+  {
+    // Design audit 2026-08-28 (知识图谱与去重 #2, 数据层 B8): every anchor sweep re-embedded all
+    // ~800 canonical concepts from scratch because there was nowhere to keep the vectors.
+    // content_hash is the hash of the exact text that was embedded, so a refreshed concept
+    // (new aliases, new label) invalidates just its own row instead of the whole cache.
+    id: "0046_canonical_concept_embeddings",
+    statements: [
+      `CREATE TABLE canonical_concept_embeddings (
+        concept_id TEXT PRIMARY KEY REFERENCES canonical_concepts(id),
+        content_hash TEXT NOT NULL,
+        vector_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+    ],
+  },
+  {
+    // Design audit 2026-08-28 (多语言 B6): the alignment judge's confidence tier was stored as
+    // 高/中/低 — Chinese literals inside a JSON contract the model is separately instructed to
+    // answer in the learner's own language, which makes the enum fight the language directive.
+    // The tier becomes ASCII; existing rows map across. SQLite CHECK constraints cannot be
+    // altered, so the table is rebuilt (same shape as 0027's mastery_claims rebuild).
+    id: "0047_ascii_alignment_confidence",
+    statements: [
+      `ALTER TABLE node_concept_anchors RENAME TO node_concept_anchors_old;`,
+      `CREATE TABLE node_concept_anchors (
+        node_id TEXT NOT NULL REFERENCES knowledge_nodes(id),
+        concept_id TEXT NOT NULL REFERENCES canonical_concepts(id),
+        verdict TEXT NOT NULL CHECK (verdict IN ('same','different')),
+        confidence TEXT NOT NULL CHECK (confidence IN ('high','medium','low')),
+        method TEXT NOT NULL CHECK (method IN ('alias','judge')),
+        reason TEXT NOT NULL,
+        anchored_at TEXT NOT NULL,
+        PRIMARY KEY (node_id, concept_id)
+      );`,
+      `INSERT INTO node_concept_anchors
+         (node_id, concept_id, verdict, confidence, method, reason, anchored_at)
+       SELECT node_id, concept_id, verdict,
+         CASE confidence
+           WHEN '高' THEN 'high'
+           WHEN '中' THEN 'medium'
+           WHEN '低' THEN 'low'
+           ELSE 'medium'
+         END,
+         method, reason, anchored_at
+       FROM node_concept_anchors_old;`,
+      `DROP TABLE node_concept_anchors_old;`,
+      `CREATE INDEX idx_node_concept_anchors_node ON node_concept_anchors(node_id);`,
+    ],
+  },
+  {
+    // Design audit 2026-08-28 (知识图谱与去重 #6): the edge judge is asked for a reasoning
+    // sentence, the schema parses it, and it was then thrown away — the cheapest possible
+    // hallucination defence (an auditable trail) cost one column that did not exist.
+    // source_message_id records which assistant reply the round's nodes came from, so an edge
+    // can be traced back to the text that produced it. Both NULL for every pre-0048 edge.
+    id: "0048_edge_reasoning_provenance",
+    statements: [
+      `ALTER TABLE knowledge_edges ADD COLUMN reasoning TEXT;`,
+      `ALTER TABLE knowledge_edges ADD COLUMN source_message_id TEXT;`,
+    ],
+  },
+  {
+    // Design audit 2026-08-28 (数据层与性能 #9): llm_calls is the fastest-growing table in the
+    // schema (1535 rows and climbing on the dev database) and sumCostForConversation filters it
+    // by conversation_id, which had no index — a full scan on every metering read. The audit
+    // named four other unindexed foreign-key columns and judged all four not worth an index:
+    // their tables are small enough that the scan is cheaper than the write cost of maintaining
+    // one. Do not add them without new evidence.
+    id: "0049_llm_calls_conversation_index",
+    statements: [
+      `CREATE INDEX IF NOT EXISTS idx_llm_calls_conversation ON llm_calls(conversation_id);`,
+    ],
+  },
 ];
+
+/**
+ * Migration numbers that were shipped once, recorded in real `_migrations` tables, and then
+ * deleted from this list — 0038/0039 and 0041-0043 all belonged to the discovery feed, torn
+ * out on 2026-08-24. They must never be reused. `runMigrations` skips any id the database has
+ * already recorded, so a NEW migration reusing one of these numbers would be silently skipped
+ * on exactly the machines that ran the old one, leaving their schema permanently forked from
+ * the code with nothing to show for it (design audit 2026-08-28, 数据层与性能 #8).
+ */
+export const RETIRED_MIGRATION_IDS: readonly string[] = ["0038", "0039", "0041", "0042", "0043"];
 
 /** Applies every migration not yet recorded in _migrations, oldest first, exactly once. */
 export async function runMigrations(sql: SqlClient): Promise<void> {
@@ -823,6 +946,7 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
   );
   const appliedRows = await sql.select<{ id: string }>("SELECT id FROM _migrations");
   const applied = new Set(appliedRows.map((row) => row.id));
+  warnAboutUnknownAppliedIds(applied);
   for (const migration of MIGRATIONS) {
     if (applied.has(migration.id)) continue;
     // One transaction per migration, bookkeeping row included: a crash mid-migration leaves
@@ -838,4 +962,26 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
       },
     ]);
   }
+}
+
+/**
+ * The ledger check: every id this database has recorded should still exist in MIGRATIONS.
+ * One that doesn't means the database ran a migration this code no longer carries — normal
+ * for a machine that ran a since-deleted feature (see RETIRED_MIGRATION_IDS), but worth
+ * saying out loud, because the same mechanism that makes it harmless (skip what's recorded)
+ * is what would make a reused number vanish without a trace.
+ *
+ * A warning, never a throw: the drift is already in the past by the time we can see it, and
+ * refusing to start would brick the app over a row that costs nothing to carry.
+ */
+function warnAboutUnknownAppliedIds(applied: ReadonlySet<string>): void {
+  const knownIds = new Set(MIGRATIONS.map((migration) => migration.id));
+  const unknownIds = [...applied].filter((id) => !knownIds.has(id)).sort();
+  if (unknownIds.length === 0) return;
+  console.warn(
+    `_migrations records ${unknownIds.length} id(s) this build does not know: ` +
+      `${unknownIds.join(", ")}. They were applied by an older build and are being left ` +
+      "alone. Never reuse one of these numbers for a new migration — this database would " +
+      "skip it silently and its schema would fork from the code with no error anywhere.",
+  );
 }

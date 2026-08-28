@@ -1,8 +1,8 @@
 /**
  * Purpose: unit tests for exactly-once migration tracking using a fake SqlClient.
  */
-import { describe, expect, it } from "vitest";
-import { MIGRATIONS, runMigrations } from "./migrations";
+import { describe, expect, it, vi } from "vitest";
+import { MIGRATIONS, RETIRED_MIGRATION_IDS, runMigrations } from "./migrations";
 import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient } from "./types";
 
@@ -75,4 +75,51 @@ describe("runMigrations", () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect([...ids].sort()).toEqual(ids);
   });
+
+  it("numbers migrations strictly upward", () => {
+    const numbers = MIGRATIONS.map((migration) => numericPrefixOf(migration.id));
+    for (let index = 1; index < numbers.length; index += 1) {
+      const previous = numbers[index - 1] ?? 0;
+      const current = numbers[index] ?? 0;
+      const because = `${MIGRATIONS[index]?.id} must outrank ${MIGRATIONS[index - 1]?.id}`;
+      expect(current, because).toBeGreaterThan(previous);
+    }
+  });
+
+  it("never reuses a retired migration number", () => {
+    const numbers = new Set(MIGRATIONS.map((migration) => numericPrefixOf(migration.id)));
+    for (const retired of RETIRED_MIGRATION_IDS) {
+      expect(
+        numbers.has(Number(retired)),
+        `migration number ${retired} was shipped once and is recorded in real _migrations ` +
+          "tables; a new migration reusing it would be skipped silently on those databases",
+      ).toBe(false);
+    }
+  });
+
+  it("warns about applied ids this build does not know, and still migrates", async () => {
+    const { client, appliedIds } = makeFakeSql();
+    appliedIds.push(...MIGRATIONS.slice(0, 3).map((migration) => migration.id));
+    appliedIds.push("0038_discovery_feed", "0041_feed_items");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      await runMigrations(client);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const message = String(warn.mock.calls[0]?.[0]);
+      expect(message).toContain("0038_discovery_feed");
+      expect(message).toContain("0041_feed_items");
+    } finally {
+      warn.mockRestore();
+    }
+    // The unknown ids are left in place and every real migration still ran.
+    for (const migration of MIGRATIONS) expect(appliedIds).toContain(migration.id);
+    expect(appliedIds).toContain("0038_discovery_feed");
+  });
 });
+
+/** "0049_llm_calls_conversation_index" -> 49. */
+function numericPrefixOf(id: string): number {
+  const prefix = /^(\d+)_/.exec(id)?.[1];
+  expect(prefix, `migration id ${id} must start with a number and an underscore`).toBeDefined();
+  return Number(prefix);
+}

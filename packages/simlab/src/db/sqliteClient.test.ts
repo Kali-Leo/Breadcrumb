@@ -369,7 +369,7 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
         node_id: "node1",
         concept_id: "concept-data-structures",
         verdict: "same",
-        confidence: "高",
+        confidence: "high",
         method: "alias",
         reason: "标签完全一致",
         anchored_at: "2026-08-09T11:00:00.000Z",
@@ -387,7 +387,7 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
         node_id: "node1",
         concept_id: "concept-data-structures",
         verdict: "different",
-        confidence: "中",
+        confidence: "medium",
         method: "judge",
         reason: "重新判定为不同概念",
         anchored_at: "2026-08-09T12:00:00.000Z",
@@ -396,7 +396,7 @@ describe("canonical_concepts + node_concept_anchors (real sqlite, migration 0020
     const afterReanchor = await temp.repos.canonical.listAnchors();
     expect(afterReanchor).toHaveLength(1);
     expect(afterReanchor[0]?.verdict).toBe("different");
-    expect(afterReanchor[0]?.confidence).toBe("中");
+    expect(afterReanchor[0]?.confidence).toBe("medium");
     expect(afterReanchor[0]?.method).toBe("judge");
 
     // comparison_profile_items now carries an optional concept_id column.

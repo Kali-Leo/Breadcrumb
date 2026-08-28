@@ -8,5 +8,6 @@
 export * from "./attach";
 export * from "./extraction";
 export * from "./mergePlan";
+export * from "./similarityGate";
 export * from "./suspectPairs";
 export * from "./synonymGate";

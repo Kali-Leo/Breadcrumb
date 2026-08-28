@@ -47,6 +47,9 @@ export interface BreadcrumbEventMap {
     conversationId: string;
     freshNodeIds: string[];
     touchedNodeIds: string[];
+    /** The assistant reply this round's nodes were extracted from — provenance the edge
+     * pipeline stores on every edge it records (migration 0048). */
+    sourceMessageId: string;
   };
   /** Ask the shell to switch to the chat view with a conversation open — used by the
    * comparison tree's practice discussions (spec 026). */

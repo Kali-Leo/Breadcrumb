@@ -13,7 +13,13 @@ const text = z
   .transform((value) => value ?? "");
 
 export const browsingProfileSchema = z.object({
+  /** Present from the service's v2 onwards; older builds simply omit it, and nothing here
+   * changes behaviour on it yet — it is read so a future mismatch can be *named*. */
+  api_version: z.number().optional(),
   topics: z.array(z.string()),
+  /** English topic names, aligned by position with `topics`. The service writes topics in
+   * Chinese; when it can also give English, an English interface uses it. */
+  topics_en: z.array(z.string()).optional(),
   groups: z.record(z.string(), z.array(z.string())),
   short: z.array(z.number()),
   long: z.array(z.number()),
@@ -54,6 +60,7 @@ export const newInterestsSchema = z.object({
   interests: z.array(
     z.object({
       topic: z.string(),
+      topic_en: z.string().optional(),
       share: z.number(),
       before: z.number(),
       items: z.array(z.object({ title: text, up: text, id: text, site: text })),

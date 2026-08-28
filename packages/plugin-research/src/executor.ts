@@ -13,6 +13,15 @@ import { verifyResearchTaskSignature } from "./taskSignature";
 /** A single task may not hold the (idle) main thread longer than this. */
 export const TASK_TIME_BUDGET_MS = 5000;
 
+/**
+ * `expiresAt` is a date, not an instant: a task that expires on the 13th is valid all through
+ * the 13th. Comparing the bare date string against a full ISO instant (as this used to) made
+ * "2026-08-13" sort before "2026-08-13T10:00:00.000Z", retiring every task a whole day early.
+ */
+function hasExpired(expiresAt: string, now: Date): boolean {
+  return `${expiresAt.slice(0, 10)}T23:59:59.999Z` < now.toISOString();
+}
+
 export interface ResearchExecutorDeps {
   sql: SqlClient;
   now: () => Date;
@@ -45,7 +54,7 @@ export async function runPendingResearchTasks(
       }
       const task = signed.payload;
       const startedAt = deps.now();
-      if (task.expiresAt < startedAt.toISOString()) continue;
+      if (hasExpired(task.expiresAt, startedAt)) continue;
       const results: StatResult[] = [];
       for (const call of task.calls) {
         if (deps.now().getTime() - startedAt.getTime() > TASK_TIME_BUDGET_MS) {

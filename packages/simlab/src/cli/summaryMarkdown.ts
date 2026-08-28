@@ -39,12 +39,15 @@ function header(metrics: RunMetrics): string {
   ].join("\n");
 }
 
+// targetConceptsEcho is deliberately not reported here (design audit 2026-08-28, simlab与
+// 测试策略 #3): the persona's target concepts are fed into the student's own prompt and then
+// used as the ground truth for matching them back, so the figure is an echo of the input and
+// read 100% on every run ever made. It stays in metrics.json, where a drop is still readable.
 function edgeNetworkSection(metrics: RunMetrics): string {
   return [
     "## edgeNetwork",
     "",
     `- cycleRejectionCount: ${metrics.edgeNetwork.cycleRejectionCount}`,
-    `- targetConceptsRecall (average across journeys): ${(metrics.edgeNetwork.targetConceptsRecall * 100).toFixed(1)}%`,
   ].join("\n");
 }
 
@@ -114,13 +117,13 @@ function flaggedSection(flaggedFileNames: readonly string[]): string {
 function journeysSection(metrics: RunMetrics): string {
   const rows = metrics.journeys.map(
     (journey) =>
-      `| ${journey.journeyId} | ${journey.personaId} | ${journey.days} | ${journey.totalConversations} | ${journey.totalRounds} | ${journey.newNodeCount} | ${(journey.targetConceptsRecall * 100).toFixed(0)}% |`,
+      `| ${journey.journeyId} | ${journey.personaId} | ${journey.days} | ${journey.totalConversations} | ${journey.totalRounds} | ${journey.newNodeCount} |`,
   );
   return [
     "## Journeys",
     "",
-    "| journeyId | personaId | days | conversations | rounds | newNodes | recall |",
-    "|---|---|---|---|---|---|---|",
-    ...(rows.length > 0 ? rows : ["| (none) | | | | | | |"]),
+    "| journeyId | personaId | days | conversations | rounds | newNodes |",
+    "|---|---|---|---|---|---|",
+    ...(rows.length > 0 ? rows : ["| (none) | | | | | |"]),
   ].join("\n");
 }

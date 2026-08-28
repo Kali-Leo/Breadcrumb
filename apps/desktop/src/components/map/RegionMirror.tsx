@@ -93,7 +93,9 @@ export function RegionMirror({
   const header = (
     <div className="rounded-xl bg-white p-3 shadow-sm">
       <p className="text-base font-semibold text-stone-700">{title}</p>
-      <p className="mt-1 text-sm text-stone-500">{memberCount} 个知识点</p>
+      <p className="mt-1 text-sm text-stone-500">
+        {t("palace:map.memberCount", { count: memberCount })}
+      </p>
     </div>
   );
 
@@ -110,7 +112,7 @@ export function RegionMirror({
       <>
         {header}
         <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs text-stone-400">{emptyLine ?? "这片区域还没有学习记录"}</p>
+          <p className="text-xs text-stone-400">{emptyLine ?? t("palace:mirror.regionEmpty")}</p>
         </div>
       </>
     );

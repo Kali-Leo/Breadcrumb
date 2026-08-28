@@ -36,14 +36,14 @@ describe("edgeJudgeSchema", () => {
           pairId: "p1",
           relation: "helps",
           direction: null,
-          weight: "中",
+          weight: "medium",
           confidence: 0.7,
           reasoning: "类比有助于理解",
         },
       ],
       methodNodes: [],
     });
-    expect(parsed.edges[0]?.weight).toBe("中");
+    expect(parsed.edges[0]?.weight).toBe("medium");
   });
 
   it("accepts a method node proposal", () => {
@@ -54,7 +54,7 @@ describe("edgeJudgeSchema", () => {
           label: "费曼技巧",
           summary: "用简单语言复述以检验理解",
           helpsLabels: ["导数"],
-          weight: "强",
+          weight: "strong",
           confidence: 0.7,
         },
       ],
@@ -81,7 +81,7 @@ describe("edgeJudgeSchema", () => {
   });
 
   it("maps every anchored helps-weight tier to its documented number", () => {
-    expect(HELPS_WEIGHT_SCORES).toEqual({ 弱: 0.3, 中: 0.6, 强: 0.9 });
+    expect(HELPS_WEIGHT_SCORES).toEqual({ weak: 0.3, medium: 0.6, strong: 0.9 });
   });
 
   it("rejects an unknown relation value", () => {
@@ -127,11 +127,11 @@ describe("edgeJudgeSchema", () => {
           label: "拉格朗日乘数法",
           summary: "带约束的极值问题求解方法",
           connectsToLabel: "导数",
-          helpsLevel: "中",
+          helpsLevel: "medium",
         },
       ],
     });
-    expect(parsed.adjacentConcepts[0]?.helpsLevel).toBe("中");
+    expect(parsed.adjacentConcepts[0]?.helpsLevel).toBe("medium");
   });
 
   it("rejects more than 2 adjacentConcepts", () => {
@@ -139,7 +139,7 @@ describe("edgeJudgeSchema", () => {
       label: "x",
       summary: "s",
       connectsToLabel: "y",
-      helpsLevel: "弱" as const,
+      helpsLevel: "weak" as const,
     };
     expect(() =>
       edgeJudgeSchema.parse({

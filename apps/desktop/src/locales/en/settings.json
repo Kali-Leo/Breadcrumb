@@ -33,7 +33,8 @@
   "quietIssues": {
     "title": "Background work",
     "allGood": "Everything in the background is fine.",
-    "summary": "{{count}} small background jobs did not finish recently. Your learning is unaffected — open to see which ones",
+    "summary_one": "{{count}} small background job did not finish recently. Your learning is unaffected — open to see which one",
+    "summary_other": "{{count}} small background jobs did not finish recently. Your learning is unaffected — open to see which ones",
     "fallbackPurpose": "Background job"
   },
   "purposes": {
@@ -147,6 +148,18 @@
     "cardPurposeLabel": "Purpose",
     "cardEthicsLabel": "Ethics note",
     "cardComputedAtLabel": "Computed",
+    "notEnoughData": "Not enough data yet",
+    "barRange": "{{low}}–{{high}}",
+    "retentionMean": "Average",
+    "retentionMedian": "Median",
+    "retentionAboveThreshold": "Share above the baseline",
+    "weekdaySunday": "Sunday",
+    "weekdayMonday": "Monday",
+    "weekdayTuesday": "Tuesday",
+    "weekdayWednesday": "Wednesday",
+    "weekdayThursday": "Thursday",
+    "weekdayFriday": "Friday",
+    "weekdaySaturday": "Saturday",
     "deleteAction": "Delete this result",
     "deleteConfirmPrompt": "Deleting this result cannot be undone. Delete it?",
     "deleteConfirmAction": "Delete",

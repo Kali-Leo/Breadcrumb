@@ -1,7 +1,8 @@
 /**
  * Purpose: dates and numbers in the reader's own conventions. Everything goes through the
  * platform's Intl so no format is hand-written for one language and wrong in the next.
- * Main exports: formatDayMonth, formatDate, formatCount, formatPercent, fontStackFor.
+ * Main exports: formatDayMonth, formatDate, formatCount, formatPercent, formatSignedDecimal,
+ * fontStackFor.
  */
 import { DEFAULT_LANGUAGE_CODE, type ScriptFamily } from "./languages";
 
@@ -36,6 +37,16 @@ export function formatPercent(locale: string, ratio: number, fractionDigits = 0)
     style: "percent",
     maximumFractionDigits: fractionDigits,
   }).format(ratio);
+}
+
+/** A signed score like "+1.25": the sign carries the meaning here, so it is always written,
+ * and both it and the decimal mark come from the reader's own conventions. */
+export function formatSignedDecimal(locale: string, value: number, fractionDigits = 2): string {
+  return new Intl.NumberFormat(safeLocale(locale), {
+    signDisplay: "exceptZero",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value);
 }
 
 /**

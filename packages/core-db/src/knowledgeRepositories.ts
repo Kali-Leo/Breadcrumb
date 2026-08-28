@@ -49,9 +49,11 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
 
 export function createNodeSightingsRepo(sql: SqlClient) {
   return {
+    /** Records a footprint. `grade` is optional: a caller with no retrieval signal (extraction,
+     * re-encounter) omits it and the footprint lands as passive exposure ('good'). */
     async record(row: NodeSightingRow): Promise<void> {
       await sql.execute(
-        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at, origin_node_id) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO node_sightings (id, node_id, conversation_id, message_id, created_at, origin_node_id, grade) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           row.id,
           row.node_id,
@@ -59,6 +61,7 @@ export function createNodeSightingsRepo(sql: SqlClient) {
           row.message_id,
           row.created_at,
           row.origin_node_id,
+          row.grade ?? "good",
         ],
       );
     },
@@ -88,13 +91,16 @@ export function createNodeSightingsRepo(sql: SqlClient) {
 export function buildKnowledgeEdgeUpsertStatement(row: KnowledgeEdgeRow): SqlTransactionStatement {
   return {
     sql: `INSERT INTO knowledge_edges
-           (id, source_id, target_id, edge_type, weight, confidence, origin, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+           (id, source_id, target_id, edge_type, weight, confidence, origin, created_at,
+            reasoning, source_message_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(source_id, target_id, edge_type) DO UPDATE SET
            weight = excluded.weight,
            confidence = excluded.confidence,
            origin = excluded.origin,
-           created_at = excluded.created_at
+           created_at = excluded.created_at,
+           reasoning = excluded.reasoning,
+           source_message_id = excluded.source_message_id
          WHERE excluded.confidence > knowledge_edges.confidence`,
     params: [
       row.id,
@@ -105,6 +111,8 @@ export function buildKnowledgeEdgeUpsertStatement(row: KnowledgeEdgeRow): SqlTra
       row.confidence,
       row.origin,
       row.created_at,
+      row.reasoning ?? null,
+      row.source_message_id ?? null,
     ],
   };
 }

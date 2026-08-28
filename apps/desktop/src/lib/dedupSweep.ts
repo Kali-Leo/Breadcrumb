@@ -1,9 +1,11 @@
 /**
  * Purpose: startup auto-merge sweep for spec 015 #4 — mechanically merges normalized-label
  * duplicate nodes (always, zero LLM), then asks the synonym-judge LLM about up to 10
- * embedding-similar existing-node pairs and merges every "同一" verdict (only when
- * knowledge-tree + network + an API config are all on). Fire-and-forget from App.tsx; any
- * LLM-tier failure degrades silently to one ai_failures row and never blocks startup.
+ * never-yet-judged embedding-similar existing-node pairs and merges every "same" verdict
+ * (only when knowledge-tree + network + an API config are all on). Every verdict, "different"
+ * included, is cached in node_pair_verdicts, so a pair is paid for once ever instead of on
+ * every startup. Fire-and-forget from App.tsx; any LLM-tier failure degrades silently to one
+ * ai_failures row and never blocks startup.
  * Main exports: runDedupSweep.
  */
 import { chatJson } from "@breadcrumb/core-llm";
@@ -13,7 +15,6 @@ import {
   type JudgedNodePair,
   planMechanicalMerges,
   planSynonymVerdictMerges,
-  SYNONYM_SIMILARITY_THRESHOLD,
   type SynonymJudgePairText,
   synonymJudgeSchema,
 } from "@breadcrumb/plugin-knowledge-tree";
@@ -23,8 +24,8 @@ import { type ApiConfig, useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
 import { llmConfigFrom } from "./llmConfig";
-import { recordMeteredCall } from "./metering";
-import { nowIso } from "./time";
+import { recordFailedCallUsage, recordMeteredCall } from "./metering";
+import { newId, nowIso } from "./time";
 
 /** One batched LLM call per sweep, capped at 10 pairs (spec 015 #4). */
 const MAX_LLM_DEDUP_PAIRS_PER_SWEEP = 10;
@@ -45,6 +46,7 @@ export async function runDedupSweep(): Promise<void> {
         merge.duplicateId,
         merge.duplicateLabel,
         nowIso(),
+        newId(),
       );
       mergedNodeIds.add(merge.canonicalId);
     }
@@ -63,11 +65,17 @@ export async function runDedupSweep(): Promise<void> {
           merge.duplicateId,
           merge.duplicateLabel,
           nowIso(),
+          newId(),
         );
         mergedNodeIds.add(merge.canonicalId);
       }
     } catch (error) {
       void recordAiFailure("knowledge-tree", error);
+      void recordFailedCallUsage(error, {
+        purpose: "knowledge-tree",
+        model: settings.apiConfig.model,
+        conversationId: null,
+      });
     }
   }
 
@@ -83,18 +91,23 @@ export async function runDedupSweep(): Promise<void> {
 
 async function planLlmTierMerges(apiConfig: ApiConfig) {
   const repos = await getRepos();
-  const [nodes, embeddings, aliases] = await Promise.all([
+  const [nodes, embeddings, aliases, cachedVerdicts] = await Promise.all([
     repos.knowledgeNodes.listAll(),
     repos.nodeEmbeddings.listAll(),
     repos.nodeAliases.listAll(),
+    repos.nodePairVerdicts.listAll(),
   ]);
   const aliasNodeIdByLabel = new Map(aliases.map((alias) => [alias.alias_label, alias.node_id]));
-  const suspectPairs = findSuspectSynonymPairs(
+  // The negative cache: rows are stored with the pair already normalized (smaller id first),
+  // which is the same key findSuspectSynonymPairs builds, so "different" verdicts drop out of
+  // the candidate list permanently instead of being re-bought on every startup.
+  const judgedPairKeys = new Set(cachedVerdicts.map((row) => `${row.node_a_id}:${row.node_b_id}`));
+  const suspectPairs = findSuspectSynonymPairs({
     nodes,
     embeddings,
     aliasNodeIdByLabel,
-    SYNONYM_SIMILARITY_THRESHOLD,
-  ).slice(0, MAX_LLM_DEDUP_PAIRS_PER_SWEEP);
+    judgedPairKeys,
+  }).slice(0, MAX_LLM_DEDUP_PAIRS_PER_SWEEP);
   if (suspectPairs.length === 0) return [];
 
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
@@ -124,5 +137,27 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
     usage,
   });
 
+  await cacheVerdicts(pairs, parsed.verdicts);
   return planSynonymVerdictMerges(pairs, parsed.verdicts, nodesById);
+}
+
+/** Persists every returned verdict — "different" above all, since that is the answer this
+ * sweep used to forget. Rows about a node the merge then deletes are cleaned up inside
+ * mergeNode's own transaction. Best-effort: a cache write must never abort the merges. */
+async function cacheVerdicts(
+  pairs: readonly JudgedNodePair[],
+  verdicts: readonly { pairId: string; verdict: "same" | "different" }[],
+): Promise<void> {
+  try {
+    const repos = await getRepos();
+    const pairById = new Map(pairs.map((pair) => [pair.pairId, pair]));
+    const judgedAt = nowIso();
+    for (const verdict of verdicts) {
+      const pair = pairById.get(verdict.pairId);
+      if (pair === undefined) continue;
+      await repos.nodePairVerdicts.record(pair.nodeAId, pair.nodeBId, verdict.verdict, judgedAt);
+    }
+  } catch (error) {
+    void recordAiFailure("knowledge-tree", error);
+  }
 }

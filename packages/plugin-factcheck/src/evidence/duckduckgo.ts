@@ -5,8 +5,9 @@
  * whose page is actually reachable (fetch-and-verify). Main exports: createDuckDuckGoProvider.
  */
 import { load } from "cheerio";
-import type { EvidenceItem, EvidenceProvider, FetchLike } from "./provider";
+import type { EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
+import { type ResultCandidate, verifyCandidates } from "./verify";
 
 const SNIPPET_MAX_LENGTH = 600;
 
@@ -20,32 +21,36 @@ export function createDuckDuckGoProvider(options: DuckDuckGoProviderOptions): Ev
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   return {
     name: "duckduckgo",
-    async search(query: string, limit: number): Promise<EvidenceItem[]> {
+    async search(query: string, limit: number): Promise<EvidenceSearchResult> {
       try {
         const response = await options.fetchImpl(
           `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
           { signal: AbortSignal.timeout(timeoutMs) },
         );
-        if (!response.ok) return [];
+        if (!response.ok) return { items: [], failed: true };
         const candidates = parseResults(await response.text());
         if (candidates.length === 0) {
-          // Headless package: no DB, so this can't reach recordAiFailure (app-side, see
-          // apps/desktop/src/lib/failureLog.ts) — a distinctive prefix is the next best
-          // signal that DuckDuckGo's markup drifted out from under the cheerio selectors.
+          // A search engine answering 200 with no result block at all is markup drift (or
+          // the rate limiter) far more often than a genuinely empty result set, and the two
+          // are indistinguishable from here — so this counts as a failed search, never as
+          // "nothing exists". The console line stays because this headless package has no
+          // DB; the host reads `failed` and writes the ai_failures row.
           console.warn("[factcheck:duckduckgo] parsed 0 result candidates from a 200 response");
+          return { items: [], failed: true };
         }
-        return await verifyCandidates(options.fetchImpl, timeoutMs, candidates, limit);
+        return await verifyCandidates(
+          options.fetchImpl,
+          timeoutMs,
+          candidates,
+          limit,
+          "duckduckgo",
+          query,
+        );
       } catch {
-        return [];
+        return { items: [], failed: true };
       }
     },
   };
-}
-
-interface ResultCandidate {
-  url: string;
-  title: string;
-  snippet: string;
 }
 
 function parseResults(html: string): ResultCandidate[] {
@@ -77,24 +82,4 @@ function decodeRedirectUrl(rawHref: string): string | null {
   } catch {
     return null;
   }
-}
-
-async function verifyCandidates(
-  fetchImpl: FetchLike,
-  timeoutMs: number,
-  candidates: readonly ResultCandidate[],
-  limit: number,
-): Promise<EvidenceItem[]> {
-  const verified: EvidenceItem[] = [];
-  for (const candidate of candidates) {
-    if (verified.length >= limit) break;
-    try {
-      const response = await fetchImpl(candidate.url, { signal: AbortSignal.timeout(timeoutMs) });
-      if (!response.ok) continue;
-      verified.push({ ...candidate, source: "duckduckgo" });
-    } catch {
-      // Unreachable page: never surface a link we could not open ourselves.
-    }
-  }
-  return verified;
 }

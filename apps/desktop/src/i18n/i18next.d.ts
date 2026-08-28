@@ -3,12 +3,12 @@
  * error instead of raw key text on screen. The Chinese catalogue is the source of truth for
  * the key shape; every other language must match it.
  */
-import type { resources } from "./index";
+import type { MessageCatalogue } from "./index";
 
 declare module "i18next" {
   interface CustomTypeOptions {
     defaultNS: "common";
-    resources: (typeof resources)["zh-CN"];
+    resources: MessageCatalogue;
     returnNull: false;
   }
 }

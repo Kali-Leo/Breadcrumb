@@ -29,7 +29,8 @@
     "evidenceClaimLearned": "你说过：这个学过",
     "evidenceClaimFamiliar": "你说过：这个比较熟",
     "evidenceClaimTaughtPrincipled": "你讲过它的原理",
-    "evidenceClaimTaughtSurface": "你把它复述过一遍"
+    "evidenceClaimTaughtSurface": "你把它复述过一遍",
+    "regionEmpty": "这片区域还没有学习记录"
   },
   "map": {
     "loadFailed": "地图没有加载成功。离开这一页再回来，会重新尝试。",
@@ -167,7 +168,9 @@
     "buildDropped": "；有 {{count}} 条因资料没核验通过被丢弃",
     "goalNeedsNetwork": "需要联网和 API 配置才能生成目标",
     "goalTitle": "胜任 {{profile}}",
-    "goalText": "{{title}}。该方向的官方知识与工具清单（{{profile}}，供选取，不必全收）：{{leaves}}"
+    "goalText": "{{title}}。该方向的官方知识与工具清单（{{profile}}，供选取，不必全收）：{{leaves}}",
+    "goalCreated": "目标已生成——学习引导交给推荐系统；这里随时可以回来看重合比例",
+    "goalFailed": "这一步没能完成，可以点一下重试"
   },
   "frontier": {
     "openerWithPrereq": "接下来可以看看「{{label}}」——你已经掌握的 {{labels}} 就在它旁边。想从哪里聊起都行。",

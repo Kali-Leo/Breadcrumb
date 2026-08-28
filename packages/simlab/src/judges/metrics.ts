@@ -12,7 +12,7 @@ import { type PurposeTally, purposeFailureRates } from "./callLedger";
 import { checkDigestReconciliation, checkFrontierStaleness } from "./digestTripwires";
 import type { Violation } from "./invariants";
 import { checkMasteryTripwires } from "./masteryTripwire";
-import { computeTargetConceptsRecall } from "./targetConceptsRecall";
+import { computeTargetConceptsEcho } from "./targetConceptsEcho";
 import type { TeachingDisciplineResult } from "./teachingDiscipline";
 import type { PressureHitSample } from "./telemetry";
 
@@ -29,7 +29,9 @@ export interface JourneySummary {
   newNodeCount: number;
   rejectedCyclicEdgeCount: number;
   pipelineFailureCount: number;
-  targetConceptsRecall: number;
+  /** Input echo, not extraction evidence — see targetConceptsEcho.ts. Kept in metrics.json,
+   * deliberately absent from `sim summarize` (design audit 2026-08-28). */
+  targetConceptsEcho: number;
 }
 
 export interface RunMetrics {
@@ -38,7 +40,7 @@ export interface RunMetrics {
   completedJourneys: number;
   totalCostCny: number;
   budgetCny: number;
-  edgeNetwork: { cycleRejectionCount: number; targetConceptsRecall: number };
+  edgeNetwork: { cycleRejectionCount: number; targetConceptsEcho: number };
   mastery: ReturnType<typeof checkMasteryTripwires>;
   interest: { note: string };
   planner: {
@@ -102,17 +104,17 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
     newNodeCount: result.newNodeLabels.length,
     rejectedCyclicEdgeCount: result.rejectedCyclicEdges.length,
     pipelineFailureCount: result.pipelineFailures.length,
-    targetConceptsRecall: computeTargetConceptsRecall(persona.knowledge.targetConcepts, [
+    targetConceptsEcho: computeTargetConceptsEcho(persona.knowledge.targetConcepts, [
       ...result.newNodeLabels,
       ...result.sightedNodeLabels,
     ]),
   }));
 
   const cycleRejectionCount = journeys.reduce((sum, j) => sum + j.rejectedCyclicEdgeCount, 0);
-  const averageRecall =
+  const averageEcho =
     journeys.length === 0
       ? 1
-      : journeys.reduce((sum, j) => sum + j.targetConceptsRecall, 0) / journeys.length;
+      : journeys.reduce((sum, j) => sum + j.targetConceptsEcho, 0) / journeys.length;
 
   const hardGateViolationCount = input.invariantViolations.filter(
     (v) => v.kind === "frontier-hard-gate",
@@ -142,7 +144,7 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
     completedJourneys: input.completed.length,
     totalCostCny: input.totalCostCny,
     budgetCny: input.budgetCny,
-    edgeNetwork: { cycleRejectionCount, targetConceptsRecall: averageRecall },
+    edgeNetwork: { cycleRejectionCount, targetConceptsEcho: averageEcho },
     mastery: checkMasteryTripwires(),
     interest: {
       note: "scripted-recovery moved to `sim recovery` (on-demand); see recovery-result.json in that run's artifacts if it was executed",

@@ -9,7 +9,7 @@
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import type { Parent } from "mdast";
-import type { ReactNode } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
@@ -25,16 +25,28 @@ import { MermaidBlock } from "./MermaidBlock";
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 
-function renderMath(value: string, displayMode: boolean, key: string): ReactNode {
-  const html = katex.renderToString(value, { displayMode, throwOnError: false });
+/** KaTeX typesetting is the most expensive thing this walk does, and a formula's HTML depends
+ * only on (value, displayMode) — both primitives, so a re-render of the surrounding message
+ * reuses the previous output instead of re-running renderToString (design audit 2026-08-28,
+ * 数据层与性能 #3). A memoized component rather than a useMemo because renderNode is a plain
+ * recursive function, not a hook context. */
+const MathSpan = memo(function MathSpan(props: { value: string; displayMode: boolean }) {
+  const { value, displayMode } = props;
+  const html = useMemo(
+    () => katex.renderToString(value, { displayMode, throwOnError: false }),
+    [value, displayMode],
+  );
   return (
     <span
-      key={key}
       className={displayMode ? "block overflow-x-auto py-1" : undefined}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output over model math
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
+});
+
+function renderMath(value: string, displayMode: boolean, key: string): ReactNode {
+  return <MathSpan key={key} value={value} displayMode={displayMode} />;
 }
 
 function renderChildren(
@@ -170,7 +182,9 @@ export function MarkdownContent({
   diglot?: DiglotContext;
   doors?: DoorContext;
 }) {
-  const tree = parser.parse(source) as Parent;
+  // remark re-parses the whole message on every render otherwise, and a streaming reply
+  // re-renders its window once per token (design audit 2026-08-28, 数据层与性能 #3).
+  const tree = useMemo(() => parser.parse(source) as Parent, [source]);
   return (
     <div className="leading-relaxed">
       {(tree.children as AnyNode[]).map((child, index) =>

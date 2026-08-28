@@ -6,6 +6,7 @@
  */
 import { BREAK_REMINDER_COPY, COMPANION_COPY, CRISIS_RESPONSE } from "@breadcrumb/plugin-companion";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../i18n/useCopyMessage";
 import { getCompanionCardById } from "../lib/companionActions";
 import { teachTopicFromTitle } from "../lib/teachActions";
 import { useChatStore } from "../stores/chatStore";
@@ -13,6 +14,7 @@ import { useCompanionStore } from "../stores/companionStore";
 
 export function CompanionChatBanners() {
   const { t } = useTranslation(["chat", "common"]);
+  const copy = useCopyMessage();
   const activeKind = useChatStore((state) => state.activeKind);
   const activeCompanionId = useChatStore((state) => state.activeCompanionId);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
@@ -42,12 +44,12 @@ export function CompanionChatBanners() {
       {isCompanionThread && displayName !== null && (
         <div className="flex items-center gap-2 border-b border-stone-100 bg-white px-4 py-1.5 text-xs text-stone-500">
           <span className="font-medium text-stone-600">{displayName}</span>
-          <span>{COMPANION_COPY.aiLabel}</span>
+          <span>{t("companion.aiLabel")}</span>
         </div>
       )}
       {activeConversationId !== null && crisisConversationIds.has(activeConversationId) && (
         <div className="mx-4 mt-2 rounded-xl bg-rose-50 px-4 py-3 text-sm text-stone-700">
-          <p>{CRISIS_RESPONSE}</p>
+          <p>{copy(CRISIS_RESPONSE)}</p>
           <button
             type="button"
             onClick={() => activeConversationId !== null && dismissCrisis(activeConversationId)}
@@ -59,7 +61,7 @@ export function CompanionChatBanners() {
       )}
       {breakReminderActive && (
         <div className="mx-4 mt-2 flex items-center justify-between rounded-xl bg-amber-50 px-4 py-2 text-sm text-stone-600">
-          <span>{BREAK_REMINDER_COPY}</span>
+          <span>{copy(BREAK_REMINDER_COPY)}</span>
           <button
             type="button"
             onClick={dismissBreakReminder}

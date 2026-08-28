@@ -1,6 +1,7 @@
 /**
  * Purpose: unit tests for the Bing China provider — result-block parsing, ck-redirect
- * base64 decoding, and the fetch-and-verify filter (mocked fetch).
+ * base64 decoding, the fetch-and-verify filter, the page-body evidence window, and the
+ * failed/empty distinction the pipeline's fourth verdict state rests on (mocked fetch).
  */
 import { describe, expect, it, vi } from "vitest";
 import { createBingProvider } from "./bing";
@@ -33,7 +34,7 @@ describe("createBingProvider", () => {
     });
     const provider = createBingProvider({ fetchImpl });
 
-    const items = await provider.search("光速", 3);
+    const { items } = await provider.search("光速", 3);
 
     expect(items).toEqual([
       {
@@ -52,21 +53,58 @@ describe("createBingProvider", () => {
   });
 
   it("passes an abort signal so blocked networks fail fast instead of hanging", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
       expect(init?.signal).toBeInstanceOf(AbortSignal);
       return new Response("", { status: 200 });
     });
     const provider = createBingProvider({ fetchImpl, timeoutMs: 1000 });
 
-    expect(await provider.search("任意查询", 3)).toEqual([]);
+    expect(await provider.search("任意查询", 3)).toEqual({ items: [], failed: true });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
   });
 
-  it("returns [] when the search endpoint fails", async () => {
+  it("reports failed (not merely empty) when the search endpoint fails", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
     const provider = createBingProvider({ fetchImpl });
 
-    expect(await provider.search("anything", 3)).toEqual([]);
+    expect(await provider.search("anything", 3)).toEqual({ items: [], failed: true });
+  });
+
+  it("reports failed when every candidate page turns out unreachable", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.startsWith("https://cn.bing.com/search")) {
+        return new Response(RESULTS_HTML, { status: 200 });
+      }
+      return new Response("gone", { status: 404 });
+    });
+    const provider = createBingProvider({ fetchImpl });
+
+    expect(await provider.search("光速", 3)).toEqual({ items: [], failed: true });
+  });
+
+  it("judges on a window of the page body rather than the search summary", async () => {
+    const body = `<html><body><script>var junk = "ignore me";</script><p>${"填充。".repeat(
+      400,
+    )}光速在真空中的数值是每秒 299792458 米，这一数值自 1983 年起成为定义值。${"补充。".repeat(
+      400,
+    )}</p></body></html>`;
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.startsWith("https://cn.bing.com/search")) {
+        return new Response(RESULTS_HTML, { status: 200 });
+      }
+      return new Response(body, { status: 200 });
+    });
+    const provider = createBingProvider({ fetchImpl });
+
+    const { items } = await provider.search("光速", 1);
+
+    expect(items[0]?.snippet).toContain("1983 年起成为定义值");
+    expect(items[0]?.snippet).not.toContain("ignore me");
+    expect(items[0]?.snippet.length).toBeLessThanOrEqual(1500);
   });
 
   it("parses a result block whose attribute order and whitespace differ from the fixture", () => {
@@ -92,7 +130,7 @@ describe("createBingProvider", () => {
     });
     const provider = createBingProvider({ fetchImpl });
 
-    return provider.search("光速", 1).then((items) => {
+    return provider.search("光速", 1).then(({ items }) => {
       expect(items).toEqual([
         {
           url: DIRECT_URL,
@@ -104,14 +142,16 @@ describe("createBingProvider", () => {
     });
   });
 
-  it("warns with a distinctive prefix when a 200 response yields zero candidates", async () => {
+  it("warns and reports failed when a 200 response yields zero candidates", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response("<html></html>", { status: 200 }));
     const provider = createBingProvider({ fetchImpl });
 
-    expect(await provider.search("anything", 3)).toEqual([]);
+    // Markup drift and a genuinely empty result set are indistinguishable from here, so the
+    // provider claims the weaker of the two: the search did not complete.
+    expect(await provider.search("anything", 3)).toEqual({ items: [], failed: true });
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("[factcheck:bing]"));
     warn.mockRestore();
   });

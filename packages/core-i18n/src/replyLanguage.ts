@@ -5,7 +5,6 @@
  * franc's job, not ours.
  * Main exports: checkReplyLanguage.
  */
-import { franc } from "franc";
 import type { Language } from "./languages";
 
 /** Below this many letters after stripping, no detector is trustworthy — and neither are we. */
@@ -32,9 +31,23 @@ function stripLanguageNeutral(text: string): string {
     .trim();
 }
 
-export function checkReplyLanguage(reply: string, expected: Language): ReplyLanguageVerdict {
+/** franc carries a ~300 KB trigram table and is only needed after a reply has finished
+ * streaming, so it is imported on first use and kept for the rest of the session — the
+ * startup bundle never pays for it. */
+let francPromise: Promise<typeof import("franc").franc> | null = null;
+
+function loadFranc(): Promise<typeof import("franc").franc> {
+  francPromise ??= import("franc").then((module) => module.franc);
+  return francPromise;
+}
+
+export async function checkReplyLanguage(
+  reply: string,
+  expected: Language,
+): Promise<ReplyLanguageVerdict> {
   const sample = stripLanguageNeutral(reply);
   if (sample.length < MIN_SAMPLE_LENGTH) return "unknown";
+  const franc = await loadFranc();
   const detected = franc(sample, { minLength: MIN_SAMPLE_LENGTH });
   if (detected === "und") return "unknown";
   if (expected.detectionCodes.includes(detected)) return "matches";

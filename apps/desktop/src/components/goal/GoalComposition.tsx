@@ -7,7 +7,7 @@
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { useTranslation } from "react-i18next";
-import { masteryAsSeenByGoal } from "../../lib/plannerGapActions";
+import { goalSatisfiedNodeIds } from "../../lib/plannerGapActions";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 export function GoalComposition() {
@@ -25,9 +25,9 @@ export function GoalComposition() {
   const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
   if (goalNodeIds.length === 0) return null;
 
-  // Same goal-view-boosted mastery coverage()/milestone() use — a chip must never disagree
-  // with what the rest of the goal UI already calls "lit".
-  const goalMasteryByNode = masteryAsSeenByGoal(masteryByNode, claims);
+  // Same goal-local belief coverage() applies — a chip must never disagree with what the rest
+  // of the goal UI already calls "lit".
+  const satisfiedNodeIds = goalSatisfiedNodeIds(claims);
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
 
   return (
@@ -35,7 +35,8 @@ export function GoalComposition() {
       <p className="text-stone-500">{t("goal.compositionCount", { count: goalNodeIds.length })}</p>
       <ul className="flex flex-wrap gap-1">
         {goalNodeIds.map((nodeId) => {
-          const lit = (goalMasteryByNode.get(nodeId) ?? 0) >= LIT_THRESHOLD;
+          const lit =
+            satisfiedNodeIds.has(nodeId) || (masteryByNode.get(nodeId) ?? 0) >= LIT_THRESHOLD;
           // Whether a node arrived via THIS goal's own suggestions isn't persisted anywhere
           // (persistCalibratedGoal doesn't tag suggested-vs-existing after insert) — a node
           // that's still unlit and has never once been sighted in a real conversation

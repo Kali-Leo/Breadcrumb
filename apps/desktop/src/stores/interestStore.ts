@@ -19,7 +19,7 @@ import { create } from "zustand";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
 import { llmConfigFrom } from "../lib/llmConfig";
-import { recordMeteredCall } from "../lib/metering";
+import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
 import { newId, nowIso } from "../lib/time";
 import { appEventBus } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
@@ -92,6 +92,11 @@ export const useInterestStore = create<InterestState>(() => ({
     } catch (error) {
       console.warn("self-report mastery mapping skipped:", error);
       void recordAiFailure("self-report-mapping", error);
+      void recordFailedCallUsage(error, {
+        purpose: "self-report-mapping",
+        model: settings.apiConfig.model,
+        conversationId: null,
+      });
     }
   },
 }));
@@ -162,6 +167,11 @@ async function extractInterestFromRound(
   } catch (error) {
     console.warn("interest extraction skipped:", error);
     void recordAiFailure("interest", error);
+    void recordFailedCallUsage(error, {
+      purpose: "interest",
+      model: settings.apiConfig.model,
+      conversationId,
+    });
   }
 }
 

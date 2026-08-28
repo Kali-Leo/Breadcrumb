@@ -13,12 +13,12 @@ import {
   cardFromJson,
   cardToJson,
   countWordLikeTokens,
+  createMeetableDebtWindow,
   extractCandidates,
   hashContext,
   type LoadedLanguagePack,
   loadLanguagePack,
   newWordCard,
-  noveltyFactor,
   type ReplacementPatch,
   ratingForSignal,
   retrievabilityOf,
@@ -28,10 +28,14 @@ import {
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { getRepos } from "./db";
-import { embedTexts } from "./embeddings";
+import { contextNoveltyFor } from "./diglotNovelty";
 import { nowIso } from "./time";
 
 const packCache = new Map<DiglotPairId, Promise<LoadedLanguagePack>>();
+
+/** One conversation stream, one window over the lemmas it recently offered — the review-debt
+ * throttle only counts due words this window can still deliver (see reviewDebt.ts). */
+const meetableDebtWindow = createMeetableDebtWindow();
 
 /** Loads a bundled language pack once per session (validated by the Zod contract). */
 export function loadBundledPack(pairId: DiglotPairId): Promise<LoadedLanguagePack> {
@@ -74,31 +78,33 @@ export async function weaveAssistantMessage(input: {
   const candidates = extractCandidates(tokens, loaded);
   if (candidates.length === 0) return { patches: [], introducedLemmas: [] };
 
-  const reviewDebt = (await repos.diglot.listDueStates(pair, nowIso(), 200)).length;
+  // Review debt throttles new words — but only debt this conversation can still pay off.
+  meetableDebtWindow.noteMessageCandidates(candidates.map((candidate) => candidate.lemma));
+  const dueStates = await repos.diglot.listDueStates(pair, nowIso());
+  const reviewDebt = meetableDebtWindow.countMeetable(dueStates.map((state) => state.lemma));
   const newWordBudgetToday = Math.max(
     0,
     adaptiveNewWordCap(input.newWordDailyBase, reviewDebt) - input.newWordsIntroducedToday,
   );
 
-  // Context novelty for review candidates: embed the message once, compare against each
-  // candidate's stored context vectors. Degrades to neutral when embeddings are down.
-  const noveltyByLemma = new Map<string, number>();
-  const reviewCandidates = candidates.filter((c) => input.cardsByLemma.has(c.lemma));
-  let messageVector: number[] | null = null;
-  if (reviewCandidates.length > 0) {
-    messageVector = ((await embedTexts([content])) ?? [null])[0] ?? null;
-    for (const candidate of reviewCandidates) {
-      const stored = await repos.diglot.listContextEmbeddings(pair, candidate.lemma);
-      const pastVectors = stored.map((row) => JSON.parse(row.vector_json) as number[]);
-      noveltyByLemma.set(candidate.lemma, noveltyFactor(messageVector, pastVectors));
+  // Context novelty (spec 033): only review candidates have stored contexts to compare to.
+  const { noveltyByLemma, messageVector } = await contextNoveltyFor({
+    pair,
+    content,
+    lemmas: candidates
+      .filter((candidate) => input.cardsByLemma.has(candidate.lemma))
+      .map((candidate) => candidate.lemma),
+  });
+
+  // Only this message's candidates can be introduced, so the floor filter runs over them
+  // rather than over the whole (thousands long) introduction queue.
+  const introductionRank = new Map<string, number>();
+  for (const candidate of candidates) {
+    const rank = loaded.introductionRankByLemma.get(candidate.lemma);
+    if (rank !== undefined && rank >= input.introductionRankFloor) {
+      introductionRank.set(candidate.lemma, rank);
     }
   }
-
-  const introductionRank = new Map(
-    loaded.introductionQueue
-      .map((lemma, rank) => [lemma, rank] as const)
-      .filter(([, rank]) => rank >= input.introductionRankFloor),
-  );
   const scheduled = scheduleReplacements({
     pairId: pair,
     candidates,

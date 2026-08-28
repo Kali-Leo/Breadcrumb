@@ -5,3 +5,4 @@
 export * from "./client";
 export * from "./jsonClient";
 export * from "./pricing";
+export * from "./retry";

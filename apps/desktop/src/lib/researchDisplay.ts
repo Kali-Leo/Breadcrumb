@@ -7,14 +7,22 @@ import type { ResearchResultRow } from "@breadcrumb/core-db";
 import { type DisplayBlock, displayBlockSchema } from "@breadcrumb/plugin-research";
 import { z } from "zod";
 
+/** A bar's label is a catalogue key with its values, never a sentence: the headless package
+ * decides which label applies, the app writes it (spec 058 §2). */
+const copyMessageSchema = z.object({
+  key: z.string().min(1),
+  params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+});
+
 // Mirrors @breadcrumb/plugin-research's StatResult type (statResults.ts exports the type
 // only, no Zod schema — this is the "compose it yourself" boundary the task calls for).
 const statResultSchema = z.union([
   z.object({ kind: z.literal("number"), value: z.number(), n: z.number() }),
   z.object({
     kind: z.literal("bars"),
-    bars: z.array(z.object({ label: z.string(), value: z.number() })),
+    bars: z.array(z.object({ label: copyMessageSchema, value: z.number() })),
   }),
+  z.object({ kind: z.literal("suppressed"), n: z.number() }),
 ]);
 export type ParsedStatResult = z.infer<typeof statResultSchema>;
 

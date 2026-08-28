@@ -27,7 +27,7 @@ function ToggleSwitch({
       className={`h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors ${on ? "bg-amber-500" : "bg-stone-300"}`}
     >
       <span
-        className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-6" : "translate-x-0"}`}
+        className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-6 rtl:-translate-x-6" : "translate-x-0"}`}
       />
     </button>
   );
@@ -47,7 +47,7 @@ export function DiglotSettingsSection() {
         </div>
         <ToggleSwitch
           on={settings.enabled}
-          ariaLabel="语言学习开关"
+          ariaLabel={t("learning:diglot.enableAria")}
           onClick={() => void saveSettings({ enabled: !settings.enabled })}
         />
       </div>
@@ -61,13 +61,11 @@ export function DiglotSettingsSection() {
             </div>
             <ToggleSwitch
               on={settings.llmRefineEnabled}
-              ariaLabel="智能替换开关"
+              ariaLabel={t("learning:diglot.llmRefineAria")}
               onClick={() => void saveSettings({ llmRefineEnabled: !settings.llmRefineEnabled })}
             />
           </div>
-          <p className="text-xs text-stone-300">
-            词典与发音数据来自这些开源项目:CC-CEDICT · FrequencyWords · CMUdict
-          </p>
+          <p className="text-xs text-stone-300">{t("learning:diglot.dataSources")}</p>
         </div>
       )}
     </section>

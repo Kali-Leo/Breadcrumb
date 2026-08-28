@@ -7,6 +7,7 @@
  * Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
+import { useTranslation } from "react-i18next";
 import { startHelperConversation } from "../lib/companionActions";
 import { appEventBus } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
@@ -18,6 +19,7 @@ interface CompanionSectionProps {
 }
 
 export function CompanionSection({ onPicked }: CompanionSectionProps) {
+  const { t } = useTranslation(["chat", "common"]);
   const companionChatEnabled = useSettingsStore((state) => state.featureSwitches.companionChat);
   const helpers = useCompanionStore((state) => state.helpers);
   const seenHelperIds = useCompanionStore((state) => state.seenHelperIds);
@@ -36,9 +38,9 @@ export function CompanionSection({ onPicked }: CompanionSectionProps) {
 
   return (
     <section>
-      <h3 className="mb-1 px-1 text-[11px] text-stone-400">{COMPANION_COPY.sectionTitle}</h3>
+      <h3 className="mb-1 px-1 text-[11px] text-stone-400">{t("common:nav.friends")}</h3>
       {helpers.length === 0 ? (
-        <p className="px-1 py-1 text-xs text-stone-400">{COMPANION_COPY.rosterEmpty}</p>
+        <p className="px-1 py-1 text-xs text-stone-400">{t("companion.rosterEmpty")}</p>
       ) : (
         <ul className="space-y-1">
           {helpers.map((helper) => (

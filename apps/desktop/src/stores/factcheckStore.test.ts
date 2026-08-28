@@ -1,20 +1,24 @@
 /**
  * Purpose: unit tests for factcheckStore's per-conversation layering — fill-on-first-visit
- * with a single-flight load, no wipe on switch, and checkMessage resolving its round from
- * the message's OWN conversation (never the active mirror), with a DB fallback.
+ * with a single-flight load (one batched claim query, not one per run), no wipe on switch,
+ * checkMessage resolving its round from the message's OWN conversation (never the active
+ * mirror) with a DB fallback, failed evidence providers reaching ai_failures, and a failed
+ * call's usage still reaching the ledger.
  */
 import type { FactcheckClaimRow, FactcheckRunRow, MessageRow } from "@breadcrumb/core-db";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { recordAiFailure } from "../lib/failureLog";
+import { recordFailedCallUsage } from "../lib/metering";
 
 const listRunsByConversationMock = vi.fn();
-const listClaimsByRunMock = vi.fn();
+const listClaimsByRunsMock = vi.fn();
 const recordRunMock = vi.fn();
 const listMessagesByConversationMock = vi.fn();
 vi.mock("../lib/db", () => ({
   getRepos: vi.fn(async () => ({
     factcheck: {
       listRunsByConversation: listRunsByConversationMock,
-      listClaimsByRun: listClaimsByRunMock,
+      listClaimsByRuns: listClaimsByRunsMock,
       recordRun: recordRunMock,
     },
     messages: { listByConversation: listMessagesByConversationMock },
@@ -28,7 +32,10 @@ vi.mock("@breadcrumb/plugin-factcheck", () => ({
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 vi.mock("../lib/failureLog", () => ({ recordAiFailure: vi.fn() }));
-vi.mock("../lib/metering", () => ({ recordMeteredCall: vi.fn(async () => {}) }));
+vi.mock("../lib/metering", () => ({
+  recordMeteredCall: vi.fn(async () => {}),
+  recordFailedCallUsage: vi.fn(async () => {}),
+}));
 
 const messagesForMock = vi.fn();
 const emitMock = vi.fn();
@@ -79,12 +86,13 @@ function claimRow(runId: string, text: string): FactcheckClaimRow {
 beforeEach(() => {
   vi.clearAllMocks();
   messagesForMock.mockReturnValue([]);
+  listClaimsByRunsMock.mockResolvedValue([]);
 });
 
 describe("ensureLoaded", () => {
   it("fills a conversation's layer on first visit and serves revisits from cache", async () => {
     listRunsByConversationMock.mockResolvedValue([runRow("r1", "m1", "fill-1")]);
-    listClaimsByRunMock.mockResolvedValue([claimRow("r1", "claim-a")]);
+    listClaimsByRunsMock.mockResolvedValue([claimRow("r1", "claim-a")]);
     const store = useFactcheckStore.getState();
     await Promise.all([store.ensureLoaded("fill-1"), store.ensureLoaded("fill-1")]);
     expect(listRunsByConversationMock).toHaveBeenCalledTimes(1);
@@ -95,9 +103,31 @@ describe("ensureLoaded", () => {
     expect(listRunsByConversationMock).toHaveBeenCalledTimes(1);
   });
 
+  it("loads every run's claims in one batched query, not one query per run", async () => {
+    listRunsByConversationMock.mockResolvedValue([
+      runRow("r1", "m1", "batch-1"),
+      runRow("r2", "m2", "batch-1"),
+      runRow("r3", "m3", "batch-1"),
+    ]);
+    listClaimsByRunsMock.mockResolvedValue([
+      claimRow("r1", "one"),
+      claimRow("r3", "three"),
+      claimRow("r2", "two"),
+    ]);
+
+    await useFactcheckStore.getState().ensureLoaded("batch-1");
+
+    expect(listClaimsByRunsMock).toHaveBeenCalledTimes(1);
+    expect(listClaimsByRunsMock).toHaveBeenCalledWith(["r1", "r2", "r3"]);
+    const layer = useFactcheckStore.getState().claimsByConversation.get("batch-1");
+    expect(layer?.get("m1")?.[0]?.text).toBe("one");
+    expect(layer?.get("m2")?.[0]?.text).toBe("two");
+    expect(layer?.get("m3")?.[0]?.text).toBe("three");
+  });
+
   it("never wipes another conversation's layer on switch", async () => {
     listRunsByConversationMock.mockResolvedValueOnce([runRow("r1", "m1", "keep-1")]);
-    listClaimsByRunMock.mockResolvedValueOnce([claimRow("r1", "kept")]);
+    listClaimsByRunsMock.mockResolvedValueOnce([claimRow("r1", "kept")]);
     await useFactcheckStore.getState().ensureLoaded("keep-1");
     listRunsByConversationMock.mockResolvedValueOnce([]);
     await useFactcheckStore.getState().ensureLoaded("keep-2");
@@ -116,6 +146,7 @@ describe("checkMessage", () => {
     runFactCheckMock.mockResolvedValue({
       claims: [{ text: "claim", relationship: "supported", reasoning: "r", evidence: [] }],
       usage: { inputTokens: 1, outputTokens: 1 },
+      failedProviders: [],
     });
     await useFactcheckStore.getState().checkMessage("check-1", "a1");
     expect(messagesForMock).toHaveBeenCalledWith("check-1");
@@ -141,10 +172,49 @@ describe("checkMessage", () => {
     runFactCheckMock.mockResolvedValue({
       claims: [],
       usage: { inputTokens: 1, outputTokens: 1 },
+      failedProviders: [],
     });
     await useFactcheckStore.getState().checkMessage("check-2", "a2");
     expect(listMessagesByConversationMock).toHaveBeenCalledWith("check-2");
     expect(useFactcheckStore.getState().claimsByConversation.get("check-2")?.get("a2")).toEqual([]);
+  });
+
+  it("records every failed evidence provider so a source going dark is visible", async () => {
+    messagesForMock.mockReturnValue([
+      messageRow("q4", "user", "check-4"),
+      messageRow("a4", "assistant", "check-4"),
+    ]);
+    runFactCheckMock.mockResolvedValue({
+      claims: [{ text: "claim", relationship: "unavailable", reasoning: "", evidence: [] }],
+      usage: { inputTokens: 1, outputTokens: 1 },
+      failedProviders: ["bing", "duckduckgo"],
+    });
+
+    await useFactcheckStore.getState().checkMessage("check-4", "a4");
+
+    expect(recordAiFailure).toHaveBeenCalledTimes(2);
+    expect(recordAiFailure).toHaveBeenCalledWith("factcheck", expect.stringContaining("bing"));
+    expect(recordAiFailure).toHaveBeenCalledWith(
+      "factcheck",
+      expect.stringContaining("duckduckgo"),
+    );
+  });
+
+  it("bills what a failed extraction call already cost instead of dropping it", async () => {
+    messagesForMock.mockReturnValue([
+      messageRow("q5", "user", "check-5"),
+      messageRow("a5", "assistant", "check-5"),
+    ]);
+    const failure = new Error("provider gave up");
+    runFactCheckMock.mockRejectedValue(failure);
+
+    await useFactcheckStore.getState().checkMessage("check-5", "a5");
+
+    expect(recordFailedCallUsage).toHaveBeenCalledWith(failure, {
+      purpose: "factcheck",
+      model: "test-model",
+      conversationId: "check-5",
+    });
   });
 
   it("does nothing when the target message is not an assistant answer", async () => {

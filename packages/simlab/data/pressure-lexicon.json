@@ -1,4 +1,21 @@
 {
-  "$comment": "Pressure-language lexicon (docs/testing/simlab-评审协议.md). A hit is a red flag, no AI judgment needed. Human-maintained: AI may propose additions, Leo/Fable 5 approve before they land here.",
-  "entries": ["你还差", "落后", "别忘了", "应该早点", "才完成", "仅完成", "再不"]
+  "$comment": "Pressure-language lexicon (docs/testing/simlab-评审协议.md), one list per interface language — a phrase that pressures a reader in one language says nothing in another, so the gate only means something when every shipped language brings its own list. A hit is a red flag, no AI judgment needed. Human-maintained: AI may propose additions, Leo/Fable 5 approve before they land here. Matching is case-insensitive, so entries are written in lower case.",
+  "entries": {
+    "zh-CN": ["你还差", "落后", "别忘了", "应该早点", "才完成", "仅完成", "再不"],
+    "en": [
+      "you still need",
+      "falling behind",
+      "behind schedule",
+      "don't forget",
+      "do not forget",
+      "should have",
+      "only finished",
+      "only completed",
+      "you missed",
+      "overdue",
+      "streak lost",
+      "hurry",
+      "before it's too late"
+    ]
+  }
 }

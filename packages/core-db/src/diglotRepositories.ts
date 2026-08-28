@@ -46,12 +46,20 @@ export function createDiglotRepo(sql: SqlClient) {
         [fsrsJson, due, lastEventAt, lemma, pair],
       );
     },
-    /** Words due for a re-encounter, oldest due first — the review-debt queue. */
+    /** Words due for a re-encounter, oldest due first — the review-debt queue. Without a
+     * limit this is the true due set: the debt throttle reads it, and a capped count silently
+     * became "debt is at least N" once the vocabulary grew past the cap (audit 2026-08-28). */
     async listDueStates(
       pair: DiglotPairId,
       nowIso: string,
-      limit: number,
+      limit?: number,
     ): Promise<DiglotWordStateRow[]> {
+      if (limit === undefined) {
+        return sql.select<DiglotWordStateRow>(
+          "SELECT * FROM diglot_word_states WHERE pair = ? AND due <= ? ORDER BY due ASC",
+          [pair, nowIso],
+        );
+      }
       return sql.select<DiglotWordStateRow>(
         `SELECT * FROM diglot_word_states WHERE pair = ? AND due <= ?
          ORDER BY due ASC LIMIT ?`,
@@ -166,15 +174,18 @@ export function createDiglotRepo(sql: SqlClient) {
         [row.lemma, row.pair, row.lemma, row.pair],
       );
     },
-    /** Every stored context vector of one word, newest first. */
-    async listContextEmbeddings(
+    /** Every stored context vector of a whole set of words, newest first — one round trip
+     * for the whole message instead of one per candidate (the weave blocks painting). */
+    async listContextEmbeddingsForLemmas(
       pair: DiglotPairId,
-      lemma: string,
+      lemmas: readonly string[],
     ): Promise<DiglotContextEmbeddingRow[]> {
+      if (lemmas.length === 0) return [];
+      const placeholders = lemmas.map(() => "?").join(", ");
       return sql.select<DiglotContextEmbeddingRow>(
-        `SELECT * FROM diglot_context_embeddings WHERE pair = ? AND lemma = ?
+        `SELECT * FROM diglot_context_embeddings WHERE pair = ? AND lemma IN (${placeholders})
          ORDER BY created_at DESC`,
-        [pair, lemma],
+        [pair, ...lemmas],
       );
     },
   };

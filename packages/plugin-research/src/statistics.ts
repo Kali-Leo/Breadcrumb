@@ -1,7 +1,8 @@
 /**
  * Purpose: implementations of the spec 036 whitelisted statistic functions — read-only
- * aggregate SQL plus the MIN_CELL_COUNT disclosure floor and plugin-memory's FSRS retention
- * math. Nothing here ever executes a mutating statement.
+ * aggregate SQL plus plugin-memory's FSRS retention math, with every sample-size floor
+ * reported as an explicit `suppressed` result rather than as the number 0. Nothing here ever
+ * executes a mutating statement.
  * Main exports: executeStatCall.
  */
 import type { NodeSightingRow, SqlClient } from "@breadcrumb/core-db";
@@ -16,7 +17,7 @@ import {
   roundTo3,
   windowStartIso,
 } from "./statisticsSeries";
-import { MIN_CELL_COUNT, type StatResult } from "./statResults";
+import { MIN_SAMPLE_SIZE, type StatResult, suppressed } from "./statResults";
 import type { StatCall } from "./taskSchema";
 
 /** The same settle bar plugin-feedback's settled.ts uses (spec 035 #7). Kept as a local
@@ -107,8 +108,9 @@ async function executeHistogram(
 }
 
 /** Aggregate FSRS retrievability across every node with at least one sighting: mean,
- * median, and the share at/above `threshold`. Below MIN_CELL_COUNT known concepts the three
- * values are suppressed to 0 — the same disclosure floor histograms enforce per-bucket. */
+ * median, and the share at/above `threshold`. Below MIN_SAMPLE_SIZE known concepts the whole
+ * summary is suppressed: three bars reading 0 are indistinguishable from three genuine zeros,
+ * and a learner with four concepts would read them as "you remember nothing". */
 async function executeRetentionSummary(
   call: Extract<StatCall, { fn: "retention_summary" }>,
   sql: SqlClient,
@@ -116,16 +118,7 @@ async function executeRetentionSummary(
 ): Promise<StatResult> {
   const sightings = await sql.select<NodeSightingRow>("SELECT * FROM node_sightings");
   const values = [...computeRetentionByNode(sightings, now.toISOString()).values()];
-  if (values.length < MIN_CELL_COUNT) {
-    return {
-      kind: "bars",
-      bars: [
-        { label: "均值", value: 0 },
-        { label: "中位数", value: 0 },
-        { label: "高于基准线的占比", value: 0 },
-      ],
-    };
-  }
+  if (values.length < MIN_SAMPLE_SIZE) return suppressed(values.length);
   const sorted = [...values].sort((a, b) => a - b);
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
   const midIndex = Math.floor(sorted.length / 2);
@@ -137,16 +130,21 @@ async function executeRetentionSummary(
   return {
     kind: "bars",
     bars: [
-      { label: "均值", value: roundTo3(mean) },
-      { label: "中位数", value: roundTo3(median) },
-      { label: "高于基准线的占比", value: roundTo3(share) },
+      { label: { key: "settings:research.retentionMean" }, value: roundTo3(mean) },
+      { label: { key: "settings:research.retentionMedian" }, value: roundTo3(median) },
+      { label: { key: "settings:research.retentionAboveThreshold" }, value: roundTo3(share) },
     ],
   };
 }
 
-/** Below this many local days actually carrying data, a Pearson coefficient is too easily a
- * small-sample artifact — the call reports 0 instead of a spurious number. */
-const CORRELATION_MIN_DAYS_WITH_DATA = 7;
+/**
+ * Fewest local days actually carrying data before a Pearson coefficient is worth reporting.
+ * Correlations do not stabilize until n is in the hundreds — n < 150 is rarely defensible and
+ * a coefficient over 7 days is noise (Schönbrodt & Perugini 2013, "At what sample size do
+ * correlations stabilize?"). 30 is the floor the 2026-08-28 audit set for this panel: still
+ * far short of stable, but no longer a number produced from a single week.
+ */
+const CORRELATION_MIN_DAYS_WITH_DATA = 30;
 
 /** Pearson correlation between two per-day series over the trailing `windowDays` local days. */
 async function executeCorrelation(
@@ -162,9 +160,9 @@ async function executeCorrelation(
   const daysWithData = dayKeys.filter(
     (_, index) => (xs[index] ?? 0) > 0 || (ys[index] ?? 0) > 0,
   ).length;
-  if (daysWithData < CORRELATION_MIN_DAYS_WITH_DATA) {
-    return { kind: "number", value: 0, n: daysWithData };
-  }
+  // 0 is a valid coefficient meaning "these move independently" — reporting it for "we do
+  // not know" prints a research finding nobody computed (审计统计分报告差距 3).
+  if (daysWithData < CORRELATION_MIN_DAYS_WITH_DATA) return suppressed(daysWithData);
   return { kind: "number", value: roundTo3(pearsonCorrelation(xs, ys)), n: dayKeys.length };
 }
 

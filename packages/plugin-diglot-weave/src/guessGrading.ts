@@ -1,11 +1,37 @@
 /**
- * Purpose: zero-LLM guess grading (spec 033) — the user's guess at a woven word's meaning
- * is graded against the original word, its dictionary synonyms, and a character-overlap
- * closeness measure. Pure and deterministic.
- * Main exports: gradeGuess.
+ * Purpose: zero-LLM guess grading (spec 033) — the user's guess at a woven word's meaning is
+ * graded against the original word and its dictionary synonyms (correct), a morphological
+ * overlap test (close), and an embedding cosine supplied by the caller (close). Character
+ * overlap as a stand-in for meaning was removed: on CJK it graded 父亲→母亲, 敌人→朋友 and
+ * 昨天→明天 as "close", because Chinese antonyms share morphemes (audit 2026-08-28 #4).
+ * Pure and deterministic; the embedding I/O lives in the app layer.
+ * Main exports: gradeGuess, GuessSemantics, SEMANTIC_CLOSE_THRESHOLD.
  */
 import type { DiglotGuessGrade } from "@breadcrumb/core-db";
-import type { LoadedLanguagePack } from "./packSchema";
+import { type LoadedLanguagePack, resolveLemma } from "./packSchema";
+
+/** Semantic evidence about one guess, computed by the caller (local e5 embeddings). */
+export interface GuessSemantics {
+  /** Cosine similarity between the guess and the original word, or null when embeddings are
+   * unavailable — in which case grading degrades to correct/wrong only. Withholding "close"
+   * is the safe error: telling someone their answer was near when it was not is the kind of
+   * misleading feedback the product may not produce. */
+  similarity: number | null;
+}
+
+/** Cosine above which a guess counts as semantically close. Deliberately high and TENTATIVE:
+ * multilingual-e5 puts unrelated words of one language in the 0.7–0.85 band and places
+ * antonyms close to each other, so a low threshold would recreate the very bug this replaces.
+ * Needs calibration on the real machine against 父亲/母亲, 敌人/朋友, 男孩/女孩, 昨天/明天. */
+export const SEMANTIC_CLOSE_THRESHOLD = 0.92;
+
+/** Shortest overlap that may count as morphological, and the share of the longer string it
+ * must cover — "友" inside "友情" is not evidence of anything. */
+const MIN_OVERLAP_CHARS = 2;
+const MIN_OVERLAP_SHARE = 0.5;
+/** Edit similarity that counts as the same word misspelled or inflected (alphabetic
+ * scripts). Two-character CJK words can never reach it without being identical. */
+const MORPHOLOGICAL_EDIT_SIMILARITY = 0.7;
 
 /** Lowercases, trims and strips surrounding punctuation/whitespace from a guess. */
 function normalize(text: string): string {
@@ -44,25 +70,36 @@ function editDistance(a: string, b: string): number {
   return distance[rows - 1]?.[cols - 1] ?? Math.max(a.length, b.length);
 }
 
-/** Share of the reference's characters that also appear in the guess — the closeness
- * measure for CJK-style scripts where single characters carry meaning. */
-function characterOverlap(guess: string, reference: string): number {
-  const referenceChars = [...reference];
-  if (referenceChars.length === 0) return 0;
-  const guessChars = new Set(guess);
-  const hits = referenceChars.filter((char) => guessChars.has(char)).length;
-  return hits / referenceChars.length;
+/** Same word in another shape: one string contains the other (compound or affix), or they
+ * are within an edit or two of each other. Form only — never a claim about meaning. */
+function isMorphologicallyClose(guess: string, reference: string): boolean {
+  const [shorter, longer] =
+    guess.length <= reference.length ? [guess, reference] : [reference, guess];
+  if (
+    shorter.length >= MIN_OVERLAP_CHARS &&
+    shorter.length / longer.length >= MIN_OVERLAP_SHARE &&
+    longer.includes(shorter)
+  ) {
+    return true;
+  }
+  return 1 - editDistance(guess, reference) / longer.length >= MORPHOLOGICAL_EDIT_SIMILARITY;
 }
 
-/** Grades a guess about the woven word whose original was `originalSurface` (lemma
- * `lemma`). Correct = the original word itself or any source lemma sharing the same
- * target translation (dictionary synonyms). Close = strong partial match: ≥50% character
- * overlap (CJK) or ≥70% edit-similarity (alphabetic). Otherwise wrong. */
+/**
+ * Grades a guess about the woven word whose original was `originalSurface` (lemma `lemma`).
+ * Correct = the original word itself or any source lemma sharing the same target translation
+ * (dictionary synonyms). A guess that is itself a DIFFERENT dictionary word is wrong, never
+ * close — it is a substantive mix-up, and the confusion miner is the place that uses it.
+ * (This also grades a near-synonym the pack does not list under the same target as wrong —
+ * unchanged from the character-overlap era, and the safe direction to err in.)
+ * Otherwise close = a morphological variant, or an embedding cosine over the threshold.
+ */
 export function gradeGuess(
   guessRaw: string,
   originalSurface: string,
   lemma: string,
   loaded: LoadedLanguagePack,
+  semantics?: GuessSemantics,
 ): DiglotGuessGrade {
   const guess = normalize(guessRaw);
   if (guess.length === 0) return "wrong";
@@ -76,11 +113,12 @@ export function gradeGuess(
   for (const reference of references) {
     if (reference.length > 0 && guess === reference) return "correct";
   }
+  const guessedLemma = resolveLemma(guessRaw.trim(), loaded);
+  if (guessedLemma !== null && guessedLemma !== lemma) return "wrong";
   for (const reference of references) {
     if (reference.length === 0) continue;
-    if (characterOverlap(guess, reference) >= 0.5) return "close";
-    const longest = Math.max(guess.length, reference.length);
-    if (longest > 0 && 1 - editDistance(guess, reference) / longest >= 0.7) return "close";
+    if (isMorphologicallyClose(guess, reference)) return "close";
   }
-  return "wrong";
+  const similarity = semantics?.similarity ?? null;
+  return similarity !== null && similarity >= SEMANTIC_CLOSE_THRESHOLD ? "close" : "wrong";
 }

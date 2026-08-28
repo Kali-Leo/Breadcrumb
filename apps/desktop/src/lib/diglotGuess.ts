@@ -5,11 +5,27 @@
  * Main exports: submitDiglotGuess, guessFeedbackMessage (the wording lives in learning.json).
  */
 import type { DiglotEventKind, DiglotGuessGrade } from "@breadcrumb/core-db";
-import { gradeGuess, type LoadedLanguagePack } from "@breadcrumb/plugin-diglot-weave";
+import {
+  cosineSimilarity,
+  gradeGuess,
+  type LoadedLanguagePack,
+} from "@breadcrumb/plugin-diglot-weave";
 import { getRepos } from "./db";
+import { embedTexts } from "./embeddings";
 import { nowIso } from "./time";
 
 export { guessFeedbackMessage } from "@breadcrumb/plugin-diglot-weave";
+
+/** Cosine similarity between the guess and the original word, from the local embedding
+ * model — the only evidence that grades a guess "close" (character overlap called Chinese
+ * antonyms close, since they share a morpheme). null whenever embeddings are unavailable, in
+ * which case grading degrades to correct-or-wrong. */
+async function guessSimilarity(guess: string, originalSurface: string): Promise<number | null> {
+  const vectors = await embedTexts([guess.trim(), originalSurface]);
+  const [guessVector, originalVector] = vectors ?? [];
+  if (guessVector === undefined || originalVector === undefined) return null;
+  return cosineSimilarity(guessVector, originalVector);
+}
 
 /** Grades and persists one guess; returns the grade and its event kind. */
 export async function submitDiglotGuess(input: {
@@ -20,7 +36,9 @@ export async function submitDiglotGuess(input: {
   context: string;
   latencyMs: number;
 }): Promise<{ grade: DiglotGuessGrade; eventKind: DiglotEventKind }> {
-  const grade = gradeGuess(input.guess, input.originalSurface, input.lemma, input.loaded);
+  const grade = gradeGuess(input.guess, input.originalSurface, input.lemma, input.loaded, {
+    similarity: await guessSimilarity(input.guess, input.originalSurface),
+  });
   const repos = await getRepos();
   await repos.diglot.insertGuess({
     id: crypto.randomUUID(),

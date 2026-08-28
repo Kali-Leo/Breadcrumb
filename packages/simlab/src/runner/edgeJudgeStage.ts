@@ -96,6 +96,7 @@ export async function runEdgeJudgeStage(
       pairs,
       existingEdges,
       nodeIdByLabel: new Map(allNodes.map((node) => [node.label, node.id])),
+      sourceMessageId: input.answerMessageId,
       newId: () => randomUUID(),
       nowIso: () => input.nowIso,
     });

@@ -8,7 +8,14 @@
  */
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors, outgoingNeighbors } from "@breadcrumb/plugin-graph";
-import { computeGap, type GapAndPathInput, helpsSupportWeight, readyNodes } from "./gapAndPath";
+import {
+  computeGap,
+  type GapAndPathInput,
+  helpsSupportWeight,
+  isSatisfiedBy,
+  readyNodes,
+} from "./gapAndPath";
+import { longestRequiresChainBelow } from "./graphDepth";
 
 /** Interest score (0..1) a step needs before the UI's "兴趣" reason chip shows — mild
  * curiosity shouldn't earn the tag, matching propagate.ts's own propagation floor. */
@@ -45,49 +52,24 @@ export interface RecommendedRouteStep {
   reason: RouteStepReason;
 }
 
-/** Longest downstream requires-chain (in nodes, this node counted) starting at each gap node,
- * following only requires edges that stay inside the gap — a static structural depth, not
- * affected by scheduling order. The gap's requires edges are guaranteed acyclic (ADR-0008's
- * graph layer rejects cycles at write time), so plain memoized recursion terminates. */
-function computeLongestChainBelow(
-  gapNodeIds: readonly string[],
-  gapSet: ReadonlySet<string>,
-  edges: readonly KnowledgeEdgeRow[],
-): Map<string, number> {
-  const memo = new Map<string, number>();
-  function visit(nodeId: string): number {
-    const cached = memo.get(nodeId);
-    if (cached !== undefined) return cached;
-    // Placeholder guards against re-entrant visits inside a single DFS branch; overwritten
-    // below once the real value is known.
-    memo.set(nodeId, 1);
-    const children = outgoingNeighbors(edges, nodeId, "requires").filter((id) => gapSet.has(id));
-    const depth = children.length === 0 ? 1 : 1 + Math.max(...children.map(visit));
-    memo.set(nodeId, depth);
-    return depth;
-  }
-  for (const nodeId of gapNodeIds) visit(nodeId);
-  return memo;
-}
-
 /** Greedily orders a goal's gap into a single route: at each step, scores every ready node
  * and takes the highest, tie-broken by label. Deterministic — same input, same output. */
 export function recommendRoute(
   input: GapAndPathInput,
   params: RecommendRouteParams,
 ): RecommendedRouteStep[] {
-  const { nodes, edges, masteryByNode, interestByNode, goalNodeIds, litThreshold } = input;
+  const { nodes, edges, interestByNode, goalNodeIds } = input;
   const { pace, interestWeight } = params;
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const goalNodeIdSet = new Set(goalNodeIds);
-  const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
+  const isLit = isSatisfiedBy(input);
   const byLabel = (a: string, b: string) =>
     (labelById.get(a) ?? a).localeCompare(labelById.get(b) ?? b);
 
   const gapNodeIds = computeGap(edges, goalNodeIds, isLit);
   const gapSet = new Set(gapNodeIds);
   const gapSize = gapNodeIds.length;
-  const depthByNode = computeLongestChainBelow(gapNodeIds, gapSet, edges);
+  const depthByNode = longestRequiresChainBelow(gapNodeIds, gapSet, edges);
 
   const remaining = new Set(gapNodeIds);
   const scheduledSet = new Set<string>();

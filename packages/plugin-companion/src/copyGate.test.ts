@@ -1,8 +1,11 @@
 /**
- * Purpose: mechanical safety gate over every companion-introduced user-visible string (spec 037
- * acceptance 5) — COMPANION_COPY, CRISIS_RESPONSE, BREAK_REMINDER_COPY, and every text field of
- * all three cards must scan clean against both the manipulation lexicon and the repo's shared
- * pressure lexicon. The pressure lexicon itself is owned by packages/simlab (dev-only test
+ * Purpose: mechanical safety gate over every string this package still spells out (spec 037
+ * acceptance 5) — what remains of COMPANION_COPY, the model-facing prompts, and every text field
+ * of all three cards must scan clean against both the manipulation lexicon and the repo's shared
+ * pressure lexicon. The interface wording moved to apps/desktop's catalogues (ADR-0031), where
+ * locales/copyGate.test.ts runs these same three scans over every shipped language, so no gate
+ * was lost; the last test below holds that line by failing if wording reappears here.
+ * The pressure lexicon itself is owned by packages/simlab (dev-only test
  * harness that depends on product packages, never the reverse), so plugin-companion cannot take
  * a package dependency on it without inverting that edge. Per spec 037's own instruction ("if it
  * lives in an importable place use it, otherwise replicate its check pattern locally and say
@@ -39,14 +42,19 @@ const SHARED_PRESSURE_LEXICON_PATH = join(
   "pressure-lexicon.json",
 );
 
+/** The shared file holds one list per interface language; everything scanned here is
+ * Chinese, so this reads the Chinese list. */
 function loadSharedPressureLexicon(): string[] {
   const raw = readFileSync(SHARED_PRESSURE_LEXICON_PATH, "utf-8");
-  const parsed = z.object({ entries: z.array(z.string().min(1)) }).parse(JSON.parse(raw));
-  return parsed.entries;
+  const parsed = z
+    .object({ entries: z.record(z.string(), z.array(z.string().min(1))) })
+    .parse(JSON.parse(raw));
+  return parsed.entries["zh-CN"] ?? [];
 }
 
 function findPressureLexiconHits(text: string, lexicon: readonly string[]): string[] {
-  return lexicon.filter((entry) => text.includes(entry));
+  const haystack = text.toLowerCase();
+  return lexicon.filter((entry) => haystack.includes(entry.toLowerCase()));
 }
 
 const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不起", "真聪明"];
@@ -76,15 +84,8 @@ function sampleStudentSystemPrompt(): string {
 describe("companion copy gates", () => {
   const pressureLexicon = loadSharedPressureLexicon();
   const allCopy: string[] = [
-    COMPANION_COPY.sectionTitle,
-    COMPANION_COPY.aiLabel,
-    COMPANION_COPY.invitation("二分查找"),
     COMPANION_COPY.reunionInvitation("二分查找"),
     COMPANION_COPY.helperName("二分查找"),
-    COMPANION_COPY.helperThanks("二分查找"),
-    COMPANION_COPY.rosterEmpty,
-    CRISIS_RESPONSE,
-    BREAK_REMINDER_COPY,
     IMPORTANCE_PROMPT,
     REFLECTION_PROMPT,
     SCRIPT_PROMPT,
@@ -111,5 +112,20 @@ describe("companion copy gates", () => {
         expect(text).not.toContain(praise);
       }
     }
+  });
+});
+
+describe("what the live UI renders", () => {
+  it("names its sentences instead of writing them", () => {
+    expect(CRISIS_RESPONSE).toEqual({ key: "chat:companion.crisisResponse" });
+    expect(BREAK_REMINDER_COPY).toEqual({ key: "chat:companion.breakReminder" });
+  });
+
+  // The section title, the AI label, the empty roster line, the helper's invitation and its
+  // thanks all left for the catalogues. What is allowed to stay is listed here by name, so
+  // adding a hardcoded interface string back to this object fails rather than shipping an
+  // English interface with Chinese in it (真机走查 2026-08-28).
+  it("leaves no interface wording in COMPANION_COPY", () => {
+    expect(Object.keys(COMPANION_COPY).sort()).toEqual(["helperName", "reunionInvitation"]);
   });
 });

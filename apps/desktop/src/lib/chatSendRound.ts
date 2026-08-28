@@ -72,34 +72,43 @@ export async function runSendRound(params: {
 }): Promise<SendRoundResult | null> {
   const { repos, activeKind, conversationId, userMessage, apiConfig } = params;
 
-  // System messages, in unshift order: kind prompt(s) -> anchored node -> learner context
-  // (spec 038 §2.3), so the most specific-to-this-round line ends up closest to the user turn.
-  const history = [...params.baseMessages];
-  history.unshift(
-    ...(await buildRoundSystemMessages({
-      repos,
-      activeKind,
-      conversationId,
-      content: userMessage.content,
-      apiConfig,
-      companionScriptEnabled: params.companionScriptEnabled,
-      companionMemoryEnabled: params.companionMemoryEnabled,
-      crisisActive: params.crisisActive,
-      studyMode: params.studyMode,
-    })),
-  );
-  const anchoredMessage = await buildAnchoredNodeSystemMessage();
-  if (anchoredMessage) history.unshift(anchoredMessage);
+  // Stable content first, volatile content last — that is what makes provider prefix caching
+  // possible at all. DeepSeek only counts a request as a cache hit when the prefix matches
+  // "starting from the 0th token", and a hit costs ~1/50th of a miss, so the kind prompt(s)
+  // and the teaching contract are pinned at index 0 and the per-round steering lines are kept
+  // out of the way: contract + prior turns stays byte-identical from one round to the next.
+  const contractMessages = await buildRoundSystemMessages({
+    repos,
+    activeKind,
+    conversationId,
+    content: userMessage.content,
+    apiConfig,
+    companionScriptEnabled: params.companionScriptEnabled,
+    companionMemoryEnabled: params.companionMemoryEnabled,
+    crisisActive: params.crisisActive,
+    studyMode: params.studyMode,
+  });
+
+  // Rebuilt every round and never persisted (spec 038 §2.3 precedent). These sit immediately
+  // before the round's user turn: last thing the model reads, and behind the cached prefix.
+  const perRoundSteering: ChatMessage[] = [];
   // 学习模式 gate (spec 052): a free chat round carries no learner-context or focus-context
   // steering — silent measurement continues elsewhere, but nothing shapes the reply.
   if (activeKind === "chat" && params.studyMode) {
-    // Neither is persisted (spec 038 §2.3 precedent): both are assembled fresh every round and
-    // only ever live in this round's outgoing history.
-    const focusContextMessage = await buildFocusContextSystemMessage(conversationId);
-    if (focusContextMessage) history.unshift(focusContextMessage);
     const learnerContextMessage = await buildLearnerContextSystemMessage(userMessage.content);
-    if (learnerContextMessage) history.unshift(learnerContextMessage);
+    if (learnerContextMessage) perRoundSteering.push(learnerContextMessage);
+    const focusContextMessage = await buildFocusContextSystemMessage(conversationId);
+    if (focusContextMessage) perRoundSteering.push(focusContextMessage);
   }
+  const anchoredMessage = await buildAnchoredNodeSystemMessage();
+  if (anchoredMessage) perRoundSteering.push(anchoredMessage);
+
+  // baseMessages always ends with this round's user message (see chatAssistantRound), so the
+  // steering slides in just ahead of it. The language directive is appended after everything
+  // by the client itself (spec 058 §1) and stays where it is.
+  const priorTurns = params.baseMessages.slice(0, -1);
+  const userTurn = params.baseMessages.slice(-1);
+  const history = [...contractMessages, ...priorTurns, ...perRoundSteering, ...userTurn];
 
   const client = createLlmClient(
     llmConfigFrom(apiConfig, { firm: shouldUseFirmDirective(conversationId) }),
@@ -129,7 +138,9 @@ export async function runSendRound(params: {
   }
 
   // Did it write in the language we asked for? (spec 058 §1 — the check, not a rewrite.)
-  if (!stoppedEarly) noteReplyLanguage(conversationId, content);
+  // Fire-and-forget: the verdict only hardens the *next* round's directive, so the reader
+  // never waits on the detector loading.
+  if (!stoppedEarly) void noteReplyLanguage(conversationId, content);
 
   const assistantMessage: MessageRow = {
     id: newId(),

@@ -52,7 +52,11 @@ const recordAiFailureMock = vi.fn();
 vi.mock("./failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
 
 const recordMeteredCallMock = vi.fn();
-vi.mock("./metering", () => ({ recordMeteredCall: recordMeteredCallMock }));
+const recordFailedCallUsageMock = vi.fn();
+vi.mock("./metering", () => ({
+  recordMeteredCall: recordMeteredCallMock,
+  recordFailedCallUsage: recordFailedCallUsageMock,
+}));
 
 const chatJsonMock = vi.fn();
 vi.mock("@breadcrumb/core-llm", async () => {
@@ -73,6 +77,7 @@ afterEach(() => {
   focusNodesListDistinctWordLabelsMock.mockReset();
   recordAiFailureMock.mockReset();
   recordMeteredCallMock.mockReset();
+  recordFailedCallUsageMock.mockReset();
   chatJsonMock.mockReset();
   settingsState = {
     featureSwitches: { termMarking: true },
@@ -114,6 +119,9 @@ describe("ensureTermMarks", () => {
         message_id: null,
         created_at: new Date().toISOString(),
         origin_node_id: null,
+        // A graded guess, not a passing mention: mastery caps a node the learner was never
+        // observed retrieving below the lit tier, so a bare exposure would never make this list.
+        grade: "easy",
       },
     ]);
     masteryClaimsListAllMock.mockResolvedValue([]);
@@ -123,7 +131,7 @@ describe("ensureTermMarks", () => {
       usage: { inputTokens: 50, outputTokens: 10 },
     });
 
-    // "作用域" is freshly re-sighted -> mastery ~1 (lit), so it lands on the lit list; thin
+    // "作用域" was freshly recalled on demand -> mastery ~1 (lit), so it lands on the lit list; thin
     // evidence (well under the threshold) -> density clip applies. Answer is 60 chars ->
     // cap = ceil(60/60) = 1, so only the first (highest-obstruction) term survives.
     const answer = "尾".repeat(60);

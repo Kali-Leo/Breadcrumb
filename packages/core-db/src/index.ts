@@ -18,6 +18,7 @@ export * from "./knowledgeRepositories";
 export * from "./migrations";
 export * from "./nodeEmbeddingRepository";
 export * from "./nodeMergeRepository";
+export * from "./nodePairVerdictRepository";
 export * from "./practiceRepositories";
 export * from "./repositories";
 export * from "./researchRepositories";

@@ -15,16 +15,29 @@
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { SynonymVerdict } from "./synonymGate";
 
+/** Whitespace sitting between a CJK character and a latin letter/digit, on either side. Only
+ * that boundary is folded: whether "if缩进" is written "if 缩进" is pure typography (writers
+ * add the space for legibility, CJK needs none), while whitespace between two latin words is
+ * meaningful and must stay. Design audit 2026-08-28 #9. */
+const CJK_LATIN_SPACE =
+  /(?<=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])\s+(?=[A-Za-z0-9])|(?<=[A-Za-z0-9])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu;
+
 /** Collapses cosmetic label variants to one comparison key: trims, folds full-width
  * latin/punctuation to half-width (NFKC — also unifies full/half-width parentheses so the
  * trailing-parenthetical strip below matches either), drops ONE trailing "(...)" annotation
- * (e.g. a romanization or translation), then lowercases latin letters. Not exhaustive
- * synonym detection — that's the embedding+LLM tier; this only catches typographic
- * near-duplicates of the same label. */
+ * (e.g. a romanization or translation), removes the optional space at a CJK/latin boundary,
+ * then lowercases latin letters. Not exhaustive synonym detection — that's the embedding+LLM
+ * tier; this only catches typographic near-duplicates of the same label.
+ *
+ * Traditional->simplified folding is NOT done here: it needs a character mapping table, and
+ * as of 2026-08-28 no npm package offers one that is at once small enough, cleanly licensed
+ * AND still maintained (the two small ones were last published in 2012 and 2017). So
+ * 財務報表 and 财务报表 still read as different labels; the embedding tier is what catches
+ * them today. */
 export function normalizeLabel(label: string): string {
   const widthUnified = label.trim().normalize("NFKC");
   const withoutTrailingParenthetical = stripOneTrailingParenthetical(widthUnified).trim();
-  return withoutTrailingParenthetical.toLowerCase();
+  return withoutTrailingParenthetical.replace(CJK_LATIN_SPACE, "").toLowerCase();
 }
 
 function stripOneTrailingParenthetical(text: string): string {
@@ -95,11 +108,11 @@ export interface JudgedNodePair {
   nodeBId: string;
 }
 
-/** Turns "同一"-verdict pairs into merge instructions (earliest-created wins), skipping any
+/** Turns "same"-verdict pairs into merge instructions (earliest-created wins), skipping any
  * pair once either side has already been folded away earlier in this same batch — a node
  * deleted by an earlier instruction must not be referenced again; a chain (A~B, B~C) leaves
  * the second pair for a later sweep, once B's survivor (A) can be re-compared against C. A
- * verdict with an unknown pairId, or "不同", contributes nothing. */
+ * verdict with an unknown pairId, or "different", contributes nothing. */
 export function planSynonymVerdictMerges(
   pairs: readonly JudgedNodePair[],
   verdicts: readonly { pairId: string; verdict: SynonymVerdict }[],
@@ -110,7 +123,7 @@ export function planSynonymVerdictMerges(
   const instructions: NodeMergeInstruction[] = [];
 
   for (const verdict of verdicts) {
-    if (verdict.verdict !== "同一") continue;
+    if (verdict.verdict !== "same") continue;
     const pair = pairById.get(verdict.pairId);
     if (pair === undefined) continue;
     if (alreadyMergedAway.has(pair.nodeAId) || alreadyMergedAway.has(pair.nodeBId)) continue;

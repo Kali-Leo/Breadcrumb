@@ -15,7 +15,7 @@ import {
   locateTermPatches,
   pickDoors,
 } from "@breadcrumb/plugin-explore";
-import { computeMastery, computeRetentionByNode } from "@breadcrumb/plugin-memory";
+import { computeMastery } from "@breadcrumb/plugin-memory";
 import { ensureTermMarks } from "./termMarking";
 import { nowIso } from "./time";
 
@@ -31,12 +31,14 @@ export async function computeDoorPatches(
       { usePlannerStore },
       { useDiglotStore },
       { useDoorStore },
+      { useMemoryStore },
     ] = await Promise.all([
       import("./db"),
       import("../stores/knowledgeStore"),
       import("../stores/plannerStore"),
       import("../stores/diglotStore"),
       import("../stores/doorStore"),
+      import("../stores/memoryStore"),
     ]);
     const repos = await getRepos();
 
@@ -49,8 +51,13 @@ export async function computeDoorPatches(
     // and veto its own door.
     const priorSightings = allSightings.filter((sighting) => sighting.message_id !== messageId);
     const now = nowIso();
-    const retentionByNode = computeRetentionByNode(priorSightings, now);
-    const masteryByNode = computeMastery(priorSightings, claims, now);
+    // memoryStore's cached map instead of two more full FSRS replays per rendered message
+    // (design audit 2026-08-28, 记忆与遗忘模型 #8). Its refresh trails each round by 7s, so at
+    // door time it still holds the pre-round state — the same thing priorSightings approximates
+    // — and door ranking is coarse enough that a few seconds of staleness cannot change which
+    // words become doors.
+    const retentionByNode = useMemoryStore.getState().retentionByNode;
+    const masteryByNode = computeMastery(priorSightings, claims, now, retentionByNode);
 
     const diglotPatches = useDiglotStore.getState().patchesByMessage.get(messageId) ?? [];
     const reservedSpans = diglotPatches.map((patch) => ({ start: patch.start, end: patch.end }));
