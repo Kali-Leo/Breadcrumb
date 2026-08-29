@@ -14,6 +14,7 @@ import type {
   NodeEmbeddingRow,
   NodeSightingRow,
 } from "@breadcrumb/core-db";
+import type { BrowsingNodeAffinity } from "@breadcrumb/plugin-browsing-interest";
 import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
 import {
   aggregateInterest,
@@ -59,6 +60,10 @@ export function computePlannerSnapshot(
   isRanked: boolean,
   routeParams: RecommendRouteParams,
   now: string,
+  /** Per-node browsing affinity from watched professional content (spec 059), or null when
+   * the interest service / embedding model is unavailable — the frontier's browsing
+   * component then carries no information. */
+  browsingAffinityByNode: ReadonlyMap<string, BrowsingNodeAffinity> | null = null,
 ): PlannerSnapshot {
   const masteryByNode = computeMastery(sightings, claims, now);
   const interestScoresByNode = aggregateInterest(signals, now);
@@ -118,6 +123,7 @@ export function computePlannerSnapshot(
     interestGatewayByNode: propagated.gatewaySourceByNode,
     evidenceWeightByNode,
     goalGapNodeIds,
+    ...(browsingAffinityByNode !== null ? { browsingAffinityByNode } : {}),
   });
 
   return {

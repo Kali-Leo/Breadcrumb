@@ -21,6 +21,7 @@ import type {
   RecommendedRouteStep,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
+import { loadBrowsingAffinityByNode } from "../lib/browsingAffinity";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
 import { deriveGoalView } from "../lib/plannerGapActions";
@@ -124,6 +125,10 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         repos.goals.listAll(),
       ]);
 
+      // Best-effort (spec 059): null when the interest service or embedding model is absent,
+      // and the planner then behaves exactly as it did before the bridge existed.
+      const browsingAffinityByNode = await loadBrowsingAffinityByNode(embeddings);
+
       const snapshot = computePlannerSnapshot(
         nodes,
         edges,
@@ -136,6 +141,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         useSettingsStore.getState().learningMode === "ranked",
         useSettingsStore.getState().routeParams,
         nowIso(),
+        browsingAffinityByNode,
       );
 
       set({ nodes, edges, claims, goals, ...snapshot });

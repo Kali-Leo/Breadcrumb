@@ -3,6 +3,17 @@
  * pure math behind the panels. No UI here; the panels live in apps/desktop.
  */
 export {
+  AFFINITY_RELATIVE_GATE_FRACTION,
+  BROWSING_RECENCY_HALF_LIFE_DAYS,
+  type BrowsingNodeAffinity,
+  browsingAffinityByNode,
+  MIN_AFFINITY_EXCESS,
+  type WatchedTitleSignal,
+  type WatchedTitleVector,
+  watchedTitleSignals,
+  watchedTitleWeight,
+} from "./affinity";
+export {
   type BrowsingInterestClient,
   BrowsingInterestServiceError,
   createBrowsingInterestClient,

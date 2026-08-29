@@ -25,6 +25,10 @@ export const FRONTIER_WEIGHTS = {
   interest: 1,
   difficulty: 0.5,
   goalGap: GOAL_GAP_SCORE_BOOST,
+  /** Browsing affinity (spec 059) at half the conversational-interest weight — a product
+   * stance, not a measurement: what the learner watches is a passive, platform-polluted
+   * environment signal, and it must never outvote what they actively said in conversation. */
+  browsing: 0.5,
 } as const;
 
 /** Which position in the concept bucket the exploration slot occupies (0-based): the top two
@@ -39,6 +43,9 @@ export interface FrontierScoreParts {
   difficulty: number;
   /** 1 when inside the selected goal's gap, 0 otherwise. */
   goalGap: number;
+  /** Browsing affinity in [0,1] (spec 059) — 0 when the interest service is absent, which
+   * min-max normalization then treats as "carries no information", exactly right. */
+  browsing: number;
 }
 
 /** Min-max normalization inside the candidate set: the best candidate on a component gets 1,
@@ -59,12 +66,14 @@ export function normalizeAndScore(parts: readonly FrontierScoreParts[]): number[
   const interest = normalizer(parts.map((part) => part.interest));
   const difficulty = normalizer(parts.map((part) => part.difficulty));
   const goalGap = normalizer(parts.map((part) => part.goalGap));
+  const browsing = normalizer(parts.map((part) => part.browsing));
   return parts.map(
     (part) =>
       FRONTIER_WEIGHTS.helps * helps(part.helps) +
       FRONTIER_WEIGHTS.interest * interest(part.interest) -
       FRONTIER_WEIGHTS.difficulty * difficulty(part.difficulty) +
-      FRONTIER_WEIGHTS.goalGap * goalGap(part.goalGap),
+      FRONTIER_WEIGHTS.goalGap * goalGap(part.goalGap) +
+      FRONTIER_WEIGHTS.browsing * browsing(part.browsing),
   );
 }
 
