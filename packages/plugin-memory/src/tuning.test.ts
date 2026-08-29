@@ -29,7 +29,8 @@ describe("tuning", () => {
 
   it("userModelParams carries the forgetting/interest half-lives as plain numbers", () => {
     expect(typeof userModelParams.claimHalfLifeDays).toBe("number");
-    expect(typeof userModelParams.interestHalfLifeDays).toBe("number");
+    expect(typeof userModelParams.interestShortHalfLifeDays).toBe("number");
+    expect(typeof userModelParams.interestLongHalfLifeDays).toBe("number");
     expect(typeof userModelParams.fsrsParametersNote).toBe("string");
   });
 });

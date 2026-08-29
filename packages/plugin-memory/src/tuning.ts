@@ -17,8 +17,9 @@ import {
 import {
   CONFIDENCE_LEVEL_SCORES,
   DEFAULT_SPREAD_FACTOR,
-  INTEREST_HALF_LIFE_DAYS,
   INTEREST_LEVEL_SCORES,
+  INTEREST_LONG_HALF_LIFE_DAYS,
+  INTEREST_SHORT_HALF_LIFE_DAYS,
   K_PSEUDO,
 } from "@breadcrumb/plugin-interest";
 import { RELATIVE_GATE_FRACTION, SYNONYM_CANDIDATE_TOP_K } from "@breadcrumb/plugin-knowledge-tree";
@@ -50,9 +51,12 @@ export const userModelParams = {
   /** Self-report claim half-life (days): how fast "我学过 X" fades if never revisited by a
    * real footprint. A learner who reliably over/under-claims is a per-user signal. */
   claimHalfLifeDays: CLAIM_HALF_LIFE_DAYS,
-  /** Interest-signal half-life (days): how fast curiosity/confusion/boredom evidence fades.
-   * A learner whose interests are unusually stable or volatile could shift this. */
-  interestHalfLifeDays: INTEREST_HALF_LIFE_DAYS,
+  /** Interest-signal half-lives (days), short/long twin channels aggregated by max (spec
+   * 059): the short channel is "into it these weeks", the long channel keeps a course-sized
+   * interest alive through a quiet month. A learner whose interests are unusually stable or
+   * volatile could shift these. */
+  interestShortHalfLifeDays: INTEREST_SHORT_HALF_LIFE_DAYS,
+  interestLongHalfLifeDays: INTEREST_LONG_HALF_LIFE_DAYS,
 } as const;
 
 /**

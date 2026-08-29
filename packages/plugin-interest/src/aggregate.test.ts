@@ -4,7 +4,12 @@
  */
 import type { InterestSignalRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { aggregateInterest, aggregateStyles, INTEREST_HALF_LIFE_DAYS, K_PSEUDO } from "./aggregate";
+import {
+  aggregateInterest,
+  aggregateStyles,
+  INTEREST_SHORT_HALF_LIFE_DAYS,
+  K_PSEUDO,
+} from "./aggregate";
 
 const NOW = "2026-07-29T12:00:00Z";
 
@@ -33,12 +38,26 @@ describe("aggregateInterest", () => {
   it("weighs recent signals more than old ones for the same node", () => {
     const signals = [
       signal({ node_id: "n1", created_at: daysAgo(0), curiosity: 1 }),
-      signal({ node_id: "n1", created_at: daysAgo(INTEREST_HALF_LIFE_DAYS), curiosity: 0 }),
+      signal({ node_id: "n1", created_at: daysAgo(INTEREST_SHORT_HALF_LIFE_DAYS), curiosity: 0 }),
     ];
     const scores = aggregateInterest(signals, NOW);
-    // weight(new) = 1*1 = 1, weight(old) = 1*0.5 = 0.5 (exactly one half-life old)
-    // score = (1*1 + 0*0.5) / (1 + 0.5 + K_PSEUDO) = 1 / 4.5
+    // Short channel: weight(new) = 1, weight(old) = 0.5 (one short half-life old), so
+    // score = 1 / (1 + 0.5 + K_PSEUDO) = 1/4.5. The long channel remembers the indifferent
+    // old signal more strongly (0.5^(14/90) ≈ 0.90), which dilutes it to 1/4.9 — so the
+    // short channel wins the max here: a recent burst outshines an indifferent past.
     expect(scores.get("n1")?.curiosity ?? 0).toBeCloseTo(1 / 4.5, 5);
+  });
+
+  it("keeps a strong month-old interest alive through the long channel (spec 059)", () => {
+    const signals = [
+      signal({ node_id: "n1", created_at: daysAgo(40), curiosity: 0.9, confidence: 0.9 }),
+    ];
+    const score = aggregateInterest(signals, NOW).get("n1")?.curiosity ?? 0;
+    // Long channel: decay 0.5^(40/90) ≈ 0.735 → score ≈ 0.163. Under the old single 14-day
+    // constant the same signal decayed to 0.5^(40/14) ≈ 0.138 → score ≈ 0.036.
+    const longDecay = 0.5 ** (40 / 90);
+    expect(score).toBeCloseTo((0.9 * 0.9 * longDecay) / (0.9 * longDecay + K_PSEUDO), 3);
+    expect(score).toBeGreaterThan(4 * 0.036);
   });
 
   it("keeps nodes independent", () => {
