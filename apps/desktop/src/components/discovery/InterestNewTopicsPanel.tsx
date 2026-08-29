@@ -11,14 +11,23 @@ import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine } from "./InterestPanel";
 import { useTopicName } from "./topicNames";
 
+/** Below this many recorded events, a single click can crown a "new interest", so the list
+ * gets a softening line (2026-08-28 audit #10 — the service's rising-share test does not
+ * look at how much data is behind the shares). Provisional product choice. */
+const THIN_EVIDENCE_EVENT_COUNT = 500;
+
 export function InterestNewTopicsPanel() {
   const { t, i18n } = useTranslation("discovery");
   const topicName = useTopicName();
   const newInterests = useBrowsingInterestStore((state) => state.newInterests);
+  const eventCount = useBrowsingInterestStore((state) => state.profile?.n_events ?? 0);
   const interests = newInterests?.interests ?? [];
 
   return (
     <InterestPanel title={t("newTopics.title")}>
+      {interests.length > 0 && eventCount < THIN_EVIDENCE_EVENT_COUNT && (
+        <p className="mb-1 text-stone-400 text-xs">{t("newTopics.thinEvidence")}</p>
+      )}
       {interests.length === 0 ? (
         <InterestPanelEmptyLine>{t("newTopics.empty")}</InterestPanelEmptyLine>
       ) : (

@@ -24,6 +24,11 @@ export const browsingProfileSchema = z.object({
   short: z.array(z.number()),
   long: z.array(z.number()),
   expose: z.array(z.number()),
+  /** Exposure-corrected interest per topic (chosen share / fed share, service v2026-08-29+):
+   * >1 means the learner seeks the topic beyond what the feed pushes. Optional — older
+   * service builds omit it. Read so future consumers can separate "likes it" from "gets fed
+   * it"; nothing in the panels renders it yet. */
+  lift: z.array(z.number()).optional(),
   prefs: z.record(z.string(), z.number()),
   drivers: z.record(z.string(), z.array(z.object({ title: text, up: text }))),
   n_events: z.number(),
