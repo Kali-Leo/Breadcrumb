@@ -58,6 +58,20 @@ describe("frontier browsing component (spec 059)", () => {
     expect(empty).toEqual(omitted);
   });
 
+  it("strips the label when every candidate shares the same affinity — the order never moved", () => {
+    const result = frontier({
+      ...base,
+      browsingAffinityByNode: new Map([
+        ["a", { score: 0.4, sourceTitle: "同一个爆款" }],
+        ["b", { score: 0.4, sourceTitle: "同一个爆款" }],
+      ]),
+    });
+    expect(result.map((candidate) => candidate.nodeId)).toEqual(["a", "b"]);
+    for (const candidate of result) {
+      expect(candidate.reason.browsingSource).toBeUndefined();
+    }
+  });
+
   it("cannot outvote conversational interest at equal normalized strength", () => {
     // a carries the strongest conversational interest, b the strongest browsing affinity.
     // Both normalize to 1 on their own component; interest weighs double browsing.

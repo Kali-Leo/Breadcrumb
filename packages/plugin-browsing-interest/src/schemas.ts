@@ -32,6 +32,10 @@ export const browsingProfileSchema = z.object({
   prefs: z.record(z.string(), z.number()),
   drivers: z.record(z.string(), z.array(z.object({ title: text, up: text }))),
   n_events: z.number(),
+  /** Engaged (click/watch) event count, exposures excluded — the honest measure of how much
+   * evidence sits behind the shares (n_events is dominated by scrolling). Optional: older
+   * service builds omit it. */
+  n_engaged: z.number().optional(),
   classifier: z.string(),
   emotion_on: z.boolean(),
 });

@@ -22,9 +22,10 @@ const client = createBrowsingInterestClient({
   fetch: (url, init) => tauriFetch(url, init),
 });
 
-/** Only this month's viewing drives recommendations (spec 059 — the recency half-life
- * makes anything older nearly weightless anyway, so fetching it would be waste). */
-const PRO_CONTENT_DAYS = 30;
+/** Fetch window for watched content. Three half-lives wide, so the window edge is where
+ * weight has already decayed to ~0.125 — a fade, not a cliff. (A window equal to the
+ * half-life would drop titles still carrying half their weight — 2026-08-30 review.) */
+const PRO_CONTENT_DAYS = 90;
 
 /** How long fetched-and-embedded title vectors stay fresh. Planner recomputes fire on every
  * mastery/interest/edge change; viewing history changes on a much slower clock. */
@@ -61,7 +62,8 @@ async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleVecto
   } catch {
     return null; // absent service is the normal case for most users — stay silent
   }
-  if (signals.length === 0) return null;
+  // Empty viewing history is a stable answer, not a failure — cache it on the long TTL.
+  if (signals.length === 0) return [];
   const vectors = await embedTexts(signals.map((signal) => signal.title));
   if (vectors === null) return null; // embedding model not downloaded yet — same silence
   return signals.flatMap((signal, index) => {
@@ -77,8 +79,15 @@ export async function loadBrowsingAffinityByNode(
 ): Promise<Map<string, BrowsingNodeAffinity> | null> {
   const titleVectors = await cachedTitleVectors();
   if (titleVectors === null || titleVectors.length === 0) return null;
-  const nodeVectors = new Map<string, readonly number[]>(
-    embeddings.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
-  );
+  // One corrupt vector row must cost that row, never the whole planner snapshot — this is
+  // the promise that a broken bridge behaves as no bridge (spec 059 出错三问).
+  const nodeVectors = new Map<string, readonly number[]>();
+  for (const row of embeddings) {
+    try {
+      nodeVectors.set(row.node_id, JSON.parse(row.vector_json) as number[]);
+    } catch {
+      console.warn("browsing affinity: skipping unreadable embedding row", row.node_id);
+    }
+  }
   return browsingAffinityByNode(titleVectors, nodeVectors);
 }

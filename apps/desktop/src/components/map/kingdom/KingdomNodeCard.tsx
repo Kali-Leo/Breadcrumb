@@ -3,7 +3,7 @@
  * statement, the recommendation reason when this is the "下一步", the relation list
  * (clickable jumps), alternates on demand, and one state-worded main action. Opening a
  * conversation is deliberately never a single click on the map.
- * Main exports: KingdomNodeCard, reasonLine.
+ * Main exports: KingdomNodeCard, reasonMessage, shortenTitle.
  */
 
 import type { CopyMessage } from "@breadcrumb/core-i18n";

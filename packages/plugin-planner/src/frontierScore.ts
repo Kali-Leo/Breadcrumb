@@ -59,7 +59,7 @@ function normalizer(values: readonly number[]): (value: number) => number {
   return span === 0 ? () => 0 : (value: number) => (value - min) / span;
 }
 
-/** Weighted sum of the four normalized components, in candidate order. */
+/** Weighted sum of the five normalized components, in candidate order. */
 export function normalizeAndScore(parts: readonly FrontierScoreParts[]): number[] {
   if (parts.length === 0) return [];
   const helps = normalizer(parts.map((part) => part.helps));

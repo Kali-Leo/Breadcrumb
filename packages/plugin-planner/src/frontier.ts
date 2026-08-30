@@ -1,7 +1,7 @@
 /**
  * Purpose: pure recommendation-frontier query — nodes one step beyond what's already lit,
- * ranked by a weighted sum of four components that are min-max normalized inside the candidate
- * set first (helps-support, interest, structural depth, goal-gap membership; see
+ * ranked by a weighted sum of five components that are min-max normalized inside the candidate
+ * set first (helps-support, interest, structural depth, goal-gap membership, browsing; see
  * frontierScore.ts). The hard gate reads "every requires-prerequisite has been lit at some
  * point", not "is lit right now" — forgetting decides what to review, not what you are allowed
  * to look at next. Concept candidates are bucketed ahead of method candidates, and the third
@@ -177,6 +177,14 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
       },
       ...(evidenceWeight !== undefined ? { evidenceWeight } : {}),
     });
+  }
+
+  // The "最近看过" label promises the viewing influenced this ranking. When every candidate
+  // carries the same browsing value, min-max normalization makes the component carry no
+  // information — so the labels would be decoration on an unmoved order. Strip them.
+  const browsingParts = parts.map((part) => part.browsing);
+  if (browsingParts.length > 0 && Math.min(...browsingParts) === Math.max(...browsingParts)) {
+    for (const candidate of candidates) delete candidate.reason.browsingSource;
   }
 
   const scores = normalizeAndScore(parts);
