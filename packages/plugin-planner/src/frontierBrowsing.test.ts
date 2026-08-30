@@ -36,20 +36,9 @@ describe("frontier browsing component (spec 059)", () => {
 
     const withBrowsing = frontier({
       ...base,
-      browsingAffinityByNode: new Map([["b", { score: 0.4, sourceTitle: "Rust 所有权详解" }]]),
+      browsingAffinityByNode: new Map([["b", 0.4]]),
     });
     expect(withBrowsing.map((candidate) => candidate.nodeId)).toEqual(["b", "a"]);
-  });
-
-  it("names the watched title in the winner's reason, and only there", () => {
-    const result = frontier({
-      ...base,
-      browsingAffinityByNode: new Map([["b", { score: 0.4, sourceTitle: "Rust 所有权详解" }]]),
-    });
-    const beta = result.find((candidate) => candidate.nodeId === "b");
-    const alpha = result.find((candidate) => candidate.nodeId === "a");
-    expect(beta?.reason.browsingSource?.title).toBe("Rust 所有权详解");
-    expect(alpha?.reason.browsingSource).toBeUndefined();
   });
 
   it("an empty affinity map changes nothing — order and reasons match the omitted case", () => {
@@ -58,18 +47,24 @@ describe("frontier browsing component (spec 059)", () => {
     expect(empty).toEqual(omitted);
   });
 
-  it("strips the label when every candidate shares the same affinity — the order never moved", () => {
+  it("shared identical affinity carries no information and cannot move the order", () => {
     const result = frontier({
       ...base,
       browsingAffinityByNode: new Map([
-        ["a", { score: 0.4, sourceTitle: "同一个爆款" }],
-        ["b", { score: 0.4, sourceTitle: "同一个爆款" }],
+        ["a", 0.4],
+        ["b", 0.4],
       ]),
     });
-    expect(result.map((candidate) => candidate.nodeId)).toEqual(["a", "b"]);
-    for (const candidate of result) {
-      expect(candidate.reason.browsingSource).toBeUndefined();
-    }
+    expect(result).toEqual(frontier(base));
+  });
+
+  it("never names any watched title anywhere in the result (Leo 裁决 2026-08-30)", () => {
+    const result = frontier({
+      ...base,
+      browsingAffinityByNode: new Map([["b", 0.9]]),
+    });
+    expect(JSON.stringify(result)).not.toContain("browsingSource");
+    expect(JSON.stringify(result)).not.toContain("title");
   });
 
   it("cannot outvote conversational interest at equal normalized strength", () => {
@@ -78,7 +73,7 @@ describe("frontier browsing component (spec 059)", () => {
     const result = frontier({
       ...base,
       interestByNode: new Map([["a", 0.6]]),
-      browsingAffinityByNode: new Map([["b", { score: 0.9, sourceTitle: "无关紧要" }]]),
+      browsingAffinityByNode: new Map([["b", 0.9]]),
     });
     expect(result.map((candidate) => candidate.nodeId)).toEqual(["a", "b"]);
   });

@@ -11,7 +11,6 @@ import { startLearningForConcept } from "../../lib/focusLearning";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { shortenTitle } from "./kingdom/KingdomNodeCard";
 
 const SHOWN_LIMIT = 3;
 
@@ -83,13 +82,6 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
               {candidate.reason.gatewayTo && (
                 <span className="mt-0.5 block text-stone-400">
                   {t("continue.gatewayTo", { label: candidate.reason.gatewayTo.label })}
-                </span>
-              )}
-              {candidate.reason.browsingSource && (
-                <span className="mt-0.5 block text-stone-400">
-                  {t("continue.becauseWatched", {
-                    title: shortenTitle(candidate.reason.browsingSource.title),
-                  })}
                 </span>
               )}
               {/* Click feedback only — the whole row is the action, no standing verb. */}

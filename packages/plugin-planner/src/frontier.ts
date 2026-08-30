@@ -38,11 +38,6 @@ export interface FrontierReason {
   /** True when this candidate is inside the caller-supplied goalGapNodeIds set (ranked mode,
    * spec 016) — lets the UI show a "目标内" tag. Absent when the caller didn't supply one. */
   inGoalGap?: boolean;
-  /** Set when browsing affinity (spec 059) contributed to this candidate's score: the watched
-   * title behind the match, so the UI can say "最近看过：…" and the learner can judge the
-   * nudge. Display-only — never fed to any LLM. Absent when the interest service is absent
-   * or nothing the learner watched resembles this node. */
-  browsingSource?: { title: string };
 }
 
 export interface FrontierCandidate {
@@ -85,11 +80,12 @@ export interface FrontierInput {
    * scores the goalGap component and gets reason.inGoalGap = true. Omit in casual mode or when
    * no goal is selected. */
   goalGapNodeIds?: ReadonlySet<string>;
-  /** nodeId -> browsing affinity from watched professional content (spec 059). Structural
-   * shape rather than an import so the planner never depends on plugin-browsing-interest.
-   * Omit (or pass empty) when the interest service is absent — the component then carries no
-   * information and cannot move the order. */
-  browsingAffinityByNode?: ReadonlyMap<string, { score: number; sourceTitle: string }>;
+  /** nodeId -> browsing-affinity score in [0,1] from watched professional content (spec
+   * 059). A plain number: which video produced the score deliberately never leaves the
+   * affinity computation (Leo 裁决 2026-08-30 — 知识点不标注来源视频). Omit (or pass empty)
+   * when the interest service is absent — the component then carries no information and
+   * cannot move the order. */
+  browsingAffinityByNode?: ReadonlyMap<string, number>;
 }
 
 /** Groups helps edges by their target node, computed once per call for O(nodes + edges). */
@@ -149,14 +145,13 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     const gatewaySourceId = interestGatewayByNode?.get(node.id);
     const evidenceWeight = evidenceWeightByNode?.get(node.id);
     const inGoalGap = goalGapNodeIds?.has(node.id) ?? false;
-    const browsingAffinity = browsingAffinityByNode?.get(node.id);
 
     parts.push({
       helps: litHelpsSources.reduce((sum, source) => sum + source.weight, 0),
       interest: interestByNode.get(node.id) ?? 0,
       difficulty: depthByNode.get(node.id) ?? 1,
       goalGap: inGoalGap ? 1 : 0,
-      browsing: browsingAffinity?.score ?? 0,
+      browsing: browsingAffinityByNode?.get(node.id) ?? 0,
     });
     candidates.push({
       nodeId: node.id,
@@ -171,20 +166,9 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
           ? { gatewayTo: { label: labelById.get(gatewaySourceId) ?? gatewaySourceId } }
           : {}),
         ...(inGoalGap ? { inGoalGap: true } : {}),
-        ...(browsingAffinity !== undefined && browsingAffinity.score > 0
-          ? { browsingSource: { title: browsingAffinity.sourceTitle } }
-          : {}),
       },
       ...(evidenceWeight !== undefined ? { evidenceWeight } : {}),
     });
-  }
-
-  // The "最近看过" label promises the viewing influenced this ranking. When every candidate
-  // carries the same browsing value, min-max normalization makes the component carry no
-  // information — so the labels would be decoration on an unmoved order. Strip them.
-  const browsingParts = parts.map((part) => part.browsing);
-  if (browsingParts.length > 0 && Math.min(...browsingParts) === Math.max(...browsingParts)) {
-    for (const candidate of candidates) delete candidate.reason.browsingSource;
   }
 
   const scores = normalizeAndScore(parts);

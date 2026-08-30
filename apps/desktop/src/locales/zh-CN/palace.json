@@ -59,7 +59,6 @@
     "reunion": "重逢 · 以前学过",
     "becausePrereq": "因为你已掌握 {{labels}}",
     "gatewayTo": "通往你感兴趣的「{{label}}」",
-    "becauseWatched": "和你最近看的「{{title}}」有关",
     "opening": "打开中…"
   },
   "goalCard": {
@@ -71,7 +70,6 @@
     "reasonPrereq": "学它之前需要的 {{labels}} 已经完成。",
     "reasonWasLit": "以前学过，有阵子没见了。",
     "reasonGateway": "通往你感兴趣的「{{label}}」。",
-    "reasonBrowsing": "和你最近看的「{{title}}」有关。",
     "reasonDefault": "可以从这里进入这片区域。",
     "stateDone": "已完成。",
     "stateDoneSeen": "已完成 · 上次接触 {{date}}。",

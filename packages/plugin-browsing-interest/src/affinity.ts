@@ -15,7 +15,7 @@
  * Pure math, no DB, no I/O. Local cosine helper per 行为局部性 > DRY (mirrors
  * plugin-interest/spread.ts and plugin-knowledge-tree/similarityGate.ts).
  * Main exports: browsingAffinityByNode, watchedTitleSignals, watchedTitleWeight,
- * WatchedTitleVector, BrowsingNodeAffinity.
+ * WatchedTitleVector.
  */
 import type { ProContent } from "./schemas";
 
@@ -46,15 +46,11 @@ export interface WatchedTitleVector {
   vector: readonly number[];
 }
 
-export interface BrowsingNodeAffinity {
-  /** weight × (similarity − title's mean similarity), max-pooled over titles — "excess
-   * similarity" units, small (≲0.15) but honestly [0,1]-bounded; frontier min-max
-   * normalizes inside the candidate set, so only the ordering carries meaning. */
-  score: number;
-  /** The title behind the max — surfaced in the UI as "最近看过：…" so the learner can see
-   * (and judge) why this node got a browsing nudge. Never sent to any LLM. */
-  sourceTitle: string;
-}
+// The affinity score per node: weight × (similarity − title's mean similarity), max-pooled
+// over titles — "excess similarity" units, small (≲0.15) but honestly [0,1]-bounded;
+// frontier min-max normalizes inside the candidate set, so only the ordering carries
+// meaning. Titles themselves stop here: Leo 裁决 2026-08-30「完全找不到什么给知识点标注
+// 从什么视频来的理由，请你把这个删掉」— no title ever leaves this computation.
 
 /** Weight of one watched item: finished counts full, unfinished half, both fading on a
  * 30-day half-life from the viewing time. */
@@ -94,8 +90,8 @@ export function watchedTitleSignals(pro: ProContent, nowMillis: number): Watched
 export function browsingAffinityByNode(
   titles: readonly WatchedTitleVector[],
   nodeVectors: ReadonlyMap<string, readonly number[]>,
-): Map<string, BrowsingNodeAffinity> {
-  const result = new Map<string, BrowsingNodeAffinity>();
+): Map<string, number> {
+  const result = new Map<string, number>();
   if (titles.length === 0 || nodeVectors.size < 2) return result;
 
   const nodeIds = [...nodeVectors.keys()];
@@ -122,9 +118,7 @@ export function browsingAffinityByNode(
       if (nodeId === undefined) continue;
       const score = Math.min(1, titleVector.weight * excess);
       const incumbent = result.get(nodeId);
-      if (incumbent === undefined || score > incumbent.score) {
-        result.set(nodeId, { score, sourceTitle: titleVector.title });
-      }
+      if (incumbent === undefined || score > incumbent) result.set(nodeId, score);
     }
   }
   return result;

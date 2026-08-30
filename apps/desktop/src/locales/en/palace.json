@@ -63,7 +63,6 @@
     "reunion": "Again · learned before",
     "becausePrereq": "Because you already have {{labels}}",
     "gatewayTo": "Leads to \"{{label}}\", which interests you",
-    "becauseWatched": "Related to “{{title}}”, which you watched recently",
     "opening": "Opening…"
   },
   "goalCard": {
@@ -75,7 +74,6 @@
     "reasonPrereq": "What it needs first, {{labels}}, is done.",
     "reasonWasLit": "Learned before, and not seen for a while.",
     "reasonGateway": "Leads to \"{{label}}\", which interests you.",
-    "reasonBrowsing": "Related to “{{title}}”, which you watched recently.",
     "reasonDefault": "A way into this area.",
     "stateDone": "Done.",
     "stateDoneSeen": "Done · last seen {{date}}.",

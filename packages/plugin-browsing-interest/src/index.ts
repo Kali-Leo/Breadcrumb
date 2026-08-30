@@ -5,7 +5,6 @@
 export {
   AFFINITY_RELATIVE_GATE_FRACTION,
   BROWSING_RECENCY_HALF_LIFE_DAYS,
-  type BrowsingNodeAffinity,
   browsingAffinityByNode,
   MIN_AFFINITY_EXCESS,
   type WatchedTitleSignal,

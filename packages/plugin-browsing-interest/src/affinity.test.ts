@@ -81,7 +81,7 @@ describe("browsingAffinityByNode", () => {
       ["history", vec(90)],
     ]);
     const result = browsingAffinityByNode([title("Rust 所有权详解", 1, vec(5))], nodes);
-    expect(result.get("rust")?.sourceTitle).toBe("Rust 所有权详解");
+    expect(result.get("rust") ?? 0).toBeGreaterThan(0);
     expect(result.has("cooking")).toBe(false);
     expect(result.has("history")).toBe(false);
   });
@@ -112,7 +112,10 @@ describe("browsingAffinityByNode", () => {
       ],
       nodes,
     );
-    expect(result.get("rust")?.sourceTitle).toBe("Rust 所有权详解");
+    // The strong title alone would score weight 0.9 × its excess; the weak one caps far
+    // below that. Max-pooling must keep the strong title's score.
+    const weakAlone = browsingAffinityByNode([title("弱一点的 Rust 视频", 0.3, vec(10))], nodes);
+    expect(result.get("rust") ?? 0).toBeGreaterThan(weakAlone.get("rust") ?? 0);
   });
 
   it("weight scales the score: a fresher viewing outranks a stale one on the same node", () => {
@@ -122,11 +125,13 @@ describe("browsingAffinityByNode", () => {
     ]);
     const stale = title("三个月前看完的", watchedTitleWeight(true, 90), vec(0));
     const fresh = title("昨天看完的", watchedTitleWeight(true, 1), vec(0));
-    const result = browsingAffinityByNode([stale, fresh], nodes);
-    expect(result.get("node")?.sourceTitle).toBe("昨天看完的");
+    const both = browsingAffinityByNode([stale, fresh], nodes);
+    const staleAlone = browsingAffinityByNode([stale], nodes);
+    // The fresh viewing's weight dominates the max — adding it must raise the score.
+    expect(both.get("node") ?? 0).toBeGreaterThan(staleAlone.get("node") ?? 0);
   });
 
-  it("journey tripwire: scores stay in [0,1] and every entry names a real title", () => {
+  it("journey tripwire: scores stay in (0,1] and no title text leaks into the result", () => {
     const nodes = new Map(
       Array.from({ length: 8 }, (_, index) => [`n${index}`, vec(index * 22)] as const),
     );
@@ -137,11 +142,11 @@ describe("browsingAffinityByNode", () => {
     ];
     const result = browsingAffinityByNode(week, nodes);
     expect(result.size).toBeGreaterThan(0);
-    const titles = new Set(week.map((watched) => watched.title));
-    for (const { score, sourceTitle } of result.values()) {
+    for (const score of result.values()) {
       expect(score).toBeGreaterThan(0);
       expect(score).toBeLessThanOrEqual(1);
-      expect(titles.has(sourceTitle)).toBe(true);
     }
+    // Leo 裁决 2026-08-30: titles stop inside this computation — the result is numbers only.
+    expect(JSON.stringify([...result.entries()])).not.toContain("Rust");
   });
 });

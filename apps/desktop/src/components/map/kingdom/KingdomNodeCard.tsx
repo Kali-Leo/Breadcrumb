@@ -3,7 +3,7 @@
  * statement, the recommendation reason when this is the "下一步", the relation list
  * (clickable jumps), alternates on demand, and one state-worded main action. Opening a
  * conversation is deliberately never a single click on the map.
- * Main exports: KingdomNodeCard, reasonMessage, shortenTitle.
+ * Main exports: KingdomNodeCard, reasonMessage.
  */
 
 import type { CopyMessage } from "@breadcrumb/core-i18n";
@@ -51,18 +51,7 @@ export function reasonMessage(candidate: FrontierCandidate, listSeparator: strin
       params: { label: candidate.reason.gatewayTo.label },
     };
   }
-  if (candidate.reason.browsingSource) {
-    return {
-      key: "palace:kingdom.reasonBrowsing",
-      params: { title: shortenTitle(candidate.reason.browsingSource.title) },
-    };
-  }
   return { key: "palace:kingdom.reasonDefault" };
-}
-
-/** Video titles run long; the reason line only needs enough to be recognized. */
-export function shortenTitle(title: string): string {
-  return title.length > 24 ? `${title.slice(0, 24)}…` : title;
 }
 
 function stateMessage(node: KingdomViewNode, lastSeenDate: string | null): CopyMessage {

@@ -8,7 +8,6 @@
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 import {
-  type BrowsingNodeAffinity,
   browsingAffinityByNode,
   createBrowsingInterestClient,
   type WatchedTitleVector,
@@ -76,7 +75,7 @@ async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleVecto
  * data is unavailable — the caller passes the map straight into computePlannerSnapshot. */
 export async function loadBrowsingAffinityByNode(
   embeddings: readonly NodeEmbeddingRow[],
-): Promise<Map<string, BrowsingNodeAffinity> | null> {
+): Promise<Map<string, number> | null> {
   const titleVectors = await cachedTitleVectors();
   if (titleVectors === null || titleVectors.length === 0) return null;
   // One corrupt vector row must cost that row, never the whole planner snapshot — this is
