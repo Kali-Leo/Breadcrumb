@@ -97,23 +97,40 @@ describe("runMigrations", () => {
     }
   });
 
-  it("warns about applied ids this build does not know, and still migrates", async () => {
+  it("stays silent about retired ids, warns about truly unknown ones, and still migrates", async () => {
     const { client, appliedIds } = makeFakeSql();
     appliedIds.push(...MIGRATIONS.slice(0, 3).map((migration) => migration.id));
-    appliedIds.push("0038_discovery_feed", "0041_feed_items");
+    // Retired tombstones (documented in RETIRED_MIGRATION_IDS) are expected on every machine
+    // that ran the deleted feature — they fired a warning on every launch until 2026-08-30.
+    appliedIds.push("0038_discovery_feed", "0041_external_content_feed");
+    // An id from no known list is real drift and must still be said out loud.
+    appliedIds.push("9999_from_a_future_build");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     try {
       await runMigrations(client);
       expect(warn).toHaveBeenCalledTimes(1);
       const message = String(warn.mock.calls[0]?.[0]);
-      expect(message).toContain("0038_discovery_feed");
-      expect(message).toContain("0041_feed_items");
+      expect(message).toContain("9999_from_a_future_build");
+      expect(message).not.toContain("0038_discovery_feed");
+      expect(message).not.toContain("0041_external_content_feed");
     } finally {
       warn.mockRestore();
     }
     // The unknown ids are left in place and every real migration still ran.
     for (const migration of MIGRATIONS) expect(appliedIds).toContain(migration.id);
     expect(appliedIds).toContain("0038_discovery_feed");
+  });
+
+  it("does not warn at all when the only extra ids are retired tombstones", async () => {
+    const { client, appliedIds } = makeFakeSql();
+    appliedIds.push("0038_discovery_feed", "0039_discovery_clear_unopened_stubs");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      await runMigrations(client);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 

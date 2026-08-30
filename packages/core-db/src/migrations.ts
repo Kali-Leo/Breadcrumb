@@ -965,18 +965,24 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
 }
 
 /**
- * The ledger check: every id this database has recorded should still exist in MIGRATIONS.
- * One that doesn't means the database ran a migration this code no longer carries — normal
- * for a machine that ran a since-deleted feature (see RETIRED_MIGRATION_IDS), but worth
- * saying out loud, because the same mechanism that makes it harmless (skip what's recorded)
- * is what would make a reused number vanish without a trace.
+ * The ledger check: every id this database has recorded should still exist in MIGRATIONS —
+ * or in RETIRED_MIGRATION_IDS, the documented tombstones of deleted features. A recorded id
+ * in neither list means the database ran a migration this code has never heard of: that IS
+ * worth saying out loud, because the same mechanism that makes it harmless (skip what's
+ * recorded) is what would make a reused number vanish without a trace.
+ *
+ * Retired ids are deliberately silent (2026-08-30): they are expected on every machine that
+ * ran the deleted feature, the reuse hazard is already institutionalized in the retired
+ * list, and a startup warning nobody can act on is noise — it fired on every launch.
  *
  * A warning, never a throw: the drift is already in the past by the time we can see it, and
  * refusing to start would brick the app over a row that costs nothing to carry.
  */
 function warnAboutUnknownAppliedIds(applied: ReadonlySet<string>): void {
   const knownIds = new Set(MIGRATIONS.map((migration) => migration.id));
-  const unknownIds = [...applied].filter((id) => !knownIds.has(id)).sort();
+  const retired = (id: string) =>
+    RETIRED_MIGRATION_IDS.some((numberPrefix) => id.startsWith(`${numberPrefix}_`));
+  const unknownIds = [...applied].filter((id) => !knownIds.has(id) && !retired(id)).sort();
   if (unknownIds.length === 0) return;
   console.warn(
     `_migrations records ${unknownIds.length} id(s) this build does not know: ` +
