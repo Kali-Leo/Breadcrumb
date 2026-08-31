@@ -20,9 +20,9 @@ export function islandRadiusForTier(sizeTier: number): number {
 }
 
 /**
- * Positions depend only on island order and radii. Adding a new island never moves
- * the ones before it; an island's position shifts only if an EARLIER island crosses
- * a size tier — which is the designed "coastline redrawn" growth milestone.
+ * Pure function of island order and radii: appending an island leaves earlier
+ * centers unchanged, but any earlier radius change shifts everything after it.
+ * No whole-map stability is promised (spec 030).
  */
 export function packIslandCenters(radii: readonly number[]): WorldPoint[] {
   const centers: WorldPoint[] = [];

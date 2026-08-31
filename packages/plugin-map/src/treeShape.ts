@@ -34,7 +34,7 @@ export interface ShapedIsland {
   label: string;
   createdAt: string;
   subtreeCount: number;
-  /** 1..6 — quantized so small growth never reshapes the coastline. */
+  /** 1..6 — quantized size bucket; coastline is regenerated whenever the tier changes. */
   sizeTier: number;
   kingdoms: ShapedKingdom[];
   memberNodeIds: string[];

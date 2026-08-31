@@ -1,6 +1,6 @@
 /**
- * Purpose: tests for the world orchestrator — determinism, layout stability under
- * growth, kingdom partition completeness, retention aggregation.
+ * Purpose: tests for the world orchestrator — determinism, pure-function layout
+ * regressions, kingdom partition completeness, retention aggregation.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -50,7 +50,7 @@ describe("buildWorldModel", () => {
     expect(buildWorldModel(demoTree())).toEqual(buildWorldModel(demoTree()));
   });
 
-  it("keeps existing islands anchored when new knowledge arrives", () => {
+  it("leaves earlier islands' output unchanged when added nodes cross no size tier", () => {
     const before = buildWorldModel(demoTree());
     const grown = [
       ...demoTree(),
