@@ -59,7 +59,7 @@
   },
   "teach": {
     "sectionTitle": "Your turn to explain (experimental)",
-    "sectionHint": "Explain something you have learned to a beginner. Saying it out loud is the sturdiest review there is.",
+    "sectionHint": "Explain something you have learned to a beginner. Explaining it once usually sticks better than reading it again.",
     "freeTopicPlaceholder": "Or pick your own topic",
     "startButton": "Start explaining",
     "recentTitle": "Recently explained",

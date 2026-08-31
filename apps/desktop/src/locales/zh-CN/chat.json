@@ -1,5 +1,5 @@
 {
-  "emptyLine": "每一次对话，都会留下一枚面包屑。",
+  "emptyLine": "还没有对话。在下面说说你想学什么，就可以开始。",
   "noReplyYet": "这条消息还没有得到回复",
   "resumedFromMiddle": "正在从中途继续 · 后来的消息都还在",
   "backToLatest": "回到最新",
@@ -24,15 +24,15 @@
     "supported": "找到了佐证",
     "insufficient": "没找到佐证，值得再确认",
     "contradicted": "查到的说法不太一致，两边都给你看",
-    "unavailable": "这次没能出门查资料",
+    "unavailable": "这次没能查证",
     "unavailableNextStep": "稍后可以再试一次。",
     "noEvidenceReasoning": "我没有找到能佐证这一条的公开资料，值得再确认一下。",
     "verdictFailedReasoning": "查到了资料，但这一条的判定中途没能完成，稍后可以再试一次。",
-    "noneChecked": "这次没能出门查资料，稍后可以再试一次",
+    "noneChecked": "这次没能查证，稍后可以再试一次",
     "allSupported": "{{count}} 条说法都找到了佐证",
     "someSupported": "{{supported}}/{{total}} 条说法找到了佐证",
-    "offlineNotice": "网络总开关是关着的——打开它，我才能出门查资料。",
-    "noApiNotice": "先在设置里配好 AI 服务，我才能帮你查证。",
+    "offlineNotice": "网络总开关是关着的。打开它才能查资料。",
+    "noApiNotice": "先在设置里配好 AI 服务，才能查证。",
     "failedNotice": "这次核查没能完成（网络波动），稍后可以再试一次。"
   },
   "companion": {
@@ -52,6 +52,6 @@
   "errors": {
     "offline": "当前处于离线模式。想继续对话，去设置里打开网络开关",
     "noApiConfig": "还没有配置 AI 服务。去设置页填写服务地址和密钥",
-    "requestFailed": "这次请求没有成功。休息一下再试，或检查设置里的 AI 服务配置。"
+    "requestFailed": "这次请求没有成功。稍后再试，或检查设置里的 AI 服务配置。"
   }
 }

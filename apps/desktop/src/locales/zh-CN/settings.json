@@ -17,7 +17,7 @@
   },
   "network": {
     "title": "网络总开关",
-    "hint": "关闭后，所有需要联网的功能（包括 API 调用）都会安静地停下。"
+    "hint": "关闭后，所有需要联网的功能（包括 API 调用）都会停止。"
   },
   "mainland": {
     "title": "大陆网络模式",
@@ -59,7 +59,7 @@
     "term-marking": "生词标注"
   },
   "billing": {
-    "intro": "每个会花钱的环节在这里独立开关、独立看账。放心打开——花了多少，这一页永远说实话。",
+    "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",
     "grandTotal": "今日合计 {{today}} · 累计 {{total}}",
     "nothingSpent": "还没花钱",
     "neverUsed": "尚未产生费用",
@@ -167,7 +167,7 @@
     "closeConfirmTitle": "关闭研究课题平台",
     "closeConfirmWhatItDoes": "研究课题平台在本地运行经审查、经项目方签名的研究任务，把统计结果算出来并展示给你。",
     "closeConfirmDataStaysLocal": "全部计算在本地完成，数据不会自动离开这台设备。",
-    "closeConfirmResearchValue": "这类本地聚合统计，是研究者了解学习规律、且不需要收集个人数据的少数途径之一，对条件有限地区的教育研究有实际价值。",
+    "closeConfirmResearchValue": "这类本地聚合统计，让研究者不必收集个人数据也能了解学习规律。",
     "closeConfirmWhatChanges": "关闭后不会再运行任何研究任务，也不会再询问是否关闭。已有结果不受影响，仍可在面板中查看或删除。",
     "closeConfirmAction": "确认关闭"
   }

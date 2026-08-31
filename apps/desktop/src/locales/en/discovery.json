@@ -3,7 +3,7 @@
   "intro": "This page shows what you have been watching on Bilibili and YouTube, and what interests you. All of it is worked out on this computer; nothing is sent anywhere else.",
   "action": "One step left, in the browser: install an extension that runs scripts, then the two scripts.",
   "installButton": "Install in the browser",
-  "afterClick": "Three pages open in your browser: install Violentmonkey first, then go back to the other two and press \"Install this script\" on each. After that, just browse Bilibili and YouTube as usual and this page turns into your interests.",
+  "afterClick": "Three pages open in your browser: install Violentmonkey first, then go back to the other two and press \"Install this script\" on each. After that, just browse Bilibili and YouTube as usual and this page will start showing your interests.",
   "token": "One more step: on the Bilibili home page, click 🔗 on the switch bar at the bottom left and paste the code below; do the same on the YouTube home page.",
   "projectHomepage": "Open the project page",
   "service": {

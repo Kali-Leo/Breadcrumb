@@ -17,7 +17,7 @@
   },
   "network": {
     "title": "Internet",
-    "hint": "Turn this off and everything that needs the internet, API calls included, quietly stops."
+    "hint": "Turn this off and everything that needs the internet, API calls included, stops."
   },
   "mainland": {
     "title": "Mainland China network",
@@ -60,7 +60,7 @@
     "term-marking": "Word marking"
   },
   "billing": {
-    "intro": "Every step that costs money has its own switch and its own bill here. Turn things on without worry — this page always tells you what was actually spent.",
+    "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
     "grandTotal": "Today {{today}} · all time {{total}}",
     "nothingSpent": "nothing spent yet",
     "neverUsed": "Nothing spent yet",
@@ -168,7 +168,7 @@
     "closeConfirmTitle": "Turning off research tasks",
     "closeConfirmWhatItDoes": "The research platform runs reviewed, project-signed tasks locally, computes the statistics and shows them to you.",
     "closeConfirmDataStaysLocal": "All of it is computed here; the data does not leave this device on its own.",
-    "closeConfirmResearchValue": "Local aggregate statistics like these are one of the few ways researchers can study how people learn without collecting anyone's personal data, and they matter for education research in places with few resources.",
+    "closeConfirmResearchValue": "Local aggregate statistics like these let researchers study how people learn without collecting anyone's personal data.",
     "closeConfirmWhatChanges": "Once off, no task will run and you will not be asked about this again. Results you already have are untouched and stay in the panel.",
     "closeConfirmAction": "Turn it off"
   }

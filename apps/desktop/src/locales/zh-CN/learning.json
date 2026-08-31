@@ -17,7 +17,7 @@
     "guessWrong": "它是「{{word}}」。",
     "enableAria": "语言学习开关",
     "llmRefineAria": "智能替换开关",
-    "dataSources": "词典与发音数据来自这些开源项目:CC-CEDICT · FrequencyWords · CMUdict"
+    "dataSources": "词典与发音数据来自这些开源项目：CC-CEDICT · FrequencyWords · CMUdict"
   },
   "door": {
     "guessPrompt": "先猜猜：一句话说它是什么？",
@@ -57,7 +57,7 @@
   },
   "teach": {
     "sectionTitle": "换你讲（实验）",
-    "sectionHint": "给一位初学者讲讲你学过的东西。讲出来这件事本身，就是最扎实的复习。",
+    "sectionHint": "给一位初学者讲讲你学过的东西。讲一遍，通常比再看一遍记得牢。",
     "freeTopicPlaceholder": "或者自选一个主题",
     "startButton": "开讲",
     "recentTitle": "最近讲过的",
