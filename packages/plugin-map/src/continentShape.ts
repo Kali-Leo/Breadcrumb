@@ -1,19 +1,15 @@
 /**
  * Purpose: reshape derived continents (./continents.ts) into the cartographic island
- * hierarchy — one continent becomes one island, sized by engagement weight instead of
- * subtree count. Kingdoms come verbatim from the continent's own kingdom list (tree: the
+ * hierarchy — one continent becomes one island, sized by its layout-day knowledge count
+ * (absolute buckets; engagement decides centrality via assignment order, never size —
+ * Leo 2026-08-31). Kingdoms come verbatim from the continent's own kingdom list (tree: the
  * root's direct children; cluster: each member), and villages/points below a kingdom reuse
  * shapeTree's recursion scoped to the continent's members.
  * Main exports: shapeContinents.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { ContinentSummary } from "./continents";
-import { indexChildren, type ShapedIsland, shapeKingdom } from "./treeShape";
-
-function continentSizeTier(weight: number, maxWeight: number): number {
-  if (maxWeight <= 0) return 1;
-  return Math.max(1, Math.ceil((6 * weight) / maxWeight));
-}
+import { indexChildren, islandSizeTier, type ShapedIsland, shapeKingdom } from "./treeShape";
 
 function earliestCreatedAt(nodes: readonly KnowledgeNodeRow[]): string {
   return nodes.reduce(
@@ -27,7 +23,6 @@ export function shapeContinents(
   continents: readonly ContinentSummary[],
 ): ShapedIsland[] {
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
-  const maxWeight = continents.reduce((max, continent) => Math.max(max, continent.weight), 0);
 
   return continents.map((continent) => {
     const memberNodes = continent.memberNodeIds
@@ -41,7 +36,8 @@ export function shapeContinents(
       label: continent.label,
       createdAt: earliestCreatedAt(memberNodes),
       subtreeCount: memberNodes.length,
-      sizeTier: continentSizeTier(continent.weight, maxWeight),
+      // A continent born on the layout day starts at tier 1; its real size lands tomorrow.
+      sizeTier: islandSizeTier(Math.max(1, continent.layoutMemberCount)),
       kingdoms: continent.kingdoms
         .map((kingdom) => nodesById.get(kingdom.id))
         .filter((node): node is KnowledgeNodeRow => node !== undefined)

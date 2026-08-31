@@ -29,8 +29,12 @@ export interface ContinentSummary {
   id: string;
   label: string;
   memberNodeIds: string[];
-  /** Σ engagement over members (default 1 per member) — how much of the map it deserves. */
+  /** Σ engagement over layout-day members (default 1 per member) — decides how close to the
+   * map centre the continent sits (slot order). Size never reads this. */
   weight: number;
+  /** Members created before the layout day (all members when no layout day is given) — the
+   * knowledge count that sizes the island. 0 = the continent was born on the layout day. */
+  layoutMemberCount: number;
   origin: "tree" | "cluster";
   kingdoms: ContinentKingdom[];
 }
@@ -41,11 +45,39 @@ export interface ContinentAssignment {
   islets: TopicSummary[];
 }
 
-/** Heaviest first, then alphabetically — the same input always yields the same order. */
+/** Heaviest first, then alphabetically — engagement pulls a landmass toward the map centre
+ * (golden-angle slots fill centre-out), and the same input always yields the same order. */
 function orderByWeight<Summary extends { weight: number; label: string }>(
   summaries: readonly Summary[],
 ): Summary[] {
   return [...summaries].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
+}
+
+/** Landmasses born on the layout day queue at the outer rim in arrival order, so today's
+ * additions surface immediately without reshuffling anything already placed. */
+function orderByArrival<Summary extends { id: string; memberNodeIds: string[] }>(
+  summaries: readonly Summary[],
+  createdAtById: ReadonlyMap<string, string>,
+): Summary[] {
+  const earliest = (summary: Summary): string =>
+    summary.memberNodeIds.reduce((min, id) => {
+      const createdAt = createdAtById.get(id) ?? "";
+      return min === "" || (createdAt !== "" && createdAt < min) ? createdAt : min;
+    }, "");
+  return [...summaries].sort(
+    (a, b) => earliest(a).localeCompare(earliest(b)) || a.id.localeCompare(b.id),
+  );
+}
+
+/** Layout inputs (weight, size) only count members known before the layout day, so browsing
+ * and mid-day growth cannot move or resize anything until tomorrow (Leo 2026-08-31). */
+function layoutMemberIds(
+  memberNodeIds: readonly string[],
+  createdAtById: ReadonlyMap<string, string>,
+  layoutDayStartIso: string | undefined,
+): string[] {
+  if (layoutDayStartIso === undefined) return [...memberNodeIds];
+  return memberNodeIds.filter((id) => (createdAtById.get(id) ?? "") < layoutDayStartIso);
 }
 
 function treeContinent(
@@ -53,13 +85,17 @@ function treeContinent(
   directChildren: readonly KnowledgeNodeRow[],
   children: ReturnType<typeof indexChildren>,
   engagementByNodeId: ReadonlyMap<string, number>,
+  createdAtById: ReadonlyMap<string, string>,
+  layoutDayStartIso: string | undefined,
 ): ContinentSummary {
   const memberNodeIds = collectSubtree(root, children).map((member) => member.id);
+  const layoutMembers = layoutMemberIds(memberNodeIds, createdAtById, layoutDayStartIso);
   return {
     id: root.id,
     label: root.label,
     memberNodeIds,
-    weight: sumEngagement(memberNodeIds, engagementByNodeId),
+    weight: sumEngagement(layoutMembers, engagementByNodeId),
+    layoutMemberCount: layoutMembers.length,
     origin: "tree",
     kingdoms: directChildren.map((child) => ({
       id: child.id,
@@ -80,6 +116,8 @@ function clusterOrphanRoots(
   orphanRoots: readonly KnowledgeNodeRow[],
   embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
   engagementByNodeId: ReadonlyMap<string, number>,
+  createdAtById: ReadonlyMap<string, string>,
+  layoutDayStartIso: string | undefined,
 ): { continents: ContinentSummary[]; islets: TopicSummary[] } {
   const nodesById = new Map(orphanRoots.map((node) => [node.id, node]));
   const embeddedIds = orphanRoots
@@ -94,11 +132,13 @@ function clusterOrphanRoots(
     const medoid = pickMedoid(memberNodeIds, embeddingByNodeId, nodesById);
     if (medoid === undefined) continue;
     for (const id of memberNodeIds) gathered.add(id);
+    const layoutMembers = layoutMemberIds(memberNodeIds, createdAtById, layoutDayStartIso);
     continents.push({
       id: medoid.id,
       label: medoid.label,
       memberNodeIds: [...memberNodeIds],
-      weight: sumEngagement(memberNodeIds, engagementByNodeId),
+      weight: sumEngagement(layoutMembers, engagementByNodeId),
+      layoutMemberCount: layoutMembers.length,
       origin: "cluster",
       kingdoms: memberNodeIds.map((id) => ({
         id,
@@ -123,9 +163,11 @@ export function deriveContinents(
   nodes: readonly KnowledgeNodeRow[],
   embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
   engagementByNodeId: ReadonlyMap<string, number>,
+  layoutDayStartIso?: string,
 ): ContinentAssignment {
   // Same root resolution as shapeTree: a dangling parent_id degrades its node to a root.
   const children = indexChildren(nodes);
+  const createdAtById = new Map(nodes.map((node) => [node.id, node.created_at]));
   const continents: ContinentSummary[] = [];
   const orphanRoots: KnowledgeNodeRow[] = [];
   for (const root of children.get(null) ?? []) {
@@ -134,11 +176,37 @@ export function deriveContinents(
       orphanRoots.push(root);
       continue;
     }
-    continents.push(treeContinent(root, directChildren, children, engagementByNodeId));
+    continents.push(
+      treeContinent(
+        root,
+        directChildren,
+        children,
+        engagementByNodeId,
+        createdAtById,
+        layoutDayStartIso,
+      ),
+    );
   }
-  const clustered = clusterOrphanRoots(orphanRoots, embeddingByNodeId, engagementByNodeId);
+  const clustered = clusterOrphanRoots(
+    orphanRoots,
+    embeddingByNodeId,
+    engagementByNodeId,
+    createdAtById,
+    layoutDayStartIso,
+  );
+  const allContinents = [...continents, ...clustered.continents];
+  const established = allContinents.filter((continent) => continent.layoutMemberCount > 0);
+  const bornToday = allContinents.filter((continent) => continent.layoutMemberCount === 0);
+  const isEstablishedIslet = (islet: TopicSummary): boolean =>
+    layoutMemberIds(islet.memberNodeIds, createdAtById, layoutDayStartIso).length > 0;
   return {
-    continents: orderByWeight([...continents, ...clustered.continents]),
-    islets: orderByWeight(clustered.islets),
+    continents: [...orderByWeight(established), ...orderByArrival(bornToday, createdAtById)],
+    islets: [
+      ...orderByWeight(clustered.islets.filter(isEstablishedIslet)),
+      ...orderByArrival(
+        clustered.islets.filter((islet) => !isEstablishedIslet(islet)),
+        createdAtById,
+      ),
+    ],
   };
 }

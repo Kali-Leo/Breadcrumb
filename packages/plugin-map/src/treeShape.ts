@@ -89,7 +89,8 @@ function villageTier(subtreeCount: number): 1 | 2 | 3 | 4 {
   return 1;
 }
 
-function islandSizeTier(subtreeCount: number): number {
+/** Absolute knowledge-count buckets: 1 → tier 1, 2-3 → 2, 4-7 → 3, … 32+ → 6. */
+export function islandSizeTier(subtreeCount: number): number {
   return Math.min(6, Math.floor(Math.log2(subtreeCount)) + 1);
 }
 

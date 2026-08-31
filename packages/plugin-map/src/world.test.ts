@@ -111,6 +111,7 @@ describe("islets", () => {
         label: "label-math",
         memberNodeIds: ["math", "algebra", "analysis"],
         weight: 3,
+        layoutMemberCount: 3,
         origin: "tree",
         kingdoms: [
           { id: "algebra", label: "label-algebra", memberNodeIds: ["algebra"] },

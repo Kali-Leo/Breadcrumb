@@ -1,7 +1,8 @@
 /**
  * Purpose: tests for reshaping derived continents into islands — kingdoms taken verbatim from
  * the continent (a tree continent's direct children, with their own subtrees nested below as
- * villages), lone-point kingdoms for cluster members, and sizeTier quantized from weight.
+ * villages), lone-point kingdoms for cluster members, and sizeTier from the layout-day
+ * knowledge count (absolute buckets — engagement weight must never size an island).
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -31,12 +32,13 @@ function cookingNodes(): KnowledgeNodeRow[] {
   ];
 }
 
-function loneContinent(id: string, weight: number): ContinentSummary {
+function loneContinent(id: string, weight: number, layoutMemberCount = 1): ContinentSummary {
   return {
     id,
     label: id,
     memberNodeIds: [id],
     weight,
+    layoutMemberCount,
     origin: "cluster",
     kingdoms: [{ id, label: id, memberNodeIds: [id] }],
   };
@@ -62,21 +64,47 @@ describe("shapeContinents", () => {
     expect(knife?.villages.map((village) => village.label).sort()).toEqual(["切丁", "切丝"]);
   });
 
-  it("quantizes island sizeTier 1..6 relative to the heaviest continent", () => {
-    const nodes = [node("light", null), node("medium", null), node("heavy", null)];
-    const continents = [loneContinent("light", 1), loneContinent("medium", 3)];
-    continents.push(loneContinent("heavy", 6));
+  it("sizes islands by layout-day knowledge count in absolute buckets, never by weight", () => {
+    const nodes = [node("tiny", null), node("mid", null), node("big", null)];
+    const continents = [
+      // Huge engagement on a single node must NOT inflate the island.
+      loneContinent("tiny", 999, 1),
+      loneContinent("mid", 1, 5),
+      loneContinent("big", 1, 40),
+    ];
 
     const islands = shapeContinents(nodes, continents);
 
-    expect(islands.find((island) => island.label === "heavy")?.sizeTier).toBe(6);
-    expect(islands.find((island) => island.label === "medium")?.sizeTier).toBe(3);
-    expect(islands.find((island) => island.label === "light")?.sizeTier).toBe(1);
+    expect(islands.find((island) => island.label === "tiny")?.sizeTier).toBe(1);
+    expect(islands.find((island) => island.label === "mid")?.sizeTier).toBe(3);
+    expect(islands.find((island) => island.label === "big")?.sizeTier).toBe(6);
     for (const island of islands) {
       expect(island.nodeId.startsWith("continent:")).toBe(true);
       // A cluster member is a lone-point kingdom: itself, no villages below it.
       expect(island.kingdoms).toHaveLength(1);
       expect(island.kingdoms[0]?.villages).toEqual([]);
     }
+  });
+
+  it("does not resize an island when a neighbour grows — buckets are absolute", () => {
+    const nodes = [node("steady", null), node("growing", null)];
+    const before = shapeContinents(nodes, [
+      loneContinent("steady", 1, 6),
+      loneContinent("growing", 1, 6),
+    ]);
+    const after = shapeContinents(nodes, [
+      loneContinent("steady", 1, 6),
+      loneContinent("growing", 1, 60),
+    ]);
+
+    const steadyBefore = before.find((island) => island.label === "steady");
+    const steadyAfter = after.find((island) => island.label === "steady");
+    expect(steadyAfter?.sizeTier).toBe(steadyBefore?.sizeTier);
+  });
+
+  it("gives a continent born on the layout day (0 layout members) the smallest tier", () => {
+    const nodes = [node("newborn", null)];
+    const islands = shapeContinents(nodes, [loneContinent("newborn", 0, 0)]);
+    expect(islands[0]?.sizeTier).toBe(1);
   });
 });

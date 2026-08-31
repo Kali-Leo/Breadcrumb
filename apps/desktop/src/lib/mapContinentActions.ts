@@ -10,6 +10,7 @@
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { type ContinentAssignment, deriveContinents } from "@breadcrumb/plugin-map";
 import { getRepos } from "./db";
+import { rowsBeforeDay, startOfLocalDayIso } from "./layoutDay";
 
 function parseEmbeddingVector(vectorJson: string): number[] | null {
   try {
@@ -32,36 +33,42 @@ function computeEngagement(sightingCount: number, avgCuriosity: number): number 
 /** Memoized per nodes array identity: without this, every palace mount produced a fresh
  * assignment object, cachedWorldModel missed every time, and the expensive world rebuild
  * blocked the main thread on each open. Freshness rides on the same signal the world cache
- * uses — a reloaded tree is a new nodes array. A null (failed) load is not kept, so the
- * next open retries; caching the promise also dedupes StrictMode's double effect run. */
+ * uses — a reloaded tree is a new nodes array — plus the layout day, so a session crossing
+ * midnight picks up the daily refresh. A null (failed) load is not kept, so the next open
+ * retries; caching the promise also dedupes StrictMode's double effect run. */
 const assignmentCache = new WeakMap<
   readonly KnowledgeNodeRow[],
-  Promise<ContinentAssignment | null>
+  { dayStartIso: string; loading: Promise<ContinentAssignment | null> }
 >();
 
 export function loadContinentAssignment(
   nodes: readonly KnowledgeNodeRow[],
 ): Promise<ContinentAssignment | null> {
+  const dayStartIso = startOfLocalDayIso();
   const cached = assignmentCache.get(nodes);
-  if (cached !== undefined) return cached;
-  const loading = computeContinentAssignment(nodes).then((assignment) => {
+  if (cached !== undefined && cached.dayStartIso === dayStartIso) return cached.loading;
+  const loading = computeContinentAssignment(nodes, dayStartIso).then((assignment) => {
     if (assignment === null) assignmentCache.delete(nodes);
     return assignment;
   });
-  assignmentCache.set(nodes, loading);
+  assignmentCache.set(nodes, { dayStartIso, loading });
   return loading;
 }
 
 async function computeContinentAssignment(
   nodes: readonly KnowledgeNodeRow[],
+  dayStartIso: string,
 ): Promise<ContinentAssignment | null> {
   try {
     const repos = await getRepos();
-    const [embeddingRows, sightingRows, interestSignalRows] = await Promise.all([
+    const [embeddingRows, allSightingRows, allInterestSignalRows] = await Promise.all([
       repos.nodeEmbeddings.listAll(),
       repos.nodeSightings.listAll(),
       repos.interestSignals.listAll(),
     ]);
+    // Daily rhythm (Leo 2026-08-31): today's footprints don't reorder the map until tomorrow.
+    const sightingRows = rowsBeforeDay(allSightingRows, dayStartIso);
+    const interestSignalRows = rowsBeforeDay(allInterestSignalRows, dayStartIso);
 
     const embeddingByNodeId = new Map<string, readonly number[]>();
     for (const row of embeddingRows) {
@@ -99,7 +106,7 @@ async function computeContinentAssignment(
       engagementByNodeId.set(node.id, computeEngagement(sightingCount, avgCuriosity));
     }
 
-    return deriveContinents(nodes, embeddingByNodeId, engagementByNodeId);
+    return deriveContinents(nodes, embeddingByNodeId, engagementByNodeId, dayStartIso);
   } catch (error) {
     console.warn("loadContinentAssignment failed, falling back to tree-root islands", error);
     return null;

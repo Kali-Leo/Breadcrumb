@@ -161,4 +161,69 @@ describe("deriveContinents", () => {
     expect(first).toEqual(second);
     expect(first.continents.map((continent) => continent.label)).toEqual(["重", "轻"]);
   });
+
+  describe("daily layout rhythm (layoutDayStartIso)", () => {
+    const dayStart = "2026-08-31T00:00:00Z";
+
+    it("freezes weight and layoutMemberCount to pre-day members, so today's growth cannot reorder", () => {
+      const nodes = [
+        node("a", null, "甲", "2026-07-01T00:00:00Z"),
+        node("a-1", "a", "甲一", "2026-07-02T00:00:00Z"),
+        node("b", null, "乙", "2026-07-01T00:00:00Z"),
+        node("b-1", "b", "乙一", "2026-07-02T00:00:00Z"),
+      ];
+      const before = deriveContinents(nodes, new Map(), new Map(), dayStart);
+      // 乙 gains three nodes today, each with heavy engagement.
+      const grownToday = [
+        ...nodes,
+        node("b-2", "b", "乙二", "2026-08-31T09:00:00Z"),
+        node("b-3", "b", "乙三", "2026-08-31T10:00:00Z"),
+        node("b-4", "b", "乙四", "2026-08-31T11:00:00Z"),
+      ];
+      const engagement = new Map<string, number>([
+        ["b-2", 50],
+        ["b-3", 50],
+        ["b-4", 50],
+      ]);
+      const after = deriveContinents(grownToday, new Map(), engagement, dayStart);
+
+      expect(after.continents.map((continent) => continent.id)).toEqual(
+        before.continents.map((continent) => continent.id),
+      );
+      const bBefore = before.continents.find((continent) => continent.id === "b");
+      const bAfter = after.continents.find((continent) => continent.id === "b");
+      expect(bAfter?.weight).toBe(bBefore?.weight);
+      expect(bAfter?.layoutMemberCount).toBe(bBefore?.layoutMemberCount);
+      // The new knowledge is still on the map today — only layout inputs wait for tomorrow.
+      expect(bAfter?.memberNodeIds).toContain("b-2");
+    });
+
+    it("queues continents born today after every established one, in arrival order", () => {
+      const nodes = [
+        node("old", null, "旧", "2026-07-01T00:00:00Z"),
+        node("old-1", "old", "旧一", "2026-07-02T00:00:00Z"),
+        node("late", null, "晚生", "2026-08-31T11:00:00Z"),
+        node("late-1", "late", "晚生一", "2026-08-31T11:05:00Z"),
+        node("early", null, "早生", "2026-08-31T09:00:00Z"),
+        node("early-1", "early", "早生一", "2026-08-31T09:05:00Z"),
+      ];
+      // Massive engagement on a newborn must not buy it a central slot today.
+      const engagement = new Map<string, number>([["late", 100]]);
+      const assignment = deriveContinents(nodes, new Map(), engagement, dayStart);
+
+      expect(assignment.continents.map((continent) => continent.id)).toEqual([
+        "old",
+        "early",
+        "late",
+      ]);
+      expect(assignment.continents[1]?.layoutMemberCount).toBe(0);
+    });
+
+    it("without a layout day, every member counts (unchanged behaviour)", () => {
+      const nodes = [node("a", null, "甲"), node("a-1", "a", "甲一")];
+      const assignment = deriveContinents(nodes, new Map(), new Map());
+      expect(assignment.continents[0]?.layoutMemberCount).toBe(2);
+      expect(assignment.continents[0]?.weight).toBe(2);
+    });
+  });
 });
