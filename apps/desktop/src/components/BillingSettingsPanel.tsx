@@ -4,13 +4,14 @@
  * (today / all time, from llm_calls). Metering exists so features can run boldly.
  * Main exports: BillingSettingsPanel.
  */
-import { formatCost } from "@breadcrumb/core-llm";
+import { formatCost, MEASUREMENT_SCENARIO } from "@breadcrumb/core-llm";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../lib/db";
 import { todayLocalMidnightIso } from "../lib/time";
 import { useDiglotStore } from "../stores/diglotStore";
 import { type FeatureSwitches, useSettingsStore } from "../stores/settingsStore";
+import { BillingEstimateLine } from "./BillingEstimateLine";
 import { ResearchTasksSettingsRow } from "./ResearchTasksSettingsRow";
 import { Toggle } from "./SettingsToggle";
 
@@ -116,6 +117,9 @@ export function BillingSettingsPanel() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-500">{t("billing.intro")}</p>
+      <p className="text-xs text-stone-400">
+        {t("billing.estimateIntro", { scenario: MEASUREMENT_SCENARIO })}
+      </p>
       <p className="text-sm text-stone-600">
         {t("billing.grandTotal", {
           today: todayGrandTotal === "" ? t("billing.nothingSpent") : todayGrandTotal,
@@ -132,6 +136,7 @@ export function BillingSettingsPanel() {
                 <p className="text-xs text-stone-500">
                   {t(`billing.features.${row.feature}.hint` as const)}
                 </p>
+                <BillingEstimateLine purposes={row.purposes} />
                 <p className="text-xs text-stone-400">{spendLine(today, total, row.purposes)}</p>
               </div>
               <Toggle
@@ -147,6 +152,7 @@ export function BillingSettingsPanel() {
           <div>
             <p className="text-sm text-stone-700">{t("billing.diglot.name")}</p>
             <p className="text-xs text-stone-500">{t("billing.diglot.hint")}</p>
+            <BillingEstimateLine purposes={["diglot-weave"]} />
             <p className="text-xs text-stone-400">{spendLine(today, total, ["diglot-weave"])}</p>
           </div>
           <Toggle
@@ -161,6 +167,7 @@ export function BillingSettingsPanel() {
           <div>
             <p className="text-sm text-stone-700">{t("billing.chat.name")}</p>
             <p className="text-xs text-stone-500">{t("billing.chat.hint")}</p>
+            <BillingEstimateLine purposes={["chat"]} />
             <p className="text-xs text-stone-400">{spendLine(today, total, ["chat"])}</p>
           </div>
         </div>

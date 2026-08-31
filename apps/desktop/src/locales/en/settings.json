@@ -62,13 +62,23 @@
   },
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
+    "estimateIntro": "The estimate under each item is worked out for {{scenario}}; what you have actually spent is beside it.",
+    "estimate": "about {{cost}} {{cadence}}",
+    "estimateUnknownModel": "Your model is not in the built-in price list, so a per-use estimate is not available",
+    "estimateFree": "Costs nothing",
+    "estimateUnmeasured": "This one has not been measured yet",
+    "cadencePerRound": "per exchange",
+    "cadencePerMessage": "per message you send",
+    "cadencePerAnswer": "per answer",
+    "cadenceOnDemand": "each time you use it",
+    "cadencePerItemOnce": "per item, charged once",
     "grandTotal": "Today {{today}} · all time {{total}}",
     "nothingSpent": "nothing spent yet",
     "neverUsed": "Nothing spent yet",
     "spendLine": "Today {{today}} · all time {{total}}",
     "diglot": {
       "name": "🧵 Language learning · smart swaps",
-      "hint": "The stronger version of language learning: the AI picks the translation that fits the sentence and occasionally swaps in a natural phrase. One small call per message.",
+      "hint": "The stronger version of language learning: the AI picks the translation that fits the sentence and occasionally swaps in a natural phrase.",
       "toggleLabel": "Language learning smart swaps"
     },
     "chat": {
@@ -78,7 +88,7 @@
     "features": {
       "knowledgeTree": {
         "name": "🌳 Knowledge map",
-        "hint": "After each exchange, the AI files what you talked about into your map. One call per round."
+        "hint": "After each exchange, the AI files what you talked about into your map."
       },
       "factcheck": {
         "name": "🔍 Fact-checking",
@@ -86,7 +96,7 @@
       },
       "knowledgeEdges": {
         "name": "🕸️ Knowledge links",
-        "hint": "When something new is filed, the AI looks at how it connects to what you already know. A small charge each time."
+        "hint": "When something new is filed, the AI looks at how it connects to what you already know."
       },
       "interest": {
         "name": "💡 Personal recommendations",
@@ -94,7 +104,7 @@
       },
       "goalPlanning": {
         "name": "🎯 Goal planning",
-        "hint": "When you set a goal, the AI turns it into a list of things to learn. One call per goal."
+        "hint": "When you set a goal, the AI turns it into a list of things to learn."
       },
       "compareProfileBuild": {
         "name": "🌲 Comparison research (experimental)",
@@ -102,7 +112,7 @@
       },
       "compareAlignment": {
         "name": "🌉 Comparison matching",
-        "hint": "During a comparison, the AI decides whether your wording and the source's wording mean the same thing. Each pair is judged once."
+        "hint": "During a comparison, the AI decides whether your wording and the source's wording mean the same thing."
       },
       "teachQuality": {
         "name": "🎓 Teach-back feedback",
@@ -110,7 +120,7 @@
       },
       "mapTopicNaming": {
         "name": "🗺️ Map naming (experimental)",
-        "hint": "On the map, the AI names each area that formed on its own. Each area is named once."
+        "hint": "On the map, the AI names each area that formed on its own."
       },
       "feedbackLab": {
         "name": "🪞 Recently",
@@ -126,15 +136,15 @@
       },
       "companionScript": {
         "name": "📜 Companion prep",
-        "hint": "Before you start explaining, the companion who will listen reads up on the topic so it can follow you. A small charge per round while you explain."
+        "hint": "Before you start explaining, the companion who will listen reads up on the topic so it can follow you."
       },
       "focusExplain": {
         "name": "🔎 Focus explanations",
-        "hint": "In focus mode, picking a word or asking a question gets you an explanation. Each word is explained once."
+        "hint": "In focus mode, picking a word or asking a question gets you an explanation."
       },
       "termMarking": {
         "name": "🖊️ Word marking",
-        "hint": "The AI marks the words in a reply you may not know yet; tap one to see what it means. Each reply is marked once."
+        "hint": "The AI marks the words in a reply you may not know yet; tap one to see what it means."
       }
     }
   },

@@ -6,5 +6,6 @@ export * from "./client";
 export * from "./jsonClient";
 export * from "./modelCatalogue";
 export * from "./pricing";
+export * from "./purposeCatalogue";
 export * from "./retry";
 export * from "./tokenEstimate";

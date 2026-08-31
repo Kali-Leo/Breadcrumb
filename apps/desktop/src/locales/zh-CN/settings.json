@@ -61,13 +61,23 @@
   },
   "billing": {
     "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",
+    "estimateIntro": "每项下面的估价，是按{{scenario}}算出来的；你自己的实际花费在它右边。",
+    "estimate": "约 {{cost}} {{cadence}}",
+    "estimateUnknownModel": "你用的模型不在内置价目表里，估不出单次花费",
+    "estimateFree": "不花钱",
+    "estimateUnmeasured": "这一项还没量过单次花费",
+    "cadencePerRound": "每轮对话",
+    "cadencePerMessage": "每条消息",
+    "cadencePerAnswer": "每条回答",
+    "cadenceOnDemand": "每次使用",
+    "cadencePerItemOnce": "每个，且只算一次",
     "grandTotal": "今日合计 {{today}} · 累计 {{total}}",
     "nothingSpent": "还没花钱",
     "neverUsed": "尚未产生费用",
     "spendLine": "今日 {{today}} · 累计 {{total}}",
     "diglot": {
       "name": "🧵 语言学习·智能替换",
-      "hint": "语言学习的加强版：AI 按上下文挑更准确的译法，偶尔换上一句地道短语。每条消息一次小额调用。",
+      "hint": "语言学习的加强版：AI 按上下文挑更准确的译法，偶尔换上一句地道短语。",
       "toggleLabel": "语言学习智能替换"
     },
     "chat": {
@@ -77,7 +87,7 @@
     "features": {
       "knowledgeTree": {
         "name": "🌳 知识整理",
-        "hint": "每次对话结束后，AI 会把这次聊到的知识点整理进你的地图。每轮一次调用。"
+        "hint": "每次对话结束后，AI 会把这次聊到的知识点整理进你的地图。"
       },
       "factcheck": {
         "name": "🔍 事实核查",
@@ -85,7 +95,7 @@
       },
       "knowledgeEdges": {
         "name": "🕸️ 知识关联",
-        "hint": "记下新知识点后，AI 会看看它和你学过的内容有什么联系。每次一小笔。"
+        "hint": "记下新知识点后，AI 会看看它和你学过的内容有什么联系。"
       },
       "interest": {
         "name": "💡 个性化推荐",
@@ -93,7 +103,7 @@
       },
       "goalPlanning": {
         "name": "🎯 目标规划",
-        "hint": "你定下一个目标后，AI 会把它变成一份要学的清单；建目标时用一次。"
+        "hint": "你定下一个目标后，AI 会把它变成一份要学的清单。"
       },
       "compareProfileBuild": {
         "name": "🌲 对比资料构建（实验）",
@@ -101,7 +111,7 @@
       },
       "compareAlignment": {
         "name": "🌉 对比匹配",
-        "hint": "对比时，AI 会判断你的说法和资料里的说法是不是同一个概念；同样的一对只判断一次。"
+        "hint": "对比时，AI 会判断你的说法和资料里的说法是不是同一个概念。"
       },
       "teachQuality": {
         "name": "🎓 讲解反馈",
@@ -109,7 +119,7 @@
       },
       "mapTopicNaming": {
         "name": "🗺️ 地图起名（实验）",
-        "hint": "在地图里，AI 会给自动聚在一起的一片内容起名字；每片只起一次。"
+        "hint": "在地图里，AI 会给自动聚在一起的一片内容起名字。"
       },
       "feedbackLab": {
         "name": "🪞 这段时间",
@@ -125,15 +135,15 @@
       },
       "companionScript": {
         "name": "📜 伙伴预习",
-        "hint": "你开讲之前，要听你讲的伙伴会先预习一下这个主题，听的时候更能接上话；你讲的过程中每轮一小笔。"
+        "hint": "你开讲之前，要听你讲的伙伴会先预习一下这个主题，听的时候更能接上话。"
       },
       "focusExplain": {
         "name": "🔎 专注解释",
-        "hint": "在专注模式里选中词语或提问时，AI 会生成一段讲解；每个词讲一次。"
+        "hint": "在专注模式里选中词语或提问时，AI 会生成一段讲解。"
       },
       "termMarking": {
         "name": "🖊️ 生词标注",
-        "hint": "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释；每条只标一次。"
+        "hint": "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释。"
       }
     }
   },
