@@ -19,6 +19,19 @@ import { useTopicName } from "./topicNames";
 const THIN_EVIDENCE_ENGAGED_COUNT = 200;
 const THIN_EVIDENCE_EVENT_COUNT = 500;
 
+/** The service lists a topic's last three engaged events — one video clicked and then
+ * watched arrives twice, which both duplicated the line on screen and collided React keys
+ * (the key is id+title). Display each video once. */
+function uniqueItems<Item extends { id: string; title: string }>(items: readonly Item[]): Item[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = `${item.id}-${item.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function InterestNewTopicsPanel() {
   const { t, i18n } = useTranslation("discovery");
   const topicName = useTopicName();
@@ -50,7 +63,7 @@ export function InterestNewTopicsPanel() {
               </span>
               {interest.items.length > 0 && (
                 <div className="mt-1 text-stone-400 text-xs">
-                  {interest.items.map((item, index) => {
+                  {uniqueItems(interest.items).map((item, index) => {
                     const url = videoUrl(item.site, item.id);
                     return (
                       <span key={`${item.id}-${item.title}`}>
