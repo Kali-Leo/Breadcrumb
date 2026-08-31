@@ -20,6 +20,15 @@ describe("buildWordExplainMessages", () => {
       "下面这段讲解里出现了「词法环境」：\n\n闭包是函数与其词法环境的绑定。\n\n请解释「词法环境」在这里的含义。",
     );
   });
+
+  it("degrades to a plain explanation when there is no parent context (map 继续, reopened retry)", () => {
+    for (const emptyContext of ["", "   \n"]) {
+      const messages = buildWordExplainMessages(emptyContext, "词法环境");
+      expect(messages[1]?.content).toBe("请讲解「词法环境」。");
+      // The refusal trigger: quoting an explanation that is not there.
+      expect(messages[1]?.content).not.toContain("这段讲解");
+    }
+  });
 });
 
 describe("buildQuestionMessages", () => {

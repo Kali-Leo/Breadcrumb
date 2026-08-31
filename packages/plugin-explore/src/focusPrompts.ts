@@ -17,16 +17,21 @@ export const FOCUS_SYSTEM_PROMPT =
   "你在专注模式里回答一个具体的词或问题。结论先行，直接说清楚是什么；能短则短，不需要开场白或客套；不评价、不夸赞学习者。";
 
 /** A solid-line child station: context is the parent node's full answer plus the picked
- * word (spec 042 §2 实线). */
+ * word (spec 042 §2 实线). Without parent context (map's 继续 entry, reopened-session
+ * retries) it degrades to a plain explanation — an empty quote makes the model refuse. */
 export function buildWordExplainMessages(
   parentAnswerText: string,
   word: string,
 ): FocusPromptMessage[] {
+  const context = parentAnswerText.trim();
   return [
     { role: "system", content: FOCUS_SYSTEM_PROMPT },
     {
       role: "user",
-      content: `下面这段讲解里出现了「${word}」：\n\n${parentAnswerText}\n\n请解释「${word}」在这里的含义。`,
+      content:
+        context.length === 0
+          ? `请讲解「${word}」。`
+          : `下面这段讲解里出现了「${word}」：\n\n${context}\n\n请解释「${word}」在这里的含义。`,
     },
   ];
 }
