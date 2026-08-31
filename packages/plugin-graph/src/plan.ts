@@ -5,7 +5,7 @@
  * helpsLabels against known labels, and (casual mode, spec 016) turns adjacentConcepts
  * proposals into sighting-free concept nodes with one helps edge each (those two proposal
  * planners live in planProposals.ts). Every judged edge
- * carries the model's own reasoning sentence and the source message it was inferred from
+ * carries the source message it was inferred from
  * into the row (migration 0048) — parsing that sentence and then discarding it was the
  * cheapest possible audit trail going to waste. No DB, no I/O.
  * Main exports: planEdgeJudgeResult, EdgeJudgePlan, JudgedPairContext,
@@ -110,7 +110,9 @@ function planRequiresEdge(
     confidence: judged.confidence,
     origin: "llm",
     created_at: input.nowIso(),
-    reasoning: judged.reasoning,
+    // The judge is no longer asked for a rationale — nothing ever read one off an edge, and
+    // it was generated after the verdict fields, so it never informed the verdict either.
+    reasoning: null,
     source_message_id: input.sourceMessageId,
   };
 }
@@ -129,7 +131,9 @@ function planHelpsEdge(
     confidence: judged.confidence,
     origin: "llm",
     created_at: input.nowIso(),
-    reasoning: judged.reasoning,
+    // The judge is no longer asked for a rationale — nothing ever read one off an edge, and
+    // it was generated after the verdict fields, so it never informed the verdict either.
+    reasoning: null,
     source_message_id: input.sourceMessageId,
   };
 }

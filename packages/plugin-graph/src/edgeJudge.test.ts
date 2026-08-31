@@ -21,7 +21,6 @@ describe("edgeJudgeSchema", () => {
           direction: "aToB",
           weight: null,
           confidence: 0.9,
-          reasoning: "不学极限就学不懂导数",
         },
       ],
       methodNodes: [],
@@ -38,7 +37,6 @@ describe("edgeJudgeSchema", () => {
           direction: null,
           weight: "medium",
           confidence: 0.7,
-          reasoning: "类比有助于理解",
         },
       ],
       methodNodes: [],
@@ -72,7 +70,6 @@ describe("edgeJudgeSchema", () => {
             direction: null,
             weight: 0.6,
             confidence: 0.5,
-            reasoning: "x",
           },
         ],
         methodNodes: [],
@@ -94,7 +91,6 @@ describe("edgeJudgeSchema", () => {
             direction: null,
             weight: null,
             confidence: 0.5,
-            reasoning: "x",
           },
         ],
         methodNodes: [],
@@ -157,7 +153,6 @@ describe("edgeJudgeSchema", () => {
       direction: null,
       weight: null,
       confidence: 0.5,
-      reasoning: "x",
     };
     expect(() => edgeJudgeSchema.parse({ edges: Array(21).fill(edge), methodNodes: [] })).toThrow();
   });

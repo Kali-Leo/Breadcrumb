@@ -3,7 +3,8 @@
  * candidate ranking can hand over up to 40 pairs while edgeJudgeSchema accepts at most 20
  * verdicts per reply, so more than 20 pairs MUST become more than one call instead of one
  * oversized call the model silently truncates. Also checks that each judged edge carries the
- * round's source message id and the judge's own reasoning into the row.
+ * round's source message id into the row, and stores no rationale (the judge is not asked
+ * for one — nothing read it, and it was generated after the verdict).
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -138,7 +139,7 @@ describe("edge extraction batching", () => {
     }
   });
 
-  it("records the judge's reasoning and the round's source message on the edge", async () => {
+  it("records the round's source message on the edge, and no rationale", async () => {
     const nodes = [node("a", null), node("b", null)];
     listAllNodesMock.mockResolvedValue(nodes);
     listAllEdgesMock.mockResolvedValue([]);
@@ -155,7 +156,6 @@ describe("edge extraction batching", () => {
             direction: "aToB",
             weight: null,
             confidence: 0.8,
-            reasoning: "不懂 b 就学不了 a",
           },
         ],
         methodNodes: [],
@@ -168,8 +168,8 @@ describe("edge extraction batching", () => {
 
     expect(upsertEdgeMock).toHaveBeenCalledTimes(1);
     expect(upsertEdgeMock.mock.calls[0]?.[0]).toMatchObject({
-      reasoning: "不懂 b 就学不了 a",
       source_message_id: "msg-42",
+      reasoning: null,
     });
   });
 });

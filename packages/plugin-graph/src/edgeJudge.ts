@@ -47,7 +47,10 @@ export const edgeJudgeSchema = z.object({
         /** Only meaningful when relation is "helps". */
         weight: helpsWeightLevelSchema.nullable(),
         confidence: z.number().min(0).max(1),
-        reasoning: z.string().min(1).max(200),
+        // No rationale field: nothing reads one, and asking for it after the verdict fields
+        // buys no reasoning either — those tokens are emitted once the decision is already
+        // made. If a rationale is ever wanted as scaffolding it has to come FIRST, and then
+        // it has to earn its output tokens (billed at 3x input).
       }),
     )
     .max(20),
@@ -91,12 +94,12 @@ export type MethodNodeProposal = EdgeJudgeResult["methodNodes"][number];
 export type AdjacentConceptProposal = EdgeJudgeResult["adjacentConcepts"][number];
 
 const BASE_SYSTEM_PROMPT = `你是一个知识关系判定器。给定若干候选知识点对（A、B），为每一对判定它们的学习结构关系，以 JSON 返回：
-{"edges":[{"pairId":"候选对编号(原样返回)","relation":"unrelated|requires|helps","direction":"aToB|bToA 或 null","weight":"weak|medium|strong 或 null,"confidence":0~1的数字,"reasoning":"一句话理由"}],
+{"edges":[{"pairId":"候选对编号(原样返回)","relation":"unrelated|requires|helps","direction":"aToB|bToA 或 null","weight":"weak|medium|strong 或 null,"confidence":0~1的数字}],
  "methodNodes":[{"label":"学习方法短名(如 费曼技巧)","summary":"这个方法是什么(一句话)","helpsLabels":["它能帮助理解的已有或候选知识点原名"],"weight":"weak|medium|strong","confidence":0~1}]}
 判定规则：
 - unrelated：两者没有直接学习结构关系
 - requires：其中一个是另一个的硬前置（不学会 A 就学不懂 B），direction 用 "aToB" 表示 A 是 B 的前置，"bToA" 反之；weight 填 null（requires 恒为 1，由系统赋值）
-- helps：两者有辅助理解关系但不是硬前置（如类比、对比、同一场景下的互补概念），weight 分档：strong=没有这个辅助基本学不明白；medium=有帮助但不是必需；weak=锦上添花，聊胜于无；reasoning 说明为什么
+- helps：两者有辅助理解关系但不是硬前置（如类比、对比、同一场景下的互补概念），weight 分档：strong=没有这个辅助基本学不明白；medium=有帮助但不是必需；weak=锦上添花，聊胜于无
 - confidence 是你对这个判定的把握程度，宁可判 unrelated 也不要牵强判定
 - methodNodes 是可选的：如果这批知识点让你联想到一个通用学习方法（如"费曼技巧""间隔重复"），可以提议，最多 3 个，宁缺毋滥；否则返回空数组`;
 
