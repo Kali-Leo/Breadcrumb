@@ -31,6 +31,15 @@ ignore = [
   "RUSTSEC-2025-0081",
   "RUSTSEC-2025-0098",
   "RUSTSEC-2025-0100",
+
+  # These two are real vulnerabilities in crates that are NOT COMPILED into this binary.
+  # cargo-audit reads Cargo.lock, which lists every crate any feature combination could pull;
+  # sqlx is declared with default-features = false and only the sqlite + runtime-tokio
+  # features, so its MySQL and Postgres drivers — and these, which arrive through them — are
+  # never built. Verified with `cargo tree -i rsa` and `cargo tree -i rkyv`, both of which
+  # report "nothing to print". Re-check this if sqlx ever gains a driver feature here.
+  "RUSTSEC-2023-0071", # rsa, via sqlx-mysql
+  "RUSTSEC-2026-0235", # rkyv, via sqlx-postgres
 ]
 
 [yanked]
