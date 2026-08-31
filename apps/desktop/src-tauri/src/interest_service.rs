@@ -34,27 +34,28 @@ fn service_is_up() -> bool {
     TcpStream::connect_timeout(&addr, Duration::from_millis(400)).is_ok()
 }
 
+/// Folders a checkout is plausibly sitting in.
+const SEARCH_FOLDERS: [&str; 6] = ["桌面", "Desktop", "文档", "Documents", "projects", "code"];
+/// Names the checkout itself is plausibly called.
+const PROJECT_FOLDERS: [&str; 3] = ["bilibili", "feed-mode", "interest-model"];
+
 /// The project is a separate checkout the user cloned themselves, so we look where people
 /// actually put it rather than demanding a configured path.
+///
+/// SECURITY: this resolves to a script the app then executes, so the candidate set is a
+/// fixed, enumerable list of exact paths. It deliberately does NOT enumerate directories:
+/// an earlier version read_dir'd each root and accepted any child containing the relative
+/// path, which meant anything that dropped a folder named `interest-model` into the home
+/// directory — an extracted download, a synced folder, another account on a shared machine —
+/// became code this app would run unprompted the moment the discovery page opened.
 fn find_daemon(home: &PathBuf) -> Option<PathBuf> {
     let mut roots = vec![home.clone()];
-    for desktop in ["桌面", "Desktop", "文档", "Documents", "projects", "code"] {
-        roots.push(home.join(desktop));
+    for folder in SEARCH_FOLDERS {
+        roots.push(home.join(folder));
     }
     for root in roots {
-        for project in ["bilibili", "feed-mode", "interest-model"] {
+        for project in PROJECT_FOLDERS {
             let candidate = root.join(project).join(DAEMON_RELATIVE_PATH);
-            if candidate.is_file() {
-                return Some(candidate);
-            }
-        }
-        // One level of "some folder that contains the project" — cheap and covers a
-        // checkout sitting inside a workspace folder.
-        let Ok(entries) = std::fs::read_dir(&root) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let candidate = entry.path().join(DAEMON_RELATIVE_PATH);
             if candidate.is_file() {
                 return Some(candidate);
             }
@@ -63,11 +64,28 @@ fn find_daemon(home: &PathBuf) -> Option<PathBuf> {
     None
 }
 
+/// Set while a spawned daemon is still coming up. The service takes tens of seconds to load
+/// its model, and the liveness probe times out in 400ms, so without this latch a frontend
+/// that keeps asking would spawn a new Python process — each loading a sentence-transformer
+/// model — on every attempt.
+static SPAWNING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// How long after a spawn the latch stays closed, matching the frontend's own start grace.
+const SPAWN_GRACE: Duration = Duration::from_secs(60);
+
 #[tauri::command]
 pub fn start_interest_service(app: tauri::AppHandle) -> ServiceStart {
     if service_is_up() {
+        SPAWNING.store(false, std::sync::atomic::Ordering::SeqCst);
         return ServiceStart::of("running", String::new(), String::new());
     }
+    if SPAWNING.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        return ServiceStart::of("starting", String::new(), String::new());
+    }
+    std::thread::spawn(|| {
+        std::thread::sleep(SPAWN_GRACE);
+        SPAWNING.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
     let Ok(home) = app.path().home_dir() else {
         return ServiceStart::of("notFound", String::new(), "no home directory".into());
     };

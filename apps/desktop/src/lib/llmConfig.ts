@@ -28,6 +28,31 @@ export function currentPriceCurrency(): Currency | undefined {
   return useSettingsStore.getState().apiConfig?.priceCurrency;
 }
 
+/** Thrown instead of dialling out while the network switch is off. Every LLM call site
+ * already treats a failed request as "degrade quietly", so this lands where those do. */
+export class NetworkDisabledError extends Error {
+  constructor() {
+    super("the network switch is off");
+    this.name = "NetworkDisabledError";
+  }
+}
+
+/**
+ * The fetch every LLM request goes through, with the network switch enforced AT the request
+ * rather than at each call site.
+ *
+ * The switch used to be an `if (networkEnabled)` copied to eighteen places, and three of them
+ * had been missed — focus-mode explanations and focus label summaries both streamed the
+ * learner's text to the provider with the switch off. Checking here means a call site cannot
+ * forget: there is one door, and it is locked.
+ */
+function gatedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (!useSettingsStore.getState().networkEnabled) {
+    return Promise.reject(new NetworkDisabledError());
+  }
+  return tauriFetch(input as Parameters<typeof tauriFetch>[0], init);
+}
+
 /**
  * `firm` is the second attempt after a reply came back in the wrong language: same request,
  * a harder instruction.
@@ -39,7 +64,7 @@ export function llmConfigFrom(apiConfig: ApiConfig, options?: { firm?: boolean }
     baseUrl: apiConfig.baseUrl,
     apiKey: apiConfig.apiKey,
     model: apiConfig.model,
-    fetchImpl: tauriFetch,
+    fetchImpl: gatedFetch,
     answerLanguageDirective: buildLanguageDirective(currentAnswerLanguage(), options),
   };
 }

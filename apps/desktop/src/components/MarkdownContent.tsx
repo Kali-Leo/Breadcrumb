@@ -30,10 +30,31 @@ const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
  * reuses the previous output instead of re-running renderToString (design audit 2026-08-28,
  * 数据层与性能 #3). A memoized component rather than a useMemo because renderNode is a plain
  * recursive function, not a hook context. */
+/** Schemes a link in model output may carry. Anything else renders as inert text rather than
+ * a clickable target. */
+const SAFE_LINK_SCHEMES = new Set(["http:", "https:", "mailto:"]);
+
+function isSafeHref(url: string | undefined): boolean {
+  if (url === undefined) return false;
+  try {
+    return SAFE_LINK_SCHEMES.has(new URL(url, "https://example.invalid").protocol);
+  } catch {
+    return false;
+  }
+}
+
 const MathSpan = memo(function MathSpan(props: { value: string; displayMode: boolean }) {
   const { value, displayMode } = props;
   const html = useMemo(
-    () => katex.renderToString(value, { displayMode, throwOnError: false }),
+    () =>
+      katex.renderToString(value, {
+        displayMode,
+        throwOnError: false,
+        // trust defaults to false, which is what refuses \href and \htmlData in model math.
+        // maxSize does not: without it a single \rule{9999em}{9999em} from the model is a
+        // layout bomb. maxExpand's default of 1000 already bounds macro expansion.
+        maxSize: 20,
+      }),
     [value, displayMode],
   );
   return (
@@ -133,7 +154,9 @@ function renderNode(
       return (
         <a
           key={key}
-          href={node.url}
+          // Model output decides this href. React refuses javascript: URLs, but relying on a
+          // framework behaviour for the only check is thin; state the allowed schemes here.
+          href={isSafeHref(node.url) ? node.url : undefined}
           target="_blank"
           rel="noreferrer"
           className="text-amber-700 underline"

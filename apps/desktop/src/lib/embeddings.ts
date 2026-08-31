@@ -8,6 +8,7 @@
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { invoke } from "@tauri-apps/api/core";
+import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { nowIso } from "./time";
 
@@ -19,7 +20,14 @@ const EMBEDDING_MODEL = "multilingual-e5-small";
 export async function embedTexts(texts: readonly string[]): Promise<number[][] | null> {
   if (texts.length === 0) return [];
   try {
-    return await invoke<number[][]>("embed_texts", { texts: [...texts] });
+    // The model download is the one network request this feature makes; after that it runs
+    // offline. Passing the switch through means a user who turned the network off does not
+    // get a silent fetch from a third party they never configured, while an already-cached
+    // model keeps working offline as it should.
+    return await invoke<number[][]>("embed_texts", {
+      texts: [...texts],
+      allowDownload: useSettingsStore.getState().networkEnabled,
+    });
   } catch (error) {
     console.warn("embedding skipped:", error);
     return null;

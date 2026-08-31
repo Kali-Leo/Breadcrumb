@@ -1,10 +1,14 @@
-// Purpose: Tauri application entry — registers plugins (sql, http, opener) and the
-// local embeddings + piper TTS + atomic SQL transaction + interest-service token commands. The Rust shell stays
-// thin: business logic lives in TS packages.
+// Purpose: Tauri application entry — registers plugins (sql, http, opener) and the local
+// embeddings + piper TTS + atomic SQL transaction + interest-service token + database-open
+// commands. The Rust shell stays thin: business logic lives in TS packages.
+//
+// The sql plugin is registered without `allow-load` in the capability set: the frontend
+// cannot name a database file, it calls open_app_database and gets the one this app owns.
 
 mod embeddings;
 mod fsrs_optim;
 mod interest_service;
+mod open_database;
 // Test-only: asserts sqlx still enables foreign keys on every connection it opens.
 #[cfg(test)]
 mod pragma_defaults;
@@ -39,6 +43,7 @@ pub fn run() {
             fsrs_optim::optimize_fsrs_parameters,
             interest_service::read_interest_service_token,
             interest_service::start_interest_service,
+            open_database::open_app_database,
             transactions::execute_sql_transaction,
             tts::piper_synthesize
         ])

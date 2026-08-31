@@ -5,17 +5,16 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default",
-    "sql:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://*" }, { "url": "http://*" }]
+    },
+    "sql:allow-close",
     "sql:allow-execute",
     "sql:allow-select",
     {
       "identifier": "http:default",
-      "allow": [
-        { "url": "https://**" },
-        { "url": "http://localhost:*" },
-        { "url": "http://127.0.0.1:*" }
-      ]
+      "allow": [{ "url": "https://**" }, { "url": "http://127.0.0.1:21456/*" }]
     }
   ]
 }

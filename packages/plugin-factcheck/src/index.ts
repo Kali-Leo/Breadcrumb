@@ -17,6 +17,11 @@ export {
   type FetchLike,
   stripHtml,
 } from "./evidence/provider";
+export {
+  fetchExternalPage,
+  isFetchableUrl,
+  MAX_RESPONSE_BYTES,
+} from "./evidence/safeFetch";
 export { createWikipediaProvider, type WikipediaProviderOptions } from "./evidence/wikipedia";
 export {
   buildClaimExtractionMessages,

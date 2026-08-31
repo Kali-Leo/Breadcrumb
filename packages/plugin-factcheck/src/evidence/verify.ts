@@ -5,6 +5,7 @@
  */
 import { extractKeywordWindow } from "./pageText";
 import type { EvidenceItem, FetchLike } from "./provider";
+import { fetchExternalPage } from "./safeFetch";
 
 /** A parsed search result, before we know whether its page can actually be opened. */
 export interface ResultCandidate {
@@ -32,14 +33,13 @@ export async function verifyCandidates(
   const items: EvidenceItem[] = [];
   for (const candidate of candidates) {
     if (items.length >= limit) break;
-    try {
-      const response = await fetchImpl(candidate.url, { signal: AbortSignal.timeout(timeoutMs) });
-      if (!response.ok) continue;
-      const window = extractKeywordWindow(await response.text(), query);
-      items.push({ ...candidate, snippet: window ?? candidate.snippet, source });
-    } catch {
-      // Unreachable page: never surface a link we could not open ourselves.
-    }
+    // Search results are attacker-influenceable input and these fetches run in Rust, outside
+    // the browser's private-network protections — fetchExternalPage refuses loopback and
+    // private addresses and caps how much body it will read.
+    const html = await fetchExternalPage(fetchImpl, candidate.url, timeoutMs);
+    if (html === null) continue; // unreachable, refused, or unusable: never surface it
+    const window = extractKeywordWindow(html, query);
+    items.push({ ...candidate, snippet: window ?? candidate.snippet, source });
   }
   return { items, failed: candidates.length > 0 && items.length === 0 };
 }

@@ -22,7 +22,7 @@ import {
   survivesThreshold,
   verifyEvidenceText,
 } from "@breadcrumb/plugin-compare";
-import { createBingProvider } from "@breadcrumb/plugin-factcheck";
+import { createBingProvider, fetchExternalPage } from "@breadcrumb/plugin-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
@@ -44,17 +44,22 @@ function costLineOf(model: string, usage: TokenUsage): string {
   return i18next.t("palace:compare.buildCost", { cost });
 }
 
+/** How long to wait for a cited page. Every other fetch in the app bounds itself; this one
+ * used to wait forever, which is a stall the user sits through. */
+const CITATION_FETCH_TIMEOUT_MS = 8000;
+
 /** Fetches one cited URL and checks the page mentions the cited material's title tokens.
- * Any network error counts as unverified — the branch dies, the build never throws here. */
+ * Any network error counts as unverified — the branch dies, the build never throws here.
+ *
+ * The URL comes out of the model's own JSON, and this fetch runs in Rust where the browser's
+ * private-network protections do not apply. Without a guard, a model could name
+ * `http://127.0.0.1:...` and read back, one substring at a time, whether a chosen string
+ * appears in a local service's response — the verdict is reported either way. fetchExternalPage
+ * refuses loopback and private addresses, bounds the body, and bounds the wait. */
 async function verifyUrl(url: string, sourceTitles: readonly string[]): Promise<boolean> {
-  try {
-    const response = await tauriFetch(url, { method: "GET" });
-    if (!response.ok) return false;
-    const text = await response.text();
-    return sourceTitles.some((title) => verifyEvidenceText(text, title));
-  } catch {
-    return false;
-  }
+  const text = await fetchExternalPage(tauriFetch, url, CITATION_FETCH_TIMEOUT_MS);
+  if (text === null) return false;
+  return sourceTitles.some((title) => verifyEvidenceText(text, title));
 }
 
 export type VerifiedProposal =

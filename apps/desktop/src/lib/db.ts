@@ -122,12 +122,20 @@ async function buildRepos(): Promise<Repos> {
   };
 }
 
-/** Must match the string passed to Database.load — it is the key tauri-plugin-sql stores its
- * connection pool under, and the execute_sql_transaction command looks the pool up by it. */
+/** The key tauri-plugin-sql stores the connection pool under — an opaque handle, not a path.
+ * Rust picks the actual file (src-tauri/src/open_database.rs) and registers the pool under
+ * this key; execute_sql_transaction and the plugin's select/execute all look it up by it.
+ *
+ * The frontend deliberately cannot name a database file. The plugin's own `load` command
+ * resolves a caller-supplied connection string against the app directory with PathBuf::push,
+ * which an absolute path replaces outright — so with `sql:allow-load` granted, any script in
+ * this webview could have opened and rewritten any SQLite file on the machine, browser
+ * cookie stores included. `allow-load` is therefore not in the capability set. */
 const DATABASE_URL = "sqlite:breadcrumb.db";
 
 async function openAndMigrate(): Promise<SqlClient> {
-  const database = await Database.load(DATABASE_URL);
+  await invoke<string>("open_app_database");
+  const database = await Database.get(DATABASE_URL);
   const sqlClient: SqlClient = {
     select: <Row>(sql: string, params?: readonly unknown[]) =>
       database.select<Row[]>(sql, params ? [...params] : []),

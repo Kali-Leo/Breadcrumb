@@ -18,7 +18,32 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "img-src": "'self' data: blob: https://*.hdslb.com https://*.ytimg.com",
+        "media-src": "'self' blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'"
+      },
+      "devCsp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "img-src": "'self' data: blob: https://*.hdslb.com https://*.ytimg.com",
+        "media-src": "'self' blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'"
+      }
     }
   },
   "bundle": {
@@ -30,6 +55,7 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "resources": ["../../../LICENSE", "../../../THIRD_PARTY_NOTICES.md"]
   }
 }

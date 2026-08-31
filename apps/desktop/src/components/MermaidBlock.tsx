@@ -11,7 +11,15 @@ let mermaidReady: Promise<typeof import("mermaid").default> | null = null;
 
 function loadMermaid() {
   mermaidReady ??= import("mermaid").then((module) => {
-    module.default.initialize({ startOnLoad: false, theme: "neutral" });
+    module.default.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      // Stated rather than inherited: "strict" is what routes diagram labels through DOMPurify
+      // and URLs through sanitizeUrl, and this component feeds model-written source straight
+      // into dangerouslySetInnerHTML. Relying on the upstream default would put the only barrier
+      // one dependency bump away from changing silently.
+      securityLevel: "strict",
+    });
     return module.default;
   });
   return mermaidReady;
