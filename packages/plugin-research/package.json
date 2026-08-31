@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-research",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless research-task plugin (spec 036): declarative whitelisted local statistics pushed by vetted institutions — Zod-validated, Ed25519-signed, aggregate-only results shown to the user. Zero token cost, nothing leaves the device in v1.",
   "type": "module",

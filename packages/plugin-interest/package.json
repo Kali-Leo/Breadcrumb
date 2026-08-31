@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-interest",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless interest plugin: per-round curiosity/confusion/boredom extraction, time-decayed aggregation, explanation-style ranking, embedding-similarity diffusion, and self-report mastery mapping.",
   "type": "module",

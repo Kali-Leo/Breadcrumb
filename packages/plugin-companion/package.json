@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-companion",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless companion-cast plugin (spec 037): Character Card V2 subset schema, the three authored companion cards (Shichimi/Pepper/Cumin, text personas derived from Pepper&Carrot under CC-BY 4.0), and the safety module (manipulation-lexicon gate, crisis detection, break reminders).",
   "type": "module",

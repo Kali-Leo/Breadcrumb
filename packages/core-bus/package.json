@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/core-bus",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Typed event bus: the nervous system connecting Breadcrumb core and plugins.",
   "type": "module",

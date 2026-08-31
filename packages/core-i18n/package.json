@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/core-i18n",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless language layer: the supported-language registry, locale negotiation, the answer-language directive injected into prompts, and the runtime check that the model actually answered in that language.",
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/simlab",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "private": true,
   "description": "Dev-only AI parallel test framework (spec 013): DeepSeek-scripted student personas, a real-SQLite session runner replaying the app's extraction/edge-judge/interest pipelines, and mechanical judges (invariants, metrics, gold-standard baseline). Never a dependency of any product package.",

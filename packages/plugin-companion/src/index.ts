@@ -10,5 +10,4 @@ export * from "./cardSchema";
 export * from "./cards/index";
 export * from "./knowledgeState";
 export * from "./memoryStream";
-export * from "./proactiveGate";
 export * from "./safety";

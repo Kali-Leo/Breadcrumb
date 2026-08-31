@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-knowledge-tree",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless knowledge-tree plugin: extracts knowledge nodes from each chat round and attaches them to the conversation's tree.",
   "type": "module",

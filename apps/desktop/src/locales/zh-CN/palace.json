@@ -20,16 +20,6 @@
     "trendWordsMemoryNote": "估算这一天你还能想起来的词有多少；一阵子不接触，会随时间自然消退。",
     "trendWordsIntuitionNote": "最粗略的估算：已经长期稳固、而且你在自己的话里用过的那部分词。",
     "trendWordsSettledNote": "数的是已经稳固超过一个月的词；新词稳固需要时间，这条线前段为 0 是正常的。",
-    "reunionOpener": "这次回顾「{{title}}」。先用自己的话说说你对它还有什么印象，从记得的部分开始就好；剩下的我来补。",
-    "newConcept": "第一次学到：{{title}}",
-    "reencounter": "又学了一次：{{title}}",
-    "wordGuessCorrect": "词汇：「{{word}}」猜对了",
-    "wordGuessClose": "词汇：「{{word}}」接近了",
-    "teachSession": "讲了一次：{{title}}",
-    "evidenceClaimLearned": "你说过你学过这个",
-    "evidenceClaimFamiliar": "你说过你对这个比较熟",
-    "evidenceClaimTaughtPrincipled": "你讲过它的原理",
-    "evidenceClaimTaughtSurface": "你把它复述过一遍",
     "regionEmpty": "这片区域还没有学习记录"
   },
   "map": {

@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/core-llm",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless LLM layer: OpenAI-compatible streaming client (Zod-validated) and cost calculation.",
   "type": "module",

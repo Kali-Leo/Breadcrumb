@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-trail",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless trail plugin: turns each day's knowledge nodes into a gentle done-list and an encouraging daily summary.",
   "type": "module",

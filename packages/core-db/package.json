@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/core-db",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Local-first data layer: typed rows, append-only migrations and hand-written SQL repositories over an injected SqlClient.",
   "type": "module",

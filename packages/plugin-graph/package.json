@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-graph",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless knowledge-graph plugin: graphology-backed cycle safety, prerequisite closure and topological order over requires/helps edges, plus embedding-based candidate ranking and the LLM edge-judge contract.",
   "type": "module",

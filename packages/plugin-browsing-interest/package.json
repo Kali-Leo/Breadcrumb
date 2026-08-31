@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-browsing-interest",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless client for the local browsing-interest service (127.0.0.1): response schemas, read-only fetching, emotion-curve geometry and word-cloud placement.",
   "type": "module",

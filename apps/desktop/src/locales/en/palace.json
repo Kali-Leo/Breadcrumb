@@ -22,16 +22,6 @@
     "trendWordsMemoryNote": "An estimate of how many words you could still recall that day; without contact, it fades on its own over time.",
     "trendWordsIntuitionNote": "The roughest estimate: words that have been stable for a long time and that you have used in your own sentences.",
     "trendWordsSettledNote": "Counts words that have been stable for over a month; new words take time to settle, so a flat start at zero is normal.",
-    "reunionOpener": "Let's revisit \"{{title}}\". Say what you still remember about it in your own words — start wherever your memory starts, and I will fill in the rest.",
-    "newConcept": "First learned: {{title}}",
-    "reencounter": "Learned again: {{title}}",
-    "wordGuessCorrect": "Vocabulary: guessed \"{{word}}\" right",
-    "wordGuessClose": "Vocabulary: came close on \"{{word}}\"",
-    "teachSession": "Explained once: {{title}}",
-    "evidenceClaimLearned": "You said you had learned this",
-    "evidenceClaimFamiliar": "You said you were fairly familiar with this",
-    "evidenceClaimTaughtPrincipled": "You explained how it works",
-    "evidenceClaimTaughtSurface": "You retold it once",
     "regionEmpty": "No learning recorded in this area yet"
   },
   "map": {

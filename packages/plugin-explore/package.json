@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-explore",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Explore doors and the exploration atlas: door picking, concept guess-gate policy, grading thresholds, and the six-layer chain recap (spec 039).",
   "type": "module",

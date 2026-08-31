@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-factcheck",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless fact-check plugin: extracts check-worthy claims from a chat round, gathers web evidence, and returns gentle per-claim verdicts.",
   "type": "module",

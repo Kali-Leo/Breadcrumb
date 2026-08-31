@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-compare",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless comparison-tree plugin (spec 023): evidence-backed profile schema, conservative label/alias matching, overlap-ratio aggregation, and the experimental search-build LLM contract with URL-verification pruning.",
   "type": "module",

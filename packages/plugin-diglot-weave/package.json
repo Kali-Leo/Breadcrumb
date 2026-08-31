@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-diglot-weave",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless diglot weave plugin (spec 033): language packs, tokenization, FSRS-6 scheduling, deterministic word replacement patches, implicit-signal handling and guess grading.",
   "type": "module",

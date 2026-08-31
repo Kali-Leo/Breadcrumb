@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-planner",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless planner plugin: the no-goal frontier() recommendation query, goal-driven gapAndPath() with three route strategies plus coverage, and the LLM goal-mapping contract.",
   "type": "module",

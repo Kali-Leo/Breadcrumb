@@ -1,5 +1,6 @@
 {
   "name": "@breadcrumb/plugin-feedback",
+  "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "description": "Headless feedback-lab plugin (spec 035): activity heatmap, small wins, cumulative totals, reunion invites, daily bite, system gauge, settled content and evidence — all computed from existing local data, zero token cost.",
   "type": "module",

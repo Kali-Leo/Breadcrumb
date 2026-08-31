@@ -6,15 +6,24 @@ from the following open-source projects.
 
 | 项目 / Project | 许可证 / License | 采用方式 / Usage |
 |---|---|---|
-| [jeheydorn/nortantis](https://github.com/jeheydorn/nortantis) | AGPL-3.0 | 手绘地图图标资产（`apps/desktop/src/assets/map-art/`）；海岸晕影、海浪、纸张纹理、做旧边框算法移植 |
-| [watabou/TownGeneratorOS](https://github.com/watabou/TownGeneratorOS) | GPL-3.0 | 村庄/城镇生成核心算法移植（Haxe → TypeScript，`packages/plugin-town/`） |
+| [jeheydorn/nortantis](https://github.com/jeheydorn/nortantis) | AGPL-3.0 | 手绘地图图标资产（`apps/desktop/src/assets/map-art/`）；海岸晕影、海浪、纸张纹理、做旧边框算法移植；构造板块模拟移植 |
 | [mewo2/terrain](https://github.com/mewo2/terrain) | MIT | 水力侵蚀/河流管线算法移植（`packages/plugin-map/src/erosion.ts` 等） |
 | [Azgaar/Fantasy-Map-Generator](https://github.com/Azgaar/Fantasy-Map-Generator) | MIT | 高度图斑块算子算法移植（`packages/plugin-map/src/heightmap.ts`） |
-| [lxgw/LxgwWenKai 霞鹜文楷](https://github.com/lxgw/LxgwWenKai) | SIL OFL 1.1 | 地图手写风格字体 |
-| [rough-stuff/rough](https://github.com/rough-stuff/rough) | MIT | 手绘颤线渲染（npm 依赖 roughjs） |
+| [lxgw/LxgwWenKai 霞鹜文楷](https://github.com/lxgw/LxgwWenKai) | SIL OFL 1.1 | 地图手写风格字体（许可证全文见 `apps/desktop/src/assets/fonts/OFL.txt`） |
+| [David Revoy《Pepper&Carrot》](https://peppercarrot.com) | CC BY 4.0 | AI 学习伙伴的角色设定为衍生创作，有改动（`packages/plugin-companion/src/cards/`）；不含原作美术资产，且不代表原作者对本产品的背书 |
+| [langchain-ai/langchainjs](https://github.com/langchain-ai/langchainjs) | MIT | Generative Agents 记忆流检索评分移植（`packages/plugin-companion/src/memoryStream.ts`） |
+| [thunlp/ProactiveAgent](https://github.com/thunlp/ProactiveAgent) | Apache-2.0 | 主动提议门控算法移植（ICLR 2025） |
+| [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | MIT | 间隔复习调度（npm 依赖） |
+| [open-spaced-repetition/fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs) | BSD-3-Clause | 按用户拟合 FSRS 参数（Rust 依赖） |
 
-依赖库（npm，见各 package.json）：pixi.js、pixi-viewport、d3-delaunay、simplex-noise、
-poisson-disk-sampling、polygon-clipping、polygon-offset 等，均为 MIT/ISC 许可证。
+依赖库（npm，见各 package.json）：pixi.js、d3-delaunay、d3-hierarchy、simplex-noise、
+poisson-disk-sampling、graphology 系列、mermaid、katex、react 等，均为 MIT/ISC/Apache-2.0 许可证。
+
+**双许可证的选择声明**（依赖以「A 或 B」发布时，本项目选择哪一支）：
+
+- `dompurify`（经由 mermaid 随包分发）：`MPL-2.0 OR Apache-2.0` —— **选择 Apache-2.0**。
+- `priority-queue`（Rust）：`LGPL-3.0-or-later OR MPL-2.0` —— **选择 MPL-2.0**。
+- `r-efi`（Rust）：`MIT OR Apache-2.0 OR LGPL-2.1-or-later` —— **选择 MIT**。
 
 注：watabou 的 CompassOS 与 RuneGeneratorOS 仓库无许可证文件，未采用其任何内容。
 
