@@ -13,8 +13,8 @@ import {
   buildQuestionMessages,
   buildWordExplainMessages,
   type FocusPromptMessage,
+  shortenStationLabel,
 } from "@breadcrumb/plugin-explore";
-import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { buildAncestorChain, truncateQuestionLabel } from "./focusActions";
 import { insertFocusNode } from "./focusExplainRound";
@@ -129,23 +129,20 @@ export function skipPendingGuess(set: FocusSessionSet, get: FocusSessionGet): vo
   void createWordChild(set, get, pending.word, pending.matchedNodeId);
 }
 
-/** Fire-and-forget short-name request for a freshly created station (spec 042 §4) — the raw
- * label stays on the map until (if ever) the model's short name lands, so this never blocks the
- * streamed explanation. A missing API config or conversation just skips the request; a failed
- * or unusable response leaves the raw label in place (summarizeFocusLabel already logs it). The
- * dynamic import keeps this side path off this module's static dependency graph. */
+/** Shortens a freshly created station's label so the map stays readable (spec 042 §4).
+ *
+ * This used to be an LLM call per long label. It is now arithmetic on the label's own text:
+ * free, instant, offline, and incapable of inventing a name for a station. The shortener
+ * declines rather than cutting a word in half, and every path falls back to the raw label —
+ * so the worst case is the map ellipsising a long name, which is what it did before anyway. */
 export function scheduleFocusLabelSummary(
   set: FocusSessionSet,
   get: FocusSessionGet,
   node: FocusNodeRow,
 ): void {
-  const apiConfig = useSettingsStore.getState().apiConfig;
-  const conversationId = get().conversationId;
-  if (apiConfig === null || conversationId === null) return;
+  const shortLabel = shortenStationLabel(node.label);
+  if (shortLabel === null) return;
   void (async () => {
-    const { summarizeFocusLabel } = await import("./focusLabelSummary");
-    const shortLabel = await summarizeFocusLabel(node.label, apiConfig, conversationId);
-    if (shortLabel === null) return;
     const repos = await getRepos();
     await repos.focusNodes.updateLabel(node.id, shortLabel);
     set({
