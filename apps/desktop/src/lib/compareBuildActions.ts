@@ -10,7 +10,7 @@ import {
   calculateCostMicros,
   chatJson,
   formatCost,
-  resolveModelPrice,
+  resolveModelRates,
   type TokenUsage,
 } from "@breadcrumb/core-llm";
 import {
@@ -37,7 +37,7 @@ export type ExperimentalBuildOutcome =
   | { ok: false; reason: string; costLine: string | null };
 
 function costLineOf(model: string, usage: TokenUsage): string {
-  const price = resolveModelPrice(model, currentPriceCurrency());
+  const price = resolveModelRates(model, { currency: currentPriceCurrency() });
   const cost = price
     ? formatCost(calculateCostMicros(usage, price), price.currency)
     : i18next.t("palace:compare.buildCostUnknown");

@@ -249,6 +249,10 @@ export interface LlmCallRow {
   model: string;
   input_tokens: number;
   output_tokens: number;
+  /** The slice of input_tokens the provider served from its prefix cache, when it reported
+   * one. Null means the provider said nothing, so the whole prompt was billed as fresh —
+   * which is distinct from a reported zero. */
+  cached_input_tokens?: number | null;
   cost_micros: number;
   currency: Currency;
   created_at: string;

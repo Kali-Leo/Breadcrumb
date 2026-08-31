@@ -6,7 +6,7 @@
  * not a financial feature, so a hand-set constant is appropriate (no live-rate dependency).
  * Main exports: createCostGuard, CostGuard, USD_TO_CNY_RATE.
  */
-import { calculateCostMicros, resolveModelPrice, type TokenUsage } from "@breadcrumb/core-llm";
+import { calculateCostMicros, resolveModelRates, type TokenUsage } from "@breadcrumb/core-llm";
 
 /** Approximate, hand-set 2026-08-01 — good enough for a soft budget ceiling. */
 export const USD_TO_CNY_RATE = 7.2;
@@ -25,7 +25,7 @@ export function createCostGuard(budgetCny: number): CostGuard {
     recordCall(model, usage) {
       // The budget is CNY, so ask for the CNY price first — DeepSeek publishes one, which
       // makes the guard exact instead of routed through the approximate rate below.
-      const price = resolveModelPrice(model, "CNY");
+      const price = resolveModelRates(model, { currency: "CNY" });
       if (price === undefined) return 0;
       const costMicros = calculateCostMicros(usage, price);
       const microsCny = price.currency === "CNY" ? costMicros : costMicros * USD_TO_CNY_RATE;

@@ -38,15 +38,28 @@ const JUDGEMENT_TEMPERATURE = 0;
 
 const completionEnvelopeSchema = z.object({
   choices: z.array(z.object({ message: z.object({ content: z.string() }).nullish() })).default([]),
-  usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).nullish(),
+  usage: z
+    .object({
+      prompt_tokens: z.number(),
+      completion_tokens: z.number(),
+      /** See the same field in client.ts: cache hits cost ~1/30 of a miss, so ignoring the
+       * split over-bills every call with a repeated prefix. */
+      prompt_cache_hit_tokens: z.number().nullish(),
+    })
+    .nullish(),
 });
 
 const ZERO_USAGE: TokenUsage = { inputTokens: 0, outputTokens: 0 };
 
 function sumUsage(a: TokenUsage, b: TokenUsage): TokenUsage {
+  const cached = (a.cachedInputTokens ?? 0) + (b.cachedInputTokens ?? 0);
   return {
     inputTokens: a.inputTokens + b.inputTokens,
     outputTokens: a.outputTokens + b.outputTokens,
+    // Undefined rather than 0 when neither attempt reported a split, so "the provider said
+    // nothing" stays distinguishable from "the provider said none of it was cached".
+    cachedInputTokens:
+      a.cachedInputTokens === undefined && b.cachedInputTokens === undefined ? undefined : cached,
   };
 }
 
@@ -91,6 +104,7 @@ async function requestCompletion(
         ? {
             inputTokens: envelope.usage.prompt_tokens,
             outputTokens: envelope.usage.completion_tokens,
+            cachedInputTokens: envelope.usage.prompt_cache_hit_tokens ?? undefined,
           }
         : ZERO_USAGE,
     };

@@ -48,7 +48,17 @@ const streamChunkSchema = z.object({
   choices: z
     .array(z.object({ delta: z.object({ content: z.string().nullish() }).nullish() }))
     .default([]),
-  usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).nullish(),
+  usage: z
+    .object({
+      prompt_tokens: z.number(),
+      completion_tokens: z.number(),
+      /** DeepSeek (and OpenAI-compatible providers that copy its shape) split the prompt
+       * into what the prefix cache served and what had to be read fresh. A cache hit costs
+       * roughly 1/30 of a miss, so dropping this field means over-billing every long
+       * conversation. Optional: providers that do not cache simply omit it. */
+      prompt_cache_hit_tokens: z.number().nullish(),
+    })
+    .nullish(),
 });
 
 export interface ChatStreamOptions {
@@ -113,6 +123,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
             usage = {
               inputTokens: chunk.usage.prompt_tokens,
               outputTokens: chunk.usage.completion_tokens,
+              cachedInputTokens: chunk.usage.prompt_cache_hit_tokens ?? undefined,
             };
           }
         }

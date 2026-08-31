@@ -1,7 +1,7 @@
 /**
  * Purpose: unit tests for the cost guard's accumulation and over-budget detection.
  */
-import { calculateCostMicros, resolveModelPrice } from "@breadcrumb/core-llm";
+import { calculateCostMicros, resolveModelRates } from "@breadcrumb/core-llm";
 import { describe, expect, it } from "vitest";
 import { createCostGuard, USD_TO_CNY_RATE } from "./costGuard";
 
@@ -15,7 +15,7 @@ describe("createCostGuard", () => {
   it("bills a model sold in CNY at its own CNY rate, with no conversion", () => {
     // deepseek-v4-flash is sold in CNY on DeepSeek's China platform, so the guard uses that
     // price directly — the approximate rate never enters the number.
-    const cnyPrice = resolveModelPrice("deepseek-v4-flash", "CNY");
+    const cnyPrice = resolveModelRates("deepseek-v4-flash", { currency: "CNY" });
     if (cnyPrice === undefined) throw new Error("deepseek-v4-flash should have a CNY price");
     expect(cnyPrice.currency).toBe("CNY");
 
@@ -28,7 +28,7 @@ describe("createCostGuard", () => {
   it("keeps a conversion path for models not sold in CNY", () => {
     // No builtin model is USD-only today, so this pins the arithmetic the branch performs
     // rather than routing a model through it.
-    const usdPrice = resolveModelPrice("deepseek-v4-flash", "USD");
+    const usdPrice = resolveModelRates("deepseek-v4-flash", { currency: "USD" });
     if (usdPrice === undefined) throw new Error("deepseek-v4-flash should have a USD price");
     const usdMicros = calculateCostMicros({ inputTokens: 1_000_000, outputTokens: 0 }, usdPrice);
     expect((usdMicros * USD_TO_CNY_RATE) / 1_000_000).toBeCloseTo(

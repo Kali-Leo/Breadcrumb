@@ -11,7 +11,7 @@
 import {
   ChatJsonError,
   calculateCostMicros,
-  resolveModelPrice,
+  resolveModelRates,
   type TokenUsage,
 } from "@breadcrumb/core-llm";
 import { getRepos } from "./db";
@@ -36,7 +36,13 @@ export async function recordMeteredCall(input: {
   responseHadContent?: boolean;
 }): Promise<void> {
   const repos = await getRepos();
-  const price = resolveModelPrice(input.model, currentPriceCurrency());
+  const createdAt = nowIso();
+  // Priced at the instant of the call, because peak and off-peak rates differ by half and
+  // the ledger has to say what this call actually cost, not what it would cost now.
+  const rates = resolveModelRates(input.model, {
+    currency: currentPriceCurrency(),
+    at: new Date(createdAt),
+  });
   await repos.llmCalls.record({
     id: newId(),
     conversation_id: input.conversationId,
@@ -44,9 +50,10 @@ export async function recordMeteredCall(input: {
     model: input.model,
     input_tokens: input.usage.inputTokens,
     output_tokens: input.usage.outputTokens,
-    cost_micros: price ? calculateCostMicros(input.usage, price) : 0,
-    currency: price?.currency ?? UNPRICED_ROW_CURRENCY,
-    created_at: nowIso(),
+    cached_input_tokens: input.usage.cachedInputTokens ?? null,
+    cost_micros: rates ? calculateCostMicros(input.usage, rates) : 0,
+    currency: rates?.currency ?? UNPRICED_ROW_CURRENCY,
+    created_at: createdAt,
   });
   // Some providers ignore stream_options usage reporting and report 0/0 tokens on a real,
   // non-empty response — recording that as a free call would silently understate spend, so

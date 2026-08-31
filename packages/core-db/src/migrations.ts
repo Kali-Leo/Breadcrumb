@@ -919,6 +919,15 @@ export const MIGRATIONS: readonly Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_llm_calls_conversation ON llm_calls(conversation_id);`,
     ],
   },
+  {
+    // Providers that keep a prefix cache bill a cache hit at roughly 1/30 of a fresh read
+    // (DeepSeek v4-flash: ¥0.10 vs ¥3.00 per million at peak). The client used to drop the
+    // split the API reports, so every input token was billed as a miss and the spending page
+    // over-stated long conversations badly. Recording the hit count makes the ledger right
+    // and makes the prefix cache's actual hit rate visible instead of guessed at.
+    id: "0050_llm_calls_cached_input_tokens",
+    statements: [`ALTER TABLE llm_calls ADD COLUMN cached_input_tokens INTEGER;`],
+  },
 ];
 
 /**

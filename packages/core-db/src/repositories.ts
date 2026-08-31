@@ -156,8 +156,9 @@ export function createLlmCallsRepo(sql: SqlClient) {
     async record(row: LlmCallRow): Promise<void> {
       await sql.execute(
         `INSERT INTO llm_calls
-           (id, conversation_id, purpose, model, input_tokens, output_tokens, cost_micros, currency, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, conversation_id, purpose, model, input_tokens, output_tokens, cached_input_tokens,
+            cost_micros, currency, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           row.id,
           row.conversation_id,
@@ -165,6 +166,7 @@ export function createLlmCallsRepo(sql: SqlClient) {
           row.model,
           row.input_tokens,
           row.output_tokens,
+          row.cached_input_tokens ?? null,
           row.cost_micros,
           row.currency,
           row.created_at,
