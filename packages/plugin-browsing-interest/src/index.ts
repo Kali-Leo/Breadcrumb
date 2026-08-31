@@ -56,6 +56,15 @@ export {
 } from "./schemas";
 export { englishTopicNames, topicLabel } from "./topicNames";
 export {
+  BROWSING_TRUST_DEFAULT,
+  BROWSING_TRUST_MAX,
+  BROWSING_TRUST_MIN,
+  type HindsightEvent,
+  hindsightTrustRatio,
+  MIN_OUTCOME_EVENTS,
+  midrankPercentile,
+} from "./trustRatio";
+export {
   layoutWordCloud,
   type PlacedWord,
   valenceColor,

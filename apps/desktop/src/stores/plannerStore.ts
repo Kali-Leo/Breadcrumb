@@ -13,6 +13,7 @@ import type {
   KnowledgeNodeRow,
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
+import { BROWSING_TRUST_DEFAULT } from "@breadcrumb/plugin-browsing-interest";
 import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
 import type {
   FrontierCandidate,
@@ -21,7 +22,8 @@ import type {
   RecommendedRouteStep,
 } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
-import { loadBrowsingAffinityByNode } from "../lib/browsingAffinity";
+import { loadBrowsingAffinityByNode, loadWatchedTitleRecords } from "../lib/browsingAffinity";
+import { computeBrowsingTrustRatio } from "../lib/browsingTrustRatio";
 import { getRepos } from "../lib/db";
 import { recordAiFailure } from "../lib/failureLog";
 import { deriveGoalView } from "../lib/plannerGapActions";
@@ -129,6 +131,22 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       // and the planner then behaves exactly as it did before the bridge existed.
       const browsingAffinityByNode = await loadBrowsingAffinityByNode(embeddings);
 
+      // One interest, one slider (spec 060 §5): the browsing weight rides the interest
+      // weight at the hindsight-validated trust ratio. With no browsing data the component
+      // carries no information, so the ratio is moot — skip the reconstruction.
+      const userWeights = useSettingsStore.getState().recommendationWeights;
+      const trustRatio =
+        browsingAffinityByNode === null
+          ? BROWSING_TRUST_DEFAULT
+          : computeBrowsingTrustRatio(
+              nodes,
+              sightings,
+              signals,
+              embeddings,
+              (await loadWatchedTitleRecords()) ?? [],
+            );
+      const frontierWeights = { ...userWeights, browsing: userWeights.interest * trustRatio };
+
       const snapshot = computePlannerSnapshot(
         nodes,
         edges,
@@ -142,7 +160,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         useSettingsStore.getState().routeParams,
         nowIso(),
         browsingAffinityByNode,
-        useSettingsStore.getState().recommendationWeights,
+        frontierWeights,
       );
 
       set({ nodes, edges, claims, goals, ...snapshot });

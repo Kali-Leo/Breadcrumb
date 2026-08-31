@@ -62,25 +62,31 @@ export function watchedTitleWeight(finished: boolean, ageDays: number): number {
 export interface WatchedTitleSignal {
   title: string;
   weight: number;
+  /** Viewing time (unix seconds) and completion of the winning entry — carried so hindsight
+   * validation (spec 060 §5) can recompute this title's weight as of any past moment. */
+  ts: number;
+  finished: boolean;
 }
 
 /** Flattens a /pro_content response into weighted title signals for embedding. Duplicate
  * titles (finished and unfinished lists can overlap across the window) keep only their
  * strongest weight; empty titles are dropped — there is nothing to embed. */
 export function watchedTitleSignals(pro: ProContent, nowMillis: number): WatchedTitleSignal[] {
-  const weightByTitle = new Map<string, number>();
+  const byTitle = new Map<string, WatchedTitleSignal>();
   const fold = (items: ProContent["finished"], finished: boolean) => {
     for (const item of items) {
       if (item.title === "") continue;
       const ageDays = Math.max(0, nowMillis / 1000 - item.ts) / 86_400;
       const weight = watchedTitleWeight(finished, ageDays);
-      const existing = weightByTitle.get(item.title);
-      if (existing === undefined || weight > existing) weightByTitle.set(item.title, weight);
+      const existing = byTitle.get(item.title);
+      if (existing === undefined || weight > existing.weight) {
+        byTitle.set(item.title, { title: item.title, weight, ts: item.ts, finished });
+      }
     }
   };
   fold(pro.finished, true);
   fold(pro.unfinished, false);
-  return [...weightByTitle.entries()].map(([title, weight]) => ({ title, weight }));
+  return [...byTitle.values()];
 }
 
 /** Per-node browsing affinity, max-pooled over titles (an average would let a hundred

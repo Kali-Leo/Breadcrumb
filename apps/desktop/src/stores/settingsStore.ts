@@ -10,17 +10,17 @@ import {
   negotiateLanguage,
   UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
-import {
-  FRONTIER_WEIGHTS,
-  type FrontierWeights,
-  type RecommendRouteParams,
-} from "@breadcrumb/plugin-planner";
+import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { changeLanguage } from "../i18n";
 import { isPseudoLocale } from "../i18n/pseudoLocale";
 import { forgetAnswerLanguageWatch } from "../lib/answerLanguageWatch";
 import { getRepos } from "../lib/db";
-import { sanitizeRecommendationWeights } from "../lib/recommendationWeights";
+import {
+  sanitizeRecommendationWeights,
+  USER_WEIGHT_DEFAULTS,
+  type UserRecommendationWeights,
+} from "../lib/recommendationWeights";
 import { nowIso } from "../lib/time";
 
 export interface ApiConfig {
@@ -152,9 +152,9 @@ interface SettingsState {
   /** Answer language, when the user asked the model to write in a different one than the
    * interface. Null means "same as the interface", which is the normal case. */
   answerLanguage: string | null;
-  /** The five frontier component weights, user-tuned via the palace's 推荐偏好 panel
-   * (spec 060 §3). Defaults to the package's FRONTIER_WEIGHTS. */
-  recommendationWeights: FrontierWeights;
+  /** The four intent-level recommendation weights, user-tuned via the palace's 推荐偏好
+   * panel (spec 060 §3+§5); the browsing weight is derived, not stored. */
+  recommendationWeights: UserRecommendationWeights;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
@@ -165,7 +165,7 @@ interface SettingsState {
   setCompareCategory(category: CompareCategory): Promise<void>;
   setLanguage(code: string): Promise<void>;
   setAnswerLanguage(code: string | null): Promise<void>;
-  setRecommendationWeights(weights: FrontierWeights): Promise<void>;
+  setRecommendationWeights(weights: UserRecommendationWeights): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -179,7 +179,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   compareCategory: "occupation",
   language: DEFAULT_LANGUAGE_CODE,
   answerLanguage: null,
-  recommendationWeights: { ...FRONTIER_WEIGHTS },
+  recommendationWeights: { ...USER_WEIGHT_DEFAULTS },
 
   async loadFromDatabase() {
     const repos = await getRepos();
@@ -204,7 +204,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
       repos.settings.get<string>(LANGUAGE_KEY),
       repos.settings.get<string>(ANSWER_LANGUAGE_KEY),
-      repos.settings.get<Partial<FrontierWeights>>(RECOMMENDATION_WEIGHTS_KEY),
+      repos.settings.get<Partial<UserRecommendationWeights>>(RECOMMENDATION_WEIGHTS_KEY),
     ]);
     // An interface language that was removed (or was never ours) must not leave the app
     // showing raw message keys — fall back to the machine's own language.

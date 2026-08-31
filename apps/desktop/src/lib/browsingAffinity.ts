@@ -10,11 +10,16 @@ import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 import {
   browsingAffinityByNode,
   createBrowsingInterestClient,
-  type WatchedTitleVector,
+  type WatchedTitleSignal,
   watchedTitleSignals,
 } from "@breadcrumb/plugin-browsing-interest";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { embedTexts } from "./embeddings";
+
+/** A watched title with everything downstream needs: the affinity path reads title/weight/
+ * vector; hindsight validation (spec 060 §5) additionally reads ts/finished to recompute
+ * the weight as of a past moment. */
+export type WatchedTitleRecord = WatchedTitleSignal & { vector: readonly number[] };
 
 /** The service's read endpoints send no CORS headers, so requests must go through Rust. */
 const client = createBrowsingInterestClient({
@@ -36,15 +41,15 @@ const TITLE_CACHE_MS = 30 * 60 * 1000;
 const FAILURE_CACHE_MS = 5 * 60 * 1000;
 
 interface TitleVectorCache {
-  vectors: readonly WatchedTitleVector[] | null;
+  vectors: readonly WatchedTitleRecord[] | null;
   fetchedAt: number;
 }
 
 let cache: TitleVectorCache | null = null;
 
-/** Watched-title vectors, through the cache: null means "unavailable right now" (service
+/** Watched-title records, through the cache: null means "unavailable right now" (service
  * unreachable, no embedding model, or simply nothing watched). */
-async function cachedTitleVectors(): Promise<readonly WatchedTitleVector[] | null> {
+export async function loadWatchedTitleRecords(): Promise<readonly WatchedTitleRecord[] | null> {
   const now = Date.now();
   if (cache !== null) {
     const ttl = cache.vectors === null ? FAILURE_CACHE_MS : TITLE_CACHE_MS;
@@ -54,7 +59,7 @@ async function cachedTitleVectors(): Promise<readonly WatchedTitleVector[] | nul
   return cache.vectors;
 }
 
-async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleVector[] | null> {
+async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecord[] | null> {
   let signals: ReturnType<typeof watchedTitleSignals>;
   try {
     signals = watchedTitleSignals(await client.proContent(PRO_CONTENT_DAYS), nowMillis);
@@ -71,15 +76,12 @@ async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleVecto
   });
 }
 
-/** The per-node browsing affinity for the current knowledge tree, or null when browsing
- * data is unavailable — the caller passes the map straight into computePlannerSnapshot. */
-export async function loadBrowsingAffinityByNode(
+/** Node embedding rows → id-keyed vectors. One corrupt vector row must cost that row, never
+ * the whole caller — this is the promise that a broken bridge behaves as no bridge (spec
+ * 059 出错三问). */
+export function parseNodeVectors(
   embeddings: readonly NodeEmbeddingRow[],
-): Promise<Map<string, number> | null> {
-  const titleVectors = await cachedTitleVectors();
-  if (titleVectors === null || titleVectors.length === 0) return null;
-  // One corrupt vector row must cost that row, never the whole planner snapshot — this is
-  // the promise that a broken bridge behaves as no bridge (spec 059 出错三问).
+): Map<string, readonly number[]> {
   const nodeVectors = new Map<string, readonly number[]>();
   for (const row of embeddings) {
     try {
@@ -88,5 +90,15 @@ export async function loadBrowsingAffinityByNode(
       console.warn("browsing affinity: skipping unreadable embedding row", row.node_id);
     }
   }
-  return browsingAffinityByNode(titleVectors, nodeVectors);
+  return nodeVectors;
+}
+
+/** The per-node browsing affinity for the current knowledge tree, or null when browsing
+ * data is unavailable — the caller passes the map straight into computePlannerSnapshot. */
+export async function loadBrowsingAffinityByNode(
+  embeddings: readonly NodeEmbeddingRow[],
+): Promise<Map<string, number> | null> {
+  const titleVectors = await loadWatchedTitleRecords();
+  if (titleVectors === null || titleVectors.length === 0) return null;
+  return browsingAffinityByNode(titleVectors, parseNodeVectors(embeddings));
 }

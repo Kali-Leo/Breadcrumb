@@ -1,24 +1,26 @@
 /**
- * Purpose: the palace left rail's 推荐偏好 card (spec 060 §3) — five life-language sliders
- * over the frontier component weights, Leo's ruling: all of them user-tunable, phrased in
- * the learner's language, never ours. No numbers, no component names, no algorithm words on
- * screen; the slider position is the whole interface. Changes write through to settings and
- * recompute the planner.
+ * Purpose: the palace left rail's 推荐偏好 card (spec 060 §3+§5) — life-language sliders
+ * over the intent-level recommendation weights, Leo's ruling: all of them user-tunable,
+ * phrased in the learner's language, never ours. Interest is ONE slider — conversation and
+ * watched-video signals both live under it (their internal split is the system's adaptive
+ * trust ratio, not a knob). No numbers, no component names, no algorithm words on screen.
  * Main exports: RecommendTuningCard.
  */
-import { FRONTIER_WEIGHTS, type FrontierWeights } from "@breadcrumb/plugin-planner";
 import { useTranslation } from "react-i18next";
-import { RECOMMENDATION_WEIGHT_MAX } from "../../lib/recommendationWeights";
+import {
+  RECOMMENDATION_WEIGHT_MAX,
+  USER_WEIGHT_DEFAULTS,
+  type UserRecommendationWeights,
+} from "../../lib/recommendationWeights";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 /** goalGap only matters in ranked mode, where a goal exists to weigh toward. */
-const SLIDER_ORDER: (keyof FrontierWeights)[] = [
+const SLIDER_ORDER: (keyof UserRecommendationWeights)[] = [
   "interest",
   "helps",
   "difficulty",
   "goalGap",
-  "browsing",
 ];
 
 export function RecommendTuningCard() {
@@ -26,7 +28,7 @@ export function RecommendTuningCard() {
   const weights = useSettingsStore((state) => state.recommendationWeights);
   const learningMode = useSettingsStore((state) => state.learningMode);
 
-  async function apply(next: FrontierWeights): Promise<void> {
+  async function apply(next: UserRecommendationWeights): Promise<void> {
     await useSettingsStore.getState().setRecommendationWeights(next);
     void usePlannerStore.getState().recompute();
   }
@@ -34,7 +36,9 @@ export function RecommendTuningCard() {
   const shown = SLIDER_ORDER.filter(
     (component) => component !== "goalGap" || learningMode === "ranked",
   );
-  const isDefault = shown.every((component) => weights[component] === FRONTIER_WEIGHTS[component]);
+  const isDefault = shown.every(
+    (component) => weights[component] === USER_WEIGHT_DEFAULTS[component],
+  );
 
   return (
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
@@ -63,7 +67,7 @@ export function RecommendTuningCard() {
       {!isDefault && (
         <button
           type="button"
-          onClick={() => void apply({ ...FRONTIER_WEIGHTS })}
+          onClick={() => void apply({ ...USER_WEIGHT_DEFAULTS })}
           className="mt-2 rounded border border-stone-200 px-2 py-1 text-stone-500 transition-colors hover:border-amber-400 hover:bg-amber-50"
         >
           {t("tuning.reset")}
