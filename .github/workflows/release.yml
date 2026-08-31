@@ -1,0 +1,85 @@
+name: Release
+
+# Tag-driven. Push a tag like v0.1.0 and this builds installers for every desktop
+# platform we support and attaches them to a GitHub release.
+#
+# macOS is deliberately absent: shipping a Mac build that is not notarised gives users a
+# "damaged app" dialog they cannot get past, and notarisation needs an Apple developer
+# account. Better to ship nothing there than something broken.
+on:
+  push:
+    tags:
+      - "v*"
+  # Lets a build be rehearsed against main before a tag is cut.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 22.04 rather than latest: an AppImage built against a newer glibc refuses to
+          # start on older distributions, and the point of the AppImage is that it runs
+          # anywhere without installing anything.
+          - platform: ubuntu-22.04
+            label: Linux (deb + AppImage)
+            args: ""
+          - platform: windows-latest
+            label: Windows (installer)
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev \
+            libayatana-appindicator3-dev librsvg2-dev libssl-dev
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # The Rust side pulls ONNX Runtime through fastembed, so a cold build is long.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: Breadcrumb ${{ github.ref_name }}
+          releaseBody: |
+            Download the file for your system, install it, and open it.
+
+            - **Windows** — the `.exe` installer.
+            - **Linux** — `.AppImage` runs without installing (`chmod +x` then double-click);
+              the `.deb` is for Debian and Ubuntu.
+
+            On first run the app asks for an AI service — any OpenAI-compatible endpoint
+            works. Nothing you write leaves your computer except the messages you send to
+            that service, and the settings page shows what every feature costs before you
+            turn it on.
+          releaseDraft: true
+          prerelease: true
+          args: ${{ matrix.args }}

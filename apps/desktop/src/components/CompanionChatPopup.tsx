@@ -49,7 +49,14 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
   return (
     <div className="absolute bottom-3 end-3 z-40 flex h-[26rem] w-96 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-stone-100 px-3 py-2">
-        <span className="truncate text-sm font-medium text-stone-700">{title}</span>
+        {/* The main view labels a companion thread as AI in its own banner; this popup is
+            where most of these conversations actually happen, and it was carrying the
+            crisis banner but not the disclosure. Somebody being asked to explain something
+            to a character should never have to work out whether the character is a person. */}
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="truncate text-sm font-medium text-stone-700">{title}</span>
+          <span className="shrink-0 text-stone-400 text-xs">{t("companion.aiLabel")}</span>
+        </span>
         <button
           type="button"
           onClick={onClose}
