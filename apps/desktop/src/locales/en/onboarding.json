@@ -1,0 +1,25 @@
+{
+  "next": "Next",
+  "back": "Back",
+  "skip": "Skip and look around first",
+  "start": "Start",
+  "what": {
+    "title": "What this is",
+    "body": "Breadcrumb is a learning companion. You talk to an AI about what you want to learn, and alongside that it builds a map of what you have covered — no note-taking, no checking in.",
+    "point1": "Concepts you talk about appear on the map by themselves, and fade where you have not been for a while.",
+    "point2": "It suggests what you could look at next, based on what you already know. You are free to ignore it.",
+    "point3": "Everything stays on this computer. No leaderboards, no streaks, no progress bars."
+  },
+  "connect": {
+    "title": "Connect an AI service",
+    "body": "The app has no AI of its own. You bring an account from an AI service — any OpenAI-compatible one works. Fill in the address, the key and the model name.",
+    "help": "No account yet? Services like DeepSeek, Qwen and OpenAI all give you a key after signing up; paste it above. The key stays on this computer.",
+    "notYetSaved": "Not saved yet. Chat will not work without it, but you can skip and come back to settings whenever you like."
+  },
+  "terms": {
+    "title": "Two things before you start",
+    "privacy": "What you write stays on your own computer. Nothing goes anywhere except the messages you send to the AI service above — no account, no cloud sync, no usage reporting.",
+    "cost": "You are spending on your own AI service account; this app neither charges you nor handles the money. Settings → Switches and spending tells you roughly what each feature costs per use, before you turn it on.",
+    "switches": "Every feature that costs money can be switched off on its own. There is also one switch for the internet: turn it off and everything that needs a connection stops, while the local parts carry on."
+  }
+}

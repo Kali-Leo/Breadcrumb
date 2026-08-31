@@ -11,6 +11,7 @@ import { ChatView } from "./components/ChatView";
 import { CompanionChatPopup } from "./components/CompanionChatPopup";
 import { CompanionSection } from "./components/CompanionSection";
 import { DiscoveryView } from "./components/discovery/DiscoveryView";
+import { FirstRunGuide } from "./components/FirstRunGuide";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -86,12 +87,11 @@ export default function App() {
     void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
 
-  // First run: no API configured yet -> open settings so the user can start in one step.
-  useEffect(() => {
-    if (settingsLoaded && apiConfig === null) {
-      setView("settings");
-    }
-  }, [settingsLoaded, apiConfig]);
+  // First run used to drop straight into the settings form: three empty fields, no way for
+  // a newcomer to know what the app was or why it wanted an API key. The guide answers that
+  // first, and carries the same settings form inside it.
+  const onboardingSeen = useSettingsStore((state) => state.onboardingSeen);
+  const showGuide = settingsLoaded && !onboardingSeen;
 
   // Helper conversations open in the floating popup, never the main view (spec 050 §8).
   useEffect(() => {
@@ -105,6 +105,21 @@ export default function App() {
       setView("chat");
     });
   }, []);
+
+  // Shown on its own, without the sidebar: nothing in the app works before this is answered,
+  // and a rail of destinations behind a welcome screen is just noise to read past.
+  if (showGuide) {
+    return (
+      <div className="h-screen text-stone-800">
+        <FirstRunGuide
+          onDone={() => {
+            void useSettingsStore.getState().markOnboardingSeen();
+            setView(apiConfig === null ? "settings" : "chat");
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col text-stone-800">

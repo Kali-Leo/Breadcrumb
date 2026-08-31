@@ -11,6 +11,7 @@ import zhChat from "../locales/zh-CN/chat.json";
 import zhCommon from "../locales/zh-CN/common.json";
 import zhDiscovery from "../locales/zh-CN/discovery.json";
 import zhLearning from "../locales/zh-CN/learning.json";
+import zhOnboarding from "../locales/zh-CN/onboarding.json";
 import zhPalace from "../locales/zh-CN/palace.json";
 import zhSettings from "../locales/zh-CN/settings.json";
 import { buildPseudoCatalogue, isPseudoLocale, PSEUDO_LOCALE_CODE } from "./pseudoLocale";
@@ -25,6 +26,7 @@ const SOURCE_CATALOGUE = {
   palace: zhPalace,
   learning: zhLearning,
   discovery: zhDiscovery,
+  onboarding: zhOnboarding,
 } as const;
 
 export type MessageCatalogue = typeof SOURCE_CATALOGUE;

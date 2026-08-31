@@ -64,16 +64,8 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
 
-      # The gtk3-rs family and its transitive proc-macro helpers are flagged unmaintained
-      # because Tauri 2's Linux backend is GTK3 + webkit2gtk. There is no patched version to
-      # move to; ignoring them by id keeps the check meaningful for everything else instead
-      # of leaving it permanently red.
+      # What is ignored, and why each one cannot be fixed, is in
+      # apps/desktop/src-tauri/.cargo/audit.toml — next to the code rather than buried in CI.
       - name: Cargo audit
         working-directory: apps/desktop/src-tauri
-        run: |
-          cargo audit \
-            --ignore RUSTSEC-2024-0411 --ignore RUSTSEC-2024-0412 --ignore RUSTSEC-2024-0413 \
-            --ignore RUSTSEC-2024-0414 --ignore RUSTSEC-2024-0415 --ignore RUSTSEC-2024-0416 \
-            --ignore RUSTSEC-2024-0417 --ignore RUSTSEC-2024-0418 --ignore RUSTSEC-2024-0419 \
-            --ignore RUSTSEC-2024-0420 --ignore RUSTSEC-2024-0429 \
-            --ignore RUSTSEC-2024-0370 --ignore RUSTSEC-2024-0436
+        run: cargo audit

@@ -95,6 +95,8 @@ export type RouteParams = RecommendRouteParams;
 
 const API_CONFIG_KEY = "apiConfig";
 const NETWORK_ENABLED_KEY = "networkEnabled";
+/** Set once the first-run guide has been finished or skipped, so it never reappears. */
+const ONBOARDING_SEEN_KEY = "onboardingSeen";
 const FEATURE_SWITCHES_KEY = "featureSwitches";
 const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 const LEARNING_MODE_KEY = "learningMode";
@@ -144,6 +146,8 @@ interface SettingsState {
   loaded: boolean;
   apiConfig: ApiConfig | null;
   networkEnabled: boolean;
+  /** False until the newcomer guide has been shown. */
+  onboardingSeen: boolean;
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
@@ -163,6 +167,7 @@ interface SettingsState {
   recommendationWeights: UserRecommendationWeights;
   loadFromDatabase(): Promise<void>;
   saveApiConfig(config: ApiConfig): Promise<void>;
+  markOnboardingSeen(): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
@@ -178,6 +183,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   loaded: false,
   apiConfig: null,
   networkEnabled: true,
+  onboardingSeen: true,
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
   learningMode: "casual",
@@ -192,6 +198,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const [
       apiConfig,
       networkEnabled,
+      onboardingSeen,
       featureSwitches,
       mainlandNetwork,
       learningMode,
@@ -203,6 +210,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     ] = await Promise.all([
       repos.settings.get<ApiConfig>(API_CONFIG_KEY),
       repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
+      repos.settings.get<boolean>(ONBOARDING_SEEN_KEY),
       repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
       repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
       repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
@@ -223,6 +231,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       loaded: true,
       apiConfig,
       networkEnabled: networkEnabled ?? true,
+      onboardingSeen: onboardingSeen ?? false,
       featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
       mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
       learningMode: learningMode ?? "casual",
@@ -239,6 +248,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const repos = await getRepos();
     await repos.settings.set(API_CONFIG_KEY, config, nowIso());
     set({ apiConfig: config });
+  },
+
+  async markOnboardingSeen() {
+    const repos = await getRepos();
+    await repos.settings.set(ONBOARDING_SEEN_KEY, true, nowIso());
+    set({ onboardingSeen: true });
   },
 
   async setNetworkEnabled(enabled) {
