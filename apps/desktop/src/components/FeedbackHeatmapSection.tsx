@@ -47,14 +47,17 @@ export function FeedbackHeatmapSection() {
 
   // The rightmost column is today — land there, not on last year's left edge. The library
   // scrolls inside its own container, so sweep every horizontally overflowing descendant.
+  // Re-runs when the cells arrive: on first mount the store is still loading and the
+  // calendar does not exist yet, so a mount-only effect would leave it parked on the left.
   useEffect(() => {
+    if (cells.length === 0) return;
     const container = scrollRef.current;
     if (container === null) return;
     const candidates = [container, ...Array.from(container.querySelectorAll("div"))];
     for (const element of candidates) {
       if (element.scrollWidth > element.clientWidth) element.scrollLeft = element.scrollWidth;
     }
-  }, []);
+  }, [cells]);
 
   return (
     <section className="rounded-xl bg-white p-3 shadow-sm">
