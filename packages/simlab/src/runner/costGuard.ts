@@ -1,12 +1,12 @@
 /**
  * Purpose: accumulates LLM spend across a run and reports when the CNY budget is exhausted,
  * so the CLI stops LAUNCHING new sessions (sessions already in flight always finish).
- * DeepSeek's builtin prices are USD; the CLI's --budgetCny flag is CNY, so a fixed
- * approximate rate converts between them — this is a rough dev-tooling cost ceiling, not a
- * financial feature, so a hand-set constant is appropriate (no live-rate dependency needed).
+ * Models sold in CNY are billed at their CNY rate directly; anything priced only in another
+ * currency goes through a fixed approximate rate — this is a rough dev-tooling cost ceiling,
+ * not a financial feature, so a hand-set constant is appropriate (no live-rate dependency).
  * Main exports: createCostGuard, CostGuard, USD_TO_CNY_RATE.
  */
-import { BUILTIN_MODEL_PRICES, calculateCostMicros, type TokenUsage } from "@breadcrumb/core-llm";
+import { calculateCostMicros, resolveModelPrice, type TokenUsage } from "@breadcrumb/core-llm";
 
 /** Approximate, hand-set 2026-08-01 — good enough for a soft budget ceiling. */
 export const USD_TO_CNY_RATE = 7.2;
@@ -23,7 +23,9 @@ export function createCostGuard(budgetCny: number): CostGuard {
   let totalMicrosCny = 0;
   return {
     recordCall(model, usage) {
-      const price = BUILTIN_MODEL_PRICES[model];
+      // The budget is CNY, so ask for the CNY price first — DeepSeek publishes one, which
+      // makes the guard exact instead of routed through the approximate rate below.
+      const price = resolveModelPrice(model, "CNY");
       if (price === undefined) return 0;
       const costMicros = calculateCostMicros(usage, price);
       const microsCny = price.currency === "CNY" ? costMicros : costMicros * USD_TO_CNY_RATE;

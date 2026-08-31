@@ -10,6 +10,7 @@ import {
   negotiateLanguage,
   UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
+import type { Currency } from "@breadcrumb/core-llm";
 import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
 import { create } from "zustand";
 import { changeLanguage } from "../i18n";
@@ -27,6 +28,11 @@ export interface ApiConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
+  /** Which currency this account is billed in, for models the provider sells in more than
+   * one (DeepSeek: CNY on its China platform, USD internationally). Absent for accounts
+   * saved before this existed and for single-currency models, where there is nothing to
+   * ask — the price table's own currency wins. */
+  priceCurrency?: Currency;
 }
 
 /** Every optional AI-consuming feature has its own switch (product principle 3). */

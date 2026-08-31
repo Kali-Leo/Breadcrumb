@@ -1,10 +1,11 @@
 /**
  * Purpose: unit tests for recordMeteredCall — the single llm_calls row writer every metered
- * call site now shares. Covers builtin-price calculation, the documented USD fallback
- * currency for unknown models, and the zero-token/non-empty-response under-count flag that
- * writes to ai_failures instead of silently recording a free call.
+ * call site now shares. Covers builtin-price calculation in whichever currency the account
+ * is billed in, the inert currency label on an unpriced model's zero-cost row, and the
+ * zero-token/non-empty-response under-count flag that writes to ai_failures instead of
+ * silently recording a free call.
  */
-import { ChatJsonError } from "@breadcrumb/core-llm";
+import { ChatJsonError, type Currency } from "@breadcrumb/core-llm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const recordCallMock = vi.fn();
@@ -17,15 +18,23 @@ vi.mock("./failureLog", () => ({
   recordAiFailure: recordAiFailureMock,
 }));
 
+/** Which currency the saved account says it is billed in — the settings picker's answer. */
+let accountCurrency: Currency | undefined;
+vi.mock("./llmConfig", () => ({
+  currentPriceCurrency: () => accountCurrency,
+}));
+
 const { recordFailedCallUsage, recordMeteredCall } = await import("./metering");
 
 afterEach(() => {
   recordCallMock.mockReset();
   recordAiFailureMock.mockReset();
+  accountCurrency = undefined;
 });
 
 describe("recordMeteredCall", () => {
-  it("prices a known builtin model at its documented USD rate", async () => {
+  it("prices a builtin model in the currency the account is billed in", async () => {
+    accountCurrency = "CNY";
     await recordMeteredCall({
       purpose: "chat",
       model: "deepseek-v4-flash",
@@ -34,13 +43,27 @@ describe("recordMeteredCall", () => {
     });
     expect(recordCallMock).toHaveBeenCalledTimes(1);
     const row = recordCallMock.mock.calls[0]?.[0];
-    expect(row.currency).toBe("USD");
-    expect(row.cost_micros).toBe(Math.round(0.14 * 1_000_000 + 0.28 * 1_000_000));
+    expect(row.currency).toBe("CNY");
+    expect(row.cost_micros).toBe(Math.round(3 * 1_000_000 + 9 * 1_000_000));
     expect(row.conversation_id).toBe("c1");
     expect(row.purpose).toBe("chat");
   });
 
-  it("falls back to USD (not CNY) and zero cost for a model missing from the price table", async () => {
+  it("prices the same model in USD for an account on the international platform", async () => {
+    accountCurrency = "USD";
+    await recordMeteredCall({
+      purpose: "chat",
+      model: "deepseek-v4-flash",
+      conversationId: null,
+      usage: { inputTokens: 1_000_000, outputTokens: 1_000_000 },
+    });
+    const row = recordCallMock.mock.calls[0]?.[0];
+    expect(row.currency).toBe("USD");
+    expect(row.cost_micros).toBe(Math.round(0.44 * 1_000_000 + 1.32 * 1_000_000));
+  });
+
+  it("costs zero for a model missing from the price table, rather than guessing a rate", async () => {
+    accountCurrency = "CNY";
     await recordMeteredCall({
       purpose: "chat",
       model: "some-unlisted-model",
@@ -48,7 +71,6 @@ describe("recordMeteredCall", () => {
       usage: { inputTokens: 500, outputTokens: 500 },
     });
     const row = recordCallMock.mock.calls[0]?.[0];
-    expect(row.currency).toBe("USD");
     expect(row.cost_micros).toBe(0);
   });
 

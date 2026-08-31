@@ -12,6 +12,10 @@
     "baseUrl": "服务地址 Base URL",
     "apiKey": "API Key",
     "model": "模型名",
+    "priceCurrency": "计费币种",
+    "priceCurrencyHint": "这个模型在不同平台按不同货币计费。选你的 API Key 所属的那个，账单页的金额才对得上。",
+    "currencyCNY": "¥ 人民币",
+    "currencyUSD": "$ 美元",
     "saved": "已保存 ✓",
     "unsaved": "有修改还没保存"
   },

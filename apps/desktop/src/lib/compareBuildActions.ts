@@ -7,10 +7,10 @@
  * ExperimentalBuildOutcome, VerifiedProposal.
  */
 import {
-  BUILTIN_MODEL_PRICES,
   calculateCostMicros,
   chatJson,
   formatCost,
+  resolveModelPrice,
   type TokenUsage,
 } from "@breadcrumb/core-llm";
 import {
@@ -28,7 +28,7 @@ import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
-import { llmConfigFrom } from "./llmConfig";
+import { currentPriceCurrency, llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -37,7 +37,7 @@ export type ExperimentalBuildOutcome =
   | { ok: false; reason: string; costLine: string | null };
 
 function costLineOf(model: string, usage: TokenUsage): string {
-  const price = BUILTIN_MODEL_PRICES[model];
+  const price = resolveModelPrice(model, currentPriceCurrency());
   const cost = price
     ? formatCost(calculateCostMicros(usage, price), price.currency)
     : i18next.t("palace:compare.buildCostUnknown");

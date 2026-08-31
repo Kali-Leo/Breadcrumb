@@ -12,6 +12,10 @@
     "baseUrl": "Base URL",
     "apiKey": "API key",
     "model": "Model name",
+    "priceCurrency": "Billing currency",
+    "priceCurrencyHint": "This model is billed in a different currency on each platform. Pick the one your API key belongs to, so the spending page matches your bill.",
+    "currencyCNY": "¥ CNY",
+    "currencyUSD": "$ USD",
     "saved": "Saved ✓",
     "unsaved": "Changes not saved yet"
   },
