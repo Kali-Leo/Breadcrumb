@@ -515,4 +515,30 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now' (2026-08-28 a
     });
     expect(result).toEqual([]);
   });
+
+  it("lets user weights flip the order (spec 060 §3): zeroed interest hands the lead to helps", () => {
+    const nodes = [node("lit", "Lit"), node("liked", "Liked"), node("helped", "Helped")];
+    const edges = [helps("lit", "helped", 1)];
+    const masteryByNode = new Map([["lit", 0.9]]);
+    const interestByNode = new Map([["liked", 1]]);
+    const base = { nodes, edges, masteryByNode, interestByNode, litThreshold: LIT };
+
+    const defaults = frontier({ ...base, previouslyLitNodeIds: new Set<string>() });
+    // interest and helps both weigh 1 by default; each candidate tops one component.
+    expect(defaults.map((candidate) => candidate.nodeId)).toContain("liked");
+
+    const helpsOnly = frontier({
+      ...base,
+      previouslyLitNodeIds: new Set<string>(),
+      weights: { helps: 1, interest: 0, difficulty: 0.5, goalGap: 2, browsing: 0.5 },
+    });
+    expect(helpsOnly[0]?.nodeId).toBe("helped");
+
+    const interestOnly = frontier({
+      ...base,
+      previouslyLitNodeIds: new Set<string>(),
+      weights: { helps: 0, interest: 1, difficulty: 0.5, goalGap: 2, browsing: 0.5 },
+    });
+    expect(interestOnly[0]?.nodeId).toBe("liked");
+  });
 });

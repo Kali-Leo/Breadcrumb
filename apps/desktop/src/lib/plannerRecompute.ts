@@ -18,11 +18,13 @@ import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
 import {
   aggregateInterest,
   DEFAULT_SPREAD_FACTOR,
+  estimatePseudoCount,
   spreadInterest,
 } from "@breadcrumb/plugin-interest";
 import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
   type FrontierCandidate,
+  type FrontierWeights,
   frontier,
   type GapAndPathResult,
   propagateInterestToPrerequisites,
@@ -63,9 +65,13 @@ export function computePlannerSnapshot(
    * the interest service / embedding model is unavailable — the frontier's browsing
    * component then carries no information. */
   browsingAffinityByNode: ReadonlyMap<string, number> | null = null,
+  /** User-tuned frontier weights (spec 060 §3); omit for the package defaults. */
+  frontierWeights?: FrontierWeights,
 ): PlannerSnapshot {
   const masteryByNode = computeMastery(sightings, claims, now);
-  const interestScoresByNode = aggregateInterest(signals, now);
+  // Adaptive shrinkage (spec 060 §4): K comes from this learner's own signal distribution,
+  // falling back to the cold-start constant while the data is still thin.
+  const interestScoresByNode = aggregateInterest(signals, now, estimatePseudoCount(signals));
   const curiosityByNode = new Map(
     [...interestScoresByNode].map(([nodeId, score]) => [nodeId, score.curiosity]),
   );
@@ -123,6 +129,7 @@ export function computePlannerSnapshot(
     evidenceWeightByNode,
     goalGapNodeIds,
     ...(browsingAffinityByNode !== null ? { browsingAffinityByNode } : {}),
+    ...(frontierWeights !== undefined ? { weights: frontierWeights } : {}),
   });
 
   return {

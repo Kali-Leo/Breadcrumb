@@ -31,6 +31,10 @@ export const FRONTIER_WEIGHTS = {
   browsing: 0.5,
 } as const;
 
+/** User-tunable copy of the weight table (spec 060 §3) — FRONTIER_WEIGHTS is the default;
+ * the palace's 推荐偏好 panel persists the learner's own values in this shape. */
+export type FrontierWeights = { -readonly [Component in keyof typeof FRONTIER_WEIGHTS]: number };
+
 /** Which position in the concept bucket the exploration slot occupies (0-based): the top two
  * stay purely score-ranked, the third is where a thin-evidence candidate may be promoted. */
 export const EXPLORATION_SLOT_INDEX = 2;
@@ -60,7 +64,10 @@ function normalizer(values: readonly number[]): (value: number) => number {
 }
 
 /** Weighted sum of the five normalized components, in candidate order. */
-export function normalizeAndScore(parts: readonly FrontierScoreParts[]): number[] {
+export function normalizeAndScore(
+  parts: readonly FrontierScoreParts[],
+  weights: FrontierWeights = FRONTIER_WEIGHTS,
+): number[] {
   if (parts.length === 0) return [];
   const helps = normalizer(parts.map((part) => part.helps));
   const interest = normalizer(parts.map((part) => part.interest));
@@ -69,11 +76,11 @@ export function normalizeAndScore(parts: readonly FrontierScoreParts[]): number[
   const browsing = normalizer(parts.map((part) => part.browsing));
   return parts.map(
     (part) =>
-      FRONTIER_WEIGHTS.helps * helps(part.helps) +
-      FRONTIER_WEIGHTS.interest * interest(part.interest) -
-      FRONTIER_WEIGHTS.difficulty * difficulty(part.difficulty) +
-      FRONTIER_WEIGHTS.goalGap * goalGap(part.goalGap) +
-      FRONTIER_WEIGHTS.browsing * browsing(part.browsing),
+      weights.helps * helps(part.helps) +
+      weights.interest * interest(part.interest) -
+      weights.difficulty * difficulty(part.difficulty) +
+      weights.goalGap * goalGap(part.goalGap) +
+      weights.browsing * browsing(part.browsing),
   );
 }
 

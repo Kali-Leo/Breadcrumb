@@ -12,10 +12,20 @@
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors } from "@breadcrumb/plugin-graph";
-import { bucketConceptsFirst, type FrontierScoreParts, normalizeAndScore } from "./frontierScore";
+import {
+  bucketConceptsFirst,
+  type FrontierScoreParts,
+  type FrontierWeights,
+  normalizeAndScore,
+} from "./frontierScore";
 import { longestRequiresChainBelow } from "./graphDepth";
 
-export { EXPLORATION_SLOT_INDEX, FRONTIER_WEIGHTS, GOAL_GAP_SCORE_BOOST } from "./frontierScore";
+export {
+  EXPLORATION_SLOT_INDEX,
+  FRONTIER_WEIGHTS,
+  type FrontierWeights,
+  GOAL_GAP_SCORE_BOOST,
+} from "./frontierScore";
 
 export interface FrontierReason {
   /** Labels of this node's requires-prerequisites — all of them satisfied, since that's the
@@ -86,6 +96,9 @@ export interface FrontierInput {
    * when the interest service is absent — the component then carries no information and
    * cannot move the order. */
   browsingAffinityByNode?: ReadonlyMap<string, number>;
+  /** User-tuned component weights (spec 060 §3, the palace's 推荐偏好 panel). Omit for the
+   * FRONTIER_WEIGHTS defaults — pre-060 behaviour exactly. */
+  weights?: FrontierWeights;
 }
 
 /** Groups helps edges by their target node, computed once per call for O(nodes + edges). */
@@ -120,6 +133,7 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     evidenceWeightByNode,
     goalGapNodeIds,
     browsingAffinityByNode,
+    weights,
   } = input;
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const isLit = (nodeId: string) => (masteryByNode.get(nodeId) ?? 0) >= litThreshold;
@@ -171,7 +185,7 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     });
   }
 
-  const scores = normalizeAndScore(parts);
+  const scores = normalizeAndScore(parts, weights);
   const scored = candidates.map((candidate, index) => ({
     ...candidate,
     score: scores[index] ?? 0,

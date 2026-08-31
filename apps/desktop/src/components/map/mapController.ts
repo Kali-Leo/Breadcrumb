@@ -8,7 +8,7 @@
  * Main exports: createMapController, MapController, MapHooks.
  */
 import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
-import { type Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { type Application, Container, Graphics } from "pixi.js";
 import { findIsland, frameForLevel, hitIsland, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";
 import { drawHoverHighlight, type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
@@ -28,10 +28,11 @@ export interface MapController {
     retentionByNode: ReadonlyMap<string, number>,
     newNodeIds: ReadonlySet<string>,
   ): void;
-  /** Marks where the recommendation engine's current invitation lives (spec 048 follow-up,
-   * Leo: the recommendation must surface as a bubble on every zoom level) — the containing
-   * island at the world level, the containing kingdom once dived into that island. */
-  setRecommendTarget(target: RecommendTarget | null): void;
+  /** Marks where the visible recommendation set lives (spec 048 follow-up + spec 060 §2,
+   * Leo: pins on every zoom level) — the containing islands at the world level, the
+   * containing kingdoms once dived into an island. One pin per place, however many
+   * candidates it holds. */
+  setRecommendTargets(targets: readonly RecommendTarget[]): void;
   devJump(depth: number): void;
   tick(deltaSeconds: number): void;
   destroy(): void;
@@ -61,7 +62,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   // The recommendation bubble rides above every band; re-appended on rebuild to stay on top.
   const recommendLayer = new Container();
   worldRoot.addChild(recommendLayer);
-  let recommendTarget: RecommendTarget | null = null;
+  let recommendTargets: readonly RecommendTarget[] = [];
 
   let world: WorldModel | null = null;
   let level: MapLevel = { kind: "world" };
@@ -83,50 +84,46 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     });
     worldRoot.addChild(controller.scene.root);
     worldRoot.addChild(recommendLayer);
-    drawRecommendMarker();
+    drawRecommendMarkers();
   }
 
-  /** One bubble at the label of whichever place holds the invitation on this level; the
-   * marker counter-scales in tick() so it keeps its on-screen size like the names do. */
-  function drawRecommendMarker(): void {
+  /** Google Material Icons "place" (Apache-2.0) — the classic upside-down teardrop with a
+   * hole (Leo 2026-08-31: 经典的地图选点标). Official asset used verbatim per the art
+   * discipline's "官方资产直用" rule; only fill/stroke colors are ours (the map's amber
+   * accent). 24×24 viewBox, tip at (12, ~21.5). */
+  const PIN_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+    '<path fill="#f59e0b" stroke="#92400e" stroke-width="1" d="M12 2C8.13 2 5 5.13 5 8.5c0 ' +
+    "5.25 7 13 7 13s7-7.75 7-13C19 5.13 15.87 2 12 2zm0 9.5c-1.66 0-3-1.34-3-3s1.34-3 3-3 " +
+    '3 1.34 3 3-1.34 3-3 3z"/></svg>';
+
+  /** One pin above the label of every place holding a visible recommendation on this level;
+   * markers counter-scale in tick() so they keep their on-screen size like the names do. */
+  function drawRecommendMarkers(): void {
     for (const child of recommendLayer.removeChildren()) child.destroy({ children: true });
     const scene = controller.scene;
-    if (scene === null || recommendTarget === null) return;
-    const targetNodeId =
-      level.kind === "world"
-        ? recommendTarget.islandId
-        : level.islandId === recommendTarget.islandId
-          ? recommendTarget.kingdomId
-          : null;
-    if (targetNodeId === null) return;
-    const label = scene.labels.find((candidate) => candidate.nodeId === targetNodeId);
-    if (label === undefined) return;
-    // A small speech bubble hovering above the place name, its tail pointing down at it
-    // (Leo: a bubble, not a bare ring). Final looks stay his; this is the legible placeholder.
-    const marker = new Container();
-    marker.position.set(label.text.x, label.text.y - 16);
-    const tag = new Text({
-      text: "下一步",
-      style: new TextStyle({ fontSize: 12, fill: 0xb45309 }),
-    });
-    tag.anchor.set(0.5, 0.5);
-    const paddingX = 8;
-    const paddingY = 5;
-    const bubbleWidth = tag.width + paddingX * 2;
-    const bubbleHeight = tag.height + paddingY * 2;
-    const bubble = new Graphics()
-      .roundRect(-bubbleWidth / 2, -bubbleHeight, bubbleWidth, bubbleHeight, 7)
-      .fill(0xfffbeb)
-      .stroke({ width: 1.4, color: 0xf59e0b })
-      .poly([-4, -1, 4, -1, 0, 7])
-      .fill(0xfffbeb)
-      .moveTo(-4, -0.5)
-      .lineTo(0, 6.5)
-      .lineTo(4, -0.5)
-      .stroke({ width: 1.4, color: 0xf59e0b });
-    tag.position.set(0, -bubbleHeight / 2);
-    marker.addChild(bubble, tag);
-    recommendLayer.addChild(marker);
+    if (scene === null || recommendTargets.length === 0) return;
+    const targetNodeIds = new Set<string>();
+    for (const target of recommendTargets) {
+      const nodeId =
+        level.kind === "world"
+          ? target.islandId
+          : level.islandId === target.islandId
+            ? target.kingdomId
+            : null;
+      if (nodeId !== null) targetNodeIds.add(nodeId);
+    }
+    for (const targetNodeId of targetNodeIds) {
+      const label = scene.labels.find((candidate) => candidate.nodeId === targetNodeId);
+      if (label === undefined) continue;
+      const marker = new Container();
+      marker.position.set(label.text.x, label.text.y - 10);
+      const pin = new Graphics().svg(PIN_SVG);
+      // Tip of the teardrop sits on the container origin, pointing at the place name.
+      pin.position.set(-12, -21.5);
+      marker.addChild(pin);
+      recommendLayer.addChild(marker);
+    }
   }
 
   const controller: MapController = {
@@ -142,9 +139,9 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       }
       applyLevel(true);
     },
-    setRecommendTarget(target) {
-      recommendTarget = target;
-      drawRecommendMarker();
+    setRecommendTargets(targets) {
+      recommendTargets = targets;
+      drawRecommendMarkers();
     },
     devJump(depth) {
       if (world === null) return;
@@ -233,7 +230,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       pendingAppear = null;
       if (snap) applyBandsInstant(scene);
       else beginAppearTransition(scene);
-      drawRecommendMarker();
+      drawRecommendMarkers();
     }
     if (snap) {
       worldRoot.scale.set(cameraTarget.scale);

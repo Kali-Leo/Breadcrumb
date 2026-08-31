@@ -142,6 +142,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         useSettingsStore.getState().routeParams,
         nowIso(),
         browsingAffinityByNode,
+        useSettingsStore.getState().recommendationWeights,
       );
 
       set({ nodes, edges, claims, goals, ...snapshot });

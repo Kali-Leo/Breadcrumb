@@ -15,6 +15,7 @@
  */
 
 import type { ContinentAssignment } from "@breadcrumb/plugin-map";
+import { visibleFrontier } from "@breadcrumb/plugin-planner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
@@ -139,26 +140,25 @@ export function MapView() {
   });
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
 
-  // The recommendation surfaces as a bubble on every level (Leo's design): the containing
-  // island at the world level, the containing kingdom once dived in; the kingdom tree then
-  // rings the node itself. Demo worlds never match real planner ids, so the bubble rests.
+  // The visible recommendation set surfaces as map pins on every level (Leo's design +
+  // spec 060 §2): the containing islands at the world level, the containing kingdoms once
+  // dived in; the kingdom tree then rings the node itself. Demo worlds never match real
+  // planner ids, so the pins rest.
   const frontierCandidates = usePlannerStore((state) => state.frontierCandidates);
   useEffect(() => {
     if (!ready) return;
-    const primary = frontierCandidates[0];
-    let target: { islandId: string; kingdomId: string | null } | null = null;
-    if (primary !== undefined) {
-      const island = displayWorld.islands.find((candidate) =>
-        candidate.memberNodeIds.includes(primary.nodeId),
+    const targets: { islandId: string; kingdomId: string | null }[] = [];
+    for (const candidate of visibleFrontier(frontierCandidates)) {
+      const island = displayWorld.islands.find((somewhere) =>
+        somewhere.memberNodeIds.includes(candidate.nodeId),
       );
-      if (island !== undefined) {
-        const kingdom = island.kingdoms.find((candidate) =>
-          candidate.memberNodeIds.includes(primary.nodeId),
-        );
-        target = { islandId: island.nodeId, kingdomId: kingdom?.nodeId ?? null };
-      }
+      if (island === undefined) continue;
+      const kingdom = island.kingdoms.find((somewhere) =>
+        somewhere.memberNodeIds.includes(candidate.nodeId),
+      );
+      targets.push({ islandId: island.nodeId, kingdomId: kingdom?.nodeId ?? null });
     }
-    controllerRef.current?.setRecommendTarget(target);
+    controllerRef.current?.setRecommendTargets(targets);
   }, [ready, frontierCandidates, displayWorld, controllerRef]);
 
   // Scene rebuilds on data changes; the renderer and camera model stay alive. New-node

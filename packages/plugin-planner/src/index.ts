@@ -14,3 +14,4 @@ export * from "./graphDepth";
 export * from "./milestone";
 export * from "./propagate";
 export * from "./recommendRoute";
+export * from "./visibleCount";

@@ -9,6 +9,7 @@ import { appEventBus } from "../../stores/chatStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { ContinueCard } from "./ContinueCard";
 import { GoalCard } from "./GoalCard";
+import { RecommendTuningCard } from "./RecommendTuningCard";
 
 export function PalaceRail() {
   const learningMode = useSettingsStore((state) => state.learningMode);
@@ -18,6 +19,7 @@ export function PalaceRail() {
         <GoalCard onOpenGoalView={() => appEventBus.emit("palace:openGoalView", {})} />
       )}
       <ContinueCard />
+      <RecommendTuningCard />
     </div>
   );
 }

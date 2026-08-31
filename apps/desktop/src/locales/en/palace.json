@@ -185,5 +185,15 @@
     "opener": "\"{{label}}\" could be next. Start wherever you like.",
     "practiceTitle": "[Practice] {{label}}",
     "practiceOpener": "This is about how to actually do it — {{sourceRef}}. Tell me how far you have got, or what you have to work with, and we start there."
+  },
+  "tuning": {
+    "title": "Recommendation preferences",
+    "intro": "When suggesting what to learn next, you can adjust what matters more.",
+    "interest": "Things I'm interested in",
+    "helps": "Where what I've learned helps",
+    "difficulty": "Prefer lighter steps",
+    "goalGap": "Toward my goal",
+    "browsing": "Consider videos I've watched",
+    "reset": "Reset to default"
   }
 }

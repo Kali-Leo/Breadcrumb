@@ -177,5 +177,15 @@
     "opener": "接下来可以看看「{{label}}」。想从哪里聊起都行。",
     "practiceTitle": "【实践】{{label}}",
     "practiceOpener": "这里探讨怎么完成这条实践——{{sourceRef}}。先说说你目前做到哪一步，或者手头有什么环境，从那里开始。"
+  },
+  "tuning": {
+    "title": "推荐偏好",
+    "intro": "推荐下一步学什么时，可以调整更看重哪些。",
+    "interest": "我感兴趣的",
+    "helps": "已学的能帮上忙的",
+    "difficulty": "先挑轻松的",
+    "goalGap": "朝我的目标去",
+    "browsing": "参考我看过的视频",
+    "reset": "恢复默认"
   }
 }

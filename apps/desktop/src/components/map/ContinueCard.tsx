@@ -5,14 +5,13 @@
  * suggest-only. An optional node-id filter scopes the card to the dived island's members.
  * Main exports: ContinueCard.
  */
+import { visibleFrontier } from "@breadcrumb/plugin-planner";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { startLearningForConcept } from "../../lib/focusLearning";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-
-const SHOWN_LIMIT = 3;
 
 interface ContinueCardProps {
   /** When set, only candidates inside this set are shown (island-level scoping). */
@@ -25,11 +24,13 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
   const candidates = usePlannerStore((state) => state.frontierCandidates);
   const [openingNodeId, setOpeningNodeId] = useState<string | null>(null);
 
-  const shown = (
+  // One recommendation set everywhere (spec 060 §1): the cliff-cut visible frontier is what
+  // the map pins mark; island scoping filters that same set rather than recomputing it.
+  const visible = visibleFrontier(candidates);
+  const shown =
     filterNodeIds === undefined
-      ? candidates
-      : candidates.filter((candidate) => filterNodeIds.has(candidate.nodeId))
-  ).slice(0, SHOWN_LIMIT);
+      ? visible
+      : visible.filter((candidate) => filterNodeIds.has(candidate.nodeId));
   if (shown.length === 0) return null;
 
   async function open(nodeId: string, label: string, litLabels: readonly string[]) {

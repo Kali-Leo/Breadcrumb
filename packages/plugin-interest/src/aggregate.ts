@@ -62,6 +62,9 @@ function emptyAccumulator(): WeightedAccumulator {
 export function aggregateInterest(
   signals: readonly InterestSignalRow[],
   nowIso: string,
+  /** Shrinkage pseudo-count override (spec 060 §4) — callers pass estimatePseudoCount()'s
+   * result; the default keeps the cold-start constant and the pre-060 behaviour. */
+  pseudoCount: number = K_PSEUDO,
 ): Map<string, NodeInterestScore> {
   const now = Date.parse(nowIso);
   const shortByNode = new Map<string, WeightedAccumulator>();
@@ -87,7 +90,7 @@ export function aggregateInterest(
   for (const [nodeId, longAcc] of longByNode) {
     const shortAcc = shortByNode.get(nodeId) ?? emptyAccumulator();
     const shrunk = (acc: WeightedAccumulator, dimension: keyof WeightedAccumulator) =>
-      acc[dimension] / (acc.weightTotal + K_PSEUDO);
+      acc[dimension] / (acc.weightTotal + pseudoCount);
     scores.set(nodeId, {
       nodeId,
       curiosity: Math.max(shrunk(shortAcc, "curiosity"), shrunk(longAcc, "curiosity")),

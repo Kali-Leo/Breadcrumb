@@ -6,5 +6,6 @@
  */
 export * from "./aggregate";
 export * from "./extraction";
+export * from "./pseudoCount";
 export * from "./selfReport";
 export * from "./spread";
