@@ -8,10 +8,11 @@
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import type { DoorCandidate } from "@breadcrumb/plugin-explore";
 import { focusSelectHintMessage } from "@breadcrumb/plugin-explore";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../i18n/useCopyMessage";
 import { computeFocusDoorPatches } from "../lib/focusDoors";
+import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { useFocusStore } from "../stores/focusStore";
 import { FocusAskBar } from "./FocusAskBar";
 import { FocusGuessCard } from "./FocusGuessCard";
@@ -46,14 +47,22 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
   hintRef.current = hint;
   const [doors, setDoors] = useState<DoorCandidate[]>([]);
 
+  // The canonical display source, same as MessageBubble: \[..\]/\(..\) become the dollar
+  // delimiters remark-math parses, so formulas render instead of showing as raw LaTeX.
+  // Door patches are computed on THIS string — their offsets must match what is on screen.
+  const displaySource = useMemo(
+    () => (currentNode === null ? "" : normalizeMathDelimiters(currentNode.answer_text)),
+    [currentNode],
+  );
+
   useEffect(() => {
     let cancelled = false;
-    if (currentNode === null || currentNode.answer_text.length === 0 || conversationId === null) {
+    if (currentNode === null || displaySource.length === 0 || conversationId === null) {
       setDoors([]);
       return;
     }
     void computeFocusDoorPatches(
-      currentNode.answer_text,
+      displaySource,
       openedDoorNodeIds,
       currentNode.id,
       conversationId,
@@ -63,7 +72,7 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
     return () => {
       cancelled = true;
     };
-  }, [currentNode, openedDoorNodeIds, conversationId]);
+  }, [currentNode, displaySource, openedDoorNodeIds, conversationId]);
 
   useEffect(() => {
     function onMouseUp() {
@@ -115,14 +124,16 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
         {pendingGuess !== null && (
           <FocusGuessCard word={pendingGuess.word} onSubmit={submitGuess} onSkip={skipGuess} />
         )}
-        {currentNode !== null && currentNode.answer_text.length > 0 && (
+        {currentNode !== null && displaySource.length > 0 && (
           <MarkdownContent
-            source={currentNode.answer_text}
+            source={displaySource}
             doors={{ patches: doors, onSelect: (word) => void selectWord(word) }}
           />
         )}
         {streamingText !== null && (
-          <MarkdownContent source={streamingText.length > 0 ? streamingText : "…"} />
+          <MarkdownContent
+            source={streamingText.length > 0 ? normalizeMathDelimiters(streamingText) : "…"}
+          />
         )}
         {errorText !== null && (
           <div className="mx-auto mt-3 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">

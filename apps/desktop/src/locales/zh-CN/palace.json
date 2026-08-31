@@ -87,7 +87,6 @@
     "expandBranch": "展开这一支",
     "collapseBranch": "折叠这一支",
     "otherEntries": "其他入口",
-    "nextStep": "去下一步",
     "showAllRelations": "显示全部关系",
     "backToIsland": "回到岛屿",
     "areaDone": "这片区域已完成。",
@@ -96,7 +95,7 @@
     "expandNode": "展开「{{label}}」",
     "viewNode": "查看「{{label}}」",
     "aggregateLabel": "{{label}} · {{count}} 个概念",
-    "nextStepBadge": "下一步"
+    "relationHint": "实线：需要先会；虚线：对它有帮助"
   },
   "goal": {
     "title": "学习目标",

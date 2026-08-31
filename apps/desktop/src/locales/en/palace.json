@@ -91,7 +91,6 @@
     "expandBranch": "Expand this branch",
     "collapseBranch": "Collapse this branch",
     "otherEntries": "Other ways in",
-    "nextStep": "Go to the next step",
     "showAllRelations": "Show all relations",
     "backToIsland": "Back to the island",
     "areaDone": "This area is done.",
@@ -101,7 +100,7 @@
     "viewNode": "Open \"{{label}}\"",
     "aggregateLabel_one": "{{label}} · {{count}} concept",
     "aggregateLabel_other": "{{label}} · {{count}} concepts",
-    "nextStepBadge": "Next step"
+    "relationHint": "Solid line: needed first; dashed: helpful"
   },
   "goal": {
     "title": "Learning goal",

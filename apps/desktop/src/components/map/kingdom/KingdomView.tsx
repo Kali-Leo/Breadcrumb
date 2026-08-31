@@ -10,6 +10,7 @@
 import { formatDayMonth } from "@breadcrumb/core-i18n";
 import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+import { visibleFrontier } from "@breadcrumb/plugin-planner";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../../../lib/db";
@@ -17,15 +18,21 @@ import { startLearningForConcept } from "../../../lib/focusLearning";
 import {
   computeVisibleTree,
   deriveKingdomNodes,
+  type KingdomViewNode,
   pickRecommendation,
   visibleLateralEdges,
 } from "../../../lib/kingdomView";
+import {
+  loadRegionFeedbackSources,
+  type RegionFeedbackSources,
+} from "../../../lib/regionFeedbackData";
 import { startTeachSession } from "../../../lib/teachActions";
 import { nowIso } from "../../../lib/time";
 import { appEventBus, useChatStore } from "../../../stores/chatStore";
 import { usePlannerStore } from "../../../stores/plannerStore";
 import { useSettingsStore } from "../../../stores/settingsStore";
 import { BackArrow } from "../../DirectionalArrow";
+import { RegionMirror } from "../RegionMirror";
 import { KingdomNodeCard, type NodeRelations } from "./KingdomNodeCard";
 import { KingdomTreeSvg } from "./KingdomTreeSvg";
 
@@ -70,6 +77,17 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
   const [lastSeenByNode, setLastSeenByNode] = useState(
     new Map<string, { conversationId: string; createdAt: string }>(),
   );
+  const [feedbackSources, setFeedbackSources] = useState<RegionFeedbackSources | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadRegionFeedbackSources().then((data) => {
+      if (!cancelled) setFeedbackSources(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const collapseKey = `kingdomView:${kingdom.nodeId}`;
 
@@ -163,8 +181,54 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     [edges, visibleNodes, primaryId, selectedId, hoverId, showAllEdges],
   );
 
+  // Pins mark the SAME recommendation set the world map pins mark (spec 060 §1's one set),
+  // plus this region's own primary so the card and the tree never disagree.
+  const pinnedIds = useMemo(() => {
+    const pinned = new Set(
+      visibleFrontier(frontierCandidates)
+        .filter((candidate) => memberSet.has(candidate.nodeId))
+        .map((candidate) => candidate.nodeId),
+    );
+    if (primaryId !== null) pinned.add(primaryId);
+    return pinned;
+  }, [frontierCandidates, memberSet, primaryId]);
+
+  // The relations toggle only exists where it can change anything: this kingdom actually
+  // carries requires/helps edges (Leo 2026-08-31 #4 — a control that does nothing teaches
+  // the user to distrust controls).
+  const hasLateralEdges = useMemo(
+    () =>
+      edges.some(
+        (edge) =>
+          (edge.edge_type === "requires" || edge.edge_type === "helps") &&
+          memberSet.has(edge.source_id) &&
+          memberSet.has(edge.target_id),
+      ),
+    [edges, memberSet],
+  );
+
   const cardNodeId = selectedId ?? primaryId;
   const cardNode = cardNodeId === null ? null : (nodeById.get(cardNodeId) ?? null);
+
+  // The mirror reads the selected concept AND everything under it — a branch is one topic.
+  const cardSubtreeIds = useMemo(() => {
+    if (cardNode === null) return new Set<string>();
+    const childrenByParent = new Map<string | null, KingdomViewNode[]>();
+    for (const node of viewNodes) {
+      const list = childrenByParent.get(node.parentId) ?? [];
+      list.push(node);
+      childrenByParent.set(node.parentId, list);
+    }
+    const collected = new Set<string>();
+    const queue = [cardNode.id];
+    while (queue.length > 0) {
+      const id = queue.pop();
+      if (id === undefined || collected.has(id)) continue;
+      collected.add(id);
+      for (const child of childrenByParent.get(id) ?? []) queue.push(child.id);
+    }
+    return collected;
+  }, [cardNode, viewNodes]);
 
   const relations: NodeRelations = useMemo(() => {
     if (cardNode === null) return { parent: null, children: [], prerequisites: [], helpers: [] };
@@ -189,19 +253,19 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     };
   }, [cardNode, nodeById, viewNodes, edges]);
 
-  async function mainAction() {
-    if (cardNode === null) return;
+  async function mainActionFor(actionNode: KingdomViewNode) {
+    if (opening) return;
     setOpening(true);
     try {
-      if (cardNode.state === "done") {
+      if (actionNode.state === "done") {
         // 用户主动讲=讲给一位求教的同学听（Leo 铁律，spec 050 §9 的临时求教者形态）；
         // 对话在弹窗里进行，主界面不被占据。伙伴开关关闭时退回主界面对话形态。
-        const conversationId = await startTeachSession(cardNode.label);
+        const conversationId = await startTeachSession(actionNode.label);
         await useChatStore.getState().loadFromDatabase();
         if (useSettingsStore.getState().featureSwitches.companionChat) {
           appEventBus.emit("companion:openPopup", {
             conversationId,
-            title: COMPANION_COPY.helperName(cardNode.label),
+            title: COMPANION_COPY.helperName(actionNode.label),
           });
         } else {
           appEventBus.emit("app:navigateChat", { conversationId });
@@ -210,8 +274,8 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
       }
       // 开始学习/继续都直进专注模式，AI 立刻开讲（spec 050 §2）；退出后落回宫殿。
       const result = await startLearningForConcept(
-        cardNode.label,
-        recommendation.primary?.nodeId === cardNode.id
+        actionNode.label,
+        recommendation.primary?.nodeId === actionNode.id
           ? recommendation.primary.reason.litPrerequisiteLabels
           : [],
         useSettingsStore.getState().featureSwitches.focusExplain,
@@ -241,50 +305,54 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     void persistCollapse(collapsed, expanded);
   }
 
-  function scrollToPrimary() {
-    if (primaryId === null) return;
-    document
-      .querySelector(`[data-station-id="${primaryId}"]`)
-      ?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+  // Double-click on a station goes straight into it (Leo 2026-08-31 #3) — same action as
+  // the card's main button, so the two entrances never diverge.
+  async function enterNode(nodeId: string) {
+    const node = nodeById.get(nodeId);
+    if (node === undefined) return;
+    setSelectedId(nodeId);
+    await mainActionFor(node);
   }
 
   return (
     <div className="flex h-full w-full overflow-hidden">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-2 border-b border-stone-200 px-4 py-2">
-          <h2 className="text-sm font-semibold text-stone-700">{kingdom.label}</h2>
-          {primaryId !== null && (
-            <button
-              type="button"
-              onClick={scrollToPrimary}
-              className="rounded border border-amber-400 px-2 py-0.5 text-xs text-amber-700 hover:bg-amber-50"
-            >
-              {t("kingdom.nextStep")}
-            </button>
-          )}
-          <label className="flex items-center gap-1 text-xs text-stone-500">
-            <input
-              type="checkbox"
-              checked={showAllEdges}
-              onChange={(event) => setShowAllEdges(event.target.checked)}
-            />
-            {t("kingdom.showAllRelations")}
-          </label>
+          {/* Back sits on the left, icon only — the arrow is the whole vocabulary
+              (Leo 2026-08-31 #5); the label survives as the accessible name. */}
           <button
             type="button"
             onClick={onClose}
-            className="ms-auto rounded-lg px-3 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
+            aria-label={t("kingdom.backToIsland")}
+            title={t("kingdom.backToIsland")}
+            className="rounded-lg px-2 py-1.5 text-stone-500 hover:bg-stone-100"
           >
-            <BackArrow /> {t("kingdom.backToIsland")}
+            <BackArrow />
           </button>
+          <h2 className="text-sm font-semibold text-stone-700">{kingdom.label}</h2>
+          {hasLateralEdges && (
+            <label
+              className="ms-auto flex items-center gap-1 text-xs text-stone-500"
+              title={t("kingdom.relationHint")}
+            >
+              <input
+                type="checkbox"
+                checked={showAllEdges}
+                onChange={(event) => setShowAllEdges(event.target.checked)}
+              />
+              {t("kingdom.showAllRelations")}
+            </label>
+          )}
         </div>
         <div className="min-h-0 flex-1 bg-stone-50">
           <KingdomTreeSvg
             visibleNodes={visibleNodes}
             lateralEdges={lateralEdges}
             primaryId={primaryId}
+            pinnedIds={pinnedIds}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            onEnter={(nodeId) => void enterNode(nodeId)}
             onHover={setHoverId}
             onExpandAggregate={toggleCollapse}
           />
@@ -317,8 +385,18 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
               visibleNodes.find((node) => node.id === cardNode.id)?.collapsedCount !== null
             }
             onJump={setSelectedId}
-            onMainAction={() => void mainAction()}
+            onMainAction={() => void mainActionFor(cardNode)}
             onToggleCollapse={() => toggleCollapse(cardNode.id)}
+          />
+        )}
+        {/* Same mirror as the island level (Leo 2026-08-31 #6): the selected concept and
+            everything under it, heatmap + trend curves. */}
+        {cardNode !== null && (
+          <RegionMirror
+            title={cardNode.label}
+            memberCount={cardSubtreeIds.size}
+            nodeIds={cardSubtreeIds}
+            sources={feedbackSources}
           />
         )}
       </aside>
