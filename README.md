@@ -11,7 +11,18 @@ of what you have covered. No note-taking, no checking in, and nothing anywhere t
 
 ---
 
-## 下载 / Download
+## 打开就能用 / Try it in the browser
+
+**[→ kali-leo.github.io/Breadcrumb](https://kali-leo.github.io/Breadcrumb/)** — 什么都不用装。
+
+数据存在浏览器自己的存储里，一样不离开你的设备。功能比桌面版少一点
+（本地嵌入模型、发音、发现页），[少了什么写在这里](apps/web/README.md)。
+另外你的 AI 服务需要允许跨域请求 —— 有的服务商可以，有的不行。
+
+Nothing to install; data still stays on your device. A few features are unavailable in a
+browser — [apps/web/README.md](apps/web/README.md) says which, and why.
+
+## 下载桌面版 / Download the desktop app
 
 **[→ 最新版本 / Latest release](https://github.com/Kali-Leo/Breadcrumb/releases/latest)**
 

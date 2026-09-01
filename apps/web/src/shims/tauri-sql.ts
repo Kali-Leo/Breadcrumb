@@ -15,12 +15,12 @@ import { openBrowserDatabase } from "./sqlite";
 class BrowserDatabaseHandle {
   async select<Row>(sql: string, params: unknown[] = []): Promise<Row> {
     const database = await openBrowserDatabase();
-    return database.select(sql, params) as Row;
+    return (await database.select(sql, params)) as Row;
   }
 
   async execute(sql: string, params: unknown[] = []): Promise<{ rowsAffected: number }> {
     const database = await openBrowserDatabase();
-    database.execute(sql, params);
+    await database.execute(sql, params);
     // Nothing in the app reads this figure; it exists so the shape matches the plugin's.
     return { rowsAffected: 0 };
   }

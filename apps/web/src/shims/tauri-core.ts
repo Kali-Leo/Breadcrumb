@@ -37,7 +37,7 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
     case "execute_sql_transaction": {
       const database = await openBrowserDatabase();
       const { statements } = args as unknown as TransactionArgs;
-      database.transaction(statements);
+      await database.transaction(statements);
       return undefined as T;
     }
 
