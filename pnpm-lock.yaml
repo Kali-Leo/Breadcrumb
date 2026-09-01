@@ -196,6 +196,151 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
 
+  apps/web:
+    dependencies:
+      '@breadcrumb/core-bus':
+        specifier: workspace:*
+        version: link:../../packages/core-bus
+      '@breadcrumb/core-db':
+        specifier: workspace:*
+        version: link:../../packages/core-db
+      '@breadcrumb/core-i18n':
+        specifier: workspace:*
+        version: link:../../packages/core-i18n
+      '@breadcrumb/core-llm':
+        specifier: workspace:*
+        version: link:../../packages/core-llm
+      '@breadcrumb/core-teaching':
+        specifier: workspace:*
+        version: link:../../packages/core-teaching
+      '@breadcrumb/plugin-browsing-interest':
+        specifier: workspace:*
+        version: link:../../packages/plugin-browsing-interest
+      '@breadcrumb/plugin-companion':
+        specifier: workspace:*
+        version: link:../../packages/plugin-companion
+      '@breadcrumb/plugin-compare':
+        specifier: workspace:*
+        version: link:../../packages/plugin-compare
+      '@breadcrumb/plugin-diglot-weave':
+        specifier: workspace:*
+        version: link:../../packages/plugin-diglot-weave
+      '@breadcrumb/plugin-explore':
+        specifier: workspace:*
+        version: link:../../packages/plugin-explore
+      '@breadcrumb/plugin-factcheck':
+        specifier: workspace:*
+        version: link:../../packages/plugin-factcheck
+      '@breadcrumb/plugin-feedback':
+        specifier: workspace:*
+        version: link:../../packages/plugin-feedback
+      '@breadcrumb/plugin-graph':
+        specifier: workspace:*
+        version: link:../../packages/plugin-graph
+      '@breadcrumb/plugin-interest':
+        specifier: workspace:*
+        version: link:../../packages/plugin-interest
+      '@breadcrumb/plugin-knowledge-tree':
+        specifier: workspace:*
+        version: link:../../packages/plugin-knowledge-tree
+      '@breadcrumb/plugin-map':
+        specifier: workspace:*
+        version: link:../../packages/plugin-map
+      '@breadcrumb/plugin-memory':
+        specifier: workspace:*
+        version: link:../../packages/plugin-memory
+      '@breadcrumb/plugin-planner':
+        specifier: workspace:*
+        version: link:../../packages/plugin-planner
+      '@breadcrumb/plugin-research':
+        specifier: workspace:*
+        version: link:../../packages/plugin-research
+      '@breadcrumb/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@sqlite.org/sqlite-wasm':
+        specifier: ^3.53.0-build1
+        version: 3.53.0-build1
+      d3-hierarchy:
+        specifier: ^3.1.2
+        version: 3.1.2
+      i18next:
+        specifier: ^26.4.0
+        version: 26.4.0(typescript@5.8.3)
+      katex:
+        specifier: ^0.18.4
+        version: 0.18.4
+      lucide-react:
+        specifier: ^1.31.0
+        version: 1.31.0(react@19.2.8)
+      mermaid:
+        specifier: ^11.16.1
+        version: 11.16.1
+      pixi.js:
+        specifier: ^8.19.0
+        version: 8.19.0
+      react:
+        specifier: ^19.1.0
+        version: 19.2.8
+      react-activity-calendar:
+        specifier: ^3.2.1
+        version: 3.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.2.8(react@19.2.8)
+      react-i18next:
+        specifier: ^17.0.12
+        version: 17.0.12(i18next@26.4.0(typescript@5.8.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.8.3)
+      recharts:
+        specifier: ^3.10.1
+        version: 3.10.1(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
+      remark-math:
+        specifier: ^6.0.0
+        version: 6.0.0
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      ts-fsrs:
+        specifier: ^5.2.1
+        version: 5.4.1
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+      zustand:
+        specifier: ^5.0.14
+        version: 5.0.14(@types/react@19.2.17)(immer@11.1.16)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
+    devDependencies:
+      '@tailwindcss/vite':
+        specifier: ^4.3.3
+        version: 4.3.3(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0))
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19.1.0
+        version: 19.2.5(@types/react@19.2.17)
+      '@vitejs/plugin-react':
+        specifier: ^4.6.0
+        version: 4.7.0(vite@7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0))
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vite:
+        specifier: ^7.0.4
+        version: 7.3.6(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+
   packages/core-bus:
     dependencies:
       '@breadcrumb/sdk':
@@ -1304,6 +1449,10 @@ packages:
     resolution: {integrity: sha512-MOG/3gTOn4Fwf574RVOaY61I5o6P90legkFADiTyn1hyjNydT+cerU2rLUwPdZkKKyJ+iT+K9p7WXK4LM1Ka6g==}
     cpu: [x64]
     os: [win32]
+
+  '@sqlite.org/sqlite-wasm@3.53.0-build1':
+    resolution: {integrity: sha512-PfWPWN2n+/37doa8oh2/oUXk4OOsRYZsxc1W1sDXIGb/Pu5Yrb+f2eyYpgQMGITVX7HVgxhs9P18Rc6I97ym/g==}
+    engines: {node: '>=22'}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -3922,6 +4071,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.62.3':
     optional: true
+
+  '@sqlite.org/sqlite-wasm@3.53.0-build1': {}
 
   '@standard-schema/spec@1.1.0': {}
 

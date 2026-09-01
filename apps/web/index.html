@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Breadcrumb</title>
+    <meta
+      name="description"
+      content="本地优先的 AI 学习伴侣。你的数据留在这台设备上。A local-first AI learning companion; your data stays on this device."
+    />
+    <!--
+      The same policy the desktop build enforces through tauri.conf.json, restated here
+      because a static host will not set it for us. connect-src has to be open: the whole
+      point of this build is that the learner brings their own AI endpoint, and we cannot
+      know its hostname in advance.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https: blob: data:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

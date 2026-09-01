@@ -1,0 +1,64 @@
+name: Browser edition
+
+# Publishes apps/web to GitHub Pages, so the app can be used by opening a URL with nothing
+# to install. The desktop build is unaffected; this is a second way to run the same code.
+on:
+  push:
+    branches: [main]
+    paths:
+      # The browser edition builds apps/desktop's source, so a change there changes it too.
+      - "apps/web/**"
+      - "apps/desktop/src/**"
+      - "packages/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a queued run replaces an older one rather than racing it.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The one thing that could break silently: the whole schema runs on a different SQLite
+      # build here. Failing the deploy is better than shipping a page that loses data.
+      - name: Verify the schema on SQLite-wasm
+        run: pnpm --filter @breadcrumb/web test
+
+      - name: Build
+        run: pnpm --filter @breadcrumb/web build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

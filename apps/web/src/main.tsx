@@ -1,0 +1,43 @@
+/**
+ * Purpose: entry point of the browser edition. It mounts the desktop application's own root
+ * component — the two builds share every line of feature code; only the four aliased modules
+ * differ (see vite.config.ts).
+ *
+ * The one thing this entry adds is a warning when the browser cannot give us durable storage,
+ * because that is the single way this edition can quietly disappoint someone: everything works
+ * perfectly, and then the tab closes and the work is gone.
+ * Main exports: none (side effects only).
+ */
+
+import App from "@desktop/App";
+import { initI18n } from "@desktop/i18n";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { isPersistent, openBrowserDatabase } from "./shims/sqlite";
+import "@desktop/App.css";
+
+function warnIfNotPersistent(): void {
+  if (isPersistent()) return;
+  const banner = document.createElement("div");
+  banner.style.cssText =
+    "position:fixed;top:0;left:0;right:0;z-index:99999;background:#fef3c7;color:#78350f;" +
+    "padding:8px 14px;font-size:13px;text-align:center;font-family:system-ui,sans-serif";
+  banner.textContent =
+    "这个浏览器不允许本页保存数据，关掉标签页后这次的内容不会留下。换一个浏览器窗口" +
+    "（非无痕模式）就可以正常保存。 · This browser will not let the page store data, so " +
+    "nothing from this session will be kept. A normal (non-private) window will save it.";
+  document.body.appendChild(banner);
+}
+
+void (async () => {
+  // Opening the database first means the persistence question is answered before the first
+  // paint, rather than a banner appearing under someone who has already started typing.
+  await openBrowserDatabase();
+  await initI18n();
+  warnIfNotPersistent();
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+})();
