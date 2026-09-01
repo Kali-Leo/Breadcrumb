@@ -1,6 +1,15 @@
 /* Purpose: global styles — Tailwind entry plus a few base rules. */
 @import "tailwindcss";
 
+/* Where the class names live, stated rather than guessed. Tailwind v4 detects sources from
+   the build root, and the browser edition builds this same app from apps/web — from there it
+   found none of these components and emitted a stylesheet with base rules and no utilities at
+   all, which is exactly as broken as it sounds (unstyled page, shipped 2026-08-31, caught
+   2026-09-01). Naming the directory keeps both builds looking at the same files.
+   Scoped to source files: the assets folder holds a two-megabyte dictionary that has no class
+   names in it and no business being scanned. */
+@source "./**/*.{ts,tsx}";
+
 /* Memory-palace handwriting font (LXGW WenKai, SIL OFL 1.1). */
 @font-face {
   font-family: "LXGW WenKai";
