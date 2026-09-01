@@ -22,9 +22,10 @@ describe("language table", () => {
       expect(language.endonym.trim().length).toBeGreaterThan(0);
       expect(language.detectionCodes.length).toBeGreaterThan(0);
       expect(fontStackFor(language.script)).toContain("sans-serif");
-      // The endonym is the language's own name; a row written in Chinese for a non-Chinese
-      // language is the mistake this catches.
-      if (language.script !== "hanzi") {
+      // The endonym is the language's own name; a row written in Chinese for a language that
+      // does not use Han characters is the mistake this catches. Japanese writes its own name
+      // with them (日本語), so kana is exempt too.
+      if (language.script !== "hanzi" && language.script !== "kana") {
         expect(language.endonym).not.toMatch(/[一-鿿]/);
       }
     }
