@@ -7,6 +7,7 @@
 export * from "./candidates";
 export * from "./confusionMining";
 export * from "./contextNovelty";
+export * from "./densityControl";
 export * from "./guessGrading";
 export * from "./guessPolicy";
 export * from "./llmRefine";

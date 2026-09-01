@@ -1,0 +1,17 @@
+{
+  "name": "@breadcrumb/core-vectors",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless vector arithmetic: packed embeddings and the all-pairs similarity landscape the relative gates are built on.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

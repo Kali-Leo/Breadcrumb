@@ -1,0 +1,17 @@
+{
+  "name": "@breadcrumb/core-text",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless text segmentation: dictionary-based Chinese word splitting over a compact word list, plus the token set relevance scoring is built on.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

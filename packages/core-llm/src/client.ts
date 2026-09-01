@@ -5,6 +5,7 @@
  * Main exports: createLlmClient, LlmClientConfig, ChatMessage, ChatStreamResult,
  * ChatStreamOptions.
  */
+
 import { z } from "zod";
 import type { TokenUsage } from "./pricing";
 import {
@@ -13,6 +14,7 @@ import {
   llmAbortError,
   STREAM_FIRST_BYTE_TIMEOUT_MS,
 } from "./retry";
+import { readSseDataLines } from "./sseLines";
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -147,31 +149,4 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
       return { content, usage };
     },
   };
-}
-
-/** Yields the payload of every `data:` line across chunk boundaries of an SSE byte stream,
- * stopping at `[DONE]`. The stream is then drained to its natural end instead of being
- * cancelled: breaking out of `for await` cancels the underlying stream, and the Tauri http
- * plugin's cancel on an already-finished response rejects a detached promise with
- * "The resource id N is invalid" — an unhandled rejection we must never produce. */
-async function* readSseDataLines(body: ReadableStream<Uint8Array>): AsyncGenerator<string> {
-  const decoder = new TextDecoder();
-  let buffered = "";
-  let sawDone = false;
-  for await (const chunk of body as unknown as AsyncIterable<Uint8Array>) {
-    if (sawDone) continue;
-    buffered += decoder.decode(chunk, { stream: true });
-    const lines = buffered.split("\n");
-    buffered = lines.pop() ?? "";
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (payload === "[DONE]") {
-        sawDone = true;
-        break;
-      }
-      yield payload;
-    }
-  }
 }

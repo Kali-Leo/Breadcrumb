@@ -90,7 +90,8 @@
     "viewNode": "«{{label}}» খুলুন",
     "aggregateLabel_one": "{{label}} · {{count}}টি ধারণা",
     "aggregateLabel_other": "{{label}} · {{count}}টি ধারণা",
-    "relationHint": "টানা রেখা: আগে দরকার; ছেঁড়া রেখা: সাহায্য করে"
+    "relationHint": "টানা রেখা: আগে দরকার; ছেঁড়া রেখা: সাহায্য করে",
+    "goToOrigin": "যেখানে এটা শেখা হয়েছিল সেখানে ফিরুন"
   },
   "goal": {
     "title": "শেখার লক্ষ্য",

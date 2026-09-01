@@ -179,7 +179,11 @@ export function CompareSection() {
               key={profile.id}
               type="button"
               onClick={() => void selectProfile(profile.id)}
-              className={`rounded px-2 py-1 ${
+              // Built comparisons can carry a title as long as the sentence someone typed;
+              // the chip truncates instead of pushing the row off screen, and keeps the whole
+              // title in its tooltip.
+              title={profile.title}
+              className={`max-w-56 truncate rounded px-2 py-1 ${
                 profile.id === selectedProfileId
                   ? "bg-amber-100 text-stone-700"
                   : "bg-stone-100 text-stone-500"

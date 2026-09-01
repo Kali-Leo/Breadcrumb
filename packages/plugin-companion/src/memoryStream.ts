@@ -8,6 +8,7 @@
  * REFLECTION_THRESHOLD, shouldReflect, REFLECTION_PROMPT, ReflectionResultSchema,
  * buildReflectionUserMessage, buildObservationContent.
  */
+import { segmentChinese } from "@breadcrumb/core-text";
 import { z } from "zod";
 
 export interface CompanionMemoryLike {
@@ -30,10 +31,11 @@ function isCjk(char: string): boolean {
   return CJK_RANGES.some(([from, to]) => codePoint >= from && codePoint <= to);
 }
 
-/** Tokenizes text for relevance scoring: lowercase, split into alphanumeric runs (non-CJK
- * "words") plus CJK bigrams (consecutive pairs of CJK characters within one CJK run) — a
- * cheap zero-dependency stand-in for real Chinese segmentation. Exported so relevance
- * scoring is independently testable. */
+/** Tokenizes text for relevance scoring: lowercase, alphanumeric runs as words, and CJK runs
+ * split by the dictionary segmenter (@breadcrumb/core-text) rather than blindly into bigrams
+ * — "计算机科学" is two words, not four overlapping pairs, and the pairs used to dilute every
+ * score they took part in. Unknown runs still fall back to bigrams inside the segmenter.
+ * Exported so relevance scoring is independently testable. */
 export function tokenizeForRelevance(text: string): Set<string> {
   const lowered = text.toLowerCase();
   const tokens = new Set<string>();
@@ -45,10 +47,7 @@ export function tokenizeForRelevance(text: string): Set<string> {
     alnumRun = "";
   };
   const flushCjk = (): void => {
-    if (cjkRun.length === 1) tokens.add(cjkRun);
-    for (let index = 0; index < cjkRun.length - 1; index += 1) {
-      tokens.add(cjkRun.slice(index, index + 2));
-    }
+    for (const token of segmentChinese(cjkRun)) tokens.add(token);
     cjkRun = "";
   };
 

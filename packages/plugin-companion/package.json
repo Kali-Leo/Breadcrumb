@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-i18n": "workspace:*",
+    "@breadcrumb/core-text": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

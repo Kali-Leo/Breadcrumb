@@ -95,7 +95,8 @@
     "aggregateLabel_one": "{{label}} · {{count}} notion",
     "aggregateLabel_many": "{{label}} · {{count}} notions",
     "aggregateLabel_other": "{{label}} · {{count}} notions",
-    "relationHint": "Trait plein : à savoir avant ; pointillé : utile"
+    "relationHint": "Trait plein : à savoir avant ; pointillé : utile",
+    "goToOrigin": "Retour là où c'est appris"
   },
   "goal": {
     "title": "Objectif d'apprentissage",

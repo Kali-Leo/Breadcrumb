@@ -13,6 +13,7 @@ import {
   alignmentJudgeSchema,
   buildAlignmentJudgeMessages,
   chunkPairs,
+  dormantNodeIds,
   validateAlignmentVerdicts,
 } from "@breadcrumb/plugin-compare";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -72,7 +73,12 @@ export async function runAnchorSweep(): Promise<number | null> {
   const confidentNodeIds = new Set(
     refreshedAnchors.filter((row) => row.verdict === "same").map((row) => row.node_id),
   );
-  const openNodes = nodes.filter((node) => !confidentNodeIds.has(node.id));
+  // A node the judge has already called unlike six different concepts is the learner's own
+  // idea, not a curriculum item under another name; asking again with a fresh top-k would
+  // buy the same answer twice (see plugin-compare/anchorDormancy.ts). The free alias pass
+  // above still covers it, so a newly added concept with the same name is still found.
+  const dormant = dormantNodeIds(refreshedAnchors);
+  const openNodes = nodes.filter((node) => !confidentNodeIds.has(node.id) && !dormant.has(node.id));
   if (openNodes.length === 0) return 0;
 
   const conceptVectorById = await loadConceptVectors(concepts);

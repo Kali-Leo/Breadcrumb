@@ -90,7 +90,8 @@
     "viewNode": "Fungua «{{label}}»",
     "aggregateLabel_one": "{{label}} · dhana {{count}}",
     "aggregateLabel_other": "{{label}} · dhana {{count}}",
-    "relationHint": "Mstari mzima: kinahitajika kwanza; mstari wa vipande: husaidia"
+    "relationHint": "Mstari mzima: kinahitajika kwanza; mstari wa vipande: husaidia",
+    "goToOrigin": "Rudi pale ulipojifunza hili"
   },
   "goal": {
     "title": "Lengo la kujifunza",

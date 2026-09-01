@@ -18,6 +18,7 @@ import {
   INITIAL_PLACEMENT_STEP,
   type LoadedLanguagePack,
   mineConfusionPairs,
+  nextDensity,
   type ReplacementPatch,
   scoreVocabTest,
   type VocabTestItem,
@@ -79,6 +80,8 @@ export interface DiglotSettings {
  * stale output. */
 let weaveEpoch = 0;
 const SETTINGS_KEY = "diglotSettings";
+/** How much history the density loop looks at — a week smooths over one heavy evening. */
+const DENSITY_WINDOW_DAYS = 7;
 
 /** Settings keys whose value actually feeds weave PATCH computation — traced through
  * lib/diglotWeave.ts's weaveAssistantMessage, lib/diglotRefine.ts's refineWeavePatches and
@@ -116,7 +119,35 @@ function wireDailyWordCounterTrigger(): void {
   dailyWordCounterTriggerWired = true;
   onLocalDayChange(() => {
     void recomputeNewWordsIntroducedToday();
+    void adjustDensityForYesterday();
   });
+}
+
+/**
+ * One day's density adjustment (spec 033 + audit 2026-08-28 语言织入 #10): how often the
+ * learner opened a woven word's meaning over the last week decides whether tomorrow's replies
+ * carry a few more of them or a few less. Silent — density has never been on screen, and this
+ * does not put it there.
+ */
+async function adjustDensityForYesterday(): Promise<void> {
+  const { settings } = useDiglotStore.getState();
+  if (!settings.enabled) return;
+  const repos = await getRepos();
+  const since = new Date(Date.parse(nowIso()) - DENSITY_WINDOW_DAYS * 86_400_000).toISOString();
+  const events = await repos.diglot.listEventsSince(settings.pairId, since);
+  const observation = { wovenWords: 0, lookups: 0 };
+  for (const event of events) {
+    // One "exposure" per woven word shown; hover and a guess opened are the learner asking
+    // what it means. Audio is not a lookup — hearing a word is not failing to know it.
+    if (event.kind === "exposure") observation.wovenWords += 1;
+    if (event.kind === "hover" || event.kind === "guess_wrong" || event.kind === "guess_close") {
+      observation.lookups += 1;
+    }
+  }
+  const density = nextDensity(settings.density, observation);
+  if (density !== settings.density) {
+    await useDiglotStore.getState().saveSettings({ density });
+  }
 }
 
 /** Recomputes today's introduced-word count from the DB — called on local-day rollover so

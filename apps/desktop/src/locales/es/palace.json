@@ -95,7 +95,8 @@
     "aggregateLabel_one": "{{label}} · {{count}} concepto",
     "aggregateLabel_many": "{{label}} · {{count}} conceptos",
     "aggregateLabel_other": "{{label}} · {{count}} conceptos",
-    "relationHint": "Línea continua: hace falta antes; discontinua: ayuda"
+    "relationHint": "Línea continua: hace falta antes; discontinua: ayuda",
+    "goToOrigin": "Volver a donde se aprendió"
   },
   "goal": {
     "title": "Objetivo de aprendizaje",

@@ -110,7 +110,8 @@
     "aggregateLabel_few": "{{label}} · {{count}} مفاهيم",
     "aggregateLabel_many": "{{label}} · {{count}} مفهومًا",
     "aggregateLabel_other": "{{label}} · {{count}} مفهوم",
-    "relationHint": "الخط المتصل: يلزم قبله؛ والمتقطع: يساعد"
+    "relationHint": "الخط المتصل: يلزم قبله؛ والمتقطع: يساعد",
+    "goToOrigin": "العودة إلى حيث تعلّمته"
   },
   "goal": {
     "title": "هدف التعلّم",

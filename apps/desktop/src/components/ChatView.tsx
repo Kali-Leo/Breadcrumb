@@ -5,7 +5,7 @@
  * isn't on the active path (spec 040 §§2-3).
  * Main exports: ChatView.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../i18n/useCopyMessage";
 import { newestLeafId } from "../lib/messageTree";
@@ -19,7 +19,8 @@ import { FocusEntryCard } from "./FocusEntryCard";
 import { FocusSessionBadge } from "./FocusSessionBadge";
 import { FocusSessionsBar } from "./FocusSessionsBar";
 import { MessageBubble } from "./MessageBubble";
-import { BackToBottomPill, useScrollPinning } from "./scrollPinning";
+import { MessageList, type MessageListHandle } from "./MessageList";
+import { BackToBottomPill } from "./scrollPinning";
 
 /** How long a located message stays highlighted (Slack-style: highlight + center, spec 040 §3). */
 const LOCATE_HIGHLIGHT_MS = 2000;
@@ -42,20 +43,14 @@ export function ChatView() {
   const setStudyMode = useChatStore((state) => state.setStudyMode);
   const ensureFactchecksLoaded = useFactcheckStore((state) => state.ensureLoaded);
   const entrySessionByMessageId = useFocusSessionsStore((state) => state.entrySessionByMessageId);
-  const { containerRef, pinned, handleScroll, scrollToBottom } = useScrollPinning();
+  const listRef = useRef<MessageListHandle>(null);
+  const [pinned, setPinned] = useState(true);
   const [locatedMessageId, setLocatedMessageId] = useState<string | null>(null);
 
   // Fill-on-first-visit: a revisited conversation shows its cached marks instantly.
   useEffect(() => {
     void ensureFactchecksLoaded(activeConversationId);
   }, [activeConversationId, ensureFactchecksLoaded]);
-
-  // Stick to the bottom only while the user is already there — scrolling up to read must
-  // never be yanked back down by a streaming delta.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: messages/streamingText are the growth triggers, not read
-  useEffect(() => {
-    if (pinned) scrollToBottom();
-  }, [messages, streamingText, pinned, scrollToBottom]);
 
   // Station map click -> locate this round (spec 040 §3). A branch click resumes onto that
   // leaf first (making it part of the active path) before scrolling to it.
@@ -69,13 +64,14 @@ export function ChatView() {
     });
   }, []);
 
-  // Runs again once resumeFromMessage's re-render puts the target row in the DOM.
+  // Runs again once resumeFromMessage's re-render has the target on the active path. The
+  // list scrolls by index rather than by DOM query: with a windowed list the row may not be
+  // rendered yet, and querySelector would quietly find nothing.
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages is the re-render signal, not read directly
   useEffect(() => {
     if (locatedMessageId === null) return;
-    const element = document.querySelector(`[data-message-id="${locatedMessageId}"]`);
-    if (!element) return;
-    element.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!messages.some((message) => message.id === locatedMessageId)) return;
+    listRef.current?.scrollToMessage(locatedMessageId);
     const timer = window.setTimeout(() => setLocatedMessageId(null), LOCATE_HIGHLIGHT_MS);
     return () => window.clearTimeout(timer);
   }, [locatedMessageId, messages]);
@@ -92,75 +88,78 @@ export function ChatView() {
       <FocusSessionsBar />
       <ContinuationBanner />
       <div className="relative min-h-0 flex-1">
-        <div
-          ref={containerRef}
-          onScroll={handleScroll}
-          className="h-full space-y-3 overflow-y-auto p-4"
-        >
-          {messages.length === 0 && !isStreaming && (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">
-              <span className="text-4xl">🍞</span>
-              <p>{t("emptyLine")}</p>
-            </div>
-          )}
-          {messages.map((message) => {
-            const focusSessionId = entrySessionByMessageId.get(message.id);
-            return (
-              <div
-                key={message.id}
-                data-message-id={message.id}
-                className={`space-y-1 rounded-2xl transition ${
-                  message.id === locatedMessageId ? "ring-2 ring-amber-300" : ""
-                }`}
-              >
-                {focusSessionId !== undefined ? (
-                  <FocusEntryCard content={message.content} sessionId={focusSessionId} />
-                ) : (
-                  <>
-                    <MessageBubble
-                      conversationId={activeConversationId}
-                      author={message.role}
-                      content={message.content}
-                      messageId={message.id}
-                    />
-                    {message.role === "assistant" && (
-                      <>
-                        <FactcheckBadge
-                          conversationId={activeConversationId}
-                          messageId={message.id}
-                        />
-                        <FocusSessionBadge messageId={message.id} />
-                      </>
+        {messages.length === 0 && !isStreaming ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">
+            <span className="text-4xl">🍞</span>
+            <p>{t("emptyLine")}</p>
+          </div>
+        ) : (
+          <MessageList
+            ref={listRef}
+            messages={messages}
+            onAtBottomChange={setPinned}
+            renderMessage={(message) => {
+              const focusSessionId = entrySessionByMessageId.get(message.id);
+              return (
+                <div
+                  data-message-id={message.id}
+                  className={`space-y-1 rounded-2xl transition ${
+                    message.id === locatedMessageId ? "ring-2 ring-amber-300" : ""
+                  }`}
+                >
+                  {focusSessionId !== undefined ? (
+                    <FocusEntryCard content={message.content} sessionId={focusSessionId} />
+                  ) : (
+                    <>
+                      <MessageBubble
+                        conversationId={activeConversationId}
+                        author={message.role}
+                        content={message.content}
+                        messageId={message.id}
+                      />
+                      {message.role === "assistant" && (
+                        <>
+                          <FactcheckBadge
+                            conversationId={activeConversationId}
+                            messageId={message.id}
+                          />
+                          <FocusSessionBadge messageId={message.id} />
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            }}
+            footer={
+              <div className="space-y-3">
+                {isStreaming && (
+                  <MessageBubble
+                    conversationId={activeConversationId}
+                    author="assistant"
+                    content={streamingText || "…"}
+                  />
+                )}
+                {(errorText !== null || canRetry) && (
+                  <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
+                    {errorText === null ? t("noReplyYet") : copy(errorText)}
+                    {canRetry && activeConversationId !== null && (
+                      <button
+                        type="button"
+                        onClick={() => void retryRound(activeConversationId)}
+                        className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
+                      >
+                        {t("common:actions.retry")}
+                      </button>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
-            );
-          })}
-          {isStreaming && (
-            <MessageBubble
-              conversationId={activeConversationId}
-              author="assistant"
-              content={streamingText || "…"}
-            />
-          )}
-          {(errorText !== null || canRetry) && (
-            <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
-              {errorText === null ? t("noReplyYet") : copy(errorText)}
-              {canRetry && activeConversationId !== null && (
-                <button
-                  type="button"
-                  onClick={() => void retryRound(activeConversationId)}
-                  className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
-                >
-                  {t("common:actions.retry")}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            }
+          />
+        )}
         {!pinned && (messages.length > 0 || isStreaming) && (
-          <BackToBottomPill onClick={scrollToBottom} />
+          <BackToBottomPill onClick={() => listRef.current?.scrollToBottom()} />
         )}
       </div>
       <Composer

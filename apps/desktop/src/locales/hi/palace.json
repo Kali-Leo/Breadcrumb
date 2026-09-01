@@ -90,7 +90,8 @@
     "viewNode": "«{{label}}» खोलें",
     "aggregateLabel_one": "{{label}} · {{count}} अवधारणा",
     "aggregateLabel_other": "{{label}} · {{count}} अवधारणाएँ",
-    "relationHint": "ठोस रेखा: पहले चाहिए; बिंदुदार: मदद करता है"
+    "relationHint": "ठोस रेखा: पहले चाहिए; बिंदुदार: मदद करता है",
+    "goToOrigin": "जहाँ यह सीखा था वहाँ लौटें"
   },
   "goal": {
     "title": "पढ़ाई का लक्ष्य",

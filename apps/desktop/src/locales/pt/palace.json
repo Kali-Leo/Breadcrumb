@@ -95,7 +95,8 @@
     "aggregateLabel_one": "{{label}} · {{count}} conceito",
     "aggregateLabel_many": "{{label}} · {{count}} conceitos",
     "aggregateLabel_other": "{{label}} · {{count}} conceitos",
-    "relationHint": "Linha cheia: precisa antes; tracejada: ajuda"
+    "relationHint": "Linha cheia: precisa antes; tracejada: ajuda",
+    "goToOrigin": "Voltar a onde isso foi aprendido"
   },
   "goal": {
     "title": "Meta de aprendizado",

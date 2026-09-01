@@ -97,6 +97,15 @@ export function createDiglotRepo(sql: SqlClient) {
         [pair, lemma, limit],
       );
     },
+    /** One pair's events since an instant — the density loop's window (spec 033), which
+     * needs a week of signals rather than the whole history. */
+    async listEventsSince(pair: DiglotPairId, sinceIso: string): Promise<DiglotWordEventRow[]> {
+      return sql.select<DiglotWordEventRow>(
+        `SELECT * FROM diglot_word_events WHERE pair = ? AND created_at >= ?
+         ORDER BY created_at ASC, id ASC`,
+        [pair, sinceIso],
+      );
+    },
     /** Every event of one pair, oldest first — the FSRS fitting corpus (vision/09 #1). */
     async listAllEvents(pair: DiglotPairId): Promise<DiglotWordEventRow[]> {
       return sql.select<DiglotWordEventRow>(

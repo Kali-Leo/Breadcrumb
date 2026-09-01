@@ -148,3 +148,53 @@ describe("adaptiveNewWordCap", () => {
     expect(adaptiveNewWordCap(5, 200)).toBe(0);
   });
 });
+
+describe("novelty's stage gate", () => {
+  it("ignores novelty until a word has been met a few times", () => {
+    // Anchoring phase: a brand-new card must score the same whether its context is fresh or
+    // a repeat, so early variability cannot pull a word forward or push it back.
+    const now = new Date("2026-09-01T10:00:00Z");
+    const young = { ...newWordCard(new Date("2026-08-25T10:00:00Z")), reps: 1 };
+    const scoreWith = (novelty: number) =>
+      scheduleReplacements({
+        pairId: "zh:en",
+        candidates: [{ lemma: "闭包", surface: "闭包", start: 0, end: 2, clauseIndex: 0 }],
+        cardsByLemma: new Map([["闭包", young]]),
+        now,
+        totalWordCount: 60,
+        density: 0.05,
+        newWordBudgetToday: 0,
+        introductionRank: new Map(),
+        noveltyByLemma: new Map([["闭包", novelty]]),
+      })[0]?.score;
+    expect(scoreWith(1.5)).toBe(scoreWith(0.5));
+  });
+
+  it("lets novelty count once the word is past the anchoring phase", () => {
+    const now = new Date("2026-09-01T10:00:00Z");
+    // A card that has actually been reviewed a few times, so difficulty/stability are the
+    // ones FSRS itself produced rather than hand-set numbers it would reject.
+    let mature = newWordCard(new Date("2026-08-01T10:00:00Z"));
+    for (const day of [3, 8, 16, 30]) {
+      mature = reviewCard(
+        "zh:en",
+        mature,
+        new Date(`2026-08-${String(day).padStart(2, "0")}T10:00:00Z`),
+        Rating.Good,
+      );
+    }
+    const scoreWith = (novelty: number) =>
+      scheduleReplacements({
+        pairId: "zh:en",
+        candidates: [{ lemma: "闭包", surface: "闭包", start: 0, end: 2, clauseIndex: 0 }],
+        cardsByLemma: new Map([["闭包", mature]]),
+        now,
+        totalWordCount: 60,
+        density: 0.05,
+        newWordBudgetToday: 0,
+        introductionRank: new Map(),
+        noveltyByLemma: new Map([["闭包", novelty]]),
+      })[0]?.score;
+    expect(scoreWith(1.5) ?? 0).toBeGreaterThan(scoreWith(0.5) ?? 0);
+  });
+});

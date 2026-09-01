@@ -34,6 +34,9 @@ interface KingdomNodeCardProps {
   onJump(nodeId: string): void;
   onMainAction(): void;
   onToggleCollapse(): void;
+  /** Null when nothing is left to go back to: the conversation this concept was first met
+   * in was deleted, or it arrived without a message behind it. */
+  onGoToOrigin: (() => void) | null;
 }
 
 /** One plain, suggest-only sentence for why this node is the current invitation. */
@@ -114,6 +117,7 @@ export function KingdomNodeCard({
   onJump,
   onMainAction,
   onToggleCollapse,
+  onGoToOrigin,
 }: KingdomNodeCardProps) {
   const { t } = useTranslation(["palace", "common"]);
   const copy = useCopyMessage();
@@ -169,6 +173,16 @@ export function KingdomNodeCard({
           </button>
         )}
       </div>
+
+      {onGoToOrigin !== null && (
+        <button
+          type="button"
+          onClick={onGoToOrigin}
+          className="mt-2 text-stone-400 underline decoration-stone-300 underline-offset-2 hover:text-stone-600"
+        >
+          {t("kingdom.goToOrigin")}
+        </button>
+      )}
 
       {isPrimary && alternates.length > 0 && (
         <details className="mt-2">

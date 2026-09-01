@@ -12,6 +12,7 @@ import {
   buildPatches,
   cardFromJson,
   cardToJson,
+  clauseTextOf,
   countWordLikeTokens,
   createMeetableDebtWindow,
   extractCandidates,
@@ -70,14 +71,14 @@ export async function weaveAssistantMessage(input: {
     adaptiveNewWordCap(input.newWordDailyBase, reviewDebt) - input.newWordsIntroducedToday,
   );
 
-  // Context novelty (spec 033): only review candidates have stored contexts to compare to.
-  const { noveltyByLemma, messageVector } = await contextNoveltyFor({
-    pair,
-    content,
-    lemmas: candidates
-      .filter((candidate) => input.cardsByLemma.has(candidate.lemma))
-      .map((candidate) => candidate.lemma),
-  });
+  // Context novelty (spec 033): only review candidates have stored contexts to compare to,
+  // and each is judged on the clause it actually appears in rather than on the whole reply.
+  const clauseByLemma = new Map<string, string>();
+  for (const candidate of candidates) {
+    if (!input.cardsByLemma.has(candidate.lemma)) continue;
+    clauseByLemma.set(candidate.lemma, clauseTextOf(content, tokens, candidate.clauseIndex));
+  }
+  const { noveltyByLemma, contextByLemma } = await contextNoveltyFor({ pair, clauseByLemma });
 
   // Only this message's candidates can be introduced, so the floor filter runs over them
   // rather than over the whole (thousands long) introduction queue.
@@ -117,12 +118,16 @@ export async function weaveAssistantMessage(input: {
       input.cardsByLemma.set(item.lemma, card);
       introducedLemmas.push(item.lemma);
     }
-    if (messageVector !== null) {
+    // Store what this word was actually met in — its clause. A word introduced in this same
+    // message has no clause vector yet (novelty is only computed for review candidates), so
+    // its first stored context arrives the next time it is met.
+    const context = contextByLemma.get(item.lemma);
+    if (context !== undefined) {
       await repos.diglot.upsertContextEmbedding({
         lemma: item.lemma,
         pair,
-        context_hash: hashContext(content),
-        vector_json: JSON.stringify(messageVector),
+        context_hash: hashContext(context.text),
+        vector_json: JSON.stringify(context.vector),
         created_at: createdAt,
       });
     }

@@ -85,7 +85,8 @@
     "expandNode": "Buka «{{label}}»",
     "viewNode": "Buka «{{label}}»",
     "aggregateLabel_other": "{{label}} · {{count}} konsep",
-    "relationHint": "Garis penuh: dibutuhkan lebih dulu; putus-putus: membantu"
+    "relationHint": "Garis penuh: dibutuhkan lebih dulu; putus-putus: membantu",
+    "goToOrigin": "Kembali ke tempat ini dipelajari"
   },
   "goal": {
     "title": "Tujuan belajar",

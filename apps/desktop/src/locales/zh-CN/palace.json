@@ -85,7 +85,8 @@
     "expandNode": "展开「{{label}}」",
     "viewNode": "查看「{{label}}」",
     "aggregateLabel": "{{label}} · {{count}} 个概念",
-    "relationHint": "实线：需要先会；虚线：对它有帮助"
+    "relationHint": "实线：需要先会；虚线：对它有帮助",
+    "goToOrigin": "回到学它的那次对话"
   },
   "goal": {
     "title": "学习目标",

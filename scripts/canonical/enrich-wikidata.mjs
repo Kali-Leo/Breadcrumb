@@ -3,11 +3,25 @@
  * label, look up a Wikidata QID (accepted ONLY when the label equals the entity's label or
  * one of its aliases after normalization — 宁缺勿错) and collect zh/en aliases. Emits the
  * canonical concept list; labels without a confident QID get a stable slug id and no extra
- * aliases. Usage: node scripts/canonical/enrich-wikidata.mjs <fine1.json> [fine2.json...] <out.json>
+ * aliases.
+ *
+ * An exact label match is not enough on its own: a name is shared across fields, and spec
+ * 025's own walkthrough caught CSS "Functions" bound to Q190686, the mathematical function.
+ * So the entity's description is read too, and a QID is refused when that description says
+ * the entity is a person, a place, a work, an organism — or something from a field the
+ * corpus being enriched is not about. Refusing costs a few aliases; accepting the wrong QID
+ * teaches the app that two unrelated things are the same concept.
+ *
+ * Usage: node scripts/canonical/enrich-wikidata.mjs [--domain=web|math|occupation]
+ *          <fine1.json> [fine2.json...] <out.json>
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { descriptionDisqualifies } from "./wikidataGuard.mjs";
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+const domainArg = rawArgs.find((arg) => arg.startsWith("--domain="));
+const domain = domainArg?.slice("--domain=".length) ?? "";
+const args = rawArgs.filter((arg) => !arg.startsWith("--"));
 if (args.length < 2) {
   console.error("usage: node enrich-wikidata.mjs <fine.json>... <out.json>");
   process.exit(1);
@@ -54,21 +68,22 @@ async function findQid(label, language) {
   return null;
 }
 
-async function fetchAliases(qid) {
+async function fetchEntity(qid) {
   const data = await wikidata({
     action: "wbgetentities",
     ids: qid,
-    props: "labels|aliases",
+    props: "labels|aliases|descriptions",
     languages: "zh|zh-hans|zh-cn|en",
   });
   const entity = data.entities?.[qid];
-  if (!entity) return [];
+  if (!entity) return { aliases: [], description: "" };
   const texts = [];
   for (const lang of Object.values(entity.labels ?? {})) texts.push(lang.value);
   for (const list of Object.values(entity.aliases ?? {})) {
     for (const alias of list) texts.push(alias.value);
   }
-  return [...new Set(texts)];
+  const descriptions = Object.values(entity.descriptions ?? {}).map((entry) => entry.value);
+  return { aliases: [...new Set(texts)], description: descriptions.join(" · ") };
 }
 
 const cachePath = new URL("./out/wikidata-cache.json", import.meta.url);
@@ -82,6 +97,7 @@ const { writeFileSync: writeCache } = await import("node:fs");
 const seenLabels = new Map(); // normalized label -> concept
 const concepts = [];
 let qidCount = 0;
+let rejectedByDescription = 0;
 
 for (const inputPath of args) {
   const { items } = JSON.parse(readFileSync(inputPath, "utf8"));
@@ -94,15 +110,31 @@ for (const inputPath of args) {
     if (Object.hasOwn(cache, key)) {
       qid = cache[key].qid;
       aliases = cache[key].aliases;
+      // Cached entries predate the description check; re-judge them from the cached text so
+      // a rerun cleans up what an earlier run accepted.
+      if (qid !== null && descriptionDisqualifies(cache[key].description ?? "", domain)) {
+        rejectedByDescription += 1;
+        qid = null;
+        aliases = [];
+      }
       if (qid !== null) qidCount += 1;
     } else {
       try {
         qid = await findQid(item.label, language);
+        let description = "";
         if (qid !== null) {
-          aliases = (await fetchAliases(qid)).filter((alias) => normalize(alias) !== key);
-          qidCount += 1;
+          const entity = await fetchEntity(qid);
+          description = entity.description;
+          if (descriptionDisqualifies(description, domain)) {
+            console.warn(`refused ${item.label} → ${qid}: ${description}`);
+            rejectedByDescription += 1;
+            qid = null;
+          } else {
+            aliases = entity.aliases.filter((alias) => normalize(alias) !== key);
+            qidCount += 1;
+          }
         }
-        cache[key] = { qid, aliases };
+        cache[key] = { qid, aliases, description };
         writeCache(cachePath, JSON.stringify(cache));
       } catch (error) {
         console.warn(`lookup failed for ${item.label}: ${error.message}`);
@@ -131,4 +163,6 @@ for (const inputPath of args) {
 }
 
 writeFileSync(outPath, `${JSON.stringify({ concepts }, null, 2)}\n`);
-console.log(`concepts=${concepts.length} withQid=${qidCount}`);
+console.log(
+  `concepts=${concepts.length} withQid=${qidCount} refusedByDescription=${rejectedByDescription}`,
+);

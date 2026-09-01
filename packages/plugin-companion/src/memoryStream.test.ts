@@ -28,24 +28,40 @@ function memory(overrides: Partial<CompanionMemoryLike>): CompanionMemoryLike {
 }
 
 describe("tokenizeForRelevance", () => {
-  it("splits mixed zh/en text into CJK bigrams plus alphanumeric words", () => {
-    const tokens = tokenizeForRelevance("学习 Binary Search 二分查找");
+  it("splits mixed zh/en text into Chinese words plus alphanumeric words", () => {
+    const tokens = tokenizeForRelevance("学习 Binary Search 计算机科学");
     expect(tokens.has("binary")).toBe(true);
     expect(tokens.has("search")).toBe(true);
     expect(tokens.has("学习")).toBe(true);
-    expect(tokens.has("二分")).toBe(true);
-    expect(tokens.has("分查")).toBe(true);
-    expect(tokens.has("查找")).toBe(true);
+    expect(tokens.has("计算机")).toBe(true);
+    expect(tokens.has("科学")).toBe(true);
+    // Words now, not every overlapping pair: "机科" straddles two words and is not one.
+    expect(tokens.has("机科")).toBe(false);
     expect(tokens.has("习b")).toBe(false); // a CJK run never bridges into an alnum run
+  });
+
+  it("falls back to character pairs only where the dictionary has nothing", () => {
+    // 二 begins no dictionary word here, so that stretch degrades to the old behaviour while
+    // 查找 is still found as a word.
+    const tokens = tokenizeForRelevance("二分查找");
+    expect(tokens.has("查找")).toBe(true);
+    expect(tokens.has("分查")).toBe(true);
   });
 
   it("lowercases before tokenizing", () => {
     expect(tokenizeForRelevance("Recursion").has("recursion")).toBe(true);
   });
 
-  it("does not bridge bigrams across a non-CJK separator inside CJK text", () => {
+  it("does not bridge tokens across a non-CJK separator inside CJK text", () => {
     const tokens = tokenizeForRelevance("闭包 abc 递归");
     expect(tokens.has("包递")).toBe(false);
+    expect(tokens.has("闭包")).toBe(true);
+    expect(tokens.has("递归")).toBe(true);
+  });
+
+  it("still yields something matchable for a phrase the dictionary has never seen", () => {
+    const tokens = tokenizeForRelevance("蒹葭苍苍");
+    expect(tokens.size).toBeGreaterThan(0);
   });
 });
 

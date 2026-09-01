@@ -78,6 +78,9 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     new Map<string, { conversationId: string; createdAt: string }>(),
   );
   const [feedbackSources, setFeedbackSources] = useState<RegionFeedbackSources | null>(null);
+  /** Concepts with a surviving message behind them — the only ones the "back to where this
+   * was learned" link can be offered for. */
+  const [originNodeIds, setOriginNodeIds] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +116,15 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
         }
       }
       setLastSeenByNode(latest);
+      // Same pass answers "is there a conversation to go back to": a footprint that still
+      // names a message. Cheap here, and it keeps the card from offering a dead link.
+      setOriginNodeIds(
+        new Set(
+          sightings
+            .filter((sighting) => memberSet.has(sighting.node_id) && sighting.message_id !== null)
+            .map((sighting) => sighting.node_id),
+        ),
+      );
     })();
   }, [collapseKey, kingdom.memberNodeIds]);
 
@@ -289,6 +301,20 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     }
   }
 
+  /**
+   * Back to where this concept was first met (spec 005 §5, backlog "溯源跳转"): open that
+   * conversation and scroll to the exchange itself. Silent when there is nothing to go back
+   * to — the conversation was deleted, or the concept arrived without a message behind it.
+   */
+  async function goToOrigin(nodeId: string): Promise<void> {
+    const repos = await getRepos();
+    const sighting = await repos.nodeSightings.firstWithMessage(nodeId);
+    if (sighting === null || sighting.message_id === null) return;
+    await useChatStore.getState().openConversation(sighting.conversation_id);
+    appEventBus.emit("app:navigateChat", { conversationId: sighting.conversation_id });
+    appEventBus.emit("chat:locateMessage", { messageId: sighting.message_id });
+  }
+
   function toggleCollapse(nodeId: string) {
     const collapsed = new Set(manualCollapsed);
     const expanded = new Set(manualExpanded);
@@ -387,6 +413,9 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
             onJump={setSelectedId}
             onMainAction={() => void mainActionFor(cardNode)}
             onToggleCollapse={() => toggleCollapse(cardNode.id)}
+            onGoToOrigin={
+              originNodeIds.has(cardNode.id) ? () => void goToOrigin(cardNode.id) : null
+            }
           />
         )}
         {/* Same mirror as the island level (Leo 2026-08-31 #6): the selected concept and

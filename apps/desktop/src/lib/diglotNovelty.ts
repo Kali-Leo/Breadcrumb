@@ -1,7 +1,12 @@
 /**
- * Purpose: context novelty for review candidates (spec 033) — embeds the message once with
- * the local model and compares it against each word's stored context vectors, so re-meeting
- * a word somewhere new scores higher than a repeat. Side effect: one DB read.
+ * Purpose: context novelty for review candidates (spec 033) — embeds the clause each
+ * candidate word appears in and compares it against that word's stored contexts, so
+ * re-meeting a word in a new setting scores higher than a repeat.
+ *
+ * The clause, not the whole message (audit 2026-08-28, 语言织入 #2): with a message-level
+ * vector, every word in one long reply had the same context, two different replies about the
+ * same topic looked identical, and "has this word been met somewhere new" could not actually
+ * be answered. Side effects: one embedding call, one DB read.
  * Main exports: contextNoveltyFor, ContextNovelty.
  */
 import type { DiglotPairId } from "@breadcrumb/core-db";
@@ -12,31 +17,48 @@ import { embedTexts } from "./embeddings";
 export interface ContextNovelty {
   /** lemma → novelty factor in [0.5, 1.5]; empty when there was nothing to compare. */
   noveltyByLemma: Map<string, number>;
-  /** The message's own vector — null when embeddings are unavailable (neutral degrade). */
-  messageVector: number[] | null;
+  /** lemma → the clause it appeared in, and that clause's vector. Empty when embeddings are
+   * unavailable (neutral degrade: the weave still runs, novelty is 1 for everything). */
+  contextByLemma: Map<string, { text: string; vector: number[] }>;
 }
 
-/** Novelty factors for the given lemmas in the context of `content`. */
+/** Novelty factors for the given lemmas, each in the context of its own clause. */
 export async function contextNoveltyFor(input: {
   pair: DiglotPairId;
-  content: string;
-  lemmas: readonly string[];
+  /** lemma → the clause text that lemma occurred in. */
+  clauseByLemma: ReadonlyMap<string, string>;
 }): Promise<ContextNovelty> {
   const noveltyByLemma = new Map<string, number>();
-  if (input.lemmas.length === 0) return { noveltyByLemma, messageVector: null };
-  const messageVector = ((await embedTexts([input.content])) ?? [null])[0] ?? null;
+  const contextByLemma = new Map<string, { text: string; vector: number[] }>();
+  const lemmas = [...input.clauseByLemma.keys()];
+  if (lemmas.length === 0) return { noveltyByLemma, contextByLemma };
+
+  // One embedding call for every clause in play: the reveal path cannot afford a round trip
+  // per word (audit 2026-08-28 #11), and identical clauses are embedded once.
+  const uniqueClauses = [...new Set(input.clauseByLemma.values())].filter((text) => text !== "");
+  const vectors = uniqueClauses.length === 0 ? null : await embedTexts(uniqueClauses);
+  const vectorByClause = new Map<string, number[]>();
+  if (vectors !== null) {
+    uniqueClauses.forEach((clause, index) => {
+      const vector = vectors[index];
+      if (vector !== undefined) vectorByClause.set(clause, vector);
+    });
+  }
+
   const repos = await getRepos();
-  // One query for the whole message: this runs before the reply may be painted, so a round
-  // trip per candidate word sat directly in the reveal path (audit 2026-08-28 #11).
-  const stored = await repos.diglot.listContextEmbeddingsForLemmas(input.pair, input.lemmas);
+  const stored = await repos.diglot.listContextEmbeddingsForLemmas(input.pair, lemmas);
   const pastByLemma = new Map<string, number[][]>();
   for (const row of stored) {
-    const vectors = pastByLemma.get(row.lemma) ?? [];
-    vectors.push(JSON.parse(row.vector_json) as number[]);
-    pastByLemma.set(row.lemma, vectors);
+    const past = pastByLemma.get(row.lemma) ?? [];
+    past.push(JSON.parse(row.vector_json) as number[]);
+    pastByLemma.set(row.lemma, past);
   }
-  for (const lemma of input.lemmas) {
-    noveltyByLemma.set(lemma, noveltyFactor(messageVector, pastByLemma.get(lemma) ?? []));
+
+  for (const lemma of lemmas) {
+    const clause = input.clauseByLemma.get(lemma) ?? "";
+    const vector = vectorByClause.get(clause) ?? null;
+    noveltyByLemma.set(lemma, noveltyFactor(vector, pastByLemma.get(lemma) ?? []));
+    if (vector !== null) contextByLemma.set(lemma, { text: clause, vector });
   }
-  return { noveltyByLemma, messageVector };
+  return { noveltyByLemma, contextByLemma };
 }

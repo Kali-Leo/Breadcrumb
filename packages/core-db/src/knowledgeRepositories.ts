@@ -76,6 +76,23 @@ export function createNodeSightingsRepo(sql: SqlClient) {
         [conversationId],
       );
     },
+    /**
+     * The earliest footprint of one concept that still points at a message — where it was
+     * first met, for jumping back to the conversation it was learned in (spec 005 §5). Rows
+     * whose message is gone (a deleted conversation) are skipped rather than returned as a
+     * dead link.
+     */
+    async firstWithMessage(nodeId: string): Promise<NodeSightingRow | null> {
+      const rows = await sql.select<NodeSightingRow>(
+        `SELECT s.* FROM node_sightings s
+           JOIN messages m ON m.id = s.message_id
+          WHERE s.node_id = ? AND s.message_id IS NOT NULL
+          ORDER BY s.created_at ASC, s.id ASC
+          LIMIT 1`,
+        [nodeId],
+      );
+      return rows[0] ?? null;
+    },
     /** Footprints attributed to one message — message-level re-encounters (vision/09). */
     async listByMessage(messageId: string): Promise<NodeSightingRow[]> {
       return sql.select<NodeSightingRow>(

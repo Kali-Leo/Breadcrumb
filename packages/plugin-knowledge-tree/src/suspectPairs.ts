@@ -7,7 +7,8 @@
  * Main exports: findSuspectSynonymPairs, SuspectSynonymPair.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
-import { cosineSimilarity, topByRelativeGate } from "./similarityGate";
+import { packVectors, partnersOf } from "@breadcrumb/core-vectors";
+import { topByRelativeGate } from "./similarityGate";
 import { SYNONYM_CANDIDATE_TOP_K } from "./synonymGate";
 
 export interface SuspectSynonymPair {
@@ -46,30 +47,29 @@ function pairKey(nodeIdA: string, nodeIdB: string): string {
  */
 export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): SuspectSynonymPair[] {
   const nodeById = new Map(input.nodes.map((node) => [node.id, node]));
-  const vectors: { nodeId: string; vector: number[] }[] = [];
+  const entries: { id: string; vector: number[] }[] = [];
   for (const row of input.embeddings) {
     if (!nodeById.has(row.node_id)) continue;
-    vectors.push({ nodeId: row.node_id, vector: JSON.parse(row.vector_json) as number[] });
+    entries.push({ id: row.node_id, vector: JSON.parse(row.vector_json) as number[] });
   }
+  // Normalized once, compared as dot products (see @breadcrumb/core-vectors): same numbers as
+  // the pairwise cosine this used to call, about eight times less time on a grown tree.
+  const packed = packVectors(entries);
 
   const topK = input.topK ?? SYNONYM_CANDIDATE_TOP_K;
   const byKey = new Map<string, SuspectSynonymPair>();
-  for (const subject of vectors) {
+  packed.ids.forEach((subjectId, subjectRow) => {
     const scored: { partnerId: string; similarity: number }[] = [];
-    for (const partner of vectors) {
-      if (partner.nodeId === subject.nodeId) continue;
-      const nodeA = nodeById.get(subject.nodeId);
-      const nodeB = nodeById.get(partner.nodeId);
+    for (const partner of partnersOf(packed, subjectRow)) {
+      const nodeA = nodeById.get(subjectId);
+      const nodeB = nodeById.get(partner.id);
       if (nodeA === undefined || nodeB === undefined) continue;
       if (isAlreadyAliasLinked(nodeA, nodeB, input.aliasNodeIdByLabel)) continue;
       if (input.judgedPairKeys.has(pairKey(nodeA.id, nodeB.id))) continue;
-      scored.push({
-        partnerId: partner.nodeId,
-        similarity: cosineSimilarity(subject.vector, partner.vector),
-      });
+      scored.push({ partnerId: partner.id, similarity: partner.similarity });
     }
     for (const entry of topByRelativeGate(scored, topK)) {
-      const nodeA = nodeById.get(subject.nodeId);
+      const nodeA = nodeById.get(subjectId);
       const nodeB = nodeById.get(entry.partnerId);
       if (nodeA === undefined || nodeB === undefined) continue;
       const key = pairKey(nodeA.id, nodeB.id);
@@ -83,7 +83,7 @@ export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): Suspect
         similarity: entry.similarity,
       });
     }
-  }
+  });
   return [...byKey.values()].sort(
     (a, b) => b.similarity - a.similarity || a.nodeAId.localeCompare(b.nodeAId),
   );

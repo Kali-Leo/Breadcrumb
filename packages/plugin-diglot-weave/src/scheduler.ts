@@ -14,7 +14,9 @@ import { retrievabilityOf, reviewCard } from "./memoryState";
 /** Default replacement density: 2% of word tokens. The hard ceiling is 5% (spec 033,
  * 95–98% comprehensible-input research). */
 export const DEFAULT_DENSITY = 0.02;
-const DENSITY_CEILING = 0.05;
+/** Ceiling on what the density loop may ask for (densityControl.ts owns the target itself);
+ * raised from 5% to 7% with that loop, on the audit's reading of Holley's one-in-fifteen. */
+const DENSITY_CEILING = 0.07;
 /** Never weave more than this many words into one message, whatever its length. */
 const MAX_PER_MESSAGE = 4;
 /** Short messages below this word count are never woven (no budget). */
@@ -67,7 +69,14 @@ export function adaptiveNewWordCap(baseCap: number, reviewDebtCount: number): nu
  * context novelty, plus an overdue-rescue term — deeply forgotten words have LOW expected
  * FSRS gain and would otherwise be starved by mildly due words forever (spec 033
  * acceptance 6: the scheduler raises a word's priority the longer it waits). */
-function reviewScore(pairId: DiglotPairId, card: Card, now: Date, novelty: number): number {
+/** Reviews before this many repetitions are the anchoring phase: the word is still being
+ * pinned to one meaning, and varying its context there is what the evidence says hurts
+ * (Psychon Bull Rev 2023 on early-stage variability; Cowan 2024 on spacing gains). Novelty
+ * is neutralised until the word has been met this many times (audit 2026-08-28, 语言织入 #7). */
+const NOVELTY_STAGE_GATE_REPS = 3;
+
+function reviewScore(pairId: DiglotPairId, card: Card, now: Date, rawNovelty: number): number {
+  const novelty = card.reps < NOVELTY_STAGE_GATE_REPS ? 1 : rawNovelty;
   const recall = retrievabilityOf(pairId, card, now);
   const urgency = Math.max(0, DESIRED_RETENTION - recall);
   const nextStability = reviewCard(pairId, card, now, Rating.Good).stability;

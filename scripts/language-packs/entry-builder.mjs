@@ -222,9 +222,9 @@ export const BLACKLIST_SUBSTRINGS = [
   "old variant",
 ];
 
-/** Normalizes one raw CEDICT gloss into a candidate target word: strips parenthetical
- * annotations, detects+strips a leading "to " (verb marker), strips a leading article, then
- * lowercases. `valid` is true only when the result matches ^[a-z][a-z'-]*$. */
+/** Normalizes one raw gloss into a candidate target word: strips parenthetical annotations,
+ * detects+strips a leading "to " (verb marker), strips a leading article, then lowercases.
+ * `valid` is true only when the result matches ^[a-z][a-z'-]*$. */
 export function normalizeGloss(rawGloss) {
   let text = rawGloss
     .replace(/\([^)]*\)/g, " ")
@@ -248,6 +248,45 @@ export function normalizeGloss(rawGloss) {
  * over-polysemous lines, blacklisted gloss language, single-character lemmas, conflicting
  * cross-line targets, and non-common-English targets all force `t1Safe: false` but keep the
  * entry — only a lemma with zero usable gloss anywhere is dropped (`entry: null`). */
+/**
+ * One raw gloss, split into the candidates it actually offers. CC-CEDICT (and Wiktionary)
+ * write synonyms inside one sense separated by "; " — "to learn; to study" is one sense with
+ * two perfectly good targets. Reading it as a single string made it match no target at all,
+ * and the entry was thrown away: 3,237 words in the Chinese frequency list were missing from
+ * the shipped pack for exactly this reason, 学习 and 函数 among them (found 2026-09-01).
+ * Order is preserved: the first sub-gloss of the first sense is still the dominant meaning.
+ */
+export function glossCandidates(rawGloss) {
+  return rawGloss
+    .split(";")
+    .map((part) => normalizeGloss(part))
+    .filter((candidate) => candidate.valid);
+}
+
+/** The first gloss that survives cleaning as readable English, even if it is several words —
+ * the meaning to show when no single word can carry it. Null when nothing readable is left. */
+function multiWordGloss(lines) {
+  for (const line of lines) {
+    for (const rawGloss of line.glosses) {
+      for (const part of rawGloss.split(";")) {
+        const cleaned = part
+          .replace(/\([^)]*\)/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+        if (/^[a-z][a-z' -]*$/.test(cleaned) && cleaned.length > 1) {
+          const isVerb = /^to\s/.test(cleaned);
+          return {
+            word: isVerb ? cleaned.replace(/^to\s+/, "") : cleaned,
+            pos: isVerb ? "v" : "n",
+          };
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export function buildEntryForLemma(simplified, lines, freqRank, cmuMap, englishFrequencySet) {
   const reasons = new Set();
   if (lines.some((line) => /[A-Z]/.test(line.pinyin))) reasons.add("properNoun");
@@ -259,32 +298,59 @@ export function buildEntryForLemma(simplified, lines, freqRank, cmuMap, englishF
   if ([...simplified].length === 1) reasons.add("singleChar");
 
   const [primary] = lines;
-  const primaryTarget = normalizeGloss(primary.glosses[0]);
+  // The first sense's first usable synonym is the dominant meaning; everything after it is an
+  // alternative. Splitting on ";" is what lets "to learn; to study" contribute "learn" at all.
+  const primaryCandidates = glossCandidates(primary.glosses[0] ?? "");
+  const primaryTarget = primaryCandidates[0] ?? normalizeGloss(primary.glosses[0] ?? "");
 
   const distinctValidTargets = new Set(
     lines
-      .map((line) => normalizeGloss(line.glosses[0]))
-      .filter((t) => t.valid)
-      .map((t) => t.word),
+      .map((line) => glossCandidates(line.glosses[0] ?? "")[0])
+      .filter((candidate) => candidate !== undefined)
+      .map((candidate) => candidate.word),
   );
   if (distinctValidTargets.size > 1) reasons.add("conflictingLines");
 
-  // Remaining glosses across every line (skipping the primary's own first gloss) become
-  // altTarget candidates, deduplicated and capped at 6.
+  // Everything else this lemma is glossed as, in reading order, deduplicated and capped at 6.
   const altCandidates = [];
   const seenWords = new Set([primaryTarget.word]);
   for (const line of lines) {
-    const startIndex = line === primary ? 1 : 0;
-    for (let i = startIndex; i < line.glosses.length && altCandidates.length < 6; i += 1) {
-      const norm = normalizeGloss(line.glosses[i]);
-      if (!norm.valid || seenWords.has(norm.word)) continue;
-      seenWords.add(norm.word);
-      altCandidates.push(norm);
+    for (let i = 0; i < line.glosses.length && altCandidates.length < 6; i += 1) {
+      const isPrimarySense = line === primary && i === 0;
+      const candidates = glossCandidates(line.glosses[i] ?? "");
+      for (const candidate of isPrimarySense ? candidates.slice(1) : candidates) {
+        if (altCandidates.length >= 6 || seenWords.has(candidate.word)) continue;
+        seenWords.add(candidate.word);
+        altCandidates.push(candidate);
+      }
     }
   }
 
+  // Nothing that could be a single word. The gloss is still a meaning worth keeping — the
+  // pack is a dictionary as well as a source of replacements, and a word dropped here cannot
+  // even be looked up. Kept with the cleaned multi-word gloss as its target and t1Safe false,
+  // which is what the schema always said such entries were for. (Before 2026-09-01 they were
+  // dropped outright: "查找 /to search for/to look up/" was not in the pack at all.)
   if (!primaryTarget.valid && altCandidates.length === 0) {
-    return { entry: null, tradForms: [], reasons: new Set(["noValidTarget"]) };
+    const fallback = multiWordGloss(lines);
+    if (fallback === null) {
+      return { entry: null, tradForms: [], reasons: new Set(["noValidTarget"]) };
+    }
+    reasons.add("multiWordTarget");
+    return {
+      entry: {
+        target: fallback.word,
+        pos: fallback.pos,
+        reading: "",
+        altTargets: [],
+        freqRank,
+        t1Safe: false,
+      },
+      tradForms: [...new Set(lines.map((line) => line.traditional))].filter(
+        (traditional) => traditional !== simplified,
+      ),
+      reasons,
+    };
   }
 
   // The primary gloss is the target unless it failed the single-word test, in which case the

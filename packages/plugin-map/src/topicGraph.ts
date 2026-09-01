@@ -6,6 +6,7 @@
  * (e.g. a lone humanities note) get lumped into the nearest big cluster.
  * Main exports: buildKnnGraph, mergeSingletonCommunities.
  */
+import { packVectors, partnersOf, similarityLandscape } from "@breadcrumb/core-vectors";
 import Graph from "graphology";
 import { computeCentroid, cosineSimilarity } from "./topicVectors";
 
@@ -18,26 +19,6 @@ interface NodeBaseline {
   best: number;
 }
 
-/** Per-node similarity landscape over every other embedded node. */
-function baselineOf(
-  id: string,
-  embeddedIds: readonly string[],
-  embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
-): NodeBaseline {
-  const vector = embeddingByNodeId.get(id) ?? [];
-  let sum = 0;
-  let best = 0;
-  let count = 0;
-  for (const otherId of embeddedIds) {
-    if (otherId === id) continue;
-    const similarity = cosineSimilarity(vector, embeddingByNodeId.get(otherId) ?? []);
-    sum += similarity;
-    best = Math.max(best, similarity);
-    count += 1;
-  }
-  return { mean: count === 0 ? 0 : sum / count, best };
-}
-
 function gateOf(baseline: NodeBaseline): number {
   return baseline.mean + RELATIVE_GATE * (baseline.best - baseline.mean);
 }
@@ -48,8 +29,15 @@ export function buildKnnGraph(
 ): Graph {
   const graph = new Graph({ type: "undirected" });
   for (const id of embeddedIds) graph.mergeNode(id);
-  const baselines = new Map(
-    embeddedIds.map((id) => [id, baselineOf(id, embeddedIds, embeddingByNodeId)]),
+  // One packed pass for the whole landscape (see @breadcrumb/core-vectors): every baseline
+  // below reads from it instead of walking every other vector again per node.
+  const packed = packVectors(
+    embeddedIds.map((id) => ({ id, vector: embeddingByNodeId.get(id) ?? [] })),
+  );
+  const rowById = new Map(packed.ids.map((id, row) => [id, row]));
+  const landscape = similarityLandscape(packed);
+  const baselines = new Map<string, NodeBaseline>(
+    packed.ids.map((id, row) => [id, landscape[row] ?? { mean: 0, best: 0 }]),
   );
   // The room's average closeness: an isolate is a node whose very best match sits below it.
   let baselineSum = 0;
@@ -57,16 +45,12 @@ export function buildKnnGraph(
   const globalMean = baselines.size === 0 ? 0 : baselineSum / baselines.size;
   const isIsolate = (baseline: NodeBaseline): boolean => baseline.best < globalMean;
   for (const id of embeddedIds) {
-    const vector = embeddingByNodeId.get(id);
+    const row = rowById.get(id);
     const baseline = baselines.get(id);
-    if (vector === undefined || baseline === undefined) continue;
+    if (row === undefined || baseline === undefined) continue;
     if (isIsolate(baseline)) continue;
-    const neighbors = embeddedIds
-      .filter((otherId) => otherId !== id)
-      .map((otherId) => ({
-        otherId,
-        similarity: cosineSimilarity(vector, embeddingByNodeId.get(otherId) ?? []),
-      }))
+    const neighbors = partnersOf(packed, row)
+      .map((partner) => ({ otherId: partner.id, similarity: partner.similarity }))
       .filter((entry) => {
         const otherBaseline = baselines.get(entry.otherId);
         if (otherBaseline === undefined || isIsolate(otherBaseline)) return false;

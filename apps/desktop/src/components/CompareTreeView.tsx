@@ -29,8 +29,15 @@ function fillFor(ratio: number): string {
   return `rgba(245, 158, 11, ${0.06 + 0.5 * ratio})`;
 }
 
+/**
+ * Overlap as a percentage, without the two lies rounding tells at the ends: a sliver of
+ * overlap must not read as "0%", and one item short of everything must not read as "100%".
+ */
 function percentOf(ratio: number): string {
-  return `${Math.round(ratio * 100)}%`;
+  const percent = ratio * 100;
+  if (ratio > 0 && percent < 1) return "<1%";
+  if (ratio < 1 && percent > 99) return ">99%";
+  return `${Math.round(percent)}%`;
 }
 
 export function CompareTreeView({
@@ -271,6 +278,7 @@ export function CompareTreeView({
               />
               <text x={10} y={21} fontSize={12} fill="#44403c">
                 {node.label.length > 11 ? `${node.label.slice(0, 10)}…` : node.label}
+                <title>{node.label}</title>
               </text>
               <text
                 x={NODE_WIDTH - 10}

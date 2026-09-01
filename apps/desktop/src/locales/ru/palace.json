@@ -100,7 +100,8 @@
     "aggregateLabel_few": "{{label}} · {{count}} понятия",
     "aggregateLabel_many": "{{label}} · {{count}} понятий",
     "aggregateLabel_other": "{{label}} · {{count}} понятия",
-    "relationHint": "Сплошная линия: нужно раньше; пунктир: помогает"
+    "relationHint": "Сплошная линия: нужно раньше; пунктир: помогает",
+    "goToOrigin": "Вернуться туда, где это учили"
   },
   "goal": {
     "title": "Учебная цель",

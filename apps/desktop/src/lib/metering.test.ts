@@ -22,6 +22,8 @@ vi.mock("./failureLog", () => ({
 let accountCurrency: Currency | undefined;
 vi.mock("./llmConfig", () => ({
   currentPriceCurrency: () => accountCurrency,
+  // No override in these cases: they are about the built-in price list.
+  currentPriceOverride: () => undefined,
 }));
 
 /** Rates halve outside DeepSeek's peak window, so a test that priced at the real clock would

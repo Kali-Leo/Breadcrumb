@@ -90,7 +90,8 @@
     "viewNode": "Open \"{{label}}\"",
     "aggregateLabel_one": "{{label}} · {{count}} concept",
     "aggregateLabel_other": "{{label}} · {{count}} concepts",
-    "relationHint": "Solid line: needed first; dashed: helpful"
+    "relationHint": "Solid line: needed first; dashed: helpful",
+    "goToOrigin": "Back to where this was learned"
   },
   "goal": {
     "title": "Learning goal",
