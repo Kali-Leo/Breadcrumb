@@ -161,4 +161,21 @@ describe("seedDemo (real sqlite)", () => {
     expect(secondInsert).toEqual(again);
     // Triple seed+wipe on real sqlite runs 18s+ on slow CI runners (2026-08-17 CI timeouts).
   }, 120_000);
+
+  it("can be seeded twice without colliding on its own ids", async () => {
+    // The seed guards only knowledge nodes against duplicates; conversations, messages,
+    // claims and words carry fixed demo- ids. Running it twice used to fail with a raw
+    // UNIQUE constraint error in front of a user who reached the welcome screen again, so
+    // the seed clears its own previous copy first. This is that guarantee.
+    temp = await createTempDatabase();
+    const first = await insertDemoData(temp.sql, NOW, WITH_WORDS);
+    const second = await insertDemoData(temp.sql, NOW, WITH_WORDS);
+    expect(second).toEqual(first);
+
+    const conversations = await temp.sql.select<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM conversations WHERE id LIKE 'demo-%'",
+      [],
+    );
+    expect(conversations[0]?.count).toBe(first.conversations);
+  });
 });

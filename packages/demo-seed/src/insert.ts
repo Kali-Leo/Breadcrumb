@@ -16,6 +16,7 @@ import {
 import { buildClaimSeed } from "./claims";
 import { buildConceptSeed } from "./concepts";
 import { buildDemoConversations } from "./conversations";
+import { wipeDemoData } from "./wipe";
 import { buildWordSeed } from "./words";
 
 export interface SeedSummary {
@@ -40,11 +41,22 @@ export interface DemoSeedOptions {
   languagePack?: unknown;
 }
 
+/**
+ * Writes the demo learner, replacing any previous copy.
+ *
+ * The wipe is load-bearing, not tidiness. Only knowledge nodes are guarded against
+ * duplicates below (labels that already exist are skipped); conversations, messages, mastery
+ * claims and words all carry fixed `demo-` ids and collide on the primary key the second time
+ * round. Every caller had to remember to wipe first, and the first one that forgot handed a
+ * user a raw UNIQUE constraint error — so the invariant lives here now, where it cannot be
+ * forgotten. It also repairs a half-written seed from an interrupted attempt.
+ */
 export async function insertDemoData(
   sql: SqlClient,
   now: Date,
   options: DemoSeedOptions = {},
 ): Promise<SeedSummary> {
+  await wipeDemoData(sql);
   const knowledgeNodes = createKnowledgeNodesRepo(sql);
   const nodeSightings = createNodeSightingsRepo(sql);
   const conversationsRepo = createConversationsRepo(sql);

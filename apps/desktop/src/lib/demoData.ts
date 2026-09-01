@@ -31,7 +31,7 @@ export async function hasDemoData(): Promise<boolean> {
   return (rows[0]?.count ?? 0) > 0;
 }
 
-/** Writes the demo learner. Safe to call twice: the seed skips labels that already exist. */
+/** Writes the demo learner. Idempotent — the seed replaces any previous copy of itself. */
 export async function installDemoData(): Promise<void> {
   const sql = await getSqlClient();
   await insertDemoData(sql, new Date(), { languagePack });
