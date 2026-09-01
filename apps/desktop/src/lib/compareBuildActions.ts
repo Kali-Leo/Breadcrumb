@@ -28,7 +28,7 @@ import i18next from "i18next";
 import type { ApiConfig } from "../stores/settingsStore";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
-import { currentPriceCurrency, llmConfigFrom } from "./llmConfig";
+import { currentPriceCurrency, currentPriceOverride, llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
 import { newId, nowIso } from "./time";
 
@@ -37,7 +37,10 @@ export type ExperimentalBuildOutcome =
   | { ok: false; reason: string; costLine: string | null };
 
 function costLineOf(model: string, usage: TokenUsage): string {
-  const price = resolveModelRates(model, { currency: currentPriceCurrency() });
+  const price = resolveModelRates(model, {
+    currency: currentPriceCurrency(),
+    override: currentPriceOverride(),
+  });
   const cost = price
     ? formatCost(calculateCostMicros(usage, price), price.currency)
     : i18next.t("palace:compare.buildCostUnknown");

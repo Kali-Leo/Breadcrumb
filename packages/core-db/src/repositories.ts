@@ -106,6 +106,51 @@ export function createConversationsRepo(sql: SqlClient) {
     async setAutoTitle(id: string, autoTitle: string | null): Promise<void> {
       await sql.execute("UPDATE conversations SET auto_title = ? WHERE id = ?", [autoTitle, id]);
     },
+    /**
+     * Deletes a conversation and everything that only existed because of it: its messages and
+     * the footprints they left. What survives is deliberate:
+     *  - **Knowledge nodes stay.** They belong to the learner, not to one chat; a concept met
+     *    in three conversations must not vanish because one of them was tidied away.
+     *  - **Spending records stay**, with their conversation link cleared. Deleting a chat is
+     *    housekeeping, not a way to make money already spent disappear from the bill.
+     * Ordered children-first and run in one transaction, so a foreign key can never be left
+     * pointing at a row that is no longer there.
+     */
+    async remove(id: string): Promise<void> {
+      await sql.executeTransaction([
+        {
+          sql: `DELETE FROM factcheck_claims WHERE run_id IN
+                  (SELECT id FROM factcheck_runs WHERE conversation_id = ?)`,
+          params: [id],
+        },
+        { sql: "DELETE FROM factcheck_runs WHERE conversation_id = ?", params: [id] },
+        {
+          sql: `DELETE FROM focus_nodes WHERE session_id IN
+                  (SELECT id FROM focus_sessions WHERE conversation_id = ?)`,
+          params: [id],
+        },
+        { sql: "DELETE FROM focus_sessions WHERE conversation_id = ?", params: [id] },
+        { sql: "DELETE FROM node_sightings WHERE conversation_id = ?", params: [id] },
+        { sql: "DELETE FROM interest_signals WHERE conversation_id = ?", params: [id] },
+        { sql: "DELETE FROM companion_knowledge_state WHERE conversation_id = ?", params: [id] },
+        {
+          sql: `DELETE FROM term_marks WHERE target_kind = 'message' AND target_id IN
+                  (SELECT id FROM messages WHERE conversation_id = ?)`,
+          params: [id],
+        },
+        {
+          sql: `UPDATE knowledge_edges SET source_message_id = NULL WHERE source_message_id IN
+                  (SELECT id FROM messages WHERE conversation_id = ?)`,
+          params: [id],
+        },
+        {
+          sql: "UPDATE llm_calls SET conversation_id = NULL WHERE conversation_id = ?",
+          params: [id],
+        },
+        { sql: "DELETE FROM messages WHERE conversation_id = ?", params: [id] },
+        { sql: "DELETE FROM conversations WHERE id = ?", params: [id] },
+      ]);
+    },
     /** Flips the 学习模式 toggle (spec 052); never touches updated_at, so toggling alone
      * does not reshuffle the sidebar. */
     async setStudyMode(id: string, studyMode: 0 | 1): Promise<void> {

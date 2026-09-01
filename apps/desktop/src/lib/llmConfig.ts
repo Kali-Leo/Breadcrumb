@@ -10,7 +10,12 @@ import {
   type Language,
   resolveAnswerLanguage,
 } from "@breadcrumb/core-i18n";
-import type { Currency, LlmClientConfig } from "@breadcrumb/core-llm";
+import {
+  type Currency,
+  type LlmClientConfig,
+  type ModelRates,
+  modelCurrencies,
+} from "@breadcrumb/core-llm";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { ApiConfig } from "../stores/settingsStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -26,6 +31,20 @@ export function currentAnswerLanguage(): Language {
  * leaves the choice to the price table, which is correct for every single-currency model. */
 export function currentPriceCurrency(): Currency | undefined {
   return useSettingsStore.getState().apiConfig?.priceCurrency;
+}
+
+/** The learner's own rate card, when they entered one. Needs a currency to be a rate card at
+ * all; without a chosen one the account's prices are read as the model's default currency. */
+export function currentPriceOverride(): ModelRates | undefined {
+  const config = useSettingsStore.getState().apiConfig;
+  const override = config?.priceOverride;
+  if (override === undefined) return undefined;
+  return {
+    currency: config?.priceCurrency ?? modelCurrencies(config?.model ?? "")[0] ?? "USD",
+    inputPerMillionTokens: override.inputPerMillionTokens,
+    outputPerMillionTokens: override.outputPerMillionTokens,
+    cachedInputPerMillionTokens: override.cachedInputPerMillionTokens,
+  };
 }
 
 /** Thrown instead of dialling out while the network switch is off. Every LLM call site

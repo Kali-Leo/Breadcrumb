@@ -17,7 +17,14 @@
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
     "saved": "Tersimpan ✓",
-    "unsaved": "Perubahan belum tersimpan"
+    "unsaved": "Perubahan belum tersimpan",
+    "priceOverride": "Harga kamu sendiri (per juta token)",
+    "priceOverrideHint": "Isi kalau daftar harga bawaan tidak mengenal modelmu, atau harganya berubah. Masukan dan keluaran harus sama-sama diisi agar berlaku; kosongkan untuk memakai daftar bawaan.",
+    "priceInput": "Masukan",
+    "priceOutput": "Keluaran",
+    "priceCached": "Masukan dari singgahan",
+    "priceUnknown": "tidak diketahui",
+    "priceNone": "tidak ada"
   },
   "network": {
     "title": "Internet",

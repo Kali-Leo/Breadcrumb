@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Tafuta mazungumzo",
-    "noMatches": "Hakuna mazungumzo yanayolingana"
+    "noMatches": "Hakuna mazungumzo yanayolingana",
+    "rename": "Badilisha jina",
+    "more": "Chaguo zaidi za «{{name}}»",
+    "delete": "Futa",
+    "deleteConfirm": "Mazungumzo haya na alama yaliyoacha huondoka pamoja; dhana zilizo kwenye ramani yako hubaki.",
+    "deleteAction": "Futa mazungumzo haya"
   },
   "popup": {
     "close": "Funga dirisha hili la mazungumzo"

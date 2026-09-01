@@ -16,7 +16,7 @@ import {
 } from "@breadcrumb/core-llm";
 import { getRepos } from "./db";
 import { recordAiFailure } from "./failureLog";
-import { currentPriceCurrency } from "./llmConfig";
+import { currentPriceCurrency, currentPriceOverride } from "./llmConfig";
 import { newId, nowIso } from "./time";
 
 /** Currency stamped on a row for a model with no builtin price. Such a row always costs 0 —
@@ -42,6 +42,7 @@ export async function recordMeteredCall(input: {
   const rates = resolveModelRates(input.model, {
     currency: currentPriceCurrency(),
     at: new Date(createdAt),
+    override: currentPriceOverride(),
   });
   await repos.llmCalls.record({
     id: newId(),

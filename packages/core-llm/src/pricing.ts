@@ -29,6 +29,14 @@ export interface RateContext {
   at?: Date;
   /** Whether the call went to a deferred/batch endpoint. */
   deferred?: boolean;
+  /**
+   * Prices the learner typed in themselves, for a model the built-in catalogue has never
+   * heard of (or whose published price has moved). Taken exactly as given: no peak/off-peak
+   * multiplier and no batch discount, because those are properties of a price list we do not
+   * have. It wins over the catalogue — someone who went to the trouble of entering their own
+   * numbers is telling us the catalogue is wrong for them.
+   */
+  override?: ModelRates;
 }
 
 /** The currencies a model is sold in — empty for a model with no catalogue entry. More than
@@ -45,6 +53,7 @@ export function resolveModelRates(
   model: string,
   context: RateContext = {},
 ): ModelRates | undefined {
+  if (context.override !== undefined) return context.override;
   const entry = MODEL_CATALOGUE[model];
   if (entry === undefined) return undefined;
   const base = entry.rates.find((rate) => rate.currency === context.currency) ?? entry.rates[0];

@@ -4,16 +4,51 @@
  * (extracted from SettingsPanel when the currency picker arrived).
  * Main exports: ApiSettingsSection.
  */
-import { type Currency, modelCurrencies } from "@breadcrumb/core-llm";
+import { type Currency, modelCurrencies, resolveModelRates } from "@breadcrumb/core-llm";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSettingsStore } from "../stores/settingsStore";
+import { type PriceOverride, useSettingsStore } from "../stores/settingsStore";
 
 /** The API form's unsaved edits, module-level so switching views (which unmounts this
  * panel) does not silently discard them — they come back on the next visit until saved
  * (Leo-approved 2026-08-16: keep the 保存 button, never lose typed text). */
-let apiFormDraft: { baseUrl: string; apiKey: string; model: string; currency?: Currency } | null =
-  null;
+let apiFormDraft: {
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  currency?: Currency;
+  prices?: PriceFields;
+} | null = null;
+
+/** The three prices, as typed — kept as text so a half-entered number is not swallowed and
+ * an empty box stays empty rather than becoming zero. */
+interface PriceFields {
+  input: string;
+  output: string;
+  cached: string;
+}
+
+const EMPTY_PRICES: PriceFields = { input: "", output: "", cached: "" };
+
+function priceFieldsOf(config: { priceOverride?: PriceOverride } | null): PriceFields {
+  const override = config?.priceOverride;
+  if (override === undefined) return EMPTY_PRICES;
+  return {
+    input: String(override.inputPerMillionTokens),
+    output: String(override.outputPerMillionTokens),
+    cached:
+      override.cachedInputPerMillionTokens === undefined
+        ? ""
+        : String(override.cachedInputPerMillionTokens),
+  };
+}
+
+/** A number the learner typed, or undefined when the box is empty or holds nonsense — a
+ * price we cannot read is a price we do not use. */
+function readPrice(text: string): number | undefined {
+  const value = Number(text.trim());
+  return text.trim() !== "" && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400";
@@ -32,6 +67,9 @@ export function ApiSettingsSection() {
   const [pickedCurrency, setPickedCurrency] = useState(
     apiFormDraft?.currency ?? apiConfig?.priceCurrency,
   );
+  const [prices, setPrices] = useState<PriceFields>(
+    apiFormDraft?.prices ?? priceFieldsOf(apiConfig),
+  );
   const [savedHint, setSavedHint] = useState(false);
 
   // The currencies the provider actually sells this model in. One or none means there is
@@ -42,32 +80,60 @@ export function ApiSettingsSection() {
   const currency = pickedCurrency ?? currencies[0];
   const savedCurrency = apiConfig?.priceCurrency ?? currencies[0];
 
+  const savedPrices = priceFieldsOf(apiConfig);
   const dirty =
     baseUrl !== savedBaseUrl ||
     apiKey !== savedApiKey ||
     model !== savedModel ||
-    currency !== savedCurrency;
+    currency !== savedCurrency ||
+    prices.input !== savedPrices.input ||
+    prices.output !== savedPrices.output ||
+    prices.cached !== savedPrices.cached;
+
+  // What the built-in list says about this model, so the boxes can show those numbers as
+  // placeholders instead of asking the learner to look them up.
+  const catalogueRates = resolveModelRates(model.trim(), { currency });
 
   function edit(patch: Partial<{ baseUrl: string; apiKey: string; model: string }>): void {
     const next = { baseUrl, apiKey, model, ...patch };
     setBaseUrl(next.baseUrl);
     setApiKey(next.apiKey);
     setModel(next.model);
-    apiFormDraft = { ...next, currency: pickedCurrency };
+    apiFormDraft = { ...next, currency: pickedCurrency, prices };
   }
 
   function pickCurrency(value: Currency): void {
     setPickedCurrency(value);
-    apiFormDraft = { baseUrl, apiKey, model, currency: value };
+    apiFormDraft = { baseUrl, apiKey, model, currency: value, prices };
+  }
+
+  function editPrice(patch: Partial<PriceFields>): void {
+    const next = { ...prices, ...patch };
+    setPrices(next);
+    apiFormDraft = { baseUrl, apiKey, model, currency: pickedCurrency, prices: next };
   }
 
   async function save() {
+    // Input and output are the pair that makes a rate card; one on its own would price half
+    // of every call at zero, so an incomplete pair is treated as "no override at all".
+    const input = readPrice(prices.input);
+    const output = readPrice(prices.output);
+    const cached = readPrice(prices.cached);
+    const priceOverride =
+      input !== undefined && output !== undefined
+        ? {
+            inputPerMillionTokens: input,
+            outputPerMillionTokens: output,
+            ...(cached !== undefined ? { cachedInputPerMillionTokens: cached } : {}),
+          }
+        : undefined;
     await saveApiConfig({
       baseUrl: baseUrl.trim(),
       apiKey: apiKey.trim(),
       model: model.trim(),
       // Only a model sold in several currencies has an answer worth storing.
       ...(currencies.length > 1 && currency !== undefined ? { priceCurrency: currency } : {}),
+      ...(priceOverride !== undefined ? { priceOverride } : {}),
     });
     apiFormDraft = null;
     setSavedHint(true);
@@ -126,6 +192,55 @@ export function ApiSettingsSection() {
           <p className="text-xs text-stone-400">{t("api.priceCurrencyHint")}</p>
         </div>
       )}
+
+      <div className="space-y-1">
+        <p className="text-sm text-stone-500">{t("api.priceOverride")}</p>
+        <p className="text-xs text-stone-400">{t("api.priceOverrideHint")}</p>
+        <div className="flex flex-wrap gap-2">
+          <label className="flex-1 space-y-1 text-xs text-stone-400">
+            {t("api.priceInput")}
+            <input
+              inputMode="decimal"
+              value={prices.input}
+              onChange={(e) => editPrice({ input: e.target.value })}
+              placeholder={
+                catalogueRates
+                  ? String(catalogueRates.inputPerMillionTokens)
+                  : t("api.priceUnknown")
+              }
+              className={INPUT_CLASS}
+            />
+          </label>
+          <label className="flex-1 space-y-1 text-xs text-stone-400">
+            {t("api.priceOutput")}
+            <input
+              inputMode="decimal"
+              value={prices.output}
+              onChange={(e) => editPrice({ output: e.target.value })}
+              placeholder={
+                catalogueRates
+                  ? String(catalogueRates.outputPerMillionTokens)
+                  : t("api.priceUnknown")
+              }
+              className={INPUT_CLASS}
+            />
+          </label>
+          <label className="flex-1 space-y-1 text-xs text-stone-400">
+            {t("api.priceCached")}
+            <input
+              inputMode="decimal"
+              value={prices.cached}
+              onChange={(e) => editPrice({ cached: e.target.value })}
+              placeholder={
+                catalogueRates?.cachedInputPerMillionTokens === undefined
+                  ? t("api.priceNone")
+                  : String(catalogueRates.cachedInputPerMillionTokens)
+              }
+              className={INPUT_CLASS}
+            />
+          </label>
+        </div>
+      </div>
 
       <button
         type="button"

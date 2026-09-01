@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Buscar conversas",
-    "noMatches": "Nenhuma conversa corresponde"
+    "noMatches": "Nenhuma conversa corresponde",
+    "rename": "Renomear",
+    "more": "Mais opções de «{{name}}»",
+    "delete": "Excluir",
+    "deleteConfirm": "Esta conversa e as marcas que ela deixou vão juntas; os conceitos do seu mapa ficam.",
+    "deleteAction": "Excluir esta conversa"
   },
   "popup": {
     "close": "Fechar esta janela de conversa"

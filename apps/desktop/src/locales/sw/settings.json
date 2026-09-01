@@ -17,7 +17,14 @@
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
     "saved": "Imehifadhiwa ✓",
-    "unsaved": "Mabadiliko bado hayajahifadhiwa"
+    "unsaved": "Mabadiliko bado hayajahifadhiwa",
+    "priceOverride": "Bei zako mwenyewe (kwa kila tokeni milioni)",
+    "priceOverrideHint": "Zijaze pale orodha ya bei iliyojengwa ndani isipoijua modeli yako, au bei imebadilika. Lazima ingizo na matokeo vijazwe vyote ili zihesabiwe; ziache tupu ili itumike orodha ya ndani.",
+    "priceInput": "Ingizo",
+    "priceOutput": "Matokeo",
+    "priceCached": "Ingizo kutoka akiba",
+    "priceUnknown": "haijulikani",
+    "priceNone": "hakuna"
   },
   "network": {
     "title": "Intaneti",

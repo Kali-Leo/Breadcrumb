@@ -43,6 +43,10 @@ interface ChatState extends ActiveMirror {
   /** Loads a session without touching the active binding — parallel windows use this. */
   ensureSession(id: string): Promise<ChatSession>;
   openConversation(id: string): Promise<void>;
+  /** Gives a conversation the name the learner typed, which also freezes auto-naming. */
+  renameConversation(id: string, title: string): Promise<void>;
+  /** Removes a conversation and the footprints it left (see conversationsRepo.remove). */
+  deleteConversation(id: string): Promise<void>;
   startNewConversation(): void;
   /** Non-destructive continuation from any station (spec 040 §2). */
   resumeFromMessage(messageId: string): void;
@@ -132,6 +136,40 @@ export const useChatStore = create<ChatState>((set, get) => {
       } finally {
         sessionLoads.delete(id);
       }
+    },
+
+    async renameConversation(id, title) {
+      const trimmed = title.trim();
+      if (trimmed === "") return;
+      const repos = await getRepos();
+      await repos.conversations.rename(id, trimmed);
+      set({
+        conversations: get().conversations.map((conversation) =>
+          conversation.id === id
+            ? { ...conversation, title: trimmed, auto_title: null }
+            : conversation,
+        ),
+      });
+    },
+
+    async deleteConversation(id) {
+      const repos = await getRepos();
+      await repos.conversations.remove(id);
+      const sessions = new Map(get().sessions);
+      sessions.delete(id);
+      const wasActive = get().activeConversationId === id;
+      set({
+        conversations: get().conversations.filter((conversation) => conversation.id !== id),
+        sessions,
+      });
+      // A deleted conversation must not stay on screen; the composer returns to the blank
+      // state a new chat starts from.
+      if (wasActive) get().startNewConversation();
+      // Footprints went with it, so anything drawn from them is now stale.
+      const { useKnowledgeStore } = await import("./knowledgeStore");
+      await useKnowledgeStore.getState().loadTree();
+      const { useMemoryStore } = await import("./memoryStore");
+      await useMemoryStore.getState().refresh();
     },
 
     async openConversation(id) {

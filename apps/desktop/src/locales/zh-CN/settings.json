@@ -17,7 +17,14 @@
     "currencyCNY": "¥ 人民币",
     "currencyUSD": "$ 美元",
     "saved": "已保存 ✓",
-    "unsaved": "有修改还没保存"
+    "unsaved": "有修改还没保存",
+    "priceOverride": "自己填单价（每百万 token）",
+    "priceOverrideHint": "内置价目表里没有你的模型、或者价格变了，就在这里填。输入和输出都填上才生效；留空就用内置的。",
+    "priceInput": "输入",
+    "priceOutput": "输出",
+    "priceCached": "缓存命中的输入",
+    "priceUnknown": "未知",
+    "priceNone": "没有"
   },
   "network": {
     "title": "网络总开关",

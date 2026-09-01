@@ -11,7 +11,7 @@
  * Main exports: FeatureCostEstimate, estimateFeatureCost.
  */
 
-import type { Currency } from "@breadcrumb/core-llm";
+import type { Currency, ModelRates } from "@breadcrumb/core-llm";
 import {
   estimatePurposeCostMicros,
   formatCost,
@@ -38,10 +38,11 @@ export function estimateFeatureCost(
   purposes: readonly string[],
   model: string,
   currency: Currency | undefined,
+  override?: ModelRates,
 ): FeatureCostEstimate {
   if (purposes.length === 0) return { kind: "free" };
 
-  const rates = resolveModelRates(model, { currency });
+  const rates = resolveModelRates(model, { currency, override });
   if (rates === undefined) return { kind: "unknown-model" };
 
   let totalMicros = 0;

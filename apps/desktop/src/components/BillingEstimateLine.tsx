@@ -7,6 +7,7 @@
  */
 import { useTranslation } from "react-i18next";
 import { estimateFeatureCost } from "../lib/billingEstimates";
+import { currentPriceOverride } from "../lib/llmConfig";
 import { useSettingsStore } from "../stores/settingsStore";
 
 const CADENCE_KEYS = {
@@ -21,7 +22,12 @@ export function BillingEstimateLine({ purposes }: { purposes: readonly string[] 
   const { t } = useTranslation("settings");
   const apiConfig = useSettingsStore((state) => state.apiConfig);
 
-  const estimate = estimateFeatureCost(purposes, apiConfig?.model ?? "", apiConfig?.priceCurrency);
+  const estimate = estimateFeatureCost(
+    purposes,
+    apiConfig?.model ?? "",
+    apiConfig?.priceCurrency,
+    currentPriceOverride(),
+  );
 
   if (estimate.kind === "free") {
     return <p className="text-xs text-stone-400">{t("billing.estimateFree")}</p>;

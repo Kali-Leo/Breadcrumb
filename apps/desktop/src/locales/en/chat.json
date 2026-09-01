@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Search chats",
-    "noMatches": "No chats match that"
+    "noMatches": "No chats match that",
+    "rename": "Rename",
+    "more": "More for “{{name}}”",
+    "delete": "Delete",
+    "deleteConfirm": "This chat and the footprints it left go together; the concepts on your map stay.",
+    "deleteAction": "Delete this chat"
   },
   "popup": {
     "close": "Close this chat window"

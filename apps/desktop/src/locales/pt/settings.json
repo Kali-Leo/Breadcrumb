@@ -17,7 +17,14 @@
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
     "saved": "Salvo ✓",
-    "unsaved": "Alterações ainda não salvas"
+    "unsaved": "Alterações ainda não salvas",
+    "priceOverride": "Seus próprios preços (por milhão de tokens)",
+    "priceOverrideHint": "Preencha quando a lista embutida não conhecer seu modelo, ou o preço tiver mudado. Entrada e saída precisam estar preenchidas para valer; deixe em branco para usar a lista embutida.",
+    "priceInput": "Entrada",
+    "priceOutput": "Saída",
+    "priceCached": "Entrada em cache",
+    "priceUnknown": "desconhecido",
+    "priceNone": "nenhum"
   },
   "network": {
     "title": "Internet",

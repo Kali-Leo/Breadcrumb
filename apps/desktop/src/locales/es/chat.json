@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Buscar conversaciones",
-    "noMatches": "Ninguna conversación coincide"
+    "noMatches": "Ninguna conversación coincide",
+    "rename": "Cambiar el nombre",
+    "more": "Más opciones de «{{name}}»",
+    "delete": "Eliminar",
+    "deleteConfirm": "Esta conversación y las huellas que dejó se van juntas; los conceptos de tu mapa se quedan.",
+    "deleteAction": "Eliminar esta conversación"
   },
   "popup": {
     "close": "Cerrar esta ventana de conversación"

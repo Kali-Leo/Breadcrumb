@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Rechercher dans les conversations",
-    "noMatches": "Aucune conversation ne correspond"
+    "noMatches": "Aucune conversation ne correspond",
+    "rename": "Renommer",
+    "more": "Plus d'options pour « {{name}} »",
+    "delete": "Supprimer",
+    "deleteConfirm": "Cette conversation et les traces qu'elle a laissées partent ensemble ; les notions de ta carte restent.",
+    "deleteAction": "Supprimer cette conversation"
   },
   "popup": {
     "close": "Fermer cette fenêtre de conversation"

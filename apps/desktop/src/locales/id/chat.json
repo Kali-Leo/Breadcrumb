@@ -12,7 +12,12 @@
   },
   "trail": {
     "search": "Cari percakapan",
-    "noMatches": "Tidak ada percakapan yang cocok"
+    "noMatches": "Tidak ada percakapan yang cocok",
+    "rename": "Ganti nama",
+    "more": "Opsi lain untuk «{{name}}»",
+    "delete": "Hapus",
+    "deleteConfirm": "Percakapan ini dan jejak yang ditinggalkannya ikut terhapus; konsep di petamu tetap ada.",
+    "deleteAction": "Hapus percakapan ini"
   },
   "popup": {
     "close": "Tutup jendela percakapan ini"

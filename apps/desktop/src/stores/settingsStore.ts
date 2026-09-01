@@ -33,6 +33,20 @@ export interface ApiConfig {
    * saved before this existed and for single-currency models, where there is nothing to
    * ask — the price table's own currency wins. */
   priceCurrency?: Currency;
+  /**
+   * Prices the learner typed for their own model, in currency units per million tokens —
+   * exactly the way providers publish them. Set when the built-in list has never heard of
+   * the model, or has the wrong number for this account. Absent = use the built-in list.
+   */
+  priceOverride?: PriceOverride;
+}
+
+/** Prices as the learner typed them: currency units per million tokens. */
+export interface PriceOverride {
+  inputPerMillionTokens: number;
+  outputPerMillionTokens: number;
+  /** Optional: providers without a prefix cache have no such rate to enter. */
+  cachedInputPerMillionTokens?: number;
 }
 
 /** Every optional AI-consuming feature has its own switch (product principle 3). */
