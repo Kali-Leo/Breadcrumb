@@ -928,6 +928,15 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0050_llm_calls_cached_input_tokens",
     statements: [`ALTER TABLE llm_calls ADD COLUMN cached_input_tokens INTEGER;`],
   },
+  {
+    // Language packs beyond the bundled zh→en are downloaded when the learner picks a pair
+    // (2026-09-01): dozens of pairs at a megabyte or two each cannot all ride inside the
+    // installer. The payload lives here rather than on disk so the browser build, which has
+    // no filesystem, installs packs the same way the desktop does — one code path, and the
+    // pack disappears with the database it belongs to.
+    id: "0051_diglot_pack_payload",
+    statements: [`ALTER TABLE diglot_language_packs ADD COLUMN payload_json TEXT;`],
+  },
 ];
 
 /**

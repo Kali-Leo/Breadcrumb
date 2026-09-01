@@ -13,6 +13,7 @@ import { CompanionSection } from "./components/CompanionSection";
 import { DiscoveryView } from "./components/discovery/DiscoveryView";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
+import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
 import { OnboardingHost } from "./components/onboarding/OnboardingHost";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
@@ -46,6 +47,7 @@ export default function App() {
     null,
   );
   const settingsLoaded = useSettingsStore((state) => state.loaded);
+  const languageUnchosen = useSettingsStore((state) => state.languageUnchosen);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
 
   useEffect(() => {
@@ -108,6 +110,10 @@ export default function App() {
       setView("chat");
     });
   }, []);
+
+  // Nobody has chosen a language and the machine reads one we have no interface in: ask
+  // first, before any of the app's own words appear (Leo 2026-09-01).
+  if (settingsLoaded && languageUnchosen) return <LanguageFirstRun />;
 
   return (
     <div className="flex h-screen flex-col text-stone-800">

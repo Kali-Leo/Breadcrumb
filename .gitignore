@@ -40,3 +40,6 @@ CLAUDE.md
 .claude/
 docs/
 specs/
+
+# Language-pack build inputs: hundreds of megabytes of upstream dictionary dumps.
+scripts/language-packs/.cache/

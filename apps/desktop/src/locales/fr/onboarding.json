@@ -1,0 +1,55 @@
+{
+  "next": "Suivant",
+  "back": "Retour",
+  "skip": "Passe, je me débrouille",
+  "welcome": {
+    "title": "Tu parles, il prend les notes",
+    "body": "Breadcrumb est un compagnon d'apprentissage. Tu parles de ce que tu veux apprendre et, en parallèle, il construit une carte de ce que tu as parcouru — sans prise de notes, sans pointage.",
+    "point1": "Les notions dont tu parles apparaissent d'elles-mêmes sur la carte, et s'estompent là où tu n'es pas revenu",
+    "point2": "Tout reste sur cet ordinateur. Pas de compte, pas de synchronisation dans le cloud",
+    "point3": "Pas de classement, pas de séries, pas de barres de progression",
+    "tryDemo": "Montre-moi d'abord un exemple (recommandé)",
+    "demoNote": "Charge trois mois d'apprentissage de quelqu'un d'autre et te les fait parcourir. Un clic les enlève quand tu veux.",
+    "installing": "Préparation de l'exemple…",
+    "startClean": "Passer l'exemple, commencer à vide"
+  },
+  "tour": {
+    "label": "Visite guidée",
+    "finish": "Commencer à l'utiliser",
+    "exit": "Quitter la visite",
+    "chatTitle": "Tout commence ici",
+    "chatBody": "Tu n'as qu'à parler. L'interrupteur au-dessus : en mode étude, les réponses t'amènent à réfléchir et à t'exercer ; en discussion libre, c'est une conversation ordinaire.",
+    "trailTitle": "Tes conversations vivent à gauche",
+    "trailBody": "Les titres se donnent tout seuls — de la première notion à la dernière. Dès que tu en renommes un toi-même, il n'est plus jamais renommé.",
+    "mapTitle": "Parle un moment et ceci pousse",
+    "mapBody": "Ces îles ont été tirées des conversations automatiquement ; rien ici n'a été rangé à la main. Molette vers le haut pour entrer dans l'une d'elles.",
+    "mapEmptyTitle": "La pleine mer, pour l'instant",
+    "mapEmptyBody": "Chaque échange transforme de lui-même ce dont tu as parlé en îles, ici. Tu n'as rien à ranger.",
+    "mirrorTitle": "Que cela s'estompe est normal",
+    "mirrorBody": "Ces deux-là montrent ce que tu as parcouru et ce dont tu te souviendrais encore. Les endroits où tu n'es pas revenu s'estompent — c'est un rappel, pas un reproche. Tout est calculé ici et ne coûte rien.",
+    "spendingTitle": "Ce que cela coûte, avant de l'allumer",
+    "spendingBody": "Toutes les fonctions payantes sont sur cette page avec leur propre interrupteur, et chacune dit à peu près ce que coûte une utilisation avant que tu l'actives. Ce chiffre est mesuré, pas deviné.",
+    "yourTurnTitle": "À toi",
+    "yourTurnBody": "Pose une question sur quelque chose que tu veux vraiment comprendre. La carte suivra toute seule."
+  },
+  "checklist": {
+    "title": "Commence ici",
+    "connect": "Connecter un service d'IA",
+    "ask": "Poser ta première question",
+    "map": "Ouvrir la carte",
+    "dismiss": "Masquer cette liste",
+    "demoNote": "La carte affiche des données d'exemple pour l'instant.",
+    "removeDemo": "Retirer les données d'exemple",
+    "removingDemo": "Retrait…",
+    "takeTour": "Fais-moi faire le tour",
+    "tourNote": "Deux minutes, en montrant l'écran réel. Échap pour sortir à tout moment."
+  },
+  "settings": {
+    "title": "Visite guidée",
+    "hint": "Refais l'introduction, ou retire les données d'exemple.",
+    "replay": "Refaire la visite",
+    "removeDemo": "Retirer les données d'exemple",
+    "demoInstalled": "Les données d'exemple sont installées",
+    "demoAbsent": "Pas de données d'exemple"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "next": "Lanjut",
+  "back": "Kembali",
+  "skip": "Lewati, saya cari jalan sendiri",
+  "welcome": {
+    "title": "Kamu bicara, ia yang mencatat",
+    "body": "Breadcrumb adalah teman belajar. Kamu bicara tentang apa yang ingin kamu pelajari, dan sambil jalan ia menyusun peta dari yang sudah kamu lewati — tanpa mencatat, tanpa absen.",
+    "point1": "Konsep yang kamu bicarakan muncul sendiri di peta, dan memudar di tempat yang tidak kamu datangi lagi",
+    "point2": "Semuanya tinggal di komputer ini. Tanpa akun, tanpa sinkronisasi awan",
+    "point3": "Tanpa papan peringkat, tanpa rentetan hari, tanpa bilah kemajuan",
+    "tryDemo": "Tunjukkan contohnya dulu (disarankan)",
+    "demoNote": "Memuat tiga bulan belajar milik orang lain dan mengajakmu berkeliling. Satu klik menghapusnya kapan saja.",
+    "installing": "Menyiapkan contoh…",
+    "startClean": "Lewati contohnya, mulai dari kosong"
+  },
+  "tour": {
+    "label": "Tur berpemandu",
+    "finish": "Mulai memakainya",
+    "exit": "Keluar dari tur",
+    "chatTitle": "Semua bermula di sini",
+    "chatBody": "Kamu cukup bicara. Sakelar di atas: dalam mode belajar, jawaban menuntunmu berpikir dan mencoba; dalam obrolan bebas, ini percakapan biasa.",
+    "trailTitle": "Percakapanmu tinggal di sebelah kiri",
+    "trailBody": "Judulnya menamai dirinya sendiri — dari konsep pertama sampai terakhir. Begitu kamu menamainya sendiri, ia tidak pernah diganti lagi.",
+    "mapTitle": "Ngobrol sebentar dan ini tumbuh",
+    "mapBody": "Pulau-pulau ini ditarik dari percakapan secara otomatis; tidak ada yang disusun dengan tangan di sini. Gulir ke atas untuk masuk ke salah satunya.",
+    "mapEmptyTitle": "Untuk sekarang, laut lepas",
+    "mapEmptyBody": "Tiap pertukaran pesan mengubah sendiri apa yang kalian bicarakan menjadi pulau di sini. Tidak ada yang perlu kamu susun.",
+    "mirrorTitle": "Memudar memang seharusnya terjadi",
+    "mirrorBody": "Keduanya menunjukkan berapa banyak yang sudah kamu lewati dan berapa yang masih bisa kamu ingat. Tempat yang tidak kamu datangi memudar — itu pengingat, bukan catatan buruk atasmu. Semuanya dihitung di sini dan tidak memakan biaya.",
+    "spendingTitle": "Berapa biayanya, sebelum kamu menyalakannya",
+    "spendingBody": "Semua fitur yang memakan biaya ada di halaman ini dengan sakelarnya sendiri, dan tiap fitur menyebutkan kira-kira berapa biaya satu kali pakai sebelum kamu menyalakannya. Angka itu diukur, bukan dikira-kira.",
+    "yourTurnTitle": "Giliranmu",
+    "yourTurnBody": "Tanyakan sesuatu yang benar-benar ingin kamu pahami. Petanya akan mengikuti sendiri."
+  },
+  "checklist": {
+    "title": "Mulai dari sini",
+    "connect": "Hubungkan layanan AI",
+    "ask": "Ajukan pertanyaan pertamamu",
+    "map": "Buka peta",
+    "dismiss": "Sembunyikan daftar ini",
+    "demoNote": "Peta sedang menampilkan data contoh.",
+    "removeDemo": "Hapus data contoh",
+    "removingDemo": "Menghapus…",
+    "takeTour": "Ajak saya berkeliling",
+    "tourNote": "Dua menit, sambil menunjuk layar yang sebenarnya. Escape keluar kapan saja."
+  },
+  "settings": {
+    "title": "Tur berpemandu",
+    "hint": "Ulangi perkenalannya, atau hapus data contoh.",
+    "replay": "Ikuti turnya lagi",
+    "removeDemo": "Hapus data contoh",
+    "demoInstalled": "Data contoh terpasang",
+    "demoAbsent": "Tidak ada data contoh"
+  }
+}

@@ -16,7 +16,9 @@ export type ScriptFamily =
   | "devanagari"
   | "bengali"
   | "ethiopic"
-  | "cyrillic";
+  | "cyrillic"
+  | "kana"
+  | "hangul";
 
 /**
  * How well the model writes this language, as an editorial judgement — NOT a benchmark score
@@ -45,11 +47,13 @@ export interface Language {
 }
 
 /**
- * Two languages ship complete today. The rest are listed because the work to add them is a
- * folder of message files, not a code change — and because the answer-language machinery
- * (directive, detection, the "the model is weaker here" advice) has to be right for
- * languages we do not yet have an interface in: a user can already read in Swahili while
- * the interface is in English.
+ * Ten ship complete (2026-09-01). Amharic is listed but not shipped: writing an interface in
+ * a language nobody here can check reads worse than not offering it, so it waits for a
+ * translation someone can vouch for (tracked in the repo's language-data issue). Adding a
+ * language is a folder of message files plus a row here, not a code change. The
+ * answer-language machinery (directive, detection, the "the model is weaker here" advice)
+ * still covers languages we have no interface in: a reader can ask for answers in a language
+ * the interface does not speak.
  */
 export const LANGUAGES: readonly Language[] = [
   {
@@ -77,7 +81,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "fr",
@@ -86,7 +90,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "pt",
@@ -95,7 +99,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "ru",
@@ -104,7 +108,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "cyrillic",
     modelSupport: "strong",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "ar",
@@ -113,7 +117,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "rtl",
     script: "arabic",
     modelSupport: "workable",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "hi",
@@ -122,7 +126,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "devanagari",
     modelSupport: "workable",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "id",
@@ -131,7 +135,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "latin",
     modelSupport: "workable",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "bn",
@@ -140,7 +144,7 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "bengali",
     modelSupport: "thin",
-    shipped: false,
+    shipped: true,
   },
   {
     code: "sw",
@@ -149,6 +153,60 @@ export const LANGUAGES: readonly Language[] = [
     direction: "ltr",
     script: "latin",
     modelSupport: "thin",
+    shipped: true,
+  },
+  {
+    code: "de",
+    endonym: "Deutsch",
+    detectionCodes: ["deu"],
+    direction: "ltr",
+    script: "latin",
+    modelSupport: "strong",
+    shipped: false,
+  },
+  {
+    code: "it",
+    endonym: "Italiano",
+    detectionCodes: ["ita"],
+    direction: "ltr",
+    script: "latin",
+    modelSupport: "strong",
+    shipped: false,
+  },
+  {
+    code: "tr",
+    endonym: "Türkçe",
+    detectionCodes: ["tur"],
+    direction: "ltr",
+    script: "latin",
+    modelSupport: "workable",
+    shipped: false,
+  },
+  {
+    code: "vi",
+    endonym: "Tiếng Việt",
+    detectionCodes: ["vie"],
+    direction: "ltr",
+    script: "latin",
+    modelSupport: "workable",
+    shipped: false,
+  },
+  {
+    code: "ja",
+    endonym: "日本語",
+    detectionCodes: ["jpn"],
+    direction: "ltr",
+    script: "kana",
+    modelSupport: "strong",
+    shipped: false,
+  },
+  {
+    code: "ko",
+    endonym: "한국어",
+    detectionCodes: ["kor"],
+    direction: "ltr",
+    script: "hangul",
+    modelSupport: "strong",
     shipped: false,
   },
   {
@@ -175,6 +233,21 @@ export function languageOf(code: string): Language | null {
 
 export function isLanguageCode(code: string): boolean {
   return languageOf(code) !== null;
+}
+
+/**
+ * How to write a language's name for a reader: in the language itself where the table knows
+ * it, otherwise the code. Region-less tags resolve to their regional row ("zh" → 简体中文),
+ * which matters wherever a code arrives from outside the table — a language-pack id, say.
+ * Display only: `languageOf`/`isLanguageCode` stay exact, so nothing is ever *stored* under a
+ * tag the table does not literally hold.
+ */
+export function languageNameOf(code: string): string {
+  const exact = languageOf(code);
+  if (exact !== null) return exact.endonym;
+  const base = code.toLowerCase().split("-")[0] ?? "";
+  const prefixed = LANGUAGES.find((language) => language.code.toLowerCase().startsWith(`${base}-`));
+  return prefixed?.endonym ?? code;
 }
 
 /** The language the app falls back to when the model is thin in the chosen one. */

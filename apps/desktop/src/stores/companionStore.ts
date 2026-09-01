@@ -1,7 +1,7 @@
 /**
  * Purpose: zustand store for the daily helper companions (spec 050 §9, Leo's redesign of
- * spec 037) — each day the gate turns the lowest-retention, footprinted concepts into up
- * to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
+ * spec 037) — each day the gate turns the footprinted concepts a review would help most
+ * (plugin-memory's review priority) into up to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
  * paradigm); talking to one drives mastery judgment underneath; once a teach-quality
  * claim lands the helper thanks the learner and leaves the roster. No same-day refills:
  * yesterday's leftovers expire, tomorrow brings a fresh batch. Also keeps crisis
@@ -175,14 +175,14 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       if (todays.length === 0) {
         await useMemoryStore.getState().refresh();
         const nodes = useKnowledgeStore.getState().nodes;
-        const retentionByNode = useMemoryStore.getState().retentionByNode;
+        const reviewPriorityByNode = useMemoryStore.getState().reviewPriorityByNode;
         const cooldownStart = new Date(
           Date.parse(todayStart) - HELPER_REPEAT_COOLDOWN_DAYS * 24 * 3_600_000,
         ).toISOString();
         const recentNodeIds = new Set(
           rows.filter((row) => row.created_at >= cooldownStart).map((row) => row.node_id),
         );
-        const candidates = pickTeachCandidates(nodes, retentionByNode, DAILY_HELPER_LIMIT * 2)
+        const candidates = pickTeachCandidates(nodes, reviewPriorityByNode, DAILY_HELPER_LIMIT * 2)
           .filter((node) => !recentNodeIds.has(node.id))
           .slice(0, DAILY_HELPER_LIMIT);
         for (const node of candidates) {

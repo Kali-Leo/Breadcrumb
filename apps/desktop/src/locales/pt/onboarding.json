@@ -1,0 +1,55 @@
+{
+  "next": "Avançar",
+  "back": "Voltar",
+  "skip": "Pular, eu me viro",
+  "welcome": {
+    "title": "Você fala, ele anota",
+    "body": "Breadcrumb é um companheiro de aprendizado. Você fala sobre o que quer aprender e, junto disso, ele monta um mapa do que você percorreu — sem anotar nada, sem bater ponto.",
+    "point1": "Os conceitos sobre os quais você fala aparecem sozinhos no mapa, e desbotam onde você não voltou",
+    "point2": "Tudo fica neste computador. Sem conta, sem sincronização na nuvem",
+    "point3": "Sem rankings, sem sequências, sem barras de progresso",
+    "tryDemo": "Me mostre um exemplo primeiro (recomendado)",
+    "demoNote": "Carrega três meses de aprendizado de outra pessoa e te guia por eles. Um clique remove quando quiser.",
+    "installing": "Preparando o exemplo…",
+    "startClean": "Pular o exemplo, começar vazio"
+  },
+  "tour": {
+    "label": "Tour guiado",
+    "finish": "Começar a usar",
+    "exit": "Sair do tour",
+    "chatTitle": "Tudo começa aqui",
+    "chatBody": "Você só precisa falar. A chave acima: no modo estudo as respostas levam você a pensar e praticar; na conversa livre é um papo comum.",
+    "trailTitle": "Suas conversas ficam à esquerda",
+    "trailBody": "Os títulos se dão sozinhos — do primeiro conceito ao último. Assim que você renomeia um, ele nunca mais é renomeado.",
+    "mapTitle": "Converse um tempo e isto cresce",
+    "mapBody": "Estas ilhas saíram das conversas automaticamente; nada aqui foi arquivado à mão. Role para cima para entrar numa delas.",
+    "mapEmptyTitle": "Mar aberto, por enquanto",
+    "mapEmptyBody": "Cada troca de mensagens transforma sozinha o que vocês conversaram em ilhas aqui. Não há nada para você arquivar.",
+    "mirrorTitle": "Desbotar é o que tem de acontecer",
+    "mirrorBody": "Estes dois mostram quanto você percorreu e quanto ainda lembraria. Os lugares onde você não voltou desbotam — é um lembrete, não uma nota contra você. Tudo é calculado aqui e não custa nada.",
+    "spendingTitle": "Quanto custa, antes de você ligar",
+    "spendingBody": "Todo recurso que custa dinheiro está nesta página com sua própria chave, e cada um diz mais ou menos quanto custa um uso antes de você ligá-lo. Esse número é medido, não chutado.",
+    "yourTurnTitle": "Sua vez",
+    "yourTurnBody": "Pergunte sobre algo que você realmente queira entender. O mapa acompanha sozinho."
+  },
+  "checklist": {
+    "title": "Comece por aqui",
+    "connect": "Conectar um serviço de IA",
+    "ask": "Fazer sua primeira pergunta",
+    "map": "Abrir o mapa",
+    "dismiss": "Dispensar esta lista",
+    "demoNote": "O mapa está mostrando dados de exemplo agora.",
+    "removeDemo": "Remover os dados de exemplo",
+    "removingDemo": "Removendo…",
+    "takeTour": "Me mostre passo a passo",
+    "tourNote": "Dois minutos, apontando para a tela real. Esc sai a qualquer momento."
+  },
+  "settings": {
+    "title": "Tour guiado",
+    "hint": "Refaça a introdução, ou remova os dados de exemplo.",
+    "replay": "Fazer o tour de novo",
+    "removeDemo": "Remover dados de exemplo",
+    "demoInstalled": "Os dados de exemplo estão instalados",
+    "demoAbsent": "Sem dados de exemplo"
+  }
+}

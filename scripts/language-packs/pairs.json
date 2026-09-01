@@ -1,0 +1,171 @@
+{
+  "$comment": "Language pairs the builder attempts. A pair here is a candidate, not a promise: build-pack.mjs refuses any pair whose frequency list is missing or whose weavable-entry count comes out too low, and the catalog only lists what actually built. Directions: `x:en` = you read x and meet English words; `en:x` = you read English and meet x words. zh:en is built by the older CC-CEDICT pipeline (build-zh-en.mjs) and ships inside the app, so it is not listed here.",
+  "downloadBase": "https://github.com/Kali-Leo/Breadcrumb/releases/download/language-packs",
+  "englishFrequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 },
+  "pairs": [
+    {
+      "id": "en:es",
+      "name": "read English, learn Spanish",
+      "kaikkiLanguage": "Spanish",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "es:en",
+      "name": "read Spanish, learn English",
+      "kaikkiLanguage": "Spanish",
+      "frequency": { "code": "es", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:fr",
+      "name": "read English, learn French",
+      "kaikkiLanguage": "French",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "fr:en",
+      "name": "read French, learn English",
+      "kaikkiLanguage": "French",
+      "frequency": { "code": "fr", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:pt",
+      "name": "read English, learn Portuguese",
+      "kaikkiLanguage": "Portuguese",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "pt:en",
+      "name": "read Portuguese, learn English",
+      "kaikkiLanguage": "Portuguese",
+      "frequency": { "code": "pt_br", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:ru",
+      "name": "read English, learn Russian",
+      "kaikkiLanguage": "Russian",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "ru:en",
+      "name": "read Russian, learn English",
+      "kaikkiLanguage": "Russian",
+      "frequency": { "code": "ru", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:id",
+      "name": "read English, learn Indonesian",
+      "kaikkiLanguage": "Indonesian",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "id:en",
+      "name": "read Indonesian, learn English",
+      "kaikkiLanguage": "Indonesian",
+      "frequency": { "code": "id", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:vi",
+      "name": "read English, learn Vietnamese",
+      "kaikkiLanguage": "Vietnamese",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "vi:en",
+      "name": "read Vietnamese, learn English",
+      "kaikkiLanguage": "Vietnamese",
+      "frequency": { "code": "vi", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:ar",
+      "name": "read English, learn Arabic",
+      "kaikkiLanguage": "Arabic",
+      "rtl": true,
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "ar:en",
+      "name": "read Arabic, learn English",
+      "kaikkiLanguage": "Arabic",
+      "frequency": { "code": "ar", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:bn",
+      "name": "read English, learn Bengali",
+      "kaikkiLanguage": "Bengali",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "bn:en",
+      "name": "read Bengali, learn English",
+      "kaikkiLanguage": "Bengali",
+      "frequency": { "code": "bn", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:hi",
+      "name": "read English, learn Hindi",
+      "kaikkiLanguage": "Hindi",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:sw",
+      "name": "read English, learn Swahili",
+      "kaikkiLanguage": "Swahili",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:de",
+      "name": "read English, learn German",
+      "kaikkiLanguage": "German",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "de:en",
+      "name": "read German, learn English",
+      "kaikkiLanguage": "German",
+      "frequency": { "code": "de", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:ja",
+      "name": "read English, learn Japanese",
+      "kaikkiLanguage": "Japanese",
+      "ruby": true,
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:ko",
+      "name": "read English, learn Korean",
+      "kaikkiLanguage": "Korean",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:it",
+      "name": "read English, learn Italian",
+      "kaikkiLanguage": "Italian",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "it:en",
+      "name": "read Italian, learn English",
+      "kaikkiLanguage": "Italian",
+      "frequency": { "code": "it", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:tr",
+      "name": "read English, learn Turkish",
+      "kaikkiLanguage": "Turkish",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "tr:en",
+      "name": "read Turkish, learn English",
+      "kaikkiLanguage": "Turkish",
+      "frequency": { "code": "tr", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    },
+    {
+      "id": "en:zh",
+      "name": "read English, learn Chinese",
+      "kaikkiLanguage": "Chinese",
+      "frequency": { "code": "en", "editions": ["2018", "2016"], "minimumWords": 20000 }
+    }
+  ]
+}

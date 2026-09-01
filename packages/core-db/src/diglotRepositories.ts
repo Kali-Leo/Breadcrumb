@@ -139,18 +139,38 @@ export function createDiglotRepo(sql: SqlClient) {
         [pair],
       );
     },
-    /** Registers (or re-registers after update) one installed language pack. */
+    /** Registers (or re-registers after update) one installed language pack, payload and all. */
     async upsertPack(row: DiglotLanguagePackRow): Promise<void> {
       await sql.execute(
         `INSERT OR REPLACE INTO diglot_language_packs
-           (id, source_lang, target_lang, version, meta_json, installed_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [row.id, row.source_lang, row.target_lang, row.version, row.meta_json, row.installed_at],
+           (id, source_lang, target_lang, version, meta_json, installed_at, payload_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          row.id,
+          row.source_lang,
+          row.target_lang,
+          row.version,
+          row.meta_json,
+          row.installed_at,
+          row.payload_json ?? null,
+        ],
       );
     },
-    /** Every installed pack — drives the settings page's pair picker. */
+    /** Every installed pack, without the payloads — the picker needs the list, not megabytes
+     * of dictionary text. */
     async listPacks(): Promise<DiglotLanguagePackRow[]> {
-      return sql.select<DiglotLanguagePackRow>("SELECT * FROM diglot_language_packs ORDER BY id");
+      return sql.select<DiglotLanguagePackRow>(
+        `SELECT id, source_lang, target_lang, version, meta_json, installed_at
+         FROM diglot_language_packs ORDER BY id`,
+      );
+    },
+    /** The stored pack file for one pair, or null when that pair is not installed. */
+    async getPackPayload(id: DiglotPairId): Promise<string | null> {
+      const rows = await sql.select<{ payload_json: string | null }>(
+        "SELECT payload_json FROM diglot_language_packs WHERE id = ?",
+        [id],
+      );
+      return rows[0]?.payload_json ?? null;
     },
     /** Uninstalls a pack registration; word states are deliberately kept — re-installing
      * the pack must not lose learning history. */

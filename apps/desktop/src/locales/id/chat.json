@@ -1,0 +1,57 @@
+{
+  "emptyLine": "Belum ada percakapan. Tulis di bawah apa yang ingin kamu pelajari untuk memulai.",
+  "noReplyYet": "Pesan ini belum punya balasan",
+  "resumedFromMiddle": "Melanjutkan dari titik sebelumnya · pesan-pesan berikutnya masih ada",
+  "backToLatest": "Kembali ke yang terbaru",
+  "composer": {
+    "placeholder": "Apa yang ingin kamu pelajari? Katakan saja… (Enter untuk kirim, Shift+Enter untuk baris baru)",
+    "freeLabel": "Ngobrol bebas",
+    "freeHint": "Bicarakan apa saja, dengan cara apa saja.",
+    "studyLabel": "Mode belajar",
+    "studyHint": "Jawaban menuntunmu berpikir dan mencoba sendiri, supaya yang kamu pelajari bertahan."
+  },
+  "trail": {
+    "search": "Cari percakapan",
+    "noMatches": "Tidak ada percakapan yang cocok"
+  },
+  "popup": {
+    "close": "Tutup jendela percakapan ini"
+  },
+  "factcheck": {
+    "checking": "Menelusuri sumber…",
+    "ask": "Periksa ini",
+    "nothingToCheck": "Tidak ada pernyataan faktual di jawaban ini yang bisa diperiksa",
+    "supported": "Ada sumber yang mendukungnya",
+    "insufficient": "Tidak ditemukan sumber pendukung — sebaiknya dipastikan sendiri",
+    "contradicted": "Sumbernya berbeda pendapat; ini kedua sisinya",
+    "unavailable": "Kali ini tidak bisa diperiksa",
+    "unavailableNextStep": "Kamu bisa mencoba lagi nanti.",
+    "noEvidenceReasoning": "Saya tidak menemukan sumber publik yang mendukung ini — sebaiknya dipastikan sendiri.",
+    "verdictFailedReasoning": "Sumbernya sudah datang, tetapi pembacaannya tidak selesai. Kamu bisa mencoba lagi nanti.",
+    "noneChecked": "Kali ini tidak ada yang bisa diperiksa — coba lagi nanti",
+    "allSupported_other": "{{count}} pernyataan punya sumber pendukung",
+    "someSupported": "{{supported}} dari {{total}} pernyataan punya sumber pendukung",
+    "offlineNotice": "Sakelar internet sedang mati. Nyalakan agar sumber bisa ditelusuri.",
+    "noApiNotice": "Atur dulu layanan AI di pengaturan, baru ini bisa diperiksa.",
+    "failedNotice": "Pemeriksaan tidak selesai (jaringan terganggu). Kamu bisa mencoba lagi nanti."
+  },
+  "companion": {
+    "roleStudent": "Murid AI",
+    "rolePeer": "Teman sekelas AI",
+    "roleMentor": "Mentor AI",
+    "chatDisabled": "Obrolan dengan teman sedang mati. Untuk melanjutkan, nyalakan lagi «Obrolan dengan teman» di pengaturan",
+    "credits": "Para teman berasal dari Pepper&Carrot karya David Revoy (peppercarrot.com), CC-BY 4.0; kepribadian tertulis mereka adalah karya turunan dengan perubahan dan tidak berarti didukung oleh penulis aslinya.",
+    "closeRoster": "Tutup daftar teman",
+    "aiLabel": "Teman belajar AI",
+    "rosterEmpty": "Hari ini tidak ada yang mampir minta bantuan.",
+    "breakReminder": "Percakapan ini sudah berjalan dua jam. Kamu boleh berhenti dan istirahat; semuanya tetap di sini.",
+    "crisisResponse": "Kamu menyebut ingin menyakiti diri sendiri. Saya AI dan tidak bisa membantu soal ini — sebaiknya bicara dengan orang sungguhan. Tiongkok daratan: saluran bantuan 12356. Amerika Serikat: 988. Negara lain: findahelpline.com. Percakapan ini akan tetap ada di sini.",
+    "helperInvitation": "Saya masih belum paham «{{topic}}». Kalau sempat, bisa dijelaskan dengan kata-katamu sendiri? Mulai dari apa itu sudah sangat membantu.",
+    "helperThanks": "Terima kasih. Sekarang «{{topic}}» jauh lebih masuk akal buat saya. Saya mau latihan sendiri dulu — sampai jumpa."
+  },
+  "errors": {
+    "offline": "Kamu sedang luring. Untuk melanjutkan, nyalakan lagi sakelar internet di pengaturan",
+    "noApiConfig": "Belum ada layanan AI yang diatur. Tambahkan alamat dan kuncinya di halaman pengaturan",
+    "requestFailed": "Permintaan itu tidak sampai. Coba lagi sebentar lagi, atau periksa layanan AI di pengaturan."
+  }
+}

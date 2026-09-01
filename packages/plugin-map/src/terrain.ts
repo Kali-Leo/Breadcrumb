@@ -2,7 +2,13 @@
  * Purpose: terrain orchestrator — blue-noise mesh, Azgaar-sculpted heightmap,
  * mewo2 hydraulic erosion, land mask with smoothed coast loops and flow-accumulation
  * rivers. Island-local coordinates (origin at island center).
- * Main exports: generateTerrain, IslandTerrain, TerrainCell.
+ *
+ * An island's shape is a function of its seed and nothing else (Leo 2026-09-01: "形状稳定,
+ * 剩下的不稳定"). Everything is generated at one canonical radius; growing a size tier
+ * scales that same outline up instead of redrawing the coast, so an island you have seen
+ * before stays recognizable however much it grows or wherever it lands. Position and size
+ * carry no such promise.
+ * Main exports: generateTerrain, scaleTerrain, CANONICAL_RADIUS, IslandTerrain, TerrainCell.
  */
 
 import { erodeTerrain } from "./erosion";
@@ -36,8 +42,16 @@ export interface IslandTerrain {
   rivers: RiverPath[];
 }
 
-const CELL_TARGET_BY_TIER = [1600, 2000, 2400, 2800, 3200, 3600] as const;
-const LAND_FRACTION_BY_TIER = [0.28, 0.3, 0.33, 0.35, 0.37, 0.39] as const;
+/** The radius every island is generated at, whatever size it is drawn at (the middle of
+ * layout.ts's RADIUS_BY_TIER, so the typical island is scaled least). */
+export const CANONICAL_RADIUS = 250;
+/** Cell count and land fraction of the canonical island — once tier-dependent, which is
+ * exactly what made a growing island redraw its coastline. */
+const CANONICAL_CELL_TARGET = 2400;
+const CANONICAL_LAND_FRACTION = 0.33;
+/** Sculpting richness (ridge count, hill count, plate mask) is likewise fixed: it feeds the
+ * heightmap, so tying it to size would move the coast again. */
+const CANONICAL_SCULPT_TIER = 3;
 
 /** Edges of land-cell polygons that no other land cell shares — the coastline. */
 function collectCoastEdges(
@@ -74,12 +88,15 @@ function normalizedSlopes(slopes: Float64Array, landIndices: readonly number[]):
   return result;
 }
 
-export function generateTerrain(seed: number, radius: number, sizeTier: number): IslandTerrain {
-  const tierIndex = Math.min(Math.max(Math.trunc(sizeTier), 1), 6) - 1;
+/** One island's shape, in canonical coordinates. Seed in, coastline out — no size, no
+ * position, nothing that changes as the learner keeps learning. */
+export function generateTerrain(seed: number): IslandTerrain {
+  const radius = CANONICAL_RADIUS;
+  const sizeTier = CANONICAL_SCULPT_TIER;
   const random = createSeededRandom(seed);
-  const mesh = buildIslandMesh(random, radius, CELL_TARGET_BY_TIER[tierIndex] ?? 2000);
+  const mesh = buildIslandMesh(random, radius, CANONICAL_CELL_TARGET);
   const sculpted = generateHeightmap(mesh, random, radius, sizeTier);
-  const erosion = erodeTerrain(mesh, sculpted, LAND_FRACTION_BY_TIER[tierIndex] ?? 0.33);
+  const erosion = erodeTerrain(mesh, sculpted, CANONICAL_LAND_FRACTION);
   // Erosion deposits sediment on the masked-out rim (big continental islands push a lot
   // of material outward) and the quantile sea level then counts those cells as land — the
   // coast ends up tracing the square Voronoi bound. The rim is ocean by construction.
@@ -120,4 +137,30 @@ export function generateTerrain(seed: number, radius: number, sizeTier: number):
     .sort((a, b) => polygonArea(b) - polygonArea(a));
 
   return { cells, landCellIndices, coastLoops, rivers };
+}
+
+function scalePoint(point: WorldPoint, factor: number): WorldPoint {
+  return { x: point.x * factor, y: point.y * factor };
+}
+
+/** The same island drawn larger or smaller: every coordinate scales, nothing is redrawn.
+ * Heights, slopes and flux stay as they are — they are normalized quantities that decide
+ * colour and symbol placement, not extents. */
+export function scaleTerrain(terrain: IslandTerrain, factor: number): IslandTerrain {
+  if (factor === 1) return terrain;
+  return {
+    cells: terrain.cells.map((cell) => ({
+      ...cell,
+      polygon: cell.polygon.map((point) => scalePoint(point, factor)),
+      site: scalePoint(cell.site, factor),
+    })),
+    landCellIndices: terrain.landCellIndices,
+    coastLoops: terrain.coastLoops.map((loop) => loop.map((point) => scalePoint(point, factor))),
+    rivers: terrain.rivers.map((river) => ({
+      ...river,
+      points: river.points.map((point) => scalePoint(point, factor)),
+      startWidth: river.startWidth * factor,
+      endWidth: river.endWidth * factor,
+    })),
+  };
 }

@@ -1,0 +1,59 @@
+{
+  "emptyLine": "Ainda não há conversas. Diga abaixo o que você quer aprender para começar uma.",
+  "noReplyYet": "Esta mensagem ainda não tem resposta",
+  "resumedFromMiddle": "Continuando de um ponto anterior · as mensagens seguintes continuam aqui",
+  "backToLatest": "Voltar ao mais recente",
+  "composer": {
+    "placeholder": "O que você gostaria de aprender? É só dizer… (Enter para enviar, Shift+Enter para nova linha)",
+    "freeLabel": "Conversa livre",
+    "freeHint": "Fale do que quiser, do jeito que quiser.",
+    "studyLabel": "Modo estudo",
+    "studyHint": "As respostas levam você a pensar e praticar, para que o que aprende fique."
+  },
+  "trail": {
+    "search": "Buscar conversas",
+    "noMatches": "Nenhuma conversa corresponde"
+  },
+  "popup": {
+    "close": "Fechar esta janela de conversa"
+  },
+  "factcheck": {
+    "checking": "Consultando fontes…",
+    "ask": "Verificar isto",
+    "nothingToCheck": "Nesta resposta não há nenhuma afirmação de fato para verificar",
+    "supported": "Foram encontradas fontes que sustentam isso",
+    "insufficient": "Nenhuma fonte encontrada para sustentar isso — vale confirmar",
+    "contradicted": "As fontes discordam; aqui estão os dois lados",
+    "unavailable": "Desta vez não deu para verificar",
+    "unavailableNextStep": "Você pode tentar de novo mais tarde.",
+    "noEvidenceReasoning": "Não encontrei nenhuma fonte pública que sustente isso — vale confirmar.",
+    "verdictFailedReasoning": "As fontes chegaram, mas a leitura não chegou ao fim. Você pode tentar de novo mais tarde.",
+    "noneChecked": "Desta vez nada pôde ser verificado — você pode tentar mais tarde",
+    "allSupported_one": "{{count}} afirmação tem uma fonte que a sustenta",
+    "allSupported_many": "As {{count}} afirmações têm fontes que as sustentam",
+    "allSupported_other": "As {{count}} afirmações têm fontes que as sustentam",
+    "someSupported": "{{supported}} de {{total}} afirmações têm fontes que as sustentam",
+    "offlineNotice": "A chave da internet está desligada. Ligue-a para consultar fontes.",
+    "noApiNotice": "Configure primeiro o serviço de IA nas configurações e isto poderá ser verificado.",
+    "failedNotice": "A verificação não terminou (a rede oscilou). Você pode tentar mais tarde."
+  },
+  "companion": {
+    "roleStudent": "Estudante IA",
+    "rolePeer": "Colega IA",
+    "roleMentor": "Mentor IA",
+    "chatDisabled": "A conversa com os companheiros está desligada. Para continuar, ligue de novo «Conversa com companheiros» nas configurações",
+    "credits": "Os companheiros vêm de Pepper&Carrot, de David Revoy (peppercarrot.com), CC-BY 4.0; suas personalidades escritas são uma obra derivada com alterações e não implicam endosso do autor original.",
+    "closeRoster": "Fechar a lista de companheiros",
+    "aiLabel": "Parceiro de estudo IA",
+    "rosterEmpty": "Hoje ninguém passou pedindo ajuda.",
+    "breakReminder": "Esta conversa já dura duas horas. Você pode levantar e descansar; tudo fica aqui.",
+    "crisisResponse": "Você falou em se machucar. Sou uma IA e não consigo ajudar nisso — vale a pena conversar com uma pessoa. China continental: linha de apoio 12356. Estados Unidos: 988. Em outros países: findahelpline.com. Esta conversa continuará aqui.",
+    "helperInvitation": "Ainda não consegui entender «{{topic}}». Quando puder, me explica com suas palavras? Começar pelo que é já ajudaria muito.",
+    "helperThanks": "Obrigado. Agora «{{topic}}» faz muito mais sentido para mim. Vou praticar por conta própria — até mais."
+  },
+  "errors": {
+    "offline": "Você está sem conexão. Para continuar, ligue de novo a chave da internet nas configurações",
+    "noApiConfig": "Ainda não há nenhum serviço de IA configurado. Adicione o endereço e a chave na página de configurações",
+    "requestFailed": "Esse pedido não foi. Tente de novo em instantes ou confira o serviço de IA nas configurações."
+  }
+}

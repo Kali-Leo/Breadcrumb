@@ -19,6 +19,8 @@ import {
   type LoadedLanguagePack,
   mineConfusionPairs,
   type ReplacementPatch,
+  scoreVocabTest,
+  type VocabTestItem,
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { create } from "zustand";
@@ -29,10 +31,15 @@ import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "../lib/diglotReve
 import {
   applyDiglotSignal,
   findProductiveUses,
-  loadBundledPack,
   loadCards,
   weaveAssistantMessage,
 } from "../lib/diglotWeave";
+import {
+  BUNDLED_PAIR_ID,
+  installLanguagePack,
+  listInstalledPairs,
+  loadPack,
+} from "../lib/languagePacks";
 import { normalizeMathDelimiters } from "../lib/markdownMath";
 import { nowIso, onLocalDayChange } from "../lib/time";
 import { appEventBus, useChatStore } from "./chatStore";
@@ -63,6 +70,9 @@ export interface DiglotSettings {
   fsrsParams: number[] | null;
   /** Review count at the last successful fitting — gates refits. */
   fsrsFittedReviewCount: number;
+  /** True once the vocabulary check has been offered and answered or waved off, so it is
+   * never put in front of the same learner twice unasked (2026-09-01). */
+  placementTestTaken: boolean;
 }
 
 /** Bumped when a weave-affecting setting changes — in-flight weaves compare it to discard
@@ -76,7 +86,7 @@ const SETTINGS_KEY = "diglotSettings";
  *  - density: ScheduleInput.density -> scheduler.ts budgetFor() (replacement count budget)
  *  - newWordDailyBase: weaveAssistantMessage's adaptiveNewWordCap base cap
  *  - introductionRankFloor: weaveAssistantMessage filters the introductionRank map by it
- *  - pairId: selects the loaded language pack (loadBundledPack) that candidates/tokenize/
+ *  - pairId: selects the loaded language pack (loadPack) that candidates/tokenize/
  *    replacement all read from
  * Everything else in DiglotSettings never reaches this path: ttsEnabled/piperPath/
  * piperModelPath are audio-only (no weave input); enabled only gates whether ensureWoven
@@ -137,6 +147,7 @@ const DEFAULT_SETTINGS: DiglotSettings = {
   placementStep: INITIAL_PLACEMENT_STEP,
   fsrsParams: null,
   fsrsFittedReviewCount: 0,
+  placementTestTaken: false,
 };
 
 interface DiglotState {
@@ -153,7 +164,20 @@ interface DiglotState {
   lemmasWithExplicitSignal: Set<string>;
   /** Systematic mix-ups mined from the guess log — drives contrast lines (vision/09). */
   confusionByLemma: Map<string, ConfusionPartner>;
+  /** Pairs this machine can weave right now: the bundled one plus every downloaded pack. */
+  installedPairs: string[];
+  /** Pair id currently being downloaded, or null. */
+  installingPairId: string | null;
+  /** Set when the last download did not finish — the picker says so and offers a retry. */
+  installFailedPairId: string | null;
   refreshConfusions(): Promise<void>;
+  /** Downloads the pack for a pair if needed, then switches to it. */
+  choosePair(pairId: string): Promise<void>;
+  /** Stores what the vocabulary check said: where new words should start from. */
+  finishPlacementTest(
+    items: readonly VocabTestItem[],
+    answers: readonly (number | null)[],
+  ): Promise<void>;
   loadFromDatabase(): Promise<void>;
   saveSettings(partial: Partial<DiglotSettings>): Promise<void>;
   /** Base-only weave for a message already on screen gated blank (history path). */
@@ -177,6 +201,9 @@ interface DiglotState {
 export const useDiglotStore = create<DiglotState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   settingsHydrated: false,
+  installedPairs: [BUNDLED_PAIR_ID],
+  installingPairId: null,
+  installFailedPairId: null,
   loaded: null,
   cardsByLemma: new Map(),
   patchesByMessage: new Map(),
@@ -194,14 +221,43 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     set({ confusionByLemma: mineConfusionPairs(guesses, loaded) });
   },
 
+  /** Picks a pair, downloading its pack first when this machine does not have it yet. A
+   * failed download leaves the current pair alone: the learner keeps weaving in the language
+   * they already had. */
+  async choosePair(pairId) {
+    if (pairId === get().settings.pairId) return;
+    if (!get().installedPairs.includes(pairId)) {
+      set({ installingPairId: pairId, installFailedPairId: null });
+      try {
+        await installLanguagePack(pairId);
+        set({ installedPairs: await listInstalledPairs() });
+      } catch {
+        set({ installingPairId: null, installFailedPairId: pairId });
+        return;
+      }
+      set({ installingPairId: null });
+    }
+    await get().saveSettings({ pairId });
+  },
+
+  /** The check's verdict is a starting point, not a verdict on the learner: it only moves
+   * the introduction floor, and behavioural placement keeps correcting it from there. */
+  async finishPlacementTest(items, answers) {
+    await get().saveSettings({
+      introductionRankFloor: scoreVocabTest(items, answers),
+      placementStep: INITIAL_PLACEMENT_STEP,
+      placementTestTaken: true,
+    });
+  },
+
   async loadFromDatabase() {
     wireDailyWordCounterTrigger();
     const repos = await getRepos();
     const stored = await repos.settings.get<DiglotSettings>(SETTINGS_KEY);
     const settings = { ...DEFAULT_SETTINGS, ...stored };
-    set({ settings, settingsHydrated: true });
+    set({ settings, settingsHydrated: true, installedPairs: await listInstalledPairs() });
     if (!settings.enabled) return;
-    const loaded = await loadBundledPack(settings.pairId);
+    const loaded = await loadPack(settings.pairId);
     const cardsByLemma = await loadCards(settings.pairId);
     const states = await repos.diglot.listStates(settings.pairId);
     const today = nowIso().slice(0, 10);

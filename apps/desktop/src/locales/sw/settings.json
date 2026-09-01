@@ -1,0 +1,186 @@
+{
+  "title": "Mipangilio",
+  "back": "Rudi kwenye mazungumzo",
+  "tabs": {
+    "general": "Kwa ujumla",
+    "billing": "Swichi na matumizi",
+    "research": "Utafiti"
+  },
+  "api": {
+    "title": "Huduma ya AI (inayoendana na OpenAI)",
+    "hint": "Weka hapa akaunti yako ya huduma ya AI; mazungumzo na kila kipengele kingine cha AI hutumia hiyo.",
+    "baseUrl": "Anwani ya msingi",
+    "apiKey": "Ufunguo wa API",
+    "model": "Jina la modeli",
+    "priceCurrency": "Sarafu ya malipo",
+    "priceCurrencyHint": "Modeli hii hulipiwa kwa sarafu tofauti kwenye kila jukwaa. Chagua ile ya ufunguo wako, ili ukurasa wa matumizi ulingane na bili yako.",
+    "currencyCNY": "¥ CNY",
+    "currencyUSD": "$ USD",
+    "saved": "Imehifadhiwa ✓",
+    "unsaved": "Mabadiliko bado hayajahifadhiwa"
+  },
+  "network": {
+    "title": "Intaneti",
+    "hint": "Izime na kila kinachohitaji intaneti kitasimama, pamoja na maombi ya API."
+  },
+  "mainland": {
+    "title": "Mtandao wa China bara",
+    "hint": "Uhakiki wa taarifa hutumia vyanzo vinavyofikika kutoka China bara pekee (Bing); ikizimwa, hupendelea Wikipedia."
+  },
+  "language": {
+    "title": "Lugha",
+    "interface": "Lugha ya kiolesura",
+    "answer": "Lugha ambayo AI hujibu kwayo",
+    "sameAsInterface": "Sawa na ya kiolesura",
+    "thinNote": "AI huandika {{language}} chini ya jinsi inavyoandika {{fallback}}. Unaweza kubadilisha lugha ya majibu peke yake na kuacha kiolesura kama kilivyo."
+  },
+  "quietIssues": {
+    "title": "Kazi za nyuma",
+    "allGood": "Kila kinachoendelea nyuma kiko sawa.",
+    "summary_one": "Hivi karibuni kazi ndogo {{count}} ya nyuma haikukamilika. Kujifunza kwako hakuathiriki — fungua uone ni ipi",
+    "summary_other": "Hivi karibuni kazi ndogo {{count}} za nyuma hazikukamilika. Kujifunza kwako hakuathiriki — fungua uone ni zipi",
+    "fallbackPurpose": "Kazi ya nyuma"
+  },
+  "purposes": {
+    "chat": "Mazungumzo",
+    "knowledge-tree": "Ramani ya maarifa",
+    "factcheck": "Uhakiki wa taarifa",
+    "knowledge-edges": "Viungo vya maarifa",
+    "interest": "Wasifu wa mapendeleo",
+    "self-report-mapping": "Kulinganisha «hili nalijua»",
+    "goal-planning": "Kupanga lengo",
+    "compare-profile": "Utafiti wa kulinganisha",
+    "compare-align": "Kulinganisha maneno",
+    "map-naming": "Majina ya ramani",
+    "diglot-weave": "Kujifunza lugha · ubadilishaji makini",
+    "teach-quality": "Maoni juu ya maelezo yako",
+    "companion-chat": "Mazungumzo na wenzako",
+    "companion-memory": "Kumbukumbu za wenzako",
+    "companion-script": "Maandalizi ya mwenzako",
+    "focus-explain": "Maelezo ya hali ya umakini",
+    "term-marking": "Kuweka alama kwenye maneno"
+  },
+  "billing": {
+    "intro": "Kila hatua inayogharimu pesa ina swichi yake hapa, na matumizi yake huhesabiwa peke yake. Ukurasa huu unaonyesha kilichotumika kweli.",
+    "estimateIntro": "Makadirio chini ya kila kipengele yamehesabiwa kwa {{scenario}}; kando yake kuna ulichotumia kweli.",
+    "estimate": "takribani {{cost}} {{cadence}}",
+    "estimateUnknownModel": "Modeli yako haipo kwenye orodha ya bei iliyojengwa ndani, hivyo makadirio kwa kila matumizi hayapatikani",
+    "estimateFree": "Haigharimu chochote",
+    "estimateUnmeasured": "Hii bado haijapimwa",
+    "cadencePerRound": "kwa kila mzunguko wa mazungumzo",
+    "cadencePerMessage": "kwa kila ujumbe unaotuma",
+    "cadencePerAnswer": "kwa kila jibu",
+    "cadenceOnDemand": "kila unapoitumia",
+    "cadencePerItemOnce": "kwa kila kipengele, mara moja",
+    "grandTotal": "Leo {{today}} · jumla {{total}}",
+    "nothingSpent": "bado hakuna kilichotumika",
+    "neverUsed": "Bado hakuna kilichotumika",
+    "spendLine": "Leo {{today}} · jumla {{total}}",
+    "diglot": {
+      "name": "🧵 Kujifunza lugha · ubadilishaji makini",
+      "hint": "Toleo imara la kujifunza lugha: AI huchagua tafsiri inayoendana na sentensi na mara kwa mara huweka msemo wa kawaida.",
+      "toggleLabel": "Ubadilishaji makini katika kujifunza lugha"
+    },
+    "chat": {
+      "name": "💬 Mazungumzo",
+      "hint": "Mazungumzo yako ya kila siku na AI. Hiki ndicho kipengele kikuu na hubaki kimewashwa; gharama yake pia imeorodheshwa hapa."
+    },
+    "features": {
+      "knowledgeTree": {
+        "name": "🌳 Ramani ya maarifa",
+        "hint": "Baada ya kila mzunguko wa mazungumzo, AI huweka mliyoyazungumza kwenye ramani yako."
+      },
+      "factcheck": {
+        "name": "🔍 Uhakiki wa taarifa",
+        "hint": "Gusa «Hakiki hili» chini ya jibu na AI hutafuta madai hayo kwenye vyanzo vya wazi."
+      },
+      "knowledgeEdges": {
+        "name": "🕸️ Viungo vya maarifa",
+        "hint": "Kitu kipya kinapowekwa, AI huangalia jinsi kinavyounganika na unayoyajua tayari."
+      },
+      "interest": {
+        "name": "💡 Mapendekezo kwa ajili yako",
+        "hint": "AI huona kinachokuvutia na mahali unapokwama, na hurekebisha mapendekezo yake kutokana na hayo; pia ndiyo hutambua mada unayomaanisha unaposema «hili nalijua»."
+      },
+      "goalPlanning": {
+        "name": "🎯 Kupanga lengo",
+        "hint": "Unapoweka lengo, AI hulibadilisha kuwa orodha ya mambo ya kujifunza."
+      },
+      "compareProfileBuild": {
+        "name": "🌲 Utafiti wa kulinganisha (majaribio)",
+        "hint": "Kwa ulinganisho ulio nje ya orodha ya kazi iliyojengwa ndani, AI hutafuta kwenye vyanzo vya wazi, hujenga orodha na huhakiki kila chanzo. Huchukua dakika chache."
+      },
+      "compareAlignment": {
+        "name": "🌉 Kulinganisha maneno",
+        "hint": "Wakati wa kulinganisha, AI huamua kama maneno yako na ya chanzo yanamaanisha kitu kilekile."
+      },
+      "teachQuality": {
+        "name": "🎓 Maoni juu ya maelezo yako",
+        "hint": "Baada ya kumweleza mwenzako jambo fulani, AI husoma jinsi ilivyokwenda; sehemu ulizoeleza kwa uwazi huhifadhiwa."
+      },
+      "mapTopicNaming": {
+        "name": "🗺️ Majina ya ramani (majaribio)",
+        "hint": "Kwenye ramani, AI hupa jina kila eneo lililojiunda lenyewe."
+      },
+      "feedbackLab": {
+        "name": "🪞 Hivi karibuni",
+        "hint": "Kidirisha cha kupitia kando ya ramani: huhesabiwa kabisa kwa data ya kompyuta hii, hakigharimu chochote."
+      },
+      "companionChat": {
+        "name": "🎭 Mazungumzo na wenzako",
+        "hint": "Kila siku wenzako wachache hupita kukuuliza kuhusu jambo ulilojifunza na hujaligusa kwa muda. Fungua mmoja na umweleze."
+      },
+      "companionMemory": {
+        "name": "🧠 Kumbukumbu za wenzako",
+        "hint": "Wenzako hukumbuka mliyoyazungumza, na mara kwa mara hupanga kumbukumbu hizo ili zibaki zikieleweka."
+      },
+      "companionScript": {
+        "name": "📜 Maandalizi ya mwenzako",
+        "hint": "Kabla hujaanza kueleza, mwenzako atakayekusikiliza husoma kidogo kuhusu mada ili aweze kukufuata."
+      },
+      "focusExplain": {
+        "name": "🔎 Maelezo ya hali ya umakini",
+        "hint": "Katika hali ya umakini, kuchagua neno au kuuliza swali hukuletea maelezo."
+      },
+      "termMarking": {
+        "name": "🖊️ Kuweka alama kwenye maneno",
+        "hint": "AI huweka alama kwenye maneno ya jibu ambayo huenda bado huyajui; gusa moja uone maana yake."
+      }
+    }
+  },
+  "research": {
+    "panelTitle": "🔬 Utafiti",
+    "panelIntro": "Kila namba hapa imehesabiwa na kompyuta hii. Kazi zimepitiwa na vyanzo vyake vinaweza kukaguliwa; data haitoki yenyewe kwenye kifaa hiki, na hakuna chochote kati ya haya kinachogharimu pesa.",
+    "offNotice": "Kazi za utafiti zimezimwa: hakuna kazi mpya itakayoendeshwa. Matokeo uliyonayo yatabaki, na unaweza kuyasoma au kuyafuta moja baada ya jingine.",
+    "loading": "Inapakia…",
+    "emptyTitle": "Bado hakuna matokeo",
+    "emptyHint": "Programu ikiwa haifanyi kazi nyingine, huhesabu kazi za utafiti zilizosainiwa hapa hapa; matokeo huonekana hapa yanapokamilika.",
+    "cardInstitutionLabel": "Taasisi",
+    "cardPurposeLabel": "Lengo",
+    "cardEthicsLabel": "Dokezo la maadili",
+    "cardComputedAtLabel": "Ilihesabiwa",
+    "notEnoughData": "Data bado haitoshi",
+    "barRange": "{{low}}–{{high}}",
+    "retentionMean": "Wastani",
+    "retentionMedian": "Kati",
+    "retentionAboveThreshold": "Sehemu iliyo juu ya kiwango cha msingi",
+    "weekdaySunday": "Jumapili",
+    "weekdayMonday": "Jumatatu",
+    "weekdayTuesday": "Jumanne",
+    "weekdayWednesday": "Jumatano",
+    "weekdayThursday": "Alhamisi",
+    "weekdayFriday": "Ijumaa",
+    "weekdaySaturday": "Jumamosi",
+    "deleteAction": "Futa matokeo haya",
+    "deleteConfirmPrompt": "Kufuta matokeo haya hakuwezi kutenduliwa. Yafutwe?",
+    "deleteConfirmAction": "Futa",
+    "settingsRowTitle": "🔬 Utafiti",
+    "settingsRowHint": "Huendesha kazi za utafiti zilizopitiwa hapa hapa na huonyesha matokeo; data haitoki yenyewe kwenye kifaa hiki na haigharimu chochote",
+    "closeConfirmTitle": "Kuzima kazi za utafiti",
+    "closeConfirmWhatItDoes": "Jukwaa la utafiti huendesha hapa hapa kazi zilizopitiwa na kusainiwa na mradi, huhesabu takwimu na kukuonyesha.",
+    "closeConfirmDataStaysLocal": "Yote huhesabiwa hapa; data haitoki yenyewe kwenye kifaa hiki.",
+    "closeConfirmResearchValue": "Takwimu za jumla za hapa hapa kama hizi huwezesha kusoma jinsi watu wanavyojifunza bila kukusanya data binafsi ya mtu yeyote.",
+    "closeConfirmWhatChanges": "Baada ya kuzima hakuna kazi itakayoendeshwa na hutaulizwa tena. Matokeo uliyonayo hayataguswa na yatabaki kwenye kidirisha.",
+    "closeConfirmAction": "Izime"
+  }
+}

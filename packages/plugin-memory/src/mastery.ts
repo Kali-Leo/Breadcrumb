@@ -3,8 +3,8 @@
  * by self-report claims that decay if never revisited. Self-report can never outweigh real
  * evidence; it only fills the gap real evidence hasn't covered yet, and a node nobody has ever
  * been observed retrieving is capped below "lit" however often it was mentioned.
- * Main exports: computeMastery, LIT_THRESHOLD, DIM_THRESHOLD, masteryTier, MasteryTier,
- * CLAIM_WEIGHT, CLAIM_HALF_LIFE_DAYS, computeClaimScore, hasRetrievalEvidence.
+ * Main exports: computeMastery, LIT_THRESHOLD, DIM_THRESHOLD, CLAIM_WEIGHT,
+ * CLAIM_HALF_LIFE_DAYS, computeClaimScore, hasRetrievalEvidence.
  */
 import type {
   MasteryClaimLevel,
@@ -16,15 +16,6 @@ import { computeRetentionByNode } from "./retention";
 
 export const LIT_THRESHOLD = 0.85;
 export const DIM_THRESHOLD = 0.5;
-
-export type MasteryTier = "lit" | "dim" | "unlit";
-
-/** Classifies a 0..1 mastery value into the three experiment-panel tiers. */
-export function masteryTier(value: number): MasteryTier {
-  if (value >= LIT_THRESHOLD) return "lit";
-  if (value >= DIM_THRESHOLD) return "dim";
-  return "unlit";
-}
 
 /** "learned" ("我学过") is stronger self-report evidence than "familiar" ("我听过"). */
 export const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = {

@@ -96,7 +96,7 @@ function pickHills(
 
 function buildIsland(shaped: ShapedIsland, center: WorldPoint): IslandModel {
   const radius = islandRadiusForTier(shaped.sizeTier);
-  const terrain = terrainFor(shaped.nodeId, radius, shaped.sizeTier);
+  const terrain = terrainFor(shaped.nodeId, radius);
   const partition =
     shaped.kingdoms.length > 0
       ? partitionKingdoms(

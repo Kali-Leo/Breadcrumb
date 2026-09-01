@@ -1,0 +1,55 @@
+{
+  "next": "Siguiente",
+  "back": "Atrás",
+  "skip": "Sáltalo, ya me oriento yo",
+  "welcome": {
+    "title": "Tú hablas, él toma las notas",
+    "body": "Breadcrumb es un compañero de aprendizaje. Hablas de lo que quieres aprender y, mientras tanto, va construyendo un mapa de lo que has cubierto — sin tomar notas ni fichar.",
+    "point1": "Los conceptos de los que hablas aparecen solos en el mapa, y se difuminan donde no has vuelto",
+    "point2": "Todo se queda en este ordenador. Sin cuenta, sin sincronización en la nube",
+    "point3": "Sin clasificaciones, sin rachas, sin barras de progreso",
+    "tryDemo": "Enséñame primero un ejemplo (recomendado)",
+    "demoNote": "Carga tres meses de aprendizaje de otra persona y te lo enseña. Un clic lo quita cuando quieras.",
+    "installing": "Preparando el ejemplo…",
+    "startClean": "Saltar el ejemplo, empezar vacío"
+  },
+  "tour": {
+    "label": "Recorrido guiado",
+    "finish": "Empezar a usarlo",
+    "exit": "Salir del recorrido",
+    "chatTitle": "Todo empieza aquí",
+    "chatBody": "Lo único que tienes que hacer es hablar. El interruptor de arriba: en modo estudio las respuestas te llevan a pensar y practicar; en charla libre es una conversación normal.",
+    "trailTitle": "Tus conversaciones viven a la izquierda",
+    "trailBody": "Los títulos se ponen solos — del primer concepto al último. En cuanto renombras uno tú, ya no se vuelve a renombrar.",
+    "mapTitle": "Habla un rato y esto crece",
+    "mapBody": "Estas islas salieron solas de las conversaciones; aquí no se archivó nada a mano. Rueda arriba para entrar en una.",
+    "mapEmptyTitle": "Mar abierto, de momento",
+    "mapEmptyBody": "Cada intercambio que tienes convierte solo lo hablado en islas de aquí. No hay nada que tengas que archivar.",
+    "mirrorTitle": "Que se difumine es lo que tiene que pasar",
+    "mirrorBody": "Estos dos muestran cuánto has cubierto y cuánto recordarías todavía. Los sitios que no has visitado se difuminan — es un recordatorio, no una nota en tu contra. Todo se calcula aquí y no cuesta nada.",
+    "spendingTitle": "Lo que cuesta, antes de encenderlo",
+    "spendingBody": "Todas las funciones que cuestan dinero están en esta página con su propio interruptor, y cada una dice aproximadamente lo que cuesta un uso antes de que la actives. Esa cifra está medida, no supuesta.",
+    "yourTurnTitle": "Te toca",
+    "yourTurnBody": "Pregunta por algo que de verdad quieras entender. El mapa irá siguiéndote solo."
+  },
+  "checklist": {
+    "title": "Empieza por aquí",
+    "connect": "Conectar un servicio de IA",
+    "ask": "Hacer tu primera pregunta",
+    "map": "Abrir el mapa",
+    "dismiss": "Ocultar esta lista",
+    "demoNote": "Ahora mismo el mapa muestra datos de ejemplo.",
+    "removeDemo": "Quitar los datos de ejemplo",
+    "removingDemo": "Quitando…",
+    "takeTour": "Enséñamelo paso a paso",
+    "tourNote": "Dos minutos, señalando la pantalla real. Escape sale en cualquier momento."
+  },
+  "settings": {
+    "title": "Recorrido guiado",
+    "hint": "Repasa la introducción otra vez, o quita los datos de ejemplo.",
+    "replay": "Volver a hacer el recorrido",
+    "removeDemo": "Quitar los datos de ejemplo",
+    "demoInstalled": "Los datos de ejemplo están instalados",
+    "demoAbsent": "Sin datos de ejemplo"
+  }
+}

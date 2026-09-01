@@ -22,6 +22,7 @@ export {
   isLanguageCode,
   LANGUAGES,
   type Language,
+  languageNameOf,
   languageOf,
   type ModelLanguageSupport,
   type ScriptFamily,
@@ -29,5 +30,5 @@ export {
   UI_LANGUAGE_CODES,
 } from "./languages";
 export type { CopyMessage } from "./message";
-export { negotiateLanguage } from "./negotiate";
+export { matchLanguage, negotiateLanguage } from "./negotiate";
 export { checkReplyLanguage, type ReplyLanguageVerdict } from "./replyLanguage";

@@ -57,7 +57,6 @@ vi.mock("./db", () => ({
 
 const {
   openCompanionConversation,
-  appendCompanionInvitation,
   seedTeachScriptForConversation,
   buildCompanionChatSystemPrompt,
 } = await import("./companionActions");
@@ -90,21 +89,6 @@ describe("openCompanionConversation", () => {
 
   it("throws for an unknown companion id", async () => {
     await expect(openCompanionConversation("nonexistent")).rejects.toThrow();
-  });
-});
-
-describe("appendCompanionInvitation", () => {
-  it("reuses her conversation and appends the invitation at the newest leaf", async () => {
-    const conversationId = await openCompanionConversation("shichimi");
-    await appendCompanionInvitation("shichimi", "闭包");
-
-    expect(conversationRows).toHaveLength(1);
-    expect(messageRows).toHaveLength(2);
-    const invitation = messageRows[1] as FakeMessageRow & { parent_id?: string | null };
-    expect(invitation.conversation_id).toBe(conversationId);
-    expect(invitation.role).toBe("assistant");
-    expect(invitation.content).toContain("闭包");
-    expect(invitation.parent_id).toBe(messageRows[0]?.id);
   });
 });
 

@@ -126,15 +126,18 @@ its institution and purpose and can be deleted, and the whole feature can be swi
 
 ## 语言 / Languages
 
-界面有简体中文与英文，两份词条都完整 —— 半份翻译比没有更糟，测试会拦住不完整的语言。
-AI 回答的语言默认跟界面走，也可以单独改掉、界面保持不变。
+界面有十一种语言：简体中文、English、Español、Français、Português、Русский、العربية、
+हिन्दी、Bahasa Indonesia、বাংলা、Kiswahili。每一份词条都完整 —— 半份翻译比没有更糟，
+测试会拦住不完整的语言。第一次打开时，如果你的系统语言不在其中，应用先请你自己选一种，
+而不是替你猜。AI 回答的语言默认跟界面走，也可以单独改掉、界面保持不变。
 
 **加一种语言不需要改代码**：复制一个 locale 文件夹翻译，再加一行语言表数据。
 测试会指出哪一条词条对不齐、占位符丢了、或者少了这门语言语法要求的复数形式。
 做法见 [参与开发](documentation/development.md)。
 
-Both shipped interface languages are complete. Adding one is a folder plus a data row — no
-code. See [development.md](documentation/development.md).
+Eleven interface languages, each of them complete. If your system language is not one of
+them, the first screen asks you to pick rather than guessing for you. Adding a language is a
+folder plus a data row — no code. See [development.md](documentation/development.md).
 
 ---
 

@@ -64,7 +64,10 @@ export interface DiglotWordGuessRow {
 }
 
 /** One installed language pack (spec 033). `meta_json` holds capability flags (t1Safe, TTS
- * availability), entry counts and attribution strings; the pack payload lives on disk. */
+ * availability), entry counts and attribution strings. `payload_json` is the pack file itself
+ * for packs the learner downloaded (2026-09-01); it is absent on the bundled pair, which ships
+ * inside the app, and is not selected by listPacks — reading the list must not drag megabytes
+ * of dictionary along. */
 export interface DiglotLanguagePackRow {
   id: DiglotPairId;
   source_lang: string;
@@ -72,6 +75,7 @@ export interface DiglotLanguagePackRow {
   version: string;
   meta_json: string;
   installed_at: string;
+  payload_json?: string | null;
 }
 
 /** One stored context vector for a woven word (spec 033) — the sentence the word appeared

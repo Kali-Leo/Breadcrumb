@@ -70,6 +70,43 @@ describe("buildWorldModel", () => {
     expect(webAfter?.coastLoops).toEqual(webBefore?.coastLoops);
   });
 
+  it("keeps an island's shape when it grows a size tier — only its size changes", () => {
+    // Leo 2026-09-01: shape is the one thing that stays put. Growing the web island past a
+    // tier boundary must scale its coastline about its own centre, not redraw it.
+    const before = buildWorldModel(demoTree());
+    const grown = [...demoTree()];
+    for (let index = 0; index < 12; index += 1) {
+      grown.push(node(`react-fact-${index}`, "react", "2026-07-10T00:00:00Z"));
+    }
+    const after = buildWorldModel(grown);
+
+    const webBefore = before.islands.find((island) => island.nodeId === "web");
+    const webAfter = after.islands.find((island) => island.nodeId === "web");
+    expect(webBefore).toBeDefined();
+    expect(webAfter).toBeDefined();
+    if (webBefore === undefined || webAfter === undefined) return;
+    expect(webAfter.radius).toBeGreaterThan(webBefore.radius);
+    const factor = webAfter.radius / webBefore.radius;
+    expect(webAfter.coastLoops).toHaveLength(webBefore.coastLoops.length);
+    webAfter.coastLoops.forEach((loop, loopIndex) => {
+      const original = webBefore.coastLoops[loopIndex] ?? [];
+      expect(loop).toHaveLength(original.length);
+      loop.forEach((point, pointIndex) => {
+        const source = original[pointIndex];
+        if (source === undefined) return;
+        // Coast points are stored in world coordinates: undo the island's own centre first.
+        expect((point.x - webAfter.center.x) / factor).toBeCloseTo(
+          source.x - webBefore.center.x,
+          6,
+        );
+        expect((point.y - webAfter.center.y) / factor).toBeCloseTo(
+          source.y - webBefore.center.y,
+          6,
+        );
+      });
+    });
+  });
+
   it("assigns every kingdom a non-empty territory and places villages inside the world", () => {
     const world = buildWorldModel(demoTree());
     const math = world.islands.find((island) => island.nodeId === "math");

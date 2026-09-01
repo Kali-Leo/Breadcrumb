@@ -1,0 +1,59 @@
+{
+  "emptyLine": "Pas encore de conversation. Dis en dessous ce que tu veux apprendre pour en commencer une.",
+  "noReplyYet": "Ce message n'a pas encore de réponse",
+  "resumedFromMiddle": "On reprend à un point antérieur · les messages suivants sont toujours là",
+  "backToLatest": "Revenir au plus récent",
+  "composer": {
+    "placeholder": "Qu'aimerais-tu apprendre ? Dis-le simplement… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)",
+    "freeLabel": "Discussion libre",
+    "freeHint": "Parle de ce que tu veux, comme tu veux.",
+    "studyLabel": "Mode étude",
+    "studyHint": "Les réponses t'amènent à réfléchir et à t'exercer, pour que ce que tu apprends reste."
+  },
+  "trail": {
+    "search": "Rechercher dans les conversations",
+    "noMatches": "Aucune conversation ne correspond"
+  },
+  "popup": {
+    "close": "Fermer cette fenêtre de conversation"
+  },
+  "factcheck": {
+    "checking": "Vérification des sources…",
+    "ask": "Vérifier ceci",
+    "nothingToCheck": "Cette réponse ne contient aucune affirmation factuelle à vérifier",
+    "supported": "Des sources qui vont dans ce sens ont été trouvées",
+    "insufficient": "Aucune source trouvée pour l'appuyer — à confirmer",
+    "contradicted": "Les sources se contredisent ; voici les deux versions",
+    "unavailable": "Impossible de vérifier cette fois-ci",
+    "unavailableNextStep": "Tu peux réessayer plus tard.",
+    "noEvidenceReasoning": "Je n'ai trouvé aucune source publique qui appuie cela — à confirmer.",
+    "verdictFailedReasoning": "Les sources sont bien arrivées, mais leur lecture n'a pas abouti. Tu peux réessayer plus tard.",
+    "noneChecked": "Rien n'a pu être vérifié cette fois-ci — tu peux réessayer plus tard",
+    "allSupported_one": "{{count}} affirmation est appuyée par une source",
+    "allSupported_many": "Les {{count}} affirmations sont appuyées par des sources",
+    "allSupported_other": "Les {{count}} affirmations sont appuyées par des sources",
+    "someSupported": "{{supported}} affirmations sur {{total}} sont appuyées par des sources",
+    "offlineNotice": "L'interrupteur internet est éteint. Allume-le pour pouvoir vérifier.",
+    "noApiNotice": "Configure d'abord le service d'IA dans les réglages, puis la vérification sera possible.",
+    "failedNotice": "La vérification n'a pas abouti (le réseau a flanché). Tu peux réessayer plus tard."
+  },
+  "companion": {
+    "roleStudent": "Élève IA",
+    "rolePeer": "Camarade IA",
+    "roleMentor": "Mentor IA",
+    "chatDisabled": "Le chat avec les compagnons est éteint. Pour continuer, rallume « Chat avec les compagnons » dans les réglages",
+    "credits": "Les compagnons viennent de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0 ; leurs personnalités écrites sont une œuvre dérivée avec modifications et n'impliquent aucune approbation de l'auteur d'origine.",
+    "closeRoster": "Fermer la liste des compagnons",
+    "aiLabel": "Partenaire d'étude IA",
+    "rosterEmpty": "Personne n'est passé demander de l'aide aujourd'hui.",
+    "breakReminder": "Cette conversation dure depuis deux heures. Tu peux t'arrêter et te reposer ; tout reste ici.",
+    "crisisResponse": "Tu as parlé de te faire du mal. Je suis une IA et je ne peux pas t'aider là-dessus — cela vaut la peine d'en parler à une personne. Chine continentale : ligne d'écoute 12356. États-Unis : 988. Ailleurs : findahelpline.com. Cette conversation restera ici.",
+    "helperInvitation": "Je n'arrive toujours pas à comprendre « {{topic}} ». Quand tu auras un moment, tu peux me l'expliquer avec tes mots ? Commencer par ce que c'est serait parfait.",
+    "helperThanks": "Merci. « {{topic}} » est bien plus clair pour moi maintenant. Je vais m'exercer de mon côté — à bientôt."
+  },
+  "errors": {
+    "offline": "Tu es hors ligne. Pour continuer, rallume l'interrupteur internet dans les réglages",
+    "noApiConfig": "Aucun service d'IA n'est encore configuré. Ajoute l'adresse et la clé sur la page des réglages",
+    "requestFailed": "Cette requête n'est pas passée. Réessaie dans un instant, ou vérifie le service d'IA dans les réglages."
+  }
+}

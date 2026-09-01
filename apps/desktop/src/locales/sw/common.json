@@ -1,0 +1,30 @@
+{
+  "actions": {
+    "retry": "Jaribu tena",
+    "stop": "Simamisha",
+    "send": "Tuma",
+    "gotIt": "Nimeelewa",
+    "copy": "Nakili",
+    "copied": "Imenakiliwa",
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "expand": "Onyesha zaidi",
+    "collapse": "Onyesha kidogo"
+  },
+  "nav": {
+    "newChat": "Mazungumzo mapya ya kujifunza",
+    "settings": "Mipangilio",
+    "vocabulary": "Msamiati",
+    "discover": "Gundua",
+    "map": "Ramani",
+    "friends": "Marafiki",
+    "offline": "Huna mtandao. Kila kinachohitaji intaneti kimesimama kwa muda; mengine yanaendelea."
+  },
+  "state": {
+    "loading": "Inapakia…",
+    "empty": "Bado hakuna kitu hapa"
+  },
+  "list": {
+    "separator": ", "
+  }
+}

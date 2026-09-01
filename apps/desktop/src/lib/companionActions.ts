@@ -1,19 +1,17 @@
 /**
  * Purpose: companion cast desktop actions (spec 037) — card lookup, opening or continuing a
- * companion chat, delivering a teach-back invitation as her own chat message, seeding the
- * teach script for a conversation, and the companion chat system prompt (Leo 2026-08-15:
- * the invitation lives in the chat like any message; replying starts the teach-back there).
- * Side effects: DB writes on openCompanionConversation / appendCompanionInvitation /
- * seedTeachScriptForConversation.
+ * companion chat, the daily helper's own opening message, seeding the teach script for a
+ * conversation, and the companion chat system prompt (Leo 2026-08-15: the invitation lives
+ * in the chat like any message; replying starts the teach-back there).
+ * Side effects: DB writes on openCompanionConversation / startHelperConversation /
+ * appendHelperThanks / seedTeachScriptForConversation.
  * Main exports: COMPANION_IDS, COMPANION_DESKTOP_COPY, helperInvitation, helperThanks,
  * getCompanionCardById, openCompanionConversation, startHelperConversation,
- * appendHelperThanks, appendCompanionInvitation, seedTeachScriptForConversation,
- * buildCompanionChatSystemPrompt.
+ * appendHelperThanks, seedTeachScriptForConversation, buildCompanionChatSystemPrompt.
  */
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildScriptUserMessage,
-  COMPANION_COPY,
   type CompanionCard,
   initialKnowledgeState,
   loadCompanionCards,
@@ -148,32 +146,6 @@ export async function appendHelperThanks(conversationId: string, topic: string):
   await repos.conversations.touch(conversationId, thanks.created_at);
   const { useChatStore } = await import("../stores/chatStore");
   useChatStore.getState().noteExternalMessage(conversationId, thanks);
-}
-
-/** Delivers a teach-back or reunion invitation as the companion's own chat message: reuses
- * (or creates) her companion conversation and appends the invitation at the newest leaf. If
- * that conversation happens to be open on screen, the message is folded into the live view. */
-export async function appendCompanionInvitation(
-  companionId: string,
-  topic: string,
-  kind: "teach" | "reunion" = "teach",
-): Promise<void> {
-  const repos = await getRepos();
-  const conversationId = await openCompanionConversation(companionId);
-  const allMessages = await repos.messages.listByConversation(conversationId);
-  const invitation = {
-    id: newId(),
-    conversation_id: conversationId,
-    role: "assistant" as const,
-    content: kind === "reunion" ? COMPANION_COPY.reunionInvitation(topic) : helperInvitation(topic),
-    created_at: nowIso(),
-    teaching_mode: null,
-    parent_id: newestLeafId(allMessages),
-  };
-  await repos.messages.append(invitation);
-  await repos.conversations.touch(conversationId, invitation.created_at);
-  const { useChatStore } = await import("../stores/chatStore");
-  useChatStore.getState().noteExternalMessage(conversationId, invitation);
 }
 
 /** Generates the teach-back script and seeds this conversation's knowledge state (spec 037's

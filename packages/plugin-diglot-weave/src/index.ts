@@ -19,3 +19,4 @@ export * from "./scheduler";
 export * from "./tokenize";
 export * from "./trainingLog";
 export * from "./uiCopy";
+export * from "./vocabTest";

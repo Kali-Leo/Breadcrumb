@@ -116,17 +116,10 @@ export function nextBreakReminderAt(sessionStartMs: number): number {
 /** Shown once shouldRemindBreak fires. Worded in chat.json under companion.breakReminder. */
 export const BREAK_REMINDER_COPY: CopyMessage = { key: "chat:companion.breakReminder" };
 
-/** What is left here after the interface wording moved to the catalogues (ADR-0031): one
- * template still reachable only from a dead path, and the helper-name pool, which is content
- * rather than copy. Everything the live UI renders is a catalogue key now. */
+/** What is left here after the interface wording moved to the catalogues (ADR-0031): the
+ * helper-name pool, which is content rather than copy. Everything the live UI renders is a
+ * catalogue key now. */
 export const COMPANION_COPY = {
-  /** The reunion invitation as the companion's own ordinary chat message (spec 048 §5 —
-   * no cards, no buttons: replying accepts, ignoring lets it expire). Its only caller,
-   * appendCompanionInvitation, is unreachable from the shipped UI (audit 2026-08-28), so the
-   * sentence stayed here rather than entering the catalogues ahead of a decision on the
-   * feature itself. */
-  reunionInvitation: (topic: string): string =>
-    `「${topic}」有阵子没一起聊过了。想回顾的话,回我一句就行,我们从你还记得的部分开始。`,
   /** Daily helper roster (spec 050 §9): each helper is a peer who wants to understand one
    * concept — never a mentor, never above the learner. Helpers go by person names (Leo
    * 2026-08-16 — the messenger convention; the topic rides along as secondary text), picked

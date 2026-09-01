@@ -1,0 +1,50 @@
+{
+  "title": "Descobrir",
+  "intro": "Esta página mostra o que você tem assistido no Bilibili e no YouTube, e o que interessa a você. Tudo é calculado neste computador; nada é enviado para lugar nenhum.",
+  "action": "Falta um passo, no navegador: instale uma extensão que roda scripts e depois os dois scripts.",
+  "installButton": "Instalar no navegador",
+  "afterClick": "Três páginas abrem no seu navegador: instale primeiro o Violentmonkey, depois volte às outras duas e aperte «Instalar este script» em cada uma. Depois disso, navegue no Bilibili e no YouTube como sempre e esta página começará a mostrar seus interesses.",
+  "token": "Mais um passo: na página inicial do Bilibili, clique em 🔗 na barra de chaves no canto inferior esquerdo e cole o código abaixo; faça o mesmo na página inicial do YouTube.",
+  "projectHomepage": "Abrir a página do projeto",
+  "service": {
+    "starting": "Iniciando o programa de interesses neste computador…",
+    "notFound": "O programa de interesses não está neste computador. Ele vem com o projeto do modo feed — baixe para sua pasta pessoal ou para a área de trabalho e volte a esta página.",
+    "pythonMissing": "Não há Python neste computador, e o programa de interesses precisa dele.",
+    "failed": "O programa de interesses não iniciou. O mais provável é que faltem alguns pacotes Python; rode isto na pasta do projeto e volte a esta página:"
+  },
+  "emotion": {
+    "title": "Como o conteúdo caiu",
+    "all": "Tudo",
+    "pro": "Aprender",
+    "ent": "Diversão",
+    "gent": "Aconchego",
+    "expose": "Serviram a você",
+    "engage": "Você escolheu",
+    "chartAria": "Como o conteúdo servido e o escolhido caíram ao longo do tempo",
+    "tooltip_one": "{{date}} {{line}} {{value}} ({{count}} item)",
+    "tooltip_many": "{{date}} {{line}} {{value}} ({{count}} itens)",
+    "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} itens)",
+    "empty": "Nada foi registrado neste período"
+  },
+  "wordCloud": {
+    "title": "Nuvem de palavras",
+    "empty": "Nada foi aberto neste período",
+    "window7": "7 dias",
+    "window30": "30 dias",
+    "window90": "90 dias",
+    "window365": "1 ano"
+  },
+  "newTopics": {
+    "title": "Interesses novos",
+    "thinEvidence": "Ainda há poucos registros — trate estas mudanças como pistas iniciais.",
+    "empty": "Nada de novo apareceu ultimamente"
+  },
+  "proContent": {
+    "title": "Conteúdo de aprendizado",
+    "unfinished": "Não terminado",
+    "finished": "Terminado",
+    "allGroups": "Tudo",
+    "minutes": "{{watched}}/{{total}} min",
+    "empty": "Nenhum conteúdo de aprendizado assistido neste período"
+  }
+}

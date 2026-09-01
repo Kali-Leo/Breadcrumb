@@ -121,6 +121,53 @@ describe("deriveContinents", () => {
     expect(assignment.islets.map((islet) => islet.id).sort()).toEqual(["kite", "opera"]);
   });
 
+  it("keeps a cluster's identity on its oldest member as new members join", () => {
+    // The island's shape is seeded from this id (Leo 2026-09-01: shape stays put), so joining
+    // a cluster must not hand it a new identity. The medoid can and does move; the first
+    // member cannot.
+    const loners = [node("kite", null, "风筝"), node("opera", null, "歌剧")];
+    const lonerEmbeddings: Array<[string, readonly number[]]> = [
+      ["kite", [0, 1, 0, 0]],
+      ["opera", [0, 0, 1, 0]],
+    ];
+    const before = deriveContinents(
+      [
+        node("spark", null, "Spark", "2026-07-01T00:00:00Z"),
+        node("hadoop", null, "Hadoop", "2026-07-02T00:00:00Z"),
+        ...loners,
+      ],
+      new Map<string, readonly number[]>([
+        ["spark", [1, 0, 0, 0]],
+        ["hadoop", [0.99, 0.02, 0, 0]],
+        ...lonerEmbeddings,
+      ]),
+      new Map(),
+    );
+    const after = deriveContinents(
+      [
+        node("spark", null, "Spark", "2026-07-01T00:00:00Z"),
+        node("hadoop", null, "Hadoop", "2026-07-02T00:00:00Z"),
+        node("hive", null, "Hive", "2026-07-09T00:00:00Z"),
+        node("flink", null, "Flink", "2026-07-10T00:00:00Z"),
+        ...loners,
+      ],
+      new Map<string, readonly number[]>([
+        ["spark", [1, 0, 0, 0]],
+        ["hadoop", [0.99, 0.02, 0, 0]],
+        ["hive", [0.97, 0.04, 0, 0]],
+        ["flink", [0.96, 0.05, 0, 0]],
+        ...lonerEmbeddings,
+      ]),
+      new Map(),
+    );
+
+    const clusterOf = (assignment: ReturnType<typeof deriveContinents>): ContinentSummary =>
+      assignment.continents.find((continent) => continent.origin === "cluster") as ContinentSummary;
+    expect(clusterOf(before).id).toBe("spark");
+    expect(clusterOf(after).id).toBe("spark");
+    expect(clusterOf(after).memberNodeIds).toContain("flink");
+  });
+
   it("leaves a childless root that clusters with nobody as an unnamed islet", () => {
     const nodes = [
       node("spark", null, "Spark"),

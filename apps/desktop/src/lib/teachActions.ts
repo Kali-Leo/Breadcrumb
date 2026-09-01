@@ -36,17 +36,20 @@ export function buildTeachSystemPrompt(topic: string): string {
   );
 }
 
-/** Lowest-retention known nodes first — the ones a teach-back helps most. */
+/** Highest review worth first — expected FSRS gain of retrieving this concept now, plus
+ * rescue for the long overdue (plugin-memory/reviewPriority.ts). Not lowest retention first:
+ * an almost-forgotten concept has the least to gain and the least chance of being retold
+ * (design audit 2026-08-28, D2; Leo 2026-09-01 ruled to change it). */
 export function pickTeachCandidates(
   nodes: readonly KnowledgeNodeRow[],
-  retentionByNode: ReadonlyMap<string, number>,
+  reviewPriorityByNode: ReadonlyMap<string, number>,
   limit: number,
 ): KnowledgeNodeRow[] {
   return nodes
-    .filter((node) => retentionByNode.has(node.id))
+    .filter((node) => reviewPriorityByNode.has(node.id))
     .sort(
       (a, b) =>
-        (retentionByNode.get(a.id) ?? 0) - (retentionByNode.get(b.id) ?? 0) ||
+        (reviewPriorityByNode.get(b.id) ?? 0) - (reviewPriorityByNode.get(a.id) ?? 0) ||
         a.label.localeCompare(b.label),
     )
     .slice(0, limit);

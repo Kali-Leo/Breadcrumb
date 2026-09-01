@@ -1,6 +1,6 @@
 /**
- * Purpose: tests for teach-back pure logic — candidate picking by lowest retention,
- * topic round-trip through the title, and plain copy invariants (spec 034).
+ * Purpose: tests for teach-back pure logic — candidate picking by review worth, topic
+ * round-trip through the title, and plain copy invariants (spec 034).
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -11,14 +11,14 @@ function node(id: string, label: string): KnowledgeNodeRow {
 }
 
 describe("pickTeachCandidates", () => {
-  it("returns lowest-retention nodes first, capped, skipping unknown nodes", () => {
+  it("returns the highest review worth first, capped, skipping nodes with no footprint", () => {
     const nodes = [node("a", "闭包"), node("b", "导数"), node("c", "极限"), node("d", "无踪影")];
-    const retention = new Map([
-      ["a", 0.9],
-      ["b", 0.4],
-      ["c", 0.6],
+    const reviewPriority = new Map([
+      ["a", 0.2],
+      ["b", 1.4],
+      ["c", 0.9],
     ]);
-    const picked = pickTeachCandidates(nodes, retention, 2);
+    const picked = pickTeachCandidates(nodes, reviewPriority, 2);
     expect(picked.map((n) => n.id)).toEqual(["b", "c"]);
   });
 });

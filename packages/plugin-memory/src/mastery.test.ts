@@ -5,13 +5,7 @@
  */
 import type { MasteryClaimRow, NodeSightingGrade, NodeSightingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import {
-  computeMastery,
-  DIM_THRESHOLD,
-  hasRetrievalEvidence,
-  LIT_THRESHOLD,
-  masteryTier,
-} from "./mastery";
+import { computeMastery, DIM_THRESHOLD, hasRetrievalEvidence, LIT_THRESHOLD } from "./mastery";
 
 const NOW = "2026-07-29T12:00:00Z";
 
@@ -115,7 +109,7 @@ describe("computeMastery", () => {
     ];
     const value = computeMastery(merelyMet, [], NOW).get("mentioned") ?? 0;
     expect(value).toBeLessThanOrEqual(DIM_THRESHOLD);
-    expect(masteryTier(value)).not.toBe("lit");
+    expect(value).toBeLessThan(LIT_THRESHOLD);
   });
 
   it("lets one correct guess lift that same node past the cap", () => {
@@ -131,7 +125,7 @@ describe("computeMastery", () => {
       ) ?? 0;
     expect(capped).toBeLessThanOrEqual(DIM_THRESHOLD);
     expect(afterGuess).toBeGreaterThan(DIM_THRESHOLD);
-    expect(masteryTier(afterGuess)).toBe("lit");
+    expect(afterGuess).toBeGreaterThanOrEqual(LIT_THRESHOLD);
   });
 
   it("keeps the cap when the only retrieval attempt failed", () => {
@@ -179,14 +173,5 @@ describe("hasRetrievalEvidence", () => {
 
   it("says no when there is no evidence at all", () => {
     expect(hasRetrievalEvidence([], [])).toBe(false);
-  });
-});
-
-describe("masteryTier", () => {
-  it("classifies the three tiers at their boundaries", () => {
-    expect(masteryTier(LIT_THRESHOLD)).toBe("lit");
-    expect(masteryTier(LIT_THRESHOLD - 0.01)).toBe("dim");
-    expect(masteryTier(DIM_THRESHOLD)).toBe("dim");
-    expect(masteryTier(DIM_THRESHOLD - 0.01)).toBe("unlit");
   });
 });

@@ -1,10 +1,10 @@
 /**
- * Purpose: app-side orchestration of the diglot weave (spec 033) — bundled pack loading,
+ * Purpose: app-side orchestration of the diglot weave (spec 033) —
  * the per-message weave pipeline (candidates → schedule → patches, with new-word
  * introduction and context-novelty via local embeddings), and signal application to FSRS.
  * Side effects: DB writes (word states, events, context embeddings).
- * Main exports: loadBundledPack, weaveAssistantMessage, applyDiglotSignal,
- * findProductiveUses, WeaveResult.
+ * Main exports: weaveAssistantMessage, applyDiglotSignal, findProductiveUses, WeaveResult.
+ * Pack loading itself lives in languagePacks.ts, which also knows how to install one.
  */
 import type { DiglotEventKind, DiglotPairId } from "@breadcrumb/core-db";
 import {
@@ -17,7 +17,6 @@ import {
   extractCandidates,
   hashContext,
   type LoadedLanguagePack,
-  loadLanguagePack,
   newWordCard,
   type ReplacementPatch,
   ratingForSignal,
@@ -31,25 +30,9 @@ import { getRepos } from "./db";
 import { contextNoveltyFor } from "./diglotNovelty";
 import { nowIso } from "./time";
 
-const packCache = new Map<DiglotPairId, Promise<LoadedLanguagePack>>();
-
 /** One conversation stream, one window over the lemmas it recently offered — the review-debt
  * throttle only counts due words this window can still deliver (see reviewDebt.ts). */
 const meetableDebtWindow = createMeetableDebtWindow();
-
-/** Loads a bundled language pack once per session (validated by the Zod contract). */
-export function loadBundledPack(pairId: DiglotPairId): Promise<LoadedLanguagePack> {
-  let cached = packCache.get(pairId);
-  if (cached === undefined) {
-    cached = (async () => {
-      if (pairId !== "zh:en") throw new Error(`no bundled pack for pair ${pairId}`);
-      const raw = (await import("../assets/language-packs/zh-en.json")).default;
-      return loadLanguagePack(raw);
-    })();
-    packCache.set(pairId, cached);
-  }
-  return cached;
-}
 
 export interface WeaveResult {
   patches: ReplacementPatch[];

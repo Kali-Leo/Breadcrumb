@@ -1,0 +1,48 @@
+{
+  "title": "Jelajah",
+  "intro": "Halaman ini menunjukkan apa yang kamu tonton di Bilibili dan YouTube, dan apa yang menarik bagimu. Semuanya dihitung di komputer ini; tidak ada yang dikirim ke mana pun.",
+  "action": "Tinggal satu langkah, di peramban: pasang ekstensi yang menjalankan skrip, lalu kedua skripnya.",
+  "installButton": "Pasang di peramban",
+  "afterClick": "Tiga halaman terbuka di peramban: pasang Violentmonkey dulu, lalu kembali ke dua halaman lain dan tekan «Pasang skrip ini» di masing-masing. Setelah itu, tonton Bilibili dan YouTube seperti biasa dan halaman ini mulai menampilkan minatmu.",
+  "token": "Satu langkah lagi: di halaman depan Bilibili, klik 🔗 pada bilah sakelar di kiri bawah lalu tempel kode di bawah ini; lakukan hal yang sama di halaman depan YouTube.",
+  "projectHomepage": "Buka halaman proyek",
+  "service": {
+    "starting": "Menjalankan program minat di komputer ini…",
+    "notFound": "Program minat tidak ada di komputer ini. Ia datang bersama proyek mode umpan — unduh ke folder rumah atau destop-mu, lalu kembali ke halaman ini.",
+    "pythonMissing": "Tidak ada Python di komputer ini, sedangkan program minat membutuhkannya.",
+    "failed": "Program minat tidak berjalan. Kemungkinan besar beberapa paket Python belum ada; jalankan ini di folder proyek, lalu kembali ke halaman ini:"
+  },
+  "emotion": {
+    "title": "Bagaimana isinya terasa",
+    "all": "Semua",
+    "pro": "Belajar",
+    "ent": "Hiburan",
+    "gent": "Menenangkan",
+    "expose": "Disodorkan",
+    "engage": "Dipilih sendiri",
+    "chartAria": "Bagaimana isi yang disodorkan dan yang dipilih terasa dari waktu ke waktu",
+    "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} butir)",
+    "empty": "Tidak ada yang tercatat pada periode ini"
+  },
+  "wordCloud": {
+    "title": "Awan kata",
+    "empty": "Tidak ada yang dibuka pada periode ini",
+    "window7": "7 hari",
+    "window30": "30 hari",
+    "window90": "90 hari",
+    "window365": "1 tahun"
+  },
+  "newTopics": {
+    "title": "Minat baru",
+    "thinEvidence": "Catatannya masih sedikit — anggap perubahan ini sebagai petunjuk awal.",
+    "empty": "Belakangan tidak ada yang baru muncul"
+  },
+  "proContent": {
+    "title": "Isi untuk belajar",
+    "unfinished": "Belum selesai",
+    "finished": "Selesai",
+    "allGroups": "Semua",
+    "minutes": "{{watched}}/{{total}} mnt",
+    "empty": "Tidak ada isi untuk belajar yang ditonton pada periode ini"
+  }
+}

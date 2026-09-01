@@ -5,8 +5,11 @@
  */
 import type { DiglotEventKind, DiglotWordEventRow, DiglotWordStateRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { WORD_SETTLED_STABILITY_DAYS } from "./settled";
-import { computeWordLayerTrendSeries, computeWordSettledSeries } from "./wordSettledSeries";
+import {
+  computeWordLayerTrendSeries,
+  computeWordSettledSeries,
+  WORD_SETTLED_STABILITY_DAYS,
+} from "./wordSettledSeries";
 
 function localIso(year: number, month: number, day: number, hour = 12): string {
   return new Date(year, month - 1, day, hour, 0).toISOString();

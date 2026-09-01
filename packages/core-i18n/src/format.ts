@@ -62,6 +62,8 @@ const FONT_STACKS: Record<ScriptFamily, string> = {
   devanagari: '"Noto Sans Devanagari", "Nirmala UI", "Kohinoor Devanagari", system-ui, sans-serif',
   bengali: '"Noto Sans Bengali", "Nirmala UI", "Kohinoor Bangla", system-ui, sans-serif',
   ethiopic: '"Noto Sans Ethiopic", "Kefa", "Abyssinica SIL", system-ui, sans-serif',
+  kana: 'system-ui, "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", "Meiryo", sans-serif',
+  hangul: 'system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif',
   cyrillic: 'system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 };
 

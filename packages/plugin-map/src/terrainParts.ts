@@ -5,27 +5,35 @@
  * Side effect: keeps a bounded in-memory terrain cache (deterministic, purely a speedup).
  */
 import { hashStringToSeed } from "./random";
-import { generateTerrain, type IslandTerrain } from "./terrain";
+import { CANONICAL_RADIUS, generateTerrain, type IslandTerrain, scaleTerrain } from "./terrain";
 import type { LandCellModel, RiverModel, WorldPoint } from "./types";
 
 /**
- * Terrain generation is the expensive step and deterministic in (seed, radius, tier)
- * — memoized so incremental learning only regenerates islands that changed tier.
+ * Terrain generation is the expensive step and deterministic in the seed alone — memoized
+ * per island, so growing a size tier costs a scale pass instead of a whole regeneration
+ * (and the island keeps the shape the learner already knows).
  */
-const terrainCache = new Map<string, IslandTerrain>();
+const shapeCache = new Map<string, IslandTerrain>();
+const scaledCache = new Map<string, IslandTerrain>();
 const TERRAIN_CACHE_LIMIT = 96;
 
-export function terrainFor(nodeId: string, radius: number, sizeTier: number): IslandTerrain {
-  const key = `${nodeId}:${radius}:${sizeTier}`;
-  const cached = terrainCache.get(key);
+function remember<T>(cache: Map<string, T>, key: string, build: () => T): T {
+  const cached = cache.get(key);
   if (cached !== undefined) return cached;
-  const terrain = generateTerrain(hashStringToSeed(nodeId), radius, sizeTier);
-  if (terrainCache.size >= TERRAIN_CACHE_LIMIT) {
-    const oldestKey = terrainCache.keys().next().value;
-    if (oldestKey !== undefined) terrainCache.delete(oldestKey);
+  const built = build();
+  if (cache.size >= TERRAIN_CACHE_LIMIT) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey !== undefined) cache.delete(oldestKey);
   }
-  terrainCache.set(key, terrain);
-  return terrain;
+  cache.set(key, built);
+  return built;
+}
+
+export function terrainFor(nodeId: string, radius: number): IslandTerrain {
+  return remember(scaledCache, `${nodeId}:${radius}`, () => {
+    const shape = remember(shapeCache, nodeId, () => generateTerrain(hashStringToSeed(nodeId)));
+    return scaleTerrain(shape, radius / CANONICAL_RADIUS);
+  });
 }
 
 export function translate(point: WorldPoint, offset: WorldPoint): WorldPoint {

@@ -2,7 +2,8 @@
  * Purpose: word trend histories replayed through the exact production FSRS mapping (spec
  * 035 T6) — the "settled" count plus the word memory/intuition layer estimates, mirroring
  * plugin-memory's concept layers over woven words instead of approximating them.
- * Main exports: WordLayerTrendPoint, computeWordSettledSeries, computeWordLayerTrendSeries.
+ * Main exports: WORD_SETTLED_STABILITY_DAYS, WordLayerTrendPoint, computeWordSettledSeries,
+ * computeWordLayerTrendSeries.
  */
 import type {
   DiglotEventKind,
@@ -17,9 +18,16 @@ import {
   reviewCard,
 } from "@breadcrumb/plugin-diglot-weave";
 import type { Card } from "ts-fsrs";
-import { WORD_SETTLED_STABILITY_DAYS } from "./settled";
 import { dateKeyRange, localDayEndIso } from "./trendDays";
 import type { TrendPoint } from "./trends";
+
+/** Word settle bar (spec 035 #7): FSRS stability at/above 30 days — a month-plus forgetting
+ * half-life. The anchor is the Anki community's "mature = interval >= 21 days" convention,
+ * which this repo's own survey (docs/research/2026-08-13-折线指标-纵向学习度量调研.md) took as
+ * the honest lower bound for "actually learned"; 30 days sits just past it.
+ * (Lived in settled.ts until that module — the retired "已长期掌握" confirmation lists —
+ * was deleted on 2026-09-01 with the rest of the concept-side review-invitation corpses.) */
+export const WORD_SETTLED_STABILITY_DAYS = 30;
 
 export interface WordLayerTrendPoint {
   /** Local calendar date, "YYYY-MM-DD". */

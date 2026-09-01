@@ -1,0 +1,58 @@
+{
+  "emptyLine": "Bado hakuna mazungumzo. Andika hapa chini unachotaka kujifunza ili kuanza.",
+  "noReplyYet": "Ujumbe huu bado haujajibiwa",
+  "resumedFromMiddle": "Tunaendelea kutoka mahali pa awali · ujumbe wa baadaye bado upo",
+  "backToLatest": "Rudi kwenye la mwisho",
+  "composer": {
+    "placeholder": "Ungependa kujifunza nini? Sema tu… (Enter kutuma, Shift+Enter kwa mstari mpya)",
+    "freeLabel": "Mazungumzo huru",
+    "freeHint": "Zungumza lolote, kwa namna yoyote unayotaka.",
+    "studyLabel": "Hali ya kusoma",
+    "studyHint": "Majibu yanakuongoza kufikiri na kujaribu mwenyewe, ili unachojifunza kibaki."
+  },
+  "trail": {
+    "search": "Tafuta mazungumzo",
+    "noMatches": "Hakuna mazungumzo yanayolingana"
+  },
+  "popup": {
+    "close": "Funga dirisha hili la mazungumzo"
+  },
+  "factcheck": {
+    "checking": "Inatafuta vyanzo…",
+    "ask": "Hakiki hili",
+    "nothingToCheck": "Hakuna dai la kiuhalisia katika jibu hili la kuhakikiwa",
+    "supported": "Vyanzo vinavyounga mkono vimepatikana",
+    "insufficient": "Hakuna chanzo kilichopatikana kuunga mkono — ni vema kuthibitisha",
+    "contradicted": "Vyanzo havikubaliani; hapa kuna pande zote mbili",
+    "unavailable": "Haikuwezekana kuhakiki wakati huu",
+    "unavailableNextStep": "Unaweza kujaribu tena baadaye.",
+    "noEvidenceReasoning": "Sikupata chanzo cha wazi kinachounga mkono hili — ni vema kuthibitisha.",
+    "verdictFailedReasoning": "Vyanzo vilifika, lakini kuvisoma hadi mwisho hakukukamilika. Unaweza kujaribu tena baadaye.",
+    "noneChecked": "Hakuna kilichoweza kuhakikiwa wakati huu — unaweza kujaribu baadaye",
+    "allSupported_one": "Dai {{count}} lina chanzo kinacholiunga mkono",
+    "allSupported_other": "Madai yote {{count}} yana vyanzo vinavyoyaunga mkono",
+    "someSupported": "Madai {{supported}} kati ya {{total}} yana vyanzo vinavyoyaunga mkono",
+    "offlineNotice": "Swichi ya intaneti imezimwa. Iwashe ili vyanzo viweze kutafutwa.",
+    "noApiNotice": "Weka kwanza huduma ya AI kwenye mipangilio, ndipo hili liweze kuhakikiwa.",
+    "failedNotice": "Uhakiki haukukamilika (mtandao ulisita). Unaweza kujaribu baadaye."
+  },
+  "companion": {
+    "roleStudent": "Mwanafunzi wa AI",
+    "rolePeer": "Mwenzako wa AI",
+    "roleMentor": "Mshauri wa AI",
+    "chatDisabled": "Mazungumzo na wenzako yamezimwa. Ili kuendelea, washa tena «Mazungumzo na wenzako» kwenye mipangilio",
+    "credits": "Wenzako wanatoka Pepper&Carrot ya David Revoy (peppercarrot.com), CC-BY 4.0; tabia zao zilizoandikwa ni kazi tokanayo yenye mabadiliko na haimaanishi kuungwa mkono na mwandishi wa awali.",
+    "closeRoster": "Funga orodha ya wenzako",
+    "aiLabel": "Mwenzako wa kusoma wa AI",
+    "rosterEmpty": "Leo hakuna aliyepita kuomba msaada.",
+    "breakReminder": "Mazungumzo haya yamechukua saa mbili. Unaweza kusimama na kupumzika; kila kitu kitabaki hapa.",
+    "crisisResponse": "Umetaja kujidhuru. Mimi ni AI na siwezi kusaidia katika hili — ni muhimu kuzungumza na mtu halisi. China bara: simu ya msaada 12356. Marekani: 988. Nchi nyingine: findahelpline.com. Mazungumzo haya yatabaki hapa.",
+    "helperInvitation": "Bado sijaelewa «{{topic}}». Ukipata nafasi, unaweza kunieleza kwa maneno yako? Kuanza na ni nini hasa kutasaidia sana.",
+    "helperThanks": "Asante. Sasa «{{topic}}» inaeleweka zaidi kwangu. Naenda kujizoeza mwenyewe — tutaonana."
+  },
+  "errors": {
+    "offline": "Huna mtandao. Ili kuendelea, washa tena swichi ya intaneti kwenye mipangilio",
+    "noApiConfig": "Bado hakuna huduma ya AI iliyowekwa. Ongeza anwani na ufunguo kwenye ukurasa wa mipangilio",
+    "requestFailed": "Ombi hilo halikupita. Jaribu tena baada ya muda kidogo, au angalia huduma ya AI kwenye mipangilio."
+  }
+}

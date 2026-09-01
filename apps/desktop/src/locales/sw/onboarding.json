@@ -1,0 +1,55 @@
+{
+  "next": "Endelea",
+  "back": "Rudi",
+  "skip": "Ruka, nitajitafutia njia",
+  "welcome": {
+    "title": "Wewe unazungumza, hii inaandika",
+    "body": "Breadcrumb ni mwenzako wa kujifunza. Unazungumza kuhusu unachotaka kujifunza, na huku ukiendelea hujenga ramani ya uliyoyapitia — bila kuandika madokezo, bila kusaini mahudhurio.",
+    "point1": "Dhana unazozizungumza hujitokeza zenyewe kwenye ramani, na hufifia pale usipokwenda tena",
+    "point2": "Kila kitu hubaki kwenye kompyuta hii. Hakuna akaunti, hakuna kusawazisha wingu",
+    "point3": "Hakuna orodha za washindi, hakuna mfululizo wa siku, hakuna vipimo vya maendeleo",
+    "tryDemo": "Nionyeshe mfano kwanza (inapendekezwa)",
+    "demoNote": "Hupakia miezi mitatu ya kujifunza kwa mtu mwingine na kukutembeza ndani yake. Bonyezo moja huiondoa wakati wowote.",
+    "installing": "Inaandaa mfano…",
+    "startClean": "Ruka mfano, anza tupu"
+  },
+  "tour": {
+    "label": "Ziara ya kuongozwa",
+    "finish": "Anza kuitumia",
+    "exit": "Toka kwenye ziara",
+    "chatTitle": "Kila kitu huanzia hapa",
+    "chatBody": "Unachotakiwa ni kuzungumza tu. Swichi iliyo juu: katika hali ya kusoma majibu hukuongoza kufikiri na kujaribu; katika mazungumzo huru ni maongezi ya kawaida.",
+    "trailTitle": "Mazungumzo yako hukaa upande wa kushoto",
+    "trailBody": "Vichwa hujipa majina vyenyewe — kutoka dhana ya kwanza hadi ya mwisho. Ukishakipa jina wewe mwenyewe, hakibadilishwi tena kamwe.",
+    "mapTitle": "Zungumza kwa muda na hii itakua",
+    "mapBody": "Visiwa hivi vilitolewa kwenye mazungumzo vyenyewe; hakuna kilichopangwa hapa kwa mkono. Sogeza juu ili kuingia ndani ya kimoja.",
+    "mapEmptyTitle": "Kwa sasa, bahari wazi",
+    "mapEmptyBody": "Kila mzunguko wa mazungumzo hubadilisha wenyewe mliyoyazungumza kuwa visiwa hapa. Hakuna cha wewe kupanga.",
+    "mirrorTitle": "Kufifia ndilo linalopaswa kutokea",
+    "mirrorBody": "Hivi viwili vinaonyesha umepitia kiasi gani na ungekumbuka kiasi gani bado. Maeneo usiyoyarudia hufifia — hilo ni ukumbusho, si alama dhidi yako. Yote huhesabiwa hapa na hayagharimu chochote.",
+    "spendingTitle": "Gharama yake, kabla hujaiwasha",
+    "spendingBody": "Kila kipengele kinachogharimu pesa kiko kwenye ukurasa huu na swichi yake, na kila kimoja hueleza takribani gharama ya matumizi moja kabla hujakiwasha. Namba hiyo imepimwa, haikubuniwa.",
+    "yourTurnTitle": "Zamu yako",
+    "yourTurnBody": "Uliza kuhusu jambo unalotaka kweli kulielewa. Ramani itaendelea kufuatana nawe yenyewe."
+  },
+  "checklist": {
+    "title": "Anzia hapa",
+    "connect": "Unganisha huduma ya AI",
+    "ask": "Uliza swali lako la kwanza",
+    "map": "Fungua ramani",
+    "dismiss": "Ondoa orodha hii",
+    "demoNote": "Kwa sasa ramani inaonyesha data ya mfano.",
+    "removeDemo": "Ondoa data ya mfano",
+    "removingDemo": "Inaondoa…",
+    "takeTour": "Nitembeze ndani yake",
+    "tourNote": "Dakika mbili, tukionyesha skrini halisi. Escape hutoka wakati wowote."
+  },
+  "settings": {
+    "title": "Ziara ya kuongozwa",
+    "hint": "Pitia utangulizi tena, au ondoa data ya mfano.",
+    "replay": "Rudia ziara",
+    "removeDemo": "Ondoa data ya mfano",
+    "demoInstalled": "Data ya mfano imewekwa",
+    "demoAbsent": "Hakuna data ya mfano"
+  }
+}

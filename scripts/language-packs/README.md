@@ -1,5 +1,23 @@
 # 语言包构建脚本(spec 033)
 
+两个入口:`build-pack.mjs`(通用,任意语言对,数据来自 Wiktionary/Kaikki + 词频表)与
+`build-zh-en.mjs`(中英专用,CC-CEDICT 管线,产物随安装包一起发布)。
+
+```bash
+node scripts/language-packs/build-pack.mjs en:sw     # 单个语言对
+node scripts/language-packs/build-pack.mjs --all     # pairs.json 里的全部
+```
+
+候选语言对写在 `pairs.json`;**列在那里只是候选,不是承诺**——缺词频表、或可替换词条数不
+够的语言对会被拒绝构建,`apps/desktop/src/assets/language-packs/catalog.json`(产物,入库)
+只列真正建成的。包体本身写到 `dist/language-packs/`(不入库),发布时上传到 GitHub Release
+的 `language-packs-<版本>` 这个 tag,应用按需下载。
+
+**如果你的网络走代理**:Node 默认不读 `HTTP_PROXY`,加 `NODE_USE_ENV_PROXY=1` 再跑,否则
+下载会一直挂着不报错。
+
+以下是中英专用管线的说明。
+
 从公开数据构建 `zh:en` 语言包,产物是单个 JSON 文件,供 `plugin-diglot-weave` 在运行时
 按 `packages/plugin-diglot-weave/src/packSchema.ts` 的 Zod 契约加载。零 npm 依赖,纯
 Node ≥20 内置 API(`fetch`/`zlib`/`fs`)。

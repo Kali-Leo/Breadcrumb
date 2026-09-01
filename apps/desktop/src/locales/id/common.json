@@ -1,0 +1,30 @@
+{
+  "actions": {
+    "retry": "Coba lagi",
+    "stop": "Berhenti",
+    "send": "Kirim",
+    "gotIt": "Mengerti",
+    "copy": "Salin",
+    "copied": "Tersalin",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "expand": "Tampilkan lebih banyak",
+    "collapse": "Tampilkan lebih sedikit"
+  },
+  "nav": {
+    "newChat": "Percakapan belajar baru",
+    "settings": "Pengaturan",
+    "vocabulary": "Kosakata",
+    "discover": "Jelajah",
+    "map": "Peta",
+    "friends": "Teman",
+    "offline": "Sedang luring. Semua yang butuh internet dijeda; sisanya tetap jalan."
+  },
+  "state": {
+    "loading": "Memuat…",
+    "empty": "Belum ada apa-apa di sini"
+  },
+  "list": {
+    "separator": ", "
+  }
+}

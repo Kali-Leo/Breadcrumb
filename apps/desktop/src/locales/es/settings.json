@@ -1,0 +1,187 @@
+{
+  "title": "Ajustes",
+  "back": "Volver a la conversación",
+  "tabs": {
+    "general": "General",
+    "billing": "Interruptores y gasto",
+    "research": "Investigación"
+  },
+  "api": {
+    "title": "Servicio de IA (compatible con OpenAI)",
+    "hint": "Pon aquí tu cuenta del servicio de IA; la conversación y todas las demás funciones con IA funcionan con ella.",
+    "baseUrl": "URL base",
+    "apiKey": "Clave de API",
+    "model": "Nombre del modelo",
+    "priceCurrency": "Moneda de facturación",
+    "priceCurrencyHint": "Este modelo se factura en una moneda distinta según la plataforma. Elige la que corresponde a tu clave para que la página de gasto coincida con tu factura.",
+    "currencyCNY": "¥ CNY",
+    "currencyUSD": "$ USD",
+    "saved": "Guardado ✓",
+    "unsaved": "Cambios sin guardar"
+  },
+  "network": {
+    "title": "Internet",
+    "hint": "Apágalo y se detiene todo lo que necesita internet, llamadas a la API incluidas."
+  },
+  "mainland": {
+    "title": "Red de China continental",
+    "hint": "La verificación de datos usa solo fuentes accesibles desde China continental (Bing); apagado, prefiere Wikipedia."
+  },
+  "language": {
+    "title": "Idioma",
+    "interface": "Idioma de la interfaz",
+    "answer": "Idioma en el que responde la IA",
+    "sameAsInterface": "El mismo que la interfaz",
+    "thinNote": "La IA escribe {{language}} menos bien que {{fallback}}. Puedes cambiar solo el idioma de las respuestas y dejar la interfaz como está."
+  },
+  "quietIssues": {
+    "title": "Trabajo en segundo plano",
+    "allGood": "Todo lo que ocurre en segundo plano está bien.",
+    "summary_one": "{{count}} tarea de fondo no llegó a terminar hace poco. Tu aprendizaje no se ve afectado — ábrelo para ver cuál",
+    "summary_many": "{{count}} tareas de fondo no llegaron a terminar hace poco. Tu aprendizaje no se ve afectado — ábrelo para ver cuáles",
+    "summary_other": "{{count}} tareas de fondo no llegaron a terminar hace poco. Tu aprendizaje no se ve afectado — ábrelo para ver cuáles",
+    "fallbackPurpose": "Tarea de fondo"
+  },
+  "purposes": {
+    "chat": "Conversación",
+    "knowledge-tree": "Mapa de conocimiento",
+    "factcheck": "Verificación de datos",
+    "knowledge-edges": "Enlaces del conocimiento",
+    "interest": "Perfil de intereses",
+    "self-report-mapping": "Reconocer «esto ya lo sé»",
+    "goal-planning": "Planificación de objetivos",
+    "compare-profile": "Investigación de comparación",
+    "compare-align": "Emparejado de la comparación",
+    "map-naming": "Nombres del mapa",
+    "diglot-weave": "Aprender idiomas · sustituciones inteligentes",
+    "teach-quality": "Devolución al explicar",
+    "companion-chat": "Chat con compañeros",
+    "companion-memory": "Memoria de los compañeros",
+    "companion-script": "Preparación del compañero",
+    "focus-explain": "Explicaciones en modo enfoque",
+    "term-marking": "Marcado de palabras"
+  },
+  "billing": {
+    "intro": "Cada paso que cuesta dinero tiene aquí su propio interruptor y su gasto se registra por separado. Esta página muestra lo que se ha gastado de verdad.",
+    "estimateIntro": "La estimación bajo cada elemento está calculada para {{scenario}}; lo que has gastado realmente aparece al lado.",
+    "estimate": "unos {{cost}} {{cadence}}",
+    "estimateUnknownModel": "Tu modelo no está en la lista de precios incorporada, así que no hay estimación por uso",
+    "estimateFree": "No cuesta nada",
+    "estimateUnmeasured": "Esto todavía no se ha medido",
+    "cadencePerRound": "por intercambio",
+    "cadencePerMessage": "por mensaje que envías",
+    "cadencePerAnswer": "por respuesta",
+    "cadenceOnDemand": "cada vez que lo usas",
+    "cadencePerItemOnce": "por elemento, una sola vez",
+    "grandTotal": "Hoy {{today}} · en total {{total}}",
+    "nothingSpent": "todavía sin gasto",
+    "neverUsed": "Todavía sin gasto",
+    "spendLine": "Hoy {{today}} · en total {{total}}",
+    "diglot": {
+      "name": "🧵 Aprender idiomas · sustituciones inteligentes",
+      "hint": "La versión reforzada de aprender idiomas: la IA elige la traducción que encaja en la frase y de vez en cuando pone una expresión natural.",
+      "toggleLabel": "Sustituciones inteligentes al aprender idiomas"
+    },
+    "chat": {
+      "name": "💬 Conversación",
+      "hint": "Tu conversación diaria con la IA. Es la función central y se queda encendida; lo que cuesta también aparece aquí."
+    },
+    "features": {
+      "knowledgeTree": {
+        "name": "🌳 Mapa de conocimiento",
+        "hint": "Después de cada intercambio, la IA archiva en tu mapa lo que habéis hablado."
+      },
+      "factcheck": {
+        "name": "🔍 Verificación de datos",
+        "hint": "Pulsa «Comprobar esto» bajo una respuesta y la IA busca las afirmaciones en fuentes públicas."
+      },
+      "knowledgeEdges": {
+        "name": "🕸️ Enlaces del conocimiento",
+        "hint": "Cuando se archiva algo nuevo, la IA mira cómo se conecta con lo que ya sabes."
+      },
+      "interest": {
+        "name": "💡 Recomendaciones personales",
+        "hint": "La IA nota qué te interesa y dónde te atascas, y ajusta con eso lo que te sugiere; también es lo que reconoce de qué tema hablas cuando dices «esto ya lo sé»."
+      },
+      "goalPlanning": {
+        "name": "🎯 Planificación de objetivos",
+        "hint": "Cuando fijas un objetivo, la IA lo convierte en una lista de cosas por aprender."
+      },
+      "compareProfileBuild": {
+        "name": "🌲 Investigación de comparación (experimental)",
+        "hint": "Para comparaciones fuera de la lista de profesiones incluida, la IA busca en fuentes públicas, construye la lista y comprueba cada fuente. Tarda unos minutos."
+      },
+      "compareAlignment": {
+        "name": "🌉 Emparejado de la comparación",
+        "hint": "Durante una comparación, la IA decide si tus palabras y las de la fuente significan lo mismo."
+      },
+      "teachQuality": {
+        "name": "🎓 Devolución al explicar",
+        "hint": "Después de explicarle algo a un compañero, la IA lee cómo fue; queda registrado lo que explicaste con claridad."
+      },
+      "mapTopicNaming": {
+        "name": "🗺️ Nombres del mapa (experimental)",
+        "hint": "En el mapa, la IA pone nombre a cada zona que se ha formado sola."
+      },
+      "feedbackLab": {
+        "name": "🪞 Últimamente",
+        "hint": "El panel de repaso junto al mapa: se calcula por completo con datos locales y no cuesta nada."
+      },
+      "companionChat": {
+        "name": "🎭 Chat con compañeros",
+        "hint": "Cada día vienen algunos compañeros a preguntarte por algo que aprendiste y hace tiempo que no tocas. Abre uno y explícaselo."
+      },
+      "companionMemory": {
+        "name": "🧠 Memoria de los compañeros",
+        "hint": "Los compañeros recuerdan lo que habéis hablado y ordenan esos recuerdos de vez en cuando para que sigan teniendo sentido."
+      },
+      "companionScript": {
+        "name": "📜 Preparación del compañero",
+        "hint": "Antes de que empieces a explicar, el compañero que va a escucharte se documenta sobre el tema para poder seguirte."
+      },
+      "focusExplain": {
+        "name": "🔎 Explicaciones en modo enfoque",
+        "hint": "En modo enfoque, elegir una palabra o hacer una pregunta te trae una explicación."
+      },
+      "termMarking": {
+        "name": "🖊️ Marcado de palabras",
+        "hint": "La IA marca en una respuesta las palabras que quizá aún no conoces; toca una para ver qué significa."
+      }
+    }
+  },
+  "research": {
+    "panelTitle": "🔬 Investigación",
+    "panelIntro": "Todos los números de aquí los ha calculado este ordenador. Las tareas están revisadas y sus fuentes se pueden comprobar; los datos no salen solos de este dispositivo y nada de esto cuesta dinero.",
+    "offNotice": "Las tareas de investigación están apagadas: no se ejecutará ninguna nueva. Los resultados que ya tienes se conservan y puedes leerlos o borrarlos uno a uno.",
+    "loading": "Cargando…",
+    "emptyTitle": "Todavía no hay resultados",
+    "emptyHint": "Mientras la aplicación está en reposo calcula localmente tareas de investigación firmadas; los resultados aparecen aquí cuando terminan.",
+    "cardInstitutionLabel": "Institución",
+    "cardPurposeLabel": "Propósito",
+    "cardEthicsLabel": "Nota ética",
+    "cardComputedAtLabel": "Calculado",
+    "notEnoughData": "Todavía no hay datos suficientes",
+    "barRange": "{{low}}–{{high}}",
+    "retentionMean": "Media",
+    "retentionMedian": "Mediana",
+    "retentionAboveThreshold": "Proporción por encima de la referencia",
+    "weekdaySunday": "Domingo",
+    "weekdayMonday": "Lunes",
+    "weekdayTuesday": "Martes",
+    "weekdayWednesday": "Miércoles",
+    "weekdayThursday": "Jueves",
+    "weekdayFriday": "Viernes",
+    "weekdaySaturday": "Sábado",
+    "deleteAction": "Borrar este resultado",
+    "deleteConfirmPrompt": "Borrar este resultado no se puede deshacer. ¿Lo borramos?",
+    "deleteConfirmAction": "Borrar",
+    "settingsRowTitle": "🔬 Investigación",
+    "settingsRowHint": "Ejecuta localmente tareas de investigación revisadas y muestra los resultados; los datos no salen solos de este dispositivo y no cuesta nada",
+    "closeConfirmTitle": "Apagar las tareas de investigación",
+    "closeConfirmWhatItDoes": "La plataforma de investigación ejecuta localmente tareas revisadas y firmadas por el proyecto, calcula las estadísticas y te las muestra.",
+    "closeConfirmDataStaysLocal": "Todo se calcula aquí; los datos no salen solos de este dispositivo.",
+    "closeConfirmResearchValue": "Estadísticas agregadas locales como estas permiten estudiar cómo aprenden las personas sin recoger los datos personales de nadie.",
+    "closeConfirmWhatChanges": "Una vez apagado no se ejecutará ninguna tarea y no se te volverá a preguntar. Los resultados que ya tienes no se tocan y siguen en el panel.",
+    "closeConfirmAction": "Apagarlo"
+  }
+}

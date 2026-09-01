@@ -7,7 +7,7 @@
 import {
   DEFAULT_LANGUAGE_CODE,
   isLanguageCode,
-  negotiateLanguage,
+  matchLanguage,
   UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
 import type { Currency } from "@breadcrumb/core-llm";
@@ -134,10 +134,12 @@ const DEFAULT_SWITCHES: FeatureSwitches = {
   termMarking: true,
 };
 
-/** First run: start in whatever language the machine is set to, if we have that interface. */
-function guessLanguage(): string {
+/** First run: the language the machine is set to, if we have an interface in it. Null when
+ * we do not — the app then asks rather than opening in a language nobody chose (Leo
+ * 2026-09-01). */
+function guessLanguage(): string | null {
   const preferred = typeof navigator === "undefined" ? [] : [...(navigator.languages ?? [])];
-  return negotiateLanguage(preferred.length > 0 ? preferred : [navigator?.language ?? ""]);
+  return matchLanguage(preferred.length > 0 ? preferred : [navigator?.language ?? ""]);
 }
 
 /** Best-effort default: mainland users need mainland-reachable evidence sources. */
@@ -164,6 +166,9 @@ interface SettingsState {
   compareCategory: CompareCategory;
   /** Interface language (spec 058) — what the app's own text is written in. */
   language: string;
+  /** True when nobody has chosen a language and the machine's own language is not one we
+   * have an interface in: the app opens on the language picker instead of guessing. */
+  languageUnchosen: boolean;
   /** Answer language, when the user asked the model to write in a different one than the
    * interface. Null means "same as the interface", which is the normal case. */
   answerLanguage: string | null;
@@ -198,6 +203,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",
   language: DEFAULT_LANGUAGE_CODE,
+  languageUnchosen: false,
   answerLanguage: null,
   recommendationWeights: { ...USER_WEIGHT_DEFAULTS },
 
@@ -231,11 +237,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       repos.settings.get<Partial<UserRecommendationWeights>>(RECOMMENDATION_WEIGHTS_KEY),
     ]);
     // An interface language that was removed (or was never ours) must not leave the app
-    // showing raw message keys — fall back to the machine's own language.
-    const language =
+    // showing raw message keys — fall back to the machine's own language, and if that is not
+    // one we speak either, open the picker.
+    const chosen =
       storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage)
         ? storedLanguage
         : guessLanguage();
+    const language = chosen ?? DEFAULT_LANGUAGE_CODE;
     await changeLanguage(language);
     set({
       loaded: true,
@@ -249,6 +257,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
       compareCategory: compareCategory ?? "occupation",
       language,
+      languageUnchosen: chosen === null,
       answerLanguage:
         storedAnswerLanguage && isLanguageCode(storedAnswerLanguage) ? storedAnswerLanguage : null,
       recommendationWeights: sanitizeRecommendationWeights(storedRecommendationWeights),
@@ -326,7 +335,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await changeLanguage(code);
     const repos = await getRepos();
     await repos.settings.set(LANGUAGE_KEY, code, nowIso());
-    set({ language: code });
+    set({ language: code, languageUnchosen: false });
   },
 
   async setRecommendationWeights(weights) {

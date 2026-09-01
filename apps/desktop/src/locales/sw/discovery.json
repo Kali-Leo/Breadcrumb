@@ -1,0 +1,49 @@
+{
+  "title": "Gundua",
+  "intro": "Ukurasa huu unaonyesha uliyokuwa ukiangalia kwenye Bilibili na YouTube, na kinachokuvutia. Yote huhesabiwa kwenye kompyuta hii; hakuna kinachotumwa mahali pengine.",
+  "action": "Imebaki hatua moja, kwenye kivinjari: sakinisha kiendelezi kinachoendesha skripti, kisha skripti hizo mbili.",
+  "installButton": "Sakinisha kwenye kivinjari",
+  "afterClick": "Kurasa tatu hufunguka kwenye kivinjari chako: sakinisha Violentmonkey kwanza, kisha rudi kwenye kurasa nyingine mbili na ubonyeze «Sakinisha skripti hii» kwenye kila moja. Baada ya hapo, tumia Bilibili na YouTube kama kawaida na ukurasa huu utaanza kuonyesha mapendeleo yako.",
+  "token": "Hatua moja zaidi: kwenye ukurasa wa mwanzo wa Bilibili, bofya 🔗 kwenye upau wa swichi upande wa chini kushoto na ubandike msimbo ulio hapa chini; fanya vivyo hivyo kwenye ukurasa wa mwanzo wa YouTube.",
+  "projectHomepage": "Fungua ukurasa wa mradi",
+  "service": {
+    "starting": "Inaanzisha programu ya mapendeleo kwenye kompyuta hii…",
+    "notFound": "Programu ya mapendeleo haipo kwenye kompyuta hii. Huja pamoja na mradi wa hali ya mkondo — ipakue kwenye folda yako ya nyumbani au eneo-kazi, kisha urudi kwenye ukurasa huu.",
+    "pythonMissing": "Hakuna Python kwenye kompyuta hii, na programu ya mapendeleo inaihitaji.",
+    "failed": "Programu ya mapendeleo haikuanza. Kuna uwezekano mkubwa inakosa vifurushi vichache vya Python; endesha hii kwenye folda ya mradi, kisha urudi kwenye ukurasa huu:"
+  },
+  "emotion": {
+    "title": "Jinsi maudhui yalivyokugusa",
+    "all": "Yote",
+    "pro": "Kujifunza",
+    "ent": "Burudani",
+    "gent": "Kutuliza",
+    "expose": "Uliletewa",
+    "engage": "Ulichagua",
+    "chartAria": "Jinsi maudhui uliyoletewa na uliyochagua yalivyokugusa kadri muda ulivyopita",
+    "tooltip_one": "{{date}} {{line}} {{value}} (kipengele {{count}})",
+    "tooltip_other": "{{date}} {{line}} {{value}} (vipengele {{count}})",
+    "empty": "Hakuna kilichorekodiwa katika kipindi hiki"
+  },
+  "wordCloud": {
+    "title": "Wingu la maneno",
+    "empty": "Hakuna kilichofunguliwa katika kipindi hiki",
+    "window7": "Siku 7",
+    "window30": "Siku 30",
+    "window90": "Siku 90",
+    "window365": "Mwaka 1"
+  },
+  "newTopics": {
+    "title": "Mapendeleo mapya",
+    "thinEvidence": "Kumbukumbu bado ni chache — chukulia mabadiliko haya kama viashiria vya awali.",
+    "empty": "Hakuna kipya kilichojitokeza hivi karibuni"
+  },
+  "proContent": {
+    "title": "Maudhui ya kujifunza",
+    "unfinished": "Hayajakamilika",
+    "finished": "Yamekamilika",
+    "allGroups": "Yote",
+    "minutes": "Dakika {{watched}}/{{total}}",
+    "empty": "Hakuna maudhui ya kujifunza yaliyotazamwa katika kipindi hiki"
+  }
+}

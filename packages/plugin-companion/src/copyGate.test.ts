@@ -84,7 +84,6 @@ function sampleStudentSystemPrompt(): string {
 describe("companion copy gates", () => {
   const pressureLexicon = loadSharedPressureLexicon();
   const allCopy: string[] = [
-    COMPANION_COPY.reunionInvitation("二分查找"),
     COMPANION_COPY.helperName("二分查找"),
     IMPORTANCE_PROMPT,
     REFLECTION_PROMPT,
@@ -126,6 +125,6 @@ describe("what the live UI renders", () => {
   // adding a hardcoded interface string back to this object fails rather than shipping an
   // English interface with Chinese in it (真机走查 2026-08-28).
   it("leaves no interface wording in COMPANION_COPY", () => {
-    expect(Object.keys(COMPANION_COPY).sort()).toEqual(["helperName", "reunionInvitation"]);
+    expect(Object.keys(COMPANION_COPY).sort()).toEqual(["helperName"]);
   });
 });

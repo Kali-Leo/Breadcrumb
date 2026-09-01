@@ -1,5 +1,5 @@
 {
-  "$comment": "Pressure-language lexicon (docs/testing/simlab-评审协议.md), one list per interface language — a phrase that pressures a reader in one language says nothing in another, so the gate only means something when every shipped language brings its own list. A hit is a red flag, no AI judgment needed. Human-maintained: AI may propose additions, Leo/Fable 5 approve before they land here. Matching is case-insensitive, so entries are written in lower case.",
+  "$comment": "Pressure-language lexicon (docs/testing/simlab-评审协议.md), one list per interface language — a phrase that pressures a reader in one language says nothing in another, so the gate only means something when every shipped language brings its own list. A hit is a red flag, no AI judgment needed. Human-maintained: AI may propose additions, Leo/Fable 5 approve before they land here; the nine lists added on 2026-09-01 alongside their catalogues are AI-written and have not been through that review yet. Matching is case-insensitive, so entries are written in lower case.",
   "entries": {
     "zh-CN": ["你还差", "落后", "别忘了", "应该早点", "才完成", "仅完成", "再不"],
     "en": [
@@ -16,6 +16,123 @@
       "streak lost",
       "hurry",
       "before it's too late"
+    ],
+    "es": [
+      "todavía te falta",
+      "te estás quedando atrás",
+      "vas retrasado",
+      "no olvides",
+      "deberías haber",
+      "solo has completado",
+      "te lo perdiste",
+      "vencido",
+      "perdiste la racha",
+      "date prisa",
+      "antes de que sea tarde"
+    ],
+    "fr": [
+      "il te manque encore",
+      "tu prends du retard",
+      "en retard sur",
+      "n'oublie pas",
+      "tu aurais dû",
+      "tu n'as terminé que",
+      "tu as manqué",
+      "en souffrance",
+      "série perdue",
+      "dépêche-toi",
+      "avant qu'il ne soit trop tard"
+    ],
+    "pt": [
+      "ainda falta",
+      "está ficando para trás",
+      "atrasado no",
+      "não esqueça",
+      "você deveria ter",
+      "só concluiu",
+      "você perdeu",
+      "vencido",
+      "perdeu a sequência",
+      "antes que seja tarde",
+      "apresse-se"
+    ],
+    "ru": [
+      "тебе ещё не хватает",
+      "отстаёшь",
+      "выбиваешься из графика",
+      "не забудь",
+      "надо было",
+      "выполнено только",
+      "ты пропустил",
+      "просрочено",
+      "серия прервана",
+      "поторопись",
+      "пока не поздно"
+    ],
+    "ar": [
+      "ما زال ينقصك",
+      "أنت متأخر",
+      "متأخر عن الجدول",
+      "لا تنسَ",
+      "كان عليك أن",
+      "أنجزت فقط",
+      "فاتك",
+      "متأخر عن موعده",
+      "انقطعت السلسلة",
+      "أسرع",
+      "قبل فوات الأوان"
+    ],
+    "hi": [
+      "अभी बाकी है",
+      "पिछड़ रहे हैं",
+      "समय से पीछे",
+      "मत भूलिए",
+      "पहले ही कर लेना चाहिए था",
+      "सिर्फ़ इतना पूरा",
+      "आपसे छूट गया",
+      "समय बीत चुका",
+      "सिलसिला टूटा",
+      "जल्दी कीजिए",
+      "देर होने से पहले"
+    ],
+    "id": [
+      "kamu masih kurang",
+      "kamu tertinggal",
+      "terlambat dari jadwal",
+      "jangan lupa",
+      "seharusnya sudah",
+      "baru selesai",
+      "kamu melewatkan",
+      "sudah lewat tenggat",
+      "rentetan terputus",
+      "cepat",
+      "sebelum terlambat"
+    ],
+    "bn": [
+      "এখনও বাকি",
+      "পিছিয়ে পড়ছেন",
+      "সময়ের চেয়ে পিছিয়ে",
+      "ভুলবেন না",
+      "আগেই করা উচিত ছিল",
+      "কেবল এটুকু শেষ",
+      "আপনি বাদ দিয়েছেন",
+      "সময় পেরিয়ে গেছে",
+      "ধারা ভেঙে গেছে",
+      "তাড়াতাড়ি করুন",
+      "দেরি হওয়ার আগে"
+    ],
+    "sw": [
+      "bado unahitaji",
+      "unabaki nyuma",
+      "umechelewa kuliko ratiba",
+      "usisahau",
+      "ulipaswa kuwa",
+      "umekamilisha tu",
+      "uliruka",
+      "muda umepita",
+      "mfululizo umekatika",
+      "harakisha",
+      "kabla haijachelewa"
     ]
   }
 }

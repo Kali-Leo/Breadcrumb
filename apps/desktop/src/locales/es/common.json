@@ -1,0 +1,30 @@
+{
+  "actions": {
+    "retry": "Reintentar",
+    "stop": "Detener",
+    "send": "Enviar",
+    "gotIt": "Entendido",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "expand": "Ver más",
+    "collapse": "Ver menos"
+  },
+  "nav": {
+    "newChat": "Nueva conversación de estudio",
+    "settings": "Ajustes",
+    "vocabulary": "Vocabulario",
+    "discover": "Descubrir",
+    "map": "Mapa",
+    "friends": "Amigos",
+    "offline": "Sin conexión. Todo lo que necesita internet está en pausa; el resto sigue funcionando."
+  },
+  "state": {
+    "loading": "Cargando…",
+    "empty": "Aquí todavía no hay nada"
+  },
+  "list": {
+    "separator": ", "
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "title": "Pengaturan",
+  "back": "Kembali ke percakapan",
+  "tabs": {
+    "general": "Umum",
+    "billing": "Sakelar dan pengeluaran",
+    "research": "Riset"
+  },
+  "api": {
+    "title": "Layanan AI (kompatibel dengan OpenAI)",
+    "hint": "Masukkan akun layanan AI-mu di sini; percakapan dan semua fitur AI lain berjalan di atasnya.",
+    "baseUrl": "URL dasar",
+    "apiKey": "Kunci API",
+    "model": "Nama model",
+    "priceCurrency": "Mata uang penagihan",
+    "priceCurrencyHint": "Model ini ditagih dengan mata uang berbeda di tiap platform. Pilih yang sesuai dengan kuncimu supaya halaman pengeluaran cocok dengan tagihanmu.",
+    "currencyCNY": "¥ CNY",
+    "currencyUSD": "$ USD",
+    "saved": "Tersimpan ✓",
+    "unsaved": "Perubahan belum tersimpan"
+  },
+  "network": {
+    "title": "Internet",
+    "hint": "Matikan, maka semua yang butuh internet berhenti, termasuk panggilan API."
+  },
+  "mainland": {
+    "title": "Jaringan Tiongkok daratan",
+    "hint": "Pemeriksaan fakta hanya memakai sumber yang bisa dibuka dari Tiongkok daratan (Bing); kalau dimatikan, lebih memilih Wikipedia."
+  },
+  "language": {
+    "title": "Bahasa",
+    "interface": "Bahasa antarmuka",
+    "answer": "Bahasa jawaban AI",
+    "sameAsInterface": "Sama dengan antarmuka",
+    "thinNote": "AI menulis {{language}} tidak sebaik {{fallback}}. Kamu bisa mengubah bahasa jawaban saja dan membiarkan antarmuka tetap seperti sekarang."
+  },
+  "quietIssues": {
+    "title": "Pekerjaan di latar",
+    "allGood": "Semua yang berjalan di latar baik-baik saja.",
+    "summary_other": "Belakangan ada {{count}} pekerjaan latar kecil yang tidak selesai. Belajarmu tidak terpengaruh — buka untuk melihat yang mana",
+    "fallbackPurpose": "Pekerjaan latar"
+  },
+  "purposes": {
+    "chat": "Percakapan",
+    "knowledge-tree": "Peta pengetahuan",
+    "factcheck": "Pemeriksaan fakta",
+    "knowledge-edges": "Kaitan pengetahuan",
+    "interest": "Profil minat",
+    "self-report-mapping": "Pencocokan «ini sudah saya tahu»",
+    "goal-planning": "Perencanaan tujuan",
+    "compare-profile": "Riset pembanding",
+    "compare-align": "Pencocokan pembanding",
+    "map-naming": "Penamaan di peta",
+    "diglot-weave": "Belajar bahasa · penggantian cerdas",
+    "teach-quality": "Masukan atas penjelasanmu",
+    "companion-chat": "Obrolan dengan teman",
+    "companion-memory": "Ingatan teman",
+    "companion-script": "Persiapan teman",
+    "focus-explain": "Penjelasan mode fokus",
+    "term-marking": "Penandaan kata"
+  },
+  "billing": {
+    "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",
+    "estimateIntro": "Perkiraan di bawah tiap item dihitung untuk {{scenario}}; di sebelahnya adalah yang benar-benar kamu keluarkan.",
+    "estimate": "sekitar {{cost}} {{cadence}}",
+    "estimateUnknownModel": "Modelmu tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
+    "estimateFree": "Tidak memakan biaya",
+    "estimateUnmeasured": "Yang ini belum diukur",
+    "cadencePerRound": "per pertukaran pesan",
+    "cadencePerMessage": "per pesan yang kamu kirim",
+    "cadencePerAnswer": "per jawaban",
+    "cadenceOnDemand": "setiap kali dipakai",
+    "cadencePerItemOnce": "per item, sekali saja",
+    "grandTotal": "Hari ini {{today}} · total {{total}}",
+    "nothingSpent": "belum ada pengeluaran",
+    "neverUsed": "Belum ada pengeluaran",
+    "spendLine": "Hari ini {{today}} · total {{total}}",
+    "diglot": {
+      "name": "🧵 Belajar bahasa · penggantian cerdas",
+      "hint": "Versi kuat dari belajar bahasa: AI memilih terjemahan yang pas untuk kalimatnya dan sesekali menyelipkan ungkapan yang alami.",
+      "toggleLabel": "Penggantian cerdas saat belajar bahasa"
+    },
+    "chat": {
+      "name": "💬 Percakapan",
+      "hint": "Obrolan sehari-harimu dengan AI. Ini fitur intinya dan tetap menyala; biayanya juga tercantum di sini."
+    },
+    "features": {
+      "knowledgeTree": {
+        "name": "🌳 Peta pengetahuan",
+        "hint": "Setelah tiap pertukaran pesan, AI menaruh apa yang kalian bicarakan ke dalam petamu."
+      },
+      "factcheck": {
+        "name": "🔍 Pemeriksaan fakta",
+        "hint": "Ketuk «Periksa ini» di bawah sebuah jawaban dan AI mencari pernyataannya di sumber publik."
+      },
+      "knowledgeEdges": {
+        "name": "🕸️ Kaitan pengetahuan",
+        "hint": "Saat sesuatu yang baru dicatat, AI melihat bagaimana ia terhubung dengan yang sudah kamu tahu."
+      },
+      "interest": {
+        "name": "💡 Rekomendasi untukmu",
+        "hint": "AI memperhatikan apa yang menarik bagimu dan di mana kamu tersendat, lalu menyesuaikan sarannya; ia juga yang mengenali topik mana yang kamu maksud saat kamu bilang «ini sudah saya tahu»."
+      },
+      "goalPlanning": {
+        "name": "🎯 Perencanaan tujuan",
+        "hint": "Saat kamu menetapkan tujuan, AI mengubahnya menjadi daftar hal yang perlu dipelajari."
+      },
+      "compareProfileBuild": {
+        "name": "🌲 Riset pembanding (eksperimen)",
+        "hint": "Untuk perbandingan di luar daftar profesi bawaan, AI mencari di sumber publik, menyusun daftarnya, dan memeriksa tiap sumber. Butuh beberapa menit."
+      },
+      "compareAlignment": {
+        "name": "🌉 Pencocokan pembanding",
+        "hint": "Saat membandingkan, AI memutuskan apakah kata-katamu dan kata-kata sumbernya berarti sama."
+      },
+      "teachQuality": {
+        "name": "🎓 Masukan atas penjelasanmu",
+        "hint": "Setelah kamu menjelaskan sesuatu kepada seorang teman, AI membaca bagaimana jalannya; bagian yang kamu jelaskan dengan jernih dicatat."
+      },
+      "mapTopicNaming": {
+        "name": "🗺️ Penamaan di peta (eksperimen)",
+        "hint": "Di peta, AI memberi nama tiap wilayah yang terbentuk sendiri."
+      },
+      "feedbackLab": {
+        "name": "🪞 Belakangan ini",
+        "hint": "Panel tinjauan di samping peta: dihitung sepenuhnya dari data di komputer ini, tidak memakan biaya."
+      },
+      "companionChat": {
+        "name": "🎭 Obrolan dengan teman",
+        "hint": "Tiap hari beberapa teman sekelas mampir menanyakan sesuatu yang pernah kamu pelajari dan sudah lama tidak kamu sentuh. Buka salah satu dan jelaskan kepadanya."
+      },
+      "companionMemory": {
+        "name": "🧠 Ingatan teman",
+        "hint": "Para teman mengingat apa yang kalian bicarakan, dan sesekali merapikan ingatan itu supaya tetap nyambung."
+      },
+      "companionScript": {
+        "name": "📜 Persiapan teman",
+        "hint": "Sebelum kamu mulai menjelaskan, teman yang akan mendengarkan membaca dulu topiknya supaya bisa mengikuti."
+      },
+      "focusExplain": {
+        "name": "🔎 Penjelasan mode fokus",
+        "hint": "Dalam mode fokus, memilih sebuah kata atau mengajukan pertanyaan akan memberimu penjelasan."
+      },
+      "termMarking": {
+        "name": "🖊️ Penandaan kata",
+        "hint": "AI menandai kata-kata dalam jawaban yang mungkin belum kamu kenal; ketuk salah satu untuk melihat artinya."
+      }
+    }
+  },
+  "research": {
+    "panelTitle": "🔬 Riset",
+    "panelIntro": "Semua angka di sini dihitung oleh komputer ini. Tugasnya sudah ditelaah dan sumbernya bisa diperiksa; datanya tidak keluar sendiri dari perangkat ini, dan semua ini tidak memakan biaya.",
+    "offNotice": "Tugas riset sedang mati: tidak ada tugas baru yang dijalankan. Hasil yang sudah ada tetap tersimpan, dan bisa kamu baca atau hapus satu per satu.",
+    "loading": "Memuat…",
+    "emptyTitle": "Belum ada hasil",
+    "emptyHint": "Saat aplikasi menganggur, ia menghitung tugas riset bertanda tangan secara lokal; hasilnya muncul di sini setelah selesai.",
+    "cardInstitutionLabel": "Lembaga",
+    "cardPurposeLabel": "Tujuan",
+    "cardEthicsLabel": "Catatan etika",
+    "cardComputedAtLabel": "Dihitung",
+    "notEnoughData": "Datanya belum cukup",
+    "barRange": "{{low}}–{{high}}",
+    "retentionMean": "Rata-rata",
+    "retentionMedian": "Median",
+    "retentionAboveThreshold": "Bagian di atas garis dasar",
+    "weekdaySunday": "Minggu",
+    "weekdayMonday": "Senin",
+    "weekdayTuesday": "Selasa",
+    "weekdayWednesday": "Rabu",
+    "weekdayThursday": "Kamis",
+    "weekdayFriday": "Jumat",
+    "weekdaySaturday": "Sabtu",
+    "deleteAction": "Hapus hasil ini",
+    "deleteConfirmPrompt": "Menghapus hasil ini tidak bisa dibatalkan. Hapus?",
+    "deleteConfirmAction": "Hapus",
+    "settingsRowTitle": "🔬 Riset",
+    "settingsRowHint": "Menjalankan tugas riset yang sudah ditelaah di komputer ini dan menampilkan hasilnya; datanya tidak keluar sendiri dari perangkat ini dan tidak memakan biaya",
+    "closeConfirmTitle": "Mematikan tugas riset",
+    "closeConfirmWhatItDoes": "Platform riset menjalankan tugas yang sudah ditelaah dan ditandatangani proyek di komputer ini, menghitung statistiknya, dan menunjukkannya kepadamu.",
+    "closeConfirmDataStaysLocal": "Semuanya dihitung di sini; datanya tidak keluar sendiri dari perangkat ini.",
+    "closeConfirmResearchValue": "Statistik agregat lokal seperti ini memungkinkan orang mempelajari cara manusia belajar tanpa mengumpulkan data pribadi siapa pun.",
+    "closeConfirmWhatChanges": "Setelah dimatikan, tidak ada tugas yang berjalan dan kamu tidak akan ditanya lagi. Hasil yang sudah ada tidak tersentuh dan tetap di panel.",
+    "closeConfirmAction": "Matikan"
+  }
+}

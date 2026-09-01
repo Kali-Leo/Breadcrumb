@@ -69,6 +69,20 @@ function orderByArrival<Summary extends { id: string; memberNodeIds: string[] }>
   );
 }
 
+/** The cluster's oldest member — its identity anchor. Ties (same creation instant) and
+ * members with no known creation time fall back to id order, so the choice is total and
+ * deterministic. Undefined only for an empty member list. */
+function earliestMemberId(
+  memberNodeIds: readonly string[],
+  createdAtById: ReadonlyMap<string, string>,
+): string | undefined {
+  return [...memberNodeIds].sort((a, b) => {
+    const createdA = createdAtById.get(a) ?? "";
+    const createdB = createdAtById.get(b) ?? "";
+    return createdA.localeCompare(createdB) || a.localeCompare(b);
+  })[0];
+}
+
 /** Layout inputs (weight, size) only count members known before the layout day, so browsing
  * and mid-day growth cannot move or resize anything until tomorrow (Leo 2026-08-31). */
 function layoutMemberIds(
@@ -134,7 +148,12 @@ function clusterOrphanRoots(
     for (const id of memberNodeIds) gathered.add(id);
     const layoutMembers = layoutMemberIds(memberNodeIds, createdAtById, layoutDayStartIso);
     continents.push({
-      id: medoid.id,
+      // Identity — and through it the terrain seed — is the cluster's oldest member, not its
+      // medoid: joining a cluster never changes which of its members came first, so the island
+      // a learner already knows keeps its shape as the cluster grows (Leo 2026-09-01: shape is
+      // the one thing that stays put). The label still comes from the medoid, which is the
+      // member that actually says what the cluster is about.
+      id: earliestMemberId(memberNodeIds, createdAtById) ?? medoid.id,
       label: medoid.label,
       memberNodeIds: [...memberNodeIds],
       weight: sumEngagement(layoutMembers, engagementByNodeId),

@@ -74,13 +74,32 @@ export function buildNodeCheckpoints(
   return checkpoints;
 }
 
+/** Recall probability of one card at an instant — the one place the fog engine's FSRS
+ * retrievability call lives, so retention and review priority always read it the same way. */
+export function retrievabilityOf(card: Card, now: Date): number {
+  return scheduler.get_retrievability(card, now, false);
+}
+
 /** Retention probability (0..1) for one node given its graded sightings. */
 export function computeNodeRetention(sightings: readonly GradedSighting[], nowIso: string): number {
   const checkpoints = buildNodeCheckpoints(sightings);
   const lastCheckpoint = checkpoints[checkpoints.length - 1];
   if (lastCheckpoint === undefined) return 0;
-  const retention = scheduler.get_retrievability(lastCheckpoint.card, new Date(nowIso), false);
+  const retention = retrievabilityOf(lastCheckpoint.card, new Date(nowIso));
   return Math.max(0, Math.min(1, retention));
+}
+
+/** Sighting rows regrouped per node, each node's list in the order the rows arrived. */
+export function groupGradedSightingsByNode(
+  sightings: readonly NodeSightingRow[],
+): Map<string, GradedSighting[]> {
+  const byNode = new Map<string, GradedSighting[]>();
+  for (const sighting of sightings) {
+    const forNode = byNode.get(sighting.node_id) ?? [];
+    forNode.push({ createdAtIso: sighting.created_at, grade: sighting.grade ?? "good" });
+    byNode.set(sighting.node_id, forNode);
+  }
+  return byNode;
 }
 
 /** Retention for every node that has at least one sighting. */
@@ -88,13 +107,10 @@ export function computeRetentionByNode(
   sightings: readonly NodeSightingRow[],
   nowIso: string,
 ): Map<string, number> {
-  const byNode = new Map<string, GradedSighting[]>();
-  for (const sighting of sightings) {
-    const forNode = byNode.get(sighting.node_id) ?? [];
-    forNode.push({ createdAtIso: sighting.created_at, grade: sighting.grade ?? "good" });
-    byNode.set(sighting.node_id, forNode);
-  }
   return new Map(
-    [...byNode.entries()].map(([nodeId, graded]) => [nodeId, computeNodeRetention(graded, nowIso)]),
+    [...groupGradedSightingsByNode(sightings).entries()].map(([nodeId, graded]) => [
+      nodeId,
+      computeNodeRetention(graded, nowIso),
+    ]),
   );
 }

@@ -11,7 +11,6 @@ import type { IslandModel, IsletModel, WorldPoint } from "./types";
 
 /** Every islet is the same small size — an islet's meaning is "on its own", not "how much". */
 export const ISLET_RADIUS = 90;
-const ISLET_SIZE_TIER = 1;
 /** Keep clear of a continent's hit radius (1.35 r) plus a visible strip of sea. */
 const ISLAND_CLEARANCE_FACTOR = 1.35;
 const ISLAND_CLEARANCE_PADDING = 140;
@@ -95,7 +94,7 @@ export function buildIslets(
       findOpenSeaPoint(random, box, isletObstacles(islands, placedCenters), PLACEMENT_ATTEMPTS) ??
       fallbackRingPoint(islands, isletIndex);
     placedCenters.push(center);
-    const terrain = terrainFor(summary.id, ISLET_RADIUS, ISLET_SIZE_TIER);
+    const terrain = terrainFor(summary.id, ISLET_RADIUS);
     return {
       nodeId: summary.id,
       label: summary.label,

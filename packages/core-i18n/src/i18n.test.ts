@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { buildLanguageDirective, resolveAnswerLanguage } from "./answerLanguage";
 import { fontStackFor, formatCount, formatDayMonth, formatPercent } from "./format";
 import { LANGUAGES, languageOf, UI_LANGUAGE_CODES } from "./languages";
-import { negotiateLanguage } from "./negotiate";
+import { matchLanguage, negotiateLanguage } from "./negotiate";
 import { checkReplyLanguage } from "./replyLanguage";
 
 const chinese = languageOf("zh-CN");
@@ -40,14 +40,23 @@ describe("picking a language for a first-time user", () => {
     expect(negotiateLanguage(["zh-Hans-CN"])).toBe("zh-CN");
     expect(negotiateLanguage(["en-GB"])).toBe("en");
     expect(negotiateLanguage(["en-us"])).toBe("en");
-    expect(negotiateLanguage(["fr-CA", "en-GB"])).toBe("en");
+    expect(negotiateLanguage(["fr-CA"])).toBe("fr");
+    // Priority order: the first tag we have an interface in wins, not the first tag.
+    expect(negotiateLanguage(["is-IS", "en-GB"])).toBe("en");
   });
 
-  it("lands somewhere readable for languages the interface does not have yet", () => {
-    expect(negotiateLanguage(["sw-KE"])).toBe("zh-CN");
-    expect(negotiateLanguage(["sw-KE"], UI_LANGUAGE_CODES, "en")).toBe("en");
+  it("says so when the machine reads a language the interface does not have", () => {
+    // Icelandic is not in the language table at all — the case the picker exists for.
+    expect(matchLanguage(["is-IS"])).toBeNull();
+    expect(matchLanguage([])).toBeNull();
+    expect(matchLanguage([""])).toBeNull();
+    expect(matchLanguage(["is-IS", "fr-CA"])).toBe("fr");
+  });
+
+  it("still lands somewhere readable for callers that cannot ask", () => {
+    expect(negotiateLanguage(["is-IS"])).toBe("zh-CN");
+    expect(negotiateLanguage(["is-IS"], UI_LANGUAGE_CODES, "en")).toBe("en");
     expect(negotiateLanguage([])).toBe("zh-CN");
-    expect(negotiateLanguage([""])).toBe("zh-CN");
   });
 });
 

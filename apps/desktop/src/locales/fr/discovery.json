@@ -1,0 +1,50 @@
+{
+  "title": "Découvrir",
+  "intro": "Cette page montre ce que tu as regardé sur Bilibili et YouTube, et ce qui t'intéresse. Tout est calculé sur cet ordinateur ; rien n'est envoyé ailleurs.",
+  "action": "Il reste une étape, dans le navigateur : installe une extension qui exécute des scripts, puis les deux scripts.",
+  "installButton": "Installer dans le navigateur",
+  "afterClick": "Trois pages s'ouvrent dans ton navigateur : installe d'abord Violentmonkey, puis reviens aux deux autres et appuie sur « Installer ce script » sur chacune. Ensuite, navigue sur Bilibili et YouTube comme d'habitude et cette page commencera à montrer tes centres d'intérêt.",
+  "token": "Encore une étape : sur la page d'accueil de Bilibili, clique sur 🔗 dans la barre d'interrupteurs en bas à gauche et colle le code ci-dessous ; fais de même sur la page d'accueil de YouTube.",
+  "projectHomepage": "Ouvrir la page du projet",
+  "service": {
+    "starting": "Démarrage du programme d'intérêts sur cet ordinateur…",
+    "notFound": "Le programme d'intérêts n'est pas sur cet ordinateur. Il vient avec le projet du mode fil — télécharge-le dans ton dossier personnel ou sur le bureau, puis reviens sur cette page.",
+    "pythonMissing": "Il n'y a pas de Python sur cet ordinateur, et le programme d'intérêts en a besoin.",
+    "failed": "Le programme d'intérêts n'a pas démarré. Il lui manque très probablement quelques paquets Python ; lance ceci dans le dossier du projet, puis reviens sur cette page :"
+  },
+  "emotion": {
+    "title": "Ce que le contenu t'a fait",
+    "all": "Tout",
+    "pro": "Apprendre",
+    "ent": "Divertissement",
+    "gent": "Réconfortant",
+    "expose": "Servi",
+    "engage": "Choisi",
+    "chartAria": "Ce que le contenu servi et choisi t'a fait au fil du temps",
+    "tooltip_one": "{{date}} {{line}} {{value}} ({{count}} élément)",
+    "tooltip_many": "{{date}} {{line}} {{value}} ({{count}} éléments)",
+    "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} éléments)",
+    "empty": "Rien n'a été enregistré sur cette période"
+  },
+  "wordCloud": {
+    "title": "Nuage de mots",
+    "empty": "Rien n'a été ouvert sur cette période",
+    "window7": "7 jours",
+    "window30": "30 jours",
+    "window90": "90 jours",
+    "window365": "1 an"
+  },
+  "newTopics": {
+    "title": "Nouveaux centres d'intérêt",
+    "thinEvidence": "Les traces sont encore peu nombreuses — prends ces changements comme des indices précoces.",
+    "empty": "Rien de nouveau n'est apparu ces derniers temps"
+  },
+  "proContent": {
+    "title": "Contenu d'apprentissage",
+    "unfinished": "Non terminé",
+    "finished": "Terminé",
+    "allGroups": "Tout",
+    "minutes": "{{watched}}/{{total}} min",
+    "empty": "Aucun contenu d'apprentissage regardé sur cette période"
+  }
+}

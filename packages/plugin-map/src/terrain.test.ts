@@ -4,12 +4,12 @@
  * anywhere, deterministic output.
  */
 import { describe, expect, it } from "vitest";
-import { generateTerrain } from "./terrain";
+import { CANONICAL_RADIUS, generateTerrain, scaleTerrain } from "./terrain";
 
 describe("generateTerrain", () => {
   it("produces land near the target fraction and a closed coast", () => {
     for (const seed of [1, 42, 90210]) {
-      const terrain = generateTerrain(seed, 170, 3);
+      const terrain = generateTerrain(seed);
       const landShare = terrain.landCellIndices.length / terrain.cells.length;
       expect(landShare).toBeGreaterThan(0.15);
       expect(landShare).toBeLessThan(0.5);
@@ -19,8 +19,7 @@ describe("generateTerrain", () => {
   });
 
   it("keeps every value finite and inside the sea margin", () => {
-    const radius = 210;
-    const terrain = generateTerrain(7, radius, 4);
+    const terrain = generateTerrain(7);
     for (const cell of terrain.cells) {
       expect(Number.isFinite(cell.height)).toBe(true);
       expect(Number.isFinite(cell.slope01)).toBe(true);
@@ -28,13 +27,13 @@ describe("generateTerrain", () => {
     }
     for (const loop of terrain.coastLoops) {
       for (const point of loop) {
-        expect(Math.hypot(point.x, point.y)).toBeLessThanOrEqual(radius * 1.36);
+        expect(Math.hypot(point.x, point.y)).toBeLessThanOrEqual(CANONICAL_RADIUS * 1.36);
       }
     }
   });
 
   it("extracts rivers that flow downhill and end at or below sea level", () => {
-    const terrain = generateTerrain(2024, 250, 5);
+    const terrain = generateTerrain(2024);
     expect(terrain.rivers.length).toBeGreaterThan(0);
     const heightAt = (x: number, y: number): number => {
       let best = Number.POSITIVE_INFINITY;
@@ -62,14 +61,31 @@ describe("generateTerrain", () => {
   });
 
   it("is deterministic for the same inputs", () => {
-    const first = generateTerrain(1234, 170, 3);
-    const second = generateTerrain(1234, 170, 3);
+    const first = generateTerrain(1234);
+    const second = generateTerrain(1234);
     expect(second).toEqual(first);
   });
 
   it("differs between seeds", () => {
-    expect(generateTerrain(1, 130, 2).coastLoops).not.toEqual(
-      generateTerrain(2, 130, 2).coastLoops,
-    );
+    expect(generateTerrain(1).coastLoops).not.toEqual(generateTerrain(2).coastLoops);
+  });
+
+  it("keeps its shape at any size — growth scales the outline, never redraws it", () => {
+    // The promise Leo made on 2026-09-01: an island you have seen before stays recognizable
+    // however much it grows. Scaling every coast point back down must land on the original.
+    const shape = generateTerrain(31337);
+    for (const factor of [0.36, 1.72]) {
+      const grown = scaleTerrain(shape, factor);
+      expect(grown.coastLoops.length).toBe(shape.coastLoops.length);
+      grown.coastLoops.forEach((loop, loopIndex) => {
+        const original = shape.coastLoops[loopIndex] ?? [];
+        expect(loop.length).toBe(original.length);
+        loop.forEach((point, pointIndex) => {
+          const source = original[pointIndex];
+          expect(point.x / factor).toBeCloseTo(source?.x ?? Number.NaN, 9);
+          expect(point.y / factor).toBeCloseTo(source?.y ?? Number.NaN, 9);
+        });
+      });
+    }
   });
 });
