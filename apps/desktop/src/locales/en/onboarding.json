@@ -33,14 +33,16 @@
     "yourTurnBody": "Ask about something you actually want to understand. The map will keep up on its own."
   },
   "checklist": {
-    "title": "What you could do next",
+    "title": "Start here",
     "connect": "Connect an AI service",
     "ask": "Ask your first question",
     "map": "Open the map",
     "dismiss": "Dismiss this list",
     "demoNote": "The map is showing example data right now.",
     "removeDemo": "Remove the example data",
-    "removingDemo": "Removing…"
+    "removingDemo": "Removing…",
+    "takeTour": "Walk me through it",
+    "tourNote": "Two minutes, pointing at the actual screen. Escape leaves at any time."
   },
   "settings": {
     "title": "Guided tour",

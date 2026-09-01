@@ -8,7 +8,7 @@
  * Main exports: OnboardingHost.
  */
 import { useCallback, useEffect, useState } from "react";
-import { installDemoData } from "../../lib/demoData";
+import { hasDemoData, installDemoData } from "../../lib/demoData";
 import { useChatStore } from "../../stores/chatStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -103,6 +103,14 @@ export function OnboardingHost({
   return (
     <OnboardingChecklist
       sawMap={sawMap}
+      onReplayTour={() => {
+        // Straight back into the tour when the example is already there — asking again
+        // whether to install what is already installed is a pointless door to walk through.
+        void hasDemoData().then((installed) => {
+          setWithDemo(installed);
+          setPhase(installed ? "tour" : "welcome");
+        });
+      }}
       onOpenSettings={() => onNavigate("settings")}
       onOpenMap={() => onNavigate("map")}
       onDismiss={() => {

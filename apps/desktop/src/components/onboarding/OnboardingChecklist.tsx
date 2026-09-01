@@ -28,6 +28,10 @@ interface ChecklistState {
 interface OnboardingChecklistProps {
   onOpenSettings(): void;
   onOpenMap(): void;
+  /** Runs the tour again. The primary action here, not a footnote: landing on this card
+   * usually means the tour was skipped or interrupted, and the person has not actually seen
+   * anything yet. */
+  onReplayTour(): void;
   onDismiss(): void;
   /** True once the learner has opened the map at least once this session. */
   sawMap: boolean;
@@ -36,6 +40,7 @@ interface OnboardingChecklistProps {
 export function OnboardingChecklist({
   onOpenSettings,
   onOpenMap,
+  onReplayTour,
   onDismiss,
   sawMap,
 }: OnboardingChecklistProps) {
@@ -85,7 +90,16 @@ export function OnboardingChecklist({
         </button>
       </div>
 
-      <ul className="mt-3 space-y-2">
+      <button
+        type="button"
+        onClick={onReplayTour}
+        className="mt-3 w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-white transition-colors hover:bg-amber-600"
+      >
+        {t("checklist.takeTour")}
+      </button>
+      <p className="mt-1.5 text-stone-400 text-xs">{t("checklist.tourNote")}</p>
+
+      <ul className="mt-4 space-y-2">
         {items.map((item) => (
           <li key={item.label} className="flex items-center gap-2 text-sm">
             <span

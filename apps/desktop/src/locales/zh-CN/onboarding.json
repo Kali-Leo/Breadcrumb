@@ -33,14 +33,16 @@
     "yourTurnBody": "问点你真正想弄懂的东西试试。地图会自己跟上。"
   },
   "checklist": {
-    "title": "接下来可以",
+    "title": "先从这里开始",
     "connect": "连接一个 AI 服务",
     "ask": "问第一个问题",
     "map": "打开地图看看",
     "dismiss": "关掉这张清单",
     "demoNote": "现在地图上是示例数据。",
     "removeDemo": "清掉示例数据",
-    "removingDemo": "正在清除…"
+    "removingDemo": "正在清除…",
+    "takeTour": "带我走一遍",
+    "tourNote": "两分钟，指着实际界面讲。中途按 Esc 随时退出。"
   },
   "settings": {
     "title": "新手引导",
