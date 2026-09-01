@@ -4,9 +4,6 @@
  * signal-event log, and verbatim guesses.
  * Main exports: WORD_COUNT, buildWordSeed.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import type {
   DiglotEventKind,
   DiglotLanguagePackRow,
@@ -19,11 +16,6 @@ import { DEMO_PAIR, isoAt } from "./shared";
 import { introducedOffsetDays, planWordEvents, replayWord } from "./wordEvents";
 
 export const WORD_COUNT = 50;
-
-const PACK_PATH = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../apps/desktop/src/assets/language-packs/zh-en.json",
-);
 
 const WRONG_GUESS_POOL = ["something", "thing", "stuff", "idea", "maybe"] as const;
 const CONTEXT_TEMPLATES = [
@@ -39,12 +31,15 @@ export interface WordSeedResult {
   guesses: DiglotWordGuessRow[];
 }
 
-/** Loads the real bundled zh:en pack (Zod-validated via loadLanguagePack, same as the app),
- * takes its 50 most frequent T1-safe entries, and builds each word's full history under the
- * DEMO_PAIR namespace so it can never collide with the user's real "zh:en" progress. */
-export function buildWordSeed(now: Date): WordSeedResult {
-  const raw: unknown = JSON.parse(readFileSync(PACK_PATH, "utf-8"));
-  const loaded = loadLanguagePack(raw);
+/** Takes the bundled zh:en pack's 50 most frequent T1-safe entries and builds each word's
+ * full history under the DEMO_PAIR namespace, so it can never collide with the user's real
+ * "zh:en" progress.
+ *
+ * The pack arrives as an argument rather than being read off disk: this runs inside the app
+ * (and in a browser) as well as in the dev CLI, and only one of those has a filesystem. It is
+ * still Zod-validated here through loadLanguagePack, exactly as the app validates its own. */
+export function buildWordSeed(now: Date, rawPack: unknown): WordSeedResult {
+  const loaded = loadLanguagePack(rawPack);
   const lemmas = loaded.introductionQueue.slice(0, WORD_COUNT);
 
   const states: DiglotWordStateRow[] = [];

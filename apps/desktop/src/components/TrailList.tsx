@@ -39,7 +39,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
         );
 
   return (
-    <div className="space-y-1">
+    <div data-tour="trail" className="space-y-1">
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}

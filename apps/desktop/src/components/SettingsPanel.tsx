@@ -11,6 +11,7 @@ import { ApiSettingsSection } from "./ApiSettingsSection";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { BackArrow } from "./DirectionalArrow";
 import { LanguageSettingsSection } from "./LanguageSettingsSection";
+import { OnboardingSettingsRow } from "./onboarding/OnboardingSettingsRow";
 import { ResearchPanel } from "./ResearchPanel";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
 // The same switch every settings row uses; this page carried its own copy of it until now.
@@ -44,6 +45,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <button
             key={target}
             type="button"
+            data-tour={target === "billing" ? "billing-tab" : undefined}
             onClick={() => setPage(target)}
             className={tabClass(page === target)}
           >
@@ -91,6 +93,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </section>
 
           <LanguageSettingsSection />
+
+          <OnboardingSettingsRow />
 
           <SettingsQuietIssues />
         </>

@@ -59,7 +59,7 @@ export function Composer(props: ComposerProps) {
   }
 
   return (
-    <div className="border-t border-stone-200 bg-white">
+    <div data-tour="composer" className="border-t border-stone-200 bg-white">
       {onSetStudyMode !== undefined && (
         <div className="px-3 pt-2">
           <div className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm">

@@ -1,25 +1,53 @@
 {
   "next": "Next",
   "back": "Back",
-  "skip": "Skip and look around first",
-  "start": "Start",
-  "what": {
-    "title": "What this is",
-    "body": "Breadcrumb is a learning companion. You talk to an AI about what you want to learn, and alongside that it builds a map of what you have covered — no note-taking, no checking in.",
-    "point1": "Concepts you talk about appear on the map by themselves, and fade where you have not been for a while.",
-    "point2": "It suggests what you could look at next, based on what you already know. You are free to ignore it.",
-    "point3": "Everything stays on this computer. No leaderboards, no streaks, no progress bars."
+  "skip": "Skip, I'll find my own way",
+  "welcome": {
+    "title": "You talk, it keeps the notes",
+    "body": "Breadcrumb is a learning companion. You talk about what you want to learn, and alongside that it builds a map of what you have covered — no note-taking, no checking in.",
+    "point1": "Concepts you talk about appear on the map by themselves, and fade where you have not been",
+    "point2": "Everything stays on this computer. No account, no cloud sync",
+    "point3": "No leaderboards, no streaks, no progress bars",
+    "tryDemo": "Show me an example first (recommended)",
+    "demoNote": "Loads someone else's three months of learning and walks you through it. One click removes it whenever you like.",
+    "installing": "Setting up the example…",
+    "startClean": "Skip the example, start empty"
   },
-  "connect": {
-    "title": "Connect an AI service",
-    "body": "The app has no AI of its own. You bring an account from an AI service — any OpenAI-compatible one works. Fill in the address, the key and the model name.",
-    "help": "No account yet? Services like DeepSeek, Qwen and OpenAI all give you a key after signing up; paste it above. The key stays on this computer.",
-    "notYetSaved": "Not saved yet. Chat will not work without it, but you can skip and come back to settings whenever you like."
+  "tour": {
+    "label": "Guided tour",
+    "finish": "Start using it",
+    "exit": "Leave the tour",
+    "chatTitle": "Everything starts here",
+    "chatBody": "All you have to do is talk. The switch above: Study mode replies guide you to think and practise; Free chat is an ordinary conversation.",
+    "trailTitle": "Your conversations live on the left",
+    "trailBody": "Titles name themselves — first concept to last. Once you rename one yourself, it is never renamed again.",
+    "mapTitle": "Talk for a while and this grows",
+    "mapBody": "These islands were pulled out of the conversations automatically; nothing here was filed by hand. Scroll up to go into one.",
+    "mapEmptyTitle": "Open sea, for now",
+    "mapEmptyBody": "Every exchange you have turns what you talked about into islands here, on its own. There is nothing for you to file.",
+    "mirrorTitle": "Fading is what is supposed to happen",
+    "mirrorBody": "These two show how much you have covered and how much you would still recall. Places you have not visited fade — that is a reminder, not a mark against you. All of it is computed here and costs nothing.",
+    "spendingTitle": "What it costs, before you turn it on",
+    "spendingBody": "Every feature that costs money is on this page with its own switch, and each says roughly what one use costs before you enable it. That figure is measured, not guessed.",
+    "yourTurnTitle": "Your turn",
+    "yourTurnBody": "Ask about something you actually want to understand. The map will keep up on its own."
   },
-  "terms": {
-    "title": "Two things before you start",
-    "privacy": "What you write stays on your own computer. Nothing goes anywhere except the messages you send to the AI service above — no account, no cloud sync, no usage reporting.",
-    "cost": "You are spending on your own AI service account; this app neither charges you nor handles the money. Settings → Switches and spending tells you roughly what each feature costs per use, before you turn it on.",
-    "switches": "Every feature that costs money can be switched off on its own. There is also one switch for the internet: turn it off and everything that needs a connection stops, while the local parts carry on."
+  "checklist": {
+    "title": "What you could do next",
+    "connect": "Connect an AI service",
+    "ask": "Ask your first question",
+    "map": "Open the map",
+    "dismiss": "Dismiss this list",
+    "demoNote": "The map is showing example data right now.",
+    "removeDemo": "Remove the example data",
+    "removingDemo": "Removing…"
+  },
+  "settings": {
+    "title": "Guided tour",
+    "hint": "Walk through the introduction again, or remove the example data.",
+    "replay": "Take the tour again",
+    "removeDemo": "Remove example data",
+    "demoInstalled": "Example data is installed",
+    "demoAbsent": "No example data"
   }
 }

@@ -249,6 +249,7 @@ export function MapView() {
           {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
           <div
             ref={containerRef}
+            data-tour="map-canvas"
             className="h-full w-full overflow-hidden"
             onClick={onCanvasClick}
           />

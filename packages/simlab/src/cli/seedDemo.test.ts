@@ -3,11 +3,28 @@
  * counts per table, full reversibility (wipe touches only `demo-`/DEMO_PAIR rows), replayed
  * word fsrs_json is parseable with a real settled tail, and "today" carries real activity.
  */
+
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { DEMO_PAIR, insertDemoData, wipeDemoData } from "@breadcrumb/demo-seed";
 import { cardFromJson } from "@breadcrumb/plugin-diglot-weave";
 import { WORD_SETTLED_STABILITY_DAYS } from "@breadcrumb/plugin-feedback";
 import { afterEach, describe, expect, it } from "vitest";
 import { createTempDatabase, type TempDatabase } from "../db/sqliteClient";
-import { DEMO_PAIR, insertDemoData, wipeDemoData } from "../seedDemo";
+
+/** The seed takes the language pack as an argument now, so it can run where there is no
+ * filesystem. This test has one, so it reads the real bundled pack. */
+const PACK: unknown = JSON.parse(
+  readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../../../apps/desktop/src/assets/language-packs/zh-en.json",
+    ),
+    "utf-8",
+  ),
+);
+const WITH_WORDS = { languagePack: PACK };
 
 const NOW = new Date(2026, 7, 13, 9, 0, 0);
 
@@ -33,7 +50,7 @@ describe("seedDemo (real sqlite)", () => {
 
   it("writes a full demo landscape with real, believable numbers", async () => {
     temp = await createTempDatabase();
-    const summary = await insertDemoData(temp.sql, NOW);
+    const summary = await insertDemoData(temp.sql, NOW, WITH_WORDS);
 
     expect(summary.conversations).toBe(4);
     expect(summary.messages).toBeGreaterThanOrEqual(14);
@@ -112,7 +129,7 @@ describe("seedDemo (real sqlite)", () => {
       kind: "chat",
     });
 
-    await insertDemoData(temp.sql, NOW);
+    await insertDemoData(temp.sql, NOW, WITH_WORDS);
     expect(await countDemoRows(temp, "knowledge_nodes")).toBe(39);
 
     await wipeDemoData(temp.sql);
@@ -138,9 +155,9 @@ describe("seedDemo (real sqlite)", () => {
     expect(remainingConversations.map((c) => c.id)).toEqual(["real-conv-1"]);
 
     // wipe -> insert is idempotent: re-running produces the exact same row counts.
-    const again = await insertDemoData(temp.sql, NOW);
+    const again = await insertDemoData(temp.sql, NOW, WITH_WORDS);
     await wipeDemoData(temp.sql);
-    const secondInsert = await insertDemoData(temp.sql, NOW);
+    const secondInsert = await insertDemoData(temp.sql, NOW, WITH_WORDS);
     expect(secondInsert).toEqual(again);
     // Triple seed+wipe on real sqlite runs 18s+ on slow CI runners (2026-08-17 CI timeouts).
   }, 120_000);

@@ -13,7 +13,7 @@ export function MirrorStack() {
   if (!enabled) return null;
 
   return (
-    <div className="flex flex-col gap-3 text-xs">
+    <div data-tour="mirror" className="flex flex-col gap-3 text-xs">
       <FeedbackHeatmapSection />
       <FeedbackTrendsSection />
     </div>

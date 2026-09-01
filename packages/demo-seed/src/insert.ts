@@ -33,7 +33,18 @@ export interface SeedSummary {
  * reproducibility; the CLI passes the real `new Date()`). Node labels already present in the
  * DB are skipped (concepts.ts), so this is safe to run against a database that already has
  * some of the user's real tree. */
-export async function insertDemoData(sql: SqlClient, now: Date): Promise<SeedSummary> {
+export interface DemoSeedOptions {
+  /** The raw zh:en language pack JSON. Omit to seed everything except vocabulary — the tour
+   * does not need words, and language learning is off by default, so a caller that has no
+   * pack to hand still gets a complete map, heatmap and history. */
+  languagePack?: unknown;
+}
+
+export async function insertDemoData(
+  sql: SqlClient,
+  now: Date,
+  options: DemoSeedOptions = {},
+): Promise<SeedSummary> {
   const knowledgeNodes = createKnowledgeNodesRepo(sql);
   const nodeSightings = createNodeSightingsRepo(sql);
   const conversationsRepo = createConversationsRepo(sql);
@@ -64,16 +75,19 @@ export async function insertDemoData(sql: SqlClient, now: Date): Promise<SeedSum
     await masteryClaims.insert(claim);
   }
 
-  const words = buildWordSeed(now);
-  await diglot.upsertPack(words.pack);
-  for (const state of words.states) {
-    await diglot.upsertState(state);
-  }
-  for (const event of words.events) {
-    await diglot.insertEvent(event);
-  }
-  for (const guess of words.guesses) {
-    await diglot.insertGuess(guess);
+  const words =
+    options.languagePack === undefined ? null : buildWordSeed(now, options.languagePack);
+  if (words !== null) {
+    await diglot.upsertPack(words.pack);
+    for (const state of words.states) {
+      await diglot.upsertState(state);
+    }
+    for (const event of words.events) {
+      await diglot.insertEvent(event);
+    }
+    for (const guess of words.guesses) {
+      await diglot.insertGuess(guess);
+    }
   }
 
   return {
@@ -82,8 +96,8 @@ export async function insertDemoData(sql: SqlClient, now: Date): Promise<SeedSum
     nodes: concepts.nodes.length,
     sightings: concepts.sightings.length,
     claims: claims.length,
-    wordStates: words.states.length,
-    wordEvents: words.events.length,
-    wordGuesses: words.guesses.length,
+    wordStates: words?.states.length ?? 0,
+    wordEvents: words?.events.length ?? 0,
+    wordGuesses: words?.guesses.length ?? 0,
   };
 }

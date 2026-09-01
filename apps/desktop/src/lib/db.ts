@@ -75,8 +75,9 @@ export interface Repos {
 let sqlClientPromise: Promise<SqlClient> | null = null;
 let reposPromise: Promise<Repos> | null = null;
 
-/** The raw SQL client — needed by @breadcrumb/plugin-research's executor, which takes a
- * SqlClient directly rather than a Repos bundle (it builds its own research repo). */
+/** The raw SQL client — for the callers that need statements rather than repositories:
+ * plugin-research's executor (it builds its own research repo), and the demo-data seed the
+ * guided tour installs and removes. */
 export function getSqlClient(): Promise<SqlClient> {
   sqlClientPromise ??= openAndMigrate();
   return sqlClientPromise;

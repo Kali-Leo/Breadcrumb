@@ -11,9 +11,9 @@ import { ChatView } from "./components/ChatView";
 import { CompanionChatPopup } from "./components/CompanionChatPopup";
 import { CompanionSection } from "./components/CompanionSection";
 import { DiscoveryView } from "./components/discovery/DiscoveryView";
-import { FirstRunGuide } from "./components/FirstRunGuide";
 import { FocusOverlay } from "./components/FocusOverlay";
 import { MapView } from "./components/map/MapView";
+import { OnboardingHost } from "./components/onboarding/OnboardingHost";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { VocabPanel } from "./components/VocabPanel";
@@ -46,7 +46,6 @@ export default function App() {
     null,
   );
   const settingsLoaded = useSettingsStore((state) => state.loaded);
-  const apiConfig = useSettingsStore((state) => state.apiConfig);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
 
   useEffect(() => {
@@ -87,11 +86,15 @@ export default function App() {
     void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
 
-  // First run used to drop straight into the settings form: three empty fields, no way for
-  // a newcomer to know what the app was or why it wanted an API key. The guide answers that
-  // first, and carries the same settings form inside it.
+  // First run: a welcome, then a tour that walks the real app, then a checklist. Driven by
+  // OnboardingHost; App only supplies what it alone knows — how to change view, and whether
+  // the map has been opened yet (a checklist item ticks off that).
   const onboardingSeen = useSettingsStore((state) => state.onboardingSeen);
-  const showGuide = settingsLoaded && !onboardingSeen;
+  const checklistDismissed = useSettingsStore((state) => state.checklistDismissed);
+  const [sawMap, setSawMap] = useState(false);
+  useEffect(() => {
+    if (view === "map") setSawMap(true);
+  }, [view]);
 
   // Helper conversations open in the floating popup, never the main view (spec 050 §8).
   useEffect(() => {
@@ -105,21 +108,6 @@ export default function App() {
       setView("chat");
     });
   }, []);
-
-  // Shown on its own, without the sidebar: nothing in the app works before this is answered,
-  // and a rail of destinations behind a welcome screen is just noise to read past.
-  if (showGuide) {
-    return (
-      <div className="h-screen text-stone-800">
-        <FirstRunGuide
-          onDone={() => {
-            void useSettingsStore.getState().markOnboardingSeen();
-            setView(apiConfig === null ? "settings" : "chat");
-          }}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen flex-col text-stone-800">
@@ -155,6 +143,13 @@ export default function App() {
               </div>
             </>
           )}
+          <OnboardingHost
+            ready={settingsLoaded}
+            seen={onboardingSeen}
+            checklistDismissed={checklistDismissed}
+            onNavigate={setView}
+            sawMap={sawMap}
+          />
           {helperPopup !== null && (
             <CompanionChatPopup
               conversationId={helperPopup.conversationId}

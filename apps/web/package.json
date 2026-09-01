@@ -18,6 +18,7 @@
     "@breadcrumb/core-i18n": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-teaching": "workspace:*",
+    "@breadcrumb/demo-seed": "workspace:*",
     "@breadcrumb/plugin-browsing-interest": "workspace:*",
     "@breadcrumb/plugin-companion": "workspace:*",
     "@breadcrumb/plugin-compare": "workspace:*",
