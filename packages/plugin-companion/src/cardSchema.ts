@@ -1,8 +1,12 @@
 /**
  * Purpose: Zod schema for the Character Card V2 subset (spec 037) used by the companion
  * cast — we implement the SillyTavern-ecosystem card format, never copy its spec prose.
- * Main exports: CompanionCardSchema, CompanionCard, CompanionRole, parseCompanionCard,
- * matchKnowledgeBoundary.
+ * Main exports: CompanionCardSchema, CompanionCard, CompanionRole, parseCompanionCard.
+ *
+ * The cards still carry a knowledgeBoundary array and the schema still validates it, but the
+ * lookup that read it (matchKnowledgeBoundary) belonged to the fixed cast and went with the
+ * daily-helper redesign (spec 050 §9). Deleted 2026-09-02 rather than left in place looking
+ * wired up.
  */
 import { z } from "zod";
 
@@ -52,17 +56,4 @@ export type CompanionCard = z.infer<typeof CompanionCardSchema>;
  * message (Zod's default `.parse` error) on any mismatch. */
 export function parseCompanionCard(json: unknown): CompanionCard {
   return CompanionCardSchema.parse(json);
-}
-
-/** Case-insensitive substring match of each knowledge-boundary entry's keys against
- * `recentText`; returns the matched entries' content, in card-authored order. An entry
- * matches once any one of its keys is found. */
-export function matchKnowledgeBoundary(card: CompanionCard, recentText: string): string[] {
-  const haystack = recentText.toLowerCase();
-  const matched: string[] = [];
-  for (const entry of card.data.extensions.breadcrumb.knowledgeBoundary) {
-    const hit = entry.keys.some((key) => haystack.includes(key.toLowerCase()));
-    if (hit) matched.push(entry.content);
-  }
-  return matched;
 }

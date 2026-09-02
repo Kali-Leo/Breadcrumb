@@ -4,14 +4,13 @@
  * Main exports: the no-goal frontier query (frontier.ts + frontierScore.ts, ranked-mode
  * goal-gap boost), the shared structural-depth helper (graphDepth.ts),
  * goal-driven gap/route/coverage query (gapAndPath.ts), the LLM goal-mapping contract
- * (goalMapping.ts), one-hop reverse interest propagation (propagate.ts), the milestone
- * score/band (milestone.ts), and the single-route recommendation (recommendRoute.ts).
+ * (goalMapping.ts), one-hop reverse interest propagation (propagate.ts), and the
+ * single-route recommendation (recommendRoute.ts).
  */
 export * from "./frontier";
 export * from "./gapAndPath";
 export * from "./goalMapping";
 export * from "./graphDepth";
-export * from "./milestone";
 export * from "./propagate";
 export * from "./recommendRoute";
 export * from "./visibleCount";

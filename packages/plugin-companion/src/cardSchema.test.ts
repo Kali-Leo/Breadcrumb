@@ -3,7 +3,7 @@
  * parse, invalid cards fail with a readable message, and knowledge-boundary matching works.
  */
 import { describe, expect, it } from "vitest";
-import { matchKnowledgeBoundary, parseCompanionCard } from "./cardSchema";
+import { parseCompanionCard } from "./cardSchema";
 import { loadCompanionCards } from "./cards/index";
 
 const validCard = {
@@ -59,14 +59,5 @@ describe("companion card schema", () => {
     const { first_mes: _omitted, ...dataWithoutFirstMes } = validCard.data;
     const bad = { ...validCard, data: dataWithoutFirstMes };
     expect(() => parseCompanionCard(bad)).toThrow(/first_mes/);
-  });
-
-  it("matches knowledge-boundary entries case-insensitively, in card order", () => {
-    const card = parseCompanionCard(validCard);
-    expect(matchKnowledgeBoundary(card, "let's talk about Closure basics")).toEqual([
-      "闭包捕获的是变量本身。",
-    ]);
-    expect(matchKnowledgeBoundary(card, "今天聊聊闭包")).toEqual(["闭包捕获的是变量本身。"]);
-    expect(matchKnowledgeBoundary(card, "今天聊聊递归")).toEqual([]);
   });
 });
