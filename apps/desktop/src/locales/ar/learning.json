@@ -17,7 +17,7 @@
     "guessWrong": "إنها «{{word}}».",
     "enableAria": "مفتاح تعلّم اللغة",
     "llmRefineAria": "مفتاح الاستبدال الذكي",
-    "dataSources": "بيانات المعجم والنطق مصدرها هذه المشاريع مفتوحة المصدر: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "بيانات المعجم والنطق: {{sources}}",
     "pairPicker": "أي لغة تتعلّم",
     "pairOption": "تقرأ {{source}} وتتعلّم {{target}}",
     "pairOptionToDownload": "تقرأ {{source}} وتتعلّم {{target}} · تنزيل {{size}} ميغابايت",

@@ -17,7 +17,7 @@
     "guessWrong": "এটা «{{word}}»।",
     "enableAria": "ভাষা শেখার সুইচ",
     "llmRefineAria": "বুদ্ধিমান বদলের সুইচ",
-    "dataSources": "অভিধান ও উচ্চারণের তথ্য এসেছে এই উন্মুক্ত প্রকল্পগুলো থেকে: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "অভিধান ও উচ্চারণের তথ্য: {{sources}}",
     "pairPicker": "আপনি কোন ভাষা শিখছেন",
     "pairOption": "{{source}} পড়ুন, {{target}} শিখুন",
     "pairOptionToDownload": "{{source}} পড়ুন, {{target}} শিখুন · {{size}} MB নামাতে হবে",

@@ -17,7 +17,7 @@
     "guessWrong": "Ini «{{word}}».",
     "enableAria": "Sakelar belajar bahasa",
     "llmRefineAria": "Sakelar penggantian cerdas",
-    "dataSources": "Data kamus dan pelafalan berasal dari proyek sumber terbuka ini: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "Data kamus dan pelafalan: {{sources}}",
     "pairPicker": "Bahasa yang sedang kamu pelajari",
     "pairOption": "Kamu membaca {{source}}, belajar {{target}}",
     "pairOptionToDownload": "Kamu membaca {{source}}, belajar {{target}} · unduh {{size}} MB",

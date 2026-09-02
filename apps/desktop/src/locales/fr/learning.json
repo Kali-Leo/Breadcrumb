@@ -17,7 +17,7 @@
     "guessWrong": "C'est « {{word}} ».",
     "enableAria": "Interrupteur de l'apprentissage des langues",
     "llmRefineAria": "Interrupteur des remplacements intelligents",
-    "dataSources": "Les données de dictionnaire et de prononciation viennent de ces projets open source : CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "Données de dictionnaire et de prononciation : {{sources}}",
     "pairPicker": "La langue que tu apprends",
     "pairOption": "Tu lis {{source}}, tu apprends {{target}}",
     "pairOptionToDownload": "Tu lis {{source}}, tu apprends {{target}} · {{size}} Mo à télécharger",

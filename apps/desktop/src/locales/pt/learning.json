@@ -17,7 +17,7 @@
     "guessWrong": "É «{{word}}».",
     "enableAria": "Chave de aprender idiomas",
     "llmRefineAria": "Chave das trocas inteligentes",
-    "dataSources": "Os dados de dicionário e pronúncia vêm destes projetos de código aberto: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "Dados de dicionário e pronúncia: {{sources}}",
     "pairPicker": "Qual idioma você está aprendendo",
     "pairOption": "Você lê {{source}}, aprende {{target}}",
     "pairOptionToDownload": "Você lê {{source}}, aprende {{target}} · {{size}} MB para baixar",

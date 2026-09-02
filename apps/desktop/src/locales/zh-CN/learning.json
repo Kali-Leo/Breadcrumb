@@ -17,7 +17,7 @@
     "guessWrong": "它是「{{word}}」。",
     "enableAria": "语言学习开关",
     "llmRefineAria": "智能替换开关",
-    "dataSources": "词典与发音数据来自这些开源项目：CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "词典与发音数据来自：{{sources}}",
     "pairPicker": "学哪门语言",
     "pairOption": "读{{source}}，学{{target}}",
     "pairOptionToDownload": "读{{source}}，学{{target}} · 需下载 {{size}} MB",

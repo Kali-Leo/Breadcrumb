@@ -344,7 +344,15 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     } else {
       set({ settings });
     }
-    if (settings.enabled && get().loaded === null) await get().loadFromDatabase();
+    // A different pair is a different dictionary, different cards, different everything the
+    // weave reads — without this the app kept weaving the old language until the next launch
+    // (caught in the 2026-09-01 walkthrough: the pair line said Swahili while the vocabulary
+    // check was still asking about English).
+    const pairChanged = previous.pairId !== settings.pairId;
+    if (settings.enabled && (get().loaded === null || pairChanged)) {
+      if (pairChanged) set({ loaded: null, cardsByLemma: new Map(), confusionByLemma: new Map() });
+      await get().loadFromDatabase();
+    }
   },
 
   async ensureWoven(messageId, content) {

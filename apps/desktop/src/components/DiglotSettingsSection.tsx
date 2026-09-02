@@ -62,6 +62,7 @@ export function DiglotSettingsSection() {
   const options = pairOptions();
   const current = options.find((option) => option.id === settings.pairId);
   const [placementOpen, setPlacementOpen] = useState(false);
+  const loaded = useDiglotStore((state) => state.loaded);
 
   return (
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
@@ -144,7 +145,13 @@ export function DiglotSettingsSection() {
               </button>
             </div>
           )}
-          <p className="text-xs text-stone-300">{t("learning:diglot.dataSources")}</p>
+          {/* Each pack names its own upstreams; the Chinese pack's three were hardcoded here
+              and stayed on screen for every other language (caught 2026-09-01). */}
+          <p className="text-xs text-stone-300">
+            {t("learning:diglot.dataSources", {
+              sources: (loaded?.pack.attribution ?? []).join(" · "),
+            })}
+          </p>
         </div>
       )}
     </section>

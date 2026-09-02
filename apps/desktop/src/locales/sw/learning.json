@@ -17,7 +17,7 @@
     "guessWrong": "Ni «{{word}}».",
     "enableAria": "Swichi ya kujifunza lugha",
     "llmRefineAria": "Swichi ya ubadilishaji makini",
-    "dataSources": "Data ya kamusi na matamshi hutoka kwenye miradi hii ya chanzo huria: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "Data ya kamusi na matamshi: {{sources}}",
     "pairPicker": "Lugha unayojifunza",
     "pairOption": "Unasoma {{source}}, unajifunza {{target}}",
     "pairOptionToDownload": "Unasoma {{source}}, unajifunza {{target}} · pakua MB {{size}}",

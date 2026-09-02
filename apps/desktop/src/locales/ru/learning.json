@@ -17,7 +17,7 @@
     "guessWrong": "Это «{{word}}».",
     "enableAria": "Переключатель изучения языка",
     "llmRefineAria": "Переключатель умных замен",
-    "dataSources": "Словарные данные и произношение взяты из открытых проектов: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "Словарные данные и произношение: {{sources}}",
     "pairPicker": "Какой язык вы учите",
     "pairOption": "Читаете {{source}}, учите {{target}}",
     "pairOptionToDownload": "Читаете {{source}}, учите {{target}} · скачать {{size}} МБ",

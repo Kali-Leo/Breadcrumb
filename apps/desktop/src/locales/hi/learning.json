@@ -17,7 +17,7 @@
     "guessWrong": "यह «{{word}}» है।",
     "enableAria": "भाषा सीखने का स्विच",
     "llmRefineAria": "समझदार बदलाव का स्विच",
-    "dataSources": "शब्दकोश और उच्चारण के आँकड़े इन ओपन-सोर्स परियोजनाओं से हैं: CC-CEDICT · FrequencyWords · CMUdict",
+    "dataSources": "शब्दकोश और उच्चारण के आँकड़े: {{sources}}",
     "pairPicker": "आप कौन-सी भाषा सीख रहे हैं",
     "pairOption": "{{source}} पढ़िए, {{target}} सीखिए",
     "pairOptionToDownload": "{{source}} पढ़िए, {{target}} सीखिए · {{size}} MB डाउनलोड",
