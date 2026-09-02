@@ -7,6 +7,7 @@
  * Main exports: findSuspectSynonymPairs, SuspectSynonymPair.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 import { packVectors, partnersOf } from "@breadcrumb/core-vectors";
 import { topByRelativeGate } from "./similarityGate";
 import { SYNONYM_CANDIDATE_TOP_K } from "./synonymGate";
@@ -47,11 +48,11 @@ function pairKey(nodeIdA: string, nodeIdB: string): string {
  */
 export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): SuspectSynonymPair[] {
   const nodeById = new Map(input.nodes.map((node) => [node.id, node]));
-  const entries: { id: string; vector: number[] }[] = [];
-  for (const row of input.embeddings) {
-    if (!nodeById.has(row.node_id)) continue;
-    entries.push({ id: row.node_id, vector: JSON.parse(row.vector_json) as number[] });
-  }
+  const vectorByNodeId = parseVectorRows(
+    input.embeddings.filter((row) => nodeById.has(row.node_id)),
+    (row) => row.node_id,
+  );
+  const entries = [...vectorByNodeId].map(([id, vector]) => ({ id, vector }));
   // Normalized once, compared as dot products (see @breadcrumb/core-vectors): same numbers as
   // the pairwise cosine this used to call, about eight times less time on a grown tree.
   const packed = packVectors(entries);

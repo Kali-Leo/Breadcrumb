@@ -5,6 +5,7 @@
  * Main exports: DisplayClaim, loadConversationLayer, resolveRoundMessages, persistRun.
  */
 import type { FactcheckClaimRow, MessageRow } from "@breadcrumb/core-db";
+import { parseJsonColumn } from "@breadcrumb/core-db";
 import type { CheckedClaim, EvidenceItem } from "@breadcrumb/plugin-factcheck";
 import { z } from "zod";
 import { getRepos } from "./db";
@@ -28,14 +29,14 @@ const evidenceListSchema = z.array(
 );
 
 function rowToDisplayClaim(row: FactcheckClaimRow): DisplayClaim {
-  const parsed = evidenceListSchema.safeParse(JSON.parse(row.evidence_json));
+  const parsed = parseJsonColumn(evidenceListSchema, row.evidence_json);
   return {
     text: row.claim_text,
     relationship: row.relationship,
     reasoning: row.reasoning,
     // A row we cannot read the evidence of still carries a usable verdict; show it without
     // links rather than dropping the claim.
-    evidence: parsed.success ? parsed.data : [],
+    evidence: parsed ?? [],
   };
 }
 

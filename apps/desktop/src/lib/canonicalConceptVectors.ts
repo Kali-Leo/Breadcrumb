@@ -6,6 +6,7 @@
  * Main exports: loadConceptVectors, hashText.
  */
 import type { CanonicalConceptEmbeddingRow, CanonicalConceptRow } from "@breadcrumb/core-db";
+import { parseVectorColumn } from "@breadcrumb/core-db";
 import { conceptText } from "./canonicalConcepts";
 import { getRepos } from "./db";
 import { embedTexts } from "./embeddings";
@@ -21,16 +22,6 @@ export function hashText(text: string): string {
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
-}
-
-function parseVector(vectorJson: string): number[] | null {
-  try {
-    const parsed: unknown = JSON.parse(vectorJson);
-    if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "number")) return parsed;
-  } catch {
-    // fall through
-  }
-  return null;
 }
 
 /**
@@ -53,7 +44,7 @@ export async function loadConceptVectors(
     const hash = hashText(text);
     const row = cached.get(concept.id);
     const vector =
-      row !== undefined && row.content_hash === hash ? parseVector(row.vector_json) : null;
+      row !== undefined && row.content_hash === hash ? parseVectorColumn(row.vector_json) : null;
     if (vector === null) {
       missing.push({ concept, text, hash });
     } else {

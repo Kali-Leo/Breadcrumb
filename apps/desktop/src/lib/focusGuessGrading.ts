@@ -8,6 +8,7 @@
  * Main exports: gradeFocusGuess, recordMatchedGuess, FocusGuessResult.
  */
 import type { FocusNodeRow, NodeSightingGrade } from "@breadcrumb/core-db";
+import { parseVectorColumn } from "@breadcrumb/core-db";
 import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   type ConceptGuessGrade,
@@ -61,7 +62,10 @@ export async function gradeFocusGuess(input: {
     if (guessVector === null || embeddingRow === null) {
       return { grade: null, feedback: conceptDirectRevealMessage(input.summary) };
     }
-    const nodeVector = JSON.parse(embeddingRow.vector_json) as number[];
+    const nodeVector = parseVectorColumn(embeddingRow.vector_json);
+    if (nodeVector === null || nodeVector.length !== guessVector.length) {
+      return { grade: null, feedback: conceptDirectRevealMessage(input.summary) };
+    }
     const grade = gradeConceptGuess(cosineSimilarity(guessVector, nodeVector));
     await repos.nodeSightings.record({
       id: newId(),

@@ -9,6 +9,7 @@
  */
 
 import type { ConversationKind, ConversationRow } from "@breadcrumb/core-db";
+import { parseJsonColumn } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { chatJson } from "@breadcrumb/core-llm";
 import { buildFreeChatSystemPrompt, buildTeachingSystemPrompt } from "@breadcrumb/core-teaching";
@@ -16,6 +17,7 @@ import {
   applyReflection,
   buildReflectUserMessage,
   buildStudentSystemPrompt,
+  type KnowledgeState,
   KnowledgeStateSchema,
   REFLECT_PROMPT,
   ReflectResultSchema,
@@ -89,13 +91,9 @@ export async function buildCompanionTeachBackIfActive(
   if (stateRow === null) return null;
   const idleHours = (Date.parse(nowIso()) - Date.parse(stateRow.updated_at)) / 3_600_000;
   if (idleHours > TEACH_EPISODE_IDLE_HOURS) return null;
-  return reflectAndBuildStudentMessage(
-    conversation,
-    card,
-    stateRow.state_json,
-    userContent,
-    apiConfig,
-  );
+  const state = parseJsonColumn(KnowledgeStateSchema, stateRow.state_json);
+  if (state === null) return null; // an unreadable state is no live episode, not a thrown chat
+  return reflectAndBuildStudentMessage(conversation, card, state, userContent, apiConfig);
 }
 
 /** kind 'teach' — with a companion_id, runs Reflect-Respond (merging this round's user
@@ -121,13 +119,9 @@ export async function buildCompanionTeachSystemMessages(
   const repos = await getRepos();
   const stateRow = await repos.companionKnowledgeState.getByConversation(conversation.id);
   if (stateRow === null) return fallback();
-  return reflectAndBuildStudentMessage(
-    conversation,
-    card,
-    stateRow.state_json,
-    userContent,
-    apiConfig,
-  );
+  const state = parseJsonColumn(KnowledgeStateSchema, stateRow.state_json);
+  if (state === null) return fallback(); // corrupt state degrades to the generic teach prompt
+  return reflectAndBuildStudentMessage(conversation, card, state, userContent, apiConfig);
 }
 
 /** The shared Reflect-Respond core: merge this round's explanation into the stored state,
@@ -135,12 +129,12 @@ export async function buildCompanionTeachSystemMessages(
 async function reflectAndBuildStudentMessage(
   conversation: ConversationRow,
   card: NonNullable<ReturnType<typeof getCompanionCardById>>,
-  stateJson: string,
+  storedState: KnowledgeState,
   userContent: string,
   apiConfig: ApiConfig,
 ): Promise<ChatMessage[]> {
   const repos = await getRepos();
-  let state = KnowledgeStateSchema.parse(JSON.parse(stateJson));
+  let state = storedState;
   try {
     const config = llmConfigFrom(apiConfig);
     const { parsed, usage } = await chatJson(

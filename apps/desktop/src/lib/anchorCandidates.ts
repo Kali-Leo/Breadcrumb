@@ -6,28 +6,18 @@
  * Main exports: buildAnchorCandidates, parseNodeVectors.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 import {
   type AlignmentCandidatePair,
   generateAlignmentCandidates,
   type ProfileItemDefinition,
 } from "@breadcrumb/plugin-compare";
 
-/** node_id -> vector, skipping rows whose stored JSON is not a number array. */
+/** node_id -> vector, skipping every row core-db's shared embedding parse rejects. */
 export function parseNodeVectors(
   rows: readonly { node_id: string; vector_json: string }[],
 ): Map<string, readonly number[]> {
-  const vectors = new Map<string, readonly number[]>();
-  for (const row of rows) {
-    try {
-      const parsed: unknown = JSON.parse(row.vector_json);
-      if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "number")) {
-        vectors.set(row.node_id, parsed);
-      }
-    } catch {
-      // skip malformed
-    }
-  }
-  return vectors;
+  return parseVectorRows(rows, (row) => row.node_id);
 }
 
 /**

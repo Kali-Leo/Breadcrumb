@@ -6,6 +6,7 @@
  * Main exports: executeStatCall.
  */
 import type { NodeSightingRow, SqlClient } from "@breadcrumb/core-db";
+import { FsrsStabilitySchema, parseJsonColumn } from "@breadcrumb/core-db";
 import { computeRetentionByNode } from "@breadcrumb/plugin-memory";
 import {
   buildDayKeys,
@@ -26,9 +27,11 @@ import type { StatCall } from "./taskSchema";
  * the bare `stability` number is needed, not full ts-fsrs Card revival. */
 const WORD_SETTLED_STABILITY_DAYS = 30;
 
-/** Reads just the `stability` field out of a serialized ts-fsrs Card. */
-function stabilityFromFsrsJson(fsrsJson: string): number {
-  return (JSON.parse(fsrsJson) as { stability: number }).stability;
+/** Reads just the `stability` field out of a serialized ts-fsrs Card; null when the column
+ * does not hold one, so an unreadable word is excluded from the count instead of turning the
+ * whole comparison into NaN. */
+function stabilityFromFsrsJson(fsrsJson: string): number | null {
+  return parseJsonColumn(FsrsStabilitySchema, fsrsJson)?.stability ?? null;
 }
 
 /** Runs a `SELECT COUNT(*) AS n ...` and wraps it as a number result whose `n` mirrors the
@@ -62,7 +65,7 @@ async function executeCount(
         "SELECT fsrs_json FROM diglot_word_states",
       );
       const value = rows.filter(
-        (row) => stabilityFromFsrsJson(row.fsrs_json) >= WORD_SETTLED_STABILITY_DAYS,
+        (row) => (stabilityFromFsrsJson(row.fsrs_json) ?? 0) >= WORD_SETTLED_STABILITY_DAYS,
       ).length;
       return { kind: "number", value, n: value };
     }

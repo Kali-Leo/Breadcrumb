@@ -6,6 +6,7 @@
  * Main exports: computeDayDigest, DayDigest.
  */
 
+import { NodeIdsJsonSchema, parseJsonColumn } from "@breadcrumb/core-db";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { coverage } from "@breadcrumb/plugin-planner";
 import type { SimlabRepos } from "../db/repos";
@@ -68,7 +69,7 @@ export async function computeDayDigest(
   const goals = goalRows.map((goal) => ({
     title: goal.title,
     coverage: coverage(
-      JSON.parse(goal.node_ids_json) as string[],
+      parseJsonColumn(NodeIdsJsonSchema, goal.node_ids_json) ?? [],
       snapshot.masteryByNode,
       LIT_THRESHOLD,
     ),

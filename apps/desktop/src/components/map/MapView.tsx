@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadContinentAssignment } from "../../lib/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/mapNamingActions";
+import { goalNodeIds as parseGoalNodeIds } from "../../lib/plannerGapActions";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
@@ -127,7 +128,7 @@ export function MapView() {
         ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
         : null;
     if (goal === null || demoMode) return { displayWorld: world, goalScope: null };
-    const goalNodeIds: ReadonlySet<string> = new Set(JSON.parse(goal.node_ids_json) as string[]);
+    const goalNodeIds: ReadonlySet<string> = new Set(parseGoalNodeIds(goal));
     const cut = filterWorldToGoal(world, goalNodeIds);
     return {
       displayWorld: cut.islands.length === 0 ? world : cut,

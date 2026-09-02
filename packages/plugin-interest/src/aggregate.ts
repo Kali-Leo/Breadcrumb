@@ -8,6 +8,7 @@
  * INTEREST_SHORT_HALF_LIFE_DAYS, INTEREST_LONG_HALF_LIFE_DAYS, K_PSEUDO.
  */
 import type { InterestSignalRow } from "@breadcrumb/core-db";
+import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
 
 /** The short channel: what the learner has been into these couple of weeks.
  *
@@ -112,7 +113,9 @@ export interface StyleRanking {
 export function aggregateStyles(signals: readonly InterestSignalRow[]): StyleRanking[] {
   const countByStyle = new Map<string, number>();
   for (const signal of signals) {
-    const styles = JSON.parse(signal.styles_json) as string[];
+    // One unreadable styles_json costs that signal, never the whole ranking.
+    const styles = parseJsonColumn(StringListJsonSchema, signal.styles_json);
+    if (styles === null) continue;
     for (const style of styles) {
       countByStyle.set(style, (countByStyle.get(style) ?? 0) + 1);
     }

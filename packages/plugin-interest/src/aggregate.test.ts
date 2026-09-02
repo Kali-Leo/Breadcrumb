@@ -119,6 +119,20 @@ describe("aggregateInterest", () => {
 });
 
 describe("aggregateStyles", () => {
+  it("skips a corrupt styles_json row and still ranks the rest", () => {
+    const signals = [
+      signal({ node_id: "n1", created_at: daysAgo(0), styles_json: "{not json" }),
+      signal({ node_id: "n2", created_at: daysAgo(0), styles_json: '["类比", 7]' }),
+      signal({ node_id: "n3", created_at: daysAgo(0), styles_json: JSON.stringify(["类比"]) }),
+      signal({ node_id: "n4", created_at: daysAgo(0), styles_json: JSON.stringify(["类比"]) }),
+      signal({ node_id: "n5", created_at: daysAgo(0), styles_json: JSON.stringify(["代码示例"]) }),
+    ];
+    expect(aggregateStyles(signals)).toEqual([
+      { style: "类比", count: 2 },
+      { style: "代码示例", count: 1 },
+    ]);
+  });
+
   it("ranks the most-observed style first", () => {
     const signals = [
       signal({

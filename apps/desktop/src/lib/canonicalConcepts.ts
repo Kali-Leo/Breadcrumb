@@ -11,6 +11,7 @@ import type {
   KnowledgeNodeRow,
   NodeConceptAnchorRow,
 } from "@breadcrumb/core-db";
+import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
 import { normalizeLabel } from "@breadcrumb/plugin-compare";
 import { CANONICAL_CONCEPTS } from "../data/generated/canonicalConcepts";
 import { getRepos } from "./db";
@@ -48,13 +49,7 @@ async function importConcepts(): Promise<void> {
 }
 
 export function parseAliases(aliasesJson: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(aliasesJson);
-    if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string")) return parsed;
-  } catch {
-    // fall through
-  }
-  return [];
+  return parseJsonColumn(StringListJsonSchema, aliasesJson) ?? [];
 }
 
 /** The text a canonical concept is embedded as — label plus its known alternate names, the

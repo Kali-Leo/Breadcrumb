@@ -81,7 +81,7 @@ describe("seedDemo (real sqlite)", () => {
     const states = await temp.repos.diglot.listStates(DEMO_PAIR);
     expect(states).toHaveLength(50);
     const settledCount = states.filter(
-      (state) => cardFromJson(state.fsrs_json).stability >= WORD_SETTLED_STABILITY_DAYS,
+      (state) => (cardFromJson(state.fsrs_json)?.stability ?? 0) >= WORD_SETTLED_STABILITY_DAYS,
     ).length;
     expect(settledCount).toBeGreaterThanOrEqual(15);
 

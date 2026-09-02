@@ -14,6 +14,7 @@ export * from "./featureRepositories";
 export * from "./focusRepositories";
 export * from "./goalRepositories";
 export * from "./interestRepositories";
+export * from "./jsonColumns";
 export * from "./knowledgeRepositories";
 export * from "./migrations";
 export * from "./nodeEmbeddingRepository";

@@ -10,6 +10,7 @@
  * Main exports: contextNoveltyFor, ContextNovelty.
  */
 import type { DiglotPairId } from "@breadcrumb/core-db";
+import { parseVectorColumn } from "@breadcrumb/core-db";
 import { noveltyFactor } from "@breadcrumb/plugin-diglot-weave";
 import { getRepos } from "./db";
 import { embedTexts } from "./embeddings";
@@ -49,8 +50,10 @@ export async function contextNoveltyFor(input: {
   const stored = await repos.diglot.listContextEmbeddingsForLemmas(input.pair, lemmas);
   const pastByLemma = new Map<string, number[][]>();
   for (const row of stored) {
+    const vector = parseVectorColumn(row.vector_json);
+    if (vector === null) continue; // an unreadable context row is one fewer comparison, not a throw
     const past = pastByLemma.get(row.lemma) ?? [];
-    past.push(JSON.parse(row.vector_json) as number[]);
+    past.push(vector);
     pastByLemma.set(row.lemma, past);
   }
 

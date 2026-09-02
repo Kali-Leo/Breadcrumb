@@ -7,6 +7,7 @@
  * DEFAULT_TOP_K_SIMILAR, DEFAULT_FALLBACK_RECENT_N.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 
 /** Absolute cost ceiling: however many candidates clear the relative gate below, never send
  * more than this many per new node to the edge-judge LLM. Not the primary cutoff anymore —
@@ -67,9 +68,7 @@ export function rankCandidatePairs(
   newNodeIds: readonly string[],
   absoluteCap: number,
 ): CandidatePair[] {
-  const vectorByNodeId = new Map(
-    embeddings.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
-  );
+  const vectorByNodeId = parseVectorRows(embeddings, (row) => row.node_id);
   const newNodeIdSet = new Set(newNodeIds);
   const existingIds = [...vectorByNodeId.keys()].filter((id) => !newNodeIdSet.has(id));
 

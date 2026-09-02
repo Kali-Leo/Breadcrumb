@@ -7,6 +7,7 @@
  * SPREAD_NEIGHBOR_TOP_K.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 
 /** How much of the similarity-weighted neighborhood average bleeds into a node's own
  * score; 0 = no diffusion, 1 = a node with no signal fully inherits its neighbors'. */
@@ -32,9 +33,7 @@ export function spreadInterest(
   embeddings: readonly NodeEmbeddingRow[],
   factor: number,
 ): Map<string, number> {
-  const vectorByNodeId = new Map(
-    embeddings.map((row) => [row.node_id, JSON.parse(row.vector_json) as number[]]),
-  );
+  const vectorByNodeId = parseVectorRows(embeddings, (row) => row.node_id);
   const nodeIds = [...vectorByNodeId.keys()];
 
   const result = new Map<string, number>();
@@ -62,7 +61,7 @@ function weightedNeighborAverage(
   nodeId: string,
   vector: readonly number[],
   allNodeIds: readonly string[],
-  vectorByNodeId: ReadonlyMap<string, number[]>,
+  vectorByNodeId: ReadonlyMap<string, readonly number[]>,
   scoresByNodeId: ReadonlyMap<string, number>,
 ): number {
   const neighbors: { id: string; similarity: number }[] = [];

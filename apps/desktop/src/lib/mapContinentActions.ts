@@ -8,21 +8,10 @@
  * Main exports: loadContinentAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 import { type ContinentAssignment, deriveContinents } from "@breadcrumb/plugin-map";
 import { getRepos } from "./db";
 import { rowsBeforeDay, startOfLocalDayIso } from "./layoutDay";
-
-function parseEmbeddingVector(vectorJson: string): number[] | null {
-  try {
-    const parsed = JSON.parse(vectorJson) as unknown;
-    if (!Array.isArray(parsed) || !parsed.every((value) => typeof value === "number")) {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
 
 /** engagement = 1 + log2(1 + sightingCount) + 2 * avgCuriosity — sightings alone already lift
  * a node above the "just created" baseline of 1, and repeated curiosity signals lift it further. */
@@ -70,11 +59,7 @@ async function computeContinentAssignment(
     const sightingRows = rowsBeforeDay(allSightingRows, dayStartIso);
     const interestSignalRows = rowsBeforeDay(allInterestSignalRows, dayStartIso);
 
-    const embeddingByNodeId = new Map<string, readonly number[]>();
-    for (const row of embeddingRows) {
-      const vector = parseEmbeddingVector(row.vector_json);
-      if (vector !== null) embeddingByNodeId.set(row.node_id, vector);
-    }
+    const embeddingByNodeId = parseVectorRows(embeddingRows, (row) => row.node_id);
 
     const sightingCountByNodeId = new Map<string, number>();
     for (const sighting of sightingRows) {

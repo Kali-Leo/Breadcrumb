@@ -50,8 +50,9 @@ describe("card lifecycle", () => {
   it("round-trips a card through JSON with dates intact", () => {
     const card = reviewCard(PAIR_A, newWordCard(NOW), NOW, Rating.Good);
     const revived = cardFromJson(cardToJson(card));
-    expect(revived.due.getTime()).toBe(card.due.getTime());
-    expect(revived.stability).toBe(card.stability);
+    expect(revived).not.toBeNull();
+    expect(revived?.due.getTime()).toBe(card.due.getTime());
+    expect(revived?.stability).toBe(card.stability);
   });
 
   it("review pushes due into the future and recall decays over time", () => {

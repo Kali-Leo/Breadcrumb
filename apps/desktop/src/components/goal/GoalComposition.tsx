@@ -7,7 +7,7 @@
  */
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import { useTranslation } from "react-i18next";
-import { goalSatisfiedNodeIds } from "../../lib/plannerGapActions";
+import { goalSatisfiedNodeIds, goalNodeIds as parseGoalNodeIds } from "../../lib/plannerGapActions";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 export function GoalComposition() {
@@ -22,7 +22,7 @@ export function GoalComposition() {
   const goal = goals.find((candidate) => candidate.id === selectedGoalId);
   if (goal === undefined) return null;
 
-  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
+  const goalNodeIds = parseGoalNodeIds(goal);
   if (goalNodeIds.length === 0) return null;
 
   // Same goal-local belief coverage() applies — a chip must never disagree with what the rest

@@ -4,6 +4,7 @@
  * any other external input. Main exports: parseResearchResultDisplay, ParsedStatResult.
  */
 import type { ResearchResultRow } from "@breadcrumb/core-db";
+import { parseJsonColumn } from "@breadcrumb/core-db";
 import { type DisplayBlock, displayBlockSchema } from "@breadcrumb/plugin-research";
 import { z } from "zod";
 
@@ -34,11 +35,8 @@ export interface ParsedResearchResult {
 /** Parses one row's stored JSON columns. Returns null on malformed data instead of
  * throwing — a corrupted row must never crash the panel, only be silently skipped. */
 export function parseResearchResultDisplay(row: ResearchResultRow): ParsedResearchResult | null {
-  try {
-    const display = z.array(displayBlockSchema).parse(JSON.parse(row.display_json));
-    const results = z.array(statResultSchema).parse(JSON.parse(row.results_json));
-    return { display, results };
-  } catch {
-    return null;
-  }
+  const display = parseJsonColumn(z.array(displayBlockSchema), row.display_json);
+  const results = parseJsonColumn(z.array(statResultSchema), row.results_json);
+  if (display === null || results === null) return null;
+  return { display, results };
 }

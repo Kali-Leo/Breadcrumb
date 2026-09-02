@@ -15,6 +15,7 @@ import type {
   NodeEmbeddingRow,
   NodeSightingRow,
 } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import type { NodeChangePlan } from "./attach";
@@ -41,13 +42,9 @@ export function findSynonymCandidates(
   existingEmbeddings: readonly NodeEmbeddingRow[],
   topK: number = SYNONYM_CANDIDATE_TOP_K,
 ): SynonymCandidatePair[] {
-  const existingVectors: { existingNodeId: string; vector: number[] }[] = [];
-  for (const existing of existingEmbeddings) {
-    existingVectors.push({
-      existingNodeId: existing.node_id,
-      vector: JSON.parse(existing.vector_json) as number[],
-    });
-  }
+  const existingVectors = [...parseVectorRows(existingEmbeddings, (row) => row.node_id)].map(
+    ([existingNodeId, vector]) => ({ existingNodeId, vector }),
+  );
 
   const candidates: SynonymCandidatePair[] = [];
   for (const [newNodeId, newVector] of newNodeVectors) {
@@ -72,7 +69,7 @@ export const synonymJudgeSchema = z.object({
   verdicts: z
     .array(
       z.object({
-        pairId: z.string().min(1),
+        pairId: z.string().min(1).max(64),
         verdict: synonymVerdictSchema,
       }),
     )

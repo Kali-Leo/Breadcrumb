@@ -6,6 +6,7 @@
  * Main exports: ensureBuiltinProfiles, computeComparisonTree, profileRowsToDefinitionItems.
  */
 import type { ComparisonProfileItemRow } from "@breadcrumb/core-db";
+import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
 import {
   alignmentCountsAsOverlap,
   buildOverlapTree,
@@ -30,15 +31,7 @@ const BUILTIN_PROFILES: readonly ProfileDefinition[] = [
 
 /** Conservative aliases parse: anything not a plain string array degrades to no aliases. */
 function parseAliases(aliasesJson: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(aliasesJson);
-    if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string")) {
-      return parsed;
-    }
-  } catch {
-    // fall through
-  }
-  return [];
+  return parseJsonColumn(StringListJsonSchema, aliasesJson) ?? [];
 }
 
 /** Definition items → stable rows: item id = `${profileId}:${key}` so keys stay readable

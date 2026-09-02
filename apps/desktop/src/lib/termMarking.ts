@@ -7,6 +7,7 @@
  * Main exports: ensureTermMarks.
  */
 import type { MasteryClaimRow, NodeSightingRow, TermMarkTargetKind } from "@breadcrumb/core-db";
+import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
 import {
   buildTermMarkingMessages,
@@ -61,7 +62,11 @@ async function computeTermMarks(
 ): Promise<string[]> {
   const repos = await getRepos();
   const cached = await repos.termMarks.getByTarget(targetKind, targetId);
-  if (cached !== null) return JSON.parse(cached.terms_json) as string[];
+  if (cached !== null) {
+    // An unreadable cache row is a cache miss, not a crash: the marks get recomputed.
+    const cachedTerms = parseJsonColumn(StringListJsonSchema, cached.terms_json);
+    if (cachedTerms !== null) return cachedTerms;
+  }
 
   const { featureSwitches, networkEnabled, apiConfig } = useSettingsStore.getState();
   if (!featureSwitches.termMarking || !networkEnabled || apiConfig === null) return [];

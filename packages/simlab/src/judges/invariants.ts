@@ -8,6 +8,7 @@
  * Main exports: runInvariants, Violation, InvariantInput.
  */
 import type { GoalRow, KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { NodeIdsJsonSchema, parseJsonColumn } from "@breadcrumb/core-db";
 import { incomingNeighbors, topologicalOrder } from "@breadcrumb/plugin-graph";
 import type { FrontierCandidate } from "@breadcrumb/plugin-planner";
 import { coverage } from "@breadcrumb/plugin-planner";
@@ -145,7 +146,7 @@ function checkDuplicateGoalTitles(goals: readonly GoalRow[]): Violation[] {
 function checkCoverage(input: InvariantInput): Violation[] {
   const violations: Violation[] = [];
   for (const goal of input.goals) {
-    const nodeIds = JSON.parse(goal.node_ids_json) as string[];
+    const nodeIds = parseJsonColumn(NodeIdsJsonSchema, goal.node_ids_json) ?? [];
     const expected =
       nodeIds.length === 0
         ? 1

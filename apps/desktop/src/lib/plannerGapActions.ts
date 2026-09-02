@@ -2,7 +2,7 @@
  * Purpose: pure gap/coverage/route computation for a selected goal, split out of
  * plannerStore.ts to keep that file under the file-size ceiling. No React/zustand here.
  * Main exports: computeGapForGoal, computeRouteForGoal, deriveGoalView, GoalView,
- * goalSatisfiedNodeIds.
+ * goalSatisfiedNodeIds, goalNodeIds.
  */
 import type {
   GoalRow,
@@ -10,6 +10,7 @@ import type {
   KnowledgeNodeRow,
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
+import { NodeIdsJsonSchema, parseJsonColumn } from "@breadcrumb/core-db";
 import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
 import {
   coverage,
@@ -19,6 +20,14 @@ import {
   type RecommendRouteParams,
   recommendRoute,
 } from "@breadcrumb/plugin-planner";
+
+/** The goal's own node id list, read out of node_ids_json. A goal whose column is corrupt
+ * reads as an empty goal rather than throwing through whichever screen happened to touch it:
+ * every readout of this column (coverage, the route, the composition chips, both maps) shares
+ * this one parse so they can never disagree about what a goal contains. */
+export function goalNodeIds(goal: GoalRow): string[] {
+  return parseJsonColumn(NodeIdsJsonSchema, goal.node_ids_json) ?? [];
+}
 
 /** Goal views believe the user's own word: a node with a 'learned' self-report claim leaves
  * THIS GOAL's remaining work and counts toward its coverage (vision/07 §4 — the goal trusts
@@ -42,7 +51,7 @@ export function computeGapForGoal(
   claims: readonly MasteryClaimRow[],
 ): { gap: GapAndPathResult | null; coverageFraction: number | null } {
   if (goal === null) return { gap: null, coverageFraction: null };
-  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
+  const nodeIds = goalNodeIds(goal);
   const satisfiedNodeIds = goalSatisfiedNodeIds(claims);
   return {
     gap: gapAndPath({
@@ -50,11 +59,11 @@ export function computeGapForGoal(
       edges,
       masteryByNode,
       interestByNode,
-      goalNodeIds,
+      goalNodeIds: nodeIds,
       litThreshold: LIT_THRESHOLD,
       satisfiedNodeIds,
     }),
-    coverageFraction: coverage(goalNodeIds, masteryByNode, LIT_THRESHOLD, satisfiedNodeIds),
+    coverageFraction: coverage(nodeIds, masteryByNode, LIT_THRESHOLD, satisfiedNodeIds),
   };
 }
 
@@ -70,14 +79,13 @@ export function computeRouteForGoal(
   routeParams: RecommendRouteParams,
 ): RecommendedRouteStep[] | null {
   if (goal === null) return null;
-  const goalNodeIds = JSON.parse(goal.node_ids_json) as string[];
   return recommendRoute(
     {
       nodes,
       edges,
       masteryByNode,
       interestByNode,
-      goalNodeIds,
+      goalNodeIds: goalNodeIds(goal),
       litThreshold: LIT_THRESHOLD,
       satisfiedNodeIds: goalSatisfiedNodeIds(claims),
     },

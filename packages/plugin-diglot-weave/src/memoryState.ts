@@ -6,7 +6,9 @@
  * retrievabilityOf, configureDiglotScheduler, EXPOSURES_PER_GOOD.
  */
 import type { DiglotEventKind, DiglotPairId } from "@breadcrumb/core-db";
-import { type Card, createEmptyCard, type FSRS, fsrs, type Grade, Rating } from "ts-fsrs";
+import { parseJsonColumn } from "@breadcrumb/core-db";
+import { type Card, createEmptyCard, type FSRS, fsrs, type Grade, Rating, State } from "ts-fsrs";
+import { z } from "zod";
 
 /** One scheduler instance per language pair — personally fitted parameters (vision/09 #1)
  * are per-pair, so a shared singleton would cross-contaminate scheduling the moment a
@@ -54,9 +56,33 @@ export function cardToJson(card: Card): string {
   return JSON.stringify(card);
 }
 
-/** Revives a card from fsrs_json; date fields come back as Date objects. */
-export function cardFromJson(json: string): Card {
-  const raw = JSON.parse(json) as Card & { due: string; last_review?: string };
+/** The stored shape of the fsrs_json column: a ts-fsrs Card whose Dates went through
+ * JSON.stringify and came back as ISO strings. Dates are checked for actual parseability
+ * rather than merely for being strings — an Invalid Date does not throw, it quietly makes
+ * every interval NaN and poisons the whole schedule. The two fields carrying defaults are
+ * the ones ts-fsrs has changed across minor versions (`elapsed_days` is deprecated,
+ * `learning_steps` arrived in 5.x): a card written by an older build must still revive. */
+const StoredCardSchema = z.object({
+  due: z.string().refine((value) => !Number.isNaN(Date.parse(value))),
+  stability: z.number().finite(),
+  difficulty: z.number().finite(),
+  elapsed_days: z.number().finite().default(0),
+  scheduled_days: z.number().finite(),
+  learning_steps: z.number().finite().default(0),
+  reps: z.number().int().nonnegative(),
+  lapses: z.number().int().nonnegative(),
+  state: z.enum(State),
+  last_review: z
+    .string()
+    .refine((value) => !Number.isNaN(Date.parse(value)))
+    .optional(),
+});
+
+/** Revives a card from fsrs_json; date fields come back as Date objects. Null when the column
+ * does not hold a card — the caller drops that one word rather than scheduling on NaN. */
+export function cardFromJson(json: string): Card | null {
+  const raw = parseJsonColumn(StoredCardSchema, json);
+  if (raw === null) return null;
   return {
     ...raw,
     due: new Date(raw.due),

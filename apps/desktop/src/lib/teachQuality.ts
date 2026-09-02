@@ -8,7 +8,9 @@
  * Main exports: judgeTeachRound (exported for reuse; subscription wires it).
  */
 import type { NodeSightingGrade } from "@breadcrumb/core-db";
+import { parseJsonColumn } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
+import { KnowledgeStateSchema } from "@breadcrumb/plugin-companion";
 import { z } from "zod";
 import { appEventBus, useChatStore } from "../stores/chatStore";
 import { useKnowledgeStore } from "../stores/knowledgeStore";
@@ -55,8 +57,10 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
   } else if (conversation.kind === "companion") {
     const stateRow = await repos.companionKnowledgeState.getByConversation(conversationId);
     if (stateRow === null) return;
-    topic = (JSON.parse(stateRow.state_json) as { topic?: string }).topic ?? "";
-    if (topic === "") return;
+    // Same schema companionChatPrompt.ts revives this column with — one column, one shape.
+    const state = parseJsonColumn(KnowledgeStateSchema, stateRow.state_json);
+    if (state === null) return;
+    topic = state.topic;
   } else {
     return;
   }

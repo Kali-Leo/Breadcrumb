@@ -17,6 +17,7 @@ import { embedNodes } from "./embeddings";
 import { planGoalRequiresEdges } from "./goalRequiresEdges";
 import { llmConfigFrom } from "./llmConfig";
 import { recordMeteredCall } from "./metering";
+import { goalNodeIds } from "./plannerGapActions";
 import { newId, nowIso } from "./time";
 
 /** Confidence recorded on a requires edge that came from goal decomposition rather than the
@@ -191,8 +192,6 @@ export async function removeNodeFromGoal(
   goal: GoalRow,
   nodeId: string,
 ): Promise<void> {
-  const remainingNodeIds = (JSON.parse(goal.node_ids_json) as string[]).filter(
-    (id) => id !== nodeId,
-  );
+  const remainingNodeIds = goalNodeIds(goal).filter((id) => id !== nodeId);
   await repos.goals.updateNodeIds(goal.id, remainingNodeIds, nowIso());
 }

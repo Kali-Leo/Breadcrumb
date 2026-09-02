@@ -48,6 +48,19 @@ function node(id: string, parentId: string | null, createdAt: string): Knowledge
 }
 
 describe("rankCandidatePairs", () => {
+  it("drops only the unreadable embedding rows, never the whole ranking", () => {
+    const embeddings = [
+      embedding("new1", [1, 0]),
+      { ...embedding("broken", [0, 0]), vector_json: "{not json" },
+      { ...embedding("nan", [0, 0]), vector_json: "[0.9, null]" },
+      { ...embedding("wrongDims", [0, 0]), vector_json: "[0.9, 0.1, 0.1]" },
+      embedding("close", [0.9, 0.1]),
+      embedding("far", [0, 1]),
+    ];
+    const pairs = rankCandidatePairs(embeddings, ["new1"], 8);
+    expect(pairs.map((pair) => pair.existingNodeId)).toEqual(["close"]);
+  });
+
   it("ranks the closest existing vector first by cosine similarity", () => {
     const embeddings = [
       embedding("new1", [1, 0]),

@@ -7,6 +7,7 @@
  * Main exports: loadBrowsingAffinityByNode.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
+import { parseVectorRows } from "@breadcrumb/core-db";
 import {
   browsingAffinityByNode,
   createBrowsingInterestClient,
@@ -82,15 +83,7 @@ async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecor
 export function parseNodeVectors(
   embeddings: readonly NodeEmbeddingRow[],
 ): Map<string, readonly number[]> {
-  const nodeVectors = new Map<string, readonly number[]>();
-  for (const row of embeddings) {
-    try {
-      nodeVectors.set(row.node_id, JSON.parse(row.vector_json) as number[]);
-    } catch {
-      console.warn("browsing affinity: skipping unreadable embedding row", row.node_id);
-    }
-  }
-  return nodeVectors;
+  return parseVectorRows(embeddings, (row) => row.node_id);
 }
 
 /** The per-node browsing affinity for the current knowledge tree, or null when browsing
