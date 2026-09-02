@@ -7,8 +7,8 @@
  */
 
 import { NodeIdsJsonSchema, parseJsonColumn } from "@breadcrumb/core-db";
-import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { coverage } from "@breadcrumb/plugin-planner";
+import { LIT_THRESHOLD } from "@breadcrumb/feature-memory";
+import { coverage } from "@breadcrumb/feature-planner";
 import type { SimlabRepos } from "../db/repos";
 import { computePlannerSnapshot } from "./plannerSnapshot";
 

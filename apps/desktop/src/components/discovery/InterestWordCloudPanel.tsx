@@ -1,10 +1,10 @@
 /**
  * Purpose: the word cloud of what the user opened — words from the titles, size by how often
- * they came up, colour by how the content felt. Placement is computed in the plugin; this
+ * they came up, colour by how the content felt. Placement is computed in the module; this
  * file owns the canvas, the font it measures with, and redrawing when the column resizes.
  * Main exports: InterestWordCloudPanel.
  */
-import { layoutWordCloud, wordFontWeight } from "@breadcrumb/plugin-browsing-interest";
+import { layoutWordCloud, wordFontWeight } from "@breadcrumb/feature-browsing-interest";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore, WORD_CLOUD_WINDOWS } from "../../stores/browsingInterestStore";

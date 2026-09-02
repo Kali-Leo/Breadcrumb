@@ -9,7 +9,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { chatJson } from "@breadcrumb/core-llm";
-import { buildGoalMappingMessages, goalMappingSchema } from "@breadcrumb/plugin-planner";
+import { buildGoalMappingMessages, goalMappingSchema } from "@breadcrumb/feature-planner";
 import type { JourneyActionContext } from "./journeyActionTypes";
 import type { TopicHint } from "./student";
 

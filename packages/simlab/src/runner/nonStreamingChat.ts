@@ -4,7 +4,12 @@
  * response body (see each caller for exactly when that happens).
  * Main exports: nonStreamingChat, NonStreamingChatResult.
  */
-import type { ChatMessage, LlmClientConfig, TokenUsage } from "@breadcrumb/core-llm";
+import {
+  type ChatMessage,
+  completionsUrl,
+  type LlmClientConfig,
+  type TokenUsage,
+} from "@breadcrumb/core-llm";
 
 export interface NonStreamingChatResult {
   content: string;
@@ -20,7 +25,7 @@ export async function nonStreamingChat(
   config: LlmClientConfig,
   messages: readonly ChatMessage[],
 ): Promise<NonStreamingChatResult> {
-  const response = await config.fetchImpl(`${config.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+  const response = await config.fetchImpl(completionsUrl(config.baseUrl), {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.apiKey}` },
     body: JSON.stringify({ model: config.model, messages, stream: false }),

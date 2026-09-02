@@ -22,27 +22,27 @@ import {
   type ReplacementPatch,
   scoreVocabTest,
   type VocabTestItem,
-} from "@breadcrumb/plugin-diglot-weave";
+} from "@breadcrumb/feature-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { create } from "zustand";
-import { getRepos } from "../lib/db";
-import { nextPlacementState } from "../lib/diglotPlacement";
-import { refineWeavePatches } from "../lib/diglotRefine";
-import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "../lib/diglotReveal";
+import { normalizeMathDelimiters } from "../lib/chat/markdownMath";
+import { nextPlacementState } from "../lib/diglot/diglotPlacement";
+import { refineWeavePatches } from "../lib/diglot/diglotRefine";
+import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "../lib/diglot/diglotReveal";
 import {
   applyDiglotSignal,
   findProductiveUses,
   loadCards,
   weaveAssistantMessage,
-} from "../lib/diglotWeave";
+} from "../lib/diglot/diglotWeave";
 import {
   BUNDLED_PAIR_ID,
   installLanguagePack,
   listInstalledPairs,
   loadPack,
-} from "../lib/languagePacks";
-import { normalizeMathDelimiters } from "../lib/markdownMath";
-import { nowIso, onLocalDayChange } from "../lib/time";
+} from "../lib/diglot/languagePacks";
+import { getRepos } from "../lib/platform/db";
+import { nowIso, onLocalDayChange } from "../lib/platform/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
@@ -65,7 +65,7 @@ export interface DiglotSettings {
   /** New-word introduction starts at this introduction-queue rank — maintained by the
    * behavioral placement (clean first reads move it up; no self-report by design). */
   introductionRankFloor: number;
-  /** Current placement jump size (see plugin placement.ts). */
+  /** Current placement jump size (see the module's placement.ts). */
   placementStep: number;
   /** Personally fitted FSRS parameters (vision/09 #1); null = library defaults. */
   fsrsParams: number[] | null;
@@ -84,8 +84,8 @@ const SETTINGS_KEY = "diglotSettings";
 const DENSITY_WINDOW_DAYS = 7;
 
 /** Settings keys whose value actually feeds weave PATCH computation — traced through
- * lib/diglotWeave.ts's weaveAssistantMessage, lib/diglotRefine.ts's refineWeavePatches and
- * the scheduler in packages/plugin-diglot-weave/src/scheduler.ts:
+ * lib/diglot/diglotWeave.ts's weaveAssistantMessage, lib/diglot/diglotRefine.ts's refineWeavePatches and
+ * the scheduler in packages/feature-diglot-weave/src/scheduler.ts:
  *  - density: ScheduleInput.density -> scheduler.ts budgetFor() (replacement count budget)
  *  - newWordDailyBase: weaveAssistantMessage's adaptiveNewWordCap base cap
  *  - introductionRankFloor: weaveAssistantMessage filters the introductionRank map by it
@@ -304,7 +304,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     // Personal memory model (vision/09 #1): apply fitted parameters, refit in background.
     configureDiglotScheduler(settings.pairId, settings.fsrsParams ?? undefined);
     void (async () => {
-      const { maybeFitFsrsParameters } = await import("../lib/fsrsFit");
+      const { maybeFitFsrsParameters } = await import("../lib/platform/fsrsFit");
       const fitted = await maybeFitFsrsParameters(settings.pairId, settings.fsrsFittedReviewCount);
       if (fitted !== null) {
         const nextSettings = {
@@ -410,7 +410,7 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   },
 }));
 
-/** Persists what the placement rules made of one signal (see lib/diglotPlacement.ts). */
+/** Persists what the placement rules made of one signal (see lib/diglot/diglotPlacement.ts). */
 async function foldPlacement(input: {
   lemma: string;
   kind: DiglotEventKind;

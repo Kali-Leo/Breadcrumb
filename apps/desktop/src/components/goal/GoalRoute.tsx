@@ -7,8 +7,8 @@
  * Main exports: GoalRoute.
  */
 
-import type { RecommendedRouteStep } from "@breadcrumb/plugin-planner";
-import { ROUTE_INTEREST_CHIP_THRESHOLD } from "@breadcrumb/plugin-planner";
+import type { RecommendedRouteStep } from "@breadcrumb/feature-planner";
+import { ROUTE_INTEREST_CHIP_THRESHOLD } from "@breadcrumb/feature-planner";
 import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 

@@ -5,7 +5,7 @@
  * where the cited page explicitly names the concept (e.g. scope in Functions, prototypes
  * in Custom JS objects). Main exports: FRONTEND_MDN_PROFILE.
  */
-import type { ProfileDefinition, ProfileItemDefinition } from "@breadcrumb/plugin-compare";
+import type { ProfileDefinition, ProfileItemDefinition } from "@breadcrumb/feature-compare";
 import { MDN_FINE_ITEMS } from "./generated/fineItems";
 
 const CURRICULUM = "https://developer.mozilla.org/en-US/curriculum/";

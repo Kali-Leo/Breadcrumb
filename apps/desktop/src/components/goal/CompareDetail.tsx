@@ -8,7 +8,7 @@
  * hosts the experimental build form.
  * Main exports: CompareNodeDetail, ExperimentalBuildForm.
  */
-import type { OverlapNode } from "@breadcrumb/plugin-compare";
+import type { OverlapNode } from "@breadcrumb/feature-compare";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCompareStore } from "../../stores/compareStore";

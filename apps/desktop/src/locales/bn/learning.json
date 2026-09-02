@@ -37,7 +37,6 @@
     "guessPlaceholder": "আপনার আন্দাজ",
     "guessSubmit": "পাঠান",
     "directReveal": "এর মানে: {{summary}}",
-    "expandPrefill": "«{{label}}» নিয়ে আরও গভীরে যেতে চাই:",
     "guessCorrect": "ঠিক। {{summary}}",
     "guessClose": "কাছাকাছি। এর মানে: {{summary}}",
     "guessWrong": "এর মানে: {{summary}}"

@@ -12,14 +12,14 @@
  * Main exports: useFocusSessionsStore, FocusSessionBadgeEntry, FocusSessionSummary.
  */
 import { create } from "zustand";
-import { createSingleFlightLoader, setConversationLayer } from "../lib/conversationLayers";
-import { getRepos } from "../lib/db";
+import { createSingleFlightLoader, setConversationLayer } from "../lib/chat/conversationLayers";
 import {
   buildFocusSessionAssembly,
   type FocusSessionAssembly,
   type FocusSessionBadgeEntry,
   type FocusSessionSummary,
-} from "../lib/focusSessionsAssembly";
+} from "../lib/focus/focusSessionsAssembly";
+import { getRepos } from "../lib/platform/db";
 import { appEventBus, useChatStore } from "./chatStore";
 
 export type { FocusSessionBadgeEntry, FocusSessionSummary };

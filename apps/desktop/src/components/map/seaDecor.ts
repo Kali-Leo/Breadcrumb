@@ -12,7 +12,7 @@ import {
   type SeaObstacle,
   type WorldModel,
   type WorldPoint,
-} from "@breadcrumb/plugin-map";
+} from "@breadcrumb/feature-map";
 import { Container, Sprite, type Texture } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
 import type { LabelBox } from "./mapLabelPlacement";

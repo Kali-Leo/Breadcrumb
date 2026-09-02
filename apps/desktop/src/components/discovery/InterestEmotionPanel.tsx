@@ -1,7 +1,7 @@
 /**
  * Purpose: the two curves of the interest dashboard — what the platforms put in front of the
  * user (投喂) against what the user opened (选择), scored from +2 to -2. Geometry comes from
- * the plugin; this file only draws it and follows the cursor.
+ * the module; this file only draws it and follows the cursor.
  * Main exports: InterestEmotionPanel.
  */
 
@@ -11,7 +11,7 @@ import {
   type EmotionCategory,
   type EmotionSeriesKey,
   findNearestChartPoint,
-} from "@breadcrumb/plugin-browsing-interest";
+} from "@breadcrumb/feature-browsing-interest";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";

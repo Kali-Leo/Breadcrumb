@@ -4,7 +4,7 @@
  * at the island level. Pure lookups plus one Graphics repaint; owns no camera or level state.
  * Main exports: HoverInfo, HoverResult, resolveHover, drawHoverHighlight.
  */
-import type { KingdomModel, WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
+import type { KingdomModel, WorldModel, WorldPoint } from "@breadcrumb/feature-map";
 import type { Graphics } from "pixi.js";
 import { findIsland, hitIsland, hitIslet, hitKingdom, type MapLevel } from "./levels";
 import { mapTheme } from "./mapTheme";

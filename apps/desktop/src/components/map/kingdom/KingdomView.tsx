@@ -8,27 +8,27 @@
  */
 
 import { formatDayMonth } from "@breadcrumb/core-i18n";
-import { COMPANION_COPY } from "@breadcrumb/plugin-companion";
-import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
-import { visibleFrontier } from "@breadcrumb/plugin-planner";
+import { COMPANION_COPY } from "@breadcrumb/feature-companion";
+import { LIT_THRESHOLD } from "@breadcrumb/feature-memory";
+import { visibleFrontier } from "@breadcrumb/feature-planner";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getRepos } from "../../../lib/db";
-import { startLearningForConcept } from "../../../lib/focusLearning";
+import { startTeachSession } from "../../../lib/companion/teachActions";
+import {
+  loadRegionFeedbackSources,
+  type RegionFeedbackSources,
+} from "../../../lib/feedback/regionFeedbackData";
+import { startLearningForConcept } from "../../../lib/focus/focusLearning";
 import {
   computeVisibleTree,
   deriveKingdomNodes,
   type KingdomViewNode,
   pickRecommendation,
   visibleLateralEdges,
-} from "../../../lib/kingdomView";
-import { goalNodeIds as parseGoalNodeIds } from "../../../lib/plannerGapActions";
-import {
-  loadRegionFeedbackSources,
-  type RegionFeedbackSources,
-} from "../../../lib/regionFeedbackData";
-import { startTeachSession } from "../../../lib/teachActions";
-import { nowIso } from "../../../lib/time";
+} from "../../../lib/map/kingdomView";
+import { goalNodeIds as parseGoalNodeIds } from "../../../lib/planner/plannerGapActions";
+import { getRepos } from "../../../lib/platform/db";
+import { nowIso } from "../../../lib/platform/time";
 import { appEventBus, useChatStore } from "../../../stores/chatStore";
 import { usePlannerStore } from "../../../stores/plannerStore";
 import { useSettingsStore } from "../../../stores/settingsStore";

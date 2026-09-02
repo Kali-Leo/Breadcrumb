@@ -5,7 +5,7 @@
  * into, since that is the only thing they are for.
  * Main exports: buildIslandScene, SceneParts, SceneContext.
  */
-import { averageRetention, type IslandModel, type WorldModel } from "@breadcrumb/plugin-map";
+import { averageRetention, type IslandModel, type WorldModel } from "@breadcrumb/feature-map";
 import { type Container, Graphics } from "pixi.js";
 import { strokeDashedPath } from "./drawPrimitives";
 import { drawLandmass } from "./islandArt";

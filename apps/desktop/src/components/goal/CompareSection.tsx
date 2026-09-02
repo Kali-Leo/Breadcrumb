@@ -5,14 +5,14 @@
  * and 一键生成目标 with its plain confirm copy. This module only compares.
  * Main exports: CompareSection.
  */
-import type { OverlapNode } from "@breadcrumb/plugin-compare";
+import type { OverlapNode } from "@breadcrumb/feature-compare";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type OccupationHit, searchOccupations } from "../../lib/occupationActions";
+import { type OccupationHit, searchOccupations } from "../../lib/compare/occupationActions";
 import { useCompareStore } from "../../stores/compareStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { CompareTreeView } from "../CompareTreeView";
 import { CompareNodeDetail, ExperimentalBuildForm } from "./CompareDetail";
+import { CompareTreeView } from "./CompareTreeView";
 
 function findNode(roots: readonly OverlapNode[], key: string): OverlapNode | null {
   for (const root of roots) {

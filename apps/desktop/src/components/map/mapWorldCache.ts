@@ -6,7 +6,11 @@
  * Main exports: cachedWorldModel.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { buildWorldModel, type ContinentAssignment, type WorldModel } from "@breadcrumb/plugin-map";
+import {
+  buildWorldModel,
+  type ContinentAssignment,
+  type WorldModel,
+} from "@breadcrumb/feature-map";
 
 interface WorldCacheEntry {
   plain?: WorldModel;

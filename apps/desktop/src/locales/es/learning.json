@@ -37,7 +37,6 @@
     "guessPlaceholder": "Tu intento",
     "guessSubmit": "Enviar",
     "directReveal": "Significa: {{summary}}",
-    "expandPrefill": "Sobre «{{label}}», me gustaría profundizar:",
     "guessCorrect": "Correcto. {{summary}}",
     "guessClose": "Cerca. Significa: {{summary}}",
     "guessWrong": "Significa: {{summary}}"

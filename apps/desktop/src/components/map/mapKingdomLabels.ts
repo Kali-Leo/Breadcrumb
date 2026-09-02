@@ -3,7 +3,7 @@
  * it and never on another realm's name.
  * Main exports: placeKingdomLabels, KingdomLabelRequest.
  */
-import type { WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldPoint } from "@breadcrumb/feature-map";
 import {
   type LabelBox,
   type LabelBoxSize,

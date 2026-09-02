@@ -16,7 +16,7 @@ import {
   newWordCard,
   ratingForSignal,
   reviewCard,
-} from "@breadcrumb/plugin-diglot-weave";
+} from "@breadcrumb/feature-diglot-weave";
 import { DEMO_PAIR, demoId, safeIsoAt } from "./shared";
 
 /** 50 words spread linearly over the ~10-week journey: word 0 introduced ~69 days ago, word
@@ -91,7 +91,7 @@ export interface WordSeedRow {
 
 /** Replays one word's plan through the exact production signal->rating mapping
  * (`ratingForSignal`) and FSRS update (`reviewCard`) — the same pattern
- * plugin-feedback/wordSettledSeries.ts uses to rebuild history, so the resulting fsrs_json is
+ * feature-feedback/wordSettledSeries.ts uses to rebuild history, so the resulting fsrs_json is
  * a faithful card, not an approximation. `guessOf` supplies the raw guess text/context for
  * guess_* events; `idSeed` makes every row's id unique across the whole 50-word corpus. */
 export function replayWord(input: {

@@ -1,0 +1,24 @@
+{
+  "name": "@breadcrumb/feature-feedback",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless feedback-lab module (spec 035): activity heatmap, small wins, cumulative totals, reunion invites, daily bite, system gauge, settled content and evidence — all computed from existing local data, zero token cost.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-i18n": "workspace:*",
+    "@breadcrumb/feature-diglot-weave": "workspace:*",
+    "@breadcrumb/feature-memory": "workspace:*",
+    "ts-fsrs": "^5.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

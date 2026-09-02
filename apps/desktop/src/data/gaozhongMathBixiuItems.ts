@@ -6,7 +6,7 @@
  * fine layer has a single source. Main exports: GAOZHONG_MATH_BIXIU_ITEMS, gaozhongMathItem,
  * GAOZHONG_MATH_STANDARD.
  */
-import type { ProfileItemDefinition } from "@breadcrumb/plugin-compare";
+import type { ProfileItemDefinition } from "@breadcrumb/feature-compare";
 
 export const GAOZHONG_MATH_STANDARD = "《普通高中数学课程标准（2017年版2020年修订）》";
 const S = GAOZHONG_MATH_STANDARD;

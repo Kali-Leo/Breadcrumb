@@ -5,7 +5,7 @@
  * canonical pipeline output (data/generated/fineItems.ts).
  * Main exports: GAOZHONG_MATH_PROFILE.
  */
-import type { ProfileDefinition } from "@breadcrumb/plugin-compare";
+import type { ProfileDefinition } from "@breadcrumb/feature-compare";
 import {
   GAOZHONG_MATH_BIXIU_ITEMS,
   GAOZHONG_MATH_STANDARD,

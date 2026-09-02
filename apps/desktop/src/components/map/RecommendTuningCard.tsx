@@ -11,7 +11,7 @@ import {
   RECOMMENDATION_WEIGHT_MAX,
   USER_WEIGHT_DEFAULTS,
   type UserRecommendationWeights,
-} from "../../lib/recommendationWeights";
+} from "../../lib/planner/recommendationWeights";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 

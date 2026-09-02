@@ -4,7 +4,7 @@
  * once one is pushed out to sea), realm names clear every seat, and both are deterministic.
  * Main exports: none (vitest suite).
  */
-import type { WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldPoint } from "@breadcrumb/feature-map";
 import { describe, expect, it } from "vitest";
 import { type IslandLabelRequest, placeIslandLabels } from "./mapIslandLabels";
 import { type KingdomLabelRequest, placeKingdomLabels } from "./mapKingdomLabels";

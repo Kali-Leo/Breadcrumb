@@ -37,7 +37,6 @@
     "guessPlaceholder": "आपका अंदाज़ा",
     "guessSubmit": "भेजें",
     "directReveal": "इसका मतलब है: {{summary}}",
-    "expandPrefill": "«{{label}}» के बारे में मैं और गहराई में जाना चाहता हूँ:",
     "guessCorrect": "सही। {{summary}}",
     "guessClose": "क़रीब। इसका मतलब है: {{summary}}",
     "guessWrong": "इसका मतलब है: {{summary}}"

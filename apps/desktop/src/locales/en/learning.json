@@ -37,7 +37,6 @@
     "guessPlaceholder": "Your guess",
     "guessSubmit": "Submit",
     "directReveal": "It means: {{summary}}",
-    "expandPrefill": "About \"{{label}}\", I would like to go deeper:",
     "guessCorrect": "Right. {{summary}}",
     "guessClose": "Close. It means: {{summary}}",
     "guessWrong": "It means: {{summary}}"

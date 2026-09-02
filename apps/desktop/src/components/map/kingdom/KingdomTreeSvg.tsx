@@ -9,9 +9,9 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { layoutFocusMap } from "../../../lib/focusMapLayout";
-import type { LateralEdgeView, VisibleTreeNode } from "../../../lib/kingdomView";
-import { truncate } from "../../../lib/truncateText";
+import { layoutFocusMap } from "../../../lib/focus/focusMapLayout";
+import type { LateralEdgeView, VisibleTreeNode } from "../../../lib/map/kingdomView";
+import { truncate } from "../../../lib/platform/truncateText";
 
 const AMBER = "#f59e0b";
 const GREY = "#a8a29e";

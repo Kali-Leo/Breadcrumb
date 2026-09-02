@@ -9,9 +9,9 @@ import type {
   LayerTrendPoint,
   TrendPoint,
   WordLayerTrendPoint,
-} from "@breadcrumb/plugin-feedback";
+} from "@breadcrumb/feature-feedback";
 import { create } from "zustand";
-import { type FeedbackData, loadFeedbackData } from "../lib/feedbackData";
+import { type FeedbackData, loadFeedbackData } from "../lib/feedback/feedbackData";
 
 interface FeedbackState {
   loaded: boolean;

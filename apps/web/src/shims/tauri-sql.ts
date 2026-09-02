@@ -11,7 +11,7 @@
  */
 import { openBrowserDatabase } from "./sqlite";
 
-/** Mirrors the shape apps/desktop/src/lib/db.ts uses: `select`, `execute`, and nothing else. */
+/** Mirrors the shape apps/desktop/src/lib/platform/db.ts uses: `select`, `execute`, and nothing else. */
 class BrowserDatabaseHandle {
   async select<Row>(sql: string, params: unknown[] = []): Promise<Row> {
     const database = await openBrowserDatabase();

@@ -3,14 +3,14 @@
  * per-conversation trail layers — filled on first visit, never wiped on switch (layers
  * accumulate for conversations visited this app session, the Discord tradeoff) — with an
  * active mirror plus fresh-node highlighting and anchoring. Side effect on import:
- * subscribes to the app bus (extraction pipeline lives in lib/knowledgeExtraction).
+ * subscribes to the app bus (extraction pipeline lives in lib/knowledge/knowledgeExtraction).
  * Main exports: useKnowledgeStore.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { create } from "zustand";
-import { createSingleFlightLoader, setConversationLayer } from "../lib/conversationLayers";
-import { getRepos } from "../lib/db";
-import { extractFromFinishedRound } from "../lib/knowledgeExtraction";
+import { createSingleFlightLoader, setConversationLayer } from "../lib/chat/conversationLayers";
+import { extractFromFinishedRound } from "../lib/knowledge/knowledgeExtraction";
+import { getRepos } from "../lib/platform/db";
 import { appEventBus, useChatStore } from "./chatStore";
 
 interface KnowledgeState {
@@ -21,7 +21,7 @@ interface KnowledgeState {
   sessionNodeIds: string[];
   trailByConversation: ReadonlyMap<string, string[]>;
   /** View-scoped: only the round that finished while its conversation was on screen sets
-   * this (lib/knowledgeTrailFold), and a switch resets it — highlights never leak across. */
+   * this (lib/knowledge/knowledgeTrailFold), and a switch resets it — highlights never leak across. */
   freshNodeIds: ReadonlySet<string>;
   /** Steers the round's system prompt (chatRoundContext.ts) and stamps sighting provenance
    * (spec 040 §7). Always null now that the ordinary-chat UI entries that used to set it

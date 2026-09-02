@@ -6,7 +6,7 @@
  * Main exports: runRoundPipeline, RoundPipelineResult (re-exports pipeline stage types).
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
-import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
+import type { RejectedCyclicEdge } from "@breadcrumb/feature-graph";
 import { runEdgeJudgeStage } from "./edgeJudgeStage";
 import { runInterestStage } from "./interestStage";
 import { runKnowledgeTreeStage } from "./knowledgeTreeStage";

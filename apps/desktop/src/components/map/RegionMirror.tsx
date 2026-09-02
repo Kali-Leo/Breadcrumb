@@ -1,7 +1,7 @@
 /**
  * Purpose: the right rail's region readout while a continent or kingdom is hovered — the
  * same two mirror visuals the world level shows (activity heatmap + layer trend lines),
- * scoped to the hovered region's member nodes via plugin-feedback's scoped series. Thin
+ * scoped to the hovered region's member nodes via feature-feedback's scoped series. Thin
  * wrappers feed the same underlying primitives (react-activity-calendar / TrendLineChart)
  * because the frozen sections read the global store and take no data props.
  * Main exports: RegionMirror.
@@ -12,14 +12,14 @@ import {
   heatmapCellMessage,
   TREND_WINDOW_DAYS,
   type TrendPoint,
-} from "@breadcrumb/plugin-feedback";
+} from "@breadcrumb/feature-feedback";
 import { cloneElement, useEffect, useMemo, useRef } from "react";
 import { type Activity, ActivityCalendar } from "react-activity-calendar";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
-import type { RegionFeedbackSources } from "../../lib/regionFeedbackData";
-import { nowIso } from "../../lib/time";
-import { TrendLineChart } from "../TrendLineChart";
+import type { RegionFeedbackSources } from "../../lib/feedback/regionFeedbackData";
+import { nowIso } from "../../lib/platform/time";
+import { TrendLineChart } from "../feedback/TrendLineChart";
 
 /** Same window as the global heatmap so the two read as one visual. */
 const HEATMAP_DAYS = 365;

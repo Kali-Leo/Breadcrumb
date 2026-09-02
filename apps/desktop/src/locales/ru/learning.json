@@ -37,7 +37,6 @@
     "guessPlaceholder": "Ваша догадка",
     "guessSubmit": "Отправить",
     "directReveal": "Это значит: {{summary}}",
-    "expandPrefill": "Про «{{label}}» хочу разобраться подробнее:",
     "guessCorrect": "Верно. {{summary}}",
     "guessClose": "Близко. Это значит: {{summary}}",
     "guessWrong": "Это значит: {{summary}}"

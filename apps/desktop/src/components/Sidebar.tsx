@@ -12,7 +12,7 @@ import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { PalaceRail } from "./map/PalaceRail";
-import { TrailList } from "./TrailList";
+import { TrailList } from "./trail/TrailList";
 
 interface SidebarProps {
   activeView: "chat" | "settings" | "map" | "vocab" | "discovery";

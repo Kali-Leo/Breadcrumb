@@ -9,9 +9,9 @@
  */
 import type { GoalRow, KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { NodeIdsJsonSchema, parseJsonColumn } from "@breadcrumb/core-db";
-import { incomingNeighbors, topologicalOrder } from "@breadcrumb/plugin-graph";
-import type { FrontierCandidate } from "@breadcrumb/plugin-planner";
-import { coverage } from "@breadcrumb/plugin-planner";
+import { incomingNeighbors, topologicalOrder } from "@breadcrumb/feature-graph";
+import type { FrontierCandidate } from "@breadcrumb/feature-planner";
+import { coverage } from "@breadcrumb/feature-planner";
 
 export type ViolationKind =
   | "cycle"

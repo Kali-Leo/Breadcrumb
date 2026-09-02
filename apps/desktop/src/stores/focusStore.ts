@@ -1,7 +1,7 @@
 /**
  * Purpose: zustand store for one focus (explain-word) session (spec 042 §3) — opens the
  * full-screen overlay, walks the guess gate before a picked word becomes a new station, and
- * delegates every station's DB write + stream to lib/focusSessionActions so this file stays a
+ * delegates every station's DB write + stream to lib/focus/focusSessionActions so this file stays a
  * thin set()-only orchestrator.
  * Main exports: useFocusStore.
  */
@@ -11,11 +11,14 @@ import {
   buildQuestionMessages,
   buildWordExplainMessages,
   computeConceptGateProbability,
-} from "@breadcrumb/plugin-explore";
+} from "@breadcrumb/feature-explore";
 import { create } from "zustand";
-import { getRepos } from "../lib/db";
-import { buildAncestorChain, type FocusGuessState, rollConceptGate } from "../lib/focusActions";
-import { insertFocusNode, insertFocusSession } from "../lib/focusExplainRound";
+import {
+  buildAncestorChain,
+  type FocusGuessState,
+  rollConceptGate,
+} from "../lib/focus/focusActions";
+import { insertFocusNode, insertFocusSession } from "../lib/focus/focusExplainRound";
 import {
   createQuestionChild,
   createWordChild,
@@ -24,7 +27,8 @@ import {
   skipPendingGuess,
   stopExplainStream,
   submitPendingGuess,
-} from "../lib/focusSessionActions";
+} from "../lib/focus/focusSessionActions";
+import { getRepos } from "../lib/platform/db";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";

@@ -17,7 +17,7 @@ import {
   reviewCard,
   scheduleReplacements,
   tokenizeMessage,
-} from "@breadcrumb/plugin-diglot-weave";
+} from "@breadcrumb/feature-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { mulberry32 } from "../util/prng";
 import { makeChatCorpus, makeSyntheticPack, SIM_PACK_WORDS } from "./diglotJourneyCorpus";
@@ -76,7 +76,7 @@ export function simulateDiglotJourney(input: {
     wordsHeld: 0,
   };
   const introductionRank = pack.introductionRankByLemma;
-  // Same measure as the app layer (lib/diglotWeave.ts): debt counts only words the recent
+  // Same measure as the app layer (lib/diglot/diglotWeave.ts): debt counts only words the recent
   // conversation can still deliver.
   const debtWindow = createMeetableDebtWindow();
   // The journey simulates one learner on one language pair; FSRS state is keyed by it.

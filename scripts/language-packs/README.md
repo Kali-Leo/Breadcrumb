@@ -18,8 +18,8 @@ node scripts/language-packs/build-pack.mjs --all     # pairs.json 里的全部
 
 以下是中英专用管线的说明。
 
-从公开数据构建 `zh:en` 语言包,产物是单个 JSON 文件,供 `plugin-diglot-weave` 在运行时
-按 `packages/plugin-diglot-weave/src/packSchema.ts` 的 Zod 契约加载。零 npm 依赖,纯
+从公开数据构建 `zh:en` 语言包,产物是单个 JSON 文件,供 `feature-diglot-weave` 在运行时
+按 `packages/feature-diglot-weave/src/packSchema.ts` 的 Zod 契约加载。零 npm 依赖,纯
 Node ≥20 内置 API(`fetch`/`zlib`/`fs`)。
 
 ## 怎么跑

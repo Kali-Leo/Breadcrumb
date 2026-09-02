@@ -3,7 +3,7 @@
  * (region frontiers, session footprints), as seen in the Laham reference.
  * Main exports: InkStroke, strokeDashedPath.
  */
-import type { WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldPoint } from "@breadcrumb/feature-map";
 import type { Graphics } from "pixi.js";
 
 export interface InkStroke {

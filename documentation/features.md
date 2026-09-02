@@ -19,10 +19,10 @@
 
 **实现。**
 - 提示词契约在 `packages/core-teaching/src/contract.ts`，桌面端和模拟测试共用同一份，防止漂移。
-- 发送管线：`lib/chatSendPipeline.ts` → `chatAssistantRound.ts` → `chatSendRound.ts`。
+- 发送管线：`lib/chat/chatSendPipeline.ts` → `chatAssistantRound.ts` → `chatSendRound.ts`。
 - 消息顺序刻意排成 `[契约, 历史轮次, 本轮引导, 用户提问]`，让前缀在每一轮之间保持一致 ——
   这样服务商的前缀缓存能命中，长对话的输入费用大幅下降。
-- **学习者上下文**（`lib/chatRoundContext.ts`）告诉模型：这个知识点你还记得多少、
+- **学习者上下文**（`lib/chat/chatRoundContext.ts`）告诉模型：这个知识点你还记得多少、
   有没有讲解过它的证据、你偏好哪种解释方式（看到两次以上才算）。只在学习模式注入。
 - **困惑检测**（`core-teaching/confusion.ts`）是零 LLM 的正则匹配，中英文都认。
   你说"没听懂"时，下一轮会自动换一种讲法重来。
@@ -67,7 +67,7 @@ mewo2/terrain 的水力侵蚀（洼地填充、流量累积、两轮侵蚀）。
 **遗忘之雾。** 模糊的白色斑块，透明度 = `(1 − 可回忆概率) × 强度`，
 盖在地形上但**在所有文字下面** —— 名字永远读得清。
 
-**实现。** `components/map/`（Pixi 场景 + React 侧栏）、`packages/plugin-map/`（地形与聚类）。
+**实现。** `components/map/`（Pixi 场景 + React 侧栏）、`packages/feature-map/`（地形与聚类）。
 大陆优先按知识树结构划分；没有子节点的孤立根节点用嵌入 kNN + Louvain 社区发现聚类，
 聚不进任何一团的成为无名小岛。
 
@@ -79,7 +79,7 @@ mewo2/terrain 的水力侵蚀（洼地填充、流量累积、两轮侵蚀）。
 
 **看到什么。** 什么都看不到，这是重点。每轮对话结束后，这次聊到的知识点自己出现在地图上。
 
-**实现。** `packages/plugin-knowledge-tree/` + `lib/knowledgeExtraction.ts`。
+**实现。** `packages/feature-knowledge-tree/` + `lib/knowledge/knowledgeExtraction.ts`。
 模型拿到这一轮问答和你已有的整棵树，返回 0~3 个知识点（短名 ≤12 字、一句话说明、挂在哪）。
 它同时被要求列出**这一轮实质性重温过的已有知识点**（用树上原名）—— 那是复习足迹。
 
@@ -380,4 +380,4 @@ Breadcrumb 会去找并启动它，但不会安装它。设置页对这些依赖
 
 那个估价不是拍脑袋 —— 它来自跑真实提示词构造函数的一次测量，
 并且有一个测试在每次跑测试时重新测量、对不上就报错
-（`apps/desktop/src/lib/purposeUsage.test.ts`）。
+（`apps/desktop/src/lib/billing/purposeUsage.test.ts`）。

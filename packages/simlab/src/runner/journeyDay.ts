@@ -8,7 +8,7 @@
  */
 import { randomUUID } from "node:crypto";
 import type { LlmClientConfig } from "@breadcrumb/core-llm";
-import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
+import type { RejectedCyclicEdge } from "@breadcrumb/feature-graph";
 import type { SimlabRepos } from "../db/repos";
 import type { RunTelemetry } from "../judges/telemetry";
 import type { Persona } from "../persona/schema";

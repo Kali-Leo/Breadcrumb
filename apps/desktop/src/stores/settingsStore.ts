@@ -1,8 +1,9 @@
 /**
  * Purpose: zustand store for user settings (API config, network switch, per-feature
  * switches, route params, interface and answer language), persisted in the settings table. Load once at startup;
- * changes write through. (Learning mode was retired by spec 045 — goals are objects now.)
- * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams.
+ * changes write through. (Learning mode was removed by spec 045 and restored by spec 048 —
+ * Leo's original design stands, so LearningMode is live.)
+ * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams, LearningMode.
  */
 import {
   DEFAULT_LANGUAGE_CODE,
@@ -11,18 +12,18 @@ import {
   UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
 import type { Currency } from "@breadcrumb/core-llm";
-import type { RecommendRouteParams } from "@breadcrumb/plugin-planner";
+import type { RecommendRouteParams } from "@breadcrumb/feature-planner";
 import { create } from "zustand";
 import { changeLanguage } from "../i18n";
 import { isPseudoLocale } from "../i18n/pseudoLocale";
-import { forgetAnswerLanguageWatch } from "../lib/answerLanguageWatch";
-import { getRepos } from "../lib/db";
 import {
   sanitizeRecommendationWeights,
   USER_WEIGHT_DEFAULTS,
   type UserRecommendationWeights,
-} from "../lib/recommendationWeights";
-import { nowIso } from "../lib/time";
+} from "../lib/planner/recommendationWeights";
+import { forgetAnswerLanguageWatch } from "../lib/platform/answerLanguageWatch";
+import { getRepos } from "../lib/platform/db";
+import { nowIso } from "../lib/platform/time";
 
 export interface ApiConfig {
   baseUrl: string;
@@ -104,7 +105,7 @@ export type CompareCategory = "occupation" | "curriculum";
 export type LearningMode = "ranked" | "casual";
 
 /** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as
- * plugin-planner's RecommendRouteParams, re-exported here so components import one name. */
+ * feature-planner's RecommendRouteParams, re-exported here so components import one name. */
 export type RouteParams = RecommendRouteParams;
 
 const API_CONFIG_KEY = "apiConfig";

@@ -10,7 +10,7 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { hasDemoData, removeDemoData } from "../../lib/demoData";
+import { hasDemoData, removeDemoData } from "../../lib/platform/demoData";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 export function OnboardingSettingsRow() {

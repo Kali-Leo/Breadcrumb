@@ -11,7 +11,7 @@ import {
   videoUrl,
   watchedMinutes,
   watchedPercent,
-} from "@breadcrumb/plugin-browsing-interest";
+} from "@breadcrumb/feature-browsing-interest";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

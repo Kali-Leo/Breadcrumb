@@ -46,7 +46,7 @@ export const StringListJsonSchema = z.array(z.string());
  * The one field a serialized ts-fsrs card is read for outside the scheduler itself
  * (`diglot_word_states.fsrs_json`). Deliberately narrow and loose about the rest: packages
  * that only need the memory strength must not have to model — or depend on — the full card.
- * Full revival lives with the scheduler, in plugin-diglot-weave's memoryState.ts.
+ * Full revival lives with the scheduler, in feature-diglot-weave's memoryState.ts.
  */
 export const FsrsStabilitySchema = z.looseObject({ stability: z.number().finite() });
 

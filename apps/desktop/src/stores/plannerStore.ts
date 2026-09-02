@@ -13,28 +13,31 @@ import type {
   KnowledgeNodeRow,
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
-import { BROWSING_TRUST_DEFAULT } from "@breadcrumb/plugin-browsing-interest";
-import type { NodeInterestScore } from "@breadcrumb/plugin-interest";
+import { BROWSING_TRUST_DEFAULT } from "@breadcrumb/feature-browsing-interest";
+import type { NodeInterestScore } from "@breadcrumb/feature-interest";
 import type {
   FrontierCandidate,
   GapAndPathResult,
   GoalMappingResult,
   RecommendedRouteStep,
-} from "@breadcrumb/plugin-planner";
+} from "@breadcrumb/feature-planner";
 import { create } from "zustand";
-import { loadBrowsingAffinityByNode, loadWatchedTitleRecords } from "../lib/browsingAffinity";
-import { computeBrowsingTrustRatio } from "../lib/browsingTrustRatio";
-import { getRepos } from "../lib/db";
-import { recordAiFailure } from "../lib/failureLog";
-import { deriveGoalView } from "../lib/plannerGapActions";
+import { deriveGoalView } from "../lib/planner/plannerGapActions";
 import {
   claimNodeAsLearned,
   persistCalibratedGoal,
   removeNodeFromGoal,
   requestGoalMapping,
-} from "../lib/plannerGoalActions";
-import { computePlannerSnapshot } from "../lib/plannerRecompute";
-import { nowIso } from "../lib/time";
+} from "../lib/planner/plannerGoalActions";
+import { computePlannerSnapshot } from "../lib/planner/plannerRecompute";
+import {
+  loadBrowsingAffinityByNode,
+  loadWatchedTitleRecords,
+} from "../lib/platform/browsingAffinity";
+import { computeBrowsingTrustRatio } from "../lib/platform/browsingTrustRatio";
+import { getRepos } from "../lib/platform/db";
+import { recordAiFailure } from "../lib/platform/failureLog";
+import { nowIso } from "../lib/platform/time";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { registerRecomputeSubscriptions } from "./plannerStoreEvents";
 import { useSettingsStore } from "./settingsStore";

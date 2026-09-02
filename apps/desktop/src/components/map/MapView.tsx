@@ -14,13 +14,13 @@
  * Main exports: MapView.
  */
 
-import type { ContinentAssignment } from "@breadcrumb/plugin-map";
-import { visibleFrontier } from "@breadcrumb/plugin-planner";
+import type { ContinentAssignment } from "@breadcrumb/feature-map";
+import { visibleFrontier } from "@breadcrumb/feature-planner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { loadContinentAssignment } from "../../lib/mapContinentActions";
-import { applyAiContinentNames } from "../../lib/mapNamingActions";
-import { goalNodeIds as parseGoalNodeIds } from "../../lib/plannerGapActions";
+import { loadContinentAssignment } from "../../lib/map/mapContinentActions";
+import { applyAiContinentNames } from "../../lib/map/mapNamingActions";
+import { goalNodeIds as parseGoalNodeIds } from "../../lib/planner/plannerGapActions";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";

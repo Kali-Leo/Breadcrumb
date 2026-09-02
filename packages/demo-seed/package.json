@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
-    "@breadcrumb/plugin-diglot-weave": "workspace:*"
+    "@breadcrumb/feature-diglot-weave": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.0"

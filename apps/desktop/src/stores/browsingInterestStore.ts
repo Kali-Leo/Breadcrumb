@@ -13,7 +13,7 @@ import {
   type NewInterests,
   type ProContent,
   type WordCloud,
-} from "@breadcrumb/plugin-browsing-interest";
+} from "@breadcrumb/feature-browsing-interest";
 import { invoke } from "@tauri-apps/api/core";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";

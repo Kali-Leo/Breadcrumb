@@ -1,6 +1,6 @@
 /**
  * Purpose: assembles every core-db repository factory over one SqlClient, mirroring
- * apps/desktop/src/lib/db.ts's Repos shape headlessly (no Tauri) so the runner and judges
+ * apps/desktop/src/lib/platform/db.ts's Repos shape headlessly (no Tauri) so the runner and judges
  * can use the exact same repo surface the app does.
  * Main exports: createSimlabRepos, SimlabRepos.
  */

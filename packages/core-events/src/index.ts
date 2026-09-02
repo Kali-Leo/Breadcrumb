@@ -1,6 +1,6 @@
 /**
  * Purpose: the typed event map the application bus (core-bus) is generic over. Breadcrumb
- * has no runtime plugin system — "plugin-*" packages are feature modules compiled in like
+ * has no runtime plugin system — "feature-*" packages are feature modules compiled in like
  * any other code (ADR-0035); the manifest/permission types that once suggested otherwise
  * were deleted with that ruling.
  * Main exports: BreadcrumbEventMap, BreadcrumbEventName.

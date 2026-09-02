@@ -5,7 +5,7 @@
  * disappearing. One hook so every interest panel answers this the same way.
  * Main exports: useTopicName.
  */
-import { englishTopicNames, topicLabel } from "@breadcrumb/plugin-browsing-interest";
+import { englishTopicNames, topicLabel } from "@breadcrumb/feature-browsing-interest";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";

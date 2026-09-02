@@ -6,7 +6,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { chatJson } from "@breadcrumb/core-llm";
-import { buildSelfReportMessages, selfReportMappingSchema } from "@breadcrumb/plugin-interest";
+import { buildSelfReportMessages, selfReportMappingSchema } from "@breadcrumb/feature-interest";
 import type { SimlabRepos } from "../db/repos";
 import type { JourneyActionContext } from "./journeyActionTypes";
 import type { TopicHint } from "./student";

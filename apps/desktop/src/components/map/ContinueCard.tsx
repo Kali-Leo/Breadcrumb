@@ -5,10 +5,10 @@
  * suggest-only. An optional node-id filter scopes the card to the dived island's members.
  * Main exports: ContinueCard.
  */
-import { visibleFrontier } from "@breadcrumb/plugin-planner";
+import { visibleFrontier } from "@breadcrumb/feature-planner";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { startLearningForConcept } from "../../lib/focusLearning";
+import { startLearningForConcept } from "../../lib/focus/focusLearning";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";

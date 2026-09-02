@@ -57,7 +57,7 @@ CI 跑同样这些，外加 `cargo audit` 和仅限生产依赖的 `pnpm audit`�
 如果改动会影响一次调用的大小，账单页上的估价就过期了。跑：
 
 ```bash
-npx vitest run --root apps/desktop src/lib/purposeUsage.test.ts
+npx vitest run --root apps/desktop src/lib/billing/purposeUsage.test.ts
 ```
 
 它会用真实的构造函数重新测量并和 `packages/core-llm/src/purposeCatalogue.ts` 比对。

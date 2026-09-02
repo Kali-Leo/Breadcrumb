@@ -5,7 +5,7 @@
  * Each continent itself is drawn by sceneIsland.ts; here they are placed and stacked.
  * Main exports: buildWorldScene, WorldScene, ScreenSize.
  */
-import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldModel, WorldPoint } from "@breadcrumb/feature-map";
 import { Container, Graphics } from "pixi.js";
 import { buildFogLayer } from "./fog";
 import { drawLandmass } from "./islandArt";

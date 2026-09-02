@@ -37,7 +37,6 @@
     "guessPlaceholder": "你的猜测",
     "guessSubmit": "提交",
     "directReveal": "它是指：{{summary}}",
-    "expandPrefill": "关于「{{label}}」，我想继续深入：",
     "guessCorrect": "对。{{summary}}",
     "guessClose": "接近。它是指：{{summary}}",
     "guessWrong": "它是指：{{summary}}"

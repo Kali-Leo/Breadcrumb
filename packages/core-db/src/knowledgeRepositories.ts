@@ -156,7 +156,7 @@ export function createKnowledgeEdgesRepo(sql: SqlClient) {
       const statement = buildKnowledgeEdgeUpsertStatement(row);
       await sql.execute(statement.sql, statement.params);
     },
-    /** Every edge, oldest first — raw material for the graph algorithms (plugin-graph). */
+    /** Every edge, oldest first — raw material for the graph algorithms (feature-graph). */
     async listAll(): Promise<KnowledgeEdgeRow[]> {
       return sql.select<KnowledgeEdgeRow>(
         "SELECT * FROM knowledge_edges ORDER BY created_at ASC, id ASC",

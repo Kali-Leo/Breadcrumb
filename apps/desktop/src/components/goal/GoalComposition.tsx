@@ -5,9 +5,12 @@
  * checkboxes, no actions.
  * Main exports: GoalComposition.
  */
-import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+import { LIT_THRESHOLD } from "@breadcrumb/feature-memory";
 import { useTranslation } from "react-i18next";
-import { goalSatisfiedNodeIds, goalNodeIds as parseGoalNodeIds } from "../../lib/plannerGapActions";
+import {
+  goalSatisfiedNodeIds,
+  goalNodeIds as parseGoalNodeIds,
+} from "../../lib/planner/plannerGapActions";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 export function GoalComposition() {

@@ -5,7 +5,7 @@
  * (backup: branch backup/village-town-scene).
  * Main exports: drawIslandSettlements, SettlementsInput, stampSprite.
  */
-import { averageRetention, type IslandModel, type WorldPoint } from "@breadcrumb/plugin-map";
+import { averageRetention, type IslandModel, type WorldPoint } from "@breadcrumb/feature-map";
 import { Container, Sprite, type Texture } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
 import { type KingdomLabelRequest, placeKingdomLabels } from "./mapKingdomLabels";

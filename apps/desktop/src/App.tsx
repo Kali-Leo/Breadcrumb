@@ -7,26 +7,26 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./App.css";
-import { ChatView } from "./components/ChatView";
-import { CompanionChatPopup } from "./components/CompanionChatPopup";
-import { CompanionSection } from "./components/CompanionSection";
+import { ChatView } from "./components/chat/ChatView";
+import { CompanionChatPopup } from "./components/companion/CompanionChatPopup";
+import { CompanionSection } from "./components/companion/CompanionSection";
+import { VocabPanel } from "./components/diglot/VocabPanel";
 import { DiscoveryView } from "./components/discovery/DiscoveryView";
-import { FocusOverlay } from "./components/FocusOverlay";
+import { FocusOverlay } from "./components/focus/FocusOverlay";
 import { MapView } from "./components/map/MapView";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
 import { OnboardingHost } from "./components/onboarding/OnboardingHost";
-import { SettingsPanel } from "./components/SettingsPanel";
 import { Sidebar } from "./components/Sidebar";
-import { VocabPanel } from "./components/VocabPanel";
-import { runDedupSweep } from "./lib/dedupSweep";
-import { backfillMissingEmbeddings } from "./lib/embeddings";
+import { SettingsPanel } from "./components/settings/SettingsPanel";
+import { runDedupSweep } from "./lib/knowledge/dedupSweep";
+import { backfillMissingEmbeddings } from "./lib/platform/embeddings";
 import { appEventBus, useChatStore } from "./stores/chatStore";
 // Side-effect only: registers edgeStore's knowledge:nodesExtracted subscription.
 import "./stores/edgeStore";
 // Side-effect only: registers interestStore's knowledge:nodesExtracted subscription.
 import "./stores/interestStore";
 // Side-effect only: teach-back quality judgment on finished teach rounds (vision/09 #2).
-import "./lib/teachQuality";
+import "./lib/companion/teachQuality";
 import { useCompanionStore } from "./stores/companionStore";
 import { useDiglotStore } from "./stores/diglotStore";
 import { useFocusSessionsStore } from "./stores/focusSessionsStore";

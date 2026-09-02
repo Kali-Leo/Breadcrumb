@@ -37,7 +37,6 @@
     "guessPlaceholder": "Tebakanmu",
     "guessSubmit": "Kirim",
     "directReveal": "Artinya: {{summary}}",
-    "expandPrefill": "Soal «{{label}}», saya ingin lebih dalam:",
     "guessCorrect": "Betul. {{summary}}",
     "guessClose": "Nyaris. Artinya: {{summary}}",
     "guessWrong": "Artinya: {{summary}}"

@@ -1,7 +1,7 @@
 /**
  * Purpose: zustand store for the daily helper companions (spec 050 §9, Leo's redesign of
  * spec 037) — each day the gate turns the footprinted concepts a review would help most
- * (plugin-memory's review priority) into up to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
+ * (feature-memory's review priority) into up to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
  * paradigm); talking to one drives mastery judgment underneath; once a teach-quality
  * claim lands the helper thanks the learner and leaves the roster. No same-day refills:
  * yesterday's leftovers expire, tomorrow brings a fresh batch. Also keeps crisis
@@ -10,19 +10,19 @@
  * Main exports: useCompanionStore, HELPER_ID_PREFIX.
  */
 import type { CompanionProposalRow } from "@breadcrumb/core-db";
-import { detectCrisis } from "@breadcrumb/plugin-companion";
+import { detectCrisis } from "@breadcrumb/feature-companion";
 import { create } from "zustand";
-import { appendHelperThanks, startHelperConversation } from "../lib/companionActions";
+import { appendHelperThanks, startHelperConversation } from "../lib/companion/companionActions";
 import {
   type BreakReminderState,
   dismissBreakReminder as dismissBreakReminderState,
   INITIAL_BREAK_REMINDER_STATE,
   recordCompanionActivity,
-} from "../lib/companionBreakReminder";
-import { recordCompanionMemoryForFinishedRound } from "../lib/companionMemoryActions";
-import { getRepos } from "../lib/db";
-import { pickTeachCandidates } from "../lib/teachActions";
-import { newId, nowIso, onLocalDayChange, todayLocalMidnightIso } from "../lib/time";
+} from "../lib/companion/companionBreakReminder";
+import { recordCompanionMemoryForFinishedRound } from "../lib/companion/companionMemoryActions";
+import { pickTeachCandidates } from "../lib/companion/teachActions";
+import { getRepos } from "../lib/platform/db";
+import { newId, nowIso, onLocalDayChange, todayLocalMidnightIso } from "../lib/platform/time";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";

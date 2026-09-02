@@ -4,7 +4,7 @@
  * Main exports: InterestNewTopicsPanel.
  */
 import { formatPercent } from "@breadcrumb/core-i18n";
-import { videoUrl } from "@breadcrumb/plugin-browsing-interest";
+import { videoUrl } from "@breadcrumb/feature-browsing-interest";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTranslation } from "react-i18next";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";

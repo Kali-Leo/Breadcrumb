@@ -1,6 +1,6 @@
 /**
  * Purpose: persists synthetic embeddings for a batch of knowledge nodes into node_embeddings —
- * the harness's stand-in for apps/desktop/src/lib/embeddings.ts's embedNodes(). Deliberate
+ * the harness's stand-in for apps/desktop/src/lib/platform/embeddings.ts's embedNodes(). Deliberate
  * divergence: the app swallows embedding failures (best-effort, never blocks chat); the
  * harness lets them throw, since a broken embedding step here is a test signal, not a UX
  * degradation to hide.

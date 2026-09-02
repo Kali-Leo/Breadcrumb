@@ -7,7 +7,7 @@
  * closed 200-word corpus where every word recurs constantly cannot show.
  * Main exports: makeSyntheticPack, makeChatCorpus, SIM_PACK_WORDS.
  */
-import { type LoadedLanguagePack, loadLanguagePack } from "@breadcrumb/plugin-diglot-weave";
+import { type LoadedLanguagePack, loadLanguagePack } from "@breadcrumb/feature-diglot-weave";
 import { mulberry32 } from "../util/prng";
 
 /** Pack size: the bundled zh:en pack offers 4888 weavable lemmas. */

@@ -9,13 +9,13 @@ import {
   aggregateInterest,
   DEFAULT_SPREAD_FACTOR,
   spreadInterest,
-} from "@breadcrumb/plugin-interest";
-import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+} from "@breadcrumb/feature-interest";
+import { computeMastery, LIT_THRESHOLD } from "@breadcrumb/feature-memory";
 import {
   type FrontierCandidate,
   frontier,
   propagateInterestToPrerequisites,
-} from "@breadcrumb/plugin-planner";
+} from "@breadcrumb/feature-planner";
 import type { SimlabRepos } from "../db/repos";
 
 export interface PlannerSnapshot {

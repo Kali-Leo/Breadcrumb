@@ -5,7 +5,7 @@
  * hook calls after every conversation.
  * Main exports: runInvariantsFromRepos.
  */
-import { LIT_THRESHOLD } from "@breadcrumb/plugin-memory";
+import { LIT_THRESHOLD } from "@breadcrumb/feature-memory";
 import type { SimlabRepos } from "../db/repos";
 import { computePlannerSnapshot } from "../runner/plannerSnapshot";
 import { runInvariants, type Violation } from "./invariants";

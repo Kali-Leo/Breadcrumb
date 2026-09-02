@@ -3,7 +3,7 @@
  * nodes disappear, and a goal touching nothing yields an empty world (the caller falls back
  * to the full map for that case).
  */
-import type { IslandModel, IsletModel, KingdomModel, WorldModel } from "@breadcrumb/plugin-map";
+import type { IslandModel, IsletModel, KingdomModel, WorldModel } from "@breadcrumb/feature-map";
 import { describe, expect, it } from "vitest";
 import { filterWorldToGoal } from "./goalWorldFilter";
 

@@ -7,7 +7,7 @@
  * Main exports: labelBoxSize, placeLabelItems, LabelBox, LabelBoxSize, PlacementItem,
  * PlacementChoice.
  */
-import type { WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldPoint } from "@breadcrumb/feature-map";
 
 /** An axis-aligned box in world units. */
 export interface LabelBox {

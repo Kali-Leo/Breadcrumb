@@ -1,6 +1,6 @@
 /**
  * Purpose: the pressure-language gate over everything the user reads. It used to run inside
- * simlab against four per-plugin copy modules; now that all wording lives in the catalogues
+ * simlab against four per-feature copy modules; now that all wording lives in the catalogues
  * (spec 058 §2), one scan covers every string in the app — including the ones those modules
  * never held — plus the bundled research task's own display text. The companion modules'
  * manipulation lexicon runs over the same set, so moving their copy here lost no gate.
@@ -10,11 +10,11 @@
  * nowhere. A new language that arrives without a lexicon fails here, by design.
  */
 import { UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
-import { containsManipulation } from "@breadcrumb/plugin-companion";
+import { containsManipulation } from "@breadcrumb/feature-companion";
 import { findPressureLexiconHits, loadPressureLexicons } from "@breadcrumb/simlab";
 import { describe, expect, it } from "vitest";
 import { resources } from "../i18n";
-import { DEMO_RESEARCH_TASK_TEXT } from "../lib/researchSampleTask";
+import { DEMO_RESEARCH_TASK_TEXT } from "../lib/research/researchSampleTask";
 
 const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不起", "真聪明"];
 const SOURCE_LANGUAGE = "zh-CN";

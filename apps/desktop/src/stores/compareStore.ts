@@ -6,18 +6,21 @@
  * Main exports: useCompareStore.
  */
 import type { ComparisonProfileRow } from "@breadcrumb/core-db";
-import type { OverlapNode } from "@breadcrumb/plugin-compare";
+import type { OverlapNode } from "@breadcrumb/feature-compare";
 import i18next from "i18next";
 import { create } from "zustand";
 import { asStoredText } from "../i18n/storedText";
-import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compareActions";
-import { runAnchorSweep } from "../lib/compareAlignActions";
-import { runExperimentalProfileBuild } from "../lib/compareBuildActions";
-import { runHubDecomposition } from "../lib/compareHubActions";
-import { getRepos } from "../lib/db";
-import { createOccupationProfile, openPracticeConversation } from "../lib/occupationActions";
-import { persistCalibratedGoal, requestGoalMapping } from "../lib/plannerGoalActions";
-import { nowIso } from "../lib/time";
+import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compare/compareActions";
+import { runAnchorSweep } from "../lib/compare/compareAlignActions";
+import { runExperimentalProfileBuild } from "../lib/compare/compareBuildActions";
+import { runHubDecomposition } from "../lib/compare/compareHubActions";
+import {
+  createOccupationProfile,
+  openPracticeConversation,
+} from "../lib/compare/occupationActions";
+import { persistCalibratedGoal, requestGoalMapping } from "../lib/planner/plannerGoalActions";
+import { getRepos } from "../lib/platform/db";
+import { nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 import { usePlannerStore } from "./plannerStore";
 import { useSettingsStore } from "./settingsStore";

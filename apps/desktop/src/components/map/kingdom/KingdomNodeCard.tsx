@@ -7,10 +7,10 @@
  */
 
 import type { CopyMessage } from "@breadcrumb/core-i18n";
-import type { FrontierCandidate } from "@breadcrumb/plugin-planner";
+import type { FrontierCandidate } from "@breadcrumb/feature-planner";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../../i18n/useCopyMessage";
-import type { KingdomViewNode } from "../../../lib/kingdomView";
+import type { KingdomViewNode } from "../../../lib/map/kingdomView";
 
 export interface NodeRelations {
   parent: { id: string; label: string } | null;

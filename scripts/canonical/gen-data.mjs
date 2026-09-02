@@ -143,7 +143,7 @@ export const CANONICAL_CONCEPTS: CanonicalConceptData[] = ${JSON.stringify(conce
 
 writeFileSync(
   new URL("../../apps/desktop/src/data/generated/fineItems.ts", import.meta.url),
-  `${header("Main exports: MATH_FINE_ITEMS, MDN_FINE_ITEMS.")}import type { ProfileItemDefinition } from "@breadcrumb/plugin-compare";
+  `${header("Main exports: MATH_FINE_ITEMS, MDN_FINE_ITEMS.")}import type { ProfileItemDefinition } from "@breadcrumb/feature-compare";
 
 export const MATH_FINE_ITEMS: ProfileItemDefinition[] = ${JSON.stringify(mathItems, null, 2)};
 

@@ -6,8 +6,11 @@
  * handled here: MapView hands in a goal-filtered world model (goalWorldFilter.ts) and the
  * exact-fit framing refits to it automatically.
  * Main exports: createMapController, MapController, MapHooks.
+ *
+ * Directory note: the non-component .ts files in components/map/ are the Pixi rendering
+ * layer and belong to the view layer; logic with no DOM or Pixi lives in lib/.
  */
-import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldModel, WorldPoint } from "@breadcrumb/feature-map";
 import { type Application, Container, Graphics } from "pixi.js";
 import { findIsland, frameForLevel, hitIsland, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";

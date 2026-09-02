@@ -5,7 +5,7 @@
  */
 
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import type { NodeChangePlan } from "@breadcrumb/plugin-knowledge-tree";
+import type { NodeChangePlan } from "@breadcrumb/feature-knowledge-tree";
 import { afterEach, describe, expect, it } from "vitest";
 import { createTempDatabase, type TempDatabase } from "../db/sqliteClient";
 import {

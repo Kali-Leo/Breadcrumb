@@ -7,7 +7,7 @@
  */
 import { randomUUID } from "node:crypto";
 import type { ChatMessage, LlmClientConfig } from "@breadcrumb/core-llm";
-import type { RejectedCyclicEdge } from "@breadcrumb/plugin-graph";
+import type { RejectedCyclicEdge } from "@breadcrumb/feature-graph";
 import type { SimlabRepos } from "../db/repos";
 import { findPressureLexiconHits } from "../judges/pressureLexicon";
 import { checkTeachingDiscipline } from "../judges/teachingDiscipline";

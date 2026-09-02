@@ -4,7 +4,7 @@
  * test something rather than vacuously passing).
  */
 import type { GoalRow, KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
-import type { FrontierCandidate } from "@breadcrumb/plugin-planner";
+import type { FrontierCandidate } from "@breadcrumb/feature-planner";
 import { describe, expect, it } from "vitest";
 import { runInvariants } from "./invariants";
 

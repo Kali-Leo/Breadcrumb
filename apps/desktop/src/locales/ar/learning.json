@@ -37,7 +37,6 @@
     "guessPlaceholder": "تخمينك",
     "guessSubmit": "إرسال",
     "directReveal": "معناه: {{summary}}",
-    "expandPrefill": "بخصوص «{{label}}»، أريد التعمّق أكثر:",
     "guessCorrect": "صحيح. {{summary}}",
     "guessClose": "قريب. معناه: {{summary}}",
     "guessWrong": "معناه: {{summary}}"

@@ -38,7 +38,7 @@ interface LoggedExtractedNode {
 
 /** Reconstructs the existing-tree labels the model actually saw for this call, by parsing
  * the same "- label（...）" lines buildExtractionMessages rendered into the logged request's
- * user message (see plugin-knowledge-tree/src/extraction.ts). Independent of the response,
+ * user message (see feature-knowledge-tree/src/extraction.ts). Independent of the response,
  * so this genuinely re-derives the check rather than trusting the model's own echo. */
 function existingLabelsFromLoggedRequest(request: unknown): Set<string> {
   if (!Array.isArray(request)) return new Set();

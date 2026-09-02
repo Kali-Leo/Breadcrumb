@@ -5,7 +5,7 @@
  * window's). Single-flight per message, mirroring diglotStore.ensureWoven.
  * Main exports: useDoorStore.
  */
-import type { DoorCandidate } from "@breadcrumb/plugin-explore";
+import type { DoorCandidate } from "@breadcrumb/feature-explore";
 import { create } from "zustand";
 import { appEventBus } from "./chatStore";
 
@@ -30,7 +30,7 @@ export const useDoorStore = create<DoorState>((set, get) => ({
     if (layer.has(messageId)) return;
     layer.set(messageId, []); // reserve to keep the pick single-flight
     set({ doorsByConversation: new Map(get().doorsByConversation).set(conversationId, layer) });
-    const { computeDoorPatches } = await import("../lib/conceptDoors");
+    const { computeDoorPatches } = await import("../lib/focus/conceptDoors");
     const doors = await computeDoorPatches(messageId, displaySource, conversationId);
     // The reservation may have been swept away while we computed — a write-back would
     // resurrect a cleared entry, so it only lands if the reservation is still there.

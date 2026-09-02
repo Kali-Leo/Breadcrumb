@@ -8,7 +8,7 @@
  * Main exports: OnboardingHost.
  */
 import { useCallback, useEffect, useState } from "react";
-import { hasDemoData, installDemoData } from "../../lib/demoData";
+import { hasDemoData, installDemoData } from "../../lib/platform/demoData";
 import { useChatStore } from "../../stores/chatStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useSettingsStore } from "../../stores/settingsStore";

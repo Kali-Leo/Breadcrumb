@@ -4,7 +4,7 @@
  * so names stay readable.
  * Main exports: buildFogLayer, fadeOf.
  */
-import { averageRetention, type WorldModel } from "@breadcrumb/plugin-map";
+import { averageRetention, type WorldModel } from "@breadcrumb/feature-map";
 import { BlurFilter, Container, Graphics } from "pixi.js";
 import { mapTheme } from "./mapTheme";
 

@@ -5,8 +5,8 @@
  * Main exports: MirrorStack.
  */
 import { useSettingsStore } from "../../stores/settingsStore";
-import { FeedbackHeatmapSection } from "../FeedbackHeatmapSection";
-import { FeedbackTrendsSection } from "../FeedbackTrendsSection";
+import { FeedbackHeatmapSection } from "../feedback/FeedbackHeatmapSection";
+import { FeedbackTrendsSection } from "../feedback/FeedbackTrendsSection";
 
 export function MirrorStack() {
   const enabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);

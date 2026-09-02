@@ -13,7 +13,7 @@ import {
   INTEREST_LEVEL_SCORES,
   type InterestExtractionNode,
   interestSignalsSchema,
-} from "@breadcrumb/plugin-interest";
+} from "@breadcrumb/feature-interest";
 import {
   describeError,
   type PipelineFailure,

@@ -3,7 +3,7 @@
  * can tell a learner what a feature will actually cost them before they switch it on rather
  * than saying "a small charge each time".
  *
- * Every number here was MEASURED, not guessed: apps/desktop/src/lib/purposeUsage.measure.ts
+ * Every number here was MEASURED, not guessed: apps/desktop/src/lib/billing/purposeUsage.measure.ts
  * runs the real prompt builders over a fixed realistic scenario, and purposeUsage.test.ts
  * re-runs it on every test run, so a prompt change that moves the cost fails the build
  * instead of quietly making this table a lie.

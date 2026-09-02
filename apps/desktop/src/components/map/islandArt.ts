@@ -4,7 +4,7 @@
  * soft ocean shade outside, clean thin ink coastline. Continents and islets share it.
  * Main exports: drawLandmass, LandmassShape.
  */
-import { type LandCellModel, pointInPolygon, type WorldPoint } from "@breadcrumb/plugin-map";
+import { type LandCellModel, pointInPolygon, type WorldPoint } from "@breadcrumb/feature-map";
 import { Container, Graphics } from "pixi.js";
 import { mapTheme } from "./mapTheme";
 

@@ -81,7 +81,7 @@ Grouped by the four features this phase built, plus one cross-cutting section (s
   target concepts go into the student's own prompt and are then used as the ground truth for
   matching them back, so it measures input echo rather than extraction (design audit
   2026-08-28). Every run to date scored 1.0. A drop below 1.0 is still worth a look.
-- **`mastery`**: `reencounterBoostValid`, `idleDecayValid`, `detail` — a pure plugin-memory
+- **`mastery`**: `reencounterBoostValid`, `idleDecayValid`, `detail` — a pure feature-memory
   self-check (not journey-specific data; FSRS math doesn't depend on which journey ran).
 - **`interest`**: `note` pointing at `sim recovery`'s `recovery-result.json` (scripted
   recovery is not computed as part of `sim run` — it moved to an on-demand subcommand

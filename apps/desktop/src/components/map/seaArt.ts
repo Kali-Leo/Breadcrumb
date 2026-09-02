@@ -4,7 +4,7 @@
  * the map stays clean.
  * Main exports: buildSeaLayer, worldBounds, Bounds.
  */
-import type { WorldModel } from "@breadcrumb/plugin-map";
+import type { WorldModel } from "@breadcrumb/feature-map";
 import { Container, Graphics } from "pixi.js";
 import type { MapArt } from "./mapArtAssets";
 import { mapTheme } from "./mapTheme";

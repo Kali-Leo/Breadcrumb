@@ -7,14 +7,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const listSightingsByConversationMock = vi.fn();
 const listAllNodesMock = vi.fn(async () => []);
-vi.mock("../lib/db", () => ({
+vi.mock("../lib/platform/db", () => ({
   getRepos: vi.fn(async () => ({
     nodeSightings: { listByConversation: listSightingsByConversationMock },
     knowledgeNodes: { listAll: listAllNodesMock },
   })),
 }));
 
-vi.mock("../lib/knowledgeExtraction", () => ({ extractFromFinishedRound: vi.fn() }));
+vi.mock("../lib/knowledge/knowledgeExtraction", () => ({ extractFromFinishedRound: vi.fn() }));
 
 const chatStateMock = { activeConversationId: null as string | null };
 vi.mock("./chatStore", () => ({

@@ -1,29 +1,29 @@
 /**
  * Purpose: zustand store for fact-check runs — manual per-message checking through the
- * plugin-factcheck pipeline, metering (purpose "factcheck"), gentle notices. Claims are
+ * feature-factcheck pipeline, metering (purpose "factcheck"), gentle notices. Claims are
  * layered per conversation, filled on first visit and never wiped on switch; layers
  * accumulate for every conversation visited this app session (the Discord tradeoff). The
- * database side lives in lib/factcheckRecords.ts.
+ * database side lives in lib/factcheck/factcheckRecords.ts.
  * Main exports: useFactcheckStore, DisplayClaim.
  */
 import type { CopyMessage } from "@breadcrumb/core-i18n";
-import { createDefaultEvidenceProviders, runFactCheck } from "@breadcrumb/plugin-factcheck";
+import { createDefaultEvidenceProviders, runFactCheck } from "@breadcrumb/feature-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
-import { createSingleFlightLoader, setConversationLayer } from "../lib/conversationLayers";
+import { recordFailedCallUsage, recordMeteredCall } from "../lib/billing/metering";
+import { createSingleFlightLoader, setConversationLayer } from "../lib/chat/conversationLayers";
 import {
   type DisplayClaim,
   loadConversationLayer,
   persistRun,
   resolveRoundMessages,
-} from "../lib/factcheckRecords";
-import { recordAiFailure } from "../lib/failureLog";
-import { llmConfigWithoutLanguageDirective } from "../lib/llmConfig";
-import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
+} from "../lib/factcheck/factcheckRecords";
+import { recordAiFailure } from "../lib/platform/failureLog";
+import { llmConfigWithoutLanguageDirective } from "../lib/platform/llmConfig";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
-export type { DisplayClaim } from "../lib/factcheckRecords";
+export type { DisplayClaim } from "../lib/factcheck/factcheckRecords";
 
 const OFFLINE_NOTICE: CopyMessage = { key: "chat:factcheck.offlineNotice" };
 const NO_API_NOTICE: CopyMessage = { key: "chat:factcheck.noApiNotice" };
@@ -82,7 +82,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
     try {
       const report = await runFactCheck(
         {
-          // Through lib/llmConfig rather than hand-assembled: that module is where the
+          // Through lib/platform/llmConfig rather than hand-assembled: that module is where the
           // network switch is enforced, and a config built here would be a second door.
           // Without the answer-language directive on purpose — the verdict prompt states its
           // own output language, and two instructions about it contradict each other.
@@ -137,7 +137,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
 }));
 
 /** A search source going dark is exactly the silent degradation spec 014's debug table exists
- * for — the headless plugin can only report it, the host has the database. */
+ * for — the headless module can only report it, the host has the database. */
 function recordProviderFailures(failedProviders: readonly string[]): void {
   for (const provider of failedProviders) {
     void recordAiFailure(

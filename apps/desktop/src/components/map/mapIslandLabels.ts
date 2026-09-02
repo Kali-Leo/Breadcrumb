@@ -5,7 +5,7 @@
  * `outside` flag says so, so the scene can pin the name back with a leader line.
  * Main exports: placeIslandLabels, IslandLabelRequest, IslandLabelPlacement.
  */
-import type { WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldPoint } from "@breadcrumb/feature-map";
 import {
   type LabelBox,
   type LabelBoxSize,

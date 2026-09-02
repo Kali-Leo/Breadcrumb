@@ -21,7 +21,7 @@ import {
   planEdgeJudgeResult,
   type RejectedCyclicEdge,
   rankCandidatePairs,
-} from "@breadcrumb/plugin-graph";
+} from "@breadcrumb/feature-graph";
 import { describeError, type PipelineFailure, type RoundPipelineInput } from "./pipelineTypes";
 
 export interface EdgeJudgeStageResult {

@@ -14,7 +14,7 @@ import {
   type EdgeJudgeCandidatePair,
   edgeJudgeSchema,
   type PairJudgement,
-} from "@breadcrumb/plugin-graph";
+} from "@breadcrumb/feature-graph";
 import { z } from "zod";
 
 export const GOLD_PAIRS_PATH = join(

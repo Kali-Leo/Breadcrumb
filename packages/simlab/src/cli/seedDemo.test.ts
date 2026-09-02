@@ -8,8 +8,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEMO_PAIR, insertDemoData, wipeDemoData } from "@breadcrumb/demo-seed";
-import { cardFromJson } from "@breadcrumb/plugin-diglot-weave";
-import { WORD_SETTLED_STABILITY_DAYS } from "@breadcrumb/plugin-feedback";
+import { cardFromJson } from "@breadcrumb/feature-diglot-weave";
+import { WORD_SETTLED_STABILITY_DAYS } from "@breadcrumb/feature-feedback";
 import { afterEach, describe, expect, it } from "vitest";
 import { createTempDatabase, type TempDatabase } from "../db/sqliteClient";
 

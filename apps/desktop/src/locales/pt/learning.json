@@ -37,7 +37,6 @@
     "guessPlaceholder": "Seu chute",
     "guessSubmit": "Enviar",
     "directReveal": "Quer dizer: {{summary}}",
-    "expandPrefill": "Sobre «{{label}}», eu queria me aprofundar:",
     "guessCorrect": "Isso. {{summary}}",
     "guessClose": "Quase. Quer dizer: {{summary}}",
     "guessWrong": "Quer dizer: {{summary}}"

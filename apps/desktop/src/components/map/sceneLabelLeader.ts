@@ -4,7 +4,7 @@
  * from the nearest edge of the name's box to that island's coast.
  * Main exports: buildLabelLeader.
  */
-import type { IslandModel, WorldPoint } from "@breadcrumb/plugin-map";
+import type { IslandModel, WorldPoint } from "@breadcrumb/feature-map";
 import { Graphics } from "pixi.js";
 import type { LabelBoxSize } from "./mapLabelPlacement";
 import { mapTheme } from "./mapTheme";

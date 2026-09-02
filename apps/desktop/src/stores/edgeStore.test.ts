@@ -14,7 +14,7 @@ const listAllEmbeddingsMock = vi.fn();
 const listAllEdgesMock = vi.fn();
 const upsertEdgeMock = vi.fn();
 const insertNodeMock = vi.fn();
-vi.mock("../lib/db", () => ({
+vi.mock("../lib/platform/db", () => ({
   getRepos: vi.fn(async () => ({
     knowledgeNodes: { listAll: listAllNodesMock, insert: insertNodeMock },
     nodeEmbeddings: { listAll: listAllEmbeddingsMock },
@@ -22,17 +22,17 @@ vi.mock("../lib/db", () => ({
   })),
 }));
 
-vi.mock("../lib/failureLog", () => ({ recordAiFailure: vi.fn() }));
-vi.mock("../lib/metering", () => ({
+vi.mock("../lib/platform/failureLog", () => ({ recordAiFailure: vi.fn() }));
+vi.mock("../lib/billing/metering", () => ({
   recordMeteredCall: vi.fn(),
   recordFailedCallUsage: vi.fn(),
 }));
-vi.mock("../lib/llmConfig", () => ({
+vi.mock("../lib/platform/llmConfig", () => ({
   llmConfigFrom: () => ({ baseUrl: "u", apiKey: "k", model: "m", fetchImpl: fetch }),
 }));
 
 let idCounter = 0;
-vi.mock("../lib/time", () => ({
+vi.mock("../lib/platform/time", () => ({
   newId: () => `id-${++idCounter}`,
   nowIso: () => "2026-08-28T10:00:00.000Z",
 }));

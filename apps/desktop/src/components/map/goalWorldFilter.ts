@@ -9,7 +9,7 @@
  * cannot be attributed back to single kingdoms.
  * Main exports: filterWorldToGoal.
  */
-import type { WorldModel } from "@breadcrumb/plugin-map";
+import type { WorldModel } from "@breadcrumb/feature-map";
 
 export function filterWorldToGoal(world: WorldModel, goalNodeIds: ReadonlySet<string>): WorldModel {
   const islands = world.islands

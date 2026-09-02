@@ -1,13 +1,13 @@
 /**
- * Purpose: a tripwire self-check of plugin-memory's remembered-behavior properties — spec
+ * Purpose: a tripwire self-check of feature-memory's remembered-behavior properties — spec
  * 013's "被记住" claim — re-encountering a node measurably raises its retention versus a
  * no-re-encounter control, and long idle measurably decays it. Pure, no DB; runs on every
- * metrics.json write as a regression guard on plugin-memory itself rather than a per-run
+ * metrics.json write as a regression guard on feature-memory itself rather than a per-run
  * statistic (there's nothing journey-specific to measure — FSRS's math is the same regardless
  * of which journey produced the sightings).
  * Main exports: checkMasteryTripwires, MasteryTripwireResult.
  */
-import { computeNodeRetention, type GradedSighting } from "@breadcrumb/plugin-memory";
+import { computeNodeRetention, type GradedSighting } from "@breadcrumb/feature-memory";
 
 export interface MasteryTripwireResult {
   reencounterBoostValid: boolean;

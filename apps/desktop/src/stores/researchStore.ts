@@ -5,11 +5,11 @@
  * Main exports: useResearchStore.
  */
 import type { ResearchResultRow } from "@breadcrumb/core-db";
-import { runPendingResearchTasks } from "@breadcrumb/plugin-research";
+import { runPendingResearchTasks } from "@breadcrumb/feature-research";
 import { create } from "zustand";
-import { getRepos, getSqlClient } from "../lib/db";
-import { recordAiFailure } from "../lib/failureLog";
-import { SIGNED_RESEARCH_TASKS } from "../lib/researchSampleTask";
+import { getRepos, getSqlClient } from "../lib/platform/db";
+import { recordAiFailure } from "../lib/platform/failureLog";
+import { SIGNED_RESEARCH_TASKS } from "../lib/research/researchSampleTask";
 
 interface ResearchState {
   loaded: boolean;

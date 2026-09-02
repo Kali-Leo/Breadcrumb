@@ -4,7 +4,7 @@
  * may mount under which hub. A subtree mounts at most once per profile (enforced by the
  * branch builder via the subtree id). Main exports: CANONICAL_MOUNTS.
  */
-import type { MountableSubtree, ProfileItemDefinition } from "@breadcrumb/plugin-compare";
+import type { MountableSubtree, ProfileItemDefinition } from "@breadcrumb/feature-compare";
 import { FRONTEND_MDN_PROFILE } from "./frontendMdnProfile";
 import { GAOZHONG_MATH_PROFILE } from "./gaozhongMathProfile";
 

@@ -6,13 +6,13 @@
  * operation hints moved onto the map canvas itself (MapView).
  * Main exports: MapInfoPanel.
  */
-import type { WorldModel } from "@breadcrumb/plugin-map";
+import type { WorldModel } from "@breadcrumb/feature-map";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   loadRegionFeedbackSources,
   type RegionFeedbackSources,
-} from "../../lib/regionFeedbackData";
+} from "../../lib/feedback/regionFeedbackData";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { ForwardArrow } from "../DirectionalArrow";
 import { findIsland, type MapLevel } from "./levels";

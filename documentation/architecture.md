@@ -10,7 +10,7 @@ apps/desktop                 Tauri 2 外壳 + React 界面 + Rust 命令
 
 packages/                    22 个无界面的库，被 apps/desktop 直接以工作区依赖引入
   ├── core-*  (5)            总线、数据库、i18n、LLM 客户端、教学契约
-  ├── plugin-* (15)          各个功能的纯逻辑
+  ├── feature-* (15)         各个功能的纯逻辑
   └── sdk / simlab (2)       类型定义 / 仅开发期的模拟测试框架
 ```
 
@@ -32,7 +32,7 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 | `core-llm` | OpenAI 兼容的流式/JSON 客户端、重试、模型价目表、计价。 |
 | `core-teaching` | 教学契约提示词。桌面端和 simlab 共用同一份，防止两边漂移。 |
 
-### plugin（15 个）
+### feature（15 个）
 
 `knowledge-tree`（抽取与去重）、`graph`（关系判定）、`memory`（掌握度与三层）、
 `planner`（推荐与前沿）、`map`（地形与聚类）、`interest`（心理信号）、
@@ -40,9 +40,9 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 `compare`（对比树）、`factcheck`（事实核查）、`feedback`（热力图与趋势）、
 `companion`（同学与记忆流）、`research`（研究课题）、`trail`（会话摘要，目前仅 simlab 使用）。
 
-> **注意：「插件」是架构约定，不是运行时系统。** Breadcrumb 不做运行时插件加载（ADR-0035，
-> 2026-09-02 裁定）：没有加载器、没有 `./mods` 目录、没有动态加载、没有插件市场，
-> `plugin-*` 前缀只表示「功能模块」。事件契约在 `packages/core-events`（原 `sdk`，
+> **注意：没有运行时插件系统。** Breadcrumb 不做运行时插件加载（ADR-0035，2026-09-02 裁定）：
+> 没有加载器、没有 `./mods` 目录、没有动态加载、没有插件市场。`feature-*` 前缀就是字面意思——
+> 功能模块，和 `core-*` 一样在构建期编译进来。事件契约在 `packages/core-events`（原 `sdk`，
 > 曾附带的 `PluginManifest`/`PluginPermission` 死类型已随裁定删除）。
 
 ---
@@ -86,7 +86,7 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 
 ### 计价
 
-`apps/desktop/src/lib/metering.ts` 是 `llm_calls` 的**唯一写入者**，
+`apps/desktop/src/lib/billing/metering.ts` 是 `llm_calls` 的**唯一写入者**，
 所有调用点都从这里过，所以定价和币种逻辑没法在各处漂移。
 
 价目在 `packages/core-llm/src/modelCatalogue.ts`，每条都带**读自哪个官方定价页**
@@ -94,7 +94,7 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 有峰谷定价的按调用发生的时刻结算；缓存命中的那部分按命中价单独计算。
 不在表里的模型记 0 花费，界面直说估不出来。
 
-每次调用的 token 用量是**实测**的（`lib/purposeUsage.measure.ts` 跑真实的提示词构造函数），
+每次调用的 token 用量是**实测**的（`lib/billing/purposeUsage.measure.ts` 跑真实的提示词构造函数），
 一个测试每次都重新测量并比对，防止改了提示词之后账单页上的数字变成谎话。
 
 ---
@@ -153,7 +153,7 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 得到一个他读不懂的回答"。
 
 **提示词一律用中文撰写**，只在最后追加一条 `【语言】…` 指令指明目标语言，
-由 `lib/llmConfig.ts` 这唯一的配置装配点附加。
+由 `lib/platform/llmConfig.ts` 这唯一的配置装配点附加。
 一条运行时绊线（`replyLanguage.ts`，懒加载 `franc`）检测到回答语言不对时，
 用更强硬的指令重试一次。
 

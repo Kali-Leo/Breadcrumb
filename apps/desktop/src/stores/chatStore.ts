@@ -7,24 +7,24 @@
 import { createEventBus } from "@breadcrumb/core-bus";
 import type { ConversationKind, ConversationRow, MessageRow } from "@breadcrumb/core-db";
 import { create } from "zustand";
-import { runChatRetryRound } from "../lib/chatAssistantRound";
-import { type ChatSendDeps, runChatSendPipeline } from "../lib/chatSendPipeline";
+import { runChatRetryRound } from "../lib/chat/chatAssistantRound";
+import { type ChatSendDeps, runChatSendPipeline } from "../lib/chat/chatSendPipeline";
 import {
   type ActiveMirror,
   type ChatSession,
   type CostByCurrency,
   EMPTY_ACTIVE_MIRROR,
   loadChatSession,
-} from "../lib/chatSessions";
-import { createSessionWriters } from "../lib/chatSessionWriters";
-import { abortStreamControl } from "../lib/chatStreamControl";
+} from "../lib/chat/chatSessions";
+import { createSessionWriters } from "../lib/chat/chatSessionWriters";
+import { abortStreamControl } from "../lib/chat/chatStreamControl";
 import {
   foldAppendedMessage,
   resumeTreeState,
   returnToLatestTreeState,
-} from "../lib/chatTreeActions";
-import { getRepos } from "../lib/db";
-import { todayLocalMidnightIso } from "../lib/time";
+} from "../lib/chat/chatTreeActions";
+import { getRepos } from "../lib/platform/db";
+import { todayLocalMidnightIso } from "../lib/platform/time";
 
 export const appEventBus = createEventBus();
 export type { CostByCurrency };

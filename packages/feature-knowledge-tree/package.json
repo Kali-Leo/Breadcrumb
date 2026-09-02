@@ -1,0 +1,23 @@
+{
+  "name": "@breadcrumb/feature-knowledge-tree",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless knowledge-tree module: extracts knowledge nodes from each chat round and attaches them to the conversation's tree.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-vectors": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

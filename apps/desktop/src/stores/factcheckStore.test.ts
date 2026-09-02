@@ -7,14 +7,14 @@
  */
 import type { FactcheckClaimRow, FactcheckRunRow, MessageRow } from "@breadcrumb/core-db";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { recordAiFailure } from "../lib/failureLog";
-import { recordFailedCallUsage } from "../lib/metering";
+import { recordFailedCallUsage } from "../lib/billing/metering";
+import { recordAiFailure } from "../lib/platform/failureLog";
 
 const listRunsByConversationMock = vi.fn();
 const listClaimsByRunsMock = vi.fn();
 const recordRunMock = vi.fn();
 const listMessagesByConversationMock = vi.fn();
-vi.mock("../lib/db", () => ({
+vi.mock("../lib/platform/db", () => ({
   getRepos: vi.fn(async () => ({
     factcheck: {
       listRunsByConversation: listRunsByConversationMock,
@@ -26,13 +26,13 @@ vi.mock("../lib/db", () => ({
 }));
 
 const runFactCheckMock = vi.fn();
-vi.mock("@breadcrumb/plugin-factcheck", () => ({
+vi.mock("@breadcrumb/feature-factcheck", () => ({
   runFactCheck: runFactCheckMock,
   createDefaultEvidenceProviders: vi.fn(() => []),
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
-vi.mock("../lib/failureLog", () => ({ recordAiFailure: vi.fn() }));
-vi.mock("../lib/metering", () => ({
+vi.mock("../lib/platform/failureLog", () => ({ recordAiFailure: vi.fn() }));
+vi.mock("../lib/billing/metering", () => ({
   recordMeteredCall: vi.fn(async () => {}),
   recordFailedCallUsage: vi.fn(async () => {}),
 }));

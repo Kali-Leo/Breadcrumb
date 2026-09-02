@@ -3,7 +3,7 @@
  * marching footprint dashes along the session trail, and a place-position index.
  * Main exports: buildPlacePositions, drawFootprintTrail, RevealTarget, applyReveals.
  */
-import type { WorldModel, WorldPoint } from "@breadcrumb/plugin-map";
+import type { WorldModel, WorldPoint } from "@breadcrumb/feature-map";
 import type { Container, Graphics } from "pixi.js";
 import { mapTheme } from "./mapTheme";
 

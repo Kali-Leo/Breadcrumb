@@ -10,7 +10,7 @@ const listSessionsByConversationMock = vi.fn();
 const getSessionByIdMock = vi.fn();
 const removeWithNodesMock = vi.fn();
 const listNodesBySessionMock = vi.fn();
-vi.mock("../lib/db", () => ({
+vi.mock("../lib/platform/db", () => ({
   getRepos: vi.fn(async () => ({
     focusSessions: {
       listByConversation: listSessionsByConversationMock,

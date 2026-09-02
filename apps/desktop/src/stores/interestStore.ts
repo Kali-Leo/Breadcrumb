@@ -14,13 +14,13 @@ import {
   type InterestExtractionNode,
   interestSignalsSchema,
   selfReportMappingSchema,
-} from "@breadcrumb/plugin-interest";
+} from "@breadcrumb/feature-interest";
 import { create } from "zustand";
-import { getRepos } from "../lib/db";
-import { recordAiFailure } from "../lib/failureLog";
-import { llmConfigFrom } from "../lib/llmConfig";
-import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
-import { newId, nowIso } from "../lib/time";
+import { recordFailedCallUsage, recordMeteredCall } from "../lib/billing/metering";
+import { getRepos } from "../lib/platform/db";
+import { recordAiFailure } from "../lib/platform/failureLog";
+import { llmConfigFrom } from "../lib/platform/llmConfig";
+import { newId, nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 

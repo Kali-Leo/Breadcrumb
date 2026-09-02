@@ -29,7 +29,7 @@ checking in, and nothing anywhere that nags you.
 
 1. **减压第一。** 界面上没有连续天数、没有进度条、没有百分比、没有排行榜。
    这些不是"还没做"，是明确拒绝做的 —— 热力图的代码算得出连续天数，
-   并且刻意不显示它（`packages/plugin-feedback/src/activity.ts`）。
+   并且刻意不显示它（`packages/feature-feedback/src/activity.ts`）。
 2. **每个耗 token 的环节独立开关、独立计价。** 设置里的「开关与计价」页把每个会花钱的
    功能列出来，标明它一次大概花多少、至今花了多少，并且每个都能单独关掉。
 3. **永不评判用户。** 猜错不扣分，久不学习不会被提醒，"没做到"这种说法在文案里

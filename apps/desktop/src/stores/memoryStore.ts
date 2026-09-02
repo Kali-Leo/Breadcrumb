@@ -4,10 +4,10 @@
  * round (re-encounters lift the fog). Both come from one replay. Local and free.
  * Main exports: useMemoryStore.
  */
-import { computeNodeMemoryByNode } from "@breadcrumb/plugin-memory";
+import { computeNodeMemoryByNode } from "@breadcrumb/feature-memory";
 import { create } from "zustand";
-import { getRepos } from "../lib/db";
-import { nowIso } from "../lib/time";
+import { getRepos } from "../lib/platform/db";
+import { nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 
 interface MemoryState {

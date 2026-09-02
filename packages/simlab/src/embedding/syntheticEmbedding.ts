@@ -29,7 +29,7 @@ export function computeSyntheticEmbedding(text: string): number[] {
   return l2Normalize(vector);
 }
 
-/** Mirrors apps/desktop/src/lib/embeddings.ts's `${label}: ${summary}` input convention, so
+/** Mirrors apps/desktop/src/lib/platform/embeddings.ts's `${label}: ${summary}` input convention, so
  * the harness embeds the same textual signal the app does — just with a synthetic vectorizer. */
 export function computeSyntheticNodeEmbedding(label: string, summary: string): number[] {
   return computeSyntheticEmbedding(`${label}: ${summary}`);

@@ -37,7 +37,6 @@
     "guessPlaceholder": "Kisio lako",
     "guessSubmit": "Tuma",
     "directReveal": "Maana yake: {{summary}}",
-    "expandPrefill": "Kuhusu «{{label}}», ningependa kwenda ndani zaidi:",
     "guessCorrect": "Sahihi. {{summary}}",
     "guessClose": "Karibu. Maana yake: {{summary}}",
     "guessWrong": "Maana yake: {{summary}}"

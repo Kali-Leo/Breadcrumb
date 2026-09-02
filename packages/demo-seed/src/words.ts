@@ -11,7 +11,7 @@ import type {
   DiglotWordGuessRow,
   DiglotWordStateRow,
 } from "@breadcrumb/core-db";
-import { loadLanguagePack } from "@breadcrumb/plugin-diglot-weave";
+import { loadLanguagePack } from "@breadcrumb/feature-diglot-weave";
 import { DEMO_PAIR, isoAt } from "./shared";
 import { introducedOffsetDays, planWordEvents, replayWord } from "./wordEvents";
 

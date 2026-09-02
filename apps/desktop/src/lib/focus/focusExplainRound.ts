@@ -1,0 +1,82 @@
+/**
+ * Purpose: a focus session/station's DB writes plus streamed explanation (spec 042 §1-2) —
+ * inserts the row up front (so the map always shows the station, even mid-stream), then streams
+ * and persists its answer. Shared by focusStore's actions so each stays a short set()-only body.
+ * Main exports: insertFocusSession, insertFocusNode, streamFocusNodeAnswer.
+ */
+import type { FocusNodeKind, FocusNodeRow, FocusSessionRow } from "@breadcrumb/core-db";
+import type { FocusPromptMessage } from "@breadcrumb/feature-explore";
+import type { ApiConfig } from "../../stores/settingsStore";
+import { getRepos } from "../platform/db";
+import { newId, nowIso } from "../platform/time";
+import { streamFocusAnswer } from "./focusExplain";
+
+/** Creates a session shell — entry_message_id is a retired legacy column (Leo 2026-08-14
+ * revision to spec 042 §5) and always stays NULL now; source_message_id anchors the session's
+ * in-place badge to the reply it was born from (null for the streaming-preview root, which in
+ * practice never reaches this path). */
+export async function insertFocusSession(
+  conversationId: string,
+  rootLabel: string,
+  sourceMessageId: string | null,
+): Promise<FocusSessionRow> {
+  const createdAt = nowIso();
+  const session: FocusSessionRow = {
+    id: newId(),
+    conversation_id: conversationId,
+    entry_message_id: null,
+    root_label: rootLabel,
+    created_at: createdAt,
+    updated_at: createdAt,
+    source_message_id: sourceMessageId,
+  };
+  const repos = await getRepos();
+  await repos.focusSessions.insert(session);
+  return session;
+}
+
+/** Inserts a station with an empty answer — callers set() it into view immediately, before the
+ * stream that fills answer_text has finished. */
+export async function insertFocusNode(input: {
+  sessionId: string;
+  parentId: string | null;
+  kind: FocusNodeKind;
+  label: string;
+  questionText: string | null;
+}): Promise<FocusNodeRow> {
+  const node: FocusNodeRow = {
+    id: newId(),
+    session_id: input.sessionId,
+    parent_id: input.parentId,
+    kind: input.kind,
+    label: input.label,
+    question_text: input.questionText,
+    answer_text: "",
+    created_at: nowIso(),
+  };
+  const repos = await getRepos();
+  await repos.focusNodes.insert(node);
+  return node;
+}
+
+/** Streams one station's answer and persists it. Throws on failure — the caller (focusStore)
+ * owns recordAiFailure and the plain error banner. */
+export async function streamFocusNodeAnswer(input: {
+  nodeId: string;
+  messages: readonly FocusPromptMessage[];
+  apiConfig: ApiConfig;
+  conversationId: string;
+  onDelta: (delta: string) => void;
+  signal?: AbortSignal;
+}): Promise<string> {
+  const result = await streamFocusAnswer({
+    messages: input.messages,
+    apiConfig: input.apiConfig,
+    conversationId: input.conversationId,
+    onDelta: input.onDelta,
+    signal: input.signal,
+  });
+  const repos = await getRepos();
+  await repos.focusNodes.updateAnswer(input.nodeId, result.content);
+  return result.content;
+}

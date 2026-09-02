@@ -14,8 +14,8 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getRepos } from "../../lib/db";
-import { hasDemoData, removeDemoData } from "../../lib/demoData";
+import { getRepos } from "../../lib/platform/db";
+import { hasDemoData, removeDemoData } from "../../lib/platform/demoData";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface ChecklistState {

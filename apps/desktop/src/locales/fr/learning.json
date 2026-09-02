@@ -37,7 +37,6 @@
     "guessPlaceholder": "Ta proposition",
     "guessSubmit": "Envoyer",
     "directReveal": "Cela veut dire : {{summary}}",
-    "expandPrefill": "À propos de « {{label}} », j'aimerais aller plus loin :",
     "guessCorrect": "C'est ça. {{summary}}",
     "guessClose": "Pas loin. Cela veut dire : {{summary}}",
     "guessWrong": "Cela veut dire : {{summary}}"

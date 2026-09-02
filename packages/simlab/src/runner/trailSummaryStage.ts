@@ -6,7 +6,7 @@
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson, type LlmClientConfig, type TokenUsage } from "@breadcrumb/core-llm";
-import { buildTrailSummaryMessages, trailSummarySchema } from "@breadcrumb/plugin-trail";
+import { buildTrailSummaryMessages, trailSummarySchema } from "@breadcrumb/feature-trail";
 import { findPressureLexiconHits } from "../judges/pressureLexicon";
 import type { RunTelemetry } from "../judges/telemetry";
 

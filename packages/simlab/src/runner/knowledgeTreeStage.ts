@@ -11,7 +11,7 @@ import {
   buildExtractionMessages,
   extractionResponseSchema,
   planNodeChanges,
-} from "@breadcrumb/plugin-knowledge-tree";
+} from "@breadcrumb/feature-knowledge-tree";
 import { embedNodes } from "../embedding/embedNodes";
 import {
   describeError,

@@ -12,7 +12,7 @@
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
-import { chunkPairs } from "@breadcrumb/plugin-compare";
+import { chunkPairs } from "@breadcrumb/feature-compare";
 import {
   buildEdgeJudgeMessages,
   DEFAULT_FALLBACK_RECENT_N,
@@ -23,13 +23,13 @@ import {
   type JudgedPairContext,
   planEdgeJudgeResult,
   rankCandidatePairs,
-} from "@breadcrumb/plugin-graph";
+} from "@breadcrumb/feature-graph";
 import { create } from "zustand";
-import { getRepos } from "../lib/db";
-import { recordAiFailure } from "../lib/failureLog";
-import { llmConfigFrom } from "../lib/llmConfig";
-import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
-import { newId, nowIso } from "../lib/time";
+import { recordFailedCallUsage, recordMeteredCall } from "../lib/billing/metering";
+import { getRepos } from "../lib/platform/db";
+import { recordAiFailure } from "../lib/platform/failureLog";
+import { llmConfigFrom } from "../lib/platform/llmConfig";
+import { newId, nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useSettingsStore } from "./settingsStore";

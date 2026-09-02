@@ -13,7 +13,7 @@ import {
   pointInPolygon,
   type WorldModel,
   type WorldPoint,
-} from "@breadcrumb/plugin-map";
+} from "@breadcrumb/feature-map";
 import { type Bounds, worldBounds } from "./seaArt";
 
 export type MapLevel = { kind: "world" } | { kind: "island"; islandId: string };
