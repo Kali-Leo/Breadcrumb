@@ -6,6 +6,7 @@
 import { z } from "zod";
 import type { EvidenceItem, EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS } from "./provider";
+import { withRequestBudget } from "./requestBudget";
 
 const searchResponseSchema = z.object({
   pages: z.array(z.object({ key: z.string(), title: z.string() })),
@@ -88,13 +89,16 @@ async function fetchSummary(
   pageKey: string,
 ): Promise<EvidenceItem | null> {
   const summaryUrl = `https://${language}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageKey)}`;
-  const summaryResponse = await fetchImpl(summaryUrl, {
-    headers: WIKIPEDIA_HEADERS,
-    signal: AbortSignal.timeout(timeoutMs),
-    maxRedirections: SEARCH_MAX_REDIRECTS,
+  const summaryPayload = await withRequestBudget(timeoutMs, async (signal) => {
+    const summaryResponse = await fetchImpl(summaryUrl, {
+      headers: WIKIPEDIA_HEADERS,
+      signal,
+      maxRedirections: SEARCH_MAX_REDIRECTS,
+    });
+    return summaryResponse.ok ? ((await summaryResponse.json()) as unknown) : null;
   });
-  if (!summaryResponse.ok) return null;
-  const summary = summaryResponseSchema.parse(await summaryResponse.json());
+  if (summaryPayload === null) return null;
+  const summary = summaryResponseSchema.parse(summaryPayload);
   if (summary.extract.length === 0) return null;
   return {
     url:
@@ -116,13 +120,16 @@ async function searchOneLanguage(
   let searchResult: z.infer<typeof searchResponseSchema>;
   try {
     const searchUrl = `https://${language}.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(query)}&limit=${PAGES_PER_LANGUAGE}`;
-    const searchResponse = await fetchImpl(searchUrl, {
-      headers: WIKIPEDIA_HEADERS,
-      signal: AbortSignal.timeout(timeoutMs),
-      maxRedirections: SEARCH_MAX_REDIRECTS,
+    const searchPayload = await withRequestBudget(timeoutMs, async (signal) => {
+      const searchResponse = await fetchImpl(searchUrl, {
+        headers: WIKIPEDIA_HEADERS,
+        signal,
+        maxRedirections: SEARCH_MAX_REDIRECTS,
+      });
+      return searchResponse.ok ? ((await searchResponse.json()) as unknown) : null;
     });
-    if (!searchResponse.ok) return { items: [], failed: true };
-    searchResult = searchResponseSchema.parse(await searchResponse.json());
+    if (searchPayload === null) return { items: [], failed: true };
+    searchResult = searchResponseSchema.parse(searchPayload);
   } catch {
     return { items: [], failed: true };
   }

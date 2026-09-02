@@ -7,6 +7,7 @@
 import { load } from "cheerio";
 import type { EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS, stripHtml } from "./provider";
+import { withRequestBudget } from "./requestBudget";
 import { type ResultCandidate, verifyCandidates } from "./verify";
 
 const SNIPPET_MAX_LENGTH = 600;
@@ -23,18 +24,21 @@ export function createBingProvider(options: BingProviderOptions): EvidenceProvid
     name: "bing",
     async search(query: string, limit: number): Promise<EvidenceSearchResult> {
       try {
-        const response = await options.fetchImpl(
-          `https://cn.bing.com/search?q=${encodeURIComponent(query)}`,
-          {
-            signal: AbortSignal.timeout(timeoutMs),
-            headers: { "Accept-Language": "zh-CN,zh" },
-            // A fixed host we chose ourselves, so a couple of hops are fine — but not the
-            // platform default of ten, and not silently.
-            maxRedirections: SEARCH_MAX_REDIRECTS,
-          },
-        );
-        if (!response.ok) return { items: [], failed: true };
-        const candidates = parseResults(await response.text());
+        const html = await withRequestBudget(timeoutMs, async (signal) => {
+          const response = await options.fetchImpl(
+            `https://cn.bing.com/search?q=${encodeURIComponent(query)}`,
+            {
+              signal,
+              headers: { "Accept-Language": "zh-CN,zh" },
+              // A fixed host we chose ourselves, so a couple of hops are fine — but not the
+              // platform default of ten, and not silently.
+              maxRedirections: SEARCH_MAX_REDIRECTS,
+            },
+          );
+          return response.ok ? await response.text() : null;
+        });
+        if (html === null) return { items: [], failed: true };
+        const candidates = parseResults(html);
         if (candidates.length === 0) {
           // A search engine answering 200 with no result block at all is markup drift far
           // more often than a genuinely empty result set, and the two are indistinguishable

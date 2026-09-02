@@ -7,6 +7,7 @@
 import { load } from "cheerio";
 import type { EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
 import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS, stripHtml } from "./provider";
+import { withRequestBudget } from "./requestBudget";
 import { type ResultCandidate, verifyCandidates } from "./verify";
 
 const SNIPPET_MAX_LENGTH = 600;
@@ -23,17 +24,20 @@ export function createDuckDuckGoProvider(options: DuckDuckGoProviderOptions): Ev
     name: "duckduckgo",
     async search(query: string, limit: number): Promise<EvidenceSearchResult> {
       try {
-        const response = await options.fetchImpl(
-          `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
-          {
-            signal: AbortSignal.timeout(timeoutMs),
-            // A fixed host we chose ourselves, so a couple of hops are fine — but not the
-            // platform default of ten, and not silently.
-            maxRedirections: SEARCH_MAX_REDIRECTS,
-          },
-        );
-        if (!response.ok) return { items: [], failed: true };
-        const candidates = parseResults(await response.text());
+        const html = await withRequestBudget(timeoutMs, async (signal) => {
+          const response = await options.fetchImpl(
+            `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+            {
+              signal,
+              // A fixed host we chose ourselves, so a couple of hops are fine — but not the
+              // platform default of ten, and not silently.
+              maxRedirections: SEARCH_MAX_REDIRECTS,
+            },
+          );
+          return response.ok ? await response.text() : null;
+        });
+        if (html === null) return { items: [], failed: true };
+        const candidates = parseResults(html);
         if (candidates.length === 0) {
           // A search engine answering 200 with no result block at all is markup drift (or
           // the rate limiter) far more often than a genuinely empty result set, and the two

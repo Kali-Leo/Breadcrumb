@@ -11,6 +11,7 @@
  * Main exports: isFetchableUrl, fetchExternalPage, MAX_RESPONSE_BYTES.
  */
 import type { FetchLike } from "./provider";
+import { withRequestBudget } from "./requestBudget";
 
 /** Hosts that name the machine the app is running on, or the network it sits inside. */
 const BLOCKED_HOSTNAMES = new Set([
@@ -109,25 +110,26 @@ export async function fetchExternalPage(
   timeoutMs: number,
 ): Promise<string | null> {
   // One budget for the whole chain: a redirect loop must not buy itself extra time.
-  const signal = AbortSignal.timeout(timeoutMs);
   let current = url;
   try {
-    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-      if (!isFetchableUrl(current)) return null;
-      const response = await fetchImpl(current, { signal, maxRedirections: 0 });
-      if (!REDIRECT_STATUSES.has(response.status)) {
-        if (!response.ok) return null;
-        return await readCapped(response as Response);
+    return await withRequestBudget(timeoutMs, async (signal) => {
+      for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+        if (!isFetchableUrl(current)) return null;
+        const response = await fetchImpl(current, { signal, maxRedirections: 0 });
+        if (!REDIRECT_STATUSES.has(response.status)) {
+          if (!response.ok) return null;
+          return await readCapped(response as Response);
+        }
+        // In the browser build an unfollowed redirect arrives opaque: status 0, no headers.
+        // That fails the check above already, and a redirect we cannot read is one we cannot
+        // re-check, so refusing it is the only safe reading.
+        const location = response.headers.get("location");
+        if (location === null || location.length === 0) return null;
+        current = new URL(location, current).toString();
       }
-      // In the browser build an unfollowed redirect arrives opaque: status 0, no headers.
-      // That fails the check above already, and a redirect we cannot read is one we cannot
-      // re-check, so refusing it is the only safe reading.
-      const location = response.headers.get("location");
-      if (location === null || location.length === 0) return null;
-      current = new URL(location, current).toString();
-    }
-    // More hops than we are willing to follow. A legitimate source does not need four.
-    return null;
+      // More hops than we are willing to follow. A legitimate source does not need four.
+      return null;
+    });
   } catch {
     return null;
   }

@@ -14,6 +14,10 @@ import { degradeSilently } from "./failureLog";
 import { nowIso } from "./time";
 
 const EMBEDDING_MODEL = "multilingual-e5-small";
+/** Mirrors MAX_TEXTS_PER_CALL in src-tauri/src/embeddings.rs. One oversized call is refused
+ * whole, and the 2026-09-02 walkthrough found the canonical-concept cache (1,012 texts) had
+ * never filled because of it — so the bridge slices here and every caller stays batch-safe. */
+const MAX_TEXTS_PER_CALL = 512;
 
 /** Embeds a batch of raw texts via the local Rust command. Returns null on any failure
  * (model not downloaded yet, offline first run, etc) instead of throwing — callers decide
@@ -25,10 +29,16 @@ export async function embedTexts(texts: readonly string[]): Promise<number[][] |
     // offline. Passing the switch through means a user who turned the network off does not
     // get a silent fetch from a third party they never configured, while an already-cached
     // model keeps working offline as it should.
-    return await invoke<number[][]>("embed_texts", {
-      texts: [...texts],
-      allowDownload: useSettingsStore.getState().networkEnabled,
-    });
+    const allowDownload = useSettingsStore.getState().networkEnabled;
+    const vectors: number[][] = [];
+    for (let start = 0; start < texts.length; start += MAX_TEXTS_PER_CALL) {
+      const batch = await invoke<number[][]>("embed_texts", {
+        texts: texts.slice(start, start + MAX_TEXTS_PER_CALL),
+        allowDownload,
+      });
+      vectors.push(...batch);
+    }
+    return vectors;
   } catch (error) {
     void degradeSilently("embeddings", error);
     return null;
