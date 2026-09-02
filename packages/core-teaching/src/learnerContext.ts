@@ -25,6 +25,21 @@ export interface LearnerContext {
 // derived. They are placeholders to be calibrated against this app's own data; do not cite
 // them as findings and do not build anything that assumes they are exact.
 
+/** Node labels and style tags are free text an extractor model wrote out of the learner's
+ * own conversation, and this message goes in as a *system* message — so nothing is
+ * interpolated raw. Newlines fold away (no forged sections), the quoting brackets this file
+ * uses to delimit a label are dropped (no forged delimiters), and a long one is cut: a label
+ * is a short name, and 24 code points is more than any real one needs. */
+const MAX_INTERPOLATED_LENGTH = 24;
+
+function sanitize(text: string): string {
+  const folded = text
+    .replace(/\s+/g, " ")
+    .replace(/[「」【】]/g, "")
+    .trim();
+  return Array.from(folded).slice(0, MAX_INTERPOLATED_LENGTH).join("");
+}
+
 /** Retention below this: teach directly from basics, small steps. Provisional, see above. */
 const LOW_RETENTION_CEILING = 0.4;
 /** Retention above this: skip basics, drop assistance. Provisional, see above. */
@@ -53,14 +68,18 @@ export function formatLearnerContextMessage(context: LearnerContext): string | n
   ) {
     lines.push(
       retentionStanceLine(
-        context.anchoredNodeLabel,
+        sanitize(context.anchoredNodeLabel),
         Math.min(1, Math.max(0, context.retention)),
         context.hasPrincipledMastery === true,
       ),
     );
   }
   if (context.preferredStyles !== undefined && context.preferredStyles.length > 0) {
-    lines.push(`- 对方更容易吸收的讲解方式：${context.preferredStyles.slice(0, 3).join("、")}。`);
+    const styles = context.preferredStyles
+      .slice(0, 3)
+      .map(sanitize)
+      .filter((style) => style.length > 0);
+    if (styles.length > 0) lines.push(`- 对方更容易吸收的讲解方式：${styles.join("、")}。`);
   }
   if (context.confusionDetected) {
     lines.push(

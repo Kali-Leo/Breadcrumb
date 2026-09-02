@@ -130,7 +130,12 @@ function ClaimLine({ claim }: { claim: DisplayClaim }) {
         <button
           key={item.url}
           type="button"
-          onClick={() => void openUrl(item.url)}
+          onClick={() => {
+            // Evidence addresses come from search results and can be plain http, which the
+            // opener capability no longer allows (nothing else in the app produces one).
+            // Refusing quietly beats raising an error the learner cannot act on.
+            if (item.url.startsWith("https://")) void openUrl(item.url);
+          }}
           className="block ps-4 text-start text-stone-400 underline decoration-stone-300 hover:text-amber-600"
         >
           {item.title}

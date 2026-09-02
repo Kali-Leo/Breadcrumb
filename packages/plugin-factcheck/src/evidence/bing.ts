@@ -6,7 +6,7 @@
  */
 import { load } from "cheerio";
 import type { EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
-import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
+import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS, stripHtml } from "./provider";
 import { type ResultCandidate, verifyCandidates } from "./verify";
 
 const SNIPPET_MAX_LENGTH = 600;
@@ -25,7 +25,13 @@ export function createBingProvider(options: BingProviderOptions): EvidenceProvid
       try {
         const response = await options.fetchImpl(
           `https://cn.bing.com/search?q=${encodeURIComponent(query)}`,
-          { signal: AbortSignal.timeout(timeoutMs), headers: { "Accept-Language": "zh-CN,zh" } },
+          {
+            signal: AbortSignal.timeout(timeoutMs),
+            headers: { "Accept-Language": "zh-CN,zh" },
+            // A fixed host we chose ourselves, so a couple of hops are fine — but not the
+            // platform default of ten, and not silently.
+            maxRedirections: SEARCH_MAX_REDIRECTS,
+          },
         );
         if (!response.ok) return { items: [], failed: true };
         const candidates = parseResults(await response.text());

@@ -2,7 +2,7 @@
  * Purpose: the self-report mapping LLM contract — prompt construction and Zod schema for
  * turning free text like "我学过高中数学" into a subset of the user's EXISTING knowledge-tree
  * node labels, each tagged with a claim strength. Never invents labels.
- * Main exports: selfReportMappingSchema, buildSelfReportMessages, SelfReportMapping.
+ * Main exports: selfReportMappingSchema, buildSelfReportMessages, SelfReportMappingResult.
  */
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import { z } from "zod";
@@ -12,7 +12,7 @@ export const selfReportMappingSchema = z.object({
     .array(
       z.object({
         /** Must exactly match one of the given existing node labels. */
-        label: z.string().min(1),
+        label: z.string().min(1).max(40),
         /** "learned" = explicitly says learned/mastered it; "familiar" = only heard of it. */
         claimLevel: z.enum(["learned", "familiar"]),
       }),
@@ -21,7 +21,6 @@ export const selfReportMappingSchema = z.object({
 });
 
 export type SelfReportMappingResult = z.infer<typeof selfReportMappingSchema>;
-export type SelfReportMapping = SelfReportMappingResult["mappings"][number];
 
 const SYSTEM_PROMPT = `你是一个自报知识映射器。学习者会用自然语言描述自己学过/熟悉的内容，你需要把它映射到
 「已有知识点列表」上的节点，以 JSON 返回：

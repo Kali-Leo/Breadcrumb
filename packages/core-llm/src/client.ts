@@ -7,14 +7,21 @@
  */
 
 import { z } from "zod";
+import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
 import {
   fetchWithRetry,
   LlmTimeoutError,
   llmAbortError,
   STREAM_FIRST_BYTE_TIMEOUT_MS,
+  STREAM_IDLE_TIMEOUT_MS,
 } from "./retry";
 import { readSseDataLines } from "./sseLines";
+
+/** Ceiling on one answer. Roughly 2M characters is far beyond any model's context, let alone
+ * one reply; reaching it means the endpoint is feeding us an endless stream, and the renderer
+ * would otherwise hold the whole thing (plus every re-render of it) in memory. */
+export const MAX_STREAM_CONTENT_CHARS = 2_000_000;
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -85,11 +92,12 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
     async chatStream(messages, onDelta, options) {
       const signal = options?.signal;
       const withLanguage = withLanguageDirective(messages, config.answerLanguageDirective);
-      // Retries live in the transport layer (retry.ts); the deadline here is FIRST BYTE only,
-      // cleared as soon as a chunk arrives — a total budget would kill long healthy answers.
-      const { response, clearDeadline, release, timedOut } = await fetchWithRetry(
+      // Retries live in the transport layer (retry.ts); the deadline here starts as a
+      // FIRST-BYTE budget and then slides per chunk — a total budget would kill long healthy
+      // answers, while never re-arming would let a stalled stream hang forever.
+      const { response, armDeadline, release, timedOut } = await fetchWithRetry(
         config.fetchImpl,
-        `${config.baseUrl.replace(/\/$/, "")}/chat/completions`,
+        completionsUrl(config.baseUrl),
         {
           method: "POST",
           headers: {
@@ -111,14 +119,21 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
       }
 
       let content = "";
+      let sawChunk = false;
       let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
+      const onChunk = (): void => {
+        sawChunk = true;
+        armDeadline(STREAM_IDLE_TIMEOUT_MS);
+      };
       try {
-        for await (const dataLine of readSseDataLines(response.body)) {
-          clearDeadline();
+        for await (const dataLine of readSseDataLines(response.body, onChunk)) {
           const chunk = streamChunkSchema.parse(JSON.parse(dataLine));
           const delta = chunk.choices[0]?.delta?.content;
           if (delta) {
             content += delta;
+            if (content.length > MAX_STREAM_CONTENT_CHARS) {
+              throw new Error(`LLM stream exceeded ${MAX_STREAM_CONTENT_CHARS} characters`);
+            }
             onDelta(delta);
           }
           if (chunk.usage) {
@@ -137,10 +152,13 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
         if (signal?.aborted) {
           throw llmAbortError("chatStream aborted by its caller");
         }
-        // The other abort we can cause ourselves: the first-byte deadline fired before any
-        // chunk arrived, so the stream died from a hang rather than from the user.
+        // The other abort we can cause ourselves: the deadline fired — before the first
+        // chunk, or after the stream went silent mid-answer. Either way it died from a hang
+        // rather than from the user; the budget named is the one that was actually running.
         if (timedOut()) {
-          throw new LlmTimeoutError(STREAM_FIRST_BYTE_TIMEOUT_MS);
+          throw new LlmTimeoutError(
+            sawChunk ? STREAM_IDLE_TIMEOUT_MS : STREAM_FIRST_BYTE_TIMEOUT_MS,
+          );
         }
         throw error;
       } finally {

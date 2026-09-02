@@ -19,10 +19,18 @@ pub struct TrainItem {
     pub reviews: Vec<TrainReview>,
 }
 
+/// Ceiling on one fit. The renderer can invoke this command directly, and `compute_parameters`
+/// is bound by the item count in both CPU and memory — a train set no review log could produce
+/// is a way to wedge the app, not a better fit. 100k review prefixes is decades of studying.
+const MAX_TRAIN_ITEMS: usize = 100_000;
+
 /// Fits FSRS parameters to the learner's review history. `items` follow fsrs-rs
 /// conventions: one item per review prefix, first review delta_t = 0.
 #[tauri::command]
 pub fn optimize_fsrs_parameters(items: Vec<TrainItem>) -> Result<Vec<f32>, String> {
+    if items.len() > MAX_TRAIN_ITEMS {
+        return Err(format!("too many review items to fit (limit {MAX_TRAIN_ITEMS})"));
+    }
     let train_set: Vec<FSRSItem> = items
         .into_iter()
         .map(|item| FSRSItem {
@@ -67,5 +75,15 @@ mod tests {
         let params = optimize_fsrs_parameters(items).expect("fit should succeed");
         assert!(params.len() >= 17, "unexpected parameter count {}", params.len());
         assert!(params.iter().all(|p| p.is_finite()));
+    }
+
+    /// The renderer can call this command with anything; the cap is what stops it from
+    /// handing over a train set that never came from a person studying.
+    #[test]
+    fn refuses_more_items_than_a_review_log_could_hold() {
+        let items: Vec<TrainItem> = (0..=MAX_TRAIN_ITEMS)
+            .map(|_| TrainItem { reviews: Vec::new() })
+            .collect();
+        assert!(optimize_fsrs_parameters(items).is_err());
     }
 }

@@ -18,6 +18,7 @@ import {
   resolveRoundMessages,
 } from "../lib/factcheckRecords";
 import { recordAiFailure } from "../lib/failureLog";
+import { llmConfigWithoutLanguageDirective } from "../lib/llmConfig";
 import { recordFailedCallUsage, recordMeteredCall } from "../lib/metering";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
@@ -79,12 +80,15 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
 
     set({ checkingMessageIds: new Set([...get().checkingMessageIds, messageId]) });
     try {
-      const fetchImpl = tauriFetch;
       const report = await runFactCheck(
         {
-          llmConfig: { ...settings.apiConfig, fetchImpl },
+          // Through lib/llmConfig rather than hand-assembled: that module is where the
+          // network switch is enforced, and a config built here would be a second door.
+          // Without the answer-language directive on purpose — the verdict prompt states its
+          // own output language, and two instructions about it contradict each other.
+          llmConfig: llmConfigWithoutLanguageDirective(settings.apiConfig),
           providers: createDefaultEvidenceProviders({
-            fetchImpl,
+            fetchImpl: tauriFetch,
             mainlandChina: settings.mainlandNetwork,
           }),
         },

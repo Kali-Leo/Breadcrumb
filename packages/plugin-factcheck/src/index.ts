@@ -14,6 +14,7 @@ export {
   type EvidenceItem,
   type EvidenceProvider,
   type EvidenceSearchResult,
+  type FetchInit,
   type FetchLike,
   stripHtml,
 } from "./evidence/provider";

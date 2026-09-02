@@ -11,7 +11,7 @@ import { z } from "zod";
 
 export const goalMappingSchema = z.object({
   /** Must exactly match a subset of the given existing node labels. */
-  existing: z.array(z.string().min(1)).max(30),
+  existing: z.array(z.string().min(1).max(40)).max(30),
   suggested: z
     .array(
       z.object({
@@ -22,7 +22,7 @@ export const goalMappingSchema = z.object({
          * by the caller — Zod can't cross-check them against a set it doesn't have. Optional
          * because an older/terser model response is still usable: a goal with no edges
          * degrades to the previous alphabetical route, it doesn't fail. */
-        requires: z.array(z.string().min(1)).max(10).optional(),
+        requires: z.array(z.string().min(1).max(40)).max(10).optional(),
       }),
     )
     .max(15),

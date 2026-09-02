@@ -488,6 +488,7 @@ version = "0.1.0"
 dependencies = [
  "fastembed",
  "fsrs",
+ "libc",
  "serde",
  "serde_json",
  "sqlx",

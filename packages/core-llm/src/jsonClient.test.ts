@@ -153,6 +153,44 @@ describe("chatJson", () => {
     expect((error as ChatJsonError).usage).toEqual({ inputTokens: 30, outputTokens: 12 });
   });
 
+  it("never puts the model's own text in the error a caller may log", async () => {
+    // The message travels into ai_failures.message; V8's SyntaxError would have quoted the
+    // reply — which is a rewrite of the learner's conversation — straight into it.
+    const secret = "学员说他在北京协和医院实习";
+    // A fresh Response per call: a body can only be read once.
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(() => Promise.resolve(completionResponse(secret)));
+
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ChatJsonError);
+    const { message } = error as ChatJsonError;
+    expect(message).toBe(`model reply was not valid JSON (${secret.length} chars)`);
+    expect(message).not.toContain("学员");
+    // The corrective retry still gets told what went wrong, just without the quote.
+    const retryBody = JSON.parse(String(fetchImpl.mock.calls[1]?.[1]?.body));
+    expect(retryBody.messages.at(-1).content).toContain("not valid JSON");
+    expect(retryBody.messages.at(-1).content).not.toContain("学员说他在北京");
+  });
+
+  it("still reports Zod validation detail, which names paths and not values", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(() => Promise.resolve(completionResponse('{"name":"Momo"}')));
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect((error as ChatJsonError).message).toContain("age");
+  });
+
   it("reports zero usage when the very first call never reached the provider", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

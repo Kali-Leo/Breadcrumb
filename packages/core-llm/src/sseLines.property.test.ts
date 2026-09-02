@@ -9,7 +9,7 @@
  */
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { readSseDataLines } from "./sseLines";
+import { MAX_SSE_LINE_CHARS, readSseDataLines } from "./sseLines";
 
 /** A ReadableStream over the given byte chunks, the shape the client feeds the reader. */
 function streamOf(chunks: readonly Uint8Array[]): ReadableStream<Uint8Array> {
@@ -112,5 +112,40 @@ describe("reading SSE data lines", () => {
   it("yields nothing for a stream that never carried data", async () => {
     const bytes = new TextEncoder().encode(": keep-alive\n\nevent: ping\n");
     expect(await collect(streamOf([bytes]))).toEqual([]);
+  });
+
+  it("skips empty data lines — some reverse proxies send them as a heartbeat", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(payload, { minLength: 1, maxLength: 6 }),
+        fc.array(fc.nat(), { maxLength: 12 }),
+        async (payloads, cuts) => {
+          // A bare `data:` and a `data: ` with nothing after it: both used to yield "",
+          // which reached JSON.parse and killed the whole answer.
+          const text = payloads.map((one) => `data:\ndata: \ndata: ${one}\n`).join("");
+          const bytes = new TextEncoder().encode(`${text}data: [DONE]\n`);
+          expect(await collect(streamOf(cutAt(bytes, cuts)))).toEqual(payloads);
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
+  it("refuses a line that never ends, however the bytes were cut up", async () => {
+    // The pathological stream: bytes forever, no newline, so the buffer would grow without
+    // bound. The cap has to fire on the accumulation, not on any single chunk.
+    const bytes = new TextEncoder().encode(`data: ${"x".repeat(MAX_SSE_LINE_CHARS + 1)}`);
+    const chunkSize = Math.ceil(bytes.length / 7);
+    const chunks: Uint8Array[] = [];
+    for (let at = 0; at < bytes.length; at += chunkSize) {
+      chunks.push(bytes.slice(at, at + chunkSize));
+    }
+    await expect(collect(streamOf(chunks))).rejects.toThrow("SSE line exceeded");
+  });
+
+  it("lets a very long but terminated line through", async () => {
+    const one = "x".repeat(MAX_SSE_LINE_CHARS - 100);
+    const bytes = new TextEncoder().encode(`data: ${one}\ndata: [DONE]\n`);
+    expect(await collect(streamOf(cutAt(bytes, [1, 5_000, 900_000])))).toEqual([one]);
   });
 });

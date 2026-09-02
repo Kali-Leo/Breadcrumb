@@ -4,7 +4,9 @@
  * Rust, outside the browser's same-origin and private-network protections — so a URL that
  * points at the loopback interface reaches services the page could never have reached.
  *
- * Two things are enforced: where a request may go, and how much may come back.
+ * Three things are enforced: where a request may go, where a redirect may take it (every hop
+ * is re-checked here, because nothing below this layer re-checks any), and how much may come
+ * back.
  *
  * Main exports: isFetchableUrl, fetchExternalPage, MAX_RESPONSE_BYTES.
  */
@@ -84,6 +86,21 @@ async function readCapped(response: Response): Promise<string> {
   return text.slice(0, MAX_RESPONSE_BYTES);
 }
 
+/** Statuses that mean "the answer is somewhere else". 303 and 307/308 included: the method
+ * is always GET here, so the distinctions between them do not change what we do. */
+const REDIRECT_STATUSES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
+
+/**
+ * How many hops this will follow by hand.
+ *
+ * The reason it follows them by hand at all: neither `isFetchableUrl` nor the desktop's
+ * capability scope is consulted again once the platform starts following redirects itself,
+ * so a page that passes the loopback check and then answers
+ * `302 Location: http://127.0.0.1:11434/…` reaches a local service — and its body comes back
+ * as "evidence", shown to the learner and sent to their LLM. Every hop below is re-checked.
+ */
+const MAX_REDIRECTS = 3;
+
 /** Fetches one externally-proposed page, or returns null when the address is not one we
  * will open, the request fails, or the response is not usable. Never throws. */
 export async function fetchExternalPage(
@@ -91,11 +108,26 @@ export async function fetchExternalPage(
   url: string,
   timeoutMs: number,
 ): Promise<string | null> {
-  if (!isFetchableUrl(url)) return null;
+  // One budget for the whole chain: a redirect loop must not buy itself extra time.
+  const signal = AbortSignal.timeout(timeoutMs);
+  let current = url;
   try {
-    const response = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs) });
-    if (!response.ok) return null;
-    return await readCapped(response as Response);
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      if (!isFetchableUrl(current)) return null;
+      const response = await fetchImpl(current, { signal, maxRedirections: 0 });
+      if (!REDIRECT_STATUSES.has(response.status)) {
+        if (!response.ok) return null;
+        return await readCapped(response as Response);
+      }
+      // In the browser build an unfollowed redirect arrives opaque: status 0, no headers.
+      // That fails the check above already, and a redirect we cannot read is one we cannot
+      // re-check, so refusing it is the only safe reading.
+      const location = response.headers.get("location");
+      if (location === null || location.length === 0) return null;
+      current = new URL(location, current).toString();
+    }
+    // More hops than we are willing to follow. A legitimate source does not need four.
+    return null;
   } catch {
     return null;
   }

@@ -15,7 +15,25 @@
  * Main exports: fetch.
  */
 
-/** The browser's fetch, bound so it cannot be called with the wrong `this`. */
-export const fetch: typeof globalThis.fetch = (...args) => globalThis.fetch(...args);
+/** The plugin's init, which is RequestInit plus a few Rust-client options. Only the one the
+ * app actually passes is modelled here. */
+interface TauriFetchInit extends RequestInit {
+  maxRedirections?: number;
+}
+
+/**
+ * The browser's fetch, bound so it cannot be called with the wrong `this`.
+ *
+ * `maxRedirections: 0` — safeFetch asks for it so it can re-check each hop itself — becomes
+ * `redirect: "manual"`. The browser then answers with an opaque redirect: status 0, no
+ * readable Location. That is deliberately a dead end rather than a silent follow: a redirect
+ * the caller cannot inspect is one it cannot re-check, and safeFetch treats it as a refusal.
+ * Any other value is left to the browser, which caps redirect chains on its own.
+ */
+export const fetch = (input: RequestInfo | URL, init?: TauriFetchInit): Promise<Response> => {
+  if (init === undefined) return globalThis.fetch(input);
+  const { maxRedirections, ...rest } = init;
+  return globalThis.fetch(input, maxRedirections === 0 ? { ...rest, redirect: "manual" } : rest);
+};
 
 export default fetch;

@@ -3,7 +3,7 @@
  * introduction queue derivation (spec 033).
  */
 import { describe, expect, it } from "vitest";
-import { loadLanguagePack } from "./packSchema";
+import { loadLanguagePack, resolveLemma } from "./packSchema";
 import { makeEnFrPack } from "./testFixture";
 
 describe("loadLanguagePack", () => {
@@ -16,6 +16,16 @@ describe("loadLanguagePack", () => {
   it("orders the introduction queue by frequency rank, t1Safe only", () => {
     const loaded = makeEnFrPack();
     expect(loaded.introductionQueue).toEqual(["book", "read", "tome"]);
+  });
+
+  it("keeps Object.prototype out of the lookup tables", () => {
+    const loaded = makeEnFrPack();
+    // Ordinary English words that also name Object.prototype members: on a plain object these
+    // resolve to functions and resolveLemma's `string | null` would be a lie.
+    for (const word of ["toString", "constructor", "valueOf", "hasOwnProperty"]) {
+      expect(resolveLemma(word, loaded)).toBeNull();
+    }
+    expect(resolveLemma("books", loaded)).toBe("book");
   });
 
   it("rejects a pack with a malformed pair id", () => {

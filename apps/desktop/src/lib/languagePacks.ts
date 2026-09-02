@@ -15,7 +15,9 @@ import type { DiglotPairId } from "@breadcrumb/core-db";
 import { type LoadedLanguagePack, loadLanguagePack } from "@breadcrumb/plugin-diglot-weave";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import catalogJson from "../assets/language-packs/catalog.json";
+import { useSettingsStore } from "../stores/settingsStore";
 import { getRepos } from "./db";
+import { NetworkDisabledError } from "./llmConfig";
 import { nowIso } from "./time";
 
 export interface CatalogPack {
@@ -28,7 +30,9 @@ export interface CatalogPack {
   entryCount: number;
   /** Entries the weave may actually swap in; the rest exist for lookup only. */
   weavableCount: number;
+  /** Uncompressed size, shown to the learner before they agree to the download. */
   bytes: number;
+  /** SHA-256 of the pack file, checked in `installLanguagePack` before anything is stored. */
   sha256: string;
 }
 
@@ -87,18 +91,34 @@ export async function listInstalledPairs(): Promise<string[]> {
   return [...installed].sort();
 }
 
+/** Lowercase hex SHA-256 of a string, via the WebCrypto both builds already have. */
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 /**
- * Downloads one pack and stores it. Validated against the pack contract before it is saved,
- * so a truncated download fails here rather than halfway through a conversation.
+ * Downloads one pack and stores it. Checked against the digest the catalog was built with —
+ * which ships inside the installer — before anything is parsed or saved, so a release asset
+ * swapped for a poisoned dictionary is refused here rather than quietly teaching someone the
+ * attacker's definitions. Then validated against the pack contract, so a truncated download
+ * fails here rather than halfway through a conversation.
  */
 export async function installLanguagePack(pairId: string): Promise<void> {
   const pack = catalogPackFor(pairId);
   if (pack === null) throw new Error(`unknown language pair: ${pairId}`);
+  // The network switch is a promise to the user, and it covers this download too: the request
+  // carries no user data, but it still reveals that this machine runs Breadcrumb.
+  if (!useSettingsStore.getState().networkEnabled) throw new NetworkDisabledError();
   const response = await tauriFetch(downloadUrlFor(pack), { method: "GET" });
   if (!response.ok) {
     throw new Error(`language pack download failed: ${response.status}`);
   }
   const text = await response.text();
+  const digest = await sha256Hex(text);
+  if (digest !== pack.sha256) {
+    throw new Error(`language pack checksum mismatch for ${pairId}`);
+  }
   const parsed = loadLanguagePack(JSON.parse(text));
   if (parsed.pack.id !== pairId) {
     throw new Error(`language pack mismatch: asked for ${pairId}, got ${parsed.pack.id}`);

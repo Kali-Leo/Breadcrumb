@@ -20,6 +20,10 @@ export const KnowledgeStateSchema = z.object({
     }),
   ),
   gaps: z.array(z.string().min(1)),
+  /** The script's expectations, carried in the state so a reflect result can be checked
+   * against them. Defaulted because rows written before this field existed must still parse
+   * — an older state simply has a smaller whitelist, never a parse failure. */
+  expectations: z.array(z.string().min(1)).default([]),
 });
 export type KnowledgeState = z.infer<typeof KnowledgeStateSchema>;
 
@@ -31,9 +35,9 @@ export const SCRIPT_PROMPT =
   '只返回 JSON:{"expectations":["…"],"misconceptions":["…"],"gaps":["…"]}';
 
 export const ScriptResultSchema = z.object({
-  expectations: z.array(z.string().min(1)).min(2).max(4),
-  misconceptions: z.array(z.string().min(1)).min(0).max(2),
-  gaps: z.array(z.string().min(1)).min(1).max(4),
+  expectations: z.array(z.string().min(1).max(80)).min(2).max(4),
+  misconceptions: z.array(z.string().min(1).max(80)).min(0).max(2),
+  gaps: z.array(z.string().min(1).max(80)).min(1).max(4),
 });
 export type ScriptResult = z.infer<typeof ScriptResultSchema>;
 
@@ -51,7 +55,18 @@ export function initialKnowledgeState(topic: string, script: ScriptResult): Know
     knownConcepts: [],
     misconceptions: script.misconceptions.map((belief) => ({ belief, corrected: false })),
     gaps: script.gaps,
+    expectations: script.expectations,
   };
+}
+
+/** Ceiling on the taught-concepts list inside the system prompt — long enough for a real
+ * session's script, short enough that the list can never dominate the prompt. */
+const MAX_KNOWN_TEXT_CHARS = 400;
+
+/** Collapses every run of whitespace (newlines included) into one space, so a stored entry
+ * cannot open what looks like a new instruction line inside the system prompt. */
+function foldToOneLine(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
 }
 
 export const REFLECT_PROMPT =
@@ -60,9 +75,11 @@ export const REFLECT_PROMPT =
   "学生误解列表里逐字出现的条目)。没有就给空数组。" +
   '只返回 JSON:{"learnedConcepts":["…"],"correctedMisconceptions":["…"]}';
 
+// Bounded on both axes: this reply is derived from text the learner wrote, and whatever
+// survives here is persisted and re-injected into every later system prompt.
 export const ReflectResultSchema = z.object({
-  learnedConcepts: z.array(z.string().min(1)),
-  correctedMisconceptions: z.array(z.string().min(1)),
+  learnedConcepts: z.array(z.string().min(1).max(40)).max(8),
+  correctedMisconceptions: z.array(z.string().min(1).max(80)).max(4),
 });
 export type ReflectResult = z.infer<typeof ReflectResultSchema>;
 
@@ -80,9 +97,17 @@ export function buildReflectUserMessage(state: KnowledgeState, userExplanation: 
 }
 
 /** Merges a reflect result into the state: learned concepts are added (deduped), and any
- * listed misconception whose belief string exactly matches flips to corrected. */
+ * listed misconception whose belief string exactly matches flips to corrected.
+ *
+ * Both halves are whitelists, not free text. A learned concept must already appear in this
+ * session's script (expectations or gaps) or in what the state already holds; anything else
+ * is dropped, exactly as an invented misconception is a silent no-op. The reflect call reads
+ * the learner's own explanation, so without this a sentence written into the teach-back box
+ * could ride into `knownConcepts` and from there into every later system prompt. */
 export function applyReflection(state: KnowledgeState, result: ReflectResult): KnowledgeState {
-  const knownConcepts = [...new Set([...state.knownConcepts, ...result.learnedConcepts])];
+  const allowedConcepts = new Set([...state.expectations, ...state.gaps, ...state.knownConcepts]);
+  const learned = result.learnedConcepts.filter((concept) => allowedConcepts.has(concept));
+  const knownConcepts = [...new Set([...state.knownConcepts, ...learned])];
   const correctedBeliefs = new Set(result.correctedMisconceptions);
   const misconceptions = state.misconceptions.map((misconception) =>
     correctedBeliefs.has(misconception.belief)
@@ -96,21 +121,26 @@ export function applyReflection(state: KnowledgeState, result: ReflectResult): K
  * disclosure), the spec-034 student stance (one question at a time, plain tone, no praise or
  * judgment), and the hard capability constraint that keeps replies inside the current
  * knowledge state. One positive-instruction block (tone contract 2026-08-02) — mirrors the
- * register of apps/desktop/src/lib/teachActions.ts's buildTeachSystemPrompt. */
+ * register of apps/desktop/src/lib/teachActions.ts's buildTeachSystemPrompt.
+ *
+ * Every interpolated item is folded onto one line and the taught-concepts list is capped, so
+ * a state entry can never forge a new section of the system prompt or crowd it out. */
 export function buildStudentSystemPrompt(
   card: { data: { name: string; personality: string } },
   state: KnowledgeState,
 ): string {
+  const known = state.knownConcepts.map(foldToOneLine);
   const knownText =
-    state.knownConcepts.length > 0 ? state.knownConcepts.join("、") : "目前还没有被教过任何内容";
+    known.length > 0 ? known.join("、").slice(0, MAX_KNOWN_TEXT_CHARS) : "目前还没有被教过任何内容";
   const uncorrected = state.misconceptions
     .filter((misconception) => !misconception.corrected)
-    .map((misconception) => misconception.belief);
+    .map((misconception) => foldToOneLine(misconception.belief));
   const misconceptionsLine =
     uncorrected.length > 0
       ? `你目前的误解(自然地表现出来,一旦被纠正就在回应里体现出改变;对方没纠出来就存疑放过,绝不揭底):${uncorrected.join("、")}。`
       : "";
-  const gapsLine = state.gaps.length > 0 ? `你知道自己还不懂:${state.gaps.join("、")}。` : "";
+  const gaps = state.gaps.map(foldToOneLine);
+  const gapsLine = gaps.length > 0 ? `你知道自己还不懂:${gaps.join("、")}。` : "";
 
   return (
     `你是 ${card.data.name},${card.data.personality}你是明示的 AI 学习伙伴,` +

@@ -45,6 +45,23 @@ describe("professional content derivations", () => {
     expect(thumbnailUrl("")).toBeNull();
   });
 
+  it("refuses any cover that is not a parseable http(s) url", () => {
+    expect(thumbnailUrl("javascript:alert(1)")).toBeNull();
+    expect(thumbnailUrl("data:image/png;base64,AAAA")).toBeNull();
+    expect(thumbnailUrl("file:///etc/passwd")).toBeNull();
+    expect(thumbnailUrl("i0.hdslb.com/bfs/abc.jpg")).toBeNull();
+    expect(thumbnailUrl("http://i0.hdslb.com/bfs/abc.jpg")).toBe(
+      "http://i0.hdslb.com/bfs/abc.jpg@256w_160h_1c",
+    );
+  });
+
+  it("matches the bilibili cdn on the host, not anywhere in the string", () => {
+    expect(thumbnailUrl("https://evil.example/x?q=hdslb.com")).toBe(
+      "https://evil.example/x?q=hdslb.com",
+    );
+    expect(thumbnailUrl("https://nothdslb.com/x.jpg")).toBe("https://nothdslb.com/x.jpg");
+  });
+
   it("says nothing about progress when the page never gave a length", () => {
     expect(watchedPercent(item())).toBe(50);
     expect(watchedPercent(item({ dwell: 900 }))).toBe(100);

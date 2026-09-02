@@ -64,7 +64,6 @@ export const interestSignalsSchema = z.object({
 });
 
 export type InterestSignalsResult = z.infer<typeof interestSignalsSchema>;
-export type ExtractedInterestSignal = InterestSignalsResult["signals"][number];
 
 const SYSTEM_PROMPT = `你是一个学习心理观察者。给定学习者与 AI 的一轮问答，以及这一轮踩过的知识点列表，
 为每个知识点判断学习者流露出的心理信号，以 JSON 返回：

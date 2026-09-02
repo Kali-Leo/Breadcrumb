@@ -27,6 +27,22 @@ coverage/
 *.log
 *.db
 *.sqlite
+*.sqlite3
+# SQLite's sidecar files hold rows that have not been checkpointed into the main file yet,
+# so *.db alone is not enough to keep a test database out of the repo.
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+# Crash and profiling dumps carry heap contents and absolute paths.
+*.heapsnapshot
+*.cpuprofile
+# Signing and packaging material.
+*.keystore
+*.jks
+*.crt
+*.cer
 packages/simlab/artifacts/
 
 # ===== editor / OS =====

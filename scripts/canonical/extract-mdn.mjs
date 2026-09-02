@@ -2,22 +2,33 @@
  * Purpose: dev-time canonical-pipeline step 1b (spec 025) — fetch each MDN Curriculum module
  * page, extract learning-outcome-level fine concepts via DeepSeek, and mechanically verify
  * (label verbatim inside quote, quote chunks verbatim inside the page text) so invented
- * content cannot pass. Usage: node scripts/canonical/extract-mdn.mjs <out.json>
+ * content cannot pass.
+ * Usage: node --env-file=.env scripts/canonical/extract-mdn.mjs <out.json>
+ * The key is read from the environment, never by parsing .env here: .env also holds the
+ * research signing private key, and a script that only needs one variable should only ever
+ * have that one in memory.
  * Side effects: network fetches to developer.mozilla.org; writes <out.json> and rejects file.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
+import { z } from "zod";
 
 const [, , outPath] = process.argv;
 if (!outPath) {
   console.error("usage: node extract-mdn.mjs <out.json>");
   process.exit(1);
 }
-const envText = readFileSync(new URL("../../.env", import.meta.url), "utf8");
-const apiKey = envText.match(/DEEPSEEK_API_KEY=(\S+)/)?.[1];
+const apiKey = process.env.DEEPSEEK_API_KEY;
 if (!apiKey) {
-  console.error("DEEPSEEK_API_KEY missing in .env");
+  console.error("DEEPSEEK_API_KEY missing — run with `node --env-file=.env`");
   process.exit(1);
 }
+
+/** The provider's envelope, not the model's answer: enough shape to index `choices[0]` without
+ * guessing. The answer itself is checked the hard way below — every label and quote must appear
+ * verbatim in the source, which no schema can express. */
+const CompletionSchema = z.object({
+  choices: z.array(z.object({ message: z.object({ content: z.string() }) })).min(1),
+});
 
 const BASE = "https://developer.mozilla.org/en-US/curriculum/";
 /** Module pages keyed by the built-in profile's item keys (JS fundamentals excluded — its 15
@@ -84,8 +95,14 @@ async function extractModule(key, url) {
     }),
   });
   if (!response.ok) throw new Error(`${key}: LLM HTTP ${response.status}`);
-  const data = await response.json();
-  return { items: JSON.parse(data.choices[0].message.content).items ?? [], text };
+  const data = CompletionSchema.parse(await response.json());
+  let answer;
+  try {
+    answer = JSON.parse(data.choices[0].message.content);
+  } catch {
+    throw new Error("model reply was not JSON");
+  }
+  return { items: Array.isArray(answer.items) ? answer.items : [], text };
 }
 
 const accepted = [];

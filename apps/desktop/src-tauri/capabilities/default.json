@@ -7,7 +7,7 @@
     "core:default",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "https://*" }, { "url": "http://*" }]
+      "allow": [{ "url": "https://*" }]
     },
     "sql:allow-close",
     "sql:allow-execute",

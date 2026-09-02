@@ -5,7 +5,7 @@
  */
 import { z } from "zod";
 import type { EvidenceItem, EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
-import { DEFAULT_TIMEOUT_MS } from "./provider";
+import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS } from "./provider";
 
 const searchResponseSchema = z.object({
   pages: z.array(z.object({ key: z.string(), title: z.string() })),
@@ -47,8 +47,15 @@ interface LanguageOutcome {
   failed: boolean;
 }
 
+/** Wikipedia edition subdomains: `en`, `zh`, `zh-yue`, `simple`… — the only shape that may be
+ * spliced into a hostname. Anything else is dropped, so a future caller wiring a user locale in
+ * cannot turn `language` into an arbitrary host. */
+const EDITION_PATTERN = /^[a-z]{2,12}(-[a-z0-9]{1,8})*$/;
+
 export function createWikipediaProvider(options: WikipediaProviderOptions): EvidenceProvider {
-  const languages = options.languages ?? ["zh", "en"];
+  const languages = (options.languages ?? ["zh", "en"]).filter((language) =>
+    EDITION_PATTERN.test(language),
+  );
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   return {
     name: "wikipedia",
@@ -84,6 +91,7 @@ async function fetchSummary(
   const summaryResponse = await fetchImpl(summaryUrl, {
     headers: WIKIPEDIA_HEADERS,
     signal: AbortSignal.timeout(timeoutMs),
+    maxRedirections: SEARCH_MAX_REDIRECTS,
   });
   if (!summaryResponse.ok) return null;
   const summary = summaryResponseSchema.parse(await summaryResponse.json());
@@ -111,6 +119,7 @@ async function searchOneLanguage(
     const searchResponse = await fetchImpl(searchUrl, {
       headers: WIKIPEDIA_HEADERS,
       signal: AbortSignal.timeout(timeoutMs),
+      maxRedirections: SEARCH_MAX_REDIRECTS,
     });
     if (!searchResponse.ok) return { items: [], failed: true };
     searchResult = searchResponseSchema.parse(await searchResponse.json());

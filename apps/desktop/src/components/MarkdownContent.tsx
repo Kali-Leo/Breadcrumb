@@ -8,6 +8,7 @@
  */
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Parent } from "mdast";
 import { memo, type ReactNode, useMemo } from "react";
 import remarkGfm from "remark-gfm";
@@ -34,7 +35,7 @@ const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
  * a clickable target. */
 const SAFE_LINK_SCHEMES = new Set(["http:", "https:", "mailto:"]);
 
-function isSafeHref(url: string | undefined): boolean {
+function isSafeHref(url: string | undefined): url is string {
   if (url === undefined) return false;
   try {
     return SAFE_LINK_SCHEMES.has(new URL(url, "https://example.invalid").protocol);
@@ -150,20 +151,32 @@ function renderNode(
           {children()}
         </blockquote>
       );
-    case "link":
-      return (
-        <a
+    case "link": {
+      // The webview must never navigate to an address the model chose: this window has no
+      // address bar, so a page loaded in it is indistinguishable from the app itself. Hand it
+      // to the system browser, as every other outbound link does (FactcheckBadge) — https
+      // only, which is the whole of the opener capability's allow list, so an http:// or
+      // mailto: link looks the same and quietly does nothing. The scheme check stays: React
+      // refuses javascript: URLs, but one framework behaviour is a thin only-check.
+      const url = node.url;
+      return isSafeHref(url) ? (
+        <button
           key={key}
-          // Model output decides this href. React refuses javascript: URLs, but relying on a
-          // framework behaviour for the only check is thin; state the allowed schemes here.
-          href={isSafeHref(node.url) ? node.url : undefined}
-          target="_blank"
-          rel="noreferrer"
-          className="text-amber-700 underline"
+          type="button"
+          onClick={() => {
+            if (url.startsWith("https://")) void openUrl(url);
+          }}
+          className="inline text-start text-amber-700 underline"
         >
           {children()}
-        </a>
+        </button>
+      ) : (
+        // An <a> with no href was not clickable either; the text keeps exactly its old look.
+        <span key={key} className="text-amber-700 underline">
+          {children()}
+        </span>
       );
+    }
     case "break":
       return <br key={key} />;
     case "thematicBreak":

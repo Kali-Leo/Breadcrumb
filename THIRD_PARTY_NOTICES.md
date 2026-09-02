@@ -50,6 +50,11 @@ poisson-disk-sampling、graphology 系列、mermaid、katex、react 等，均为
 
 ## 语言织入数据来源(spec 033,开发期构建语言包、运行时零网络)
 
+- **Wiktionary**(经 kaikki.org 的机器可读抽取,wiktionary.org / kaikki.org):
+  下载型语言包(`pairs.json` 所列 27 对)的词条、词性与释义来源,
+  **CC BY-SA 4.0** 许可(部分内容同时受 GFDL 覆盖);由
+  `scripts/language-packs/build-pack.mjs` 在开发期构建,每个包的 `attribution`
+  字段内嵌署名并在设置页展示。
 - **CC-CEDICT**(MDBG,cc-cedict.org):zh→en 语言包的词条、繁简形与释义来源,
   **CC BY-SA 4.0** 许可;由 `scripts/language-packs/build-zh-en.mjs` 在开发期
   构建为 `apps/desktop/src/assets/language-packs/zh-en.json` 随包分发。

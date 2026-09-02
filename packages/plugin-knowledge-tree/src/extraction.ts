@@ -16,7 +16,7 @@ export const extractionResponseSchema = z.object({
         /** One-sentence takeaway of what was learned about it in this round. */
         summary: z.string().min(1).max(200),
         /** Label of an existing node (or of another node in this batch) to attach under; null = root. */
-        parentLabel: z.string().nullable(),
+        parentLabel: z.string().max(40).nullable(),
       }),
     )
     .max(5),

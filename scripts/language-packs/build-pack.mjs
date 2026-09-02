@@ -30,7 +30,13 @@ import {
   glossCandidates,
 } from "./entry-builder.mjs";
 import { downloadCachedStream, kaikkiUrlFor, streamKaikkiEntries } from "./kaikki.mjs";
-import { downloadCached, parseCmudict, parseFrequencyList } from "./parsers.mjs";
+import {
+  downloadCached,
+  lockedSource,
+  parseCmudict,
+  parseFrequencyList,
+  requireLockedSource,
+} from "./parsers.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.join(HERE, ".cache");
@@ -47,7 +53,15 @@ const CATALOG_PATH = path.join(
   "catalog.json",
 );
 const PAIRS_PATH = path.join(HERE, "pairs.json");
-const CMUDICT_URL = "https://raw.githubusercontent.com/cmusphinx/cmudict/master/cmudict.dict";
+// GitHub sources are pinned to a commit, never to `master`: a branch is whatever the upstream
+// account holds today, and this data ends up inside packs shipped to learners. The commit ids
+// and every file's digest live in upstream.lock.json.
+const HERMITDAVE_COMMIT = "525f9b560de45753a5ea01069454e72e9aa541c6";
+const CMUDICT_COMMIT = "74790861f652b15e4ac49015a90074ad62a27690";
+const CMUDICT_URL = `https://raw.githubusercontent.com/cmusphinx/cmudict/${CMUDICT_COMMIT}/cmudict.dict`;
+/** A hostile or broken upstream should not be able to fill the disk; the pinned size plus half
+ * leaves room for an honest upstream that grew a little between re-pins. */
+const SIZE_CEILING_FACTOR = 1.5;
 
 /** English targets must be words a learner will actually meet again; same cutoff the zh→en
  * build settled on. */
@@ -75,7 +89,7 @@ function readJson(file) {
 
 /** Object with keys in alphabetical order — byte-identical output across rebuilds. */
 function sortedObject(object) {
-  const out = {};
+  const out = Object.create(null); // same reason as the accumulators: the keys are upstream text
   for (const key of Object.keys(object).sort()) out[key] = object[key];
   return out;
 }
@@ -83,10 +97,15 @@ function sortedObject(object) {
 /** hermitdave's FrequencyWords has two editions and not every language is in both. */
 async function loadFrequencyList(spec) {
   for (const edition of spec.editions) {
-    const url = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/${edition}/${spec.code}/${spec.code}_50k.txt`;
+    const url = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/${HERMITDAVE_COMMIT}/content/${edition}/${spec.code}/${spec.code}_50k.txt`;
     const filename = `freq-${spec.code}-${edition}.txt`;
+    const source = lockedSource(url);
+    if (source === null) {
+      console.log(`  ${spec.code}/${edition} is not pinned in upstream.lock.json, skipping`);
+      continue;
+    }
     try {
-      const bytes = await downloadCached(url, CACHE_DIR, filename);
+      const bytes = await downloadCached(url, CACHE_DIR, filename, source.sha256);
       const ranks = parseFrequencyList(bytes.toString("utf-8"));
       if (ranks.size >= spec.minimumWords) return ranks;
       console.log(
@@ -141,8 +160,11 @@ function isRedirectOrLabel(entry) {
  * their English gloss is the word the learner meets.
  */
 async function buildTowardEnglish({ extractPath, sourceRanks, cmuMap, englishFrequent }) {
-  const entries = {};
-  const forms = {};
+  // Null-prototype: `word` and `surface` below come straight off a remote JSONL, and a record
+  // spelling either of them `__proto__` would otherwise overwrite the prototype instead of
+  // adding a key — a silent hole in the pack rather than a visible failure.
+  const entries = Object.create(null);
+  const forms = Object.create(null);
   const stats = { candidates: 0, kept: 0, t1Safe: 0, withReading: 0 };
 
   for await (const raw of streamKaikkiEntries(extractPath)) {
@@ -234,7 +256,7 @@ async function buildFromEnglish({ extractPath, sourceRanks, englishFrequent }) {
     }
   }
 
-  const entries = {};
+  const entries = Object.create(null); // `lemma` is upstream text; see buildTowardEnglish.
   const stats = { candidates: claims.size, kept: 0, t1Safe: 0, withReading: 0 };
   for (const [lemma, claim] of claims) {
     const t1Safe = claim.claimants === 1;
@@ -252,7 +274,7 @@ async function buildFromEnglish({ extractPath, sourceRanks, englishFrequent }) {
   }
   // English inflections would need a second extract; the tokenizer falls back to exact and
   // lowercased matches, so an empty form table costs recall, never correctness.
-  return { entries, forms: {}, stats };
+  return { entries, forms: Object.create(null), stats };
 }
 
 async function buildPair(pair, shared) {
@@ -263,10 +285,20 @@ async function buildPair(pair, shared) {
     console.log(`  refused: no frequency list for ${sourceLang}`);
     return null;
   }
+  const kaikkiUrl = kaikkiUrlFor(pair.kaikkiLanguage);
+  const kaikkiSource = lockedSource(kaikkiUrl);
+  if (kaikkiSource === null) {
+    // Refusing beats building: an unpinned extract is one nobody has checked, and whatever it
+    // says would go out to learners as a dictionary. Pin it in upstream.lock.json to enable it.
+    console.log(`  refused: ${kaikkiUrl} is not pinned in upstream.lock.json`);
+    return null;
+  }
   const extractPath = await downloadCachedStream(
-    kaikkiUrlFor(pair.kaikkiLanguage),
+    kaikkiUrl,
     CACHE_DIR,
     `kaikki-${pair.kaikkiLanguage.replaceAll(" ", "-").toLowerCase()}.jsonl`,
+    kaikkiSource.sha256,
+    Math.ceil(kaikkiSource.bytes * SIZE_CEILING_FACTOR),
   );
 
   const built =
@@ -347,7 +379,14 @@ async function main() {
   const now = new Date();
   const version = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   const cmuMap = parseCmudict(
-    (await downloadCached(CMUDICT_URL, CACHE_DIR, "cmudict.dict")).toString("utf-8"),
+    (
+      await downloadCached(
+        CMUDICT_URL,
+        CACHE_DIR,
+        "cmudict.dict",
+        requireLockedSource(CMUDICT_URL).sha256,
+      )
+    ).toString("utf-8"),
   );
   const englishRanks = await loadFrequencyList(config.englishFrequency);
   if (englishRanks === null) throw new Error("the English frequency list is required");

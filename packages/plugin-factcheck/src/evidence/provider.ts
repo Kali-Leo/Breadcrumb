@@ -1,15 +1,34 @@
 /**
  * Purpose: the evidence-source contract — provider interface, evidence item shape, and a
  * small HTML-to-text helper shared by concrete providers.
- * Main exports: EvidenceProvider, EvidenceItem, EvidenceSearchResult, FetchLike, stripHtml.
+ * Main exports: EvidenceProvider, EvidenceItem, EvidenceSearchResult, FetchLike, FetchInit,
+ * stripHtml.
  */
 
+/**
+ * What the injected fetch accepts. `maxRedirections` is the one field beyond the browser's
+ * RequestInit: on the desktop the request is made by Rust, which follows redirects itself
+ * and re-checks nothing on the way, so this layer has to be able to say "do not follow, hand
+ * the 302 back to me" (safeFetch re-checks every hop). The browser build's shim maps it onto
+ * `redirect: "manual"`.
+ */
+export interface FetchInit extends RequestInit {
+  /** 0 = hand redirects back unfollowed. Omitted = the platform's default. */
+  maxRedirections?: number;
+}
+
 /** Injected fetch so the headless package stays free of platform networking choices. */
-export type FetchLike = typeof fetch;
+export type FetchLike = (input: RequestInfo | URL, init?: FetchInit) => Promise<Response>;
 
 /** Blocked networks (e.g. walled endpoints in mainland China) hang instead of failing,
  * so every provider request must time out fast and let the pipeline fall through. */
 export const DEFAULT_TIMEOUT_MS = 8000;
+
+/** Redirect budget for a search request. These go to a host we picked ourselves, so the risk
+ * a redirect carries is nothing like the one an externally-proposed page carries (safeFetch
+ * re-checks those by hand) — but the platform default of ten hops is still more rope than a
+ * search endpoint needs. */
+export const SEARCH_MAX_REDIRECTS = 2;
 
 export interface EvidenceItem {
   /** Link already verified accessible (fetch-and-verify) before being surfaced. */

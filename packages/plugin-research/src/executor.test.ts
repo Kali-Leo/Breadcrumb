@@ -9,8 +9,8 @@ import { withSequentialTransactions } from "@breadcrumb/core-db";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { describe, expect, it } from "vitest";
 import { runPendingResearchTasks, TASK_TIME_BUDGET_MS } from "./executor";
+import { signResearchTask } from "./signing.dev";
 import type { ResearchTask, SignedResearchTask } from "./taskSchema";
-import { signResearchTask } from "./taskSignature";
 
 const toHex = (bytes: Uint8Array): string =>
   Array.from(bytes)

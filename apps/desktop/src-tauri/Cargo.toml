@@ -30,3 +30,7 @@ serde_json = "1"
 fastembed = "5.17.4"
 fsrs = "6.6.1"
 
+# Unix only, and only for getuid(): validated_binary has to know whether the file it is about
+# to execute belongs to the user running the app, and std offers no way to ask.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

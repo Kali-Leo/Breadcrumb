@@ -3,10 +3,14 @@
  * headings, ask DeepSeek to extract fine-grained concepts from the ①②③ enumerations, and
  * mechanically verify every extraction (label must appear verbatim inside its quote, quote
  * chunks verbatim inside the source slice) so invented content cannot pass.
- * Usage: node scripts/canonical/extract-kebiao.mjs <kebiao.txt> <out.json>
+ * Usage: node --env-file=.env scripts/canonical/extract-kebiao.mjs <kebiao.txt> <out.json>
+ * The key is read from the environment, never by parsing .env here: .env also holds the
+ * research signing private key, and a script that only needs one variable should only ever
+ * have that one in memory.
  * Side effects: writes <out.json> and <out.json>.rejects.txt.
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { z } from "zod";
 
 const [, , sourcePath, outPath] = process.argv;
 if (!sourcePath || !outPath) {
@@ -14,12 +18,18 @@ if (!sourcePath || !outPath) {
   process.exit(1);
 }
 
-const envText = readFileSync(new URL("../../.env", import.meta.url), "utf8");
-const apiKey = envText.match(/DEEPSEEK_API_KEY=(\S+)/)?.[1];
+const apiKey = process.env.DEEPSEEK_API_KEY;
 if (!apiKey) {
-  console.error("DEEPSEEK_API_KEY missing in .env");
+  console.error("DEEPSEEK_API_KEY missing — run with `node --env-file=.env`");
   process.exit(1);
 }
+
+/** The provider's envelope, not the model's answer: enough shape to index `choices[0]` without
+ * guessing. The answer itself is checked the hard way below — every label and quote must appear
+ * verbatim in the source, which no schema can express. */
+const CompletionSchema = z.object({
+  choices: z.array(z.object({ message: z.object({ content: z.string() }) })).min(1),
+});
 
 /** Ordered unit headings as they appear in the extracted text; each slice runs to the next
  * heading (or a hard stop marker). Keys match the built-in profile's unit item keys. */
@@ -99,8 +109,14 @@ async function extractUnit(key, heading, slice) {
     }),
   });
   if (!response.ok) throw new Error(`${key}: HTTP ${response.status}`);
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content).items ?? [];
+  const data = CompletionSchema.parse(await response.json());
+  let answer;
+  try {
+    answer = JSON.parse(data.choices[0].message.content);
+  } catch {
+    throw new Error("model reply was not JSON");
+  }
+  return Array.isArray(answer.items) ? answer.items : [];
 }
 
 /** Quote soft check: ≥80% of its 10-char chunks appear verbatim in the whole source
@@ -121,7 +137,14 @@ const rejects = [];
 for (let index = 0; index < UNITS.length; index += 1) {
   const [key, heading] = UNITS[index];
   const slice = sliceFor(index);
-  const items = await extractUnit(key, heading, slice);
+  // One unhappy unit must not lose the other nineteen: a malformed reply costs this batch only.
+  let items;
+  try {
+    items = await extractUnit(key, heading, slice);
+  } catch (error) {
+    console.warn(`${key}: skipped (${error.message})`);
+    continue;
+  }
   for (const item of items) {
     const label = String(item.label ?? "").trim();
     const quote = String(item.quote ?? "").trim();

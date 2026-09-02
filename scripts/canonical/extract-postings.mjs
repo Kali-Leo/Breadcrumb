@@ -3,21 +3,31 @@
  * each real posting via DeepSeek with the verbatim double-check (label inside quote, quote
  * inside that posting's text), then aggregate across postings with a frequency floor so no
  * single posting's noise survives. Emits the bundled patch JSON keyed by SOC code.
- * Usage: node extract-postings.mjs <postings.json> <soc-code> <out.json>
+ * Usage: node --env-file=.env scripts/canonical/extract-postings.mjs <postings.json> <soc-code> <out.json>
+ * The key is read from the environment, never by parsing .env here: .env also holds the
+ * research signing private key, and a script that only needs one variable should only ever
+ * have that one in memory.
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { z } from "zod";
 
 const [, , postingsPath, socCode, outPath] = process.argv;
 if (!postingsPath || !socCode || !outPath) {
   console.error("usage: node extract-postings.mjs <postings.json> <soc-code> <out.json>");
   process.exit(1);
 }
-const envText = readFileSync(new URL("../../.env", import.meta.url), "utf8");
-const apiKey = envText.match(/DEEPSEEK_API_KEY=(\S+)/)?.[1];
+const apiKey = process.env.DEEPSEEK_API_KEY;
 if (!apiKey) {
-  console.error("DEEPSEEK_API_KEY missing");
+  console.error("DEEPSEEK_API_KEY missing — run with `node --env-file=.env`");
   process.exit(1);
 }
+
+/** The provider's envelope, not the model's answer: enough shape to index `choices[0]` without
+ * guessing. The answer itself is checked the hard way below — every label and quote must appear
+ * verbatim in the source, which no schema can express. */
+const CompletionSchema = z.object({
+  choices: z.array(z.object({ message: z.object({ content: z.string() }) })).min(1),
+});
 
 const MIN_POSTINGS = 3;
 
@@ -43,8 +53,14 @@ async function extract(posting) {
     }),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content).items ?? [];
+  const data = CompletionSchema.parse(await response.json());
+  let answer;
+  try {
+    answer = JSON.parse(data.choices[0].message.content);
+  } catch {
+    throw new Error("model reply was not JSON");
+  }
+  return Array.isArray(answer.items) ? answer.items : [];
 }
 
 const { postings } = JSON.parse(readFileSync(postingsPath, "utf8"));

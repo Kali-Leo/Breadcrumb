@@ -123,7 +123,6 @@ export const IMPORTANCE_PROMPT =
 export const ImportanceResultSchema = z.object({
   importance: z.number().int().min(1).max(10),
 });
-export type ImportanceResult = z.infer<typeof ImportanceResultSchema>;
 
 export function buildImportanceUserMessage(observationText: string): string {
   return `观察记录:\n${observationText}`;
@@ -142,9 +141,8 @@ export const REFLECTION_PROMPT =
   '只返回 JSON:{"insights": ["洞察1", "洞察2"]}';
 
 export const ReflectionResultSchema = z.object({
-  insights: z.array(z.string().min(1)).min(1).max(3),
+  insights: z.array(z.string().min(1).max(120)).min(1).max(3),
 });
-export type ReflectionResult = z.infer<typeof ReflectionResultSchema>;
 
 export function buildReflectionUserMessage(observations: readonly CompanionMemoryLike[]): string {
   const lines = observations.map((observation) => `- ${observation.content}`).join("\n");

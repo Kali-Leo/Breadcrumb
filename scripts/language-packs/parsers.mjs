@@ -1,18 +1,68 @@
 /**
  * Purpose: cached downloads plus line-format parsers for the language-pack builder's upstream
  * sources — CC-CEDICT, FrequencyWords, and CMUdict.
- * Main exports: downloadCached, parseCedict, parseFrequencyList, parseCmudict.
+ *
+ * Every download is checked against upstream.lock.json before it is allowed into `.cache/`.
+ * The packs built here are shipped to learners' machines, so an upstream that quietly changes
+ * (or is taken over) must stop the build rather than flow through it — see upstream.lock.json
+ * for how to re-pin a source on purpose.
+ * Main exports: lockedSource, requireLockedSource, downloadCached, digestOf, parseCedict,
+ * parseFrequencyList, parseCmudict.
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const LOCK = JSON.parse(fs.readFileSync(path.join(HERE, "upstream.lock.json"), "utf-8"));
+
+/** The pinned digest and size for `url`, or null when this upstream has never been pinned. */
+export function lockedSource(url) {
+  return LOCK.sources[url] ?? null;
+}
+
+/** Same, but refuses to continue: an unpinned upstream is a hole in the supply chain, not a
+ * missing convenience. The message says exactly what to do about it. */
+export function requireLockedSource(url) {
+  const source = lockedSource(url);
+  if (source === null) {
+    throw new Error(
+      `no pin for ${url}\n` +
+        `  Download it once, run \`sha256sum\` and \`stat -c %s\` on the file, then add both\n` +
+        `  under "sources" in scripts/language-packs/upstream.lock.json.`,
+    );
+  }
+  return source;
+}
+
+export function digestOf(buffer) {
+  return crypto.createHash("sha256").update(buffer).digest("hex");
+}
+
+function assertDigest(url, actual, expectedSha256) {
+  if (actual === expectedSha256) return;
+  throw new Error(
+    `checksum mismatch for ${url}\n  expected ${expectedSha256}\n  got      ${actual}\n` +
+      `  Either the upstream moved (re-pin it in upstream.lock.json after checking what changed)\n` +
+      `  or the file was tampered with. Nothing was written to the cache.`,
+  );
+}
 
 /** Downloads `url` into `cacheDir/filename`, skipping the network call when the file already
- * exists on disk. Returns the raw bytes either way. */
-export async function downloadCached(url, cacheDir, filename) {
+ * exists on disk. Both paths are verified against `expectedSha256` (required — a download with
+ * no expected digest is exactly the hole this function exists to close). Returns the raw
+ * bytes. */
+export async function downloadCached(url, cacheDir, filename, expectedSha256) {
+  if (typeof expectedSha256 !== "string" || expectedSha256.length !== 64) {
+    throw new Error(`downloadCached(${url}) needs a 64-char expectedSha256`);
+  }
   const dest = path.join(cacheDir, filename);
   if (fs.existsSync(dest)) {
+    const cached = fs.readFileSync(dest);
+    assertDigest(url, digestOf(cached), expectedSha256);
     console.log(`  cached: ${filename}`);
-    return fs.readFileSync(dest);
+    return cached;
   }
   console.log(`  downloading: ${url}`);
   const res = await fetch(url);
@@ -20,6 +70,7 @@ export async function downloadCached(url, cacheDir, filename) {
     throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
   }
   const buffer = Buffer.from(await res.arrayBuffer());
+  assertDigest(url, digestOf(buffer), expectedSha256);
   fs.mkdirSync(cacheDir, { recursive: true });
   fs.writeFileSync(dest, buffer);
   return buffer;

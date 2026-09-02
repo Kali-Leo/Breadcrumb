@@ -10,7 +10,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import zlib from "node:zlib";
 import { buildEntryForLemma } from "./entry-builder.mjs";
-import { downloadCached, parseCedict, parseCmudict, parseFrequencyList } from "./parsers.mjs";
+import {
+  downloadCached,
+  parseCedict,
+  parseCmudict,
+  parseFrequencyList,
+  requireLockedSource,
+} from "./parsers.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.join(HERE, ".cache");
@@ -25,16 +31,22 @@ const OUTPUT_PATH = path.join(
   "language-packs",
   "zh-en.json",
 );
+const HERMITDAVE_COMMIT = "525f9b560de45753a5ea01069454e72e9aa541c6";
+const CMUDICT_COMMIT = "74790861f652b15e4ac49015a90074ad62a27690";
 const CEDICT_URL = "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz";
-const ZH_FREQ_URL =
-  "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/zh_cn/zh_cn_50k.txt";
-const EN_FREQ_URL =
-  "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_50k.txt";
-const CMUDICT_URL = "https://raw.githubusercontent.com/cmusphinx/cmudict/master/cmudict.dict";
+// GitHub sources are pinned to a commit, never to `master`: a branch is whatever the upstream
+// account holds today, and these files end up inside the pack shipped to learners. The commit
+// ids and every file's digest live in upstream.lock.json.
+const ZH_FREQ_URL = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/${HERMITDAVE_COMMIT}/content/2018/zh_cn/zh_cn_50k.txt`;
+const EN_FREQ_URL = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/${HERMITDAVE_COMMIT}/content/2018/en/en_50k.txt`;
+const CMUDICT_URL = `https://raw.githubusercontent.com/cmusphinx/cmudict/${CMUDICT_COMMIT}/cmudict.dict`;
 
 const MIN_T1SAFE = 2000;
 const DEFAULT_EN_CUTOFF = 20000;
 const LOOSENED_EN_CUTOFF = 30000;
+
+const shaOf = (url) => requireLockedSource(url).sha256;
+const utf8 = (buffer) => buffer.toString("utf-8");
 
 /** Sorts an object's keys alphabetically, preserving field order within each value. */
 function sortedObject(obj) {
@@ -83,14 +95,13 @@ function runBuild({ cedictBySimplified, zhRank, cmuMap, enWordsOrdered, enFreqCu
 
 async function main() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(HERE, ".gitignore"), ".cache/\n");
 
   console.log("Downloading source data (cached after first run)...");
   const [cedictGz, zhFreqText, enFreqText, cmudictText] = await Promise.all([
-    downloadCached(CEDICT_URL, CACHE_DIR, "cedict_1_0_ts_utf-8_mdbg.txt.gz"),
-    downloadCached(ZH_FREQ_URL, CACHE_DIR, "zh_cn_50k.txt").then((b) => b.toString("utf-8")),
-    downloadCached(EN_FREQ_URL, CACHE_DIR, "en_50k.txt").then((b) => b.toString("utf-8")),
-    downloadCached(CMUDICT_URL, CACHE_DIR, "cmudict.dict").then((b) => b.toString("utf-8")),
+    downloadCached(CEDICT_URL, CACHE_DIR, "cedict_1_0_ts_utf-8_mdbg.txt.gz", shaOf(CEDICT_URL)),
+    downloadCached(ZH_FREQ_URL, CACHE_DIR, "zh_cn_50k.txt", shaOf(ZH_FREQ_URL)).then(utf8),
+    downloadCached(EN_FREQ_URL, CACHE_DIR, "en_50k.txt", shaOf(EN_FREQ_URL)).then(utf8),
+    downloadCached(CMUDICT_URL, CACHE_DIR, "cmudict.dict", shaOf(CMUDICT_URL)).then(utf8),
   ]);
   const cedictText = zlib.gunzipSync(cedictGz).toString("utf-8");
 

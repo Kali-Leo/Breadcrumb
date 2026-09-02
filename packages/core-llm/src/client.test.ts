@@ -3,8 +3,8 @@
  * using an injected fake fetch — no network involved.
  */
 import { describe, expect, it, vi } from "vitest";
-import { createLlmClient } from "./client";
-import { STREAM_FIRST_BYTE_TIMEOUT_MS } from "./retry";
+import { createLlmClient, MAX_STREAM_CONTENT_CHARS } from "./client";
+import { STREAM_FIRST_BYTE_TIMEOUT_MS, STREAM_IDLE_TIMEOUT_MS } from "./retry";
 
 function sseResponseFromLines(lines: readonly string[]): Response {
   const encoder = new TextEncoder();
@@ -39,6 +39,33 @@ function makeClient(response: Response, capturedRequests: RequestInit[] = []) {
       return Promise.resolve(response);
     },
   });
+}
+
+/** A client whose response body this test drives chunk by chunk, reacting to an abort the
+ * way a real fetch does: by erroring the body stream from the inside. */
+function clientOverDrivenBody(): {
+  client: ReturnType<typeof clientWith>;
+  push: (text: string) => void;
+  close: () => void;
+} {
+  const encoder = new TextEncoder();
+  let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      bodyController = controller;
+    },
+  });
+  const client = clientWith((_url, init) => {
+    init?.signal?.addEventListener("abort", () =>
+      bodyController?.error(new Error("aborted by the deadline")),
+    );
+    return Promise.resolve(new Response(body, { status: 200 }));
+  });
+  return {
+    client,
+    push: (text) => bodyController?.enqueue(encoder.encode(text)),
+    close: () => bodyController?.close(),
+  };
 }
 
 describe("createLlmClient.chatStream", () => {
@@ -147,40 +174,103 @@ describe("createLlmClient.chatStream", () => {
     }
   });
 
-  it("clears the first-byte deadline once a chunk lands, so a long answer is never cut off", async () => {
+  it("keeps a long answer alive far past the first-byte budget, one chunk at a time", async () => {
     vi.useFakeTimers();
     try {
-      const encoder = new TextEncoder();
-      let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined;
-      const body = new ReadableStream<Uint8Array>({
-        start(controller) {
-          bodyController = controller;
-        },
-      });
-      const client = clientWith((_url, init) => {
-        init?.signal?.addEventListener("abort", () =>
-          bodyController?.error(new Error("aborted by the deadline")),
-        );
-        return Promise.resolve(new Response(body, { status: 200 }));
-      });
-
+      const { client, push, close } = clientOverDrivenBody();
       const deltas: string[] = [];
       const streaming = client.chatStream([{ role: "user", content: "hi" }], (t) => deltas.push(t));
-      bodyController?.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"一"}}]}\n'));
-      await vi.advanceTimersByTimeAsync(0);
-      expect(deltas).toEqual(["一"]);
 
-      // Far past the first-byte budget: a total-duration timeout would have killed this.
-      await vi.advanceTimersByTimeAsync(STREAM_FIRST_BYTE_TIMEOUT_MS * 3);
-      bodyController?.enqueue(
-        encoder.encode('data: {"choices":[{"delta":{"content":"二"}}]}\ndata: [DONE]\n'),
-      );
-      bodyController?.close();
+      // Five chunks, each well inside the silence budget but the whole answer running for
+      // longer than the first-byte budget — a total-duration timeout would have killed this.
+      for (let index = 0; index < 5; index += 1) {
+        push(`data: {"choices":[{"delta":{"content":"${index}"}}]}\n`);
+        await vi.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS - 1_000);
+      }
+      expect(STREAM_IDLE_TIMEOUT_MS * 5).toBeGreaterThan(STREAM_FIRST_BYTE_TIMEOUT_MS);
+      push("data: [DONE]\n");
+      close();
 
-      expect((await streaming).content).toBe("一二");
+      expect((await streaming).content).toBe("01234");
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("times out when the stream goes silent mid-answer, instead of hanging forever", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, push } = clientOverDrivenBody();
+      const deltas: string[] = [];
+      const streaming = client.chatStream([{ role: "user", content: "hi" }], (t) => deltas.push(t));
+      const settled = expect(streaming).rejects.toMatchObject({
+        name: "LlmTimeoutError",
+        message: `LLM request timed out after ${STREAM_IDLE_TIMEOUT_MS}ms`,
+      });
+
+      push('data: {"choices":[{"delta":{"content":"半"}}]}\n');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(deltas).toEqual(["半"]);
+
+      // The endpoint then stalls without closing the connection.
+      await vi.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS + 1);
+      await settled;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("still reports the first-byte budget when nothing ever arrived", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client } = clientOverDrivenBody();
+      const streaming = client.chatStream([{ role: "user", content: "hi" }], () => undefined);
+      const settled = expect(streaming).rejects.toMatchObject({
+        name: "LlmTimeoutError",
+        message: `LLM request timed out after ${STREAM_FIRST_BYTE_TIMEOUT_MS}ms`,
+      });
+      await vi.advanceTimersByTimeAsync(STREAM_FIRST_BYTE_TIMEOUT_MS + 1);
+      await settled;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("refuses to keep accumulating past the content ceiling", async () => {
+    // Five deltas, each a legal SSE line, that together overrun the ceiling.
+    const part = "x".repeat(MAX_STREAM_CONTENT_CHARS / 4);
+    const response = sseResponseFromLines([
+      ...Array.from({ length: 5 }, () => `data: {"choices":[{"delta":{"content":"${part}"}}]}`),
+      "data: [DONE]",
+    ]);
+    await expect(
+      makeClient(response).chatStream([{ role: "user", content: "hi" }], () => undefined),
+    ).rejects.toThrow("LLM stream exceeded");
+  });
+
+  it("posts to the validated completions URL and refuses a plaintext one", async () => {
+    const urls: string[] = [];
+    const client = createLlmClient({
+      baseUrl: "https://api.example.com/v1/?token=abc",
+      apiKey: "test-key",
+      model: "test-model",
+      fetchImpl: (url) => {
+        urls.push(String(url));
+        return Promise.resolve(sseResponseFromLines(["data: [DONE]"]));
+      },
+    });
+    await client.chatStream([{ role: "user", content: "hi" }], () => undefined);
+    expect(urls).toEqual(["https://api.example.com/v1/chat/completions"]);
+
+    const plaintext = createLlmClient({
+      baseUrl: "http://proxy.example.com/v1",
+      apiKey: "test-key",
+      model: "test-model",
+      fetchImpl: () => Promise.reject(new Error("must never be called")),
+    });
+    await expect(
+      plaintext.chatStream([{ role: "user", content: "hi" }], () => undefined),
+    ).rejects.toThrow("must be https");
   });
 
   it("sends model, messages and stream flags in the request body", async () => {

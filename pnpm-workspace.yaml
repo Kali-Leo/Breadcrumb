@@ -4,8 +4,10 @@ packages:
 allowBuilds:
   better-sqlite3: true
   esbuild: true
-  onnxruntime-node: set this to true or false
-  protobufjs: set this to true or false
-  sharp: set this to true or false
-minimumReleaseAgeExclude:
-  - '@types/better-sqlite3@9.6.0'
+  # These three only reach the tree as optional dependencies of @huggingface/transformers,
+  # which no edition of this app installs — the browser build refuses embeddings outright
+  # (apps/web/src/shims/embeddings.ts) and the desktop build does them in Rust. Their
+  # postinstall scripts would download native binaries, so: no.
+  onnxruntime-node: false
+  protobufjs: false
+  sharp: false

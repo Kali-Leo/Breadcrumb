@@ -4,8 +4,9 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { describe, expect, it } from "vitest";
+import { signResearchTask } from "./signing.dev";
 import type { ResearchTask, SignedResearchTask } from "./taskSchema";
-import { signResearchTask, verifyResearchTaskSignature } from "./taskSignature";
+import { verifyResearchTaskSignature } from "./taskSignature";
 
 const toHex = (bytes: Uint8Array): string =>
   Array.from(bytes)

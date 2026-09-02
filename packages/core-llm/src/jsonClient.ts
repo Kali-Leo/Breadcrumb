@@ -7,6 +7,7 @@
  */
 import { z } from "zod";
 import { type ChatMessage, type LlmClientConfig, withLanguageDirective } from "./client";
+import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
 import { fetchWithRetry, NON_STREAMING_TIMEOUT_MS } from "./retry";
 
@@ -73,7 +74,7 @@ async function requestCompletion(
 ): Promise<{ content: string; usage: TokenUsage }> {
   const { response, release } = await fetchWithRetry(
     config.fetchImpl,
-    `${config.baseUrl.replace(/\/$/, "")}/chat/completions`,
+    completionsUrl(config.baseUrl),
     {
       method: "POST",
       headers: {
@@ -113,13 +114,25 @@ async function requestCompletion(
   }
 }
 
-/** Parses `content` as JSON and validates it against `schema`; throws the underlying error
- * (JSON.parse SyntaxError or ZodError) unchanged so the caller can read its message. */
+/** Parses `content` as JSON and validates it against `schema`. Zod errors travel unchanged —
+ * they name paths and expected types, not values, and the model needs them to correct itself.
+ * A JSON syntax error does NOT: V8 quotes the offending text into its message, and that
+ * message is carried by ChatJsonError all the way into `ai_failures.message`, which would put
+ * a slice of the learner's own conversation (as the model rewrote it) into a debug log. */
 function parseAndValidate<Schema extends z.ZodType>(
   content: string,
   schema: Schema,
 ): z.infer<Schema> {
-  return schema.parse(JSON.parse(content));
+  let value: unknown;
+  try {
+    value = JSON.parse(content);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`model reply was not valid JSON (${content.length} chars)`);
+    }
+    throw error;
+  }
+  return schema.parse(value);
 }
 
 /** The mutable running total of what the provider has already been asked to bill us for.

@@ -63,10 +63,16 @@
 已经核对过它**不会**泄漏到：日志、控制台、错误消息、`ai_failures` 表、`llm_calls` 表、
 崩溃报告、或研究课题的统计里。仓库和 git 历史里也没有任何密钥。
 
-**已知的不足**：明文存储意味着任何以你的身份运行的程序都能读到它。
+**已知的不足（桌面版）**：明文存储意味着任何以你的身份运行的程序都能读到它。
 数据库文件权限已收紧到 `0600`，但这不等于加密。
 把它挪进操作系统钥匙串是待办事项，代价是引入一个系统依赖（Linux 上是 dbus/secret-service），
 会让"下载就能跑"这件事变难 —— 所以还没做。
+
+**已知的不足（浏览器版）**：浏览器里没有 `0600` 这种东西。数据存在 OPFS 里，
+而 OPFS 的隔离单位是**源**、不是网址路径 —— 这一版部署在 `kali-leo.github.io`，
+与该账号下其它所有 GitHub Pages 项目同源，那些页面上的脚本能打开这里的数据库、
+读出明文密钥。真正的修法是给浏览器版配一个独立域名；在那之前，
+如果你的密钥值得保护，请用桌面版。
 
 ---
 
@@ -141,9 +147,11 @@ GTK3 那一族"无人维护"告警按 id 忽略并注明原因 —— Tauri 2 �
 以及字体的 `OFL.txt`。
 
 内置数据的许可与署名：O*NET 30.2（CC BY 4.0）、ESCO v1.2.1（CC BY 4.0）、
-Wikidata（CC0）、CC-CEDICT（CC BY-SA 4.0）、FrequencyWords（CC BY-SA 4.0）、
+Wikidata（CC0）、Wiktionary（经 kaikki.org 抽取，CC BY-SA 4.0，部分内容同时受 GFDL 覆盖，
+是全部下载型语言包的词条来源）、CC-CEDICT（CC BY-SA 4.0）、FrequencyWords（CC BY-SA 4.0）、
 CMUdict（BSD-2）、霞鹜文楷（SIL OFL 1.1）、地图美术资产来自 Nortantis（AGPL-3.0）、
 学习伙伴的文字设定衍生自 David Revoy《Pepper&Carrot》（CC BY 4.0，有改动，不代表其背书）。
 
-> `zh-en.json` 词包按 **CC BY-SA 4.0** 单独授权，不并入本仓库的 AGPL——
-> CC 的单向兼容清单只列了 GPLv3，没有 AGPLv3。
+> 语言包按 **CC BY-SA 4.0** 单独授权，不并入本仓库的 AGPL——CC 的单向兼容清单
+> 只列了 GPLv3，没有 AGPLv3。这对随包分发的 `zh-en.json` 和 `pairs.json` 里
+> 那 27 个下载型语言包一视同仁：它们的许可情况完全一样。

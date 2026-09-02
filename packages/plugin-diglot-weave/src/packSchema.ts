@@ -6,18 +6,29 @@
  */
 import { z } from "zod";
 
+/** A pack is a file on disk, but it is a *data* file — bounded so a corrupt or hostile one
+ * fails the contract instead of being loaded whole. The shipped zh-en pack is ~25k entries
+ * whose longest value is a couple of dozen characters, so both ceilings sit far above any
+ * real pack. */
+const MAX_TABLE_ENTRIES = 200_000;
+const MAX_VALUE_LENGTH = 200;
+
+function withinTableLimit(table: Record<string, unknown>): boolean {
+  return Object.keys(table).length <= MAX_TABLE_ENTRIES;
+}
+
 /** One replaceable word: source lemma → its dominant target-language translation.
  * Only entries that passed the build-time T1 whitelist (single dominant sense, content
  * word, not a proper noun, single-word target) may set `t1Safe: true`. */
 export const PackEntrySchema = z.object({
   /** The replacement word in the target language (single word, no spaces, for T1). */
-  target: z.string().min(1),
+  target: z.string().min(1).max(MAX_VALUE_LENGTH),
   /** Coarse part of speech tag, e.g. "n", "v", "adj" — display only. */
-  pos: z.string(),
+  pos: z.string().max(MAX_VALUE_LENGTH),
   /** Pronunciation of the target word (IPA preferred, romanization fallback, "" if none). */
-  reading: z.string(),
+  reading: z.string().max(MAX_VALUE_LENGTH),
   /** Other acceptable translations of the source lemma — used by guess grading. */
-  altTargets: z.array(z.string()),
+  altTargets: z.array(z.string().max(MAX_VALUE_LENGTH)),
   /** Source-language frequency rank (1 = most frequent) — drives introduction order. */
   freqRank: z.number().int().positive(),
   /** Build-time whitelist verdict; false entries are kept for lookup but never woven. */
@@ -43,9 +54,13 @@ export const LanguagePackSchema = z.object({
     ruby: z.boolean(),
   }),
   /** Inflected/variant surface form → source lemma (identity forms are omitted). */
-  forms: z.record(z.string(), z.string()),
+  forms: z
+    .record(z.string(), z.string().max(MAX_VALUE_LENGTH))
+    .refine(withinTableLimit, { message: `forms must hold at most ${MAX_TABLE_ENTRIES} keys` }),
   /** Source lemma → entry. */
-  entries: z.record(z.string(), PackEntrySchema),
+  entries: z
+    .record(z.string(), PackEntrySchema)
+    .refine(withinTableLimit, { message: `entries must hold at most ${MAX_TABLE_ENTRIES} keys` }),
 });
 
 export type PackEntry = z.infer<typeof PackEntrySchema>;
@@ -79,7 +94,15 @@ export function resolveLemma(surface: string, loaded: LoadedLanguagePack): strin
 
 /** Validates raw JSON (throws ZodError on contract violation) and builds derived indexes. */
 export function loadLanguagePack(rawJson: unknown): LoadedLanguagePack {
-  const pack = LanguagePackSchema.parse(rawJson);
+  const parsed = LanguagePackSchema.parse(rawJson);
+  // Prototype-free lookup tables: `forms`/`entries` are indexed by whatever word the message
+  // contains, and "toString" / "constructor" are ordinary English words. On a plain object
+  // those keys hit Object.prototype and resolveLemma would hand back a function.
+  const pack: LanguagePack = {
+    ...parsed,
+    forms: Object.assign(Object.create(null) as Record<string, string>, parsed.forms),
+    entries: Object.assign(Object.create(null) as Record<string, PackEntry>, parsed.entries),
+  };
   const lemmasByTarget = new Map<string, string[]>();
   for (const [lemma, entry] of Object.entries(pack.entries)) {
     for (const target of [entry.target, ...entry.altTargets]) {

@@ -14,10 +14,27 @@ export function videoUrl(site: string, id: string): string | null {
   return null;
 }
 
-/** Bilibili covers accept a size suffix; other hosts must be requested as-is. */
+/** True for bilibili's own CDN and nothing that merely ends in those letters — a host is a
+ * suffix match on a label boundary, never a substring. */
+function isBilibiliCdn(hostname: string): boolean {
+  return hostname === "hdslb.com" || hostname.endsWith(".hdslb.com");
+}
+
+/** Bilibili covers accept a size suffix; other hosts must be requested as-is. The string
+ * comes from the local service, which copies it off a page, and the caller hands it straight
+ * to an <img src> — so anything that is not a parseable http(s) url gets no image at all
+ * rather than an unexplained request. */
 export function thumbnailUrl(pic: string): string | null {
   if (!pic) return null;
-  return pic.includes("hdslb.com") ? `${pic}@256w_160h_1c` : pic;
+  let parsed: URL;
+  try {
+    parsed = new URL(pic);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+  const url = parsed.toString();
+  return isBilibiliCdn(parsed.hostname) ? `${url}@256w_160h_1c` : url;
 }
 
 /** Null when the page never told us the total length — then there is no honest percentage. */

@@ -3,7 +3,8 @@
  * the Tauri fetch, and the directive naming the language the model must answer in (spec 058
  * §1). Every call site builds its config here so no feature can quietly answer in the wrong
  * language.
- * Main exports: llmConfigFrom, currentAnswerLanguage, currentPriceCurrency.
+ * Main exports: llmConfigFrom, llmConfigWithoutLanguageDirective, currentAnswerLanguage,
+ * currentPriceCurrency.
  */
 import {
   buildLanguageDirective,
@@ -73,10 +74,13 @@ function gatedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respo
 }
 
 /**
- * `firm` is the second attempt after a reply came back in the wrong language: same request,
- * a harder instruction.
+ * The config for a call whose own prompt already names the language it must answer in — fact
+ * checking is the case: plugin-factcheck's verdict prompt asks for 中文 by contract, and a
+ * second, contradictory instruction about the output language is how a reply comes back in
+ * neither. Assembled here anyway, because gatedFetch is the point of this module: a call site
+ * that builds its own config is a call site that can forget the network switch.
  */
-export function llmConfigFrom(apiConfig: ApiConfig, options?: { firm?: boolean }): LlmClientConfig {
+export function llmConfigWithoutLanguageDirective(apiConfig: ApiConfig): LlmClientConfig {
   // Named rather than spread: priceCurrency is billing bookkeeping and has no business
   // travelling to the provider with the request.
   return {
@@ -84,6 +88,16 @@ export function llmConfigFrom(apiConfig: ApiConfig, options?: { firm?: boolean }
     apiKey: apiConfig.apiKey,
     model: apiConfig.model,
     fetchImpl: gatedFetch,
+  };
+}
+
+/**
+ * `firm` is the second attempt after a reply came back in the wrong language: same request,
+ * a harder instruction.
+ */
+export function llmConfigFrom(apiConfig: ApiConfig, options?: { firm?: boolean }): LlmClientConfig {
+  return {
+    ...llmConfigWithoutLanguageDirective(apiConfig),
     answerLanguageDirective: buildLanguageDirective(currentAnswerLanguage(), options),
   };
 }

@@ -76,7 +76,18 @@ on the desktop, never leaves your device.
 
 ## 存储
 
-数据在浏览器的 **OPFS**（源私有文件系统）里，按站点隔离，跟你打开的其他网站互不可见。
+数据在浏览器的 **OPFS**（源私有文件系统）里。
+
+**隔离的单位是「源」，不是网址路径。** 这一版部署在 `kali-leo.github.io` 上，与该账号下
+其它所有 GitHub Pages 项目**同源** —— 那些页面上的脚本能打开这里的 `breadcrumb.db`，
+读出包括 API 密钥在内的全部数据。别的网站读不到，同源的兄弟项目读得到。
+介意的话请用桌面版。
+
+> OPFS is isolated per **origin**, not per path. This build is served from
+> `kali-leo.github.io`, the same origin as every other GitHub Pages project under that
+> account, so script on any of those pages can open this app's `breadcrumb.db` and read
+> everything in it, API key included. Other websites cannot; sibling projects on the same
+> origin can. Use the desktop build if that matters to you.
 
 - **无痕模式 / 禁用存储时**：应用照常工作，但**关掉标签页就没了**。
   这种情况启动时会有一条横幅明说，不会让你白写一天。

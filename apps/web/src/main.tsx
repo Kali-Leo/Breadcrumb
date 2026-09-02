@@ -16,6 +16,16 @@ import ReactDOM from "react-dom/client";
 import { isPersistent, openBrowserDatabase } from "./shims/sqlite";
 import "@desktop/App.css";
 
+// Clickjacking guard. `frame-ancestors` is the right answer and we cannot give it: the CSP is
+// delivered as a <meta> tag (see index.html) because GitHub Pages sets no response headers, and
+// browsers ignore frame-ancestors in meta policies. So the page checks for itself. It matters
+// because the irreversible actions here — removing a language pack, clearing data, the API key
+// field — are exactly what a transparent overlay would aim someone at.
+if (globalThis.self !== globalThis.top) {
+  document.documentElement.textContent = "";
+  throw new Error("Breadcrumb refuses to run inside a frame");
+}
+
 function warnIfNotPersistent(): void {
   if (isPersistent()) return;
   const banner = document.createElement("div");

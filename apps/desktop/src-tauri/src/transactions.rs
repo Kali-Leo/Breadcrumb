@@ -20,6 +20,20 @@ pub struct TransactionStatement {
     pub params: Vec<JsonValue>,
 }
 
+/// Ceiling on one batch. Every statement holds the same pooled connection for the whole
+/// transaction, so an unbounded batch from the renderer is a lock the rest of the app queues
+/// behind. The app's own batches are one migration or one screen's worth of writes.
+const MAX_STATEMENTS: usize = 10_000;
+
+/// Separate from the command so it can be tested without a database: the command itself needs
+/// a live pool, this rule does not.
+fn check_batch_size(count: usize) -> Result<(), String> {
+    if count > MAX_STATEMENTS {
+        return Err(format!("too many statements in one transaction (limit {MAX_STATEMENTS})"));
+    }
+    Ok(())
+}
+
 /// Runs every statement inside one sqlx transaction on one pooled connection. On any
 /// statement error the transaction is dropped before commit, which rolls it back — either
 /// the whole batch persists or none of it does. `db` is the same connection string the
@@ -30,6 +44,7 @@ pub async fn execute_sql_transaction(
     db: String,
     statements: Vec<TransactionStatement>,
 ) -> Result<(), String> {
+    check_batch_size(statements.len())?;
     let instances = db_instances.0.read().await;
     let pool = match instances
         .get(&db)
@@ -67,4 +82,16 @@ pub async fn execute_sql_transaction(
         .commit()
         .await
         .map_err(|error| format!("failed to commit transaction: {error}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{check_batch_size, MAX_STATEMENTS};
+
+    #[test]
+    fn accepts_a_real_batch_and_refuses_an_unbounded_one() {
+        assert!(check_batch_size(0).is_ok());
+        assert!(check_batch_size(MAX_STATEMENTS).is_ok());
+        assert!(check_batch_size(MAX_STATEMENTS + 1).is_err());
+    }
 }

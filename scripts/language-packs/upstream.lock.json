@@ -1,0 +1,70 @@
+{
+  "$comment": "Every upstream file the language-pack builders download, pinned. `sha256` and `bytes` were measured with `sha256sum` / `stat -c %s` over scripts/language-packs/.cache/ and re-verified by re-downloading each raw.githubusercontent.com URL at the pinned commit. A download whose digest does not match is refused, so a poisoned or silently-updated upstream fails the build instead of reaching a learner's machine. Updating an upstream is a manual edit here: download the new file, run sha256sum on it, and paste both numbers in. `commits` records where the /<sha>/ path segments in the builders come from — re-query with `gh api repos/<owner>/<repo>/commits/master --jq .sha`. Kaikki has no commit ids; its extracts are re-cut periodically, so its digests are dated snapshots and a mismatch there usually means the dump moved, not that anything is wrong.",
+  "commits": {
+    "hermitdave/FrequencyWords": {
+      "sha": "525f9b560de45753a5ea01069454e72e9aa541c6",
+      "queriedAt": "2026-09-02",
+      "via": "gh api repos/hermitdave/FrequencyWords/commits/master --jq .sha"
+    },
+    "cmusphinx/cmudict": {
+      "sha": "74790861f652b15e4ac49015a90074ad62a27690",
+      "queriedAt": "2026-09-02",
+      "via": "gh api repos/cmusphinx/cmudict/commits/master --jq .sha"
+    }
+  },
+  "kaikkiSnapshot": "2026-09-01",
+  "sources": {
+    "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz": {
+      "sha256": "d42a2f5503bbb3f8a11fa4f9ae710afcbaf6f6110a4619435dd9fe51e485aec4",
+      "bytes": 3967795
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/zh_cn/zh_cn_50k.txt": {
+      "sha256": "25599e00347b893e55c3058a748819b3fe19403291cd12f7c03af128e7f3fe45",
+      "bytes": 565895
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/en/en_50k.txt": {
+      "sha256": "5351ff405b1126ef555791dd4d9798a48e3e9a501a9fc481a9da957752cfb458",
+      "bytes": 622749
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/bn/bn_50k.txt": {
+      "sha256": "2fd6c08f29335f26af983c26821537e5ed5e42dfdf43275a0c646a15d18d636e",
+      "bytes": 1119693
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/id/id_50k.txt": {
+      "sha256": "f2eea0da9735b7040efbfa813f5f875ec931de5a0ec70a6f28213ea60a87bb38",
+      "bytes": 588873
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/vi/vi_50k.txt": {
+      "sha256": "3f5b112e4324136c2ba82d3151038607e3dd1dfa0911c226929d7544cc11adf3",
+      "bytes": 487058
+    },
+    "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/cmudict.dict": {
+      "sha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22",
+      "bytes": 3618488
+    },
+    "https://kaikki.org/dictionary/Bengali/kaikki.org-dictionary-Bengali.jsonl": {
+      "sha256": "4a64c2f62418de22017ac34caf779bb02e92ddd51e23af6404c7160352823ac3",
+      "bytes": 37587512
+    },
+    "https://kaikki.org/dictionary/Hindi/kaikki.org-dictionary-Hindi.jsonl": {
+      "sha256": "2c5e0cfcd8ce8e979cb08f94a7d499e7194a2676d2a44b7a07a75f2b2332413b",
+      "bytes": 160321794
+    },
+    "https://kaikki.org/dictionary/Indonesian/kaikki.org-dictionary-Indonesian.jsonl": {
+      "sha256": "fb276a6bfeb88862b7996c96bc783d633419ecf6a13b56f258d6567d4f27235b",
+      "bytes": 63974332
+    },
+    "https://kaikki.org/dictionary/Korean/kaikki.org-dictionary-Korean.jsonl": {
+      "sha256": "73bbb7e2222b4cd6224a23caf4a3f6a6c0e44d10891c8b4cc12486e37068d96b",
+      "bytes": 198690194
+    },
+    "https://kaikki.org/dictionary/Swahili/kaikki.org-dictionary-Swahili.jsonl": {
+      "sha256": "eadbd6be688ec51ddccec812e4715016d06e61717991b814838a630419262531",
+      "bytes": 77783580
+    },
+    "https://kaikki.org/dictionary/Vietnamese/kaikki.org-dictionary-Vietnamese.jsonl": {
+      "sha256": "c507001f32b211a5f18f4379c5e81098377c6e73d827b82e98cffde73964fec5",
+      "bytes": 78748680
+    }
+  }
+}

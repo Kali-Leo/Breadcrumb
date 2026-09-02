@@ -31,8 +31,14 @@ export const NON_STREAMING_TIMEOUT_MS = 120_000;
 
 /** Streaming gets a FIRST-BYTE budget rather than a total one. A healthy long answer can
  * legitimately stream for many minutes, so only the silence *before* the first chunk counts
- * as a hang; once a chunk lands the deadline is cleared and never re-armed. */
+ * against this one; once a chunk lands it is replaced by the idle budget below. */
 export const STREAM_FIRST_BYTE_TIMEOUT_MS = 60_000;
+
+/** After the first chunk the deadline becomes a SLIDING one: every chunk re-arms it, so a
+ * long answer that keeps arriving is never cut off, while a connection that goes quiet
+ * mid-stream (half-dead socket, a peer that stalls forever) still dies instead of hanging
+ * the request for good. Generous enough to cover a slow provider's thinking pauses. */
+export const STREAM_IDLE_TIMEOUT_MS = 30_000;
 
 /** Raised when an attempt's own deadline fired. Distinct from an abort so the caller can
  * tell "the network went quiet" apart from "the user pressed stop". */
@@ -50,9 +56,10 @@ export function llmAbortError(message: string): DOMException {
 
 interface Attempt {
   readonly signal: AbortSignal;
-  /** Stops the deadline while KEEPING the caller's abort wired up — streaming calls this on
-   * its first chunk so a long reply is never cut short by a stopwatch started before it. */
-  clearDeadline(): void;
+  /** Restarts the deadline with a fresh budget, keeping the caller's abort wired up —
+   * streaming re-arms it on every chunk, turning the first-byte budget into a sliding
+   * silence budget. */
+  armDeadline(timeoutMs: number): void;
   /** Clears the deadline and detaches the forwarding listener. Call once the attempt is done. */
   release(): void;
   /** True when this attempt was aborted by its own deadline rather than by the caller. */
@@ -62,15 +69,19 @@ interface Attempt {
 function startAttempt(userSignal: AbortSignal | undefined, timeoutMs: number): Attempt {
   const controller = new AbortController();
   let expired = false;
-  const timer = setTimeout(() => {
+  const expire = (): void => {
     expired = true;
     controller.abort();
-  }, timeoutMs);
+  };
+  let timer = setTimeout(expire, timeoutMs);
   const forwardAbort = (): void => controller.abort();
   userSignal?.addEventListener("abort", forwardAbort);
   return {
     signal: controller.signal,
-    clearDeadline: () => clearTimeout(timer),
+    armDeadline: (nextTimeoutMs: number) => {
+      clearTimeout(timer);
+      timer = setTimeout(expire, nextTimeoutMs);
+    },
     release: () => {
       clearTimeout(timer);
       userSignal?.removeEventListener("abort", forwardAbort);
@@ -126,8 +137,8 @@ function backoffDelayMs(attemptIndex: number, retryAfter: string | null): number
 
 export interface RetryingFetchResult {
   response: Response;
-  /** See Attempt.clearDeadline — the first-byte hook for streaming callers. */
-  clearDeadline(): void;
+  /** See Attempt.armDeadline — the per-chunk hook for streaming callers. */
+  armDeadline(timeoutMs: number): void;
   /** See Attempt.release — call it in a `finally` once the body has been consumed. */
   release(): void;
   /** True when the deadline, not the caller, aborted this request. */
@@ -163,7 +174,7 @@ export async function fetchWithRetry(
     if (response.ok) {
       return {
         response,
-        clearDeadline: attempt.clearDeadline,
+        armDeadline: attempt.armDeadline,
         release: attempt.release,
         timedOut: attempt.timedOut,
       };

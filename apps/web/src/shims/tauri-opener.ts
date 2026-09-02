@@ -8,7 +8,7 @@
  * Main exports: openUrl.
  */
 
-const OPENABLE_SCHEMES = new Set(["http:", "https:", "mailto:"]);
+const OPENABLE_SCHEMES = new Set(["http:", "https:"]);
 
 export async function openUrl(url: string): Promise<void> {
   let parsed: URL;

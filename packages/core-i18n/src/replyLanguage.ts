@@ -10,6 +10,12 @@ import type { Language } from "./languages";
 /** Below this many letters after stripping, no detector is trustworthy — and neither are we. */
 const MIN_SAMPLE_LENGTH = 24;
 
+/** The stripping regexes are linear-ish but not free (the email one backtracks per start
+ * position on long runs without an "@"), and detection only ever needs a sample — so a very
+ * long reply is cut before any of them run. 20k characters is orders of magnitude above
+ * MIN_SAMPLE_LENGTH, so the verdict is unaffected. */
+const MAX_SAMPLE_SOURCE_LENGTH = 20_000;
+
 export type ReplyLanguageVerdict =
   /** The reply is in the language we asked for. */
   | "matches"
@@ -45,7 +51,7 @@ export async function checkReplyLanguage(
   reply: string,
   expected: Language,
 ): Promise<ReplyLanguageVerdict> {
-  const sample = stripLanguageNeutral(reply);
+  const sample = stripLanguageNeutral(reply.slice(0, MAX_SAMPLE_SOURCE_LENGTH));
   if (sample.length < MIN_SAMPLE_LENGTH) return "unknown";
   const franc = await loadFranc();
   const detected = franc(sample, { minLength: MIN_SAMPLE_LENGTH });

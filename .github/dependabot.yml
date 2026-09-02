@@ -1,0 +1,35 @@
+# Keeping dependencies current is half the point; the other half is the third entry.
+# Every third-party action in .github/workflows is pinned to a commit SHA, which is safe
+# but frozen — nobody notices when a pinned action gets a security fix. Dependabot opens
+# the PR that moves the SHA and updates the trailing "# vX.Y.Z" comment for us.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the routine patch/minor churn across the workspace; majors stay separate
+      # so they get read properly.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: cargo
+    directory: "/apps/desktop/src-tauri"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

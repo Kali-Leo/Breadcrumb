@@ -61,7 +61,7 @@ export const edgeJudgeSchema = z.object({
         label: z.string().min(1).max(40),
         summary: z.string().min(1).max(200),
         /** Labels (existing or among this batch's nodes) this method helps understand. */
-        helpsLabels: z.array(z.string().min(1)).min(1).max(5),
+        helpsLabels: z.array(z.string().min(1).max(40)).min(1).max(5),
         weight: helpsWeightLevelSchema,
         confidence: z.number().min(0).max(1),
       }),
@@ -79,7 +79,7 @@ export const edgeJudgeSchema = z.object({
         summary: z.string().min(1).max(200),
         /** Must echo a label already known this batch (an existing node or one of the pairs'
          * A/B labels) — the concept it's adjacent to. */
-        connectsToLabel: z.string().min(1),
+        connectsToLabel: z.string().min(1).max(40),
         /** How much connectsToLabel helps understand this new concept. */
         helpsLevel: helpsWeightLevelSchema,
       }),
@@ -90,8 +90,6 @@ export const edgeJudgeSchema = z.object({
 
 export type EdgeJudgeResult = z.infer<typeof edgeJudgeSchema>;
 export type PairJudgement = EdgeJudgeResult["edges"][number];
-export type MethodNodeProposal = EdgeJudgeResult["methodNodes"][number];
-export type AdjacentConceptProposal = EdgeJudgeResult["adjacentConcepts"][number];
 
 const BASE_SYSTEM_PROMPT = `你是一个知识关系判定器。给定若干候选知识点对（A、B），为每一对判定它们的学习结构关系，以 JSON 返回：
 {"edges":[{"pairId":"候选对编号(原样返回)","relation":"unrelated|requires|helps","direction":"aToB|bToA 或 null","weight":"weak|medium|strong 或 null,"confidence":0~1的数字}],

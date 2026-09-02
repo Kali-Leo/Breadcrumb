@@ -22,14 +22,18 @@ export interface ContinentNamingRequest {
 }
 
 export const continentNamingSchema = z.object({
-  clusters: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string().refine(isPlainContinentName, {
-        message: `name must be ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} code points with no digits`,
+  clusters: z
+    .array(
+      z.object({
+        /** Echoed back from the request, so it is as long as the handles we sent — bounded
+         * because the caller turns it into a Map key. */
+        id: z.string().max(64),
+        name: z.string().refine(isPlainContinentName, {
+          message: `name must be ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} code points with no digits`,
+        }),
       }),
-    }),
-  ),
+    )
+    .max(200),
 });
 
 /** Stable across runs and machines: the member set alone decides the key, so a cluster that
