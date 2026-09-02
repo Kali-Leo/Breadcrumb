@@ -123,7 +123,11 @@ function rememberedLanguage(): string | null {
   }
 }
 
-function rememberLanguage(code: string): void {
+/** Mirrors a language the learner actually chose (or that the database holds for them). Not
+ * called from changeLanguage itself: a tab that cannot open the database falls back to the
+ * browser's locale, and letting that write the mirror would overwrite the real choice for
+ * every other tab (2026-09-02 walkthrough). */
+export function rememberLanguage(code: string): void {
   try {
     globalThis.localStorage?.setItem(REMEMBERED_LANGUAGE_KEY, code);
   } catch {
@@ -171,5 +175,4 @@ export async function changeLanguage(code: string): Promise<void> {
   await ensureCatalogue(code);
   await i18next.changeLanguage(code);
   applyLanguageToDocument(code);
-  rememberLanguage(code);
 }

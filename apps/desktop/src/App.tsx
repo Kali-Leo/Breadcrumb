@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./App.css";
+import "./lib/platform/zodConfig";
 import { LazyBoundary } from "./components/LazyBoundary";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
 import { Sidebar } from "./components/Sidebar";

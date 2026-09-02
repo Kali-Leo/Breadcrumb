@@ -7,7 +7,7 @@
  * Main exports: loadSettingsSnapshot, SettingsSnapshot.
  */
 import { DEFAULT_LANGUAGE_CODE, isLanguageCode, UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
-import { changeLanguage } from "../i18n";
+import { changeLanguage, rememberLanguage } from "../i18n";
 import {
   sanitizeRecommendationWeights,
   type UserRecommendationWeights,
@@ -94,6 +94,9 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage) ? storedLanguage : guessLanguage();
   const language = chosen ?? DEFAULT_LANGUAGE_CODE;
   await changeLanguage(language);
+  // Only a preference the database really holds is mirrored; a guessed fallback is not.
+  if (storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage))
+    rememberLanguage(storedLanguage);
   return {
     loaded: true,
     apiConfig,

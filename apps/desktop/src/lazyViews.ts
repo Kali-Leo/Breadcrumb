@@ -35,40 +35,29 @@ import type { SettingsPanel as SettingsPanelComponent } from "./components/setti
  * reads the replacement without importing anything again. LazyBoundary supplies the render —
  * it clears on the next view switch — and this supplies something new for it to try.
  *
- * One more obstacle (2026-09-02 browser walkthrough): the module map remembers a failed
- * dynamic import for the life of the document, so re-running the same `import()` never goes
- * back to the network. When the failure names the chunk's URL (Firefox and Chromium do), the
- * retry imports that URL with a fresh query string instead, which the module map treats as a
- * new module. Shared dependencies keep their plain URLs, so nothing else is duplicated.
+ * Known limit (2026-09-02 browser walkthrough): the module map also remembers a failed
+ * dynamic import for the life of the document, so within one page load the retry only helps
+ * when the failure was transient at the JavaScript level. A chunk that could not be fetched
+ * needs a page reload once the network is back; re-importing it under a fresh query string
+ * was tried and rejected — production chunks export minified names and depend on sibling
+ * chunks that stay failed. The README states the reload plainly.
  */
 type ViewModule = Record<string, unknown>;
-
-function chunkUrlIn(error: unknown): string | null {
-  const message = error instanceof Error ? error.message : String(error);
-  return /https?:\/\/[^\s"']+\.js/.exec(message)?.[0] ?? null;
-}
 
 function retryable<P>(
   load: () => Promise<ViewModule>,
   exportName: string,
   replace: (next: LazyExoticComponent<ComponentType<P>>) => void,
-  failedChunkUrl: string | null = null,
 ): LazyExoticComponent<ComponentType<P>> {
   return lazy(async () => {
     try {
-      const viewModule =
-        failedChunkUrl === null
-          ? await load()
-          : ((await import(
-              /* @vite-ignore */ `${failedChunkUrl}?retry=${Date.now()}`
-            )) as ViewModule);
-      const component = viewModule[exportName];
+      const component = (await load())[exportName];
       if (typeof component !== "function" && typeof component !== "object") {
         throw new Error(`lazy view ${exportName} is not exported by its chunk`);
       }
       return { default: component as ComponentType<P> };
     } catch (error) {
-      replace(retryable(load, exportName, replace, chunkUrlIn(error) ?? failedChunkUrl));
+      replace(retryable(load, exportName, replace));
       throw error;
     }
   });

@@ -109,14 +109,18 @@ iOS 上没有安装提示，要自己「分享 → 添加到主屏幕」（也�
 
 也就是说：**第一次访问很快，离线能力随着你用它而变完整**。
 完全没浏览过就断网，缺的是那些还没碰过的界面，不是应用本身。
+离线时点到一个还没缓存过的界面，那一块会空着（侧栏和别的页照常）；网络回来后**刷新一次**
+它就有了 —— 浏览器会记住这一页里失败过的脚本，不刷新不会再去取。
 
 更新是自动的（`registerType: "autoUpdate"`），不弹"有新版本"的对话框。
 
 > Installable and offline-capable. The service worker precaches the shell — scripts,
 > stylesheet, map artwork, SQLite's wasm and worker (~6.3 MB) — and caches everything heavy
 > the first time it is actually used. A first visit stays fast; offline coverage completes
-> itself as you use the app. On iOS, add it to the home screen by hand: that also exempts its
-> storage from WebKit's seven-day eviction timer.
+> itself as you use the app. A view you never opened before going offline stays blank until
+> you are back online and reload once — the page remembers a script that failed to load. On
+> iOS, add it to the home screen by hand: that also exempts its storage from WebKit's
+> seven-day eviction timer.
 
 ---
 

@@ -6,7 +6,7 @@
  * Main exports: createSettingsWriteActions, SettingsWriteActions.
  */
 import { isLanguageCode, UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
-import { changeLanguage } from "../i18n";
+import { changeLanguage, rememberLanguage } from "../i18n";
 import { isPseudoLocale } from "../i18n/pseudoLocale";
 import {
   sanitizeRecommendationWeights,
@@ -126,6 +126,7 @@ export function createSettingsWriteActions(
       if (!UI_LANGUAGE_CODES.includes(code) && !isPseudoLocale(code)) return;
       forgetAnswerLanguageWatch();
       await changeLanguage(code);
+      rememberLanguage(code);
       const repos = await getRepos();
       await repos.settings.set(LANGUAGE_KEY, code, nowIso());
       set({ language: code, languageUnchosen: false });
