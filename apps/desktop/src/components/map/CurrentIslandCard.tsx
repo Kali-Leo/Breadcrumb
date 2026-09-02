@@ -8,6 +8,7 @@
  */
 import type { IslandModel } from "@breadcrumb/feature-map";
 import { useTranslation } from "react-i18next";
+import { placeKeyOf } from "../../lib/map/placeNames";
 import { PlaceNameEditor } from "./PlaceNameEditor";
 
 export function CurrentIslandCard({ island }: { island: IslandModel }) {
@@ -18,7 +19,7 @@ export function CurrentIslandCard({ island }: { island: IslandModel }) {
       <div className="mt-0.5">
         <PlaceNameEditor
           key={island.nodeId}
-          nodeId={island.nodeId}
+          nodeId={placeKeyOf(island.nodeId)}
           name={island.label}
           nameClassName="text-base font-semibold text-stone-700"
         />

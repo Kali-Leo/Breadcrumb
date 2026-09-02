@@ -98,3 +98,11 @@ describe("applyPlaceNames", () => {
     expect(applyPlaceNames(world, new Map([["root", "AI 起的名字"]]))).toBe(world);
   });
 });
+
+describe("placeKeyOf", () => {
+  it("maps an island's prefixed model id to the knowledge node id the table is keyed by", async () => {
+    const { placeKeyOf } = await import("./placeNames");
+    expect(placeKeyOf("continent:node-7")).toBe("node-7");
+    expect(placeKeyOf("node-7")).toBe("node-7");
+  });
+});
