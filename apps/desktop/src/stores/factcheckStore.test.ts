@@ -31,7 +31,10 @@ vi.mock("@breadcrumb/feature-factcheck", () => ({
   createDefaultEvidenceProviders: vi.fn(() => []),
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
-vi.mock("../lib/platform/failureLog", () => ({ recordAiFailure: vi.fn() }));
+vi.mock("../lib/platform/failureLog", () => ({
+  degradeSilently: vi.fn(),
+  recordAiFailure: vi.fn(),
+}));
 vi.mock("../lib/billing/metering", () => ({
   recordMeteredCall: vi.fn(async () => {}),
   recordFailedCallUsage: vi.fn(async () => {}),

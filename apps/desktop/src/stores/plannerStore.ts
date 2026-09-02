@@ -30,7 +30,7 @@ import {
 } from "../lib/planner/plannerGoalActions";
 import { createPlannerRecompute } from "../lib/planner/plannerRecomputeRun";
 import { getRepos } from "../lib/platform/db";
-import { recordAiFailure } from "../lib/platform/failureLog";
+import { degradeSilently } from "../lib/platform/failureLog";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { registerRecomputeSubscriptions } from "./plannerStoreEvents";
 import { useSettingsStore } from "./settingsStore";
@@ -132,8 +132,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       const existingLabels = get().nodes.map((node) => node.label);
       return await requestGoalMapping(settings.apiConfig, goalText, existingLabels);
     } catch (error) {
-      console.warn("goal mapping skipped:", error);
-      void recordAiFailure("goal-planning", error);
+      void degradeSilently("goal-planning", error);
       return null;
     }
   },

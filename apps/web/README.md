@@ -33,7 +33,7 @@ on the desktop, never leaves your device.
 数据库用的是 `opfs-sahpool` 这个 VFS，它**不需要跨源隔离（COOP/COEP）** ——
 也就是说这个版本可以放在任何静态托管上，不用配特殊响应头。这正是"打开就能用"的前提。
 
-45 个迁移在 SQLite-wasm 上逐条跑通并有测试盯着
+47 个迁移在 SQLite-wasm 上逐条跑通并有测试盯着
 （`src/shims/sqlite.migrations.test.ts`）—— 不同的 SQLite 构建、不同的驱动、
 不同的绑定层，底下压着几千行手写 SQL，这是这一版最大的风险点，所以它是被测的。
 

@@ -18,7 +18,7 @@ import {
 import { create } from "zustand";
 import { recordFailedCallUsage, recordMeteredCall } from "../lib/billing/metering";
 import { getRepos } from "../lib/platform/db";
-import { recordAiFailure } from "../lib/platform/failureLog";
+import { degradeSilently } from "../lib/platform/failureLog";
 import { llmConfigFrom } from "../lib/platform/llmConfig";
 import { newId, nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
@@ -86,8 +86,7 @@ export const useInterestStore = create<InterestState>(() => ({
         appEventBus.emit("mastery:updated", { changedNodeIds });
       }
     } catch (error) {
-      console.warn("self-report mastery mapping skipped:", error);
-      void recordAiFailure("self-report-mapping", error);
+      void degradeSilently("self-report-mapping", error);
       void recordFailedCallUsage(error, {
         purpose: "self-report-mapping",
         model: settings.apiConfig.model,
@@ -160,8 +159,7 @@ async function extractInterestFromRound(
       appEventBus.emit("interest:updated", { nodeIds: signalNodeIds });
     }
   } catch (error) {
-    console.warn("interest extraction skipped:", error);
-    void recordAiFailure("interest", error);
+    void degradeSilently("interest", error);
     void recordFailedCallUsage(error, {
       purpose: "interest",
       model: settings.apiConfig.model,

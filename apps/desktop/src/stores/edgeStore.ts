@@ -27,7 +27,7 @@ import {
 import { create } from "zustand";
 import { recordFailedCallUsage, recordMeteredCall } from "../lib/billing/metering";
 import { getRepos } from "../lib/platform/db";
-import { recordAiFailure } from "../lib/platform/failureLog";
+import { degradeSilently } from "../lib/platform/failureLog";
 import { llmConfigFrom } from "../lib/platform/llmConfig";
 import { newId, nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
@@ -167,8 +167,7 @@ async function extractEdgesFromFinishedRound(
       appEventBus.emit("knowledge:edgesUpdated", { addedEdgeIds });
     }
   } catch (error) {
-    console.warn("knowledge-edge extraction skipped:", error);
-    void recordAiFailure("knowledge-edges", error);
+    void degradeSilently("knowledge-edges", error);
     void recordFailedCallUsage(error, {
       purpose: "knowledge-edges",
       model: settings.apiConfig.model,

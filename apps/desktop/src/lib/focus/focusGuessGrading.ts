@@ -20,6 +20,7 @@ import { cosineSimilarity } from "@breadcrumb/feature-knowledge-tree";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { getRepos } from "../platform/db";
 import { embedTexts } from "../platform/embeddings";
+import { degradeSilently } from "../platform/failureLog";
 import { newId, nowIso } from "../platform/time";
 
 /** A concept guess is the only place in the app where the learner is asked to produce a
@@ -78,7 +79,7 @@ export async function gradeFocusGuess(input: {
     });
     return { grade, feedback: guessFeedbackMessage(grade, input.summary) };
   } catch (error) {
-    console.warn("focus guess grading skipped:", error);
+    void degradeSilently("focus-guess", error);
     return { grade: null, feedback: conceptDirectRevealMessage(input.summary) };
   }
 }

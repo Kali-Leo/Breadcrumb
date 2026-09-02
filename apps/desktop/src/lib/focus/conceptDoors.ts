@@ -16,6 +16,7 @@ import {
   pickDoors,
 } from "@breadcrumb/feature-explore";
 import { computeMastery } from "@breadcrumb/feature-memory";
+import { degradeSilently } from "../platform/failureLog";
 import { nowIso } from "../platform/time";
 import { ensureTermMarks } from "./termMarking";
 
@@ -113,7 +114,7 @@ export async function computeDoorPatches(
 
     return [...termDoors, ...legacyDoors].sort((a, b) => a.start - b.start);
   } catch (error) {
-    console.warn("door picking skipped:", error);
+    void degradeSilently("concept-doors", error);
     return [];
   }
 }

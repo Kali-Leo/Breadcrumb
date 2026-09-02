@@ -2,7 +2,7 @@
  * Purpose: TS bridge to the Rust `embed_texts` Tauri command (local fastembed) — a low-level
  * text-embedding helper (embedTexts) plus a batched knowledge-node embedder that writes
  * straight to node_embeddings (embedNodes). Side effect: DB writes (embedNodes only).
- * Every failure is swallowed (console.warn): embeddings accelerate edge/synonym discovery,
+ * Every failure is swallowed (degradeSilently): embeddings accelerate edge/synonym discovery,
  * they are never a hard dependency for chat or knowledge-tree extraction to keep working.
  * Main exports: embedTexts, embedNodes, backfillMissingEmbeddings.
  */
@@ -10,6 +10,7 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { invoke } from "@tauri-apps/api/core";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { getRepos } from "./db";
+import { degradeSilently } from "./failureLog";
 import { nowIso } from "./time";
 
 const EMBEDDING_MODEL = "multilingual-e5-small";
@@ -29,7 +30,7 @@ export async function embedTexts(texts: readonly string[]): Promise<number[][] |
       allowDownload: useSettingsStore.getState().networkEnabled,
     });
   } catch (error) {
-    console.warn("embedding skipped:", error);
+    void degradeSilently("embeddings", error);
     return null;
   }
 }

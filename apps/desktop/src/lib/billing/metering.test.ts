@@ -15,6 +15,7 @@ vi.mock("../platform/db", () => ({
 
 const recordAiFailureMock = vi.fn();
 vi.mock("../platform/failureLog", () => ({
+  degradeSilently: vi.fn(),
   recordAiFailure: recordAiFailureMock,
 }));
 

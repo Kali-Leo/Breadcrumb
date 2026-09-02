@@ -11,7 +11,7 @@
   },
   "scripts": {
     "typecheck": "pnpm -r --if-present typecheck",
-    "lint": "biome check .",
+    "lint": "biome check . && node scripts/check-file-length.mjs",
     "format": "biome check --write .",
     "test": "pnpm -r --if-present test",
     "prepare": "husky"

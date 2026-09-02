@@ -40,7 +40,7 @@ vi.mock("./canonicalConcepts", async () => {
   };
 });
 
-vi.mock("../platform/failureLog", () => ({ recordAiFailure: vi.fn() }));
+vi.mock("../platform/failureLog", () => ({ degradeSilently: vi.fn(), recordAiFailure: vi.fn() }));
 vi.mock("../billing/metering", () => ({ recordMeteredCall: vi.fn() }));
 vi.mock("../platform/llmConfig", () => ({
   llmConfigFrom: () => ({ baseUrl: "u", apiKey: "k", model: "m", fetchImpl: fetch }),

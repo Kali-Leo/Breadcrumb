@@ -18,7 +18,7 @@ import {
   persistRun,
   resolveRoundMessages,
 } from "../lib/factcheck/factcheckRecords";
-import { recordAiFailure } from "../lib/platform/failureLog";
+import { degradeSilently, recordAiFailure } from "../lib/platform/failureLog";
 import { llmConfigWithoutLanguageDirective } from "../lib/platform/llmConfig";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
@@ -118,8 +118,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
         noticeByMessageId: withoutKey(get().noticeByMessageId, messageId),
       });
     } catch (error) {
-      console.warn("factcheck skipped:", error);
-      void recordAiFailure("factcheck", error);
+      void degradeSilently("factcheck", error);
       // The claim-extraction call may have reached the provider (and been billed) before it
       // gave up; recordMeteredCall above is never reached on this path.
       void recordFailedCallUsage(error, {

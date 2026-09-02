@@ -12,7 +12,7 @@ import { outgoingNeighbors } from "@breadcrumb/feature-graph";
  * node, counting only steps that stay inside `scope`. A static structural property — it does
  * not depend on mastery or on scheduling order. The requires graph is guaranteed acyclic
  * (ADR-0008's graph layer rejects cycles at write time), so plain memoized recursion
- * terminates; the placeholder write below is a belt-and-braces guard for a corrupted store. */
+ * terminates; the sentinel write below is a belt-and-braces guard for a corrupted store. */
 export function longestRequiresChainBelow(
   nodeIds: readonly string[],
   scope: ReadonlySet<string>,

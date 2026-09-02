@@ -6,8 +6,8 @@
  * kingdomView.ts.
  * Main exports: KingdomTreeSvg.
  */
+import { layoutFocusMap } from "@breadcrumb/feature-explore";
 import { useTranslation } from "react-i18next";
-import { layoutFocusMap } from "../../../lib/focus/focusMapLayout";
 import type { VisibleTreeNode } from "../../../lib/map/kingdomCollapse";
 import type { LateralEdgeView } from "../../../lib/map/kingdomView";
 import { KingdomTreeStation } from "./KingdomTreeStation";

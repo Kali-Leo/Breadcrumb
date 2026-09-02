@@ -43,7 +43,7 @@ checking in, and nothing anywhere that nags you.
 
 ## 现在的状态
 
-v0.1.0 是第一个可下载的版本。功能上分三档，文档里会逐个标注：
+当前版本 v0.1.2（`apps/desktop/src-tauri/tauri.conf.json`）。功能上分三档，文档里会逐个标注：
 
 - **成熟**：对话与学习模式、知识地图、专注模式、事实核查、语言学习。
 - **能用但年轻**：学习目标、对比树、每日请教你的同学、研究课题平台。

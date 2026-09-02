@@ -8,6 +8,7 @@
  * Main exports: resolveSpeechProvider, canSpeak, subscribeVoicesChanged, speakWord.
  */
 import { invoke } from "@tauri-apps/api/core";
+import { degradeSilently } from "./failureLog";
 
 /** Pure provider verification (unit-tested): Piper counts only when BOTH paths are
  * configured non-empty (speakWord needs both); the system synthesizer counts only when a
@@ -82,7 +83,7 @@ export async function speakWord(
       await audio.play();
       return true;
     } catch (error) {
-      console.warn("piper synthesis failed, falling back:", error);
+      void degradeSilently("diglot-audio", error);
     }
   }
   const synthesis = window.speechSynthesis;
@@ -95,7 +96,7 @@ export async function speakWord(
       synthesis.speak(utterance);
       return true;
     } catch (error) {
-      console.warn("speechSynthesis failed:", error);
+      void degradeSilently("diglot-audio", error);
     }
   }
   return false;

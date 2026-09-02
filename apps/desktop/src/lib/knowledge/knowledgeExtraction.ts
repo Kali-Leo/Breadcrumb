@@ -17,7 +17,7 @@ import { recordFailedCallUsage, recordMeteredCall } from "../billing/metering";
 import { anchorNodesByAlias } from "../compare/canonicalConcepts";
 import { getRepos } from "../platform/db";
 import { embedNodes } from "../platform/embeddings";
-import { recordAiFailure } from "../platform/failureLog";
+import { degradeSilently } from "../platform/failureLog";
 import { llmConfigFrom } from "../platform/llmConfig";
 import { newId, nowIso } from "../platform/time";
 import { refreshConversationAutoTitle } from "../trail/trailNamingActions";
@@ -128,8 +128,7 @@ export async function extractFromFinishedRound(
       await useChatStore.getState().loadFromDatabase();
     }
   } catch (error) {
-    console.warn("knowledge extraction skipped:", error);
-    void recordAiFailure("knowledge-tree", error);
+    void degradeSilently("knowledge-tree", error);
     void recordFailedCallUsage(error, {
       purpose: "knowledge-tree",
       model: settings.apiConfig.model,

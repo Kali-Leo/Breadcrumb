@@ -67,7 +67,6 @@ export function ChatView() {
   // Runs again once resumeFromMessage's re-render has the target on the active path. The
   // list scrolls by index rather than by DOM query: with a windowed list the row may not be
   // rendered yet, and querySelector would quietly find nothing.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: messages is the re-render signal, not read directly
   useEffect(() => {
     if (locatedMessageId === null) return;
     if (!messages.some((message) => message.id === locatedMessageId)) return;

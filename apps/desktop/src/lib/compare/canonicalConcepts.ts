@@ -15,6 +15,7 @@ import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
 import { normalizeLabel } from "@breadcrumb/feature-compare";
 import { CANONICAL_CONCEPTS } from "../../data/generated/canonicalConcepts";
 import { getRepos } from "../platform/db";
+import { degradeSilently } from "../platform/failureLog";
 import { nowIso } from "../platform/time";
 
 /** Set once the import has SUCCEEDED, and never cleared — the inventory is a build-time
@@ -98,6 +99,6 @@ export async function anchorNodesByAlias(nodes: readonly KnowledgeNodeRow[]): Pr
     }
     if (rows.length > 0) await repos.canonical.upsertAnchors(rows);
   } catch (error) {
-    console.warn("alias anchoring skipped:", error);
+    void degradeSilently("compare-align", error);
   }
 }

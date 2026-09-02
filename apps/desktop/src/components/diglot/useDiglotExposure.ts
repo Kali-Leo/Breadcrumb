@@ -6,9 +6,9 @@
  * counts as first-encounter evidence (audit 2026-08-28 #2d).
  * Main exports: useDiglotExposure.
  */
+import { wovenContextSentenceFor } from "@breadcrumb/core-text";
 import type { ReplacementPatch } from "@breadcrumb/feature-diglot-weave";
 import { type RefObject, useEffect } from "react";
-import { wovenContextSentenceFor } from "../../lib/focus/contextSentence";
 
 /** Runs whose exposure signals already fired this session — a duplicate-event guard only. */
 const exposedMessages = new Set<string>();

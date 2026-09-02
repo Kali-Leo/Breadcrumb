@@ -30,6 +30,12 @@ cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
 
 CI 跑同样这些，外加 `cargo audit` 和仅限生产依赖的 `pnpm audit`。
 
+**供应链那一侧的约定**：`.github/workflows/` 里**每一个第三方 action 都钉到 commit SHA**
+（后面跟一条 `# vX.Y.Z` 注释说明这个 SHA 是哪个版本），所以一次被劫持的 tag 推送影响不到构建；
+代价是钉死的 action 拿不到安全修复，所以 `.github/dependabot.yml` 每周替 npm、cargo 和
+github-actions 三个生态开更新 PR —— **升级靠 dependabot，不靠手改**（补丁和小版本合成一个 PR，
+大版本单独开，好好读）。漏洞报告的去处写在 `.github/SECURITY.md`。
+
 > **质量门全绿不等于测完。** 这个项目有过三个 spec 全绿交付、应用一打开全是运行时报错的
 > 事故。改动涉及新功能、管线或多文件重构时，请在真实应用里走通一遍验收路径，
 > 并确认控制台没有报错。
@@ -43,6 +49,26 @@ CI 跑同样这些，外加 `cargo audit` 和仅限生产依赖的 `pnpm audit`�
 - **单文件 200 行上限。** 超了就拆。
 - **TypeScript strict**，外部边界一律 Zod 校验（LLM 响应、外部服务、磁盘上的数据）。
 - **Conventional Commits。** 提交信息说清楚"为什么"，而不只是"改了什么"。
+
+## 离线数据管线（`scripts/`）
+
+`scripts/` 下有两条**手动**数据管线（目录里另有几个零散的开发小工具）。
+它们**不被 CI 调用**，也不参与应用构建 —— 产物是已经入库的数据文件，平时没人需要跑它们。
+
+**语言包构建**（`scripts/language-packs/`）。两个入口：`build-pack.mjs`（通用管线，
+任意语言对，数据来自 Wiktionary/kaikki + 词频表）和 `build-zh-en.mjs`（中英专用的
+CC-CEDICT 管线，产物随安装包一起发）。**所有上游文件都钉在 `upstream.lock.json` 里**
+（URL、commit SHA、sha256、字节数），下载后摘要对不上就拒绝构建 ——
+所以一个被投毒或被悄悄换掉的上游到不了学习者的机器上。**要更新某个上游，就得改这个锁文件**：
+把新文件下下来，`sha256sum` 一遍，把摘要和大小两个数字粘进去；
+`commits` 那一段的 SHA 用 `gh api repos/<owner>/<repo>/commits/master --jq .sha` 重新查。
+详情见 `scripts/language-packs/README.md`。
+
+**职业 / 概念数据**（`scripts/canonical/`）。把 O*NET、ESCO、MDN 课程和课标的原始文件
+变成入库的 TypeScript 数据。其中带 LLM 抽取的那几步（`extract-kebiao.mjs`、
+`extract-mdn.mjs`、`extract-postings.mjs`）要读 `DEEPSEEK_API_KEY`，
+所以必须用 **`node --env-file=.env`** 跑（见 `.env.example`）；纯转换的那几步
+（`extract-onet.mjs`、`extract-esco.mjs`、`gen-data.mjs`）不需要密钥，也不联网发请求。
 
 ## 加一门界面语言
 
@@ -94,6 +120,6 @@ macOS 刻意不构建：没有 Apple 开发者账号做公证的话，用户会�
 
 ## 目录里没有的东西
 
-`docs/`、`specs/`、`CLAUDE.md` 和 `.claude/` 不在这个仓库里 ——
-它们是开发过程的内部工作层。你需要知道的东西应该都在 `documentation/` 里；
-如果不在，那是文档的缺陷，欢迎提 issue。
+开发过程的内部工作层（设计文档、决策记录、AI 规则文件）不在这个仓库里。
+所以**公开文档里不应该出现指向它们的路径** —— 结论要么写进 `documentation/`，要么就没有。
+你需要知道的东西应该都在 `documentation/` 里；如果不在，那是文档的缺陷，欢迎提 issue。

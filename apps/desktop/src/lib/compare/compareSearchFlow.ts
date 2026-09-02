@@ -15,6 +15,7 @@ import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { persistCalibratedGoal, requestGoalMapping } from "../planner/plannerGoalActions";
 import { getRepos } from "../platform/db";
+import { degradeSilently } from "../platform/failureLog";
 import { computeComparisonTree } from "./compareActions";
 import { runExperimentalProfileBuild } from "./compareBuildActions";
 import { runHubDecomposition } from "./compareHubActions";
@@ -139,7 +140,7 @@ export function createCompareSearchActions(
           goalNote: i18next.t("palace:compare.goalCreated"),
         });
       } catch (error) {
-        console.warn("goal generation from profile skipped:", error);
+        void degradeSilently("goal-planning", error);
         set({ generatingGoal: false, goalNote: i18next.t("palace:compare.goalFailed") });
       }
     },

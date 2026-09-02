@@ -29,7 +29,11 @@ browser — [apps/web/README.md](apps/web/README.md) says which, and why.
 | 系统 | 下载哪个 |
 |---|---|
 | Windows | `.exe` 安装包，双击安装 |
-| Linux | `.AppImage`（`chmod +x` 后双击即可运行，不用安装）或 `.deb`（Debian / Ubuntu）|
+| Linux | `.AppImage`（`chmod +x` 后双击即可运行，不用安装）或 `.deb`（Debian / Ubuntu）。两个都需要 glibc 2.38 或更新（Ubuntu 24.04+、Debian 13+、Fedora 39+）|
+
+每次发布都附一份 `SHA256SUMS`（由构建出这些文件的那次 CI 一起产出）。想核对下载的话：
+把它放到安装包旁边，`sha256sum --check --ignore-missing SHA256SUMS`；
+Windows 用 `certutil -hashfile <文件名> SHA256` 再和文件里对应那行比对。
 
 > macOS 暂未提供。没有 Apple 开发者账号做公证的话，Mac 用户会撞上一个过不去的
 > "应用已损坏"对话框 —— 那比不提供更糟。

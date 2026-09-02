@@ -16,6 +16,7 @@ import {
   createCompareSearchActions,
 } from "../lib/compare/compareSearchFlow";
 import { getRepos } from "../lib/platform/db";
+import { degradeSilently } from "../lib/platform/failureLog";
 import {
   type CompareProfileViewState,
   type CompareSelectionActions,
@@ -83,7 +84,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
         await get().selectProfile(first.id);
       }
     } catch (error) {
-      console.warn("comparison profiles load skipped:", error);
+      void degradeSilently("compare-profile", error);
       set({ loading: false });
     }
   },

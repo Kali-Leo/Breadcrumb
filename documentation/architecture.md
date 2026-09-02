@@ -4,13 +4,22 @@
 
 ```
 apps/desktop                 Tauri 2 外壳 + React 界面 + Rust 命令
-  ├── src/                   React：视图、zustand store、lib（副作用与编排）
-  ├── src-tauri/             Rust：6 个命令，业务逻辑一概不在这里
-  └── src/locales/           界面文案（zh-CN、en）
+  ├── src/
+  │   ├── components/        React 组件，按功能分成 12 个目录：chat、map、focus、
+  │   │                      diglot、goal、companion、discovery、feedback、
+  │   │                      research、settings、trail、onboarding
+  │   ├── lib/               副作用与编排，按功能分成 14 个目录：billing、chat、
+  │   │                      companion、compare、diglot、factcheck、feedback、
+  │   │                      focus、knowledge、map、planner、platform、research、trail
+  │   ├── stores/            17 个 zustand store
+  │   └── locales/           界面文案，一种语言一个目录（共 11 种）
+  └── src-tauri/             Rust：7 个命令，业务逻辑一概不在这里
 
 packages/                    27 个无界面的库，被 apps/desktop 直接以工作区依赖引入
-  ├── core-*  (10)           总线、数据库、事件契约、i18n、LLM 客户端、教学契约、
-  │                          文本、向量、日历日、确定性随机
+  ├── core-*  (10)           总线、数据库（迁移是 core-db/src/migrations/ 这个目录，
+  │                          按编号分段）、事件契约、i18n、LLM 客户端、教学契约、
+  │                          文本（core-text）、向量（core-vectors）、
+  │                          日历日（core-time）、确定性随机（core-random）
   ├── feature-* (15)         各个功能的纯逻辑
   └── demo-seed / simlab (2) 演示数据 / 仅开发期的模拟测试框架
 ```
@@ -27,8 +36,8 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 
 | 包 | 负责 |
 |---|---|
-| `core-bus` | 42 行的类型化发布订阅。全应用一个实例，17 个事件。抛异常的订阅者会被捕获，不阻塞其他人。 |
-| `core-db` | 45 个只追加的迁移 + 手写 SQL 仓储，跑在一个注入的 `SqlClient` 上。 |
+| `core-bus` | 42 行的类型化发布订阅。全应用一个实例，14 个事件（事件表在 `core-events`）。抛异常的订阅者会被捕获，不阻塞其他人。 |
+| `core-db` | 47 个只追加的迁移（编号排到 0052；5 个曾上线又被删掉的编号记在 `RETIRED_MIGRATION_IDS` 里，永不复用）+ 手写 SQL 仓储，跑在一个注入的 `SqlClient` 上。 |
 | `core-events` | 跨模块事件的类型契约。没有运行时插件系统，见下方注意事项。 |
 | `core-i18n` | 语言注册表、语言协商、回答语言指令。 |
 | `core-llm` | OpenAI 兼容的流式/JSON 客户端、重试、模型价目表、计价。 |
@@ -53,10 +62,11 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 | `demo-seed` | 演示用的示例数据生成：一棵可信的知识树与配套事件，供空库首次启动和 simlab 起手用。 |
 | `simlab` | 仅开发期的模拟测试框架：合成人格重放真实管线，给判官台跑分。不进产品构建。 |
 
-> **注意：没有运行时插件系统。** Breadcrumb 不做运行时插件加载（ADR-0035，2026-09-02 裁定）：
+> **注意：没有运行时插件系统。** 2026-09-02 定下的结论：Breadcrumb 不做运行时插件加载 ——
 > 没有加载器、没有 `./mods` 目录、没有动态加载、没有插件市场。`feature-*` 前缀就是字面意思——
-> 功能模块，和 `core-*` 一样在构建期编译进来。事件契约在 `packages/core-events`（原 `sdk`，
-> 曾附带的 `PluginManifest`/`PluginPermission` 死类型已随裁定删除）。
+> 功能模块，和 `core-*` 一样在构建期编译进来（这批包过去带的是 plugin 前缀，同一天改名）。
+> 事件契约在 `packages/core-events`（原 `sdk`，曾附带的 `PluginManifest`/`PluginPermission`
+> 死类型没有任何消费者、也没有加载器，已随这个结论一起删除）。
 
 ---
 
@@ -64,21 +74,29 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 
 **SQLite，经 `tauri-plugin-sql`，文件 `breadcrumb.db`。**
 
-迁移是只追加的数组（`packages/core-db/src/migrations.ts`），每个迁移**连同它自己的
-记账行**跑在一个事务里 —— 崩溃留下的是"干净地没应用"，而不是"应用了一半"。
+迁移是只追加的数组。它现在是一个目录（`packages/core-db/src/migrations/`）：
+按编号分段的 `NNNN-NNNN.ts` 各存一批，`index.ts` 里的拼接顺序**就是**迁移顺序。
+共 47 条，编号排到 0052 —— 中间空掉的 0038/0039、0041~0043 是发现页拆除时删掉的，
+它们记在 `RETIRED_MIGRATION_IDS` 里，编号永不复用（复用会在跑过旧版本的机器上被静默跳过）。
+每个迁移**连同它自己的记账行**跑在一个事务里 —— 崩溃留下的是"干净地没应用"，
+而不是"应用了一半"。
 
 **原子性需要一个 Rust 命令。** 插件的连接池最多 10 条连接，
 所以从前端分开发出的 `BEGIN` / `COMMIT` 会落在不同连接上，根本不构成事务。
 `src-tauri/src/transactions.rs` 借用插件自己的池，把一批语句跑在一个 sqlx 事务里。
 
-**约 40 张活跃表。** 主要的几张：`conversations` / `messages`（带 `parent_id` 消息树）、
-`llm_calls`（计价账本）、`knowledge_nodes` / `node_sightings` / `node_embeddings`、
-`knowledge_edges`、`interest_signals`、`mastery_claims`、`goals`、
-`diglot_*`、`focus_sessions` / `focus_nodes`、`term_marks`、`factcheck_*`、
-`companion_*`、`ai_failures`、`settings`。
+**40 张活跃表**（迁移里建过 51 张，其中 13 张已被后来的迁移 DROP 掉；这 40 张含
+`_migrations` 那张记账表）。主要的几张：`conversations` / `messages`（带 `parent_id` 消息树）、
+`llm_calls`（计价账本）、`knowledge_nodes_v2` / `node_sightings` / `node_embeddings`、
+`knowledge_edges`、`node_aliases` / `node_merges` / `node_pair_verdicts`、
+`interest_signals`、`mastery_claims`、`goals`、`diglot_*`、
+`focus_sessions` / `focus_nodes`、`term_marks`、`factcheck_*`、`companion_*`、
+`canonical_concepts` / `comparison_profiles`、`research_*`、`ai_failures`、`settings`。
 
-**所有 SQL 都是参数化的。** 全仓库唯一的字符串插值是占位符个数（`ids.map(() => "?")`）
-和一个由 Zod 枚举选出的表名 —— 没有任何用户或模型提供的文本会变成 SQL。
+**所有 SQL 都是参数化的。** 全仓库唯一的字符串插值是占位符个数（`ids.map(() => "?")`），
+一共三处；级联删除和节点合并要碰的表名是写死在常量数组里的（`CONVERSATION_SCOPED_TABLES`、
+`MERGE_REFERENCING_TABLES`，各有一个对着真实 schema 跑的漂移测试）——
+没有任何用户或模型提供的文本会变成 SQL。
 
 ---
 
@@ -86,6 +104,11 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 
 `packages/core-llm/`：
 
+- **端点**（`completionsUrl.ts`）：`baseUrl` 拼成 `/chat/completions` 这一个地址，
+  两个客户端共用，省得它们对"什么算可用端点"产生分歧。**必须是 https** ——
+  只有回环地址（`127.0.0.1` / `localhost` / `[::1]`）允许明文 http，因为本机的
+  Ollama / LM Studio / llama.cpp 没有证书。密钥是 Bearer 头，走明文就等于交出去。
+  query 和 fragment 会被丢掉（`https://a.example/v1?x=` 否则会拼成一个悄悄错掉的地址）。
 - **流式**（`client.ts`）：SSE，带 `stream_options: {include_usage: true}`，
   并读取服务商报告的**缓存命中 token 数**。读取器是**读干净而不是取消** ——
   取消一个已完成的 Tauri http 响应会让一个已分离的 promise 变成 rejection。
@@ -96,6 +119,12 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 - **重试**（`retry.ts`）：2 次传输层重试，可重试状态码 `{429,500,502,503,529}`，
   等抖动退避（500ms 起、8s 封顶），尊重 `Retry-After`；
   非流式整请求 120s 超时，流式只对**首字节**计 60s。
+
+> **三道保险防着一个被劫持或恶意的端点把内存吃光**（端点是用户自己填的，所以这不是假想）：
+> 单行 SSE 上限 100 万字符（`MAX_SSE_LINE_CHARS`，一条永不换行的响应否则会无限增长）；
+> 一次回答全文上限 200 万字符（`MAX_STREAM_CONTENT_CHARS`，远超任何模型的上下文）；
+> 首字节之后超时变成**滑动**的，每来一个 chunk 重新计时，连续 30 秒静默就断
+> （`STREAM_IDLE_TIMEOUT_MS`）—— 长回答不会被切断，半死的连接也不会永远挂着。
 
 ### 计价
 
@@ -123,13 +152,16 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 每个使用者在它返回 null 时都能优雅降级。
 
 > **这一层有一条反复出现的教训。** e5 会把所有真实的成对相似度挤在 0.80~0.95 之间，
-> 所以代码里**每一个绝对余弦阈值都被换成了相对门** `μ + 0.5·(best − μ)`。
+> 所以代码里**每一个绝对余弦阈值都被换成了相对门** `μ + f·(best − μ)`。
+> 那个 `f` 现在是全仓唯一的一个常数 `RELATIVE_GATE_FRACTION = 0.5`，定义在
+> `packages/core-vectors/src/similarity.ts`，知识树、关系判定、浏览兴趣都从这里 re-export ——
+> 以前是四份各自写死的拷贝，可以各改各的。
 > 2026-08-28 的审计发现旧的绝对阈值 0.72 让 100% 的候选对通过，
 > 使得对比匹配成为最大的一笔 LLM 开销，而有效输出率只有 0.023%。
 
 ---
 
-## Rust 命令面（6 个）
+## Rust 命令面（7 个）
 
 | 命令 | 做什么 |
 |---|---|
@@ -140,16 +172,31 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 | `piper_synthesize` | 调用用户自己配置的 Piper 做发音 |
 | `start_interest_service` / `read_interest_service_token` | 启动并连接外部的浏览兴趣程序 |
 
-**安全边界。** 前端**不能指定数据库文件**（`sql:allow-load` 已从权限集中移除，
-路径由 Rust 选定）；`piper_synthesize` 会校验它将要执行的到底是不是 Piper；
-兴趣程序的查找是一组固定路径，不枚举目录；有一份真实的 CSP；
-外部 URL 抓取拒绝回环与私有地址。详见 [隐私与花费](privacy-and-cost.md)。
+**安全边界。**
+
+- 前端**不能指定数据库文件**（`sql:allow-load` 已从权限集中移除，路径由 Rust 选定）。
+- `piper_synthesize` 会校验它将要执行的到底是不是 Piper；兴趣程序的查找是一组固定路径，
+  不枚举目录。
+- **模型写出来的链接一律交给 opener 打开，不让 webview 自己导航过去。** 这个窗口没有地址栏，
+  一个加载进来的页面和应用本身长得一模一样 —— 那是干净的钓鱼面。opener 的协议白名单里
+  已经没有 `http://`。
+- **导航守卫**（`lib.rs` 的 `navigation_guard` 插件）：主窗口只允许加载 `tauri:` 协议、
+  `tauri.localhost`，以及**仅开发构建**下的 Vite 服务器；别的一律拒绝。
+- **语言包下载先校验 sha256**：摘要随安装包一起发（`assets/language-packs/catalog.json`），
+  对不上就拒绝，然后才轮到 Zod 契约校验。
+- **外链抓取逐跳重检**：`fetchExternalPage` 自己跟随重定向（最多 3 跳），
+  **每一跳都重新过一遍**回环/私有地址名单 —— 底下没有任何一层会再检查一次，
+  一个 `302 Location: http://127.0.0.1:11434/…` 否则就能把本机服务的响应当"证据"读出来。
+  响应体大小和总等待时间也都有上限。
+- 有一份真实的 CSP（开发和生产各一份）。
+
+详见 [隐私与花费](privacy-and-cost.md)。
 
 ---
 
 ## 状态管理
 
-18 个 zustand store。**几个 store 有导入期副作用**（订阅事件总线），
+17 个 zustand store。**几个 store 有导入期副作用**（订阅事件总线），
 所以 `App.tsx` 里有几行只为副作用而存在的 import —— 那不是多余的。
 
 事件链：

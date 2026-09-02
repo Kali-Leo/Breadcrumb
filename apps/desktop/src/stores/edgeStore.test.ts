@@ -22,7 +22,10 @@ vi.mock("../lib/platform/db", () => ({
   })),
 }));
 
-vi.mock("../lib/platform/failureLog", () => ({ recordAiFailure: vi.fn() }));
+vi.mock("../lib/platform/failureLog", () => ({
+  degradeSilently: vi.fn(),
+  recordAiFailure: vi.fn(),
+}));
 vi.mock("../lib/billing/metering", () => ({
   recordMeteredCall: vi.fn(),
   recordFailedCallUsage: vi.fn(),

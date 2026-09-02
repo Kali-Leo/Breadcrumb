@@ -49,7 +49,10 @@ vi.mock("../../stores/settingsStore", () => ({
 }));
 
 const recordAiFailureMock = vi.fn();
-vi.mock("../platform/failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
+vi.mock("../platform/failureLog", () => ({
+  degradeSilently: vi.fn(),
+  recordAiFailure: recordAiFailureMock,
+}));
 
 const recordMeteredCallMock = vi.fn();
 const recordFailedCallUsageMock = vi.fn();

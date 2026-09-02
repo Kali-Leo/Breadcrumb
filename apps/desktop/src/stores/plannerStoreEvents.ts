@@ -5,6 +5,7 @@
  * importing usePlannerStore itself) so this module has no dependency back on the store file.
  * Main exports: registerRecomputeSubscriptions.
  */
+import { degradeSilently } from "../lib/platform/failureLog";
 import { appEventBus } from "./chatStore";
 
 /** Subscribes `recompute` to knowledge:edgesUpdated, interest:updated, mastery:updated and
@@ -13,7 +14,7 @@ import { appEventBus } from "./chatStore";
  * crash). */
 export function registerRecomputeSubscriptions(recompute: () => Promise<void>): void {
   function recomputeSafely(): void {
-    recompute().catch((error: unknown) => console.warn("planner recompute skipped:", error));
+    recompute().catch((error: unknown) => degradeSilently("planner", error));
   }
   appEventBus.on("knowledge:edgesUpdated", recomputeSafely);
   appEventBus.on("interest:updated", recomputeSafely);

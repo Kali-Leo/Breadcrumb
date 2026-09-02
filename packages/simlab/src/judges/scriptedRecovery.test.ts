@@ -6,8 +6,10 @@
  * against DeepSeek at DEFAULT_RECOVERY_ROUNDS (3) showed curiosity outscoring confusion/
  * boredom for both hard personas — a real empirical finding (the mechanism works: signals
  * ARE extracted and persisted), not a harness bug. Rather than assert a dominance that
- * doesn't reliably hold at 3 rounds, this reports the measured rate as a baseline, matching
- * the "no pass threshold" precedent already established for the gold-baseline eval.
+ * doesn't reliably hold at 3 rounds, this asserts only that the pipeline produced signals at
+ * all, matching the "no pass threshold" precedent already established for the gold-baseline
+ * eval. Measuring the rate is a deliberate manual exercise (inspect `result` under a
+ * debugger); the run itself stays quiet rather than printing into every `pnpm test`.
  */
 import { describe, it } from "vitest";
 import { buildLlmClientConfig, loadDeepseekApiKey, resolveRepoRoot } from "../runner/config";
@@ -23,10 +25,6 @@ describe.skipIf(apiKey === null)(
       const result = await runScriptedRecovery("confused-novice", "confusion", llmConfig);
       if (result.signalCount === 0)
         throw new Error("scripted-recovery produced zero interest signals — pipeline is broken");
-      console.log(
-        `confused-novice recovery: dominant=${result.dominantSignal}, expected=confusion, ` +
-          `matches=${result.matches}, averages=${JSON.stringify(result.averages)}`,
-      );
     }, 180_000);
 
     it("measures dominant-signal recovery for the bored-topic-skipper persona", async () => {
@@ -34,10 +32,6 @@ describe.skipIf(apiKey === null)(
       const result = await runScriptedRecovery("bored-topic-skipper", "boredom", llmConfig);
       if (result.signalCount === 0)
         throw new Error("scripted-recovery produced zero interest signals — pipeline is broken");
-      console.log(
-        `bored-topic-skipper recovery: dominant=${result.dominantSignal}, expected=boredom, ` +
-          `matches=${result.matches}, averages=${JSON.stringify(result.averages)}`,
-      );
     }, 180_000);
   },
 );

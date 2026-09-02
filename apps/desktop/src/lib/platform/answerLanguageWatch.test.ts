@@ -8,7 +8,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const recordAiFailureMock = vi.fn();
-vi.mock("./failureLog", () => ({ recordAiFailure: recordAiFailureMock }));
+vi.mock("./failureLog", () => ({
+  degradeSilently: vi.fn(),
+  recordAiFailure: recordAiFailureMock,
+}));
 
 const answerLanguage = { code: "en", detectionCodes: ["eng"] };
 vi.mock("./llmConfig", () => ({ currentAnswerLanguage: () => answerLanguage }));

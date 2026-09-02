@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { degradeSilently } from "../../lib/platform/failureLog";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
@@ -60,7 +61,7 @@ export function MapView() {
     usePlannerStore
       .getState()
       .recompute()
-      .catch((error: unknown) => console.warn("planner recompute skipped:", error));
+      .catch((error: unknown) => degradeSilently("planner", error));
   }, []);
 
   const { world, displayWorld, goalScope, retentionByNode } = useWorldModel(demoMode);

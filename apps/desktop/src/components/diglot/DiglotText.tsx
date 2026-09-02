@@ -6,11 +6,12 @@
  * lib/diglot/diglotCardPosition.
  * Main exports: DiglotText.
  */
+
+import { wovenContextSentenceFor } from "@breadcrumb/core-text";
 import type { ReplacementPatch } from "@breadcrumb/feature-diglot-weave";
 import { applyPatches } from "@breadcrumb/feature-diglot-weave";
 import { useEffect, useRef, useState } from "react";
 import { computeDiglotCardPosition } from "../../lib/diglot/diglotCardPosition";
-import { wovenContextSentenceFor } from "../../lib/focus/contextSentence";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { DiglotWordSpan, type OpenCard } from "./DiglotWordSpan";
 import { useDiglotExposure } from "./useDiglotExposure";

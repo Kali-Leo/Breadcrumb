@@ -11,6 +11,7 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
 import { type ContinentAssignment, deriveContinents } from "@breadcrumb/feature-map";
 import { getRepos } from "../platform/db";
+import { degradeSilently } from "../platform/failureLog";
 import { rowsBeforeDay, startOfLocalDayIso } from "./layoutDay";
 
 /** engagement = 1 + log2(1 + sightingCount) + 2 * avgCuriosity — sightings alone already lift
@@ -93,7 +94,7 @@ async function computeContinentAssignment(
 
     return deriveContinents(nodes, embeddingByNodeId, engagementByNodeId, dayStartIso);
   } catch (error) {
-    console.warn("loadContinentAssignment failed, falling back to tree-root islands", error);
+    void degradeSilently("map-continents", error);
     return null;
   }
 }

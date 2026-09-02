@@ -1,18 +1,17 @@
 /**
  * Purpose: derive the map's continents tree-first (spec 031) — every knowledge root that has
  * children becomes a continent named after itself, with its direct children as kingdoms;
- * only childless orphan roots fall back to embedding clustering, and whatever refuses to
- * cluster leaves as an unnamed islet. Pure: no DB, no UI, seeded randomness only.
+ * only childless orphan roots fall back to embedding clustering (continentClusters.ts), and
+ * whatever refuses to cluster leaves as an unnamed islet. This file owns the continent types,
+ * the tree half, and the placement order. Pure: no DB, no UI, seeded randomness only.
  * Main exports: deriveContinents, ContinentAssignment, ContinentSummary, ContinentKingdom.
  *
  * Naming rule "大陆与国家永不同名" holds by construction for tree continents — a parent never
- * shares a label with its own children. Cluster continents carry the ONE allowed exception:
- * their name is the medoid member's own label and that member is also one of their kingdoms,
- * so the two read alike. That is the honest node name; the optional AI naming pass exists
- * precisely to lift a cluster continent's name away from its members.
+ * shares a label with its own children. The one allowed exception belongs to cluster
+ * continents and is documented in continentClusters.ts.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { clusterEmbeddedNodes, pickMedoid } from "./topicCluster";
+import { clusterOrphanRoots, layoutMemberIds } from "./continentClusters";
 import { sumEngagement } from "./topicFallback";
 import type { TopicSummary } from "./topics";
 import { collectSubtree, indexChildren } from "./treeShape";
@@ -69,31 +68,6 @@ function orderByArrival<Summary extends { id: string; memberNodeIds: string[] }>
   );
 }
 
-/** The cluster's oldest member — its identity anchor. Ties (same creation instant) and
- * members with no known creation time fall back to id order, so the choice is total and
- * deterministic. Undefined only for an empty member list. */
-function earliestMemberId(
-  memberNodeIds: readonly string[],
-  createdAtById: ReadonlyMap<string, string>,
-): string | undefined {
-  return [...memberNodeIds].sort((a, b) => {
-    const createdA = createdAtById.get(a) ?? "";
-    const createdB = createdAtById.get(b) ?? "";
-    return createdA.localeCompare(createdB) || a.localeCompare(b);
-  })[0];
-}
-
-/** Layout inputs (weight, size) only count members known before the layout day, so browsing
- * and mid-day growth cannot move or resize anything until tomorrow (Leo 2026-08-31). */
-function layoutMemberIds(
-  memberNodeIds: readonly string[],
-  createdAtById: ReadonlyMap<string, string>,
-  layoutDayStartIso: string | undefined,
-): string[] {
-  if (layoutDayStartIso === undefined) return [...memberNodeIds];
-  return memberNodeIds.filter((id) => (createdAtById.get(id) ?? "") < layoutDayStartIso);
-}
-
 function treeContinent(
   root: KnowledgeNodeRow,
   directChildren: readonly KnowledgeNodeRow[],
@@ -118,64 +92,6 @@ function treeContinent(
       memberNodeIds: collectSubtree(child, children).map((member) => member.id),
     })),
   };
-}
-
-/**
- * Clusters the flat, childless roots by embedding similarity (the same relative-gate pipeline
- * topic discovery uses), so a shelf of unfiled interests still gathers into a landmass.
- * A root with no embedding cannot be judged for similarity at all, so it goes straight to the
- * islets — as does anything that clustered with nobody.
- */
-function clusterOrphanRoots(
-  orphanRoots: readonly KnowledgeNodeRow[],
-  embeddingByNodeId: ReadonlyMap<string, readonly number[]>,
-  engagementByNodeId: ReadonlyMap<string, number>,
-  createdAtById: ReadonlyMap<string, string>,
-  layoutDayStartIso: string | undefined,
-): { continents: ContinentSummary[]; islets: TopicSummary[] } {
-  const nodesById = new Map(orphanRoots.map((node) => [node.id, node]));
-  const embeddedIds = orphanRoots
-    .filter((node) => (embeddingByNodeId.get(node.id)?.length ?? 0) > 0)
-    .map((node) => node.id);
-  const communities = clusterEmbeddedNodes(embeddedIds, embeddingByNodeId);
-
-  const continents: ContinentSummary[] = [];
-  const gathered = new Set<string>();
-  for (const memberNodeIds of communities.values()) {
-    if (memberNodeIds.length < 2) continue;
-    const medoid = pickMedoid(memberNodeIds, embeddingByNodeId, nodesById);
-    if (medoid === undefined) continue;
-    for (const id of memberNodeIds) gathered.add(id);
-    const layoutMembers = layoutMemberIds(memberNodeIds, createdAtById, layoutDayStartIso);
-    continents.push({
-      // Identity — and through it the terrain seed — is the cluster's oldest member, not its
-      // medoid: joining a cluster never changes which of its members came first, so the island
-      // a learner already knows keeps its shape as the cluster grows (Leo 2026-09-01: shape is
-      // the one thing that stays put). The label still comes from the medoid, which is the
-      // member that actually says what the cluster is about.
-      id: earliestMemberId(memberNodeIds, createdAtById) ?? medoid.id,
-      label: medoid.label,
-      memberNodeIds: [...memberNodeIds],
-      weight: sumEngagement(layoutMembers, engagementByNodeId),
-      layoutMemberCount: layoutMembers.length,
-      origin: "cluster",
-      kingdoms: memberNodeIds.map((id) => ({
-        id,
-        label: nodesById.get(id)?.label ?? id,
-        memberNodeIds: [id],
-      })),
-    });
-  }
-
-  const islets = orphanRoots
-    .filter((node) => !gathered.has(node.id))
-    .map((node) => ({
-      id: node.id,
-      label: node.label,
-      memberNodeIds: [node.id],
-      weight: sumEngagement([node.id], engagementByNodeId),
-    }));
-  return { continents, islets };
 }
 
 export function deriveContinents(

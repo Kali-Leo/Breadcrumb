@@ -16,6 +16,7 @@ import {
   openPracticeConversation,
 } from "../lib/compare/occupationActions";
 import { getRepos } from "../lib/platform/db";
+import { degradeSilently } from "../lib/platform/failureLog";
 import { nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 import type { CompareState } from "./compareStore";
@@ -45,7 +46,7 @@ async function sweepInBackground(
     const judged = await runAnchorSweep();
     if (judged !== null && judged > 0) await refresh();
   } catch (error) {
-    console.warn("anchor sweep skipped:", error);
+    void degradeSilently("compare-align", error);
   } finally {
     setAligning(false);
   }
@@ -115,7 +116,7 @@ export function createCompareSelectionActions(
           (aligning) => set({ aligning }),
         );
       } catch (error) {
-        console.warn("comparison tree compute skipped:", error);
+        void degradeSilently("compare-profile", error);
         set({ loading: false });
       }
     },
@@ -128,7 +129,7 @@ export function createCompareSelectionActions(
         if (profileId !== null) await get().selectProfile(profileId);
         else set({ loading: false });
       } catch (error) {
-        console.warn("occupation profile creation skipped:", error);
+        void degradeSilently("compare-profile", error);
         set({ loading: false });
       }
     },
@@ -150,7 +151,7 @@ export function createCompareSelectionActions(
           if (get().selectedProfileId === selected) set({ tree });
         }
       } catch (error) {
-        console.warn("practice score skipped:", error);
+        void degradeSilently("compare-profile", error);
       }
     },
 
@@ -159,7 +160,7 @@ export function createCompareSelectionActions(
         const conversationId = await openPracticeConversation(node.label, node.sourceRef);
         appEventBus.emit("app:navigateChat", { conversationId });
       } catch (error) {
-        console.warn("practice discussion skipped:", error);
+        void degradeSilently("compare-profile", error);
       }
     },
   };

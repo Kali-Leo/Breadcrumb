@@ -7,9 +7,9 @@
  * dashed = 3 3), spec 040's provenance-tree view that spec 042 §6 retired.
  * Main exports: FocusMap.
  */
+import { layoutFocusMap } from "@breadcrumb/feature-explore";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { layoutFocusMap } from "../../lib/focus/focusMapLayout";
 import { truncate } from "../../lib/platform/truncateText";
 import { useFocusStore } from "../../stores/focusStore";
 
