@@ -98,7 +98,27 @@ console.log("first screen (gzipped, as GitHub Pages serves it):");
 for (const row of rows) console.log(`  ${kib(row.gzip).padStart(10)}  ${row.name}`);
 console.log(`  ${kib(total).padStart(10)}  total`);
 
-const failures = [];
+/** Chunks that must only ever be reached through a dynamic import. A static edge from any
+ * other chunk means Rollup merged something into them (2026-09-02: an empty mermaid parser
+ * facade was folded into the trend-chart chunk, so opening the map fetched 3 MB of mermaid
+ * online and, because the PWA precache deliberately leaves mermaid out, went blank offline). */
+const LAZY_ONLY_CHUNKS = ["mermaid"];
+function staticImportsOfLazyChunks() {
+  const assetsDir = join(distDir, "assets");
+  const problems = [];
+  for (const file of readdirSync(assetsDir)) {
+    if (!file.endsWith(".js")) continue;
+    const source = readFileSync(join(assetsDir, file), "utf8");
+    for (const name of LAZY_ONLY_CHUNKS) {
+      if (file.startsWith(`${name}-`)) continue;
+      const staticEdge = new RegExp(`(from|import)s*["']./${name}-[^"']+.js["']`);
+      if (staticEdge.test(source)) problems.push(`${file} statically imports the ${name} chunk`);
+    }
+  }
+  return problems;
+}
+
+const failures = staticImportsOfLazyChunks();
 if (entry.gzip > ENTRY_GZIP_LIMIT)
   failures.push(`entry chunk ${kib(entry.gzip)} over the ${kib(ENTRY_GZIP_LIMIT)} ceiling`);
 if (total > CRITICAL_PATH_GZIP_LIMIT)

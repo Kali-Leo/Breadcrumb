@@ -37,7 +37,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
           onClick={() => useFocusStore.getState().stopStreaming()}
           className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 hover:bg-amber-200"
         >
-          停止
+          {t("common:actions.stop")}
         </button>
       )}
       <button
@@ -45,7 +45,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
         disabled={streaming || draft.trim().length === 0}
         className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 disabled:opacity-40"
       >
-        发送
+        {t("common:actions.send")}
       </button>
     </form>
   );

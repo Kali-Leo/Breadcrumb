@@ -27,7 +27,7 @@
       because a static host will not set it for us. connect-src has to be open: the whole
       point of this build is that the learner brings their own AI endpoint, and we cannot
       know its hostname in advance. Everything else stays as narrow as the desktop policy:
-      img-src lists only the two video CDNs the discovery page uses.
+      img-src is self-only: the discovery page, the one consumer of external images, has no entry in this edition.
 
       frame-ancestors is deliberately absent — the spec makes browsers ignore it in a meta
       policy, and a static host will not send the header. apps/web/src/main.tsx refuses to run
@@ -35,7 +35,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.hdslb.com https://*.ytimg.com; media-src 'self' blob:; connect-src 'self' https: blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https: blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
     />
   </head>
 

@@ -15,6 +15,7 @@ import {
   watchedTitleSignals,
 } from "@breadcrumb/feature-browsing-interest";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { isBrowserEdition } from "./edition";
 import { embedTexts } from "./embeddings";
 
 /** A watched title with everything downstream needs: the affinity path reads title/weight/
@@ -61,6 +62,10 @@ export async function loadWatchedTitleRecords(): Promise<readonly WatchedTitleRe
 }
 
 async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecord[] | null> {
+  // The browser edition has no way to reach the loopback service (CSP and mixed content both
+  // refuse it), and every planner recompute was still trying — found in the 2026-09-02
+  // walkthrough. Answer "no bridge" before touching the network, as the store already does.
+  if (isBrowserEdition()) return null;
   let signals: ReturnType<typeof watchedTitleSignals>;
   try {
     signals = watchedTitleSignals(await client.proContent(PRO_CONTENT_DAYS), nowMillis);

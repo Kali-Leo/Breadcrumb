@@ -4,9 +4,10 @@
  * else into them, spec 057 added discovery back as the interest panel).
  * Main exports: App (default).
  */
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./App.css";
+import { LazyBoundary } from "./components/LazyBoundary";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
 import { Sidebar } from "./components/Sidebar";
 import {
@@ -39,10 +40,6 @@ import { useFocusStore } from "./stores/focusStore";
 import { useKnowledgeStore } from "./stores/knowledgeStore";
 import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
-
-/** Nothing, deliberately: a view is a whole screen, and a spinner or a word in the moment
- * before it arrives would be a new thing on screen that was never there before. */
-const NOTHING_YET = null;
 
 /** Idle delay before the research task platform's v1 "idle execution" kicks in — no real
  * OS-level idle detection yet, just a fixed wait after startup (spec 036 §3, noted as a v1
@@ -150,27 +147,31 @@ export default function App() {
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1">
-          <Suspense fallback={NOTHING_YET}>
+          <LazyBoundary resetKey={view}>
             {view === "chat" && <ChatView />}
             {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
             {view === "map" && <MapView />}
             {view === "vocab" && <VocabPanel />}
             {view === "discovery" && <DiscoveryView />}
-            {/* The companions roster pops out at the center area's lower-left, sized to its
-                three rows; clicking anywhere else dismisses it (Leo's design). */}
-            {companionsOpen && (
-              <>
-                <button
-                  type="button"
-                  aria-label={t("companion.closeRoster")}
-                  onClick={() => setCompanionsOpen(false)}
-                  className="absolute inset-0 z-20 cursor-default"
-                />
-                <div className="absolute bottom-2 start-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+          </LazyBoundary>
+          {/* The companions roster pops out at the center area's lower-left, sized to its
+              three rows; clicking anywhere else dismisses it (Leo's design). */}
+          {companionsOpen && (
+            <>
+              <button
+                type="button"
+                aria-label={t("companion.closeRoster")}
+                onClick={() => setCompanionsOpen(false)}
+                className="absolute inset-0 z-20 cursor-default"
+              />
+              <div className="absolute bottom-2 start-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+                <LazyBoundary resetKey={String(companionsOpen)}>
                   <CompanionSection onPicked={() => setCompanionsOpen(false)} />
-                </div>
-              </>
-            )}
+                </LazyBoundary>
+              </div>
+            </>
+          )}
+          <LazyBoundary resetKey={view}>
             {onboardingRunning && (
               <OnboardingHost
                 ready={settingsLoaded}
@@ -180,6 +181,8 @@ export default function App() {
                 sawMap={sawMap}
               />
             )}
+          </LazyBoundary>
+          <LazyBoundary resetKey={helperPopup?.conversationId ?? ""}>
             {helperPopup !== null && (
               <CompanionChatPopup
                 conversationId={helperPopup.conversationId}
@@ -187,10 +190,10 @@ export default function App() {
                 onClose={() => setHelperPopup(null)}
               />
             )}
-          </Suspense>
+          </LazyBoundary>
         </main>
       </div>
-      <Suspense fallback={NOTHING_YET}>{focusOpen && <FocusOverlay />}</Suspense>
+      <LazyBoundary resetKey={String(focusOpen)}>{focusOpen && <FocusOverlay />}</LazyBoundary>
     </div>
   );
 }

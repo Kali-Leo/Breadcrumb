@@ -51,6 +51,19 @@ function bannerText(): string | null {
   }
 }
 
+const LANGUAGE_GRACE_MS = 1500;
+function languageSettled(): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(done, LANGUAGE_GRACE_MS);
+    function done(): void {
+      clearTimeout(timer);
+      i18next.off("languageChanged", done);
+      resolve();
+    }
+    i18next.on("languageChanged", done);
+  });
+}
+
 function warnIfNotPersistent(): void {
   const text = bannerText();
   if (text === null) return;
@@ -72,7 +85,10 @@ void (async () => {
   // paint, rather than a banner appearing under someone who has already started typing.
   await openBrowserDatabase();
   await initI18n();
-  warnIfNotPersistent();
+  // The interface language is chosen by the settings store once the app mounts, so a banner
+  // drawn now would always speak the source language. Wait for that first switch (or a short
+  // grace period when there is none) before picking the sentence.
+  void languageSettled().then(warnIfNotPersistent);
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <App />
