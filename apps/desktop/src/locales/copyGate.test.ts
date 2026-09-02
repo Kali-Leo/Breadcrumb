@@ -13,7 +13,7 @@ import { UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
 import { containsManipulation } from "@breadcrumb/feature-companion";
 import { findPressureLexiconHits, loadPressureLexicons } from "@breadcrumb/simlab";
 import { describe, expect, it } from "vitest";
-import { resources } from "../i18n";
+import { resources } from "../i18n/allCatalogues";
 import { DEMO_RESEARCH_TASK_TEXT } from "../lib/research/researchSampleTask";
 
 const PRAISE_WORDS = ["真棒", "太棒", "厉害", "加油", "优秀", "了不起", "真聪明"];

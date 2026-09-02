@@ -9,7 +9,7 @@ from the following open-source projects.
 | [jeheydorn/nortantis](https://github.com/jeheydorn/nortantis) | AGPL-3.0 | 手绘地图图标资产（`apps/desktop/src/assets/map-art/`）；海岸晕影、海浪、纸张纹理、做旧边框算法移植；构造板块模拟移植 |
 | [mewo2/terrain](https://github.com/mewo2/terrain) | MIT | 水力侵蚀/河流管线算法移植（`packages/feature-map/src/erosion.ts` 等） |
 | [Azgaar/Fantasy-Map-Generator](https://github.com/Azgaar/Fantasy-Map-Generator) | MIT | 高度图斑块算子算法移植（`packages/feature-map/src/heightmap.ts`） |
-| [lxgw/LxgwWenKai 霞鹜文楷](https://github.com/lxgw/LxgwWenKai) | SIL OFL 1.1 | 地图手写风格字体（许可证全文见 `apps/desktop/src/assets/fonts/OFL.txt`） |
+| [lxgw/LxgwWenKai 霞鹜文楷](https://github.com/lxgw/LxgwWenKai) | SIL OFL 1.1 | 地图手写风格字体（许可证全文见 `apps/desktop/src/assets/fonts/OFL.txt`）。随应用分发的不是原始 TTF，而是按 unicode-range 切成的 95 片子集化 WOFF2 —— OFL 的附加许可明确允许修改、改格式与再分发，条件是保留本声明、不单独售卖字体、且衍生字体不使用保留字体名（子集分片沿用原名分发于本应用内，未作为独立字体发布） |
 | [David Revoy《Pepper&Carrot》](https://peppercarrot.com) | CC BY 4.0 | AI 学习伙伴的角色设定为衍生创作，有改动（`packages/feature-companion/src/cards/`）；不含原作美术资产，且不代表原作者对本产品的背书 |
 | [langchain-ai/langchainjs](https://github.com/langchain-ai/langchainjs) | MIT | Generative Agents 记忆流检索评分移植（`packages/feature-companion/src/memoryStream.ts`） |
 | [thunlp/ProactiveAgent](https://github.com/thunlp/ProactiveAgent) | Apache-2.0 | 主动提议门控算法移植（ICLR 2025） |

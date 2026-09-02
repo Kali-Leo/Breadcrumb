@@ -5,10 +5,13 @@
  * Kept out of App.tsx so the shell stays a shell: App renders this and hands it the two things
  * only App can do, which are switching views and knowing which one is open.
  *
+ * The demo module is reached through import() rather than a top-level import: it seeds three
+ * months of a learner's history, and none of that code has any business being fetched by
+ * someone who is not asking for it.
+ *
  * Main exports: OnboardingHost.
  */
 import { useCallback, useEffect, useState } from "react";
-import { hasDemoData, installDemoData } from "../../lib/platform/demoData";
 import { useChatStore } from "../../stores/chatStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -66,6 +69,7 @@ export function OnboardingHost({
   }, [onNavigate]);
 
   const tryDemo = useCallback(async () => {
+    const { installDemoData } = await import("../../lib/platform/demoData");
     await installDemoData();
     // Reload the stores that already read from the database, so the map, the trail and the
     // review panel show the demo learner without a restart.
@@ -106,10 +110,12 @@ export function OnboardingHost({
       onReplayTour={() => {
         // Straight back into the tour when the example is already there — asking again
         // whether to install what is already installed is a pointless door to walk through.
-        void hasDemoData().then((installed) => {
+        void (async () => {
+          const { hasDemoData } = await import("../../lib/platform/demoData");
+          const installed = await hasDemoData();
           setWithDemo(installed);
           setPhase(installed ? "tour" : "welcome");
-        });
+        })();
       }}
       onOpenSettings={() => onNavigate("settings")}
       onOpenMap={() => onNavigate("map")}

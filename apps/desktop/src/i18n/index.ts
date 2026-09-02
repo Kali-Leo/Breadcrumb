@@ -1,11 +1,12 @@
 /**
- * Purpose: starts i18next with the bundled message catalogues and keeps the document in
- * step with the chosen language — the html lang/dir attributes and the font stack for that
- * language's script. Import once from main.tsx, before anything renders.
+ * Purpose: starts i18next with the source catalogue and keeps the document in step with the
+ * chosen language — the html lang/dir attributes and the font stack for that language's
+ * script. Import once from main.tsx, before anything renders; every other language is fetched
+ * by changeLanguage, one language at a time (see catalogues.ts).
  * Main exports: initI18n, applyLanguageToDocument, changeLanguage.
  */
 import { DEFAULT_LANGUAGE_CODE, fontStackFor, languageOf } from "@breadcrumb/core-i18n";
-import i18next, { type FormatFunction, type Resource, type ResourceLanguage } from "i18next";
+import i18next, { type FormatFunction, type ResourceLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
 import zhChat from "../locales/zh-CN/chat.json";
 import zhCommon from "../locales/zh-CN/common.json";
@@ -14,11 +15,13 @@ import zhLearning from "../locales/zh-CN/learning.json";
 import zhOnboarding from "../locales/zh-CN/onboarding.json";
 import zhPalace from "../locales/zh-CN/palace.json";
 import zhSettings from "../locales/zh-CN/settings.json";
-import { buildPseudoCatalogue, isPseudoLocale, PSEUDO_LOCALE_CODE } from "./pseudoLocale";
+import { loadCatalogue } from "./catalogues";
+import { buildPseudoCatalogue, isPseudoLocale } from "./pseudoLocale";
 
 /** The Chinese catalogue is the source language: it defines which keys exist, and t() is
  * type-checked against it (see i18next.d.ts). Every other language is discovered from the
- * filesystem below, so adding one is a folder plus a row in the language table — no code. */
+ * locales folder by catalogues.ts, so adding one is a folder plus a row in the language
+ * table — no code. */
 const SOURCE_CATALOGUE = {
   common: zhCommon,
   chat: zhChat,
@@ -31,41 +34,10 @@ const SOURCE_CATALOGUE = {
 
 export type MessageCatalogue = typeof SOURCE_CATALOGUE;
 
-/** Eager on purpose: all languages together are ~50 KB, and the desktop app's "loading" is a
- * local disk read. Splitting them per language would buy nothing and cost a await on first
- * paint (audit 2026-08-28, "verified good" §6). */
-const catalogueModules = import.meta.glob<{ default: ResourceLanguage }>("../locales/*/*.json", {
-  eager: true,
-});
-
-const LOCALE_PATH = /\/locales\/([^/]+)\/([^/]+)\.json$/;
-
-function discoverCatalogues(): Resource {
-  const found: Resource = {};
-  for (const [path, module] of Object.entries(catalogueModules)) {
-    const match = LOCALE_PATH.exec(path);
-    if (match === null) continue;
-    const [, code, namespace] = match as unknown as [string, string, string];
-    const language = found[code] ?? {};
-    language[namespace] = module.default;
-    found[code] = language;
-  }
-  return found;
-}
-
-export const resources: Resource = discoverCatalogues();
-
-/** Development builds get one extra, deliberately unreadable locale for layout testing. */
-export const DEV_LOCALES: Resource = import.meta.env.DEV
-  ? {
-      [PSEUDO_LOCALE_CODE]: Object.fromEntries(
-        Object.entries(resources.en ?? {}).map(([namespace, catalogue]) => [
-          namespace,
-          buildPseudoCatalogue(catalogue as never) as ResourceLanguage,
-        ]),
-      ),
-    }
-  : {};
+/** The one language that is always here. It is the source catalogue, the fallback behind
+ * every other language, and the first paint's language, so it is worth its place in the
+ * entry graph; the other ten arrive from catalogues.ts when they are actually chosen. */
+const SOURCE_RESOURCES = { [DEFAULT_LANGUAGE_CODE]: SOURCE_CATALOGUE as ResourceLanguage };
 
 export const NAMESPACES = [
   "common",
@@ -110,7 +82,7 @@ function isolateInterpolatedValues(): void {
 export async function initI18n(): Promise<void> {
   if (i18next.isInitialized) return;
   await i18next.use(initReactI18next).init({
-    resources: { ...resources, ...DEV_LOCALES },
+    resources: SOURCE_RESOURCES,
     lng: DEFAULT_LANGUAGE_CODE,
     fallbackLng: DEFAULT_LANGUAGE_CODE,
     defaultNS: "common",
@@ -134,7 +106,33 @@ export function applyLanguageToDocument(code: string): void {
   root.style.setProperty("--app-font-stack", fontStackFor(language?.script ?? "latin"));
 }
 
+/** English padded and flipped, built on demand so the pseudolocale costs a development
+ * build one fetch and a shipped build nothing at all. */
+async function buildPseudoLanguage(): Promise<ResourceLanguage> {
+  const english = await loadCatalogue("en");
+  return Object.fromEntries(
+    Object.entries(english).map(([namespace, catalogue]) => [
+      namespace,
+      buildPseudoCatalogue(catalogue as never) as ResourceLanguage,
+    ]),
+  );
+}
+
+/** Fetches a language's catalogues the first time it is asked for and hands them to i18next.
+ * Cheap on every later call: i18next already holds the bundle. */
+async function ensureCatalogue(code: string): Promise<void> {
+  if (code === DEFAULT_LANGUAGE_CODE) return;
+  if (i18next.hasResourceBundle(code, "common")) return;
+  const pseudo = isPseudoLocale(code);
+  if (pseudo && !import.meta.env.DEV) return;
+  const language = pseudo ? await buildPseudoLanguage() : await loadCatalogue(code);
+  for (const [namespace, catalogue] of Object.entries(language)) {
+    i18next.addResourceBundle(code, namespace, catalogue);
+  }
+}
+
 export async function changeLanguage(code: string): Promise<void> {
+  await ensureCatalogue(code);
   await i18next.changeLanguage(code);
   applyLanguageToDocument(code);
 }

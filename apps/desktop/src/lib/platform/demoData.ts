@@ -17,7 +17,6 @@
  * Main exports: installDemoData, removeDemoData, hasDemoData.
  */
 import { insertDemoData, wipeDemoData } from "@breadcrumb/demo-seed";
-import languagePack from "../../assets/language-packs/zh-en.json";
 import { getSqlClient } from "./db";
 
 /** One demo node id is enough to answer "is the demo installed" without a schema flag that
@@ -31,9 +30,14 @@ export async function hasDemoData(): Promise<boolean> {
   return (rows[0]?.count ?? 0) > 0;
 }
 
-/** Writes the demo learner. Idempotent — the seed replaces any previous copy of itself. */
+/** Writes the demo learner. Idempotent — the seed replaces any previous copy of itself.
+ *
+ * The bundled Chinese-English pack is 3.3 MB and is only ever read here, so it is fetched at
+ * the moment someone asks for the demo rather than sitting behind every mention of this
+ * module — asking "is the demo installed?" must not download a dictionary. */
 export async function installDemoData(): Promise<void> {
   const sql = await getSqlClient();
+  const languagePack = (await import("../../assets/language-packs/zh-en.json")).default;
   await insertDemoData(sql, new Date(), { languagePack });
 }
 

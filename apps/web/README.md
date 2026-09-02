@@ -68,11 +68,16 @@ on the desktop, never leaves your device.
 
 | 少了什么 | 影响 | 为什么 |
 |---|---|---|
-| **本地嵌入模型** | 地图分区退回按知识树结构划分；知识点去重只剩机械规则那一层；关系候选退回同级与时间排序；猜词判定只判对错，不给"接近" | 模型有几十兆，第一次打开应该是个能用的应用，不是一次下载。加回来是很小的改动，见 `src/shims/embeddings.ts` |
 | **FSRS 参数按人拟合** | 用库的默认参数 | 需要 Rust 那个 crate。它本来也只在 400 次复习之后才触发 |
 | **本地发音（Piper）** | 退回浏览器自己的语音合成 | Piper 是本机程序，网页起不了进程 |
 | **发现页** | 这一版没有入口 | 它要连本机 21456 端口上的另一个程序。网页连本地端口正是浏览器该拦的事，所以侧栏里不放这个入口，也不去轮询那个端口 |
 | **手机浏览器** | 界面按桌面宽度排版，手机上用不了 | 侧栏固定 240px 不能收起，记忆宫殿的画布算出来是 0 宽，而且只认鼠标滚轮，进了一层就退不出来。手机上请等桌面版或后续适配 |
+
+**本地嵌入模型现在有了。** 和桌面版同一个模型（`multilingual-e5-small`），在 Web Worker 里
+用 transformers.js 跑，q8 量化版与桌面向量的余弦 ≥ 0.995。它**不在首屏下载**：
+第一次真的要用到时才取那 113 MB，并且归网络总开关管——开关关着就直接降级，不偷偷联网。
+下载源先探测 `huggingface.co`，不通再退 `hf-mirror.com`；ONNX 运行时的 wasm 从本站同源目录发，
+不走 jsDelivr。模型存在浏览器的 Cache API 里，之后完全离线。
 
 **其余全部照常**：对话与学习模式、知识地图（含地形生成）、专注模式、生词标注与猜词、
 学习目标、对比树（1,016 个职业的数据是随包的）、事实核查、每日来请教你的同学、
@@ -82,6 +87,36 @@ on the desktop, never leaves your device.
 （`/Breadcrumb/language-packs/`，由部署流程从 GitHub Releases 搬过来，
 文件与 Release 资产逐字节相同，装之前照样核对 SHA-256）。
 早先直接向 GitHub Releases 下载在浏览器里是 100% 失败的：资产两跳重定向都不带 CORS 头。
+
+---
+
+## 可安装 / 离线
+
+这一版是个 PWA：地址栏里会出现"安装"，装完在自己的窗口里跑，没有浏览器界面。
+iOS 上没有安装提示，要自己「分享 → 添加到主屏幕」（也建议这么做：Safari 会清理
+七天没打开过的网站数据，已添加到主屏的应用不受这条计时器约束）。
+
+**装好之后断网也能开。** Service Worker 在第一次访问时把**应用外壳**存下来 ——
+脚本、样式、地图的美术、SQLite 的 wasm 和它的 Worker，约 6.3 MB / 61 个文件。
+外壳是一次性整批下载的（少一个文件整次安装就作废），所以大件不放里面：
+
+| 不进预缓存 | 什么时候缓存 |
+|---|---|
+| 24 MB 的字体分片（95 片，只按需要的那几片下） | 第一次用到那一片 |
+| 两个职业数据集、mermaid、随包的中英词包 | 第一次打开用到它的界面 |
+| 下载来的语言包（`/Breadcrumb/language-packs/*.json`） | 装的时候 |
+| ONNX 运行时（`/Breadcrumb/ort/`）与 113 MB 的嵌入模型 | 第一次用嵌入时（模型由 transformers.js 自己的 Cache 管，不经 Service Worker） |
+
+也就是说：**第一次访问很快，离线能力随着你用它而变完整**。
+完全没浏览过就断网，缺的是那些还没碰过的界面，不是应用本身。
+
+更新是自动的（`registerType: "autoUpdate"`），不弹"有新版本"的对话框。
+
+> Installable and offline-capable. The service worker precaches the shell — scripts,
+> stylesheet, map artwork, SQLite's wasm and worker (~6.3 MB) — and caches everything heavy
+> the first time it is actually used. A first visit stays fast; offline coverage completes
+> itself as you use the app. On iOS, add it to the home screen by hand: that also exempts its
+> storage from WebKit's seven-day eviction timer.
 
 ---
 

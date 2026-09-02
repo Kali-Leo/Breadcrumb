@@ -24,11 +24,15 @@ export function manualChunks(id: string): string | undefined {
   // Naming them keeps the size warning legible instead of pointing at a hashed filename.
   if (id.includes("/data/generated/escoDataset")) return "escoDataset";
   if (id.includes("/data/generated/onetDataset")) return "onetDataset";
-  // Every interface language, plus the library that reads them. Needed for the first paint, but
-  // as its own file it downloads beside the entry rather than inside it.
-  if (id.includes("/apps/desktop/src/locales/") || id.includes("/apps/desktop/src/i18n/")) {
-    return "i18n";
-  }
+  // One chunk per interface language. i18n/catalogues.ts imports them lazily, so grouping the
+  // eleven together would undo that: a named group is one file, and one file is fetched whole
+  // the moment any language in it is asked for. Chinese is the source catalogue and is
+  // imported statically, so its chunk is the only one on the first paint's path.
+  const locale = /\/apps\/desktop\/src\/locales\/([^/]+)\//.exec(id)?.[1];
+  if (locale !== undefined) return `locale-${locale}`;
+  // The i18n machinery itself, plus the library that reads the catalogues. Needed for the
+  // first paint, but as its own file it downloads beside the entry rather than inside it.
+  if (id.includes("/apps/desktop/src/i18n/")) return "i18n";
   if (!id.includes("node_modules")) return undefined;
   if (isPackage(id, "i18next") || isPackage(id, "react-i18next")) return "i18n";
   if (isPackage(id, "pixi.js")) return "pixi";

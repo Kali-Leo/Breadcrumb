@@ -7,7 +7,8 @@
  */
 import { UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
 import { describe, expect, it } from "vitest";
-import { NAMESPACES, resources } from "./index";
+import { resources } from "./allCatalogues";
+import { NAMESPACES } from "./index";
 
 type Catalogue = Record<string, unknown>;
 

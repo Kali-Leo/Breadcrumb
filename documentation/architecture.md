@@ -151,6 +151,9 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 语言学习的上下文新颖度、浏览兴趣匹配。**零 token，从不计价**，
 每个使用者在它返回 null 时都能优雅降级。
 
+浏览器版跑的是同一个模型的 q8 ONNX 导出（transformers.js + ORT-wasm，在 Worker 里），
+与桌面向量余弦 ≥ 0.995；细节见下面的「浏览器版」。
+
 > **这一层有一条反复出现的教训。** e5 会把所有真实的成对相似度挤在 0.80~0.95 之间，
 > 所以代码里**每一个绝对余弦阈值都被换成了相对门** `μ + f·(best − μ)`。
 > 那个 `f` 现在是全仓唯一的一个常数 `RELATIVE_GATE_FRACTION = 0.5`，定义在
@@ -222,14 +225,43 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
 一条运行时绊线（`replyLanguage.ts`，懒加载 `franc`）检测到回答语言不对时，
 用更强硬的指令重试一次。
 
-**加一门语言不需要改代码**：`import.meta.glob("../locales/*/*.json")` 在构建期发现文件夹。
-唯一贴近代码的一步是在 `core-i18n/src/languages.ts` 里加**一行数据**。
+**加一门语言不需要改代码**：`import.meta.glob("../locales/*/*.json")` 在构建期发现文件夹
+（`i18n/catalogues.ts`）。唯一贴近代码的一步是在 `core-i18n/src/languages.ts` 里加**一行数据**。
 文字方向和字体栈从那一行推导（按书写系统，不按语言）。
+
+**目录按语言加载，一次只取一种**：中文是源语言也是回退语言，静态进包；其余十种各自一个 chunk，
+`changeLanguage` 时才取（十一种一起 eager 打包时是 163 KiB gzip 压在浏览器版的首屏关键路径上，
+桌面版读本地磁盘感觉不到，网页版每次首访都要付）。
+十一语言一致性的那批测试要的是相反的东西，所以它们从 `i18n/allCatalogues.ts` 读全量 ——
+那个模块只有测试导入，任何构建都到不了它。
 
 **包只产出键，不产出字符串**（`CopyMessage { key, params }`）。
 测试卡得很死：跨语言的键集必须完全一致、不能有空串、非中文目录里不能残留汉字、
 占位符必须对齐、该语言语法要求的每个 CLDR 复数类别都必须齐全、
 包里发出的每个键都必须能在真实目录里解析、以及一份压力/操控词表要扫过每一条叶子字符串。
+
+---
+
+## 浏览器版（apps/web）
+
+**没有第二份功能代码。** `apps/web` 构建的就是 `apps/desktop/src`，只有四个模块被 Vite
+别名换掉：`plugin-sql` → SQLite-wasm（OPFS 的 `opfs-sahpool` VFS，不需要 COOP/COEP）、
+`api/core` → 浏览器实现的命令表、`plugin-http` → `fetch`、`plugin-opener` → `window.open`。
+部署在 GitHub Pages 的子路径 `/Breadcrumb/`，静态托管，**设不了任何响应头**——
+这一条决定了上面每一个选择。
+
+- **本地嵌入**：`shims/embedding/` 里一个 Worker 跑 transformers.js。ORT 的 wasm 从本站
+  同源的 `ort/` 目录发（默认会走 jsDelivr，大陆不可直连）；模型源在运行时探测
+  `huggingface.co` → `hf-mirror.com`；113 MB 的下载归网络总开关管，存进 Cache API。
+- **可安装 / 离线**：`vite-plugin-pwa`（`vite.pwa.ts`）。`scope`/`start_url` 继承 Vite 的
+  `base`——Service Worker 不能声明高于自身路径的作用域，而那需要一个静态托管发不出的响应头。
+  预缓存只装应用外壳（约 6.3 MB）；字体分片、职业数据集、mermaid、词包、ORT 都走
+  运行时 CacheFirst，第一次用到才缓存。模型权重不进 Service Worker：transformers.js
+  自己有一份 Cache，两份就是同一个 113 MB 存两遍。
+- **首屏**：`scripts/check-bundle-size.mjs` 在每次构建后量入口 chunk 与 index.html
+  声明的全部关键路径（都按 gzip，因为 Pages 实际发的就是 gzip），超线就让构建失败。
+- **onnxruntime-web 自己的 `new URL()`** 会让 Vite 多吐一份 23.6 MB 的 wasm 副本；
+  运行时用的是同源那份，所以 `vite.config.ts` 里一个 `generateBundle` 钩子把它从产物里删掉。
 
 ---
 

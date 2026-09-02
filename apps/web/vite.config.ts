@@ -1,11 +1,35 @@
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { manualChunks } from "../desktop/vite.chunks";
+import { pwaPlugin } from "./vite.pwa";
+
+// GitHub Pages serves a project site under /<repo>/, so assets have to be requested from
+// there. Set BASE_PATH=/ for any host that serves from the root.
+const base = process.env.BASE_PATH ?? "/Breadcrumb/";
 
 const desktopSrc = fileURLToPath(new URL("../desktop/src", import.meta.url));
 const shim = (name: string) => fileURLToPath(new URL(`./src/shims/${name}`, import.meta.url));
+
+/**
+ * onnxruntime-web resolves its own binary with `new URL("ort-wasm-….wasm", import.meta.url)`,
+ * which Vite dutifully turns into a 23.6 MB emitted asset. Nothing ever requests it:
+ * embeddingWorker.ts overrides `wasmPaths` before the runtime initialises, pointing at the
+ * copy public/ort/ serves from this origin (copy-ort-assets.mjs). Deleting it from the bundle
+ * costs the deploy a quarter of its size and the runtime nothing. The URL string stays in the
+ * JavaScript, unevaluated and unfetched.
+ */
+function dropDuplicateOrtWasm(): Plugin {
+  return {
+    name: "breadcrumb:drop-duplicate-ort-wasm",
+    generateBundle(_options, bundle) {
+      for (const fileName of Object.keys(bundle)) {
+        if (/(^|\/)ort-wasm-[^/]*\.wasm$/.test(fileName)) delete bundle[fileName];
+      }
+    },
+  };
+}
 
 /**
  * The browser edition builds the desktop application's source directly. The only difference
@@ -14,10 +38,8 @@ const shim = (name: string) => fileURLToPath(new URL(`./src/shims/${name}`, impo
  * else is duplicated. A feature added to the desktop app is in this build the same day.
  */
 export default defineConfig({
-  // GitHub Pages serves a project site under /<repo>/, so assets have to be requested from
-  // there. Set BASE_PATH=/ for any host that serves from the root.
-  base: process.env.BASE_PATH ?? "/Breadcrumb/",
-  plugins: [react(), tailwindcss()],
+  base,
+  plugins: [react(), tailwindcss(), dropDuplicateOrtWasm(), pwaPlugin(base)],
   resolve: {
     alias: [
       { find: "@tauri-apps/plugin-sql", replacement: shim("tauri-sql.ts") },

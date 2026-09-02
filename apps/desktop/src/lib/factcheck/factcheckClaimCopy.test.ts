@@ -4,7 +4,7 @@
  * reasoning is left alone, and rows stored before the split keep their original text.
  */
 import { describe, expect, it } from "vitest";
-import { resources } from "../../i18n";
+import { resources } from "../../i18n/allCatalogues";
 import { claimReasoningKey } from "./factcheckClaimCopy";
 
 describe("claimReasoningKey", () => {

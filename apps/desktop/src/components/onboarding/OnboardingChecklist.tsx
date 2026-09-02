@@ -10,12 +10,13 @@
  *
  * It dismisses permanently and can be brought back from settings.
  *
+ * The demo module is reached through import(), for the reason OnboardingHost gives.
+ *
  * Main exports: OnboardingChecklist.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../../lib/platform/db";
-import { hasDemoData, removeDemoData } from "../../lib/platform/demoData";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface ChecklistState {
@@ -56,6 +57,7 @@ export function OnboardingChecklist({
 
   useEffect(() => {
     void (async () => {
+      const { hasDemoData } = await import("../../lib/platform/demoData");
       const repos = await getRepos();
       const conversations = await repos.conversations.listRecentFirst();
       // Demo conversations do not count as having asked anything — the point of the item is
@@ -137,7 +139,8 @@ export function OnboardingChecklist({
             disabled={removing}
             onClick={() => {
               setRemoving(true);
-              void removeDemoData()
+              void import("../../lib/platform/demoData")
+                .then((module) => module.removeDemoData())
                 .then(() => window.location.reload())
                 .finally(() => setRemoving(false));
             }}

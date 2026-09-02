@@ -10,7 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Breadcrumb</title>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-    <link rel="apple-touch-icon" href="icon-128.png" />
+    <!-- iOS has no install prompt: someone adds this to their home screen by hand, and this
+         is the icon they end up with. Safari scales it, so the 512 is the one to give it. The
+         web app manifest (vite.pwa.ts) names both sizes for every other browser. -->
+    <link rel="apple-touch-icon" href="icon-512.png" />
     <!-- The shell is white — the sidebar, the chat and every panel. The map's parchment is the
          canvas's own colour, not the page's, so it would be the wrong thing to paint the
          browser's chrome with. -->
