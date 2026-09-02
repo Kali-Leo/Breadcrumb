@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01",
+  "generatedAt": "2026-09-02",
   "downloadBase": "https://github.com/Kali-Leo/Breadcrumb/releases/download/language-packs",
   "packs": [
     {
@@ -8,10 +8,10 @@
       "sourceLang": "bn",
       "targetLang": "en",
       "version": "2026.09.01",
-      "entryCount": 2306,
-      "weavableCount": 1778,
-      "bytes": 860956,
-      "sha256": "88fa319d8c1025f0f4214e868a2b2f4cee075fbdd149e429f76465e3e6097494"
+      "entryCount": 2527,
+      "weavableCount": 1958,
+      "bytes": 954714,
+      "sha256": "90404744a20dbc3060a9591c540d9b2d2e2df6b1c97c2fcec16d2ac21a18cf83"
     },
     {
       "id": "en:hi",
@@ -19,10 +19,10 @@
       "sourceLang": "en",
       "targetLang": "hi",
       "version": "2026.09.01",
-      "entryCount": 2939,
-      "weavableCount": 2004,
-      "bytes": 402347,
-      "sha256": "3531f34b33ecb0e641ea66e5696000316c9e13c2db0fb5e89a1776f02c2fb694"
+      "entryCount": 3206,
+      "weavableCount": 2136,
+      "bytes": 440922,
+      "sha256": "b745d5deb147304816e42f36b47ee95d7c0a0e94f6a8ecbdaedb5e70d0b475f8"
     },
     {
       "id": "en:id",
@@ -30,10 +30,10 @@
       "sourceLang": "en",
       "targetLang": "id",
       "version": "2026.09.01",
-      "entryCount": 4264,
-      "weavableCount": 2763,
-      "bytes": 498424,
-      "sha256": "7ceb2b65da37ab65d5dff46cb622d4a09517b911d85988d20575cfde7bef75e6"
+      "entryCount": 4461,
+      "weavableCount": 2843,
+      "bytes": 522302,
+      "sha256": "2a03324681e8b9bafb8d51b2da43681af2d57f0a935ff908ec2c4aaca4aa45ff"
     },
     {
       "id": "en:ko",
@@ -41,10 +41,10 @@
       "sourceLang": "en",
       "targetLang": "ko",
       "version": "2026.09.01",
-      "entryCount": 4387,
-      "weavableCount": 2731,
-      "bytes": 534687,
-      "sha256": "97a06cb0840f78a1b92ee4e89bccdda227434f6f699bfbe72744fc6c48a42f06"
+      "entryCount": 5389,
+      "weavableCount": 2963,
+      "bytes": 665637,
+      "sha256": "b4b9af37215919477601ba62f9af9c60715b3dcdf43a84b62595f91403aa5505"
     },
     {
       "id": "en:sw",
@@ -52,10 +52,21 @@
       "sourceLang": "en",
       "targetLang": "sw",
       "version": "2026.09.01",
-      "entryCount": 2651,
-      "weavableCount": 2059,
-      "bytes": 272779,
-      "sha256": "d3daaa5e59bc4fec30e96c8eab9f6820472059ee0dbb941ca0b88d781512266c"
+      "entryCount": 2707,
+      "weavableCount": 2099,
+      "bytes": 278592,
+      "sha256": "d2bafddacf703ff24faf6159802db1a9302becc736506156274f81930abfe326"
+    },
+    {
+      "id": "en:vi",
+      "file": "en-vi.json",
+      "sourceLang": "en",
+      "targetLang": "vi",
+      "version": "2026.09.01",
+      "entryCount": 2498,
+      "weavableCount": 1648,
+      "bytes": 281781,
+      "sha256": "d6fd6bfff689e9d61086d0f0eeea349ba92c5e3522227e38d01c251029d2ba11"
     },
     {
       "id": "id:en",
@@ -63,10 +74,10 @@
       "sourceLang": "id",
       "targetLang": "en",
       "version": "2026.09.01",
-      "entryCount": 6378,
-      "weavableCount": 4537,
-      "bytes": 927520,
-      "sha256": "bccc54388b4ee3660d1f4026f53103cbe4bbadb18be266b9b3da3230b3bedd90"
+      "entryCount": 6731,
+      "weavableCount": 4779,
+      "bytes": 985292,
+      "sha256": "3cee3a5c18696efef900d488477b5ef79d5bc7cfaa56a141ede86a782f5ad9c6"
     },
     {
       "id": "vi:en",
@@ -74,10 +85,10 @@
       "sourceLang": "vi",
       "targetLang": "en",
       "version": "2026.09.01",
-      "entryCount": 2552,
-      "weavableCount": 1849,
-      "bytes": 336586,
-      "sha256": "842277359a695816e646c75d7c08b48038db5188e2b2f7f34c70cd08a0fee691"
+      "entryCount": 3530,
+      "weavableCount": 2618,
+      "bytes": 485954,
+      "sha256": "37f79b99dae22fc7ad632abd822217477be54b84a3e67412712127c1b7e4046b"
     }
   ]
 }

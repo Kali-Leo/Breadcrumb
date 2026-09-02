@@ -27,7 +27,7 @@ import {
   arpabetToIpa,
   BLACKLIST_SUBSTRINGS,
   ENGLISH_FUNCTION_WORDS,
-  normalizeGloss,
+  glossCandidates,
 } from "./entry-builder.mjs";
 import { downloadCachedStream, kaikkiUrlFor, streamKaikkiEntries } from "./kaikki.mjs";
 import { downloadCached, parseCmudict, parseFrequencyList } from "./parsers.mjs";
@@ -155,7 +155,10 @@ async function buildTowardEnglish({ extractPath, sourceRanks, cmuMap, englishFre
 
     const glosses = allGlossesOf(raw);
     if (glosses.length === 0) continue;
-    const normalized = glosses.map((gloss) => normalizeGloss(gloss)).filter((item) => item.valid);
+    // Each gloss can offer several synonyms ("to learn; to study"); reading it as one string
+    // dropped the entry entirely, which is what it did to 3,237 Chinese words before this was
+    // found (2026-09-01).
+    const normalized = glosses.flatMap((gloss) => glossCandidates(gloss));
     if (normalized.length === 0) continue;
 
     const [target, ...rest] = normalized;
@@ -207,8 +210,9 @@ async function buildFromEnglish({ extractPath, sourceRanks, englishFrequent }) {
     if (isRedirectOrLabel(raw) || raw.pos === "name") continue;
     const gloss = primaryGlossOf(raw);
     if (gloss === null) continue;
-    const normalized = normalizeGloss(gloss);
-    if (!normalized.valid) continue;
+    // The first usable synonym of the dominant sense is the English lemma this word teaches.
+    const normalized = glossCandidates(gloss)[0];
+    if (normalized === undefined) continue;
     const lemma = normalized.word;
     if (!englishFrequent.has(lemma) || ENGLISH_FUNCTION_WORDS.has(lemma)) continue;
     const freqRank = sourceRanks.get(lemma);
