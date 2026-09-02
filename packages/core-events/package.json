@@ -1,8 +1,8 @@
 {
-  "name": "@breadcrumb/sdk",
+  "name": "@breadcrumb/core-events",
   "license": "AGPL-3.0-only",
   "version": "0.0.1",
-  "description": "Types and contracts for Breadcrumb plugins: event map, manifest, permissions.",
+  "description": "The typed application event map every module's bus traffic conforms to.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

@@ -92,9 +92,6 @@ importers:
       '@breadcrumb/plugin-research':
         specifier: workspace:*
         version: link:../../packages/plugin-research
-      '@breadcrumb/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.1
@@ -264,9 +261,6 @@ importers:
       '@breadcrumb/plugin-research':
         specifier: workspace:*
         version: link:../../packages/plugin-research
-      '@breadcrumb/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
       '@sqlite.org/sqlite-wasm':
         specifier: ^3.53.0-build1
         version: 3.53.0-build1
@@ -352,9 +346,9 @@ importers:
 
   packages/core-bus:
     dependencies:
-      '@breadcrumb/sdk':
+      '@breadcrumb/core-events':
         specifier: workspace:*
-        version: link:../sdk
+        version: link:../core-events
     devDependencies:
       typescript:
         specifier: ^5.9.0
@@ -371,6 +365,12 @@ importers:
       vitest:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+
+  packages/core-events:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
 
   packages/core-i18n:
     dependencies:
@@ -788,12 +788,6 @@ importers:
       vitest:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
-
-  packages/sdk:
-    devDependencies:
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
 
   packages/simlab:
     dependencies:

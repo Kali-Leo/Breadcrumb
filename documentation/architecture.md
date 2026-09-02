@@ -40,9 +40,10 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 `compare`（对比树）、`factcheck`（事实核查）、`feedback`（热力图与趋势）、
 `companion`（同学与记忆流）、`research`（研究课题）、`trail`（会话摘要，目前仅 simlab 使用）。
 
-> **注意：「插件」是架构约定，不是运行时系统。** `packages/sdk` 里定义了 `PluginManifest`
-> 和 `PluginPermission`，但那个加载器不存在，两个类型也没有任何使用者。
-> 没有 `./mods` 目录、没有动态加载、没有插件市场。文件自己的注释就写着"还没有东西校验清单"。
+> **注意：「插件」是架构约定，不是运行时系统。** Breadcrumb 不做运行时插件加载（ADR-0035，
+> 2026-09-02 裁定）：没有加载器、没有 `./mods` 目录、没有动态加载、没有插件市场，
+> `plugin-*` 前缀只表示「功能模块」。事件契约在 `packages/core-events`（原 `sdk`，
+> 曾附带的 `PluginManifest`/`PluginPermission` 死类型已随裁定删除）。
 
 ---
 

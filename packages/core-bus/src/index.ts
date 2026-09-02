@@ -1,8 +1,8 @@
 /**
- * Purpose: minimal typed publish/subscribe event bus used by the app shell and all plugins.
+ * Purpose: minimal typed publish/subscribe event bus used by the app shell and all feature modules.
  * Main exports: createEventBus(), EventBus. No side effects; instances are created explicitly.
  */
-import type { BreadcrumbEventMap, BreadcrumbEventName } from "@breadcrumb/sdk";
+import type { BreadcrumbEventMap, BreadcrumbEventName } from "@breadcrumb/core-events";
 
 export type EventHandler<Name extends BreadcrumbEventName> = (
   payload: BreadcrumbEventMap[Name],

@@ -33,7 +33,6 @@
     "@breadcrumb/plugin-memory": "workspace:*",
     "@breadcrumb/plugin-planner": "workspace:*",
     "@breadcrumb/plugin-research": "workspace:*",
-    "@breadcrumb/sdk": "workspace:*",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-http": "^2.5.9",
     "@tauri-apps/plugin-opener": "^2",
