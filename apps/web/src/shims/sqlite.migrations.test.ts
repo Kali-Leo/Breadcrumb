@@ -1,7 +1,9 @@
 /**
  * Purpose: proves the browser edition's database really is the same database. The desktop
- * build runs 45 append-only migrations through sqlx; this runs the very same MIGRATIONS array
- * through SQLite-compiled-to-WebAssembly and then exercises the repositories against it.
+ * build runs every migration in MIGRATIONS through sqlx; this runs that same array through
+ * SQLite-compiled-to-WebAssembly and then exercises the repositories against it. The count is
+ * asserted against MIGRATIONS.length rather than written down here, because a number in a
+ * comment goes stale the first time someone adds a migration.
  *
  * This is the browser edition's biggest risk in one test. Everything else it does is aliasing
  * a module; this is a different SQLite build, a different driver, and a different binding

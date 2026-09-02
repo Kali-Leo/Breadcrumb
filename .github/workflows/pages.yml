@@ -39,6 +39,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Type errors used to travel all the way into production: nothing here ran tsc, and the
+      # build does not type-check. This is the cheapest gate there is.
+      - name: Type-check
+        run: pnpm --filter @breadcrumb/web typecheck
+
       # The one thing that could break silently: the whole schema runs on a different SQLite
       # build here. Failing the deploy is better than shipping a page that loses data.
       - name: Verify the schema on SQLite-wasm
@@ -46,6 +51,23 @@ jobs:
 
       - name: Build
         run: pnpm --filter @breadcrumb/web build
+
+      # Language packs, served from this site rather than from GitHub Releases. Release assets
+      # send no CORS headers on either hop of their redirect, so a page can never fetch one —
+      # measured 2026-09-02, and it left all eight downloadable pairs uninstallable here.
+      # The files are byte-for-byte the release assets; installLanguagePack still checks each
+      # one against the digest baked into the catalogue before it is stored.
+      - name: Bundle the language packs into the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./apps/desktop/src/assets/language-packs/catalog.json').packs[0].version")
+          mkdir -p apps/web/dist/language-packs
+          gh release download "language-packs-$version" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir apps/web/dist/language-packs \
+            --pattern '*.json'
+          ls -l apps/web/dist/language-packs
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 

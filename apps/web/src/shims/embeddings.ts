@@ -1,46 +1,43 @@
 /**
- * Purpose: what the browser edition answers when the app asks for local text embeddings.
+ * Purpose: what the browser edition answers when the app asks for local text embeddings —
+ * the same multilingual-e5-small the desktop build runs through Rust, here as its q8 ONNX
+ * export running in a Web Worker (embedding/embeddingWorker.ts) on ORT-wasm. This module is the
+ * page's end of that worker; the desktop bridge (apps/desktop/src/lib/platform/embeddings.ts)
+ * calls it through the aliased `invoke("embed_texts")` and never knows the difference.
  *
- * Today: nothing, honestly. The desktop build runs multilingual-e5-small through Rust; the
- * browser equivalent is transformers.js, which is tens of megabytes of model on first use and
- * drags a Node-only native toolchain (onnxruntime-node, sharp) through the dependency tree for
- * a build that will never run in Node. A first visit should be a working app, not a download,
- * so this edition ships without it.
+ * The model is 113 MB, downloaded once on first use (network switch permitting) into the
+ * Cache API and loaded from there ever after. There is no prompt and no progress bar — the
+ * desktop build has none either — and every failure surfaces as a rejection that lands on
+ * the same degradation paths a failed native call already takes.
  *
- * That is a real, deliberate reduction rather than an oversight — and the app is built for it.
- * Every consumer of embeddings already handles them being unavailable: the map falls back to
- * tree structure for its continents, node dedup skips its semantic tier and keeps the
- * mechanical one, edge candidates fall back to sibling and recency ranking, and concept-guess
- * grading drops to correct/wrong rather than offering "close". Nothing breaks; some things get
- * coarser, and the features page says which.
- *
- * Adding it later is a small, contained change: depend on @huggingface/transformers, load the
- * pipeline in `loadPipeline` below, and keep the "query: " prefix so the vectors stay
- * comparable with the desktop build's.
- *
- * Main exports: embedTextsInBrowser, isEmbeddingModelLoaded.
+ * Main exports: BROWSER_EMBEDDING_MODEL, embedTextsInBrowser, isEmbeddingModelLoaded.
  */
+import { createEmbeddingLink, type EmbeddingLink } from "./embedding/workerLink";
 
-/** Kept next to the code it will configure, so whoever enables this does not have to go
- * looking for which model the desktop build uses. */
-export const DESKTOP_EMBEDDING_MODEL = "multilingual-e5-small";
+/** What this edition's rows in node_embeddings are stamped with. The desktop build writes
+ * "multilingual-e5-small" for its full-precision vectors; the suffix lets an exported library
+ * say which precision made each row. Mirrored in the desktop bridge's EMBEDDING_MODEL. */
+export const BROWSER_EMBEDDING_MODEL = "multilingual-e5-small-q8";
+
+let link: EmbeddingLink | null = null;
 
 export function isEmbeddingModelLoaded(): boolean {
-  return false;
+  return link?.loaded ?? false;
 }
 
 /**
- * Rejects rather than returning an empty array. `[]` would mean "these texts embed to
- * nothing", which reads to a caller as a successful result and would poison similarity
- * comparisons; a rejection lands on the same path a failed native call already takes, where
- * every caller degrades deliberately.
+ * Rejects rather than returning an empty array on failure. `[]` would mean "these texts embed
+ * to nothing", which reads to a caller as a successful result and would poison similarity
+ * comparisons; a rejection lands where a failed native call already lands.
  */
 export async function embedTextsInBrowser(
   texts: string[],
-  _allowDownload: boolean,
+  allowDownload: boolean,
 ): Promise<number[][]> {
   if (texts.length === 0) return [];
-  throw new Error(
-    "local embeddings are not available in the browser edition; features that use them degrade",
+  link ??= createEmbeddingLink(
+    () =>
+      new Worker(new URL("./embedding/embeddingWorker.ts", import.meta.url), { type: "module" }),
   );
+  return link.embed(texts, allowDownload);
 }

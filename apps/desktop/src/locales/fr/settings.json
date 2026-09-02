@@ -196,5 +196,17 @@
     "closeConfirmResearchValue": "Des statistiques agrégées locales comme celles-ci permettent d'étudier comment les gens apprennent sans recueillir les données personnelles de qui que ce soit.",
     "closeConfirmWhatChanges": "Une fois éteintes, aucune tâche ne sera exécutée et on ne te le redemandera pas. Les résultats déjà obtenus ne sont pas touchés et restent dans le panneau.",
     "closeConfirmAction": "L'éteindre"
+  },
+  "backup": {
+    "title": "Sauvegarde et restauration",
+    "hint": "Dans la version navigateur, vos données vivent dans ce seul navigateur. Exportez une sauvegarde et vous pourrez continuer depuis un autre appareil ou un autre navigateur.",
+    "export": "Exporter une sauvegarde",
+    "import": "Restaurer depuis une sauvegarde",
+    "replaceWarning": "La restauration remplace toutes vos données actuelles par celles de la sauvegarde, et ce qui est remplacé ne peut pas être récupéré. Vous pouvez d'abord exporter une sauvegarde des données actuelles.",
+    "confirmImport": "Restaurer",
+    "exporting": "Exportation…",
+    "importing": "Restauration…",
+    "exportFailed": "Cette session n'a aucun fichier à exporter : le navigateur n'a pas laissé cette page enregistrer de données.",
+    "importFailed": "Ce fichier n'est pas une sauvegarde Breadcrumb, et vos données actuelles sont inchangées. Essayez un autre fichier."
   }
 }

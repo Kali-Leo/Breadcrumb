@@ -1,7 +1,8 @@
 /**
  * Purpose: settings view with three pages — general (API config, language, network,
- * mainland mode), switches-and-spending (the per-feature billing page, Leo 2026-08-12), and
- * research (the research task platform, moved here from the top level by spec 044).
+ * mainland mode, and in the browser edition backup and restore), switches-and-spending (the
+ * per-feature billing page, Leo 2026-08-12), and research (the research task platform, moved
+ * here from the top level by spec 044).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { OnboardingSettingsRow } from "../onboarding/OnboardingSettingsRow";
 import { ResearchPanel } from "../research/ResearchPanel";
 import { ApiSettingsSection } from "./ApiSettingsSection";
 import { BillingSettingsPanel } from "./BillingSettingsPanel";
+import { DataBackupSection } from "./DataBackupSection";
 import { LanguageSettingsSection } from "./LanguageSettingsSection";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
 // The same switch every settings row uses; this page carried its own copy of it until now.
@@ -95,6 +97,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <LanguageSettingsSection />
 
           <OnboardingSettingsRow />
+
+          {/* Browser edition only, and it renders nothing on the desktop: there the database
+              is a file the learner already has. */}
+          <DataBackupSection />
 
           <SettingsQuietIssues />
         </>

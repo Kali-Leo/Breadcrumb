@@ -19,7 +19,10 @@
     "offline": "Offline. Anything that needs the internet is paused; the rest still works."
   },
   "state": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "storageUnsupported": "This browser cannot store the page's data, so nothing from this session will be kept once the tab closes. Open it in a recent Chrome, Edge, Firefox or Safari and it will be saved.",
+    "storageBlocked": "This window will not let the page store data, so nothing from this session will be kept once the tab closes. Open it in a normal window rather than a private one and it will be saved.",
+    "storageOtherTab": "Breadcrumb is already open in another tab, and nothing here will be saved. Go back to that tab to carry on, or close it and reload this page."
   },
   "list": {
     "separator": ", "

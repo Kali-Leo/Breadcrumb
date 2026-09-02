@@ -6,8 +6,16 @@
  * different things — the roster lives behind 👥, not inside the list.)
  * Main exports: Sidebar.
  */
-import { ALargeSmall, Compass, Map as MapIcon, Settings, Users } from "lucide-react";
+import {
+  ALargeSmall,
+  Compass,
+  type LucideIcon,
+  Map as MapIcon,
+  Settings,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { isBrowserEdition } from "../lib/platform/edition";
 import { useChatStore } from "../stores/chatStore";
 import { useCompanionStore } from "../stores/companionStore";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -62,6 +70,9 @@ function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void 
   );
 }
 
+/** One button in the bottom row: icon, its name, what it opens, whether it is the open one. */
+type NavEntry = readonly [LucideIcon, string, () => void, boolean];
+
 export function Sidebar({
   activeView,
   companionsOpen,
@@ -74,6 +85,23 @@ export function Sidebar({
 }: SidebarProps) {
   const { t } = useTranslation("common");
   const startNewConversation = useChatStore((state) => state.startNewConversation);
+
+  const navEntries: NavEntry[] = [
+    [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
+    [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
+    [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
+  ];
+  // Discovery reads a program running on this machine, which a web page cannot reach and
+  // should not try to. In the browser edition there is no entry at all, rather than one that
+  // opens a page whose only content would be an apology.
+  if (!isBrowserEdition()) {
+    navEntries.splice(2, 0, [
+      Compass,
+      t("nav.discover"),
+      onOpenDiscovery,
+      activeView === "discovery",
+    ]);
+  }
 
   return (
     <aside className="flex h-full w-60 flex-col border-e border-stone-200 bg-white">
@@ -106,14 +134,7 @@ export function Sidebar({
       <div className="flex items-center border-t border-stone-100 px-2 py-2">
         <ConnectivityDot />
         <div className="flex flex-1 items-center justify-evenly">
-          {(
-            [
-              [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
-              [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
-              [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
-              [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
-            ] as const
-          ).map(([Icon, name, onClick, active]) => (
+          {navEntries.map(([Icon, name, onClick, active]) => (
             <button
               key={name}
               type="button"

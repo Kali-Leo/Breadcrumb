@@ -19,7 +19,10 @@
     "offline": "Sedang luring. Semua yang butuh internet dijeda; sisanya tetap jalan."
   },
   "state": {
-    "loading": "Memuat…"
+    "loading": "Memuat…",
+    "storageUnsupported": "Peramban ini tidak bisa menyimpan data halaman, jadi tidak ada yang tersisa dari sesi ini setelah tab ditutup. Buka di Chrome, Edge, Firefox, atau Safari versi baru, dan semuanya akan tersimpan.",
+    "storageBlocked": "Jendela ini tidak mengizinkan halaman menyimpan data, jadi tidak ada yang tersisa dari sesi ini setelah tab ditutup. Buka di jendela biasa, bukan jendela penyamaran, dan semuanya akan tersimpan.",
+    "storageOtherTab": "Breadcrumb sudah terbuka di tab lain, dan tidak ada yang akan tersimpan di sini. Kembali ke tab itu untuk melanjutkan, atau tutup tab itu lalu muat ulang halaman ini."
   },
   "list": {
     "separator": ", "

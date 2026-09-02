@@ -5,6 +5,11 @@
  * of staying blank behind a console error.
  * Main exports: useMapApplication.
  */
+// Pixi 8 compiles shader uniform parsers with `new Function` unless this module is loaded
+// first; under a CSP without 'unsafe-eval' (both editions) it refuses to start and the map
+// shows its failure state. The browser edition hit that on 2026-09-02; the desktop webview is
+// lenient today but declares the same policy, so the safe path is taken everywhere.
+import "pixi.js/unsafe-eval";
 import { Application } from "pixi.js";
 import { useEffect, useRef, useState } from "react";
 import { applyReveals, drawFootprintTrail } from "./livingMap";

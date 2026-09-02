@@ -195,5 +195,17 @@
     "closeConfirmResearchValue": "Local aggregate statistics like these let researchers study how people learn without collecting anyone's personal data.",
     "closeConfirmWhatChanges": "Once off, no task will run and you will not be asked about this again. Results you already have are untouched and stay in the panel.",
     "closeConfirmAction": "Turn it off"
+  },
+  "backup": {
+    "title": "Backup and restore",
+    "hint": "In the browser edition your data lives in this one browser. Export a backup and you can carry on from another device or another browser.",
+    "export": "Export a backup",
+    "import": "Restore from a backup",
+    "replaceWarning": "Restoring replaces all of your current data with what is in the backup, and what is replaced cannot be brought back. You can export a backup of the current data first.",
+    "confirmImport": "Restore",
+    "exporting": "Exporting…",
+    "importing": "Restoring…",
+    "exportFailed": "This session has no file to export — the browser did not let this page store data.",
+    "importFailed": "That file is not a Breadcrumb backup, and your current data is unchanged. Try another file."
   }
 }

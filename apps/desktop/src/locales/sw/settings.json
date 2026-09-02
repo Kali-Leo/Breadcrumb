@@ -195,5 +195,17 @@
     "closeConfirmResearchValue": "Takwimu za jumla za hapa hapa kama hizi huwezesha kusoma jinsi watu wanavyojifunza bila kukusanya data binafsi ya mtu yeyote.",
     "closeConfirmWhatChanges": "Baada ya kuzima hakuna kazi itakayoendeshwa na hutaulizwa tena. Matokeo uliyonayo hayataguswa na yatabaki kwenye kidirisha.",
     "closeConfirmAction": "Izime"
+  },
+  "backup": {
+    "title": "Nakala rudufu na kurejesha",
+    "hint": "Katika toleo la kivinjari, data yako ipo katika kivinjari hiki pekee. Hamisha nakala rudufu, kisha unaweza kuendelea kutoka kifaa kingine au kivinjari kingine.",
+    "export": "Hamisha nakala rudufu",
+    "import": "Rejesha kutoka nakala rudufu",
+    "replaceWarning": "Kurejesha kunabadilisha data yako yote ya sasa na iliyo ndani ya nakala rudufu, na iliyobadilishwa haiwezi kurudishwa. Unaweza kwanza kuhamisha nakala rudufu ya data ya sasa.",
+    "confirmImport": "Rejesha",
+    "exporting": "Inahamisha…",
+    "importing": "Inarejesha…",
+    "exportFailed": "Kipindi hiki hakina faili la kuhamisha — kivinjari hakikuruhusu ukurasa huu kuhifadhi data.",
+    "importFailed": "Faili hilo si nakala rudufu ya Breadcrumb, na data yako ya sasa haijabadilika. Jaribu faili lingine."
   }
 }

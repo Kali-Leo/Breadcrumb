@@ -194,5 +194,17 @@
     "closeConfirmResearchValue": "这类本地聚合统计，让研究者不必收集个人数据也能了解学习规律。",
     "closeConfirmWhatChanges": "关闭后不会再运行任何研究任务，也不会再询问是否关闭。已有结果不受影响，仍可在面板中查看或删除。",
     "closeConfirmAction": "确认关闭"
+  },
+  "backup": {
+    "title": "备份与恢复",
+    "hint": "浏览器版的数据只存在这一个浏览器里。导出一份备份，就能换台设备或换个浏览器接着用。",
+    "export": "导出一份备份",
+    "import": "从备份恢复",
+    "replaceWarning": "恢复会用备份里的内容替换现在的全部数据，被换掉的内容找不回来。可以先导出一份现在的备份。",
+    "confirmImport": "确认恢复",
+    "exporting": "正在导出…",
+    "importing": "正在恢复…",
+    "exportFailed": "这个会话没有可以导出的文件——浏览器没让这一页保存数据。",
+    "importFailed": "这个文件不是 Breadcrumb 的备份，现在的数据没有变动。换一个文件试试。"
   }
 }

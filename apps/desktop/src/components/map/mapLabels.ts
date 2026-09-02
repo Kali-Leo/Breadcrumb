@@ -10,6 +10,36 @@ import { mapTheme } from "./mapTheme";
 /** Names rasterize at 3x their on-screen size, then scale down — no soft edges. */
 const LABEL_SUPERSAMPLE = 3;
 
+/** Characters whose handwriting slice has already been asked for, so a name built from
+ * characters already in hand is never re-rasterized. */
+const requestedCodepoints = new Set<number>();
+
+/**
+ * The handwriting font ships as unicode-range slices, and a browser only fetches a slice when
+ * it lays out DOM text in it. Pixi rasterizes through canvas, which draws with whatever faces
+ * are already loaded and never fetches anything itself — so a name whose slice had not been
+ * pulled in would come out in the serif fallback and stay there. Ask for exactly the slices
+ * this name needs, then redraw once they land: assigning the text again is what dirties Pixi's
+ * cached texture. Both assignments happen in the same task, so nothing blank is ever shown.
+ */
+function withHandwriting(label: MapLabel, content: string): MapLabel {
+  const missing = [...content].map((char) => char.codePointAt(0) ?? 0);
+  if (missing.every((codepoint) => requestedCodepoints.has(codepoint))) return label;
+  for (const codepoint of missing) requestedCodepoints.add(codepoint);
+  if (typeof document === "undefined") return label;
+  void document.fonts
+    .load(`${label.screenSize}px ${mapTheme.fontFamily}`, content)
+    .then(() => {
+      if (label.text.destroyed) return;
+      const drawn = label.text.text;
+      label.text.text = "";
+      label.text.text = drawn;
+    })
+    // Best-effort, exactly as the first font load is: the serif fallback stays readable.
+    .catch(() => {});
+  return label;
+}
+
 export interface MapLabel {
   /** Which island/kingdom this name belongs to — hover emphasis looks names up by it. */
   nodeId: string;
@@ -58,7 +88,7 @@ export function makeMapLabel(
   text.scale.set(1 / LABEL_SUPERSAMPLE);
   text.anchor.set(0.5);
   text.alpha = alpha;
-  return { nodeId, text, screenSize, baseAlpha: alpha };
+  return withHandwriting({ nodeId, text, screenSize, baseAlpha: alpha }, content);
 }
 
 /**

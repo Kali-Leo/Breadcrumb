@@ -19,7 +19,10 @@
     "offline": "Sin conexión. Todo lo que necesita internet está en pausa; el resto sigue funcionando."
   },
   "state": {
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "storageUnsupported": "Este navegador no puede guardar los datos de la página, así que no quedará nada de esta sesión al cerrar la pestaña. Ábrela en una versión reciente de Chrome, Edge, Firefox o Safari y se guardará.",
+    "storageBlocked": "Esta ventana no permite que la página guarde datos, así que no quedará nada de esta sesión al cerrar la pestaña. Ábrela en una ventana normal, no de incógnito, y se guardará.",
+    "storageOtherTab": "Breadcrumb ya está abierto en otra pestaña y aquí no se guardará nada. Vuelve a esa pestaña para continuar, o ciérrala y recarga esta página."
   },
   "list": {
     "separator": ", "

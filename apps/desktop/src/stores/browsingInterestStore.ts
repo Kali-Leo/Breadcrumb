@@ -17,6 +17,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
+import { isBrowserEdition } from "../lib/platform/edition";
 
 /** The service's read endpoints send no CORS headers, so requests must go through Rust. */
 const client = createBrowsingInterestClient({
@@ -82,6 +83,10 @@ export const useBrowsingInterestStore = create<BrowsingInterestState>((set, get)
   /** One round trip per panel; a service that goes away mid-round drops the page back to
    * the setup steps rather than leaving half-stale panels on screen. */
   async refresh() {
+    // The browser edition has no discovery page and no way to reach 127.0.0.1: a page served
+    // over https cannot make plain-http requests, so every probe would be a console error
+    // every few seconds and nothing else. Answering here keeps that off the wire entirely.
+    if (isBrowserEdition()) return;
     try {
       const profile = await client.profile();
       const [emotion, wordCloud, newInterests, proContent] = await Promise.all([
@@ -109,6 +114,7 @@ export const useBrowsingInterestStore = create<BrowsingInterestState>((set, get)
    * background program the user already installed, and it is the only thing standing between
    * them and their own data. If it never comes up, the page says so plainly. */
   async ensureServiceRunning() {
+    if (isBrowserEdition()) return;
     if (get().connected || get().serviceStatus !== "unknown") return;
     set({ serviceStatus: "starting" });
     let result: ServiceStartResult;
@@ -149,6 +155,7 @@ export const useBrowsingInterestStore = create<BrowsingInterestState>((set, get)
   },
 
   async loadConnectionToken() {
+    if (isBrowserEdition()) return;
     try {
       const token = await invoke<string | null>("read_interest_service_token");
       set({ connectionToken: token ?? null });

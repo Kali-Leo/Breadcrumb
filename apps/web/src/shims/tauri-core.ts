@@ -12,7 +12,7 @@
  * Main exports: invoke.
  */
 import { embedTextsInBrowser } from "./embeddings";
-import { openBrowserDatabase } from "./sqlite";
+import { exportDatabaseFile, importDatabaseFile, openBrowserDatabase } from "./sqlite";
 
 /** Thrown for commands this build genuinely cannot provide. The message reaches the same
  * console.warn / ai_failures paths the desktop build uses for a failed native call. */
@@ -38,6 +38,19 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
       const database = await openBrowserDatabase();
       const { statements } = args as unknown as TransactionArgs;
       await database.transaction(statements);
+      return undefined as T;
+    }
+
+    // Backup and restore exist only here. On the desktop the database is a file the learner
+    // can already copy; in a browser it is inside storage nothing else can reach, so this is
+    // the only way data can get out of one machine and into another. There is no Rust command
+    // by these names, which is why the settings section that calls them is browser-only.
+    case "export_database":
+      return (await exportDatabaseFile()) as T;
+
+    case "import_database": {
+      const { bytes } = args as { bytes: Uint8Array };
+      await importDatabaseFile(bytes);
       return undefined as T;
     }
 

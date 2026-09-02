@@ -17,6 +17,7 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import catalogJson from "../../assets/language-packs/catalog.json";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { getRepos } from "../platform/db";
+import { isBrowserEdition } from "../platform/edition";
 import { NetworkDisabledError } from "../platform/llmConfig";
 import { nowIso } from "../platform/time";
 
@@ -55,7 +56,19 @@ export function catalogPackFor(pairId: string): CatalogPack | null {
   return PACK_CATALOG.find((pack) => pack.id === pairId) ?? null;
 }
 
+/**
+ * Where a pack is fetched from, which is not the same place in the two builds.
+ *
+ * The desktop build asks GitHub Releases directly. A browser cannot: the release asset
+ * redirects to a second host and neither hop sends `access-control-allow-origin`, so the fetch
+ * fails before it has even followed the redirect — measured 2026-09-02, and it made every one
+ * of the eight downloadable pairs impossible to install in the browser edition. So that build
+ * reads the packs from its own site instead, where being same-origin makes the question moot;
+ * the deploy workflow copies the very same release assets into the site. The digest check
+ * afterwards is unchanged and still the thing that decides whether a pack is trusted.
+ */
 function downloadUrlFor(pack: CatalogPack): string {
+  if (isBrowserEdition()) return `${import.meta.env.BASE_URL}language-packs/${pack.file}`;
   return `${catalog.downloadBase}-${pack.version}/${pack.file}`;
 }
 

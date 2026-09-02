@@ -194,5 +194,17 @@
     "closeConfirmResearchValue": "Statistik agregat lokal seperti ini memungkinkan orang mempelajari cara manusia belajar tanpa mengumpulkan data pribadi siapa pun.",
     "closeConfirmWhatChanges": "Setelah dimatikan, tidak ada tugas yang berjalan dan kamu tidak akan ditanya lagi. Hasil yang sudah ada tidak tersentuh dan tetap di panel.",
     "closeConfirmAction": "Matikan"
+  },
+  "backup": {
+    "title": "Cadangan dan pemulihan",
+    "hint": "Di versi peramban, data Anda hanya ada di peramban ini. Ekspor satu cadangan, lalu Anda bisa melanjutkan dari perangkat lain atau peramban lain.",
+    "export": "Ekspor cadangan",
+    "import": "Pulihkan dari cadangan",
+    "replaceWarning": "Pemulihan mengganti seluruh data Anda sekarang dengan isi cadangan, dan yang diganti tidak bisa dikembalikan. Anda boleh mengekspor cadangan data saat ini lebih dulu.",
+    "confirmImport": "Pulihkan",
+    "exporting": "Mengekspor…",
+    "importing": "Memulihkan…",
+    "exportFailed": "Sesi ini tidak punya berkas untuk diekspor — peramban tidak mengizinkan halaman ini menyimpan data.",
+    "importFailed": "Berkas itu bukan cadangan Breadcrumb, dan data Anda sekarang tidak berubah. Coba berkas lain."
   }
 }

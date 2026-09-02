@@ -36,6 +36,8 @@ on the desktop, never leaves your device.
 47 个迁移在 SQLite-wasm 上逐条跑通并有测试盯着
 （`src/shims/sqlite.migrations.test.ts`）—— 不同的 SQLite 构建、不同的驱动、
 不同的绑定层，底下压着几千行手写 SQL，这是这一版最大的风险点，所以它是被测的。
+四个替身模块也各有测试：命令分发表、协议白名单、重定向转换、数据库协议本身
+（`src/shims/*.test.ts`）。
 
 ---
 
@@ -44,16 +46,19 @@ on the desktop, never leaves your device.
 桌面版的网络请求是 Rust 发的，在浏览器的安全模型之外，所以**任何 AI 服务都能用**。
 浏览器版的请求是网页发的，所以**你的 AI 服务必须允许跨域请求**。
 
-各家不一样：有的直接就能用，有的会被浏览器挡下来，报一个 CORS 错误 ——
-那不是这个应用能修的。
+**多数主流服务商可以直连。** 2026-09-02 实测预检通过的有：DeepSeek、OpenAI、Moonshot、
+智谱、通义、Groq、OpenRouter、SiliconFlow。填上密钥就能用，不用做别的。
 
-如果你填好了密钥却一直失败，先在浏览器控制台看看是不是 CORS。
-**遇到这种情况有两个办法**：换一个支持浏览器直连的服务商，或者用桌面版。
+**本机端点用不了。** Ollama、LM Studio 这一类跑在你自己电脑上的服务，
+这一版连不上：页面是 https 的，本机端点是 http 的，浏览器会拦下来。想用它们请用桌面版。
 
-> On desktop these requests are made by Rust, outside the browser's security model, so any
-> endpoint works. Here they are made by a web page, so your AI service must send CORS headers.
-> Some providers do and work immediately; some do not and will fail with a CORS error no
-> client-side code can fix. Switch provider, or use the desktop build.
+如果填好了密钥却一直失败，先在浏览器控制台看看是不是 CORS ——
+应用本身分不清"被跨域挡下"和"网断了"，两者报的是同一个错。
+
+> Most mainstream providers work directly: DeepSeek, OpenAI, Moonshot, Zhipu, Tongyi, Groq,
+> OpenRouter and SiliconFlow all passed a preflight check on 2026-09-02. What cannot work is a
+> local endpoint — Ollama, LM Studio and the like — because this page is served over https and
+> those listen on plain http, which the browser blocks. Use the desktop build for those.
 
 ---
 
@@ -66,11 +71,17 @@ on the desktop, never leaves your device.
 | **本地嵌入模型** | 地图分区退回按知识树结构划分；知识点去重只剩机械规则那一层；关系候选退回同级与时间排序；猜词判定只判对错，不给"接近" | 模型有几十兆，第一次打开应该是个能用的应用，不是一次下载。加回来是很小的改动，见 `src/shims/embeddings.ts` |
 | **FSRS 参数按人拟合** | 用库的默认参数 | 需要 Rust 那个 crate。它本来也只在 400 次复习之后才触发 |
 | **本地发音（Piper）** | 退回浏览器自己的语音合成 | Piper 是本机程序，网页起不了进程 |
-| **发现页** | 没有数据 | 它要连本机 21456 端口上的另一个程序。网页连本地端口正是浏览器该拦的事 |
+| **发现页** | 这一版没有入口 | 它要连本机 21456 端口上的另一个程序。网页连本地端口正是浏览器该拦的事，所以侧栏里不放这个入口，也不去轮询那个端口 |
+| **手机浏览器** | 界面按桌面宽度排版，手机上用不了 | 侧栏固定 240px 不能收起，记忆宫殿的画布算出来是 0 宽，而且只认鼠标滚轮，进了一层就退不出来。手机上请等桌面版或后续适配 |
 
 **其余全部照常**：对话与学习模式、知识地图（含地形生成）、专注模式、生词标注与猜词、
-学习目标、对比树（1,016 个职业的数据是随包的）、事实核查、语言学习、每日来请教你的同学、
+学习目标、对比树（1,016 个职业的数据是随包的）、事实核查、每日来请教你的同学、
 研究课题平台、以及计价与全部开关。
+
+**语言学习是可用的。** 9 个语言对里，`zh:en` 随包，另外 8 个从本站同源目录下载
+（`/Breadcrumb/language-packs/`，由部署流程从 GitHub Releases 搬过来，
+文件与 Release 资产逐字节相同，装之前照样核对 SHA-256）。
+早先直接向 GitHub Releases 下载在浏览器里是 100% 失败的：资产两跳重定向都不带 CORS 头。
 
 ---
 
@@ -89,10 +100,35 @@ on the desktop, never leaves your device.
 > everything in it, API key included. Other websites cannot; sibling projects on the same
 > origin can. Use the desktop build if that matters to you.
 
-- **无痕模式 / 禁用存储时**：应用照常工作，但**关掉标签页就没了**。
-  这种情况启动时会有一条横幅明说，不会让你白写一天。
+- **无痕模式 / 禁用存储 / 浏览器太旧时**：应用照常工作，但**关掉标签页就没了**。
+  这种情况启动时会有一条横幅明说是哪一种，不会让你白写一天。
+- **多标签页**：数据库一次只允许一个标签页打开。在第二个标签页里打开这个应用，
+  那一页会挂出横幅并变成临时会话，**在那一页里做的事不会存进库里**。
+  回到原来那个标签页继续，或者关掉它再刷新。
 - **清除浏览器数据会连它一起清掉**。这是浏览器的规矩，不是这个应用的选择。
   在意的话用桌面版。
+- 启动时会调 `navigator.storage.persist()` 请浏览器不要在磁盘紧张时回收这块存储。
+  Chrome 静默决定，Firefox 会弹一次询问，Safari 只对加到主屏的网页应用授予。
+  没拿到授权也照常能用，只是浏览器保留了以后回收的权利。
+
+---
+
+## 备份与恢复
+
+浏览器版的数据只存在这一个浏览器里，所以设置页最下面有「备份与恢复」：
+
+- **导出一份备份** —— 下载整个数据库文件（`breadcrumb-YYYY-MM-DD.db`）。
+  这就是桌面版能直接打开的那种 SQLite 文件。
+- **从备份恢复** —— 选一个备份文件，确认后替换当前全部数据，然后页面刷新。
+  文件先要过三道校验（SQLite 文件头、512 字节对齐、有可用槽位）才会写进去，
+  选错文件不会动到现有数据。恢复是不可逆的，所以要点两次。
+
+桌面版没有这一节：那边数据库本来就是磁盘上的一个文件，复制它就是备份。
+
+> The browser edition keeps everything in this one browser, so Settings has a backup section:
+> export the whole database as a file, or restore from one (which replaces everything and asks
+> you to confirm first). The file is an ordinary SQLite database, the same shape the desktop
+> build reads.
 
 ---
 

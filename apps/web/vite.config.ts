@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { manualChunks } from "../desktop/vite.chunks";
 
 const desktopSrc = fileURLToPath(new URL("../desktop/src", import.meta.url));
 const shim = (name: string) => fileURLToPath(new URL(`./src/shims/${name}`, import.meta.url));
@@ -35,8 +36,11 @@ export default defineConfig({
   },
   build: {
     target: "es2022",
-    // The occupation and curriculum datasets are megabytes of static data by design; warning
-    // about them on every build trains people to ignore the warning.
-    chunkSizeWarningLimit: 12_000,
+    rollupOptions: { output: { manualChunks } },
+    // Back to a number that means something. The occupation datasets are still megabytes and
+    // will still say so on every build — they are named chunks now, so the warning points at
+    // them by name and nothing else hides behind a raised ceiling. What actually guards the
+    // first screen is scripts/check-bundle-size.mjs, which this package runs after every build.
+    chunkSizeWarningLimit: 1_000,
   },
 });

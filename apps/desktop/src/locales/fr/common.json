@@ -19,7 +19,10 @@
     "offline": "Hors ligne. Tout ce qui a besoin d'internet est en pause ; le reste fonctionne toujours."
   },
   "state": {
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "storageUnsupported": "Ce navigateur ne peut pas enregistrer les données de la page : rien de cette session ne sera conservé une fois l'onglet fermé. Ouvrez-la dans une version récente de Chrome, Edge, Firefox ou Safari et tout sera enregistré.",
+    "storageBlocked": "Cette fenêtre n'autorise pas la page à enregistrer des données : rien de cette session ne sera conservé une fois l'onglet fermé. Ouvrez-la dans une fenêtre normale plutôt qu'en navigation privée et tout sera enregistré.",
+    "storageOtherTab": "Breadcrumb est déjà ouvert dans un autre onglet, et rien ne sera enregistré ici. Revenez à cet onglet pour continuer, ou fermez-le puis rechargez cette page."
   },
   "list": {
     "separator": ", "

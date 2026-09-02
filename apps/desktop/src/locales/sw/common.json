@@ -19,7 +19,10 @@
     "offline": "Huna mtandao. Kila kinachohitaji intaneti kimesimama kwa muda; mengine yanaendelea."
   },
   "state": {
-    "loading": "Inapakia…"
+    "loading": "Inapakia…",
+    "storageUnsupported": "Kivinjari hiki hakiwezi kuhifadhi data ya ukurasa huu, kwa hivyo hakuna kitakachobaki cha kipindi hiki baada ya kufunga kichupo. Kifungue katika toleo jipya la Chrome, Edge, Firefox au Safari, na kila kitu kitahifadhiwa.",
+    "storageBlocked": "Dirisha hili haliruhusu ukurasa kuhifadhi data, kwa hivyo hakuna kitakachobaki cha kipindi hiki baada ya kufunga kichupo. Kifungue katika dirisha la kawaida badala ya la faragha, na kila kitu kitahifadhiwa.",
+    "storageOtherTab": "Breadcrumb tayari imefunguliwa katika kichupo kingine, na hakuna kitakachohifadhiwa hapa. Rudi kwenye kichupo hicho ili kuendelea, au kifunge kisha upakie ukurasa huu upya."
   },
   "list": {
     "separator": ", "

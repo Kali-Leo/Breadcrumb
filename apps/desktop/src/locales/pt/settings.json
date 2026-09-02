@@ -196,5 +196,17 @@
     "closeConfirmResearchValue": "Estatísticas agregadas locais como estas permitem estudar como as pessoas aprendem sem recolher dados pessoais de ninguém.",
     "closeConfirmWhatChanges": "Uma vez desligado, nenhuma tarefa será executada e você não será perguntado de novo. Os resultados que já tem ficam intactos no painel.",
     "closeConfirmAction": "Desligar"
+  },
+  "backup": {
+    "title": "Backup e restauração",
+    "hint": "Na versão de navegador, seus dados ficam só neste navegador. Exporte um backup e você poderá continuar em outro aparelho ou em outro navegador.",
+    "export": "Exportar um backup",
+    "import": "Restaurar de um backup",
+    "replaceWarning": "Restaurar substitui todos os seus dados atuais pelo conteúdo do backup, e o que for substituído não volta. Você pode exportar antes um backup dos dados atuais.",
+    "confirmImport": "Restaurar",
+    "exporting": "Exportando…",
+    "importing": "Restaurando…",
+    "exportFailed": "Esta sessão não tem arquivo para exportar — o navegador não deixou esta página guardar dados.",
+    "importFailed": "Esse arquivo não é um backup do Breadcrumb, e seus dados atuais continuam iguais. Tente outro arquivo."
   }
 }

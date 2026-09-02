@@ -10,10 +10,15 @@ import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { invoke } from "@tauri-apps/api/core";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { getRepos } from "./db";
+import { isBrowserEdition } from "./edition";
 import { degradeSilently } from "./failureLog";
 import { nowIso } from "./time";
 
-const EMBEDDING_MODEL = "multilingual-e5-small";
+/** What each row in node_embeddings is stamped with. The browser edition runs the same model
+ * quantised to q8 (apps/web/src/shims/embeddings.ts, BROWSER_EMBEDDING_MODEL), whose vectors
+ * agree with these only to a cosine of ~0.995; the suffix lets an exported library say which
+ * precision made each row instead of mixing the two under one name. */
+const EMBEDDING_MODEL = isBrowserEdition() ? "multilingual-e5-small-q8" : "multilingual-e5-small";
 /** Mirrors MAX_TEXTS_PER_CALL in src-tauri/src/embeddings.rs. One oversized call is refused
  * whole, and the 2026-09-02 walkthrough found the canonical-concept cache (1,012 texts) had
  * never filled because of it — so the bridge slices here and every caller stays batch-safe. */

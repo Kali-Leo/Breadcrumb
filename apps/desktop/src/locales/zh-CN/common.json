@@ -19,7 +19,10 @@
     "offline": "已离线。需要联网的功能暂停，其他不受影响"
   },
   "state": {
-    "loading": "正在加载…"
+    "loading": "正在加载…",
+    "storageUnsupported": "这个浏览器存不了本页的数据，关掉标签页后这次的内容就没有了。用较新的 Chrome、Edge、Firefox 或 Safari 打开，就能保存下来。",
+    "storageBlocked": "这个窗口不让本页保存数据，关掉标签页后这次的内容就没有了。换一个普通窗口（不是无痕模式）打开，就能保存下来。",
+    "storageOtherTab": "Breadcrumb 已经在另一个标签页里打开着，这一页不会保存任何内容。回到那个标签页继续，或者关掉它再刷新这一页。"
   },
   "list": {
     "separator": "、"

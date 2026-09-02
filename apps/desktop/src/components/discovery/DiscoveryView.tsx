@@ -6,6 +6,7 @@
  * Main exports: DiscoveryView.
  */
 import { useEffect } from "react";
+import { isBrowserEdition } from "../../lib/platform/edition";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { DiscoverySetupSteps } from "./DiscoverySetupSteps";
 import { InterestEmotionPanel } from "./InterestEmotionPanel";
@@ -24,12 +25,16 @@ export function DiscoveryView() {
   const eventCount = useBrowsingInterestStore((state) => state.profile?.n_events ?? 0);
 
   useEffect(() => {
+    if (isBrowserEdition()) return;
     const store = useBrowsingInterestStore.getState();
     void store.refresh().then(() => store.ensureServiceRunning());
     void store.loadConnectionToken();
   }, []);
 
   useEffect(() => {
+    // No timer at all in the browser edition: there is no sidebar entry that reaches this
+    // page, and the service it would poll is a local program a web page cannot talk to.
+    if (isBrowserEdition()) return undefined;
     const timer = setInterval(
       () => {
         const store = useBrowsingInterestStore.getState();

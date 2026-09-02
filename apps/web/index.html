@@ -1,9 +1,20 @@
 <!doctype html>
-<html lang="zh-CN">
+<!--
+  lang and dir are the interface language's, and apps/desktop/src/i18n/index.ts rewrites both
+  on every language change (applyLanguageToDocument). The values here are only what the very
+  first paint uses, so they match DEFAULT_LANGUAGE_CODE.
+-->
+<html lang="zh-CN" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Breadcrumb</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="apple-touch-icon" href="icon-128.png" />
+    <!-- The shell is white — the sidebar, the chat and every panel. The map's parchment is the
+         canvas's own colour, not the page's, so it would be the wrong thing to paint the
+         browser's chrome with. -->
+    <meta name="theme-color" content="#ffffff" />
     <meta
       name="description"
       content="本地优先的 AI 学习伴侣。你的数据留在这台设备上。A local-first AI learning companion; your data stays on this device."
@@ -26,7 +37,50 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <!--
+      Something to look at while the application arrives. main.tsx opens the database before it
+      renders anything, so on a slow connection the first screen used to be white for as long as
+      that took. This is deliberately wordless: a sentence here would be a sentence the app
+      never says, in whichever language we guessed, and it would still be on screen after the
+      real interface was ready to replace it. React clears #root on its first render.
+    -->
+    <style>
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #ffffff;
+      }
+      #boot::before {
+        content: "";
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.9rem;
+        background: #e7e5e4;
+        animation: boot-breathe 1.6s ease-in-out infinite;
+      }
+      @keyframes boot-breathe {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.92);
+        }
+        50% {
+          opacity: 0.75;
+          transform: scale(1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot::before {
+          animation: none;
+          opacity: 0.5;
+        }
+      }
+    </style>
+    <div id="root">
+      <div id="boot" aria-hidden="true"></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

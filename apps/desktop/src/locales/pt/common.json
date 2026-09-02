@@ -19,7 +19,10 @@
     "offline": "Sem conexão. Tudo o que precisa de internet está pausado; o resto continua funcionando."
   },
   "state": {
-    "loading": "Carregando…"
+    "loading": "Carregando…",
+    "storageUnsupported": "Este navegador não consegue guardar os dados da página, então nada desta sessão fica depois que a aba for fechada. Abra em uma versão recente do Chrome, Edge, Firefox ou Safari e tudo será guardado.",
+    "storageBlocked": "Esta janela não deixa a página guardar dados, então nada desta sessão fica depois que a aba for fechada. Abra em uma janela comum, não anônima, e tudo será guardado.",
+    "storageOtherTab": "O Breadcrumb já está aberto em outra aba, e nada aqui será guardado. Volte para aquela aba para continuar, ou feche-a e recarregue esta página."
   },
   "list": {
     "separator": ", "
