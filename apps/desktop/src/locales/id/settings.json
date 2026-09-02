@@ -69,7 +69,7 @@
   },
   "billing": {
     "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",
-    "estimateIntro": "Perkiraan di bawah tiap item dihitung untuk {{scenario}}; di sebelahnya adalah yang benar-benar kamu keluarkan.",
+    "estimateIntro": "Perkiraan di bawah tiap item memakai pemakaianmu sendiri yang terakhir untuk yang sudah kamu pakai, dan {{scenario}} untuk yang belum; di sebelahnya adalah yang benar-benar kamu keluarkan.",
     "estimate": "sekitar {{cost}} {{cadence}}",
     "estimateUnknownModel": "Modelmu tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
     "estimateFree": "Tidak memakan biaya",

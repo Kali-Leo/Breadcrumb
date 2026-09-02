@@ -69,7 +69,7 @@
   },
   "billing": {
     "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",
-    "estimateIntro": "每项下面的估价，是按{{scenario}}算出来的；你自己的实际花费在它右边。",
+    "estimateIntro": "每项下面的估价，你用过的按你最近的实际用量算，没用过的按{{scenario}}算；你自己的实际花费在它右边。",
     "estimate": "约 {{cost}} {{cadence}}",
     "estimateUnknownModel": "你用的模型不在内置价目表里，估不出单次花费",
     "estimateFree": "不花钱",

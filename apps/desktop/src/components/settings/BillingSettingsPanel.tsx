@@ -14,6 +14,7 @@ import { type FeatureSwitches, useSettingsStore } from "../../stores/settingsSto
 import { BillingEstimateLine } from "./BillingEstimateLine";
 import { ResearchTasksSettingsRow } from "./ResearchTasksSettingsRow";
 import { Toggle } from "./SettingsToggle";
+import { usePurposeAverages } from "./usePurposeAverages";
 
 /** Switchable metered features: switch key → metering purposes. Names and explanations
  * live in settings.json under billing.features.<switch key>. */
@@ -114,6 +115,8 @@ export function BillingSettingsPanel() {
   const diglotSettings = useDiglotStore((state) => state.settings);
   const saveDiglotSettings = useDiglotStore((state) => state.saveSettings);
   const { today, total, todayGrandTotal, allTimeGrandTotal } = useSpendMaps();
+  const model = useSettingsStore((state) => state.apiConfig?.model ?? "");
+  const averages = usePurposeAverages(model);
 
   return (
     <div className="space-y-4">
@@ -137,7 +140,7 @@ export function BillingSettingsPanel() {
                 <p className="text-xs text-stone-500">
                   {t(`billing.features.${row.feature}.hint` as const)}
                 </p>
-                <BillingEstimateLine purposes={row.purposes} />
+                <BillingEstimateLine purposes={row.purposes} averages={averages} />
                 <p className="text-xs text-stone-400">{spendLine(today, total, row.purposes)}</p>
               </div>
               <Toggle
@@ -153,7 +156,7 @@ export function BillingSettingsPanel() {
           <div>
             <p className="text-sm text-stone-700">{t("billing.diglot.name")}</p>
             <p className="text-xs text-stone-500">{t("billing.diglot.hint")}</p>
-            <BillingEstimateLine purposes={["diglot-weave"]} />
+            <BillingEstimateLine purposes={["diglot-weave"]} averages={averages} />
             <p className="text-xs text-stone-400">{spendLine(today, total, ["diglot-weave"])}</p>
           </div>
           <Toggle
@@ -168,7 +171,7 @@ export function BillingSettingsPanel() {
           <div>
             <p className="text-sm text-stone-700">{t("billing.chat.name")}</p>
             <p className="text-xs text-stone-500">{t("billing.chat.hint")}</p>
-            <BillingEstimateLine purposes={["chat"]} />
+            <BillingEstimateLine purposes={["chat"]} averages={averages} />
             <p className="text-xs text-stone-400">{spendLine(today, total, ["chat"])}</p>
           </div>
         </div>

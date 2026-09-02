@@ -71,7 +71,7 @@
   },
   "billing": {
     "intro": "Cada passo que custa dinheiro tem sua própria chave aqui, e seu gasto é registrado à parte. Esta página mostra o que foi realmente gasto.",
-    "estimateIntro": "A estimativa sob cada item é calculada para {{scenario}}; o que você gastou de verdade está ao lado.",
+    "estimateIntro": "A estimativa sob cada item usa o seu consumo recente no que você já usou, e {{scenario}} no que ainda não; o que você gastou de verdade está ao lado.",
     "estimate": "cerca de {{cost}} {{cadence}}",
     "estimateUnknownModel": "Seu modelo não está na lista de preços embutida, então não há estimativa por uso",
     "estimateFree": "Não custa nada",

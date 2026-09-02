@@ -70,7 +70,7 @@
   },
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
-    "estimateIntro": "The estimate under each item is worked out for {{scenario}}; what you have actually spent is beside it.",
+    "estimateIntro": "The estimate under each item uses your own recent usage where you have used it, and {{scenario}} where you have not; what you have actually spent is beside it.",
     "estimate": "about {{cost}} {{cadence}}",
     "estimateUnknownModel": "Your model is not in the built-in price list, so a per-use estimate is not available",
     "estimateFree": "Costs nothing",

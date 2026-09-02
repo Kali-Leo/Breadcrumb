@@ -1,12 +1,13 @@
 /**
  * Purpose: the "about ¥0.0023 per exchange" line under each feature on the spending page —
- * what one use of this feature costs, worked out from the measured purpose catalogue and the
- * configured model's published rates. Says plainly when it cannot know rather than showing a
- * number nobody stands behind.
+ * what one use of this feature costs, worked out from this account's own recorded calls when
+ * there are enough of them and from the measured purpose catalogue otherwise, at the
+ * configured model's rates. Says plainly when it cannot know rather than showing a number
+ * nobody stands behind.
  * Main exports: BillingEstimateLine.
  */
 import { useTranslation } from "react-i18next";
-import { estimateFeatureCost } from "../../lib/billing/billingEstimates";
+import { estimateFeatureCost, type PurposeAverages } from "../../lib/billing/billingEstimates";
 import { currentPriceOverride } from "../../lib/platform/llmConfig";
 import { useSettingsStore } from "../../stores/settingsStore";
 
@@ -19,15 +20,25 @@ const CADENCE_KEYS = {
   "per-day": "billing.cadencePerDay",
 } as const;
 
-export function BillingEstimateLine({ purposes }: { purposes: readonly string[] }) {
+export function BillingEstimateLine({
+  purposes,
+  averages,
+}: {
+  purposes: readonly string[];
+  /** This account's own averages for the model in use, loaded once by the panel. */
+  averages: PurposeAverages;
+}) {
   const { t } = useTranslation("settings");
   const apiConfig = useSettingsStore((state) => state.apiConfig);
 
   const estimate = estimateFeatureCost(
     purposes,
-    apiConfig?.model ?? "",
-    apiConfig?.priceCurrency,
-    currentPriceOverride(),
+    {
+      model: apiConfig?.model ?? "",
+      currency: apiConfig?.priceCurrency,
+      override: currentPriceOverride(),
+    },
+    averages,
   );
 
   if (estimate.kind === "free") {
