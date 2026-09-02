@@ -13,8 +13,8 @@ import { buildGoalMappingMessages, goalMappingSchema } from "@breadcrumb/plugin-
 import type { JourneyActionContext } from "./journeyActionTypes";
 import type { TopicHint } from "./student";
 
-export async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicHint> {
-  const { repos, persona, llmConfig } = ctx;
+export async function applyCreateGoal(context: JourneyActionContext): Promise<TopicHint> {
+  const { repos, persona, llmConfig } = context;
   const allNodes = await repos.knowledgeNodes.listAll();
   const goalText = `学会：${persona.knowledge.targetConcepts.join("、")}`;
   try {
@@ -26,8 +26,8 @@ export async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicH
       ),
       goalMappingSchema,
     );
-    ctx.recordCall("goal-planning", llmConfig.model, usage);
-    ctx.logStage({ purpose: "goal-planning", request: goalText, response: parsed });
+    context.recordCall("goal-planning", llmConfig.model, usage);
+    context.logStage({ purpose: "goal-planning", request: goalText, response: parsed });
 
     const labelToId = new Map(allNodes.map((node) => [node.label, node.id]));
     const suggestedIds: string[] = [];
@@ -40,7 +40,7 @@ export async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicH
         label: suggested.label,
         summary: suggested.summary,
         kind: "concept",
-        created_at: ctx.nowIso,
+        created_at: context.nowIso,
       });
       suggestedIds.push(id);
       labelToId.set(suggested.label, id);
@@ -54,19 +54,19 @@ export async function applyCreateGoal(ctx: JourneyActionContext): Promise<TopicH
     const duplicateGoal = existingGoals.find((goal) => goal.title.trim() === trimmedTitle);
     if (duplicateGoal !== undefined) {
       // Idempotent on title: refresh the existing goal instead of inserting a duplicate card.
-      await repos.goals.updateNodeIds(duplicateGoal.id, nodeIds, ctx.nowIso);
+      await repos.goals.updateNodeIds(duplicateGoal.id, nodeIds, context.nowIso);
     } else {
       await repos.goals.insert({
         id: randomUUID(),
         title: trimmedTitle,
         node_ids_json: JSON.stringify(nodeIds),
-        created_at: ctx.nowIso,
-        updated_at: ctx.nowIso,
+        created_at: context.nowIso,
+        updated_at: context.nowIso,
       });
     }
   } catch (error) {
-    ctx.recordFailure?.("goal-planning");
-    ctx.logStage({
+    context.recordFailure?.("goal-planning");
+    context.logStage({
       purpose: "goal-planning",
       error: error instanceof Error ? error.message : String(error),
     });

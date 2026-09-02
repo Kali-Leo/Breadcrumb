@@ -36,17 +36,11 @@
     "guessPrompt": "خمّن أولًا: ما هو، في جملة واحدة؟",
     "guessPlaceholder": "تخمينك",
     "guessSubmit": "إرسال",
-    "expandButton": "لنتحدث عنه",
     "directReveal": "معناه: {{summary}}",
     "expandPrefill": "بخصوص «{{label}}»، أريد التعمّق أكثر:",
     "guessCorrect": "صحيح. {{summary}}",
     "guessClose": "قريب. معناه: {{summary}}",
     "guessWrong": "معناه: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "جارٍ",
-    "casualChatGroupLabel": "مجرد حديث",
-    "timelineToggleLabel": "التصفح حسب التاريخ"
   },
   "focus": {
     "exitButton": "اخرج من التركيز",
@@ -79,11 +73,6 @@
     "mapAria": "خريطة محطات التركيز"
   },
   "teach": {
-    "sectionTitle": "دورك لتشرح (تجريبي)",
-    "sectionHint": "اشرح لمبتدئ شيئًا تعلّمته. شرحه مرة واحدة يثبت عادة أكثر من إعادة قراءته.",
-    "freeTopicPlaceholder": "أو اختر موضوعك أنت",
-    "startButton": "ابدأ الشرح",
-    "recentTitle": "شرحته مؤخرًا",
     "opener": "أتعلّم «{{topic}}» ولم أستوعبه بعد. هل تشرحه بكلماتك؟ البدء بما هو عليه سيكون رائعًا.",
     "conversationTitle": "شرح · {{topic}}"
   }

@@ -937,6 +937,19 @@ export const MIGRATIONS: readonly Migration[] = [
     id: "0051_diglot_pack_payload",
     statements: [`ALTER TABLE diglot_language_packs ADD COLUMN payload_json TEXT;`],
   },
+  {
+    // Housekeeping (dead-code audit 2026-09-02). practice_attestations was superseded by
+    // practice_scores in 0022, which copied its rows across and then deliberately left the
+    // old table standing; nothing has read or written it since, so it goes now. The two
+    // indexes cost every insert and serve no query: factcheck_runs is only ever read by
+    // conversation_id, and node_merges has no WHERE clause anywhere.
+    id: "0052_drop_dead_table_and_indexes",
+    statements: [
+      `DROP TABLE IF EXISTS practice_attestations;`,
+      `DROP INDEX IF EXISTS idx_factcheck_runs_message;`,
+      `DROP INDEX IF EXISTS idx_node_merges_canonical;`,
+    ],
+  },
 ];
 
 /**

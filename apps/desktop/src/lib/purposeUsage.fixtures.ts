@@ -9,14 +9,10 @@
  * own canonical concept data so the token counts reflect real Chinese terminology rather
  * than invented filler.
  *
- * Main exports: SCENARIO, treeNodes, treeLabels, ROUND, LONG_ANSWER.
+ * Main exports: treeNodes, treeLabels, ROUND, LONG_ANSWER.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { CANONICAL_CONCEPTS } from "../data/generated/canonicalConcepts";
-
-/** How the scenario is described wherever a measurement is shown or documented. */
-export const SCENARIO =
-  "学了约三个月的学习者：知识树 80 个节点，一轮学习模式问答（提问 ~40 字，回答 ~600 字）";
 
 /** Nodes in the tree at measurement time. 80 is past the point where the tree stops being a
  * rounding error in the prompt and before it dominates — the shape most rounds see. */

@@ -12,11 +12,6 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
-    "@breadcrumb/plugin-compare": "workspace:*",
-    "@breadcrumb/plugin-graph": "workspace:*",
-    "@breadcrumb/plugin-interest": "workspace:*",
-    "@breadcrumb/plugin-knowledge-tree": "workspace:*",
-    "@breadcrumb/plugin-planner": "workspace:*",
     "ts-fsrs": "^5.2.1"
   },
   "devDependencies": {

@@ -26,15 +26,6 @@ export function createFocusSessionsRepo(sql: SqlClient) {
         ],
       );
     },
-    /** Legacy (pre-2026-08-14): fills in the exit-time record message id. No longer called on
-     * the normal exit path — kept only so a pre-0035 session's old record card can still be
-     * looked up (getByEntryMessage). */
-    async setEntryMessage(id: string, messageId: string, updatedAtIso: string): Promise<void> {
-      await sql.execute(
-        "UPDATE focus_sessions SET entry_message_id = ?, updated_at = ? WHERE id = ?",
-        [messageId, updatedAtIso, id],
-      );
-    },
     async getById(id: string): Promise<FocusSessionRow | null> {
       const rows = await sql.select<FocusSessionRow>("SELECT * FROM focus_sessions WHERE id = ?", [
         id,

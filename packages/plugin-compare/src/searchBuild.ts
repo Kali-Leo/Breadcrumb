@@ -26,7 +26,6 @@ export const searchedProfileProposalSchema = z.object({
   items: z.array(searchedProposalItemSchema).min(4).max(80),
 });
 
-export type SearchedProfileProposal = z.infer<typeof searchedProfileProposalSchema>;
 export type SearchedProposalItem = z.infer<typeof searchedProposalItemSchema>;
 
 const SYSTEM_PROMPT = `你是一个知识范围画像构建器。给定一个真实存在的职业、身份或教育阶段，请依据真实公开资料（官方课程标准、职业技能标准、权威机构发布的课程或认证大纲）把这类人应掌握的知识整理成一棵树，以 JSON 返回：

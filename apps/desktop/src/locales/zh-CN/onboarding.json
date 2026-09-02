@@ -49,7 +49,6 @@
     "hint": "重新走一遍引导，或清掉示例数据。",
     "replay": "重新走一遍",
     "removeDemo": "清掉示例数据",
-    "demoInstalled": "示例数据已装上",
     "demoAbsent": "没有示例数据"
   }
 }

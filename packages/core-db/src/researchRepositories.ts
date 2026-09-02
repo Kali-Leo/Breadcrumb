@@ -65,5 +65,3 @@ export function createResearchRepo(sql: SqlClient) {
     },
   };
 }
-
-export type ResearchRepo = ReturnType<typeof createResearchRepo>;

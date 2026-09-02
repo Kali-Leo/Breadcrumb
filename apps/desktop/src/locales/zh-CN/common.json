@@ -7,9 +7,7 @@
     "copy": "复制",
     "copied": "已复制",
     "cancel": "取消",
-    "save": "保存",
-    "expand": "展开",
-    "collapse": "收起"
+    "save": "保存"
   },
   "nav": {
     "newChat": "新的学习对话",
@@ -21,8 +19,7 @@
     "offline": "已离线。需要联网的功能暂停，其他不受影响"
   },
   "state": {
-    "loading": "正在加载…",
-    "empty": "还没有内容"
+    "loading": "正在加载…"
   },
   "list": {
     "separator": "、"

@@ -35,16 +35,12 @@ async function retryOnce<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 interface InterestState {
-  /** Node ids the most recent interest-extraction round wrote a signal for. */
-  lastSignalNodeIds: string[];
   /** Maps free text like "我学过高中数学" onto existing tree nodes and writes claims. UI
    * lands in spec 012 — this is the wired-up action only. */
   selfReportMastery(userText: string): Promise<void>;
 }
 
 export const useInterestStore = create<InterestState>(() => ({
-  lastSignalNodeIds: [],
-
   async selfReportMastery(userText) {
     const settings = useSettingsStore.getState();
     if (!settings.featureSwitches.interest || !settings.networkEnabled || !settings.apiConfig) {
@@ -161,7 +157,6 @@ async function extractInterestFromRound(
     }
 
     if (signalNodeIds.length > 0) {
-      useInterestStore.setState({ lastSignalNodeIds: signalNodeIds });
       appEventBus.emit("interest:updated", { nodeIds: signalNodeIds });
     }
   } catch (error) {

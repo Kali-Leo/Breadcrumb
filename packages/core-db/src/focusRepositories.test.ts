@@ -142,9 +142,19 @@ describe("createFocusSessionsRepo", () => {
     });
     expect(await repo.getByEntryMessage("m1")).toBeNull();
 
-    await repo.setEntryMessage("s1", "m1", "2026-08-14T10:05:00Z");
-    expect(await repo.getByEntryMessage("m1")).toMatchObject({ id: "s1" });
-    expect(await repo.listByConversation("c1")).toHaveLength(1);
+    // Pre-0035 sessions are the only ones that carry an entry message; nothing writes one
+    // any more, so the lookup is exercised against a row inserted with it already set.
+    await repo.insert({
+      id: "s2",
+      conversation_id: "c1",
+      entry_message_id: "m1",
+      root_label: "递归",
+      created_at: "2026-08-14T10:05:00Z",
+      updated_at: "2026-08-14T10:05:00Z",
+      source_message_id: null,
+    });
+    expect(await repo.getByEntryMessage("m1")).toMatchObject({ id: "s2" });
+    expect(await repo.listByConversation("c1")).toHaveLength(2);
     expect(await repo.listByConversation("other")).toHaveLength(0);
   });
 

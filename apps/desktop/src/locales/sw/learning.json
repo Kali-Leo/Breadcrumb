@@ -36,17 +36,11 @@
     "guessPrompt": "Kisia kwanza: ni nini hasa, kwa sentensi moja?",
     "guessPlaceholder": "Kisio lako",
     "guessSubmit": "Tuma",
-    "expandButton": "Tuzungumze",
     "directReveal": "Maana yake: {{summary}}",
     "expandPrefill": "Kuhusu «{{label}}», ningependa kwenda ndani zaidi:",
     "guessCorrect": "Sahihi. {{summary}}",
     "guessClose": "Karibu. Maana yake: {{summary}}",
     "guessWrong": "Maana yake: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "Inaendelea",
-    "casualChatGroupLabel": "Mazungumzo tu",
-    "timelineToggleLabel": "Angalia kwa tarehe"
   },
   "focus": {
     "exitButton": "Toka kwenye umakini",
@@ -71,11 +65,6 @@
     "mapAria": "Ramani ya vituo vya umakini"
   },
   "teach": {
-    "sectionTitle": "Zamu yako kueleza (majaribio)",
-    "sectionHint": "Mweleze mwanzilishi jambo ulilojifunza. Kulieleza mara moja huwa hukaa vizuri kuliko kulisoma tena.",
-    "freeTopicPlaceholder": "Au chagua mada yako mwenyewe",
-    "startButton": "Anza kueleza",
-    "recentTitle": "Ulizoeleza hivi karibuni",
     "opener": "Ninajifunza «{{topic}}» na bado sijalielewa vizuri. Unaweza kunieleza kwa maneno yako? Kuanza na ni nini hasa kutasaidia sana.",
     "conversationTitle": "Kueleza · {{topic}}"
   }

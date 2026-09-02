@@ -36,17 +36,11 @@
     "guessPrompt": "Chute primeiro: o que é isso, em uma frase?",
     "guessPlaceholder": "Seu chute",
     "guessSubmit": "Enviar",
-    "expandButton": "Conversar sobre isso",
     "directReveal": "Quer dizer: {{summary}}",
     "expandPrefill": "Sobre «{{label}}», eu queria me aprofundar:",
     "guessCorrect": "Isso. {{summary}}",
     "guessClose": "Quase. Quer dizer: {{summary}}",
     "guessWrong": "Quer dizer: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "Em andamento",
-    "casualChatGroupLabel": "Só conversando",
-    "timelineToggleLabel": "Ver por data"
   },
   "focus": {
     "exitButton": "Sair do foco",
@@ -73,11 +67,6 @@
     "mapAria": "Mapa das paradas do foco"
   },
   "teach": {
-    "sectionTitle": "Sua vez de explicar (experimental)",
-    "sectionHint": "Explique algo que você aprendeu para quem está começando. Explicar uma vez costuma fixar melhor do que ler de novo.",
-    "freeTopicPlaceholder": "Ou escolha seu próprio tema",
-    "startButton": "Começar a explicar",
-    "recentTitle": "Explicado recentemente",
     "opener": "Estou aprendendo «{{topic}}» e ainda não peguei direito. Você me explica com suas palavras? Começar pelo que é já ajudaria muito.",
     "conversationTitle": "Explicando · {{topic}}"
   }

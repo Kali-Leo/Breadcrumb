@@ -9,6 +9,8 @@
  * STATION_X, COLUMN_WIDTH, ROW_HEIGHT, TOP_MARGIN.
  */
 
+import { groupByParent } from "@breadcrumb/plugin-explore";
+
 export interface FocusMapNode {
   id: string;
   label: string;
@@ -49,16 +51,6 @@ export const TOP_MARGIN = 20;
 const BOTTOM_MARGIN = 20;
 /** Room to the right of a station's dot for its truncated label (11px, up to 12 chars). */
 const LABEL_ALLOWANCE = 120;
-
-function groupByParent(nodes: readonly FocusMapNode[]): Map<string | null, FocusMapNode[]> {
-  const groups = new Map<string | null, FocusMapNode[]>();
-  for (const node of nodes) {
-    const siblings = groups.get(node.parentId) ?? [];
-    siblings.push(node);
-    groups.set(node.parentId, siblings);
-  }
-  return groups;
-}
 
 /** Ids from the root down to (and including) currentId, or an empty set when currentId isn't
  * reachable (e.g. the map is still empty). */

@@ -155,7 +155,6 @@
     }
   },
   "research": {
-    "panelTitle": "🔬 Riset",
     "panelIntro": "Semua angka di sini dihitung oleh komputer ini. Tugasnya sudah ditelaah dan sumbernya bisa diperiksa; datanya tidak keluar sendiri dari perangkat ini, dan semua ini tidak memakan biaya.",
     "offNotice": "Tugas riset sedang mati: tidak ada tugas baru yang dijalankan. Hasil yang sudah ada tetap tersimpan, dan bisa kamu baca atau hapus satu per satu.",
     "loading": "Memuat…",

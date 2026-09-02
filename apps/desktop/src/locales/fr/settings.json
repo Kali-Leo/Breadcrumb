@@ -157,7 +157,6 @@
     }
   },
   "research": {
-    "panelTitle": "🔬 Recherche",
     "panelIntro": "Chaque chiffre ici a été calculé par cet ordinateur. Les tâches sont relues et leurs sources vérifiables ; les données ne quittent pas cet appareil d'elles-mêmes, et rien de tout cela ne coûte quoi que ce soit.",
     "offNotice": "Les tâches de recherche sont éteintes : aucune nouvelle tâche ne sera exécutée. Les résultats déjà obtenus sont conservés, et tu peux les lire ou les supprimer un par un.",
     "loading": "Chargement…",

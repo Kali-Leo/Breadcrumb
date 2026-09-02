@@ -36,17 +36,11 @@
     "guessPrompt": "আগে আন্দাজ করুন: এক বাক্যে এটা কী?",
     "guessPlaceholder": "আপনার আন্দাজ",
     "guessSubmit": "পাঠান",
-    "expandButton": "এ নিয়ে কথা বলি",
     "directReveal": "এর মানে: {{summary}}",
     "expandPrefill": "«{{label}}» নিয়ে আরও গভীরে যেতে চাই:",
     "guessCorrect": "ঠিক। {{summary}}",
     "guessClose": "কাছাকাছি। এর মানে: {{summary}}",
     "guessWrong": "এর মানে: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "চলছে",
-    "casualChatGroupLabel": "এমনি কথা",
-    "timelineToggleLabel": "সময় ধরে দেখুন"
   },
   "focus": {
     "exitButton": "মনোযোগ থেকে বেরোন",
@@ -71,11 +65,6 @@
     "mapAria": "মনোযোগের থামার মানচিত্র"
   },
   "teach": {
-    "sectionTitle": "এবার আপনি বোঝান (পরীক্ষামূলক)",
-    "sectionHint": "যা শিখেছেন তা কোনো নতুন মানুষকে বোঝান। একবার বুঝিয়ে দেওয়া সাধারণত আবার পড়ার চেয়ে বেশি টেকে।",
-    "freeTopicPlaceholder": "অথবা নিজের বিষয় বাছুন",
-    "startButton": "বোঝানো শুরু করুন",
-    "recentTitle": "সম্প্রতি বোঝানো",
     "opener": "আমি «{{topic}}» শিখছি, এখনও ঠিকঠাক ধরতে পারিনি। নিজের ভাষায় একটু বুঝিয়ে দেবেন? জিনিসটা কী, সেখান থেকে শুরু করলেই হবে।",
     "conversationTitle": "বোঝানো · {{topic}}"
   }

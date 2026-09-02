@@ -36,17 +36,11 @@
     "guessPrompt": "先猜猜：一句话说它是什么？",
     "guessPlaceholder": "你的猜测",
     "guessSubmit": "提交",
-    "expandButton": "展开聊聊",
     "directReveal": "它是指：{{summary}}",
     "expandPrefill": "关于「{{label}}」，我想继续深入：",
     "guessCorrect": "对。{{summary}}",
     "guessClose": "接近。它是指：{{summary}}",
     "guessWrong": "它是指：{{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "正在进行",
-    "casualChatGroupLabel": "随手聊",
-    "timelineToggleLabel": "按时间浏览"
   },
   "focus": {
     "exitButton": "退出专注",
@@ -69,11 +63,6 @@
     "mapAria": "专注站点图"
   },
   "teach": {
-    "sectionTitle": "换你讲（实验）",
-    "sectionHint": "给一位初学者讲讲你学过的东西。讲一遍，通常比再看一遍记得牢。",
-    "freeTopicPlaceholder": "或者自选一个主题",
-    "startButton": "开讲",
-    "recentTitle": "最近讲过的",
     "opener": "我正在学「{{topic}}」，还没真正弄懂。可以请你用自己的话给我讲讲吗？从它是什么讲起就好。",
     "conversationTitle": "换你讲·{{topic}}"
   }

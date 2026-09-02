@@ -7,9 +7,7 @@
     "copy": "Copy",
     "copied": "Copied",
     "cancel": "Cancel",
-    "save": "Save",
-    "expand": "Show more",
-    "collapse": "Show less"
+    "save": "Save"
   },
   "nav": {
     "newChat": "New learning chat",
@@ -21,8 +19,7 @@
     "offline": "Offline. Anything that needs the internet is paused; the rest still works."
   },
   "state": {
-    "loading": "Loading…",
-    "empty": "Nothing here yet"
+    "loading": "Loading…"
   },
   "list": {
     "separator": ", "

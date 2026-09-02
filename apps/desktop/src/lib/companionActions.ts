@@ -31,7 +31,6 @@ import { newId, nowIso } from "./time";
 
 /** The cast is fixed (spec 037 — three roles, never interchangeable). */
 export const COMPANION_IDS = ["shichimi", "pepper", "cumin"] as const;
-export type CompanionId = (typeof COMPANION_IDS)[number];
 
 /** Desktop-only companion prompt text. What the user reads (role tags, the switched-off
  * notice, the dismiss action, the credits line) lives in chat.json under companion.*;

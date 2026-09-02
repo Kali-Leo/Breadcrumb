@@ -4,8 +4,9 @@
  * entities never take binary scores; canonical subtrees mount under them where available)
  * and skill/competence phrases become attestation-scored practice items. Verbatim official
  * data (CC BY 4.0), no LLM anywhere.
- * Main exports: EscoOccupationEntry, EscoConceptDict, buildEscoKnowledgeBranch.
+ * Main exports: EscoOccupationEntry, EscoConceptDict, buildEscoKnowledgeBranch, clip.
  */
+import { normalizeLabel } from "./matching";
 import type { ProfileItemDefinition } from "./profileSchema";
 import { type MountableSubtree, mountSubtreeUnder } from "./subtreeMount";
 
@@ -28,12 +29,10 @@ export type EscoConceptDict = Record<
   { label: string; type: string; aliases: string[] } | undefined
 >;
 
-function clip(text: string, max: number): string {
+/** Cuts a string to `max` characters total, ellipsis included. Shared with
+ * occupationProfile.ts, which builds the branch this module feeds. */
+export function clip(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
-}
-
-function normalized(label: string): string {
-  return label.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
 }
 
 /**
@@ -71,7 +70,7 @@ export function buildEscoKnowledgeBranch(
     const isHub = concept.type === "knowledge";
     const key = `esco-${id}`;
     const aliases = concept.aliases.filter((a) => a.length > 0 && a.length <= 60).slice(0, 12);
-    const mount = isHub ? mounts.get(normalized(concept.label)) : undefined;
+    const mount = isHub ? mounts.get(normalizeLabel(concept.label)) : undefined;
     const mountable = mount !== undefined && !mountedSubtrees.has(mount.id);
     items.push({
       key,
@@ -84,7 +83,7 @@ export function buildEscoKnowledgeBranch(
           : `${source} · 技能条目（自陈计分）· ${note}`,
         300,
       ),
-      conceptId: `c:${normalized(concept.label)}`,
+      conceptId: `c:${normalizeLabel(concept.label)}`,
       kind: isHub ? "hub" : "practice",
     });
     if (mountable) {

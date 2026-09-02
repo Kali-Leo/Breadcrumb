@@ -42,9 +42,6 @@
     "failedNotice": "The check did not finish (the network wobbled). You can try again later."
   },
   "companion": {
-    "roleStudent": "AI student",
-    "rolePeer": "AI classmate",
-    "roleMentor": "AI mentor",
     "chatDisabled": "Companion chat is off. To carry on, turn \"Companion chat\" back on in settings",
     "credits": "The companions come from David Revoy's Pepper&Carrot (peppercarrot.com), CC-BY 4.0; their written personalities are a derivative work with changes, and imply no endorsement by the original author.",
     "closeRoster": "Close the companion list",

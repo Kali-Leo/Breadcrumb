@@ -83,6 +83,7 @@ export function generateAlignmentCandidates(input: {
 }
 
 export function chunkPairs<Pair>(pairs: readonly Pair[], size: number): Pair[][] {
+  if (size <= 0) throw new Error(`chunkPairs: size must be positive, got ${size}`);
   const chunks: Pair[][] = [];
   for (let start = 0; start < pairs.length; start += size) {
     chunks.push(pairs.slice(start, start + size));

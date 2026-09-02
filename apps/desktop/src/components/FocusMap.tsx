@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { layoutFocusMap } from "../lib/focusMapLayout";
+import { truncate } from "../lib/truncateText";
 import { useFocusStore } from "../stores/focusStore";
 
 const DOT_RADIUS = 5;
@@ -27,10 +28,6 @@ const PANE_PADDING = 32;
 /** Below this the map stops shrinking and the pane scrolls instead — a station this small
  * stops being clickable. */
 const MIN_SCALE = 0.6;
-
-function truncateLabel(label: string): string {
-  return label.length > LABEL_MAX_CHARS ? `${label.slice(0, LABEL_MAX_CHARS)}…` : label;
-}
 
 function activateOnKey(event: React.KeyboardEvent, action: () => void) {
   if (event.key === "Enter" || event.key === " ") action();
@@ -152,7 +149,7 @@ export function FocusMap() {
                     strokeWidth={1}
                   />
                   <text x={station.x + 10} y={station.y + 4} fontSize={11} fill="#57534e">
-                    {truncateLabel(station.label)}
+                    {truncate(station.label, LABEL_MAX_CHARS)}
                   </text>
                 </g>
               </g>

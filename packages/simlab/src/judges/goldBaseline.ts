@@ -54,6 +54,7 @@ export interface GoldBaselineResult {
 }
 
 function chunk<Item>(items: readonly Item[], size: number): Item[][] {
+  if (size <= 0) throw new Error(`chunk: size must be positive, got ${size}`);
   const chunks: Item[][] = [];
   for (let index = 0; index < items.length; index += size)
     chunks.push(items.slice(index, index + size));

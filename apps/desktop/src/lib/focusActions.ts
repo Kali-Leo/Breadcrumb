@@ -6,6 +6,7 @@
  * Main exports: buildAncestorChain, truncateQuestionLabel, rollConceptGate, FocusGuessState.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
+import { truncate } from "./truncateText";
 
 export interface FocusGuessState {
   word: string;
@@ -37,10 +38,7 @@ export function buildAncestorChain(
 
 /** Truncates a free-text question into a station label (spec 042 §1). */
 export function truncateQuestionLabel(question: string): string {
-  const trimmed = question.trim();
-  return trimmed.length > QUESTION_LABEL_MAX_CHARS
-    ? `${trimmed.slice(0, QUESTION_LABEL_MAX_CHARS)}…`
-    : trimmed;
+  return truncate(question.trim(), QUESTION_LABEL_MAX_CHARS);
 }
 
 /** The guess-gate dice roll (spec 042 §3): true = open with a guess card instead of jumping

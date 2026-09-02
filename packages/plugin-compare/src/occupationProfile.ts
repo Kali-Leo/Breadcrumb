@@ -9,6 +9,7 @@
  */
 import {
   buildEscoKnowledgeBranch,
+  clip,
   type EscoConceptDict,
   type EscoOccupationEntry,
 } from "./escoKnowledgeBranch";
@@ -48,10 +49,6 @@ export const MAX_PRACTICE_TASKS = 30;
 
 export function occupationProfileId(code: string): string {
   return `occ-${code}`;
-}
-
-function clip(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
 /**

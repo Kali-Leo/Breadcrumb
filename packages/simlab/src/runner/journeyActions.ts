@@ -37,22 +37,22 @@ const ACTION_WEIGHTS: { item: JourneyActionType; weight: number }[] = [
 ];
 
 export async function pickAndApplyJourneyAction(
-  ctx: JourneyActionContext,
+  context: JourneyActionContext,
 ): Promise<JourneyActionResult> {
-  const actionType = pickWeighted(ctx.random, ACTION_WEIGHTS);
+  const actionType = pickWeighted(context.random, ACTION_WEIGHTS);
   switch (actionType) {
     case "follow-frontier":
-      return { actionType, topicHint: await applyFollowFrontier(ctx) };
+      return { actionType, topicHint: await applyFollowFrontier(context) };
     case "self-report":
-      return { actionType, topicHint: await applySelfReport(ctx) };
+      return { actionType, topicHint: await applySelfReport(context) };
     case "create-goal":
-      return { actionType, topicHint: await applyCreateGoal(ctx) };
+      return { actionType, topicHint: await applyCreateGoal(context) };
     case "revisit-old-topic":
-      return { actionType, topicHint: applyRevisitOldTopic(ctx) };
+      return { actionType, topicHint: applyRevisitOldTopic(context) };
     case "jump-new-domain":
       return {
         actionType,
-        topicHint: { label: null, isDomainJump: true, domainHint: pickDomainHint(ctx) },
+        topicHint: { label: null, isDomainJump: true, domainHint: pickDomainHint(context) },
       };
     default:
       return { actionType, topicHint: { label: null, isDomainJump: false } };
@@ -64,26 +64,29 @@ export async function pickAndApplyJourneyAction(
  * a jump-new-domain opener is actually grounded in something outside the touched-labels set
  * instead of leaving the student model to invent an arbitrary topic. Null when the persona's
  * whole brief has already been touched. */
-function pickDomainHint(ctx: JourneyActionContext): string | null {
-  const touched = new Set(ctx.touchedLabelsSoFar);
+function pickDomainHint(context: JourneyActionContext): string | null {
+  const touched = new Set(context.touchedLabelsSoFar);
   const candidates = [
-    ...new Set([...ctx.persona.knowledge.knownTopics, ...ctx.persona.knowledge.targetConcepts]),
+    ...new Set([
+      ...context.persona.knowledge.knownTopics,
+      ...context.persona.knowledge.targetConcepts,
+    ]),
   ].filter((label) => !touched.has(label));
   if (candidates.length === 0) return null;
-  const index = Math.floor(ctx.random() * candidates.length);
+  const index = Math.floor(context.random() * candidates.length);
   return candidates[index] ?? null;
 }
 
-async function applyFollowFrontier(ctx: JourneyActionContext): Promise<TopicHint> {
-  const snapshot = await computePlannerSnapshot(ctx.repos, ctx.nowIso);
+async function applyFollowFrontier(context: JourneyActionContext): Promise<TopicHint> {
+  const snapshot = await computePlannerSnapshot(context.repos, context.nowIso);
   const top = snapshot.frontierCandidates[0];
   return top === undefined
     ? { label: null, isDomainJump: false }
     : { label: top.label, isDomainJump: false };
 }
 
-function applyRevisitOldTopic(ctx: JourneyActionContext): TopicHint {
-  if (ctx.touchedLabelsSoFar.length === 0) return { label: null, isDomainJump: false };
-  const index = Math.floor(ctx.random() * ctx.touchedLabelsSoFar.length);
-  return { label: ctx.touchedLabelsSoFar[index] ?? null, isDomainJump: false };
+function applyRevisitOldTopic(context: JourneyActionContext): TopicHint {
+  if (context.touchedLabelsSoFar.length === 0) return { label: null, isDomainJump: false };
+  const index = Math.floor(context.random() * context.touchedLabelsSoFar.length);
+  return { label: context.touchedLabelsSoFar[index] ?? null, isDomainJump: false };
 }

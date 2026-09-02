@@ -42,9 +42,6 @@
     "failedNotice": "Uhakiki haukukamilika (mtandao ulisita). Unaweza kujaribu baadaye."
   },
   "companion": {
-    "roleStudent": "Mwanafunzi wa AI",
-    "rolePeer": "Mwenzako wa AI",
-    "roleMentor": "Mshauri wa AI",
     "chatDisabled": "Mazungumzo na wenzako yamezimwa. Ili kuendelea, washa tena «Mazungumzo na wenzako» kwenye mipangilio",
     "credits": "Wenzako wanatoka Pepper&Carrot ya David Revoy (peppercarrot.com), CC-BY 4.0; tabia zao zilizoandikwa ni kazi tokanayo yenye mabadiliko na haimaanishi kuungwa mkono na mwandishi wa awali.",
     "closeRoster": "Funga orodha ya wenzako",

@@ -36,17 +36,11 @@
     "guessPrompt": "Adivina primero: ¿qué es, en una frase?",
     "guessPlaceholder": "Tu intento",
     "guessSubmit": "Enviar",
-    "expandButton": "Hablarlo",
     "directReveal": "Significa: {{summary}}",
     "expandPrefill": "Sobre «{{label}}», me gustaría profundizar:",
     "guessCorrect": "Correcto. {{summary}}",
     "guessClose": "Cerca. Significa: {{summary}}",
     "guessWrong": "Significa: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "En curso",
-    "casualChatGroupLabel": "Solo charlando",
-    "timelineToggleLabel": "Ver por fecha"
   },
   "focus": {
     "exitButton": "Salir del enfoque",
@@ -73,11 +67,6 @@
     "mapAria": "Mapa de paradas del enfoque"
   },
   "teach": {
-    "sectionTitle": "Te toca explicar (experimental)",
-    "sectionHint": "Explícale a alguien que empieza algo que hayas aprendido. Explicarlo una vez suele quedarse mejor que volver a leerlo.",
-    "freeTopicPlaceholder": "O elige tu propio tema",
-    "startButton": "Empezar a explicar",
-    "recentTitle": "Explicado hace poco",
     "opener": "Estoy aprendiendo «{{topic}}» y todavía no lo tengo claro. ¿Me lo explicas con tus palabras? Empezar por qué es estaría muy bien.",
     "conversationTitle": "Explicando · {{topic}}"
   }

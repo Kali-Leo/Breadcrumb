@@ -3,7 +3,7 @@
   "license": "AGPL-3.0-only",
   "version": "0.0.1",
   "private": true,
-  "description": "A realistic learner's history, written straight into the database: 24 knowledge nodes across two domains with FSRS-verified sighting histories, the conversations they came from, mastery claims and vocabulary. Used by the guided tour so a newcomer sees the app doing its job instead of an empty map, and by the dev seeding CLI. Its integration test lives in packages/simlab, which owns the real-SQLite harness it needs.",
+  "description": "A realistic learner's history, written straight into the database: 24 knowledge nodes across two domains whose sighting histories are hand-placed against the fog engine's decay curve so each node lands in its intended state, the conversations they came from, mastery claims and vocabulary. Used by the guided tour so a newcomer sees the app doing its job instead of an empty map, and by the dev seeding CLI. Its integration test lives in packages/simlab, which owns the real-SQLite harness it needs.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
-    "@breadcrumb/plugin-diglot-weave": "workspace:*",
-    "ts-fsrs": "^5.2.1"
+    "@breadcrumb/plugin-diglot-weave": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.0"

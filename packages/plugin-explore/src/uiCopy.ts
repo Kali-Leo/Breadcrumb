@@ -2,8 +2,8 @@
  * Purpose: the explore/focus sentences that need a decision made in logic — which one
  * applies, and with what values (spec 058 §2). The wording itself lives in the app's
  * learning.json; nothing here is user-visible text.
- * Main exports: conceptDirectRevealMessage, doorExpandPrefillMessage, focusSelectHintMessage,
- * focusErrorMessage, focusBadgeMessage, focusBarTitleMessage.
+ * Main exports: conceptDirectRevealMessage, focusSelectHintMessage, focusErrorMessage,
+ * focusBadgeMessage, focusBarTitleMessage.
  */
 import type { CopyMessage } from "@breadcrumb/core-i18n";
 
@@ -11,11 +11,6 @@ import type { CopyMessage } from "@breadcrumb/core-i18n";
  * summary with no score and no record (spec 039 §2.2 item 3 degrade path). */
 export function conceptDirectRevealMessage(summary: string): CopyMessage {
   return { key: "learning:door.directReveal", params: { summary } };
-}
-
-/** Composer prefill for the door card's expand action — the user still presses send. */
-export function doorExpandPrefillMessage(label: string): CopyMessage {
-  return { key: "learning:door.expandPrefill", params: { label } };
 }
 
 /** Selection-confirm hint floated over a focus overlay's main pane (spec 042 §3) — the text

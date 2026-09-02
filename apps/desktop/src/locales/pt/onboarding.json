@@ -49,7 +49,6 @@
     "hint": "Refaça a introdução, ou remova os dados de exemplo.",
     "replay": "Fazer o tour de novo",
     "removeDemo": "Remover dados de exemplo",
-    "demoInstalled": "Os dados de exemplo estão instalados",
     "demoAbsent": "Sem dados de exemplo"
   }
 }

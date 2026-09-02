@@ -1,7 +1,7 @@
 /**
  * Purpose: heatmap data (per-day footprint counts, local calendar days) and continuity
  * streak stats for the feedback lab's "学习热力图" module (spec 035 #1).
- * Main exports: DailyActivityCell, computeDailyActivity, computeContinuity.
+ * Main exports: DailyActivityCell, computeDailyActivity, computeContinuity, toLocalDateKey.
  */
 
 export interface DailyActivityCell {
@@ -11,8 +11,9 @@ export interface DailyActivityCell {
 }
 
 /** Local calendar date key for an ISO instant — cuts days by the machine's local timezone,
- * matching what the heatmap visually represents to the person looking at it. */
-function toLocalDateKey(iso: string): string {
+ * matching what the heatmap visually represents to the person looking at it. Every day-cutting
+ * consumer in this package reads it from here, so "which day is this" is decided once. */
+export function toLocalDateKey(iso: string): string {
   const instant = new Date(iso);
   const year = instant.getFullYear();
   const month = String(instant.getMonth() + 1).padStart(2, "0");

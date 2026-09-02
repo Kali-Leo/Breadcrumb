@@ -3,15 +3,7 @@
  * turns a day count plus "now" into the local calendar date sequence each series samples.
  * Main exports: dateKeyRange, localDayEndIso.
  */
-
-/** Local calendar date key for an ISO instant, matching activity.ts's day-cutting rule. */
-function toLocalDateKey(iso: string): string {
-  const instant = new Date(iso);
-  const year = instant.getFullYear();
-  const month = String(instant.getMonth() + 1).padStart(2, "0");
-  const day = String(instant.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+import { toLocalDateKey } from "./activity";
 
 /** The last instant of a local calendar day, as an ISO string — the sampling point each
  * series uses so "today's value" reflects everything that happened today. */

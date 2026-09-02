@@ -2,7 +2,7 @@
  * Purpose: the simulated-student persona contract (spec 013 T2) — a knowledge axis (what the
  * persona actually knows, ground truth for "被看见" recall) kept strictly separate from a
  * behavior axis (how the persona acts), per UserSimCRS.
- * Main exports: personaSchema, Persona, PersonaKnowledge, PersonaBehavior.
+ * Main exports: personaSchema, Persona, PersonaBehavior.
  */
 import { z } from "zod";
 
@@ -42,6 +42,5 @@ export const personaSchema = z.object({
   behavior: personaBehaviorSchema,
 });
 
-export type PersonaKnowledge = z.infer<typeof personaKnowledgeSchema>;
 export type PersonaBehavior = z.infer<typeof personaBehaviorSchema>;
 export type Persona = z.infer<typeof personaSchema>;

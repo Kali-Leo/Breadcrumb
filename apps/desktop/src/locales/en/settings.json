@@ -156,7 +156,6 @@
     }
   },
   "research": {
-    "panelTitle": "🔬 Research",
     "panelIntro": "Every number here was computed by this computer. The tasks are reviewed and their sources can be checked; the data does not leave this device on its own, and none of this costs anything.",
     "offNotice": "Research tasks are off: no new task will run. Results you already have are kept, and you can read or delete them one by one.",
     "loading": "Loading…",

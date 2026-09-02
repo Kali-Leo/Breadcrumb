@@ -41,9 +41,6 @@
     "failedNotice": "这次核查没能完成（网络波动），稍后可以再试一次。"
   },
   "companion": {
-    "roleStudent": "AI 学生",
-    "rolePeer": "AI 同学",
-    "roleMentor": "AI 导师",
     "chatDisabled": "伙伴聊天已关闭。想继续，去设置里打开「伙伴聊天」",
     "credits": "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com)，CC-BY 4.0；文字人设为衍生创作，有改动；不代表原作者对本产品的背书。",
     "closeRoster": "关闭伙伴列表",

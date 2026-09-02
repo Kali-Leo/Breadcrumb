@@ -61,10 +61,10 @@ export interface DayConversationsOutcome {
 }
 
 export async function runJourneyDayConversations(
-  ctx: DayConversationsContext,
+  context: DayConversationsContext,
 ): Promise<DayConversationsOutcome> {
-  let nowIso = ctx.nowIso;
-  let topicHint = ctx.topicHint;
+  let nowIso = context.nowIso;
+  let topicHint = context.topicHint;
   let edgesAddedToday = 0;
   let edgesRejectedToday = 0;
   let conversationsRun = 0;
@@ -73,67 +73,69 @@ export async function runJourneyDayConversations(
 
   for (
     let conversationIndex = 0;
-    conversationIndex < ctx.conversationsToday;
+    conversationIndex < context.conversationsToday;
     conversationIndex += 1
   ) {
     if (conversationIndex > 0)
-      nowIso = addHours(nowIso, randomFloat(ctx.random, ...WITHIN_DAY_GAP_HOURS));
+      nowIso = addHours(nowIso, randomFloat(context.random, ...WITHIN_DAY_GAP_HOURS));
     const conversationId = randomUUID();
-    await ctx.repos.conversations.create({
+    await context.repos.conversations.create({
       id: conversationId,
-      title: `journey:${ctx.persona.name}:day${ctx.day}`,
+      title: `journey:${context.persona.name}:day${context.day}`,
       created_at: nowIso,
       updated_at: nowIso,
       kind: "chat",
     });
 
     const result = await runConversation({
-      repos: ctx.repos,
+      repos: context.repos,
       conversationId,
-      persona: ctx.persona,
-      llmConfig: ctx.llmConfig,
-      costGuard: ctx.costGuard,
-      log: ctx.log,
-      day: ctx.day,
-      maxRounds: randomInt(ctx.random, ...ROUNDS_PER_CONVERSATION_RANGE),
+      persona: context.persona,
+      llmConfig: context.llmConfig,
+      costGuard: context.costGuard,
+      log: context.log,
+      day: context.day,
+      maxRounds: randomInt(context.random, ...ROUNDS_PER_CONVERSATION_RANGE),
       startIso: nowIso,
       topicHint,
-      telemetry: ctx.telemetry,
+      telemetry: context.telemetry,
     });
 
     nowIso = result.endIso;
     conversationsRun += 1;
     roundsRun += result.rounds;
-    ctx.newNodeLabels.push(...result.newNodeLabels);
+    context.newNodeLabels.push(...result.newNodeLabels);
     newNodeLabelsToday.push(...result.newNodeLabels);
-    ctx.sightedNodeLabels.push(...result.sightedNodeLabels);
-    ctx.touchedLabels.push(...result.newNodeLabels, ...result.sightedNodeLabels);
-    ctx.rejectedCyclicEdges.push(...result.rejectedCyclicEdges);
-    ctx.pipelineFailures.push(...result.pipelineFailures);
+    context.sightedNodeLabels.push(...result.sightedNodeLabels);
+    context.touchedLabels.push(...result.newNodeLabels, ...result.sightedNodeLabels);
+    context.rejectedCyclicEdges.push(...result.rejectedCyclicEdges);
+    context.pipelineFailures.push(...result.pipelineFailures);
     edgesAddedToday += result.addedEdgeCount;
     edgesRejectedToday += result.rejectedCyclicEdges.length;
 
-    if (ctx.onConversationComplete) await ctx.onConversationComplete(ctx.repos, ctx.day, ctx.log);
+    if (context.onConversationComplete)
+      await context.onConversationComplete(context.repos, context.day, context.log);
 
     const actionResult = await pickAndApplyJourneyAction({
-      repos: ctx.repos,
-      persona: ctx.persona,
-      llmConfig: ctx.llmConfig,
+      repos: context.repos,
+      persona: context.persona,
+      llmConfig: context.llmConfig,
       nowIso,
-      random: ctx.random,
+      random: context.random,
       recordCall: (purpose, model, usage) => {
-        ctx.costGuard.recordCall(model, usage);
-        ctx.telemetry?.ledger.recordSuccess(purpose);
+        context.costGuard.recordCall(model, usage);
+        context.telemetry?.ledger.recordSuccess(purpose);
       },
-      recordFailure: (purpose) => ctx.telemetry?.ledger.recordFailure(purpose),
-      logStage: (record) => ctx.log.writeLine({ event: "pipeline-stage", day: ctx.day, ...record }),
-      touchedLabelsSoFar: ctx.touchedLabels,
-      pendingSelfReportTopics: ctx.pendingSelfReportTopics,
+      recordFailure: (purpose) => context.telemetry?.ledger.recordFailure(purpose),
+      logStage: (record) =>
+        context.log.writeLine({ event: "pipeline-stage", day: context.day, ...record }),
+      touchedLabelsSoFar: context.touchedLabels,
+      pendingSelfReportTopics: context.pendingSelfReportTopics,
     });
     topicHint = actionResult.topicHint;
-    ctx.log.writeLine({
+    context.log.writeLine({
       event: "journey-action",
-      day: ctx.day,
+      day: context.day,
       action: actionResult.actionType,
       topicHint,
     });

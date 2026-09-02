@@ -74,6 +74,7 @@ export const NAMESPACES = [
   "palace",
   "learning",
   "discovery",
+  "onboarding",
 ] as const;
 
 /** Unicode bidirectional isolates. In a left-to-right interface they are zero-width and

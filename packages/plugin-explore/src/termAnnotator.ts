@@ -4,8 +4,8 @@
  * post-processing: conditional density clipping (unlimited once the learner is well enough
  * understood, else a strict per-60-characters cap) and locating each surviving term's first
  * occurrence in the answer as a door-shaped patch.
- * Main exports: buildTermMarkingMessages, termMarkResponseSchema, TermMarkResponse,
- * TermMarkingMessage, clipTermsByDensity, locateTermPatches, LEARNER_EVIDENCE_THRESHOLD,
+ * Main exports: buildTermMarkingMessages, termMarkResponseSchema, TermMarkingMessage,
+ * clipTermsByDensity, locateTermPatches, LEARNER_EVIDENCE_THRESHOLD,
  * TERM_DENSITY_CHARS_PER_TERM.
  */
 import { z } from "zod";
@@ -21,7 +21,6 @@ export const termMarkResponseSchema = z.object({
    * marking in this answer. */
   terms: z.array(z.object({ term: z.string().min(1).max(60) })).max(50),
 });
-export type TermMarkResponse = z.infer<typeof termMarkResponseSchema>;
 
 /** Spec 043 §3's three rules folded into one instruction: prefer marking too few over too
  * many, never mark a word any beginner already knows, never mark a word already on the lit

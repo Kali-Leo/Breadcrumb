@@ -43,9 +43,6 @@
     "failedNotice": "La comprobación no llegó a terminar (falló la red). Puedes intentarlo más tarde."
   },
   "companion": {
-    "roleStudent": "Estudiante IA",
-    "rolePeer": "Compañero IA",
-    "roleMentor": "Mentor IA",
     "chatDisabled": "El chat con compañeros está apagado. Para seguir, vuelve a activar «Chat con compañeros» en los ajustes",
     "credits": "Los compañeros vienen de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0; sus personalidades escritas son una obra derivada con cambios y no implican respaldo del autor original.",
     "closeRoster": "Cerrar la lista de compañeros",

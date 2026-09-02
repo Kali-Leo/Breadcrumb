@@ -36,17 +36,11 @@
     "guessPrompt": "Сначала догадка: что это такое, одним предложением?",
     "guessPlaceholder": "Ваша догадка",
     "guessSubmit": "Отправить",
-    "expandButton": "Обсудить",
     "directReveal": "Это значит: {{summary}}",
     "expandPrefill": "Про «{{label}}» хочу разобраться подробнее:",
     "guessCorrect": "Верно. {{summary}}",
     "guessClose": "Близко. Это значит: {{summary}}",
     "guessWrong": "Это значит: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "В процессе",
-    "casualChatGroupLabel": "Просто разговор",
-    "timelineToggleLabel": "Смотреть по датам"
   },
   "focus": {
     "exitButton": "Выйти из фокуса",
@@ -75,11 +69,6 @@
     "mapAria": "Карта остановок фокуса"
   },
   "teach": {
-    "sectionTitle": "Теперь объясните вы (эксперимент)",
-    "sectionHint": "Объясните новичку то, что выучили. Один раз объяснить обычно держится лучше, чем ещё раз прочитать.",
-    "freeTopicPlaceholder": "Или выберите свою тему",
-    "startButton": "Начать объяснять",
-    "recentTitle": "Недавно объясняли",
     "opener": "Я учу «{{topic}}» и пока толком не разобрался. Объясните своими словами? Хорошо бы начать с того, что это такое.",
     "conversationTitle": "Объяснение · {{topic}}"
   }

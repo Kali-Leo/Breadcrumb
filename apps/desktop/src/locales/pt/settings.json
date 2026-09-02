@@ -157,7 +157,6 @@
     }
   },
   "research": {
-    "panelTitle": "🔬 Pesquisa",
     "panelIntro": "Todos os números aqui foram calculados por este computador. As tarefas são revisadas e suas fontes podem ser conferidas; os dados não saem sozinhos deste aparelho, e nada disso custa dinheiro.",
     "offNotice": "As tarefas de pesquisa estão desligadas: nenhuma nova será executada. Os resultados que você já tem são mantidos, e você pode lê-los ou apagá-los um a um.",
     "loading": "Carregando…",

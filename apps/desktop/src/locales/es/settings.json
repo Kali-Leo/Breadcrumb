@@ -157,7 +157,6 @@
     }
   },
   "research": {
-    "panelTitle": "🔬 Investigación",
     "panelIntro": "Todos los números de aquí los ha calculado este ordenador. Las tareas están revisadas y sus fuentes se pueden comprobar; los datos no salen solos de este dispositivo y nada de esto cuesta dinero.",
     "offNotice": "Las tareas de investigación están apagadas: no se ejecutará ninguna nueva. Los resultados que ya tienes se conservan y puedes leerlos o borrarlos uno a uno.",
     "loading": "Cargando…",

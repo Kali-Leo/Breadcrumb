@@ -7,6 +7,7 @@
  * stationLabelsFromSightings, shouldWriteAutoTitle, displayTrailTitle.
  */
 import type { NodeSightingRow } from "@breadcrumb/core-db";
+import { truncate } from "./truncateText";
 
 /** Matches ensureChatConversationId's truncation (chatRoundContext.ts) — the initial title a
  * freshly-created chat conversation gets from its first user message. */
@@ -15,29 +16,22 @@ export const INITIAL_TITLE_MAX_CHARS = 20;
 /** Same truncation rule used at conversation creation time — kept here so the freeze check
  * below and the creation path can never drift apart. */
 export function computeInitialTitle(firstMessageContent: string): string {
-  return firstMessageContent.length > INITIAL_TITLE_MAX_CHARS
-    ? `${firstMessageContent.slice(0, INITIAL_TITLE_MAX_CHARS)}…`
-    : firstMessageContent;
+  return truncate(firstMessageContent, INITIAL_TITLE_MAX_CHARS);
 }
 
 /** Auto-title's own label truncation — shorter than the initial-title one because two labels
  * share one line ("A → B"). */
 const STATION_LABEL_MAX_CHARS = 8;
 
-function truncateStationLabel(label: string): string {
-  return label.length > STATION_LABEL_MAX_CHARS
-    ? `${label.slice(0, STATION_LABEL_MAX_CHARS)}…`
-    : label;
-}
-
 /** "First station -> last station" (spec 041 §1). Zero stations -> null (nothing to name yet,
  * the initial title stands); one station -> that station alone in brackets; two or more -> an
  * arrow between the first and the last, skipping whatever sits between them. */
 export function computeAutoTitle(stationLabels: readonly string[]): string | null {
   if (stationLabels.length === 0) return null;
-  if (stationLabels.length === 1) return `「${truncateStationLabel(stationLabels[0] as string)}」`;
-  const first = truncateStationLabel(stationLabels[0] as string);
-  const last = truncateStationLabel(stationLabels[stationLabels.length - 1] as string);
+  if (stationLabels.length === 1)
+    return `「${truncate(stationLabels[0] as string, STATION_LABEL_MAX_CHARS)}」`;
+  const first = truncate(stationLabels[0] as string, STATION_LABEL_MAX_CHARS);
+  const last = truncate(stationLabels[stationLabels.length - 1] as string, STATION_LABEL_MAX_CHARS);
   return `${first} → ${last}`;
 }
 

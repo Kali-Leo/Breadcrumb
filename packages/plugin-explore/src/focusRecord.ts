@@ -4,7 +4,7 @@
  * buildFocusRecordText is the full multi-line record (spec 042 §5, pre-2026-08-14: used to land
  * in the host conversation on exit); buildFocusContextLine is the one-line, truncated form the
  * silent per-round context uses instead (Leo 2026-08-14 revision).
- * Main exports: buildFocusRecordText, buildFocusContextLine, FocusRecordNode.
+ * Main exports: buildFocusRecordText, buildFocusContextLine, groupByParent, FocusRecordNode.
  */
 
 export interface FocusRecordNode {
@@ -22,9 +22,12 @@ function stationLabel(node: FocusRecordNode): string {
 }
 
 /** Groups nodes by parent id, preserving each group's existing order (repo rows already come
- * created_at, id ascending — the order a preorder walk should visit siblings in). */
-function groupByParent(nodes: readonly FocusRecordNode[]): Map<string | null, FocusRecordNode[]> {
-  const groups = new Map<string | null, FocusRecordNode[]>();
+ * created_at, id ascending — the order a preorder walk should visit siblings in). Generic over
+ * the node shape: the desktop map layout walks the same station tree with its own row type. */
+export function groupByParent<Node extends { parentId: string | null }>(
+  nodes: readonly Node[],
+): Map<string | null, Node[]> {
+  const groups = new Map<string | null, Node[]>();
   for (const node of nodes) {
     const siblings = groups.get(node.parentId) ?? [];
     siblings.push(node);

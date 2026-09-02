@@ -7,9 +7,7 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "cancel": "Cancelar",
-    "save": "Guardar",
-    "expand": "Ver más",
-    "collapse": "Ver menos"
+    "save": "Guardar"
   },
   "nav": {
     "newChat": "Nueva conversación de estudio",
@@ -21,8 +19,7 @@
     "offline": "Sin conexión. Todo lo que necesita internet está en pausa; el resto sigue funcionando."
   },
   "state": {
-    "loading": "Cargando…",
-    "empty": "Aquí todavía no hay nada"
+    "loading": "Cargando…"
   },
   "list": {
     "separator": ", "

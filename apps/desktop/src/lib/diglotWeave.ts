@@ -21,7 +21,6 @@ import {
   newWordCard,
   type ReplacementPatch,
   ratingForSignal,
-  retrievabilityOf,
   reviewCard,
   scheduleReplacements,
   tokenizeMessage,
@@ -202,8 +201,12 @@ export function findProductiveUses(
 export async function loadCards(pair: DiglotPairId): Promise<Map<string, Card>> {
   const repos = await getRepos();
   const states = await repos.diglot.listStates(pair);
-  return new Map(states.map((state) => [state.lemma, cardFromJson(state.fsrs_json)]));
+  const cards = new Map<string, Card>();
+  for (const state of states) {
+    // A word whose stored card is unreadable drops out of the working map: it will be
+    // introduced fresh next time, which is a far smaller loss than a scheduler running on NaN.
+    const card = cardFromJson(state.fsrs_json);
+    if (card !== null) cards.set(state.lemma, card);
+  }
+  return cards;
 }
-
-/** Recall probability helper re-exported for UI display decisions. */
-export { retrievabilityOf };

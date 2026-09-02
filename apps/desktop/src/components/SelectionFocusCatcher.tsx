@@ -8,14 +8,11 @@
 import { focusSelectHintMessage } from "@breadcrumb/plugin-explore";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useCopyMessage } from "../i18n/useCopyMessage";
+import { truncate } from "../lib/truncateText";
 
 /** Selections longer than this are truncated before becoming a focus session's root label
  * (spec 042 §5: "选区文本截 24 字"). */
 const MAX_ROOT_LABEL_CHARS = 24;
-
-function truncateSelection(text: string): string {
-  return text.length > MAX_ROOT_LABEL_CHARS ? `${text.slice(0, MAX_ROOT_LABEL_CHARS)}…` : text;
-}
 
 interface SelectionHint {
   quotedText: string;
@@ -63,7 +60,11 @@ export function SelectionFocusCatcher({
         return;
       }
       const rect = range.getBoundingClientRect();
-      setHint({ quotedText: truncateSelection(text), left: rect.left, top: rect.top - 32 });
+      setHint({
+        quotedText: truncate(text, MAX_ROOT_LABEL_CHARS),
+        left: rect.left,
+        top: rect.top - 32,
+      });
     }
     function handlePointerDown(event: MouseEvent) {
       if (containerRef.current?.contains(event.target as Node)) return;

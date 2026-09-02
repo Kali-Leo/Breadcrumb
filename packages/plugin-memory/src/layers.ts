@@ -6,14 +6,8 @@
  * computeKnowledgeLayerSeries.
  */
 import type { MasteryClaimRow, NodeSightingRow } from "@breadcrumb/core-db";
-import { fsrs } from "ts-fsrs";
 import { computeClaimScore } from "./mastery";
-import { buildNodeCheckpoints, gradedSightingsOf } from "./retention";
-
-// Same explicit configuration as retention.ts's scheduler — the two must stay identical, since
-// this file samples the retrievability of cards that file's semantics produced. See the comment
-// there for why enable_short_term is stated rather than inherited (design audit 2026-08-28 #7).
-const scheduler = fsrs({ enable_short_term: false });
+import { buildNodeCheckpoints, gradedSightingsOf, retrievabilityOf } from "./retention";
 
 /** memory(t) = Σ retrievability; understanding(t) = Σ claimScore × retrievability;
  * intuition(t) = Σ retrievability over nodes whose stability has cleared the automation
@@ -99,10 +93,7 @@ export function computeKnowledgeLayerSeries(input: {
       const checkpoint = checkpoints[checkpointIndex];
       if (checkpoint === undefined) continue;
 
-      const retrievability = Math.max(
-        0,
-        Math.min(1, scheduler.get_retrievability(checkpoint.card, new Date(sample.ms), false)),
-      );
+      const retrievability = retrievabilityOf(checkpoint.card, new Date(sample.ms));
       memory[sample.index] = (memory[sample.index] ?? 0) + retrievability;
 
       const claimsSoFar = nodeClaims.filter((claim) => Date.parse(claim.created_at) <= sample.ms);

@@ -36,17 +36,11 @@
     "guessPrompt": "पहले अंदाज़ा लगाइए: एक वाक्य में यह क्या है?",
     "guessPlaceholder": "आपका अंदाज़ा",
     "guessSubmit": "भेजें",
-    "expandButton": "इस पर बात करें",
     "directReveal": "इसका मतलब है: {{summary}}",
     "expandPrefill": "«{{label}}» के बारे में मैं और गहराई में जाना चाहता हूँ:",
     "guessCorrect": "सही। {{summary}}",
     "guessClose": "क़रीब। इसका मतलब है: {{summary}}",
     "guessWrong": "इसका मतलब है: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "चल रहा है",
-    "casualChatGroupLabel": "यूँ ही बातचीत",
-    "timelineToggleLabel": "तारीख़ से देखें"
   },
   "focus": {
     "exitButton": "फ़ोकस से बाहर",
@@ -71,11 +65,6 @@
     "mapAria": "फ़ोकस पड़ावों का नक्शा"
   },
   "teach": {
-    "sectionTitle": "अब आप समझाइए (प्रयोगात्मक)",
-    "sectionHint": "जो सीखा है वह किसी नौसिखिए को समझाइए। एक बार समझा देना आमतौर पर दोबारा पढ़ने से ज़्यादा टिकता है।",
-    "freeTopicPlaceholder": "या अपना विषय चुनिए",
-    "startButton": "समझाना शुरू करें",
-    "recentTitle": "हाल में समझाया",
     "opener": "मैं «{{topic}}» सीख रहा हूँ और अब तक ठीक से पकड़ नहीं पाया। अपने शब्दों में समझा देंगे? यह क्या है, वहीं से शुरू करें तो बढ़िया रहेगा।",
     "conversationTitle": "समझाना · {{topic}}"
   }

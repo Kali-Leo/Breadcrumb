@@ -22,6 +22,7 @@ import {
   pickRecommendation,
   visibleLateralEdges,
 } from "../../../lib/kingdomView";
+import { goalNodeIds as parseGoalNodeIds } from "../../../lib/plannerGapActions";
 import {
   loadRegionFeedbackSources,
   type RegionFeedbackSources,
@@ -142,7 +143,7 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
     if (learningMode !== "ranked") return new Set<string>();
     const goal = goals.find((candidate) => candidate.id === selectedGoalId);
     if (goal === undefined) return new Set<string>();
-    const goalIds = JSON.parse(goal.node_ids_json) as string[];
+    const goalIds = parseGoalNodeIds(goal);
     return new Set(goalIds.filter((id) => memberSet.has(id)));
   }, [learningMode, goals, selectedGoalId, memberSet]);
 

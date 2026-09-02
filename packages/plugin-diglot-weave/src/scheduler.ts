@@ -3,7 +3,7 @@
  * in one message under the density budget, maximizing expected memory gain (FSRS-6) with
  * dispersion, new-word throttle and context-novelty factors. Deterministic throughout.
  * Main exports: scheduleReplacements, adaptiveNewWordCap, ScheduleInput,
- * ScheduledReplacement, DEFAULT_DENSITY.
+ * ScheduledReplacement.
  */
 import type { DiglotPairId } from "@breadcrumb/core-db";
 import type { Card } from "ts-fsrs";
@@ -11,9 +11,6 @@ import { Rating } from "ts-fsrs";
 import type { CandidateOccurrence } from "./candidates";
 import { retrievabilityOf, reviewCard } from "./memoryState";
 
-/** Default replacement density: 2% of word tokens. The hard ceiling is 5% (spec 033,
- * 95–98% comprehensible-input research). */
-export const DEFAULT_DENSITY = 0.02;
 /** Ceiling on what the density loop may ask for (densityControl.ts owns the target itself);
  * raised from 5% to 7% with that loop, on the audit's reading of Holley's one-in-fifteen. */
 const DENSITY_CEILING = 0.07;

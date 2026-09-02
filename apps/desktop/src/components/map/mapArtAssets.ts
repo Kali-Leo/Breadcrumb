@@ -4,7 +4,7 @@
  * mipmapped so they stay crisp when drawn small. Village settlement icons went away with
  * the village scene (2026-08-11). Also readies the handwriting font before Pixi rasterizes
  * labels.
- * Main exports: loadMapArt, resetMapArt, MapArt.
+ * Main exports: loadMapArt, resetMapArt, MapArt, urlNamed.
  */
 import { Texture } from "pixi.js";
 
@@ -26,10 +26,18 @@ export interface MapArt {
   };
 }
 
-function urlNamed(folder: string, nameFragment: string): string {
+/**
+ * Resolves one art file by folder and file-name prefix. The match is anchored to the start
+ * of the *file name*, never a substring of the whole path: a plain `includes` let the
+ * dictionary-ordered glob hand `town-width` to `flat-town-width=30.png`, which silently drew
+ * kingdom tiers 2 and 3 with the same picture. Exported for the resolution test.
+ */
+export function urlNamed(folder: string, nameFragment: string): string {
   return (
     Object.entries(assetUrls).find(
-      ([path]) => path.includes(`/map-art/${folder}/`) && path.includes(nameFragment),
+      ([path]) =>
+        path.includes(`/map-art/${folder}/`) &&
+        (path.split("/").pop() ?? "").startsWith(nameFragment),
     )?.[1] ?? ""
   );
 }

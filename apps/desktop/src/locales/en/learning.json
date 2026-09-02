@@ -36,17 +36,11 @@
     "guessPrompt": "Have a guess first: what is it, in one sentence?",
     "guessPlaceholder": "Your guess",
     "guessSubmit": "Submit",
-    "expandButton": "Talk it through",
     "directReveal": "It means: {{summary}}",
     "expandPrefill": "About \"{{label}}\", I would like to go deeper:",
     "guessCorrect": "Right. {{summary}}",
     "guessClose": "Close. It means: {{summary}}",
     "guessWrong": "It means: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "In progress",
-    "casualChatGroupLabel": "Just chatting",
-    "timelineToggleLabel": "Browse by time"
   },
   "focus": {
     "exitButton": "Leave focus",
@@ -71,11 +65,6 @@
     "mapAria": "Focus stop map"
   },
   "teach": {
-    "sectionTitle": "Your turn to explain (experimental)",
-    "sectionHint": "Explain something you have learned to a beginner. Explaining it once usually sticks better than reading it again.",
-    "freeTopicPlaceholder": "Or pick your own topic",
-    "startButton": "Start explaining",
-    "recentTitle": "Recently explained",
     "opener": "I am learning \"{{topic}}\" and have not really got it yet. Could you explain it in your own words? Starting from what it is would be great.",
     "conversationTitle": "Explaining · {{topic}}"
   }

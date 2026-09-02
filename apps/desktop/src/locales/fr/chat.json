@@ -43,9 +43,6 @@
     "failedNotice": "La vérification n'a pas abouti (le réseau a flanché). Tu peux réessayer plus tard."
   },
   "companion": {
-    "roleStudent": "Élève IA",
-    "rolePeer": "Camarade IA",
-    "roleMentor": "Mentor IA",
     "chatDisabled": "Le chat avec les compagnons est éteint. Pour continuer, rallume « Chat avec les compagnons » dans les réglages",
     "credits": "Les compagnons viennent de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0 ; leurs personnalités écrites sont une œuvre dérivée avec modifications et n'impliquent aucune approbation de l'auteur d'origine.",
     "closeRoster": "Fermer la liste des compagnons",

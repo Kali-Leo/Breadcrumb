@@ -8,7 +8,7 @@
  * one file to revisit when the typings improve, instead of casts scattered through the data
  * layer where they would look like carelessness.
  *
- * Main exports: SqliteHandle, execRows, execRun, openPooledDatabase, openMemoryDatabase.
+ * Main exports: SqliteHandle, execRows, execRun, openMemoryDatabase.
  */
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
@@ -47,9 +47,6 @@ export function execRun(handle: SqliteHandle, sql: string, params: readonly unkn
 
 interface Sqlite3Loose {
   oo1: { DB: new (filename: string, flags: string) => SqliteHandle };
-  installOpfsSAHPoolVfs?(options: { name: string }): Promise<{
-    OpfsSAHPoolDb: new (filename: string) => SqliteHandle;
-  }>;
 }
 
 async function loadSqlite(): Promise<Sqlite3Loose> {
@@ -59,22 +56,6 @@ async function loadSqlite(): Promise<Sqlite3Loose> {
     printErr(): void;
   }) => Promise<Sqlite3Loose>;
   return init({ print: () => {}, printErr: () => {} });
-}
-
-/**
- * Opens the durable, browser-stored database, or null when this browser will not give us one
- * (a private window, storage blocked, or no OPFS at all). Null is a state the caller has to
- * handle out loud, not an error to swallow.
- */
-export async function openPooledDatabase(filename: string): Promise<SqliteHandle | null> {
-  const sqlite3 = await loadSqlite();
-  if (sqlite3.installOpfsSAHPoolVfs === undefined) return null;
-  try {
-    const pool = await sqlite3.installOpfsSAHPoolVfs({ name: "breadcrumb" });
-    return new pool.OpfsSAHPoolDb(filename);
-  } catch {
-    return null;
-  }
 }
 
 /** A database that lives only as long as the page. Used as the fallback, and by tests. */

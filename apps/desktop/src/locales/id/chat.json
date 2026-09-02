@@ -41,9 +41,6 @@
     "failedNotice": "Pemeriksaan tidak selesai (jaringan terganggu). Kamu bisa mencoba lagi nanti."
   },
   "companion": {
-    "roleStudent": "Murid AI",
-    "rolePeer": "Teman sekelas AI",
-    "roleMentor": "Mentor AI",
     "chatDisabled": "Obrolan dengan teman sedang mati. Untuk melanjutkan, nyalakan lagi «Obrolan dengan teman» di pengaturan",
     "credits": "Para teman berasal dari Pepper&Carrot karya David Revoy (peppercarrot.com), CC-BY 4.0; kepribadian tertulis mereka adalah karya turunan dengan perubahan dan tidak berarti didukung oleh penulis aslinya.",
     "closeRoster": "Tutup daftar teman",

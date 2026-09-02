@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { layoutFocusMap } from "../../../lib/focusMapLayout";
 import type { LateralEdgeView, VisibleTreeNode } from "../../../lib/kingdomView";
+import { truncate } from "../../../lib/truncateText";
 
 const AMBER = "#f59e0b";
 const GREY = "#a8a29e";
@@ -63,10 +64,6 @@ interface KingdomTreeSvgProps {
   onEnter(nodeId: string): void;
   onHover(nodeId: string | null): void;
   onExpandAggregate(nodeId: string): void;
-}
-
-function truncate(label: string): string {
-  return label.length > LABEL_MAX_CHARS ? `${label.slice(0, LABEL_MAX_CHARS)}…` : label;
 }
 
 export function KingdomTreeSvg({
@@ -254,10 +251,10 @@ export function KingdomTreeSvg({
               <text x={station.x + 10} y={station.y + 4} fontSize={11} fill={TEXT}>
                 {isAggregate
                   ? t("kingdom.aggregateLabel", {
-                      label: truncate(node.label),
+                      label: truncate(node.label, LABEL_MAX_CHARS),
                       count: node.collapsedCount,
                     })
-                  : truncate(node.label)}
+                  : truncate(node.label, LABEL_MAX_CHARS)}
               </text>
             </g>
           );

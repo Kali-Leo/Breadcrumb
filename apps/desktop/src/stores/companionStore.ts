@@ -7,7 +7,7 @@
  * yesterday's leftovers expire, tomorrow brings a fresh batch. Also keeps crisis
  * detection and the break reminder.
  * Side effects on import: subscribes to chat:responseFinished / chat:messageSent.
- * Main exports: useCompanionStore, HELPER_ID_PREFIX, helperTopicOf.
+ * Main exports: useCompanionStore, HELPER_ID_PREFIX.
  */
 import type { CompanionProposalRow } from "@breadcrumb/core-db";
 import { detectCrisis } from "@breadcrumb/plugin-companion";
@@ -64,10 +64,6 @@ function wireDailyHelperGateTriggers(): void {
     }
     previousCompanionChatEnabled = enabled;
   });
-}
-
-export function helperTopicOf(row: CompanionProposalRow): string {
-  return row.topic;
 }
 
 interface CompanionState extends BreakReminderState {

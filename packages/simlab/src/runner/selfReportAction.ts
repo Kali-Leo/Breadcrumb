@@ -41,20 +41,23 @@ export async function resolvePendingSelfReportTopics(
   }
 }
 
-export async function applySelfReport(ctx: JourneyActionContext): Promise<TopicHint> {
-  const { repos, persona, llmConfig } = ctx;
+export async function applySelfReport(context: JourneyActionContext): Promise<TopicHint> {
+  const { repos, persona, llmConfig } = context;
   if (persona.knowledge.knownTopics.length === 0) return { label: null, isDomainJump: false };
 
   // Retry anything queued from an earlier self-report first — the node backing it may have
   // been created by a conversation since then (S4 requeue).
-  await resolvePendingSelfReportTopics(ctx.pendingSelfReportTopics, repos, ctx.nowIso, (label) =>
-    ctx.logStage({ event: "self-report-pending-resolved", label }),
+  await resolvePendingSelfReportTopics(
+    context.pendingSelfReportTopics,
+    repos,
+    context.nowIso,
+    (label) => context.logStage({ event: "self-report-pending-resolved", label }),
   );
 
   const allNodes = await repos.knowledgeNodes.listAll();
   if (allNodes.length === 0) {
     // Nothing in the tree yet to plausibly match against — the whole brief is premature.
-    for (const topic of persona.knowledge.knownTopics) ctx.pendingSelfReportTopics.add(topic);
+    for (const topic of persona.knowledge.knownTopics) context.pendingSelfReportTopics.add(topic);
     return { label: null, isDomainJump: false };
   }
 
@@ -66,8 +69,8 @@ export async function applySelfReport(ctx: JourneyActionContext): Promise<TopicH
       buildSelfReportMessages(userText, existingLabels),
       selfReportMappingSchema,
     );
-    ctx.recordCall("self-report-mapping", llmConfig.model, usage);
-    ctx.logStage({ purpose: "self-report-mapping", request: userText, response: parsed });
+    context.recordCall("self-report-mapping", llmConfig.model, usage);
+    context.logStage({ purpose: "self-report-mapping", request: userText, response: parsed });
 
     const nodeIdByLabel = new Map(allNodes.map((node) => [node.label, node.id]));
     for (const mapping of parsed.mappings) {
@@ -78,7 +81,7 @@ export async function applySelfReport(ctx: JourneyActionContext): Promise<TopicH
         node_id: nodeId,
         level: mapping.claimLevel,
         source: "self-report",
-        created_at: ctx.nowIso,
+        created_at: context.nowIso,
       });
     }
 
@@ -86,11 +89,11 @@ export async function applySelfReport(ctx: JourneyActionContext): Promise<TopicH
     // can never have been in the LLM's candidate list — not a model miss, just premature
     // timing. Queue them instead of losing the signal for good.
     for (const topic of persona.knowledge.knownTopics) {
-      if (!nodeIdByLabel.has(topic)) ctx.pendingSelfReportTopics.add(topic);
+      if (!nodeIdByLabel.has(topic)) context.pendingSelfReportTopics.add(topic);
     }
   } catch (error) {
-    ctx.recordFailure?.("self-report-mapping");
-    ctx.logStage({
+    context.recordFailure?.("self-report-mapping");
+    context.logStage({
       purpose: "self-report-mapping",
       error: error instanceof Error ? error.message : String(error),
     });

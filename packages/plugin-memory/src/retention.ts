@@ -4,7 +4,7 @@
  * mention lands as "Good", a graded retrieval lands as Again/Hard/Easy. Retention is the FSRS
  * retrievability at `now`. Pure and local; zero cost.
  * Main exports: computeNodeRetention, computeRetentionByNode, buildNodeCheckpoints,
- * gradedSightingsOf, NodeRetentionCheckpoint, GradedSighting.
+ * gradedSightingsOf, retrievabilityOf, NodeRetentionCheckpoint, GradedSighting.
  */
 import type { NodeSightingGrade, NodeSightingRow } from "@breadcrumb/core-db";
 import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
@@ -74,10 +74,12 @@ export function buildNodeCheckpoints(
   return checkpoints;
 }
 
-/** Recall probability of one card at an instant — the one place the fog engine's FSRS
- * retrievability call lives, so retention and review priority always read it the same way. */
+/** Recall probability (0..1) of one card at an instant — the one place the fog engine's FSRS
+ * retrievability call lives, so retention, the layer series and review priority always read it
+ * the same way. Clamped here rather than at each call site: every consumer treats it as a
+ * probability, so an out-of-range value from the library must never reach one of them. */
 export function retrievabilityOf(card: Card, now: Date): number {
-  return scheduler.get_retrievability(card, now, false);
+  return Math.max(0, Math.min(1, scheduler.get_retrievability(card, now, false)));
 }
 
 /** Retention probability (0..1) for one node given its graded sightings. */
@@ -85,8 +87,7 @@ export function computeNodeRetention(sightings: readonly GradedSighting[], nowIs
   const checkpoints = buildNodeCheckpoints(sightings);
   const lastCheckpoint = checkpoints[checkpoints.length - 1];
   if (lastCheckpoint === undefined) return 0;
-  const retention = retrievabilityOf(lastCheckpoint.card, new Date(nowIso));
-  return Math.max(0, Math.min(1, retention));
+  return retrievabilityOf(lastCheckpoint.card, new Date(nowIso));
 }
 
 /** Sighting rows regrouped per node, each node's list in the order the rows arrived. */

@@ -36,17 +36,11 @@
     "guessPrompt": "Devine d'abord : c'est quoi, en une phrase ?",
     "guessPlaceholder": "Ta proposition",
     "guessSubmit": "Envoyer",
-    "expandButton": "En discuter",
     "directReveal": "Cela veut dire : {{summary}}",
     "expandPrefill": "À propos de « {{label}} », j'aimerais aller plus loin :",
     "guessCorrect": "C'est ça. {{summary}}",
     "guessClose": "Pas loin. Cela veut dire : {{summary}}",
     "guessWrong": "Cela veut dire : {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "En cours",
-    "casualChatGroupLabel": "Simple discussion",
-    "timelineToggleLabel": "Parcourir par date"
   },
   "focus": {
     "exitButton": "Quitter le focus",
@@ -73,11 +67,6 @@
     "mapAria": "Carte des étapes du focus"
   },
   "teach": {
-    "sectionTitle": "À toi d'expliquer (expérimental)",
-    "sectionHint": "Explique à un débutant quelque chose que tu as appris. L'expliquer une fois tient généralement mieux que de le relire.",
-    "freeTopicPlaceholder": "Ou choisis ton propre sujet",
-    "startButton": "Commencer à expliquer",
-    "recentTitle": "Expliqué récemment",
     "opener": "J'apprends « {{topic}} » et je n'ai pas encore vraiment saisi. Tu peux me l'expliquer avec tes mots ? Commencer par ce que c'est serait parfait.",
     "conversationTitle": "Explication · {{topic}}"
   }

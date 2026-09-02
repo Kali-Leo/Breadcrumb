@@ -7,9 +7,7 @@
     "copy": "Nakili",
     "copied": "Imenakiliwa",
     "cancel": "Ghairi",
-    "save": "Hifadhi",
-    "expand": "Onyesha zaidi",
-    "collapse": "Onyesha kidogo"
+    "save": "Hifadhi"
   },
   "nav": {
     "newChat": "Mazungumzo mapya ya kujifunza",
@@ -21,8 +19,7 @@
     "offline": "Huna mtandao. Kila kinachohitaji intaneti kimesimama kwa muda; mengine yanaendelea."
   },
   "state": {
-    "loading": "Inapakia…",
-    "empty": "Bado hakuna kitu hapa"
+    "loading": "Inapakia…"
   },
   "list": {
     "separator": ", "

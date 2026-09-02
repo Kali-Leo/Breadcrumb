@@ -36,17 +36,11 @@
     "guessPrompt": "Tebak dulu: apa ini, dalam satu kalimat?",
     "guessPlaceholder": "Tebakanmu",
     "guessSubmit": "Kirim",
-    "expandButton": "Bicarakan",
     "directReveal": "Artinya: {{summary}}",
     "expandPrefill": "Soal «{{label}}», saya ingin lebih dalam:",
     "guessCorrect": "Betul. {{summary}}",
     "guessClose": "Nyaris. Artinya: {{summary}}",
     "guessWrong": "Artinya: {{summary}}"
-  },
-  "trail": {
-    "ongoingSectionLabel": "Sedang berjalan",
-    "casualChatGroupLabel": "Sekadar mengobrol",
-    "timelineToggleLabel": "Lihat menurut waktu"
   },
   "focus": {
     "exitButton": "Keluar dari fokus",
@@ -69,11 +63,6 @@
     "mapAria": "Peta perhentian fokus"
   },
   "teach": {
-    "sectionTitle": "Giliranmu menjelaskan (eksperimen)",
-    "sectionHint": "Jelaskan sesuatu yang sudah kamu pelajari kepada seorang pemula. Menjelaskan sekali biasanya lebih melekat daripada membacanya lagi.",
-    "freeTopicPlaceholder": "Atau pilih topikmu sendiri",
-    "startButton": "Mulai menjelaskan",
-    "recentTitle": "Baru saja dijelaskan",
     "opener": "Saya sedang belajar «{{topic}}» dan belum benar-benar paham. Bisa dijelaskan dengan kata-katamu sendiri? Mulai dari apa itu sudah sangat membantu.",
     "conversationTitle": "Menjelaskan · {{topic}}"
   }
