@@ -11,6 +11,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { z } from "zod";
+import { normalize } from "./shared.mjs";
 
 const [, , sourcePath, outPath] = process.argv;
 if (!sourcePath || !outPath) {
@@ -58,10 +59,6 @@ const UNITS = [
 
 const source = readFileSync(sourcePath, "utf8");
 
-/** NFKC-fold and strip all whitespace — the shared normalization for containment checks. */
-function normalize(text) {
-  return text.normalize("NFKC").replace(/\s+/gu, "");
-}
 const normalizedSource = normalize(source);
 
 /** pdftotext sometimes replaces the "．" after the unit number with a private-use glyph or

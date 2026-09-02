@@ -6,8 +6,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createComparisonRepo } from "./comparisonRepositories";
+import type { ComparisonProfileItemRow, ComparisonProfileRow } from "./comparisonTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { ComparisonProfileItemRow, ComparisonProfileRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 function makeFakeSql() {
   const profileRows = new Map<string, ComparisonProfileRow>();

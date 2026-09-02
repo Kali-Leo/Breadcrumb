@@ -13,6 +13,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-vectors": "workspace:*",
     "graphology": "^0.26.0",
     "graphology-dag": "^0.4.1",
     "zod": "^4.1.0"

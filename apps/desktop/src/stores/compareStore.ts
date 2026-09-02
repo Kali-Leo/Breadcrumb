@@ -2,43 +2,27 @@
  * Purpose: zustand store for the comparison tree (spec 023) — profile list (builtins
  * imported on first load), the selected profile's overlap tree, expand/collapse and
  * detail-selection UI state, and the experimental search-build flow with its plain
- * cost/outcome line. Standalone module: no planner/ladder/goal state anywhere.
- * Main exports: useCompareStore.
+ * cost/outcome line. Standalone module: no planner/ladder/goal state anywhere. The
+ * per-profile actions live in compareStoreSelection.ts and the network-spending flows in
+ * lib/compare/compareSearchFlow.ts; this file holds the state itself.
+ * Main exports: useCompareStore, CompareState.
  */
 import type { ComparisonProfileRow } from "@breadcrumb/core-db";
 import type { OverlapNode } from "@breadcrumb/feature-compare";
-import i18next from "i18next";
 import { create } from "zustand";
-import { asStoredText } from "../i18n/storedText";
-import { computeComparisonTree, ensureBuiltinProfiles } from "../lib/compare/compareActions";
-import { runAnchorSweep } from "../lib/compare/compareAlignActions";
-import { runExperimentalProfileBuild } from "../lib/compare/compareBuildActions";
-import { runHubDecomposition } from "../lib/compare/compareHubActions";
+import { ensureBuiltinProfiles } from "../lib/compare/compareActions";
 import {
-  createOccupationProfile,
-  openPracticeConversation,
-} from "../lib/compare/occupationActions";
-import { persistCalibratedGoal, requestGoalMapping } from "../lib/planner/plannerGoalActions";
+  type CompareSearchActions,
+  createCompareSearchActions,
+} from "../lib/compare/compareSearchFlow";
 import { getRepos } from "../lib/platform/db";
-import { nowIso } from "../lib/platform/time";
-import { appEventBus } from "./chatStore";
-import { usePlannerStore } from "./plannerStore";
-import { useSettingsStore } from "./settingsStore";
+import {
+  type CompareProfileViewState,
+  type CompareSelectionActions,
+  createCompareSelectionActions,
+} from "./compareStoreSelection";
 
-/** Per-profile view state (VS Code explorer model): which keys are expanded and which
- * node's detail panel is open. Kept so switching profiles to peek and back doesn't lose
- * a deep expansion. */
-interface CompareProfileViewState {
-  expandedKeys: ReadonlySet<string>;
-  detailKey: string | null;
-}
-
-const EMPTY_PROFILE_VIEW_STATE: CompareProfileViewState = {
-  expandedKeys: new Set<string>(),
-  detailKey: null,
-};
-
-interface CompareState {
+export interface CompareState extends CompareSelectionActions, CompareSearchActions {
   profiles: ComparisonProfileRow[];
   selectedProfileId: string | null;
   /** The profile's overlap tree under one visible root node (the profile itself). */
@@ -65,45 +49,9 @@ interface CompareState {
   goalNote: string | null;
   generatingGoal: boolean;
   load(): Promise<void>;
-  selectProfile(profileId: string): Promise<void>;
   toggleExpanded(key: string): void;
   selectDetail(key: string | null): void;
-  buildFromTopic(topic: string): Promise<void>;
-  /** Builds the chosen occupation's profile offline and selects it (spec 026). */
-  createOccupation(code: string): Promise<void>;
-  /** Records the learner's own 0–10 score for an experience leaf and rescores the tree. */
-  setPracticeScore(itemId: string, score: number): Promise<void>;
-  /** Opens (or resumes) the saved-but-sidebar-hidden discussion for a practice item. */
-  discussPractice(node: OverlapNode): Promise<void>;
-  /** 一键生成目标 (spec 026 §3): feeds the profile's evidence leaves to goal planning. */
-  generateGoalFromProfile(): Promise<void>;
-  /** Hub decomposition (spec 028 §3): verified search-build of a hub's sub-tree, in place. */
-  decomposeHub(node: OverlapNode): Promise<void>;
   decomposingHub: boolean;
-}
-
-/** Fire-and-forget anchor sweep (spec 025 — profile-agnostic: anchors are node↔concept, so
- * one sweep serves every profile); when new pairs got judged, quietly recompute the tree so
- * semantic matches appear without the user doing anything. */
-async function sweepInBackground(
-  refresh: () => Promise<void>,
-  setAligning: (aligning: boolean) => void,
-): Promise<void> {
-  setAligning(true);
-  try {
-    const judged = await runAnchorSweep();
-    if (judged !== null && judged > 0) await refresh();
-  } catch (error) {
-    console.warn("anchor sweep skipped:", error);
-  } finally {
-    setAligning(false);
-  }
-}
-
-function mirrorOf(
-  viewState: CompareProfileViewState,
-): Pick<CompareState, "expandedKeys" | "detailKey"> {
-  return { expandedKeys: viewState.expandedKeys, detailKey: viewState.detailKey };
 }
 
 export const useCompareStore = create<CompareState>((set, get) => ({
@@ -140,54 +88,6 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     }
   },
 
-  async selectProfile(profileId) {
-    // Save the outgoing profile's expansion/detail state before switching (VS Code
-    // explorer model) — a peek at another profile must not lose a deep expansion. The
-    // restore happens atomically with selectedProfileId/tree below so old and new state
-    // never render mixed together.
-    const outgoing = get().selectedProfileId;
-    const viewStateByProfile = new Map(get().viewStateByProfile);
-    if (outgoing !== null) {
-      viewStateByProfile.set(outgoing, {
-        expandedKeys: get().expandedKeys,
-        detailKey: get().detailKey,
-      });
-    }
-    set({ loading: true, viewStateByProfile });
-    try {
-      // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
-      // alignment runs behind it and quietly patches the tree when new verdicts land.
-      const repos = await getRepos();
-      const [tree, scores] = await Promise.all([
-        computeComparisonTree(profileId),
-        repos.practice.listScores(),
-      ]);
-      const restored = viewStateByProfile.get(profileId) ?? EMPTY_PROFILE_VIEW_STATE;
-      set({
-        selectedProfileId: profileId,
-        tree,
-        scoreByItemId: new Map(scores.map((row) => [row.item_id, row.score])),
-        loading: false,
-        goalNote: null,
-        ...mirrorOf(restored),
-      });
-      void sweepInBackground(
-        async () => {
-          const selected = get().selectedProfileId;
-          if (selected === null) return;
-          const refreshed = await computeComparisonTree(selected);
-          // The user may have switched profiles during the sweep — a stale tree must
-          // never land under the newly selected profile's title.
-          if (get().selectedProfileId === selected) set({ tree: refreshed });
-        },
-        (aligning) => set({ aligning }),
-      );
-    } catch (error) {
-      console.warn("comparison tree compute skipped:", error);
-      set({ loading: false });
-    }
-  },
-
   toggleExpanded(key) {
     const next = new Set(get().expandedKeys);
     if (next.has(key)) {
@@ -202,158 +102,6 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     set({ detailKey: key });
   },
 
-  async buildFromTopic(topic) {
-    const settings = useSettingsStore.getState();
-    if (!settings.featureSwitches.compareProfileBuild) return;
-    if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ buildNote: i18next.t("palace:compare.buildNeedsNetwork") });
-      return;
-    }
-    set({ building: true, buildNote: null });
-    const outcome = await runExperimentalProfileBuild(settings.apiConfig, {
-      topic,
-      mainland: settings.mainlandNetwork,
-    });
-    if (outcome.ok) {
-      const dropped =
-        outcome.droppedCount > 0
-          ? i18next.t("palace:compare.buildDropped", { count: outcome.droppedCount })
-          : "";
-      set({ building: false, buildNote: `${outcome.costLine}${dropped}` });
-      await get().load();
-      await get().selectProfile(outcome.profileId);
-    } else {
-      const cost = outcome.costLine === null ? "" : `；${outcome.costLine}`;
-      set({ building: false, buildNote: `${outcome.reason}${cost}` });
-    }
-  },
-
-  async createOccupation(code) {
-    set({ loading: true });
-    try {
-      const profileId = await createOccupationProfile(code);
-      await get().load();
-      if (profileId !== null) await get().selectProfile(profileId);
-      else set({ loading: false });
-    } catch (error) {
-      console.warn("occupation profile creation skipped:", error);
-      set({ loading: false });
-    }
-  },
-
-  async setPracticeScore(itemId, score) {
-    try {
-      const repos = await getRepos();
-      await repos.practice.upsertScore({
-        item_id: itemId,
-        score,
-        scored_at: nowIso(),
-      });
-      const next = new Map(get().scoreByItemId);
-      next.set(itemId, score);
-      set({ scoreByItemId: next });
-      const selected = get().selectedProfileId;
-      if (selected !== null) {
-        const tree = await computeComparisonTree(selected);
-        if (get().selectedProfileId === selected) set({ tree });
-      }
-    } catch (error) {
-      console.warn("practice score skipped:", error);
-    }
-  },
-
-  async discussPractice(node) {
-    try {
-      const conversationId = await openPracticeConversation(node.label, node.sourceRef);
-      appEventBus.emit("app:navigateChat", { conversationId });
-    } catch (error) {
-      console.warn("practice discussion skipped:", error);
-    }
-  },
-
-  async decomposeHub(node) {
-    const settings = useSettingsStore.getState();
-    if (!settings.featureSwitches.compareProfileBuild) return;
-    if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ buildNote: i18next.t("palace:compare.buildNeedsNetwork") });
-      return;
-    }
-    const profileId = get().selectedProfileId;
-    if (profileId === null) return;
-    set({ decomposingHub: true, buildNote: null });
-    const outcome = await runHubDecomposition(settings.apiConfig, {
-      profileId,
-      hubItemId: node.key,
-      topic: node.label,
-      mainland: settings.mainlandNetwork,
-    });
-    if (outcome.ok) {
-      const dropped =
-        outcome.droppedCount > 0
-          ? i18next.t("palace:compare.buildDropped", { count: outcome.droppedCount })
-          : "";
-      const tree = await computeComparisonTree(profileId);
-      set({
-        decomposingHub: false,
-        buildNote: `${outcome.costLine}${dropped}`,
-        ...(get().selectedProfileId === profileId ? { tree } : {}),
-      });
-    } else {
-      const cost = outcome.costLine === null ? "" : `；${outcome.costLine}`;
-      set({ decomposingHub: false, buildNote: `${outcome.reason}${cost}` });
-    }
-  },
-
-  async generateGoalFromProfile() {
-    const settings = useSettingsStore.getState();
-    if (!settings.networkEnabled || settings.apiConfig === null) {
-      set({ goalNote: i18next.t("palace:compare.goalNeedsNetwork") });
-      return;
-    }
-    const selected = get().selectedProfileId;
-    const profile = get().profiles.find((candidate) => candidate.id === selected);
-    const tree = get().tree;
-    if (selected === null || profile === undefined || tree === null) return;
-    set({ generatingGoal: true, goalNote: null });
-    try {
-      // Evidence-grounded goal text (spec 026 §3): the profile's own leaf list rides along,
-      // so decomposition selects from cited material instead of inventing.
-      const leafLabels: string[] = [];
-      const walk = (node: OverlapNode): void => {
-        if (node.isLeaf && (node.kind === "knowledge" || node.kind === "tool")) {
-          leafLabels.push(node.label);
-        }
-        for (const child of node.children) walk(child);
-      };
-      walk(tree);
-      // Stored text: the title is written to the goal row and the text goes to the model, so
-      // neither may carry t()'s bidirectional isolates (see i18n/storedText.ts).
-      const goalTitle = asStoredText(
-        i18next.t("palace:compare.goalTitle", { profile: profile.title }),
-      );
-      const goalText = asStoredText(
-        i18next.t("palace:compare.goalText", {
-          title: goalTitle,
-          profile: profile.title,
-          leaves: leafLabels.slice(0, 60).join(i18next.t("common:list.separator")),
-        }),
-      );
-      const planner = usePlannerStore.getState();
-      const mapping = await requestGoalMapping(
-        settings.apiConfig,
-        goalText,
-        planner.nodes.map((node) => node.label),
-      );
-      const repos = await getRepos();
-      await persistCalibratedGoal(repos, goalTitle, mapping, planner.nodes);
-      await planner.recompute();
-      set({
-        generatingGoal: false,
-        goalNote: i18next.t("palace:compare.goalCreated"),
-      });
-    } catch (error) {
-      console.warn("goal generation from profile skipped:", error);
-      set({ generatingGoal: false, goalNote: i18next.t("palace:compare.goalFailed") });
-    }
-  },
+  ...createCompareSelectionActions(set, get),
+  ...createCompareSearchActions(set, get),
 }));

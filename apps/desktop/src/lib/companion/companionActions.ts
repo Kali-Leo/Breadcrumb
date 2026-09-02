@@ -1,10 +1,10 @@
 /**
  * Purpose: companion cast desktop actions (spec 037) — card lookup, opening or continuing a
- * companion chat, the daily helper's own opening message, seeding the teach script for a
- * conversation, and the companion chat system prompt (Leo 2026-08-15: the invitation lives
- * in the chat like any message; replying starts the teach-back there).
- * Side effects: DB writes on openCompanionConversation / startHelperConversation /
- * appendHelperThanks / seedTeachScriptForConversation.
+ * companion chat, seeding the teach script for a conversation, and the companion chat system
+ * prompt (Leo 2026-08-15: the invitation lives in the chat like any message; replying starts
+ * the teach-back there). The daily helper's own conversation lifecycle lives in
+ * companionHelperConversation.ts and is re-exported here so existing importers keep working.
+ * Side effects: DB writes on openCompanionConversation / seedTeachScriptForConversation.
  * Main exports: COMPANION_IDS, COMPANION_DESKTOP_COPY, helperInvitation, helperThanks,
  * getCompanionCardById, openCompanionConversation, startHelperConversation,
  * appendHelperThanks, seedTeachScriptForConversation, buildCompanionChatSystemPrompt.
@@ -18,16 +18,19 @@ import {
   SCRIPT_PROMPT,
   ScriptResultSchema,
 } from "@breadcrumb/feature-companion";
-import i18next from "i18next";
-import { asStoredText } from "../../i18n/storedText";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { recordMeteredCall } from "../billing/metering";
-import { newestLeafId } from "../chat/messageTree";
 import { getRepos } from "../platform/db";
 import { recordAiFailure } from "../platform/failureLog";
 import { llmConfigFrom } from "../platform/llmConfig";
 import { newId, nowIso } from "../platform/time";
-import { teachConversationTitle } from "./teachActions";
+
+export {
+  appendHelperThanks,
+  helperInvitation,
+  helperThanks,
+  startHelperConversation,
+} from "./companionHelperConversation";
 
 /** The cast is fixed (spec 037 — three roles, never interchangeable). */
 export const COMPANION_IDS = ["shichimi", "pepper", "cumin"] as const;
@@ -83,68 +86,6 @@ export async function openCompanionConversation(companionId: string): Promise<st
     parent_id: null,
   });
   return conversationId;
-}
-
-/** The helper's own chat messages, composed locally with zero LLM calls and written into the
- * conversation — so, like the teach opener, they are rendered here at creation time rather
- * than at display time, and go through asStoredText because they become database rows and
- * part of every prompt built from that conversation. */
-export function helperInvitation(topic: string): string {
-  return asStoredText(i18next.t("chat:companion.helperInvitation", { topic }));
-}
-
-export function helperThanks(topic: string): string {
-  return asStoredText(i18next.t("chat:companion.helperThanks", { topic }));
-}
-
-/** Creates a daily helper's conversation (spec 050 §9): kind 'teach' so the whole proven
- * teach-back pipeline (student prompt from the title's topic, quality judgment, metering)
- * applies untouched; companion_id links it to its roster row. The opener is the helper's
- * plain ask-for-help message. Returns the existing conversation when one already exists. */
-export async function startHelperConversation(helperId: string, topic: string): Promise<string> {
-  const repos = await getRepos();
-  const existing = await repos.conversations.findLatestByCompanion(helperId, "teach");
-  if (existing !== null) return existing.id;
-  const conversationId = newId();
-  const createdAt = nowIso();
-  await repos.conversations.create({
-    id: conversationId,
-    title: teachConversationTitle(topic),
-    created_at: createdAt,
-    updated_at: createdAt,
-    kind: "teach",
-    companion_id: helperId,
-  });
-  await repos.messages.append({
-    id: newId(),
-    conversation_id: conversationId,
-    role: "assistant",
-    content: helperInvitation(topic),
-    created_at: createdAt,
-    teaching_mode: null,
-    parent_id: null,
-  });
-  return conversationId;
-}
-
-/** The helper's goodbye once its concept is confirmed (or the day's help is done) — after
- * this the roster row resolves and the character leaves (spec 050 §9). */
-export async function appendHelperThanks(conversationId: string, topic: string): Promise<void> {
-  const repos = await getRepos();
-  const allMessages = await repos.messages.listByConversation(conversationId);
-  const thanks = {
-    id: newId(),
-    conversation_id: conversationId,
-    role: "assistant" as const,
-    content: helperThanks(topic),
-    created_at: nowIso(),
-    teaching_mode: null,
-    parent_id: newestLeafId(allMessages),
-  };
-  await repos.messages.append(thanks);
-  await repos.conversations.touch(conversationId, thanks.created_at);
-  const { useChatStore } = await import("../../stores/chatStore");
-  useChatStore.getState().noteExternalMessage(conversationId, thanks);
 }
 
 /** Generates the teach-back script and seeds this conversation's knowledge state (spec 037's

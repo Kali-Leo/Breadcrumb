@@ -9,7 +9,13 @@
  */
 import type { SqlClient } from "@breadcrumb/core-db";
 import type { CopyMessage } from "@breadcrumb/core-i18n";
+import { dateKeyRange, dateKeyToLocalDate, toLocalDateKey } from "@breadcrumb/core-time";
 import type { StatCall } from "./taskSchema";
+
+/** The day-cutting rule, under this module's name. It is @breadcrumb/core-time's, shared with
+ * the feedback lab's heatmap and the trail's daily summary (2026-09-02 — the three used to
+ * hold byte-identical copies kept in sync by comments pointing at each other). */
+export { toLocalDateKey as localDateKey };
 
 const DAILY_METRIC_TABLE: Record<Extract<StatCall, { fn: "correlation" }>["xMetric"], string> = {
   daily_encounters: "node_sightings",
@@ -36,43 +42,16 @@ export async function fetchDailyCounts(
   );
 }
 
-/** Local calendar date key for an ISO instant, matching the feedback lab's day-cutting rule
- * (activity.ts) — days are cut by the machine's local timezone, not UTC. */
-export function localDateKey(iso: string): string {
-  const instant = new Date(iso);
-  const year = instant.getFullYear();
-  const month = String(instant.getMonth() + 1).padStart(2, "0");
-  const day = String(instant.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-/** Adds (or subtracts) whole days to a local date key. */
-function shiftDateKey(dateKey: string, deltaDays: number): string {
-  const [year, month, day] = dateKey.split("-").map(Number) as [number, number, number];
-  const shifted = new Date(year, month - 1, day);
-  shifted.setDate(shifted.getDate() + deltaDays);
-  const shiftedYear = shifted.getFullYear();
-  const shiftedMonth = String(shifted.getMonth() + 1).padStart(2, "0");
-  const shiftedDay = String(shifted.getDate()).padStart(2, "0");
-  return `${shiftedYear}-${shiftedMonth}-${shiftedDay}`;
-}
-
 /** Full local-day key sequence from (now - windowDays + 1) to now inclusive. */
 export function buildDayKeys(windowDays: number, nowIso: string): string[] {
-  const todayKey = localDateKey(nowIso);
-  const keys: string[] = [];
-  for (let offset = windowDays - 1; offset >= 0; offset -= 1) {
-    keys.push(shiftDateKey(todayKey, -offset));
-  }
-  return keys;
+  return dateKeyRange(windowDays, nowIso);
 }
 
 /** Start-of-local-day ISO instant for the earliest day in a windowDays range — the SQL lower
  * bound for a "last N days" query. */
 export function windowStartIso(windowDays: number, nowIso: string): string {
-  const earliestKey = buildDayKeys(windowDays, nowIso)[0] ?? localDateKey(nowIso);
-  const [year, month, day] = earliestKey.split("-").map(Number) as [number, number, number];
-  return new Date(year, month - 1, day, 0, 0, 0, 0).toISOString();
+  const earliestKey = buildDayKeys(windowDays, nowIso)[0] ?? toLocalDateKey(nowIso);
+  return dateKeyToLocalDate(earliestKey).toISOString();
 }
 
 /** Counts timestamps into the given local-day buckets, in day-key order. */
@@ -82,7 +61,7 @@ export function countsByLocalDay(
 ): number[] {
   const countByDate = new Map<string, number>();
   for (const iso of timestampsIso) {
-    const key = localDateKey(iso);
+    const key = toLocalDateKey(iso);
     countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
   }
   return dayKeys.map((key) => countByDate.get(key) ?? 0);

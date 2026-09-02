@@ -14,8 +14,10 @@
  *
  * Main exports: SpotlightTour, TourStep.
  */
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { cardPosition, type SpotlightPlace } from "./spotlightPlacement";
+import { useSpotlightPosition } from "./useSpotlightPosition";
 
 export interface TourStep {
   /** Matches a `data-tour` attribute on the element to point at. Omit for a centred step. */
@@ -25,77 +27,7 @@ export interface TourStep {
   /** Locale key suffix under `onboarding.tour.` — `<id>Title` and `<id>Body`. */
   id: string;
   /** Which side of the target to put the card on. Falls back when it would go off-screen. */
-  place?: "top" | "bottom" | "start" | "end";
-}
-
-interface Rect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
-/** Breathing room between the highlighted element and the hole's edge. */
-const PADDING = 8;
-/** The card's fixed width — narrow enough to sit beside a sidebar button. */
-const CARD_WIDTH = 320;
-/** The target may not exist the instant a view is switched to — the map mounts a Pixi canvas
- * and generates terrain first. Poll rather than guessing one delay: a single timeout is either
- * too short on a slow machine or a needless wait on a fast one. */
-const POLL_MS = 120;
-const POLL_LIMIT = 24;
-
-function measure(target: string | undefined): Rect | null {
-  if (target === undefined) return null;
-  const element = document.querySelector(`[data-tour="${target}"]`);
-  if (element === null) return null;
-  const box = element.getBoundingClientRect();
-  if (box.width === 0 && box.height === 0) return null;
-  return {
-    top: box.top - PADDING,
-    left: box.left - PADDING,
-    width: box.width + PADDING * 2,
-    height: box.height + PADDING * 2,
-  };
-}
-
-/** Where the card goes: beside the hole if it fits, otherwise wherever it does. */
-function cardPosition(rect: Rect | null, place: TourStep["place"]): React.CSSProperties {
-  if (rect === null) {
-    return { top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: CARD_WIDTH };
-  }
-  const gap = 14;
-  const { innerWidth, innerHeight } = window;
-  const preferred = place ?? "bottom";
-
-  if (preferred === "end" && rect.left + rect.width + gap + CARD_WIDTH < innerWidth) {
-    return {
-      top: Math.min(rect.top, innerHeight - 260),
-      left: rect.left + rect.width + gap,
-      width: CARD_WIDTH,
-    };
-  }
-  if (preferred === "start" && rect.left - gap - CARD_WIDTH > 0) {
-    return {
-      top: Math.min(rect.top, innerHeight - 260),
-      left: rect.left - gap - CARD_WIDTH,
-      width: CARD_WIDTH,
-    };
-  }
-  if (preferred === "top" && rect.top - gap > 220) {
-    return {
-      top: rect.top - gap - 200,
-      left: Math.min(Math.max(rect.left, gap), innerWidth - CARD_WIDTH - gap),
-      width: CARD_WIDTH,
-    };
-  }
-  // Bottom, and the fallback for everything that did not fit.
-  const below = rect.top + rect.height + gap;
-  return {
-    top: below + 220 < innerHeight ? below : Math.max(gap, rect.top - gap - 200),
-    left: Math.min(Math.max(rect.left, gap), innerWidth - CARD_WIDTH - gap),
-    width: CARD_WIDTH,
-  };
+  place?: SpotlightPlace;
 }
 
 interface SpotlightTourProps {
@@ -108,8 +40,6 @@ interface SpotlightTourProps {
 export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProps) {
   const { t } = useTranslation("onboarding");
   const [index, setIndex] = useState(0);
-  const [rect, setRect] = useState<Rect | null>(null);
-  const settleTimer = useRef<number | null>(null);
 
   const step = steps[index];
   const isLast = index === steps.length - 1;
@@ -119,32 +49,7 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
     if (step?.view !== undefined) onNavigate(step.view);
   }, [step?.view, onNavigate]);
 
-  const remeasure = useCallback(() => setRect(measure(step?.target)), [step?.target]);
-
-  useLayoutEffect(() => {
-    setRect(null);
-    let attempts = 0;
-    const tick = () => {
-      const found = measure(step?.target);
-      setRect(found);
-      attempts += 1;
-      // Stop as soon as it is there. Giving up leaves the card centred and the step still
-      // readable — a view that never rendered (no WebGL for the map, say) must not take the
-      // tour down with it.
-      if (found === null && attempts < POLL_LIMIT) {
-        settleTimer.current = window.setTimeout(tick, POLL_MS);
-      }
-    };
-    tick();
-    return () => {
-      if (settleTimer.current !== null) window.clearTimeout(settleTimer.current);
-    };
-  }, [step?.target]);
-
-  useEffect(() => {
-    window.addEventListener("resize", remeasure);
-    return () => window.removeEventListener("resize", remeasure);
-  }, [remeasure]);
+  const rect = useSpotlightPosition(step?.target);
 
   // Escape leaves. A tour nobody can get out of is worse than no tour.
   useEffect(() => {

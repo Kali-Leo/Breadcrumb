@@ -3,10 +3,14 @@
  * (multilingual-e5-small via fastembed) — hashes character bigrams of a text into a fixed
  * L2-normalized vector, so rankCandidatePairs' cosine-similarity path is exercisable in the
  * harness without ONNX or network access. Divergence from production is deliberate (spec
- * 013 T1) and documented here rather than in the runner.
+ * 013 T1) and documented here rather than in the runner. The hash and the normalization are
+ * the shared core primitives (2026-09-02) — core-vectors' l2Normalize keeps this module's
+ * "a zero vector comes back as a zero vector" rule, which packVectors deliberately does not.
  * Main exports: computeSyntheticEmbedding, computeSyntheticNodeEmbedding,
  * SYNTHETIC_EMBEDDING_DIMENSIONS, SYNTHETIC_EMBEDDING_MODEL.
  */
+import { fnv1a32 } from "@breadcrumb/core-random";
+import { l2Normalize } from "@breadcrumb/core-vectors";
 
 export const SYNTHETIC_EMBEDDING_DIMENSIONS = 64;
 
@@ -19,7 +23,7 @@ export const SYNTHETIC_EMBEDDING_MODEL = "simlab-synthetic-bigram-hash";
 export function computeSyntheticEmbedding(text: string): number[] {
   const vector = new Array<number>(SYNTHETIC_EMBEDDING_DIMENSIONS).fill(0);
   for (const bigram of extractBigrams(text)) {
-    const hash = fnv1aHash(bigram);
+    const hash = fnv1a32(bigram);
     const index = hash % SYNTHETIC_EMBEDDING_DIMENSIONS;
     // The hash's low bit picks a sign so bigram mass spreads across +/- instead of every
     // text trending toward the same all-positive direction.
@@ -43,21 +47,4 @@ function extractBigrams(text: string): string[] {
     bigrams.push(`${chars[index]}${chars[index + 1]}`);
   }
   return bigrams;
-}
-
-/** FNV-1a, 32-bit — a small, well-known, dependency-free string hash; not cryptographic,
- * just needs to spread bigrams evenly across the vector's dimensions. */
-function fnv1aHash(text: string): number {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
-function l2Normalize(vector: readonly number[]): number[] {
-  const norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
-  if (norm === 0) return [...vector];
-  return vector.map((value) => value / norm);
 }

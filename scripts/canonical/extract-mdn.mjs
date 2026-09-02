@@ -11,6 +11,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
+import { normalize } from "./shared.mjs";
 
 const [, , outPath] = process.argv;
 if (!outPath) {
@@ -52,10 +53,6 @@ const MODULES = [
   ["ext-css-tooling", `${BASE}extensions/css-tooling/`],
   ["ext-other-tooling", `${BASE}extensions/other-tooling-types/`],
 ];
-
-function normalize(text) {
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
-}
 
 function stripHtml(html) {
   return html

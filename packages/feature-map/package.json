@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-random": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
     "d3-delaunay": "^6.0.4",
     "graphology": "^0.26.0",

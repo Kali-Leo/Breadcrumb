@@ -4,7 +4,8 @@
  * missing-embedding backfill queue.
  * Main exports: createNodeEmbeddingsRepo.
  */
-import type { KnowledgeNodeRow, NodeEmbeddingRow, SqlClient } from "./types";
+import type { KnowledgeNodeRow, NodeEmbeddingRow } from "./knowledgeTypes";
+import type { SqlClient } from "./types";
 
 export function createNodeEmbeddingsRepo(sql: SqlClient) {
   return {

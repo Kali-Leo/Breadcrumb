@@ -4,10 +4,11 @@
  * written before the migration are backfilled rather than left NULL.
  */
 import { describe, expect, it } from "vitest";
-import { createNodeSightingsRepo } from "./knowledgeRepositories";
+import type { NodeSightingGrade, NodeSightingRow } from "./knowledgeTypes";
 import { runMigrations } from "./migrations";
 import { openDatabaseMigratedThrough, openMigratedDatabase } from "./realSqliteTestFixture";
-import type { NodeSightingGrade, NodeSightingRow, SqlClient } from "./types";
+import { createNodeSightingsRepo } from "./sightingsRepository";
+import type { SqlClient } from "./types";
 
 const CONVERSATION_ID = "c1";
 const NODE_ID = "n1";

@@ -3,7 +3,8 @@
  * 011) — LLM-observed interest signals and user self-report mastery claims.
  * Main exports: createInterestSignalsRepo, createMasteryClaimsRepo factories.
  */
-import type { InterestSignalRow, MasteryClaimRow, SqlClient } from "./types";
+import type { InterestSignalRow, MasteryClaimRow } from "./knowledgeTypes";
+import type { SqlClient } from "./types";
 
 export function createInterestSignalsRepo(sql: SqlClient) {
   return {

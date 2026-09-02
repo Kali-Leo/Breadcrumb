@@ -2,6 +2,7 @@
  * Purpose: unit tests for day-boundary math and the no-pressure, no-praise tone contract of
  * the summary prompt.
  */
+import { toLocalDateKey as coreDateKey } from "@breadcrumb/core-time";
 import { describe, expect, it } from "vitest";
 import { buildTrailSummaryMessages, localDateString, localDayRange } from "./index";
 
@@ -48,5 +49,16 @@ describe("buildTrailSummaryMessages", () => {
     const systemPrompt = buildTrailSummaryMessages([node])[0]?.content ?? "";
     expect(systemPrompt).toContain("禁止");
     expect(systemPrompt).toContain("不评价");
+  });
+});
+
+/** The trail's "yesterday" and the feedback heatmap's cells must name the same day — see the
+ * matching test in feature-feedback. */
+describe("day cutting agrees with @breadcrumb/core-time", () => {
+  it("gives the same key as core-time for every hour of a day", () => {
+    for (let hour = 0; hour < 24; hour += 1) {
+      const instant = new Date(2026, 6, 29, hour, 30);
+      expect(localDateString(instant)).toBe(coreDateKey(instant));
+    }
   });
 });

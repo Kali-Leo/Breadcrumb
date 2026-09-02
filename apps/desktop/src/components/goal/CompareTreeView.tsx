@@ -3,42 +3,21 @@
  * layout starting from ONE visible root (the profile itself, so the tree reads as a tree,
  * not a list), amber depth = overlap ratio with the ratio printed on every node, drag-to-pan
  * on the whole canvas, and auto-focus scrolling that glides the newly expanded children into
- * view. Main exports: CompareTreeView.
+ * view. Layout math lives in compareTreeLayout.ts, panning in useDragPan, one box in
+ * CompareTreeNode. Main exports: CompareTreeView.
  */
 import type { OverlapNode } from "@breadcrumb/feature-compare";
-import { hierarchy, tree } from "d3-hierarchy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const NODE_WIDTH = 168;
-const NODE_HEIGHT = 34;
-const LEVEL_GAP = 216;
-const ROW_GAP = 44;
-const PADDING = 16;
-/** Pointer travel below this is a click on whatever is under the cursor, not a pan. */
-const DRAG_THRESHOLD_PX = 5;
-
-interface LayoutEntry {
-  node: OverlapNode;
-  hasHiddenChildren: boolean;
-  children?: LayoutEntry[];
-}
-
-/** White→amber-500 wash: 0% overlap is nearly paper, 100% is a confident amber. */
-function fillFor(ratio: number): string {
-  return `rgba(245, 158, 11, ${0.06 + 0.5 * ratio})`;
-}
-
-/**
- * Overlap as a percentage, without the two lies rounding tells at the ends: a sliver of
- * overlap must not read as "0%", and one item short of everything must not read as "100%".
- */
-function percentOf(ratio: number): string {
-  const percent = ratio * 100;
-  if (ratio > 0 && percent < 1) return "<1%";
-  if (ratio < 1 && percent > 99) return ">99%";
-  return `${Math.round(percent)}%`;
-}
+import { CompareTreeNode } from "./CompareTreeNode";
+import {
+  buildCompareTreeLayout,
+  type CompareTreePoint,
+  NODE_HEIGHT,
+  NODE_WIDTH,
+  PADDING,
+} from "./compareTreeLayout";
+import { useDragPan } from "./useDragPan";
 
 export function CompareTreeView({
   root,
@@ -54,35 +33,10 @@ export function CompareTreeView({
   onSelectDetail(key: string): void;
 }) {
   const { t } = useTranslation("palace");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{
-    x: number;
-    y: number;
-    left: number;
-    top: number;
-    moved: boolean;
-  } | null>(null);
-  const suppressClickRef = useRef(false);
+  const { containerRef, dragRef, suppressClickRef, handlers } = useDragPan();
   const [focusKey, setFocusKey] = useState<string | null>(null);
 
-  const layout = useMemo(() => {
-    // Only expanded nodes contribute children — the layout IS the collapse mechanism.
-    function toEntry(node: OverlapNode): LayoutEntry {
-      const expanded = expandedKeys.has(node.key);
-      return {
-        node,
-        hasHiddenChildren: !expanded && node.children.length > 0,
-        children: expanded ? node.children.map(toEntry) : undefined,
-      };
-    }
-    const rootEntry = hierarchy<LayoutEntry>(toEntry(root), (entry) => entry.children);
-    tree<LayoutEntry>().nodeSize([ROW_GAP, LEVEL_GAP])(rootEntry);
-    const visible = rootEntry.descendants();
-    const minX = Math.min(...visible.map((point) => point.x ?? 0));
-    const maxX = Math.max(...visible.map((point) => point.x ?? 0));
-    const maxY = Math.max(...visible.map((point) => point.y ?? 0));
-    return { visible, minX, maxX, maxY };
-  }, [root, expandedKeys]);
+  const layout = useMemo(() => buildCompareTreeLayout(root, expandedKeys), [root, expandedKeys]);
 
   const width = layout.maxY + NODE_WIDTH + PADDING * 2;
   const height = layout.maxX - layout.minX + NODE_HEIGHT + PADDING * 2;
@@ -125,7 +79,7 @@ export function CompareTreeView({
   }, [layout]);
 
   /** Effective drawing position: newborn nodes render at their parent for the first frame. */
-  function positionOf(point: (typeof layout.visible)[number]): { x: number; y: number } {
+  function positionOf(point: CompareTreePoint): { x: number; y: number } {
     const override = bornOverrides.get(point.data.node.key);
     return override === undefined
       ? { x: point.y ?? 0, y: point.x ?? 0 }
@@ -143,7 +97,7 @@ export function CompareTreeView({
       top: Math.max(0, (point.x ?? 0) + offsetY + NODE_HEIGHT / 2 - container.clientHeight / 2),
       behavior: "smooth",
     });
-  }, [layout, focusKey, offsetY]);
+  }, [layout, focusKey, offsetY, containerRef]);
 
   function handleNodeActivate(node: OverlapNode) {
     if (suppressClickRef.current) return;
@@ -166,46 +120,10 @@ export function CompareTreeView({
         userSelect: "none",
         WebkitUserSelect: "none",
       }}
-      onPointerDown={(event) => {
-        const container = containerRef.current;
-        if (container === null) return;
-        dragRef.current = {
-          x: event.clientX,
-          y: event.clientY,
-          left: container.scrollLeft,
-          top: container.scrollTop,
-          moved: false,
-        };
-      }}
-      onPointerMove={(event) => {
-        const drag = dragRef.current;
-        const container = containerRef.current;
-        if (drag === null || container === null) return;
-        const dx = event.clientX - drag.x;
-        const dy = event.clientY - drag.y;
-        if (!drag.moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD_PX) return;
-        if (!drag.moved) {
-          // Capture only once the gesture is definitely a pan (plain clicks keep their
-          // normal click flow) so native selection-drag can't steal the move stream.
-          container.setPointerCapture(event.pointerId);
-        }
-        drag.moved = true;
-        document.getSelection()?.removeAllRanges();
-        container.scrollLeft = drag.left - dx;
-        container.scrollTop = drag.top - dy;
-      }}
-      onPointerUp={(event) => {
-        containerRef.current?.releasePointerCapture(event.pointerId);
-        suppressClickRef.current = dragRef.current?.moved ?? false;
-        dragRef.current = null;
-        // Let the click event (which fires right after pointerup) see the flag, then clear.
-        setTimeout(() => {
-          suppressClickRef.current = false;
-        }, 0);
-      }}
-      onPointerLeave={() => {
-        dragRef.current = null;
-      }}
+      onPointerDown={handlers.onPointerDown}
+      onPointerMove={handlers.onPointerMove}
+      onPointerUp={handlers.onPointerUp}
+      onPointerLeave={handlers.onPointerLeave}
     >
       <svg
         width={Math.max(width, 320)}
@@ -241,59 +159,16 @@ export function CompareTreeView({
         {layout.visible.map((point) => {
           const node = point.data.node;
           const position = positionOf(point);
-          const x = position.x + PADDING;
-          const y = position.y + offsetY;
-          const selected = node.key === detailKey;
           return (
-            // biome-ignore lint/a11y/useSemanticElements: SVG nodes cannot be <button> elements
-            <g
+            <CompareTreeNode
               key={node.key}
-              role="button"
-              tabIndex={0}
-              aria-label={
-                (node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? t("compare.nodeNotDecomposed", { label: node.label })
-                  : t("compare.nodeOverlap", {
-                      label: node.label,
-                      percent: percentOf(node.ratio),
-                    })
-              }
-              style={{
-                transform: `translate(${x}px, ${y}px)`,
-                transition: "transform 0.25s ease",
-                cursor: "pointer",
-              }}
-              onClick={() => handleNodeActivate(node)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") handleNodeActivate(node);
-              }}
-            >
-              <rect
-                width={NODE_WIDTH}
-                height={NODE_HEIGHT}
-                rx={8}
-                fill={fillFor(node.ratio)}
-                stroke={selected ? "#f59e0b" : "#e7e5e4"}
-                strokeWidth={selected ? 1.6 : 1}
-              />
-              <text x={10} y={21} fontSize={12} fill="#44403c">
-                {node.label.length > 11 ? `${node.label.slice(0, 10)}…` : node.label}
-                <title>{node.label}</title>
-              </text>
-              <text
-                x={NODE_WIDTH - 10}
-                y={21}
-                fontSize={11}
-                fill="#78716c"
-                textAnchor="end"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-              >
-                {(node.kind === "hub" || node.kind === "tool") && node.isLeaf
-                  ? t("compare.notDecomposedShort")
-                  : percentOf(node.ratio)}
-                {point.data.hasHiddenChildren ? " ▸" : ""}
-              </text>
-            </g>
+              node={node}
+              x={position.x + PADDING}
+              y={position.y + offsetY}
+              selected={node.key === detailKey}
+              hasHiddenChildren={point.data.hasHiddenChildren}
+              onActivate={handleNodeActivate}
+            />
           );
         })}
       </svg>

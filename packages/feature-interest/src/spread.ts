@@ -1,13 +1,14 @@
 /**
  * Purpose: embedding-similarity neighborhood diffusion — a node with no direct interest
  * signal but close (by cosine similarity) to interested nodes inherits some of that
- * interest. Pure math, no DB, no I/O. Local cosine helper per 行为局部性 > DRY (mirrors
- * feature-graph/src/similarity.ts without depending on that package).
+ * interest. Pure math, no DB, no I/O. Cosine comes from @breadcrumb/core-vectors (2026-09-02:
+ * the private copy this module kept was one of six, and they had already drifted).
  * Main exports: spreadInterest, DEFAULT_SPREAD_FACTOR, SPREAD_SIMILARITY_FLOOR,
  * SPREAD_NEIGHBOR_TOP_K.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
+import { cosineSimilarity } from "@breadcrumb/core-vectors";
 
 /** How much of the similarity-weighted neighborhood average bleeds into a node's own
  * score; 0 = no diffusion, 1 = a node with no signal fully inherits its neighbors'. */
@@ -83,20 +84,4 @@ function weightedNeighborAverage(
     weightTotal += neighbor.similarity;
   }
   return weightTotal > 0 ? weightedSum / weightTotal : 0;
-}
-
-function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dotProduct += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }

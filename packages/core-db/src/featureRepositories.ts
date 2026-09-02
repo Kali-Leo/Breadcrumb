@@ -7,9 +7,9 @@ import type {
   FactcheckClaimRow,
   FactcheckRunRow,
   MapPlaceNameRow,
-  SqlClient,
   TrailSummaryRow,
-} from "./types";
+} from "./featureTypes";
+import type { SqlClient } from "./types";
 
 export function createMapPlaceNamesRepo(sql: SqlClient) {
   return {

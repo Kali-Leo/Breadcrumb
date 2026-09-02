@@ -1,27 +1,23 @@
 /**
  * Purpose: kNN cosine-similarity graph construction and singleton-community merging for topic
  * discovery — the graphology plumbing around Louvain. Gates are RELATIVE to each node's own
- * similarity baseline: e5-family embeddings squeeze all cosines into a narrow high band
+ * similarity baseline (core-vectors' relativeGate, the same one the dedup tier and the edge
+ * judge use): e5-family embeddings squeeze all cosines into a narrow high band
  * (observed 0.77–0.95), so absolute thresholds pass everything and flat-profile isolates
  * (e.g. a lone humanities note) get lumped into the nearest big cluster.
  * Main exports: buildKnnGraph, mergeSingletonCommunities.
  */
-import { packVectors, partnersOf, similarityLandscape } from "@breadcrumb/core-vectors";
+import type { SimilarityBaseline } from "@breadcrumb/core-vectors";
+import {
+  packVectors,
+  partnersOf,
+  relativeGate,
+  similarityLandscape,
+} from "@breadcrumb/core-vectors";
 import Graph from "graphology";
 import { computeCentroid, cosineSimilarity } from "./topicVectors";
 
 const K_NEAREST = 5;
-/** An edge must clear μ + this fraction of (max − μ) for BOTH endpoints' baselines. */
-const RELATIVE_GATE = 0.5;
-
-interface NodeBaseline {
-  mean: number;
-  best: number;
-}
-
-function gateOf(baseline: NodeBaseline): number {
-  return baseline.mean + RELATIVE_GATE * (baseline.best - baseline.mean);
-}
 
 export function buildKnnGraph(
   embeddedIds: readonly string[],
@@ -36,14 +32,14 @@ export function buildKnnGraph(
   );
   const rowById = new Map(packed.ids.map((id, row) => [id, row]));
   const landscape = similarityLandscape(packed);
-  const baselines = new Map<string, NodeBaseline>(
+  const baselines = new Map<string, SimilarityBaseline>(
     packed.ids.map((id, row) => [id, landscape[row] ?? { mean: 0, best: 0 }]),
   );
   // The room's average closeness: an isolate is a node whose very best match sits below it.
   let baselineSum = 0;
   for (const baseline of baselines.values()) baselineSum += baseline.mean;
   const globalMean = baselines.size === 0 ? 0 : baselineSum / baselines.size;
-  const isIsolate = (baseline: NodeBaseline): boolean => baseline.best < globalMean;
+  const isIsolate = (baseline: SimilarityBaseline): boolean => baseline.best < globalMean;
   for (const id of embeddedIds) {
     const row = rowById.get(id);
     const baseline = baselines.get(id);
@@ -58,8 +54,8 @@ export function buildKnnGraph(
         // never adopts a drifter, and degenerate tiny inputs can't fake an edge at 0.
         return (
           entry.similarity > globalMean &&
-          entry.similarity >= gateOf(baseline) &&
-          entry.similarity >= gateOf(otherBaseline)
+          entry.similarity >= relativeGate(baseline) &&
+          entry.similarity >= relativeGate(otherBaseline)
         );
       })
       .sort((a, b) => b.similarity - a.similarity)

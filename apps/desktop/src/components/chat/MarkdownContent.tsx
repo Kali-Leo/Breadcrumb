@@ -6,15 +6,14 @@
  * itself lives in MarkdownSpans.tsx.
  * Main exports: MarkdownContent.
  */
-import katex from "katex";
-import "katex/dist/katex.min.css";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Parent } from "mdast";
-import { memo, type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+import { MarkdownLink } from "./MarkdownLink";
+import { renderMath } from "./MarkdownMath";
 import {
   type AnyNode,
   type DiglotContext,
@@ -25,51 +24,6 @@ import {
 import { MermaidBlock } from "./MermaidBlock";
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
-
-/** KaTeX typesetting is the most expensive thing this walk does, and a formula's HTML depends
- * only on (value, displayMode) — both primitives, so a re-render of the surrounding message
- * reuses the previous output instead of re-running renderToString (design audit 2026-08-28,
- * 数据层与性能 #3). A memoized component rather than a useMemo because renderNode is a plain
- * recursive function, not a hook context. */
-/** Schemes a link in model output may carry. Anything else renders as inert text rather than
- * a clickable target. */
-const SAFE_LINK_SCHEMES = new Set(["http:", "https:", "mailto:"]);
-
-function isSafeHref(url: string | undefined): url is string {
-  if (url === undefined) return false;
-  try {
-    return SAFE_LINK_SCHEMES.has(new URL(url, "https://example.invalid").protocol);
-  } catch {
-    return false;
-  }
-}
-
-const MathSpan = memo(function MathSpan(props: { value: string; displayMode: boolean }) {
-  const { value, displayMode } = props;
-  const html = useMemo(
-    () =>
-      katex.renderToString(value, {
-        displayMode,
-        throwOnError: false,
-        // trust defaults to false, which is what refuses \href and \htmlData in model math.
-        // maxSize does not: without it a single \rule{9999em}{9999em} from the model is a
-        // layout bomb. maxExpand's default of 1000 already bounds macro expansion.
-        maxSize: 20,
-      }),
-    [value, displayMode],
-  );
-  return (
-    <span
-      className={displayMode ? "block overflow-x-auto py-1" : undefined}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output over model math
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
-});
-
-function renderMath(value: string, displayMode: boolean, key: string): ReactNode {
-  return <MathSpan key={key} value={value} displayMode={displayMode} />;
-}
 
 function renderChildren(
   node: AnyNode,
@@ -151,32 +105,12 @@ function renderNode(
           {children()}
         </blockquote>
       );
-    case "link": {
-      // The webview must never navigate to an address the model chose: this window has no
-      // address bar, so a page loaded in it is indistinguishable from the app itself. Hand it
-      // to the system browser, as every other outbound link does (FactcheckBadge) — https
-      // only, which is the whole of the opener capability's allow list, so an http:// or
-      // mailto: link looks the same and quietly does nothing. The scheme check stays: React
-      // refuses javascript: URLs, but one framework behaviour is a thin only-check.
-      const url = node.url;
-      return isSafeHref(url) ? (
-        <button
-          key={key}
-          type="button"
-          onClick={() => {
-            if (url.startsWith("https://")) void openUrl(url);
-          }}
-          className="inline text-start text-amber-700 underline"
-        >
+    case "link":
+      return (
+        <MarkdownLink key={key} url={node.url}>
           {children()}
-        </button>
-      ) : (
-        // An <a> with no href was not clickable either; the text keeps exactly its old look.
-        <span key={key} className="text-amber-700 underline">
-          {children()}
-        </span>
+        </MarkdownLink>
       );
-    }
     case "break":
       return <br key={key} />;
     case "thematicBreak":

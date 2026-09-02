@@ -1,7 +1,7 @@
 /**
  * Purpose: zustand store driving the experimental planner — recomputes frontier candidates
- * and, for a selected goal, its gap/coverage/recommended route by calling
- * computePlannerSnapshot with fresh mastery/interest data from repos. Side effect on import:
+ * and, for a selected goal, its gap/coverage/recommended route by running the recompute
+ * pipeline (plannerRecomputeRun) over fresh repo data. Side effect on import:
  * subscribes to knowledge:edgesUpdated, interest:updated, mastery:updated and
  * knowledge:nodesExtracted, recomputing on each — cheap and local, so dynamic replanning
  * falls out for free.
@@ -13,7 +13,6 @@ import type {
   KnowledgeNodeRow,
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
-import { BROWSING_TRUST_DEFAULT } from "@breadcrumb/feature-browsing-interest";
 import type { NodeInterestScore } from "@breadcrumb/feature-interest";
 import type {
   FrontierCandidate,
@@ -29,15 +28,9 @@ import {
   removeNodeFromGoal,
   requestGoalMapping,
 } from "../lib/planner/plannerGoalActions";
-import { computePlannerSnapshot } from "../lib/planner/plannerRecompute";
-import {
-  loadBrowsingAffinityByNode,
-  loadWatchedTitleRecords,
-} from "../lib/platform/browsingAffinity";
-import { computeBrowsingTrustRatio } from "../lib/platform/browsingTrustRatio";
+import { createPlannerRecompute } from "../lib/planner/plannerRecomputeRun";
 import { getRepos } from "../lib/platform/db";
 import { recordAiFailure } from "../lib/platform/failureLog";
-import { nowIso } from "../lib/platform/time";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { registerRecomputeSubscriptions } from "./plannerStoreEvents";
 import { useSettingsStore } from "./settingsStore";
@@ -81,12 +74,6 @@ interface PlannerState {
   skipGoalNode(nodeId: string): Promise<void>;
 }
 
-/** One extraction fires several bus events back-to-back; each used to launch its own
- * full-table recompute concurrently, last-write-wins. One in flight + one pending rerun
- * covers every burst. */
-let recomputeInFlight = false;
-let recomputePending = false;
-
 export const usePlannerStore = create<PlannerState>((set, get) => ({
   nodes: [],
   edges: [],
@@ -102,73 +89,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   coverageFraction: null,
   route: null,
 
-  async recompute() {
-    if (recomputeInFlight) {
-      recomputePending = true;
-      return;
-    }
-    recomputeInFlight = true;
-    try {
-      await runRecompute();
-    } finally {
-      recomputeInFlight = false;
-      if (recomputePending) {
-        recomputePending = false;
-        void get().recompute();
-      }
-    }
-
-    async function runRecompute(): Promise<void> {
-      const repos = await getRepos();
-      const [nodes, edges, sightings, claims, signals, embeddings, goals] = await Promise.all([
-        repos.knowledgeNodes.listAll(),
-        repos.knowledgeEdges.listAll(),
-        repos.nodeSightings.listAll(),
-        repos.masteryClaims.listAll(),
-        repos.interestSignals.listAll(),
-        repos.nodeEmbeddings.listAll(),
-        repos.goals.listAll(),
-      ]);
-
-      // Best-effort (spec 059): null when the interest service or embedding model is absent,
-      // and the planner then behaves exactly as it did before the bridge existed.
-      const browsingAffinityByNode = await loadBrowsingAffinityByNode(embeddings);
-
-      // One interest, one slider (spec 060 §5): the browsing weight rides the interest
-      // weight at the hindsight-validated trust ratio. With no browsing data the component
-      // carries no information, so the ratio is moot — skip the reconstruction.
-      const userWeights = useSettingsStore.getState().recommendationWeights;
-      const trustRatio =
-        browsingAffinityByNode === null
-          ? BROWSING_TRUST_DEFAULT
-          : computeBrowsingTrustRatio(
-              nodes,
-              sightings,
-              signals,
-              embeddings,
-              (await loadWatchedTitleRecords()) ?? [],
-            );
-      const frontierWeights = { ...userWeights, browsing: userWeights.interest * trustRatio };
-
-      const snapshot = computePlannerSnapshot(
-        nodes,
-        edges,
-        sightings,
-        claims,
-        signals,
-        embeddings,
-        goals,
-        get().selectedGoalId,
-        useSettingsStore.getState().learningMode === "ranked",
-        useSettingsStore.getState().routeParams,
-        nowIso(),
-        browsingAffinityByNode,
-        frontierWeights,
-      );
-
-      set({ nodes, edges, claims, goals, ...snapshot });
-    }
-  },
+  recompute: createPlannerRecompute(set, get),
 
   selectGoal(goalId) {
     const state = get();

@@ -8,9 +8,8 @@ import type {
   CanonicalConceptEmbeddingRow,
   CanonicalConceptRow,
   NodeConceptAnchorRow,
-  SqlClient,
-  SqlTransactionStatement,
-} from "./types";
+} from "./comparisonTypes";
+import type { SqlClient, SqlTransactionStatement } from "./types";
 
 const CONCEPT_UPSERT_SQL = `INSERT OR REPLACE INTO canonical_concepts
     (id, label, aliases_json, source_ref, created_at)

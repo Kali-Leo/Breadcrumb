@@ -2,26 +2,27 @@
  * Purpose: pure candidate-pair generation between new and existing knowledge nodes — cosine
  * similarity ranking (gated relative to each new node's own similarity landscape, same
  * pattern as feature-map's topicGraph.ts) when embeddings exist, plus a same-parent/
- * most-recent fallback when they don't. No DB, no I/O.
+ * most-recent fallback when they don't. No DB, no I/O. Cosine and the gate itself come from
+ * @breadcrumb/core-vectors, so this module and the four others that used to keep private
+ * copies can no longer drift apart (2026-09-02).
  * Main exports: rankCandidatePairs, fallbackCandidatePairs, CandidatePair,
  * DEFAULT_TOP_K_SIMILAR, DEFAULT_FALLBACK_RECENT_N.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
+import { cosineSimilarity, relativeGate, similarityBaseline } from "@breadcrumb/core-vectors";
 
 /** Absolute cost ceiling: however many candidates clear the relative gate below, never send
  * more than this many per new node to the edge-judge LLM. Not the primary cutoff anymore —
- * see RELATIVE_GATE — this only bounds the worst case (a node with many equally-strong
- * matches). */
+ * see the relative gate below — this only bounds the worst case (a node with many
+ * equally-strong matches). */
 export const DEFAULT_TOP_K_SIMILAR = 8;
 
-/** An existing node must clear μ + this fraction of (best − μ) of the new node's OWN
- * similarity landscape over the candidate pool to be offered to the edge-judge LLM — same
- * relative-gate pattern as feature-map/topicGraph.ts. A blind fixed top-3 truncates away a
- * true prerequisite phrased differently the moment 3 more-literal matches outrank it; gating
- * relative to the node's own mean/best keeps every candidate that is genuinely close to its
- * best match, not just the first few. */
-const RELATIVE_GATE = 0.5;
+/** An existing node must clear core-vectors' RELATIVE_GATE_FRACTION of the gap between the
+ * new node's mean and best similarity over the candidate pool to be offered to the edge-judge
+ * LLM. A blind fixed top-3 truncates away a true prerequisite phrased differently the moment 3
+ * more-literal matches outrank it; gating relative to the node's own mean/best keeps every
+ * candidate that is genuinely close to its best match, not just the first few. */
 
 /** Degraded-mode (no embeddings yet) fallback pool size: how many most-recently-created
  * existing nodes each new node gets paired against, alongside its tree siblings. */
@@ -40,23 +41,6 @@ export interface CandidatePair {
   existingNodeId: string;
   /** Cosine similarity when ranked by embeddings; absent for fallback-strategy pairs. */
   similarity?: number;
-}
-
-/** Relative-gate threshold over one node's own similarity landscape: mean + a fraction of
- * the gap up to its best match. Mirrors feature-map/topicGraph.ts's gateOf. Mean is clamped
- * to at most best: mean <= best always holds mathematically, but independently-rounded
- * floating-point sums can push the computed mean a hair above the computed best when many
- * candidates are near-identically similar — without the clamp the gate would then exceed
- * every candidate's similarity and reject the whole set. */
-function relativeGate(similarities: readonly number[]): number {
-  let sum = 0;
-  let best = 0;
-  for (const similarity of similarities) {
-    sum += similarity;
-    best = Math.max(best, similarity);
-  }
-  const mean = similarities.length === 0 ? 0 : Math.min(sum / similarities.length, best);
-  return mean + RELATIVE_GATE * (best - mean);
 }
 
 /** Existing nodes that clear the relative similarity gate for each new node, capped at
@@ -85,7 +69,7 @@ export function rankCandidatePairs(
       })
       .filter((entry): entry is { existingNodeId: string; similarity: number } => entry !== null);
     if (similarities.length === 0) continue;
-    const gate = relativeGate(similarities.map((entry) => entry.similarity));
+    const gate = relativeGate(similarityBaseline(similarities.map((entry) => entry.similarity)));
     const ranked = similarities
       .filter((entry) => entry.similarity >= gate)
       .sort((a, b) => b.similarity - a.similarity)
@@ -95,22 +79,6 @@ export function rankCandidatePairs(
     }
   }
   return pairs;
-}
-
-function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dotProduct += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 /** Degraded-mode candidate generation for when embeddings are unavailable: each new node

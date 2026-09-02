@@ -44,9 +44,18 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../../packages/core-llm
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../../packages/core-random
       '@breadcrumb/core-teaching':
         specifier: workspace:*
         version: link:../../packages/core-teaching
+      '@breadcrumb/core-text':
+        specifier: workspace:*
+        version: link:../../packages/core-text
+      '@breadcrumb/core-time':
+        specifier: workspace:*
+        version: link:../../packages/core-time
       '@breadcrumb/demo-seed':
         specifier: workspace:*
         version: link:../../packages/demo-seed
@@ -348,6 +357,15 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
 
+  packages/core-random:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+
   packages/core-teaching:
     devDependencies:
       typescript:
@@ -358,6 +376,15 @@ importers:
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/core-text:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.1.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0)
+
+  packages/core-time:
     devDependencies:
       typescript:
         specifier: ^5.9.0
@@ -390,6 +417,9 @@ importers:
 
   packages/feature-browsing-interest:
     dependencies:
+      '@breadcrumb/core-vectors':
+        specifier: workspace:*
+        version: link:../core-vectors
       zod:
         specifier: ^4.1.0
         version: 4.4.3
@@ -406,6 +436,9 @@ importers:
       '@breadcrumb/core-i18n':
         specifier: workspace:*
         version: link:../core-i18n
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../core-random
       '@breadcrumb/core-text':
         specifier: workspace:*
         version: link:../core-text
@@ -447,6 +480,12 @@ importers:
       '@breadcrumb/core-i18n':
         specifier: workspace:*
         version: link:../core-i18n
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../core-random
+      '@breadcrumb/core-vectors':
+        specifier: workspace:*
+        version: link:../core-vectors
       ts-fsrs:
         specifier: ^5.2.1
         version: 5.4.1
@@ -485,6 +524,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../core-random
       cheerio:
         specifier: ^1.0.0
         version: 1.2.0
@@ -507,6 +549,9 @@ importers:
       '@breadcrumb/core-i18n':
         specifier: workspace:*
         version: link:../core-i18n
+      '@breadcrumb/core-time':
+        specifier: workspace:*
+        version: link:../core-time
       '@breadcrumb/feature-diglot-weave':
         specifier: workspace:*
         version: link:../feature-diglot-weave
@@ -532,6 +577,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-vectors':
+        specifier: workspace:*
+        version: link:../core-vectors
       graphology:
         specifier: ^0.26.0
         version: 0.26.0(graphology-types@0.24.8)
@@ -560,6 +608,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-vectors':
+        specifier: workspace:*
+        version: link:../core-vectors
       zod:
         specifier: ^4.1.0
         version: 4.4.3
@@ -598,6 +649,9 @@ importers:
       '@breadcrumb/core-db':
         specifier: workspace:*
         version: link:../core-db
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../core-random
       '@breadcrumb/core-vectors':
         specifier: workspace:*
         version: link:../core-vectors
@@ -679,6 +733,9 @@ importers:
       '@breadcrumb/core-i18n':
         specifier: workspace:*
         version: link:../core-i18n
+      '@breadcrumb/core-time':
+        specifier: workspace:*
+        version: link:../core-time
       '@breadcrumb/feature-memory':
         specifier: workspace:*
         version: link:../feature-memory
@@ -704,6 +761,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-time':
+        specifier: workspace:*
+        version: link:../core-time
       zod:
         specifier: ^4.1.0
         version: 4.4.3
@@ -723,9 +783,15 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-random':
+        specifier: workspace:*
+        version: link:../core-random
       '@breadcrumb/core-teaching':
         specifier: workspace:*
         version: link:../core-teaching
+      '@breadcrumb/core-vectors':
+        specifier: workspace:*
+        version: link:../core-vectors
       '@breadcrumb/demo-seed':
         specifier: workspace:*
         version: link:../demo-seed

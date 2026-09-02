@@ -1,35 +1,14 @@
 /**
- * Purpose: shared deterministic randomness — a seeded mulberry32 PRNG plus small range
- * helpers, used by persona perturbation and the journey runner's action/timing choices.
- * Library code must never call Math.random(); everything traces back to a seed.
+ * Purpose: the harness's range helpers over @breadcrumb/core-random's seeded PRNG, used by
+ * persona perturbation and the journey runner's action/timing choices. Library code must
+ * never call Math.random(); everything traces back to a seed. mulberry32 and seedFromStrings
+ * moved to core-random 2026-09-02 (this copy differed from the map module's only in keeping
+ * the state signed, which yields the identical stream) and are re-exported here so the
+ * harness keeps importing its randomness from one place.
  * Main exports: mulberry32, seedFromStrings, randomInt, pickWeighted.
  */
 
-/** mulberry32: a small, fast, well-known 32-bit seeded PRNG. Returns a function yielding
- * successive floats in [0, 1); same seed -> same sequence, always. */
-export function mulberry32(seed: number): () => number {
-  let state = seed | 0;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** Combines any number of strings into one 32-bit seed via FNV-1a, so distinct input tuples
- * get distinct-but-reproducible PRNG streams. */
-export function seedFromStrings(parts: readonly string[]): number {
-  let hash = 0x811c9dc5;
-  for (const part of parts) {
-    for (let index = 0; index < part.length; index += 1) {
-      hash ^= part.charCodeAt(index);
-      hash = Math.imul(hash, 0x01000193);
-    }
-  }
-  return hash >>> 0;
-}
+export { mulberry32, seedFromStrings } from "@breadcrumb/core-random";
 
 /** A uniformly-distributed integer in [min, max] (inclusive on both ends). */
 export function randomInt(random: () => number, min: number, max: number): number {

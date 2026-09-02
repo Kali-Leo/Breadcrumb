@@ -16,7 +16,9 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-random": "workspace:*",
     "@breadcrumb/core-teaching": "workspace:*",
+    "@breadcrumb/core-vectors": "workspace:*",
     "@breadcrumb/demo-seed": "workspace:*",
     "@breadcrumb/feature-diglot-weave": "workspace:*",
     "@breadcrumb/feature-feedback": "workspace:*",

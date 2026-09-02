@@ -5,13 +5,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createCanonicalRepo } from "./canonicalRepositories";
+import type { CanonicalConceptRow, NodeConceptAnchorRow } from "./comparisonTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type {
-  AlignmentConfidence,
-  CanonicalConceptRow,
-  NodeConceptAnchorRow,
-  SqlClient,
-} from "./types";
+import type { AlignmentConfidence, SqlClient } from "./types";
 
 function makeFakeSql() {
   const conceptRows = new Map<string, CanonicalConceptRow>();

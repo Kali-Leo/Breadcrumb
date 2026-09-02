@@ -5,7 +5,8 @@
  * The semantic crosswalk itself lives in canonicalRepositories.ts (spec 025).
  * Main exports: createComparisonRepo factory.
  */
-import type { ComparisonProfileItemRow, ComparisonProfileRow, SqlClient } from "./types";
+import type { ComparisonProfileItemRow, ComparisonProfileRow } from "./comparisonTypes";
+import type { SqlClient } from "./types";
 
 export function createComparisonRepo(sql: SqlClient) {
   return {

@@ -3,33 +3,17 @@
  * streak stats for the feedback lab's "学习热力图" module (spec 035 #1).
  * Main exports: DailyActivityCell, computeDailyActivity, computeContinuity, toLocalDateKey.
  */
+import { dateKeyRange, toLocalDateKey } from "@breadcrumb/core-time";
+
+/** Re-exported so this package's own day-cutting consumers keep one import; the rule itself
+ * is @breadcrumb/core-time's, shared with the research lab and the trail (2026-09-02 — the
+ * three used to hold byte-identical copies kept in sync by comments). */
+export { toLocalDateKey };
 
 export interface DailyActivityCell {
   /** Local calendar date, "YYYY-MM-DD". */
   date: string;
   count: number;
-}
-
-/** Local calendar date key for an ISO instant — cuts days by the machine's local timezone,
- * matching what the heatmap visually represents to the person looking at it. Every day-cutting
- * consumer in this package reads it from here, so "which day is this" is decided once. */
-export function toLocalDateKey(iso: string): string {
-  const instant = new Date(iso);
-  const year = instant.getFullYear();
-  const month = String(instant.getMonth() + 1).padStart(2, "0");
-  const day = String(instant.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-/** Adds (or subtracts) whole days to a local date key. */
-function shiftDateKey(dateKey: string, deltaDays: number): string {
-  const [year, month, day] = dateKey.split("-").map(Number) as [number, number, number];
-  const shifted = new Date(year, month - 1, day);
-  shifted.setDate(shifted.getDate() + deltaDays);
-  const shiftedYear = shifted.getFullYear();
-  const shiftedMonth = String(shifted.getMonth() + 1).padStart(2, "0");
-  const shiftedDay = String(shifted.getDate()).padStart(2, "0");
-  return `${shiftedYear}-${shiftedMonth}-${shiftedDay}`;
 }
 
 /** Full local-day sequence from (today - days + 1) to today inclusive, every day present
@@ -39,7 +23,6 @@ export function computeDailyActivity(
   options: { days: number; todayIso: string },
 ): DailyActivityCell[] {
   const { days, todayIso } = options;
-  const todayKey = toLocalDateKey(todayIso);
 
   const countByDate = new Map<string, number>();
   for (const eventTimeIso of eventTimesIso) {
@@ -47,12 +30,10 @@ export function computeDailyActivity(
     countByDate.set(dateKey, (countByDate.get(dateKey) ?? 0) + 1);
   }
 
-  const cells: DailyActivityCell[] = [];
-  for (let offset = days - 1; offset >= 0; offset -= 1) {
-    const date = shiftDateKey(todayKey, -offset);
-    cells.push({ date, count: countByDate.get(date) ?? 0 });
-  }
-  return cells;
+  return dateKeyRange(days, todayIso).map((date) => ({
+    date,
+    count: countByDate.get(date) ?? 0,
+  }));
 }
 
 /** Active-day count, longest connected active run, and the run ending today (or ending

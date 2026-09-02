@@ -5,66 +5,41 @@
  * paradigm); talking to one drives mastery judgment underneath; once a teach-quality
  * claim lands the helper thanks the learner and leaves the roster. No same-day refills:
  * yesterday's leftovers expire, tomorrow brings a fresh batch. Also keeps crisis
- * detection and the break reminder.
+ * detection and the break reminder. The gate run itself and its day-change / switch-toggle
+ * triggers live in lib/companion/companionDailyGate.ts.
  * Side effects on import: subscribes to chat:responseFinished / chat:messageSent.
  * Main exports: useCompanionStore, HELPER_ID_PREFIX.
  */
 import type { CompanionProposalRow } from "@breadcrumb/core-db";
 import { detectCrisis } from "@breadcrumb/feature-companion";
 import { create } from "zustand";
-import { appendHelperThanks, startHelperConversation } from "../lib/companion/companionActions";
 import {
   type BreakReminderState,
   dismissBreakReminder as dismissBreakReminderState,
   INITIAL_BREAK_REMINDER_STATE,
   recordCompanionActivity,
 } from "../lib/companion/companionBreakReminder";
+import {
+  HELPER_ID_PREFIX,
+  runDailyHelperGate,
+  wireDailyHelperGateTriggers,
+} from "../lib/companion/companionDailyGate";
+import { appendHelperThanks } from "../lib/companion/companionHelperConversation";
 import { recordCompanionMemoryForFinishedRound } from "../lib/companion/companionMemoryActions";
-import { pickTeachCandidates } from "../lib/companion/teachActions";
 import { getRepos } from "../lib/platform/db";
-import { newId, nowIso, onLocalDayChange, todayLocalMidnightIso } from "../lib/platform/time";
+import { nowIso } from "../lib/platform/time";
 import { appEventBus, useChatStore } from "./chatStore";
-import { useKnowledgeStore } from "./knowledgeStore";
-import { useMemoryStore } from "./memoryStore";
 import { useSettingsStore } from "./settingsStore";
 
-export const HELPER_ID_PREFIX = "helper-";
-const DAILY_HELPER_LIMIT = 3;
-/** A concept that had a helper within this window doesn't get another one yet. */
-const HELPER_REPEAT_COOLDOWN_DAYS = 7;
-const LOOKBACK_MS = 30 * 24 * 3_600_000;
+export { HELPER_ID_PREFIX };
+
 /** Without a quality verdict (switch off / offline), this many learner replies count as
  * "did what could be done" and the helper thanks and leaves. */
 const FALLBACK_REPLY_LIMIT = 3;
 
-/** Serializes overlapping gate runs (StrictMode double-mount, bus bursts). */
-let gateRunInFlight = false;
 /** Conversations whose helper-completion check is in flight — two rounds finishing close
  * together must not thank twice. */
 const completingConversationIds = new Set<string>();
-/** Guards the day-change/switch-toggle re-gate wiring below against being registered twice
- * (StrictMode double-invokes initialize()) — module scope survives both invocations. */
-let dailyGateTriggersWired = false;
-
-/** Re-runs the daily-helper gate when the local day rolls over (an app left open across
- * midnight must not keep yesterday's roster until restart) and when the companionChat
- * switch flips off→on (toggling it back on must not leave helpers empty until restart).
- * Wired once per module lifetime from initialize(). */
-function wireDailyHelperGateTriggers(): void {
-  if (dailyGateTriggersWired) return;
-  dailyGateTriggersWired = true;
-  onLocalDayChange(() => {
-    void useCompanionStore.getState().refreshDailyHelpers();
-  });
-  let previousCompanionChatEnabled = useSettingsStore.getState().featureSwitches.companionChat;
-  useSettingsStore.subscribe((state) => {
-    const enabled = state.featureSwitches.companionChat;
-    if (enabled && !previousCompanionChatEnabled) {
-      void useCompanionStore.getState().refreshDailyHelpers();
-    }
-    previousCompanionChatEnabled = enabled;
-  });
-}
 
 interface CompanionState extends BreakReminderState {
   /** Today's pending helpers — the whole roster (spec 050 §9: like a daily task list). */
@@ -142,7 +117,9 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   ...INITIAL_BREAK_REMINDER_STATE,
 
   async initialize() {
-    wireDailyHelperGateTriggers();
+    wireDailyHelperGateTriggers(() => {
+      void useCompanionStore.getState().refreshDailyHelpers();
+    });
     await get().refreshDailyHelpers();
   },
 
@@ -151,59 +128,8 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       set({ helpers: [] });
       return;
     }
-    if (gateRunInFlight) return;
-    gateRunInFlight = true;
-    try {
-      const repos = await getRepos();
-      const now = nowIso();
-      const todayStart = todayLocalMidnightIso();
-      const sinceIso = new Date(Date.parse(now) - LOOKBACK_MS).toISOString();
-      const rows = await repos.companionProposals.listRecent(sinceIso);
-
-      // Yesterday's unhandled helpers leave quietly — tomorrow is a fresh page.
-      for (const row of rows) {
-        if (row.status === "pending" && row.created_at < todayStart) {
-          await repos.companionProposals.resolve(row.id, "expired", now);
-        }
-      }
-
-      const todays = rows.filter((row) => row.created_at >= todayStart);
-      if (todays.length === 0) {
-        await useMemoryStore.getState().refresh();
-        const nodes = useKnowledgeStore.getState().nodes;
-        const reviewPriorityByNode = useMemoryStore.getState().reviewPriorityByNode;
-        const cooldownStart = new Date(
-          Date.parse(todayStart) - HELPER_REPEAT_COOLDOWN_DAYS * 24 * 3_600_000,
-        ).toISOString();
-        const recentNodeIds = new Set(
-          rows.filter((row) => row.created_at >= cooldownStart).map((row) => row.node_id),
-        );
-        const candidates = pickTeachCandidates(nodes, reviewPriorityByNode, DAILY_HELPER_LIMIT * 2)
-          .filter((node) => !recentNodeIds.has(node.id))
-          .slice(0, DAILY_HELPER_LIMIT);
-        for (const node of candidates) {
-          const helperId = `${HELPER_ID_PREFIX}${node.id}`;
-          await startHelperConversation(helperId, node.label);
-          const row: CompanionProposalRow = {
-            id: newId(),
-            companion_id: helperId,
-            node_id: node.id,
-            topic: node.label,
-            kind: "teach",
-            status: "pending",
-            created_at: nowIso(),
-            resolved_at: null,
-          };
-          await repos.companionProposals.insert(row);
-          todays.push(row);
-        }
-        if (candidates.length > 0) await useChatStore.getState().loadFromDatabase();
-      }
-
-      set({ helpers: todays.filter((row) => row.status === "pending") });
-    } finally {
-      gateRunInFlight = false;
-    }
+    const helpers = await runDailyHelperGate();
+    if (helpers !== null) set({ helpers });
   },
 
   markHelperSeen(helperId) {

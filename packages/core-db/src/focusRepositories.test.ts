@@ -5,8 +5,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createFocusNodesRepo, createFocusSessionsRepo } from "./focusRepositories";
+import type { FocusNodeRow, FocusSessionRow } from "./focusTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { FocusNodeRow, FocusSessionRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 /** In-memory fake keyed by table name inferred from the SQL text. */
 function makeFakeSql() {

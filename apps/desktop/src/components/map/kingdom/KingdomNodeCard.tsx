@@ -3,23 +3,15 @@
  * statement, the recommendation reason when this is the "下一步", the relation list
  * (clickable jumps), alternates on demand, and one state-worded main action. Opening a
  * conversation is deliberately never a single click on the map.
- * Main exports: KingdomNodeCard, reasonMessage.
+ * Main exports: KingdomNodeCard.
  */
 
-import type { CopyMessage } from "@breadcrumb/core-i18n";
 import type { FrontierCandidate } from "@breadcrumb/feature-planner";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../../i18n/useCopyMessage";
+import type { NodeRelations } from "../../../lib/map/kingdomRelations";
 import type { KingdomViewNode } from "../../../lib/map/kingdomView";
-
-export interface NodeRelations {
-  parent: { id: string; label: string } | null;
-  children: { id: string; label: string }[];
-  /** Sources of requires-edges pointing at this node — its prerequisites. */
-  prerequisites: { id: string; label: string }[];
-  /** Sources of helps-edges pointing at this node — what aids it. */
-  helpers: { id: string; label: string }[];
-}
+import { MAIN_ACTION_KEY, reasonMessage, stateMessage } from "./kingdomCardCopy";
 
 interface KingdomNodeCardProps {
   node: KingdomViewNode;
@@ -38,44 +30,6 @@ interface KingdomNodeCardProps {
    * in was deleted, or it arrived without a message behind it. */
   onGoToOrigin: (() => void) | null;
 }
-
-/** One plain, suggest-only sentence for why this node is the current invitation. */
-export function reasonMessage(candidate: FrontierCandidate, listSeparator: string): CopyMessage {
-  if (candidate.reason.litPrerequisiteLabels.length > 0) {
-    return {
-      key: "palace:kingdom.reasonPrereq",
-      params: { labels: candidate.reason.litPrerequisiteLabels.join(listSeparator) },
-    };
-  }
-  if (candidate.reason.wasLitBefore) return { key: "palace:kingdom.reasonWasLit" };
-  if (candidate.reason.gatewayTo) {
-    return {
-      key: "palace:kingdom.reasonGateway",
-      params: { label: candidate.reason.gatewayTo.label },
-    };
-  }
-  return { key: "palace:kingdom.reasonDefault" };
-}
-
-function stateMessage(node: KingdomViewNode, lastSeenDate: string | null): CopyMessage {
-  if (node.state === "done") {
-    return lastSeenDate === null
-      ? { key: "palace:kingdom.stateDone" }
-      : { key: "palace:kingdom.stateDoneSeen", params: { date: lastSeenDate } };
-  }
-  if (node.state === "visited") {
-    return lastSeenDate === null
-      ? { key: "palace:kingdom.stateVisited" }
-      : { key: "palace:kingdom.stateVisitedSeen", params: { date: lastSeenDate } };
-  }
-  return { key: "palace:kingdom.stateUntouched" };
-}
-
-const MAIN_ACTION_KEY = {
-  untouched: "kingdom.actionUntouched",
-  visited: "kingdom.actionVisited",
-  done: "kingdom.actionDone",
-} as const;
 
 function RelationRow({
   title,

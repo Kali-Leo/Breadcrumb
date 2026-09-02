@@ -5,19 +5,13 @@
  * thin set()-only orchestrator.
  * Main exports: useFocusStore.
  */
-import type { FocusNodeRow } from "@breadcrumb/core-db";
-import type { CopyMessage } from "@breadcrumb/core-i18n";
 import {
   buildQuestionMessages,
   buildWordExplainMessages,
   computeConceptGateProbability,
 } from "@breadcrumb/feature-explore";
 import { create } from "zustand";
-import {
-  buildAncestorChain,
-  type FocusGuessState,
-  rollConceptGate,
-} from "../lib/focus/focusActions";
+import { buildAncestorChain, rollConceptGate } from "../lib/focus/focusActions";
 import { insertFocusNode, insertFocusSession } from "../lib/focus/focusExplainRound";
 import {
   createQuestionChild,
@@ -28,60 +22,16 @@ import {
   stopExplainStream,
   submitPendingGuess,
 } from "../lib/focus/focusSessionActions";
+import { type FocusState, RESET_SESSION_FIELDS } from "../lib/focus/focusStoreState";
 import { getRepos } from "../lib/platform/db";
 import { appEventBus } from "./chatStore";
 import { useKnowledgeStore } from "./knowledgeStore";
 import { useMemoryStore } from "./memoryStore";
 import { useSettingsStore } from "./settingsStore";
 
-interface FocusState {
-  open: boolean;
-  sessionId: string | null;
-  conversationId: string | null;
-  rootLabel: string;
-  nodes: FocusNodeRow[];
-  currentNodeId: string | null;
-  streamingText: string | null;
-  /** The failure to state, as a catalogue key (spec 058 §2); null while nothing failed. */
-  errorText: CopyMessage | null;
-  pendingGuess: FocusGuessState | null;
-  guessedNodeIds: ReadonlySet<string>;
-  recentConsecutiveAbandons: number;
-  lastRevealAtByNode: ReadonlyMap<string, Date>;
-  /** Node ids already opened as a station this session — computeFocusDoorPatches never
-   * re-marks them (mirrors doorStore.openedNodeIds, but session-scoped). */
-  openedDoorNodeIds: ReadonlySet<string>;
-  startFromWord(
-    conversationId: string,
-    word: string,
-    parentAnswerText: string,
-    sourceMessageId: string | null,
-  ): Promise<void>;
-  selectWord(word: string): Promise<void>;
-  submitGuess(guessText: string): Promise<void>;
-  skipGuess(): void;
-  askQuestion(question: string): Promise<void>;
-  /** Stops the in-flight explanation, keeping the streamed-so-far text as the station's
-   * content — no error, no banner. */
-  stopStreaming(): void;
-  jumpTo(nodeId: string): void;
-  exitFocus(): void;
-  reopen(sessionId: string): Promise<void>;
-  /** Re-runs the current station after a failure/timeout (watchdog, 2026-08-14). */
-  retryCurrent(): Promise<void>;
-}
-
 /** The root station's parent context (the chat reply it was selected from) — kept only for
  * in-session retries; reopened sessions fall back to a plain word explanation. */
 let rootParentText: string | null = null;
-
-const RESET_SESSION_FIELDS = {
-  pendingGuess: null,
-  guessedNodeIds: new Set<string>(),
-  recentConsecutiveAbandons: 0,
-  lastRevealAtByNode: new Map<string, Date>(),
-  openedDoorNodeIds: new Set<string>(),
-};
 
 export const useFocusStore = create<FocusState>((set, get) => ({
   open: false,

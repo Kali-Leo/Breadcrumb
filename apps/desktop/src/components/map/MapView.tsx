@@ -1,26 +1,15 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
  * jumps (world → island, the deepest view) on the wheel with exact-fit framing, no free
- * zoom or panning. Islands are derived continents once the async assignment loads (tree
- * roots first, clustering only for the flat leftovers, spec 031); until then the tree-root
- * fallback renders, which is fine and intended, and AI continent names (when that switch is
- * on) patch in a moment later. The world model is cached per (nodes, assignment) pair so
- * re-opening the palace skips the expensive terrain build (identical output, just
- * remembered). The Pixi lifecycle lives in useMapApplication; if its init fails the page
- * says so in place instead of staying blank. Goal mode redraws to the goal's cut via
- * goalWorldFilter (hide places without goal nodes + camera refit; a positional re-layout is
- * deliberately off the table — island positions stay stable across modes). StrictMode-safe;
- * DEV keys 0 demo, 1..2 jumps.
+ * zoom or panning. The world model (continents, caching, the goal cut) is assembled in
+ * useWorldModel and pushed to the controller by useMapSceneSync. The Pixi lifecycle lives in
+ * useMapApplication; if its init fails the page says so in place instead of staying blank.
+ * StrictMode-safe; DEV keys 0 demo, 1..2 jumps.
  * Main exports: MapView.
  */
 
-import type { ContinentAssignment } from "@breadcrumb/feature-map";
-import { visibleFrontier } from "@breadcrumb/feature-planner";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { loadContinentAssignment } from "../../lib/map/mapContinentActions";
-import { applyAiContinentNames } from "../../lib/map/mapNamingActions";
-import { goalNodeIds as parseGoalNodeIds } from "../../lib/planner/plannerGapActions";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
@@ -28,29 +17,25 @@ import { useMemoryStore } from "../../stores/memoryStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { GoalView } from "../goal/GoalView";
-import { demoKnowledgeNodes, demoRetentionByNode, demoSessionTrail } from "./demoWorld";
-import { filterWorldToGoal } from "./goalWorldFilter";
+import { demoSessionTrail } from "./demoWorld";
 import { type KingdomRef, KingdomView } from "./kingdom/KingdomView";
 import { findIsland, type MapLevel } from "./levels";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { MapModeToggle } from "./MapModeToggle";
 import type { HoverInfo } from "./mapHover";
-import { cachedWorldModel } from "./mapWorldCache";
 import { useMapApplication } from "./useMapApplication";
+import { useMapSceneSync } from "./useMapSceneSync";
+import { useWorldModel } from "./useWorldModel";
 
 export function MapView() {
   const { t } = useTranslation(["palace", "common"]);
-  const previousIdsRef = useRef(new Map<string, ReadonlySet<string>>());
 
-  const storeNodes = useKnowledgeStore((state) => state.nodes);
   const storeSessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
-  const storeRetention = useMemoryStore((state) => state.retentionByNode);
   const [demoMode, setDemoMode] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
   const [goalViewOpen, setGoalViewOpen] = useState(false);
   const [subwayKingdom, setSubwayKingdom] = useState<KingdomRef | null>(null);
-  const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Fog data should be fresh whenever the palace opens.
   useEffect(() => {
@@ -78,124 +63,21 @@ export function MapView() {
       .catch((error: unknown) => console.warn("planner recompute skipped:", error));
   }, []);
 
-  // Continents load asynchronously and re-derive whenever the tree changes; until the first
-  // load resolves, cachedWorldModel's null-assignment fallback renders. AI names (spec 031
-  // §3) arrive later still and simply replace the assignment once they do — the medoid-named
-  // map is already on screen by then.
-  useEffect(() => {
-    let cancelled = false;
-    void loadContinentAssignment(storeNodes).then((assignment) => {
-      if (cancelled) return;
-      setContinentAssignment(assignment);
-      const settings = useSettingsStore.getState();
-      if (
-        assignment === null ||
-        !settings.featureSwitches.mapTopicNaming ||
-        !settings.networkEnabled ||
-        settings.apiConfig === null
-      ) {
-        return;
-      }
-      void applyAiContinentNames(assignment, settings.apiConfig).then((named) => {
-        if (!cancelled && named !== assignment) setContinentAssignment(named);
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [storeNodes]);
-
-  const nodes = demoMode ? demoKnowledgeNodes : storeNodes;
-  const retentionByNode = demoMode ? demoRetentionByNode : storeRetention;
-  // Demo nodes never match a real-data assignment's member ids, so demo mode always uses
-  // the tree-root fallback.
-  const effectiveAssignment = demoMode ? null : continentAssignment;
-  const world = useMemo(
-    () => cachedWorldModel(nodes, effectiveAssignment),
-    [nodes, effectiveAssignment],
-  );
-
-  // Goal mode redraws the map to the goal's cut (Leo: 目标截取的树意味着目标地图要重绘):
-  // places with zero goal nodes are removed from the world handed to the controller, and
-  // the exact-fit framing refits to what remains. A goal touching no place keeps the full
-  // map (nothing to frame otherwise). Leaving goal mode restores the full world.
-  const goals = usePlannerStore((state) => state.goals);
-  const selectedGoalId = usePlannerStore((state) => state.selectedGoalId);
-  const learningMode = useSettingsStore((state) => state.learningMode);
-  const { displayWorld, goalScope } = useMemo(() => {
-    const goal =
-      learningMode === "ranked"
-        ? (goals.find((candidate) => candidate.id === selectedGoalId) ?? null)
-        : null;
-    if (goal === null || demoMode) return { displayWorld: world, goalScope: null };
-    const goalNodeIds: ReadonlySet<string> = new Set(parseGoalNodeIds(goal));
-    const cut = filterWorldToGoal(world, goalNodeIds);
-    return {
-      displayWorld: cut.islands.length === 0 ? world : cut,
-      goalScope: { title: goal.title, nodeIds: goalNodeIds },
-    };
-  }, [world, learningMode, goals, selectedGoalId, demoMode]);
+  const { world, displayWorld, goalScope, retentionByNode } = useWorldModel(demoMode);
   const { containerRef, controllerRef, trailIdsRef, ready, initFailed } = useMapApplication({
     onHover: setHover,
     onLevel: setLevel,
   });
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
-
-  // The visible recommendation set surfaces as map pins on every level (Leo's design +
-  // spec 060 §2): the containing islands at the world level, the containing kingdoms once
-  // dived in; the kingdom tree then rings the node itself. Demo worlds never match real
-  // planner ids, so the pins rest.
-  const frontierCandidates = usePlannerStore((state) => state.frontierCandidates);
-  useEffect(() => {
-    if (!ready) return;
-    const targets: { islandId: string; kingdomId: string | null }[] = [];
-    for (const candidate of visibleFrontier(frontierCandidates)) {
-      const island = displayWorld.islands.find((somewhere) =>
-        somewhere.memberNodeIds.includes(candidate.nodeId),
-      );
-      if (island === undefined) continue;
-      const kingdom = island.kingdoms.find((somewhere) =>
-        somewhere.memberNodeIds.includes(candidate.nodeId),
-      );
-      targets.push({ islandId: island.nodeId, kingdomId: kingdom?.nodeId ?? null });
-    }
-    controllerRef.current?.setRecommendTargets(targets);
-  }, [ready, frontierCandidates, displayWorld, controllerRef]);
-
-  // Scene rebuilds on data changes; the renderer and camera model stay alive. New-node
-  // reveals diff against the FULL world so leaving goal mode never replays them.
-  useEffect(() => {
-    if (!ready) return;
-    controllerRef.current?.setWorld(
-      displayWorld,
-      retentionByNode,
-      (() => {
-        const datasetKey = demoMode ? "demo" : "real";
-        const currentIds: ReadonlySet<string> = new Set(
-          world.islands.flatMap((island) => island.memberNodeIds),
-        );
-        const previousIds = previousIdsRef.current.get(datasetKey);
-        previousIdsRef.current.set(datasetKey, currentIds);
-        return previousIds === undefined
-          ? new Set<string>()
-          : new Set([...currentIds].filter((id) => !previousIds.has(id)));
-      })(),
-    );
-  }, [ready, world, displayWorld, retentionByNode, demoMode, controllerRef]);
-
-  useEffect(() => {
-    if (!import.meta.env.DEV) return undefined;
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "0") {
-        setDemoMode((value) => !value);
-        return;
-      }
-      const jump = ["1", "2"].indexOf(event.key);
-      if (jump >= 0) controllerRef.current?.devJump(jump);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [controllerRef]);
+  useMapSceneSync({
+    ready,
+    controllerRef,
+    world,
+    displayWorld,
+    retentionByNode,
+    demoMode,
+    setDemoMode,
+  });
 
   // The goal view is the palace's drill-in (spec 047) — it replaces the whole page and
   // returns to the exact map state on close (level/camera state lives in the controller

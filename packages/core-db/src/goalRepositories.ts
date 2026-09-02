@@ -3,7 +3,8 @@
  * knowledge-node ids it maps to, most-recently-touched first.
  * Main exports: createGoalsRepo factory.
  */
-import type { GoalRow, SqlClient } from "./types";
+import type { GoalRow } from "./knowledgeTypes";
+import type { SqlClient } from "./types";
 
 export function createGoalsRepo(sql: SqlClient) {
   return {

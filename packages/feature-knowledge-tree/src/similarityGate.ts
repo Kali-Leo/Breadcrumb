@@ -8,48 +8,20 @@
  * reach a paid LLM judgment, and the alignment layer's 0.72 pruned literally nothing. A gate
  * computed from each node's OWN similarity landscape is immune to where the model happens to
  * put the band, which is why feature-graph's candidate ranking never had this bug.
+ *
+ * The math itself now lives in @breadcrumb/core-vectors, shared with the five other modules
+ * that had each copied it (2026-09-02): one gate fraction, one cosine, so a threshold sweep
+ * can no longer move four of the five.
  * Main exports: cosineSimilarity, RELATIVE_GATE_FRACTION, relativeGate, topByRelativeGate.
  */
+import { relativeGate as gateOfBaseline, similarityBaseline } from "@breadcrumb/core-vectors";
 
-/** Cosine helper, exported for in-package reuse (synonymGate.ts, suspectPairs.ts) and by
- * feature-compare — mirrors feature-graph/src/similarity.ts and feature-interest/src/spread.ts's
- * own local copies rather than adding a cross-package dep for this one piece of math. */
-export function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dotProduct += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-/** A candidate must clear μ + this fraction of (best − μ) of the subject's own similarity
- * landscape. Same constant and same meaning as feature-graph/src/similarity.ts's RELATIVE_GATE. */
-export const RELATIVE_GATE_FRACTION = 0.5;
+export { cosineSimilarity, RELATIVE_GATE_FRACTION } from "@breadcrumb/core-vectors";
 
 /** Relative-gate threshold over one subject's own similarity landscape: mean plus a fraction
- * of the gap up to its best match. Mean is clamped to at most best: mean <= best always holds
- * mathematically, but independently-rounded floating-point sums can push the computed mean a
- * hair above the computed best when many candidates are near-identically similar — without
- * the clamp the gate would then exceed every candidate's similarity and reject the whole set.
- * (Copied deliberately from feature-graph rather than shared: the two modules have no
- * dependency edge between them, and this is six lines of arithmetic.) */
+ * of the gap up to its best match (see core-vectors for why the mean is clamped to best). */
 export function relativeGate(similarities: readonly number[]): number {
-  let sum = 0;
-  let best = 0;
-  for (const similarity of similarities) {
-    sum += similarity;
-    best = Math.max(best, similarity);
-  }
-  const mean = similarities.length === 0 ? 0 : Math.min(sum / similarities.length, best);
-  return mean + RELATIVE_GATE_FRACTION * (best - mean);
+  return gateOfBaseline(similarityBaseline(similarities));
 }
 
 /** The entries clearing the relative gate, most similar first, capped at `topK`. A single

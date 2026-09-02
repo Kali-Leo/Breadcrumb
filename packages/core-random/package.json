@@ -1,0 +1,17 @@
+{
+  "name": "@breadcrumb/core-random",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless deterministic randomness: the FNV-1a string hash and mulberry32 PRNG every seeded decision in the product derives from, so the same input always replays the same sequence.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -4,8 +4,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createAiFailuresRepo } from "./aiFailureRepositories";
+import type { AiFailureRow } from "./featureTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { AiFailureRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 /** In-memory fake keyed by insertion order. */
 function makeFakeSql() {

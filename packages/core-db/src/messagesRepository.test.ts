@@ -4,9 +4,10 @@
  * them unchanged.
  */
 import { describe, expect, it } from "vitest";
-import { createMessagesRepo } from "./repositories";
+import type { MessageRow } from "./chatTypes";
+import { createMessagesRepo } from "./messagesRepository";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { MessageRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 /** In-memory fake: stores appended messages and answers listByConversation. */
 function makeFakeSql() {

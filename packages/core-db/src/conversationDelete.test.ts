@@ -2,10 +2,16 @@
  * Purpose: deleting a conversation, against a real migrated database — the cascade has to
  * leave no foreign key pointing at a deleted row, and has to leave alone the two things that
  * outlive the conversation: the learner's knowledge nodes and the money already spent.
+ * Plus a schema-drift tripwire over CONVERSATION_SCOPED_TABLES, twin of the one
+ * nodeMergeRepository.test.ts runs over MERGE_REFERENCING_TABLES.
  */
 import { describe, expect, it } from "vitest";
+import {
+  buildConversationDeleteStatements,
+  CONVERSATION_SCOPED_TABLES,
+} from "./conversationDeleteStatements";
+import { createConversationsRepo } from "./conversationsRepository";
 import { openMigratedDatabase } from "./realSqliteTestFixture";
-import { createConversationsRepo } from "./repositories";
 
 const NOW = "2026-09-01T10:00:00.000Z";
 
@@ -106,6 +112,43 @@ describe("deleting a conversation", () => {
         "PRAGMA foreign_key_check",
       );
       expect(violations).toEqual([]);
+    } finally {
+      database.close();
+    }
+  });
+  it("handles every table the live schema points at conversations or messages with", async () => {
+    const database = await openMigratedDatabase();
+    try {
+      const referencing = await database.sql.select<{ table: string }>(
+        `SELECT DISTINCT m.name AS "table"
+         FROM sqlite_master m
+         JOIN pragma_foreign_key_list(m.name) fk
+         WHERE m.type = 'table' AND fk."table" IN ('conversations', 'messages')`,
+      );
+      const tables = referencing.map((row) => row.table).sort();
+      expect(tables.length).toBeGreaterThan(0);
+
+      const batchText = buildConversationDeleteStatements("conv-1")
+        .map((statement) => statement.sql)
+        .join("\n");
+
+      for (const table of tables) {
+        expect(
+          CONVERSATION_SCOPED_TABLES.includes(table),
+          `${table} references conversations/messages but is missing from CONVERSATION_SCOPED_TABLES`,
+        ).toBe(true);
+        expect(
+          batchText.includes(table),
+          `${table} references conversations/messages but remove()'s batch never touches it`,
+        ).toBe(true);
+      }
+      // The FK-less members (term_marks, knowledge_edges, and the grandchildren) are declared
+      // by hand; they must be in the batch too, or deleting a chat leaves rows behind.
+      for (const table of CONVERSATION_SCOPED_TABLES) {
+        expect(batchText.includes(table), `${table} is declared but absent from the batch`).toBe(
+          true,
+        );
+      }
     } finally {
       database.close();
     }

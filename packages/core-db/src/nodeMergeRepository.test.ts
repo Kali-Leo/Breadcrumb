@@ -8,14 +8,12 @@
  */
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
+import type { KnowledgeNodeRow } from "./knowledgeTypes";
 import { runMigrations } from "./migrations";
-import {
-  buildMergeNodeStatements,
-  createNodeMergeRepo,
-  MERGE_REFERENCING_TABLES,
-} from "./nodeMergeRepository";
+import { createNodeMergeRepo, MERGE_REFERENCING_TABLES } from "./nodeMergeRepository";
+import { buildMergeNodeStatements } from "./nodeMergeStatements";
 import { createNodeSqliteClient } from "./realSqliteTestFixture";
-import type { KnowledgeNodeRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 const NOW = "2026-08-28T10:00:00.000Z";
 

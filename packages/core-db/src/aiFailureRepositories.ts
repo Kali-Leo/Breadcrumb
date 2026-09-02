@@ -3,7 +3,8 @@
  * of every silently-degraded AI pipeline failure, written best-effort from each store's catch.
  * Main exports: createAiFailuresRepo factory.
  */
-import type { AiFailureRow, SqlClient } from "./types";
+import type { AiFailureRow } from "./featureTypes";
+import type { SqlClient } from "./types";
 
 export function createAiFailuresRepo(sql: SqlClient) {
   return {

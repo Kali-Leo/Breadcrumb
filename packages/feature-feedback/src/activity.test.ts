@@ -3,8 +3,9 @@
  * date-range completeness, local-day cutting, and the "counts yesterday if today is still
  * empty" continuity rule.
  */
+import { toLocalDateKey as coreDateKey } from "@breadcrumb/core-time";
 import { describe, expect, it } from "vitest";
-import { computeContinuity, computeDailyActivity } from "./activity";
+import { computeContinuity, computeDailyActivity, toLocalDateKey } from "./activity";
 
 function localIso(year: number, month: number, day: number, hour = 12): string {
   return new Date(year, month - 1, day, hour, 0).toISOString();
@@ -85,5 +86,18 @@ describe("computeContinuity", () => {
   it("current run is zero for a single-day range with no activity", () => {
     const cells = computeDailyActivity([], { days: 1, todayIso: TODAY });
     expect(computeContinuity(cells).currentRunDays).toBe(0);
+  });
+});
+
+/** The heatmap, the research lab's daily buckets and the trail's summary all have to cut the
+ * calendar at the same instant, or one study session lands on two different days depending on
+ * which surface is looking at it. Before 2026-09-02 that agreement rested on three
+ * byte-identical private copies and a comment; this fails the moment one is reintroduced. */
+describe("day cutting agrees with @breadcrumb/core-time", () => {
+  it("gives the same key as core-time for every hour of a day", () => {
+    for (let hour = 0; hour < 24; hour += 1) {
+      const iso = new Date(2026, 6, 29, hour, 30).toISOString();
+      expect(toLocalDateKey(iso)).toBe(coreDateKey(iso));
+    }
   });
 });

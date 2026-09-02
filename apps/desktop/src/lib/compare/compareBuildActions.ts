@@ -1,10 +1,10 @@
 /**
  * Purpose: the experimental search-build pipeline (spec 023 §5) — one metered LLM proposal
  * with mandatory per-item citations, a URL verification pass over every unique cited source
- * (unreachable or off-topic pages kill their whole branch), and a whole-build failure when
- * too little survives (宁缺毋假). Returns the display facts the UI must show: token usage
- * and cost. Main exports: runExperimentalProfileBuild, runProposalPipeline,
- * ExperimentalBuildOutcome, VerifiedProposal.
+ * (unreachable or off-topic pages kill their whole branch, see compareCitationVerify.ts), and
+ * a whole-build failure when too little survives (宁缺毋假). Returns the display facts the UI
+ * must show: token usage and cost. Main exports: runExperimentalProfileBuild,
+ * runProposalPipeline, ExperimentalBuildOutcome, VerifiedProposal.
  */
 import {
   calculateCostMicros,
@@ -15,15 +15,10 @@ import {
 } from "@breadcrumb/core-llm";
 import {
   buildCompareProposalMessages,
-  findRescueUrl,
-  pruneUnverifiedBranches,
   type SearchedProposalItem,
   searchedProfileProposalSchema,
   survivesThreshold,
-  verifyEvidenceText,
 } from "@breadcrumb/feature-compare";
-import { createBingProvider, fetchExternalPage } from "@breadcrumb/feature-factcheck";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import i18next from "i18next";
 import type { ApiConfig } from "../../stores/settingsStore";
 import { recordMeteredCall } from "../billing/metering";
@@ -31,6 +26,7 @@ import { getRepos } from "../platform/db";
 import { recordAiFailure } from "../platform/failureLog";
 import { currentPriceCurrency, currentPriceOverride, llmConfigFrom } from "../platform/llmConfig";
 import { newId, nowIso } from "../platform/time";
+import { verifyCitedSources } from "./compareCitationVerify";
 
 export type ExperimentalBuildOutcome =
   | { ok: true; profileId: string; costLine: string; droppedCount: number }
@@ -45,24 +41,6 @@ function costLineOf(model: string, usage: TokenUsage): string {
     ? formatCost(calculateCostMicros(usage, price), price.currency)
     : i18next.t("palace:compare.buildCostUnknown");
   return i18next.t("palace:compare.buildCost", { cost });
-}
-
-/** How long to wait for a cited page. Every other fetch in the app bounds itself; this one
- * used to wait forever, which is a stall the user sits through. */
-const CITATION_FETCH_TIMEOUT_MS = 8000;
-
-/** Fetches one cited URL and checks the page mentions the cited material's title tokens.
- * Any network error counts as unverified — the branch dies, the build never throws here.
- *
- * The URL comes out of the model's own JSON, and this fetch runs in Rust where the browser's
- * private-network protections do not apply. Without a guard, a model could name
- * `http://127.0.0.1:...` and read back, one substring at a time, whether a chosen string
- * appears in a local service's response — the verdict is reported either way. fetchExternalPage
- * refuses loopback and private addresses, bounds the body, and bounds the wait. */
-async function verifyUrl(url: string, sourceTitles: readonly string[]): Promise<boolean> {
-  const text = await fetchExternalPage(tauriFetch, url, CITATION_FETCH_TIMEOUT_MS);
-  if (text === null) return false;
-  return sourceTitles.some((title) => verifyEvidenceText(text, title));
 }
 
 export type VerifiedProposal =
@@ -115,40 +93,7 @@ export async function runProposalPipeline(
     };
   }
 
-  // Verify each unique cited URL once; an item may share a source with its siblings.
-  // Dead direct links get one search rescue: the model cites deep links from memory and
-  // those rot (all three 2026-08-10 failures were a single hallucinated/rotted URL taking
-  // the whole build to 0/N). A search hit proving the cited material exists revives the
-  // branch and swaps in the reachable URL; no hit still kills it (宁缺毋假).
-  const titlesByUrl = new Map<string, string[]>();
-  for (const item of items) {
-    const titles = titlesByUrl.get(item.sourceUrl) ?? [];
-    titles.push(item.sourceTitle);
-    titlesByUrl.set(item.sourceUrl, titles);
-  }
-  const bing = createBingProvider({ fetchImpl: tauriFetch });
-  const verdicts = await Promise.all(
-    [...titlesByUrl.entries()].map(async ([url, titles]) => {
-      if (await verifyUrl(url, titles)) return { url, ok: true, rescueUrl: null };
-      // A failed search yields no items, and no rescue — same outcome as no hit, so the
-      // branch dies either way (宁缺毋假); only the items are of interest here.
-      const { items: results } = await bing.search(titles[0] ?? "", 3);
-      const rescueUrl = findRescueUrl(results, titles);
-      return { url, ok: rescueUrl !== null, rescueUrl };
-    }),
-  );
-  const verifiedUrls = new Set(verdicts.filter((verdict) => verdict.ok).map((v) => v.url));
-  const rescuedUrlByOriginal = new Map(
-    verdicts
-      .filter((verdict) => verdict.rescueUrl !== null)
-      .map((verdict) => [verdict.url, verdict.rescueUrl as string]),
-  );
-
-  const surviving = pruneUnverifiedBranches(items, verifiedUrls).map((item) => ({
-    ...item,
-    // The rescued URL is the one we actually verified as reachable — cite that.
-    sourceUrl: rescuedUrlByOriginal.get(item.sourceUrl) ?? item.sourceUrl,
-  }));
+  const { surviving, verdicts } = await verifyCitedSources(items);
   const costLine = costLineOf(config.model, usage);
   if (!survivesThreshold(items.length, surviving.length)) {
     const failedSamples = verdicts

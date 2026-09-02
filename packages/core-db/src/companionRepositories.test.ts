@@ -4,6 +4,7 @@
  * decline streaks, knowledge-state upsert, and conversations.create/findLatestByCompanion.
  */
 import { describe, expect, it } from "vitest";
+import type { ConversationRow } from "./chatTypes";
 import {
   createCompanionKnowledgeStateRepo,
   createCompanionMemoriesRepo,
@@ -14,9 +15,9 @@ import type {
   CompanionMemoryRow,
   CompanionProposalRow,
 } from "./companionTypes";
-import { createConversationsRepo } from "./repositories";
+import { createConversationsRepo } from "./conversationsRepository";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { ConversationRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 function makeFakeSql() {
   const conversations = new Map<string, ConversationRow>();

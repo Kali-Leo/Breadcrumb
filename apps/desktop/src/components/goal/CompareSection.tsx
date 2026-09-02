@@ -6,13 +6,14 @@
  * Main exports: CompareSection.
  */
 import type { OverlapNode } from "@breadcrumb/feature-compare";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { type OccupationHit, searchOccupations } from "../../lib/compare/occupationActions";
 import { useCompareStore } from "../../stores/compareStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { CompareNodeDetail, ExperimentalBuildForm } from "./CompareDetail";
 import { CompareTreeView } from "./CompareTreeView";
+import { GoalFromProfile } from "./GoalFromProfile";
+import { OccupationPicker } from "./OccupationPicker";
 
 function findNode(roots: readonly OverlapNode[], key: string): OverlapNode | null {
   for (const root of roots) {
@@ -21,103 +22,6 @@ function findNode(roots: readonly OverlapNode[], key: string): OverlapNode | nul
     if (found !== null) return found;
   }
   return null;
-}
-
-function OccupationPicker() {
-  const { t } = useTranslation("palace");
-  const createOccupation = useCompareStore((state) => state.createOccupation);
-  const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<OccupationHit[]>([]);
-  const latestQuery = useRef("");
-  return (
-    <div className="space-y-1">
-      <input
-        value={query}
-        onChange={(event) => {
-          const next = event.target.value;
-          setQuery(next);
-          latestQuery.current = next;
-          // The directory loads on first keystroke; a slow load must not overwrite the hits
-          // of a query the user has since typed past.
-          void searchOccupations(next).then((found) => {
-            setHits((current) => (latestQuery.current === next ? found : current));
-          });
-        }}
-        placeholder={t("compare.searchPlaceholder")}
-        className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
-      />
-      {hits.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="text-stone-400">{t("compare.didYouMean")}</span>
-          {hits.map((hit) => (
-            <button
-              key={hit.code}
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setHits([]);
-                void createOccupation(hit.code);
-              }}
-              className="rounded border border-amber-300 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
-            >
-              {hit.title}（{hit.code}）
-              {hit.matchedAlt !== null && ` · ${t("compare.alsoCalled", { name: hit.matchedAlt })}`}
-            </button>
-          ))}
-        </div>
-      )}
-      {query.trim().length >= 2 && hits.length === 0 && (
-        <p className="text-stone-400">{t("compare.notFound")}</p>
-      )}
-    </div>
-  );
-}
-
-function GoalFromProfile() {
-  const { t } = useTranslation("palace");
-  const generatingGoal = useCompareStore((state) => state.generatingGoal);
-  const goalNote = useCompareStore((state) => state.goalNote);
-  const generateGoalFromProfile = useCompareStore((state) => state.generateGoalFromProfile);
-  const [confirming, setConfirming] = useState(false);
-  return (
-    <div className="space-y-1">
-      {confirming ? (
-        <div className="space-y-1 rounded border border-amber-200 bg-amber-50 px-2 py-1.5">
-          <p className="text-stone-600">{t("compare.goalNote")}</p>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              disabled={generatingGoal}
-              onClick={() => {
-                setConfirming(false);
-                void generateGoalFromProfile();
-              }}
-              className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
-            >
-              {t("compare.generate")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              className="rounded border border-stone-200 px-2 py-0.5 text-stone-500"
-            >
-              {t("compare.notNow")}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          disabled={generatingGoal}
-          onClick={() => setConfirming(true)}
-          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
-        >
-          {generatingGoal ? t("compare.generating") : t("compare.generateGoal")}
-        </button>
-      )}
-      {goalNote !== null && <p className="text-stone-500">{goalNote}</p>}
-    </div>
-  );
 }
 
 export function CompareSection() {

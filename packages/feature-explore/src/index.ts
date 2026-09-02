@@ -12,6 +12,7 @@ export * from "./focusRecord";
 export * from "./gatePolicy";
 export * from "./guessGrading";
 export * from "./hubNodes";
+export * from "./mapLayout";
 export * from "./shortLabel";
 export * from "./termAnnotator";
 export * from "./uiCopy";

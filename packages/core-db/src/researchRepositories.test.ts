@@ -3,7 +3,8 @@
  * bookkeeping survives result deletion, results order newest-first, deletes are physical.
  */
 import { describe, expect, it } from "vitest";
-import { createResearchRepo, type ResearchResultRow } from "./researchRepositories";
+import { createResearchRepo } from "./researchRepositories";
+import type { ResearchResultRow } from "./researchTypes";
 import { withSequentialTransactions } from "./transactionFallback";
 import type { SqlClient } from "./types";
 

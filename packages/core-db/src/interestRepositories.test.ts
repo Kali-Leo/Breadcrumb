@@ -4,8 +4,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createInterestSignalsRepo, createMasteryClaimsRepo } from "./interestRepositories";
+import type { InterestSignalRow, MasteryClaimRow } from "./knowledgeTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { InterestSignalRow, MasteryClaimRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 /** In-memory fake keyed by table name inferred from the SQL text. */
 function makeFakeSql() {

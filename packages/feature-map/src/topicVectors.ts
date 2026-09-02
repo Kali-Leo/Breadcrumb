@@ -1,24 +1,11 @@
 /**
- * Purpose: small pure vector-math helpers shared by topic discovery — cosine similarity and
- * centroid (mean vector). No DB, no UI, no randomness.
+ * Purpose: small pure vector-math helpers shared by topic discovery. Cosine now comes from
+ * @breadcrumb/core-vectors (2026-09-02 — one shared implementation instead of six copies);
+ * the centroid stays here because it is topic-clustering's own idea of a group's middle.
  * Main exports: cosineSimilarity, computeCentroid.
  */
 
-export function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dot += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
+export { cosineSimilarity } from "@breadcrumb/core-vectors";
 
 export function computeCentroid(
   memberIds: readonly string[],

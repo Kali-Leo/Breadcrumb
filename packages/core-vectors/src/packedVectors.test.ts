@@ -5,23 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { packVectors, partnersOf, similarityBetween, similarityLandscape } from "./packedVectors";
-
-/** The implementation this replaces, kept here as the reference to compare against. */
-function plainCosine(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dot += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
+import { cosineSimilarity as plainCosine } from "./similarity";
 
 function randomEntries(count: number, dims: number) {
   let seed = 42;

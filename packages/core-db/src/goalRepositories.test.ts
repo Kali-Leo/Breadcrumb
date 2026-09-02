@@ -4,8 +4,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { createGoalsRepo } from "./goalRepositories";
+import type { GoalRow } from "./knowledgeTypes";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { GoalRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 /** In-memory fake keyed by goal id. */
 function makeFakeSql() {

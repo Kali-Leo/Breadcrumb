@@ -6,15 +6,12 @@
  * Usage: node scripts/canonical/gen-data.mjs <kebiao-fine.json> <mdn-fine.json> <concepts.json>
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { normalize } from "./shared.mjs";
 
 const [, , kebiaoPath, mdnPath, conceptsPath] = process.argv;
 if (!kebiaoPath || !mdnPath || !conceptsPath) {
   console.error("usage: node gen-data.mjs <kebiao-fine.json> <mdn-fine.json> <concepts.json>");
   process.exit(1);
-}
-
-function normalize(text) {
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
 }
 
 const kebiao = JSON.parse(readFileSync(kebiaoPath, "utf8"));

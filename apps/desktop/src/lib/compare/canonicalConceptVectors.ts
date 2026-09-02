@@ -7,22 +7,18 @@
  */
 import type { CanonicalConceptEmbeddingRow, CanonicalConceptRow } from "@breadcrumb/core-db";
 import { parseVectorColumn } from "@breadcrumb/core-db";
+import { fnv1aHex8 } from "@breadcrumb/core-random";
 import { getRepos } from "../platform/db";
 import { embedTexts } from "../platform/embeddings";
 import { nowIso } from "../platform/time";
 import { conceptText } from "./canonicalConcepts";
 
 /** Stable FNV-1a hash of the exact text that was embedded — the cache's invalidation key.
- * Same construction as feature-diglot-weave's hashContext; collision risk is irrelevant here
- * because a miss only costs one re-embed. */
-export function hashText(text: string): string {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
-}
+ * @breadcrumb/core-random's, the same construction feature-diglot-weave's hashContext uses
+ * (2026-09-02: it was a hand-copy of it); collision risk is irrelevant here because a miss
+ * only costs one re-embed. Written into canonical_concept_embeddings.content_hash, so
+ * changing the construction would invalidate every cached row at once. */
+export const hashText = fnv1aHex8;
 
 /**
  * concept id -> vector for every concept given, embedding only the cache misses and writing

@@ -5,7 +5,7 @@
  * scenario (every node has exactly one child, so the whole line falls straight down one column).
  */
 import { describe, expect, it } from "vitest";
-import { layoutFocusMap } from "./focusMapLayout";
+import { layoutFocusMap } from "./mapLayout";
 
 const FORK_NODES = [
   { id: "a", label: "A", kind: "word" as const, parentId: null },

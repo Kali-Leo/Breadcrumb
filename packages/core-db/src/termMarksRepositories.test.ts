@@ -4,9 +4,10 @@
  * different targets never collide.
  */
 import { describe, expect, it } from "vitest";
+import type { TermMarkRow } from "./focusTypes";
 import { createTermMarksRepo } from "./termMarksRepositories";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { SqlClient, TermMarkRow } from "./types";
+import type { SqlClient } from "./types";
 
 function makeFakeSql() {
   const rows: TermMarkRow[] = [];

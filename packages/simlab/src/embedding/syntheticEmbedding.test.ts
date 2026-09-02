@@ -2,25 +2,13 @@
  * Purpose: unit tests for the synthetic embedding's two required properties — determinism
  * and similarity-correlated cosine distance.
  */
+import { cosineSimilarity } from "@breadcrumb/core-vectors";
 import { describe, expect, it } from "vitest";
 import {
   computeSyntheticEmbedding,
   computeSyntheticNodeEmbedding,
   SYNTHETIC_EMBEDDING_DIMENSIONS,
 } from "./syntheticEmbedding";
-
-function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < a.length; index += 1) {
-    dotProduct += (a[index] ?? 0) * (b[index] ?? 0);
-    normA += (a[index] ?? 0) ** 2;
-    normB += (b[index] ?? 0) ** 2;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
 
 describe("computeSyntheticEmbedding", () => {
   it("has the fixed dimensionality", () => {

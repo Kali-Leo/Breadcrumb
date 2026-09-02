@@ -3,9 +3,10 @@
  * upsert+list round-trip and overwrite-on-same-item_id semantics (spec 029).
  */
 import { describe, expect, it } from "vitest";
+import type { PracticeScoreRow } from "./comparisonTypes";
 import { createPracticeRepo } from "./practiceRepositories";
 import { withSequentialTransactions } from "./transactionFallback";
-import type { PracticeScoreRow, SqlClient } from "./types";
+import type { SqlClient } from "./types";
 
 function makeFakeSql() {
   const rows = new Map<string, PracticeScoreRow>();

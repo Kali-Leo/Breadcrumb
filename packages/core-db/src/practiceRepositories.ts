@@ -3,7 +3,8 @@
  * AI-verified 0–10 score on a pure experience leaf, one row per item, overwritten in place.
  * Main exports: createPracticeRepo factory.
  */
-import type { PracticeScoreRow, SqlClient } from "./types";
+import type { PracticeScoreRow } from "./comparisonTypes";
+import type { SqlClient } from "./types";
 
 export function createPracticeRepo(sql: SqlClient) {
   return {

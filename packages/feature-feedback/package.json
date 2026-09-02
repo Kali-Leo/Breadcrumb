@@ -13,6 +13,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-i18n": "workspace:*",
+    "@breadcrumb/core-time": "workspace:*",
     "@breadcrumb/feature-diglot-weave": "workspace:*",
     "@breadcrumb/feature-memory": "workspace:*",
     "ts-fsrs": "^5.2.1"

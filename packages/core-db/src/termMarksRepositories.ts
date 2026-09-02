@@ -3,7 +3,8 @@
  * (target_kind, target_id), so a message or focus-node answer is ever LLM-marked at most once.
  * Main exports: createTermMarksRepo.
  */
-import type { SqlClient, TermMarkRow, TermMarkTargetKind } from "./types";
+import type { TermMarkRow, TermMarkTargetKind } from "./focusTypes";
+import type { SqlClient } from "./types";
 
 export function createTermMarksRepo(sql: SqlClient) {
   return {

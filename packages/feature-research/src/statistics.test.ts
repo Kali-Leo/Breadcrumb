@@ -8,9 +8,10 @@
 
 import type { SqlClient } from "@breadcrumb/core-db";
 import { withSequentialTransactions } from "@breadcrumb/core-db";
+import { toLocalDateKey as coreDateKey } from "@breadcrumb/core-time";
 import { describe, expect, it } from "vitest";
 import { executeStatCall } from "./statistics";
-import { buildDayKeys } from "./statisticsSeries";
+import { buildDayKeys, localDateKey } from "./statisticsSeries";
 
 interface FakeTables {
   knowledge_nodes?: readonly { id: string }[];
@@ -309,5 +310,21 @@ describe("correlation", () => {
       NOW,
     );
     expect(result).toEqual({ kind: "number", value: 1, n: 40 });
+  });
+});
+
+/** Correlation buckets must fall on the same calendar days the feedback heatmap and the trail
+ * use — see the matching test in feature-feedback. */
+describe("day cutting agrees with @breadcrumb/core-time", () => {
+  it("gives the same key as core-time for every hour of a day", () => {
+    for (let hour = 0; hour < 24; hour += 1) {
+      const iso = new Date(2026, 6, 29, hour, 30).toISOString();
+      expect(localDateKey(iso)).toBe(coreDateKey(iso));
+    }
+  });
+
+  it("ends its window on today and runs oldest first", () => {
+    const keys = buildDayKeys(3, new Date(2026, 6, 29, 15, 30).toISOString());
+    expect(keys).toEqual(["2026-07-27", "2026-07-28", "2026-07-29"]);
   });
 });

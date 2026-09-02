@@ -16,6 +16,7 @@
  *          <fine1.json> [fine2.json...] <out.json>
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { normalize } from "./shared.mjs";
 import { descriptionDisqualifies } from "./wikidataGuard.mjs";
 
 const rawArgs = process.argv.slice(2);
@@ -27,10 +28,6 @@ if (args.length < 2) {
   process.exit(1);
 }
 const outPath = args.pop();
-
-function normalize(text) {
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
-}
 
 async function wikidata(params) {
   const query = new URLSearchParams({ format: "json", ...params }).toString();

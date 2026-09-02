@@ -8,13 +8,16 @@ import { createEventBus } from "@breadcrumb/core-bus";
 import type { ConversationKind, ConversationRow, MessageRow } from "@breadcrumb/core-db";
 import { create } from "zustand";
 import { runChatRetryRound } from "../lib/chat/chatAssistantRound";
+import {
+  type ConversationActions,
+  createConversationActions,
+} from "../lib/chat/chatConversationActions";
 import { type ChatSendDeps, runChatSendPipeline } from "../lib/chat/chatSendPipeline";
 import {
   type ActiveMirror,
   type ChatSession,
   type CostByCurrency,
   EMPTY_ACTIVE_MIRROR,
-  loadChatSession,
 } from "../lib/chat/chatSessions";
 import { createSessionWriters } from "../lib/chat/chatSessionWriters";
 import { abortStreamControl } from "../lib/chat/chatStreamControl";
@@ -24,12 +27,11 @@ import {
   returnToLatestTreeState,
 } from "../lib/chat/chatTreeActions";
 import { getRepos } from "../lib/platform/db";
-import { todayLocalMidnightIso } from "../lib/platform/time";
 
 export const appEventBus = createEventBus();
 export type { CostByCurrency };
 
-interface ChatState extends ActiveMirror {
+interface ChatState extends ActiveMirror, ConversationActions {
   conversations: ConversationRow[];
   todayCost: CostByCurrency;
   /** One runtime session per open conversation — the source of truth; the ActiveMirror
@@ -39,14 +41,6 @@ interface ChatState extends ActiveMirror {
   /** Per-conversation composer drafts (null key = the new-conversation composer); a draft
    * is cleared only once its user message actually persisted. */
   drafts: ReadonlyMap<string | null, string>;
-  loadFromDatabase(): Promise<void>;
-  /** Loads a session without touching the active binding — parallel windows use this. */
-  ensureSession(id: string): Promise<ChatSession>;
-  openConversation(id: string): Promise<void>;
-  /** Gives a conversation the name the learner typed, which also freezes auto-naming. */
-  renameConversation(id: string, title: string): Promise<void>;
-  /** Removes a conversation and the footprints it left (see conversationsRepo.remove). */
-  deleteConversation(id: string): Promise<void>;
   startNewConversation(): void;
   /** Non-destructive continuation from any station (spec 040 §2). */
   resumeFromMessage(messageId: string): void;
@@ -71,13 +65,6 @@ interface ChatState extends ActiveMirror {
   /** Folds an externally-appended row (invitation, thanks, exit record) into its session. */
   noteExternalMessage(conversationId: string, message: MessageRow): void;
 }
-
-/** In-flight session loads, deduped per conversation (StrictMode double-mounts, popup +
- * send racing) — a stale load's putSession must not clobber folded messages. */
-const sessionLoads = new Map<string, Promise<ChatSession>>();
-/** The most recently requested open — a slower open resolving late must not yank the
- * active binding back. */
-let latestOpenRequestId: string | null = null;
 
 export const useChatStore = create<ChatState>((set, get) => {
   const { patchSession, putSession, setRoundError } = createSessionWriters(set, get);
@@ -105,85 +92,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     drafts: new Map(),
     newConversationStudyMode: false,
     ...EMPTY_ACTIVE_MIRROR,
-
-    async loadFromDatabase() {
-      const repos = await getRepos();
-      // Sidebar lists only 'chat' kind — practice discussions (spec 026) stay hidden here.
-      const [conversations, todayCost] = await Promise.all([
-        repos.conversations.listByKind("chat"),
-        repos.llmCalls.sumCostSince(todayLocalMidnightIso()),
-      ]);
-      set({ conversations, todayCost });
-    },
-
-    async ensureSession(id) {
-      const existing = get().sessions.get(id);
-      if (existing !== undefined) return existing;
-      const inFlight = sessionLoads.get(id);
-      if (inFlight !== undefined) return inFlight;
-      const load = (async () => {
-        const session = await loadChatSession(await getRepos(), id);
-        // A session that appeared meanwhile (a send round folded into it) wins over the
-        // older DB snapshot.
-        const current = get().sessions.get(id);
-        if (current !== undefined) return current;
-        putSession(id, session, false);
-        return session;
-      })();
-      sessionLoads.set(id, load);
-      try {
-        return await load;
-      } finally {
-        sessionLoads.delete(id);
-      }
-    },
-
-    async renameConversation(id, title) {
-      const trimmed = title.trim();
-      if (trimmed === "") return;
-      const repos = await getRepos();
-      await repos.conversations.rename(id, trimmed);
-      set({
-        conversations: get().conversations.map((conversation) =>
-          conversation.id === id
-            ? { ...conversation, title: trimmed, auto_title: null }
-            : conversation,
-        ),
-      });
-    },
-
-    async deleteConversation(id) {
-      const repos = await getRepos();
-      await repos.conversations.remove(id);
-      const sessions = new Map(get().sessions);
-      sessions.delete(id);
-      const wasActive = get().activeConversationId === id;
-      set({
-        conversations: get().conversations.filter((conversation) => conversation.id !== id),
-        sessions,
-      });
-      // A deleted conversation must not stay on screen; the composer returns to the blank
-      // state a new chat starts from.
-      if (wasActive) get().startNewConversation();
-      // Footprints went with it, so anything drawn from them is now stale.
-      const { useKnowledgeStore } = await import("./knowledgeStore");
-      await useKnowledgeStore.getState().loadTree();
-      const { useMemoryStore } = await import("./memoryStore");
-      await useMemoryStore.getState().refresh();
-    },
-
-    async openConversation(id) {
-      latestOpenRequestId = id;
-      // Always reload: an external append the session missed must not stay invisible.
-      const session = await loadChatSession(await getRepos(), id);
-      // Only the newest open request may move the active binding (fast A→B clicking).
-      putSession(id, session, latestOpenRequestId === id);
-      // Opening a helper's conversation reads its invitation — the roster dot clears.
-      if (session.companionId !== null) {
-        const { useCompanionStore } = await import("./companionStore");
-        useCompanionStore.getState().markHelperSeen(session.companionId);
-      }
-    },
+    ...createConversationActions(set, get, putSession),
 
     startNewConversation() {
       set({ activeConversationId: null, ...EMPTY_ACTIVE_MIRROR });

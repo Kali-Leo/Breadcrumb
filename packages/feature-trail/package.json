@@ -13,6 +13,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-time": "workspace:*",
     "zod": "^4.1.0"
   },
   "devDependencies": {

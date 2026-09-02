@@ -8,10 +8,11 @@ apps/desktop                 Tauri 2 外壳 + React 界面 + Rust 命令
   ├── src-tauri/             Rust：6 个命令，业务逻辑一概不在这里
   └── src/locales/           界面文案（zh-CN、en）
 
-packages/                    22 个无界面的库，被 apps/desktop 直接以工作区依赖引入
-  ├── core-*  (5)            总线、数据库、i18n、LLM 客户端、教学契约
+packages/                    27 个无界面的库，被 apps/desktop 直接以工作区依赖引入
+  ├── core-*  (10)           总线、数据库、事件契约、i18n、LLM 客户端、教学契约、
+  │                          文本、向量、日历日、确定性随机
   ├── feature-* (15)         各个功能的纯逻辑
-  └── sdk / simlab (2)       类型定义 / 仅开发期的模拟测试框架
+  └── demo-seed / simlab (2) 演示数据 / 仅开发期的模拟测试框架
 ```
 
 **分层原则：`packages/` 里没有 React、没有 Tauri、没有网络。** 它们是纯函数加 Zod 契约。
@@ -22,15 +23,20 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 
 ## 各包的职责
 
-### core（5 个）
+### core（10 个）
 
 | 包 | 负责 |
 |---|---|
 | `core-bus` | 42 行的类型化发布订阅。全应用一个实例，17 个事件。抛异常的订阅者会被捕获，不阻塞其他人。 |
 | `core-db` | 45 个只追加的迁移 + 手写 SQL 仓储，跑在一个注入的 `SqlClient` 上。 |
+| `core-events` | 跨模块事件的类型契约。没有运行时插件系统，见下方注意事项。 |
 | `core-i18n` | 语言注册表、语言协商、回答语言指令。 |
 | `core-llm` | OpenAI 兼容的流式/JSON 客户端、重试、模型价目表、计价。 |
+| `core-random` | FNV-1a 字符串哈希与 mulberry32 种子随机。库代码一律不调 `Math.random()`：地形、证据排序、人格扰动都从种子回放得出同一结果。 |
 | `core-teaching` | 教学契约提示词。桌面端和 simlab 共用同一份，防止两边漂移。 |
+| `core-text` | 纯文本处理：词表分词的中文切词，以及句边界查找。 |
+| `core-time` | 「今天是哪一天」只在这里回答一次：按机器本地时区切日。热力图、研究相关性、每日摘要、宫殿布局必须切在同一条线上。 |
+| `core-vectors` | 向量运算：打包归一化嵌入、全对相似度地形，以及余弦与相对门限（`RELATIVE_GATE_FRACTION`，全仓一个常数）。 |
 
 ### feature（15 个）
 
@@ -39,6 +45,13 @@ packages/                    22 个无界面的库，被 apps/desktop 直接以�
 `browsing-interest`（浏览兴趣桥）、`explore`（专注模式与生词）、`diglot-weave`（语言学习）、
 `compare`（对比树）、`factcheck`（事实核查）、`feedback`（热力图与趋势）、
 `companion`（同学与记忆流）、`research`（研究课题）、`trail`（会话摘要，目前仅 simlab 使用）。
+
+### 其余两个（2 个）
+
+| 包 | 负责 |
+|---|---|
+| `demo-seed` | 演示用的示例数据生成：一棵可信的知识树与配套事件，供空库首次启动和 simlab 起手用。 |
+| `simlab` | 仅开发期的模拟测试框架：合成人格重放真实管线，给判官台跑分。不进产品构建。 |
 
 > **注意：没有运行时插件系统。** Breadcrumb 不做运行时插件加载（ADR-0035，2026-09-02 裁定）：
 > 没有加载器、没有 `./mods` 目录、没有动态加载、没有插件市场。`feature-*` 前缀就是字面意思——

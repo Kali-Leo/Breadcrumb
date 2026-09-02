@@ -1,168 +1,43 @@
 /**
  * Purpose: zustand store for user settings (API config, network switch, per-feature
  * switches, route params, interface and answer language), persisted in the settings table. Load once at startup;
- * changes write through. (Learning mode was removed by spec 045 and restored by spec 048 —
- * Leo's original design stands, so LearningMode is live.)
- * Main exports: useSettingsStore, ApiConfig, FeatureSwitches, RouteParams, LearningMode.
+ * changes write through. The value types, storage keys and defaults live in
+ * lib/platform/settingsSchema.ts, the startup read in settingsStoreLoad.ts and the
+ * write-through actions in settingsStoreWrites.ts; this file holds the state itself.
+ * (Learning mode was removed by spec 045 and restored by spec 048 — Leo's original design
+ * stands, so LearningMode is live.)
+ * Main exports: useSettingsStore, SettingsState, ApiConfig, FeatureSwitches, RouteParams,
+ * LearningMode.
  */
-import {
-  DEFAULT_LANGUAGE_CODE,
-  isLanguageCode,
-  matchLanguage,
-  UI_LANGUAGE_CODES,
-} from "@breadcrumb/core-i18n";
-import type { Currency } from "@breadcrumb/core-llm";
-import type { RecommendRouteParams } from "@breadcrumb/feature-planner";
+import { DEFAULT_LANGUAGE_CODE } from "@breadcrumb/core-i18n";
 import { create } from "zustand";
-import { changeLanguage } from "../i18n";
-import { isPseudoLocale } from "../i18n/pseudoLocale";
 import {
-  sanitizeRecommendationWeights,
   USER_WEIGHT_DEFAULTS,
   type UserRecommendationWeights,
 } from "../lib/planner/recommendationWeights";
-import { forgetAnswerLanguageWatch } from "../lib/platform/answerLanguageWatch";
-import { getRepos } from "../lib/platform/db";
-import { nowIso } from "../lib/platform/time";
+import {
+  type ApiConfig,
+  type CompareCategory,
+  DEFAULT_ROUTE_PARAMS,
+  DEFAULT_SWITCHES,
+  type FeatureSwitches,
+  guessMainlandNetwork,
+  type LearningMode,
+  type RouteParams,
+} from "../lib/platform/settingsSchema";
+import { loadSettingsSnapshot } from "./settingsStoreLoad";
+import { createSettingsWriteActions, type SettingsWriteActions } from "./settingsStoreWrites";
 
-export interface ApiConfig {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  /** Which currency this account is billed in, for models the provider sells in more than
-   * one (DeepSeek: CNY on its China platform, USD internationally). Absent for accounts
-   * saved before this existed and for single-currency models, where there is nothing to
-   * ask — the price table's own currency wins. */
-  priceCurrency?: Currency;
-  /**
-   * Prices the learner typed for their own model, in currency units per million tokens —
-   * exactly the way providers publish them. Set when the built-in list has never heard of
-   * the model, or has the wrong number for this account. Absent = use the built-in list.
-   */
-  priceOverride?: PriceOverride;
-}
+export type {
+  ApiConfig,
+  CompareCategory,
+  FeatureSwitches,
+  LearningMode,
+  PriceOverride,
+  RouteParams,
+} from "../lib/platform/settingsSchema";
 
-/** Prices as the learner typed them: currency units per million tokens. */
-export interface PriceOverride {
-  inputPerMillionTokens: number;
-  outputPerMillionTokens: number;
-  /** Optional: providers without a prefix cache have no such rate to enter. */
-  cachedInputPerMillionTokens?: number;
-}
-
-/** Every optional AI-consuming feature has its own switch (product principle 3). */
-export interface FeatureSwitches {
-  knowledgeTree: boolean;
-  factcheck: boolean;
-  knowledgeEdges: boolean;
-  interest: boolean;
-  /** Goal planning (spec 047): mapping a free-text goal into a knowledge-node set — one
-   * LLM call per goal creation. Replaced the retired labPanel switch. */
-  goalPlanning: boolean;
-  /** Experimental: search-build a comparison profile on demand (spec 023 §5). */
-  compareProfileBuild: boolean;
-  /** Semantic alignment between profile items and the user's own vocabulary (spec 024). */
-  compareAlignment: boolean;
-  /** Experimental: let the model name the map's clustered continents (spec 031 §3). */
-  mapTopicNaming: boolean;
-  /** Teach-back explanation quality judgment → mastery evidence (vision/09 #2). */
-  teachQuality: boolean;
-  /** The 🪞 feedback-lab full-page view (spec 035): candidate forms for "making learning
-   * visible", all computed from existing local data. */
-  feedbackLab: boolean;
-  /** The 🔬 research task platform (spec 036): runs vetted, project-signed research tasks
-   * locally and shows the aggregate results. Default on, no reminder (Leo 2026-08-13) —
-   * computation stays on-device and the real consent point is the (not-yet-built) upload
-   * step; turning it off shows a one-time plain explanation, then never asks again. */
-  researchTasks: boolean;
-  /** Companion cast (spec 037): opening/continuing a chat with one of the three companion
-   * cards. Off hides the sidebar's 伙伴 section entirely and blocks sending in an open
-   * companion conversation. */
-  companionChat: boolean;
-  /** Companion cast: writes/retrieves the per-companion memory stream (importance scoring +
-   * periodic reflection). Off means companions still chat, just without long-term memory. */
-  companionMemory: boolean;
-  /** Companion cast: generates the teach-back script (expectations/misconceptions/gaps) and
-   * runs Reflect-Respond each round. Off falls back to spec-034's generic teach prompt. */
-  companionScript: boolean;
-  /** Focus mode (spec 042): a picked word's full-screen explain session — each station's
-   * streamed answer. Off leaves the rest of focus mode (entry, subway map, exit record)
-   * working, just with no way to generate a new station's content. */
-  focusExplain: boolean;
-  /** Term marking (spec 043): one small call after a reply/focus answer lands, picking which
-   * words would trip up this learner — the primary source of explore doors. Off leaves doors
-   * to the zero-LLM legacy node-matching source only. */
-  termMarking: boolean;
-}
-
-/** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
- * curriculum material (教材). A display filter, not a feature switch. */
-export type CompareCategory = "occupation" | "curriculum";
-
-/** 'casual' = wander by curiosity, recommendations grow outward naturally. 'ranked' = push
- * toward a chosen goal (frontier weights the goal's gap; goal surfaces appear). Spec 016,
- * removed by spec 045 and restored by spec 048 (Leo's original design stands). */
-export type LearningMode = "ranked" | "casual";
-
-/** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as
- * feature-planner's RecommendRouteParams, re-exported here so components import one name. */
-export type RouteParams = RecommendRouteParams;
-
-const API_CONFIG_KEY = "apiConfig";
-const NETWORK_ENABLED_KEY = "networkEnabled";
-/** Set once the first-run guide has been finished or skipped, so it never reappears. */
-const ONBOARDING_SEEN_KEY = "onboardingSeen";
-/** Separate from ONBOARDING_SEEN_KEY: the checklist is meant to outlive the tour and survive
- * restarts, so "has seen the introduction" and "is done with the checklist" are two answers. */
-const CHECKLIST_DISMISSED_KEY = "onboardingChecklistDismissed";
-const FEATURE_SWITCHES_KEY = "featureSwitches";
-const MAINLAND_NETWORK_KEY = "mainlandNetwork";
-const LEARNING_MODE_KEY = "learningMode";
-const ROUTE_PARAMS_KEY = "routeParams";
-const COMPARE_CATEGORY_KEY = "compareCategory";
-const LANGUAGE_KEY = "language";
-const ANSWER_LANGUAGE_KEY = "answerLanguage";
-const RECOMMENDATION_WEIGHTS_KEY = "recommendationWeights";
-/** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
- * learner tunes from the middle (spec 017 #1). */
-const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
-/** Metered features default ON: metering exists so features can run boldly — every
- * switch and its real spend live on the 开关与计价 page, and silent signal collection is
- * a core product value (Leo 2026-08-13). feedbackLab costs zero tokens and only ever
- * shows plain facts — exactly the "make learning visible" surface the product is for. */
-const DEFAULT_SWITCHES: FeatureSwitches = {
-  knowledgeTree: true,
-  factcheck: true,
-  knowledgeEdges: true,
-  interest: true,
-  goalPlanning: true,
-  compareProfileBuild: true,
-  compareAlignment: true,
-  mapTopicNaming: true,
-  teachQuality: true,
-  feedbackLab: true,
-  researchTasks: true,
-  companionChat: true,
-  companionMemory: true,
-  companionScript: true,
-  focusExplain: true,
-  termMarking: true,
-};
-
-/** First run: the language the machine is set to, if we have an interface in it. Null when
- * we do not — the app then asks rather than opening in a language nobody chose (Leo
- * 2026-09-01). */
-function guessLanguage(): string | null {
-  const preferred = typeof navigator === "undefined" ? [] : [...(navigator.languages ?? [])];
-  return matchLanguage(preferred.length > 0 ? preferred : [navigator?.language ?? ""]);
-}
-
-/** Best-effort default: mainland users need mainland-reachable evidence sources. */
-function guessMainlandNetwork(): boolean {
-  return navigator.language.toLowerCase() === "zh-cn";
-}
-
-interface SettingsState {
+export interface SettingsState extends SettingsWriteActions {
   loaded: boolean;
   apiConfig: ApiConfig | null;
   networkEnabled: boolean;
@@ -191,19 +66,6 @@ interface SettingsState {
    * panel (spec 060 §3+§5); the browsing weight is derived, not stored. */
   recommendationWeights: UserRecommendationWeights;
   loadFromDatabase(): Promise<void>;
-  saveApiConfig(config: ApiConfig): Promise<void>;
-  markOnboardingSeen(): Promise<void>;
-  resetOnboarding(): Promise<void>;
-  dismissChecklist(): Promise<void>;
-  setNetworkEnabled(enabled: boolean): Promise<void>;
-  setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
-  setMainlandNetwork(enabled: boolean): Promise<void>;
-  setLearningMode(mode: LearningMode): Promise<void>;
-  setRouteParams(params: RouteParams): Promise<void>;
-  setCompareCategory(category: CompareCategory): Promise<void>;
-  setLanguage(code: string): Promise<void>;
-  setAnswerLanguage(code: string | null): Promise<void>;
-  setRecommendationWeights(weights: UserRecommendationWeights): Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -223,149 +85,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   recommendationWeights: { ...USER_WEIGHT_DEFAULTS },
 
   async loadFromDatabase() {
-    const repos = await getRepos();
-    const [
-      apiConfig,
-      networkEnabled,
-      onboardingSeen,
-      checklistDismissed,
-      featureSwitches,
-      mainlandNetwork,
-      learningMode,
-      routeParams,
-      compareCategory,
-      storedLanguage,
-      storedAnswerLanguage,
-      storedRecommendationWeights,
-    ] = await Promise.all([
-      repos.settings.get<ApiConfig>(API_CONFIG_KEY),
-      repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
-      repos.settings.get<boolean>(ONBOARDING_SEEN_KEY),
-      repos.settings.get<boolean>(CHECKLIST_DISMISSED_KEY),
-      repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
-      repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
-      repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
-      repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
-      repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
-      repos.settings.get<string>(LANGUAGE_KEY),
-      repos.settings.get<string>(ANSWER_LANGUAGE_KEY),
-      repos.settings.get<Partial<UserRecommendationWeights>>(RECOMMENDATION_WEIGHTS_KEY),
-    ]);
-    // An interface language that was removed (or was never ours) must not leave the app
-    // showing raw message keys — fall back to the machine's own language, and if that is not
-    // one we speak either, open the picker.
-    const chosen =
-      storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage)
-        ? storedLanguage
-        : guessLanguage();
-    const language = chosen ?? DEFAULT_LANGUAGE_CODE;
-    await changeLanguage(language);
-    set({
-      loaded: true,
-      apiConfig,
-      networkEnabled: networkEnabled ?? true,
-      onboardingSeen: onboardingSeen ?? false,
-      checklistDismissed: checklistDismissed ?? false,
-      featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
-      mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
-      learningMode: learningMode ?? "casual",
-      routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
-      compareCategory: compareCategory ?? "occupation",
-      language,
-      languageUnchosen: chosen === null,
-      answerLanguage:
-        storedAnswerLanguage && isLanguageCode(storedAnswerLanguage) ? storedAnswerLanguage : null,
-      recommendationWeights: sanitizeRecommendationWeights(storedRecommendationWeights),
-    });
+    set(await loadSettingsSnapshot());
   },
 
-  async saveApiConfig(config) {
-    const repos = await getRepos();
-    await repos.settings.set(API_CONFIG_KEY, config, nowIso());
-    set({ apiConfig: config });
-  },
-
-  /** Puts the newcomer experience back so it runs again on the next load. */
-  async resetOnboarding() {
-    const repos = await getRepos();
-    await repos.settings.set(ONBOARDING_SEEN_KEY, false, nowIso());
-    await repos.settings.set(CHECKLIST_DISMISSED_KEY, false, nowIso());
-    set({ onboardingSeen: false, checklistDismissed: false });
-  },
-
-  async dismissChecklist() {
-    const repos = await getRepos();
-    await repos.settings.set(CHECKLIST_DISMISSED_KEY, true, nowIso());
-    set({ checklistDismissed: true });
-  },
-
-  async markOnboardingSeen() {
-    const repos = await getRepos();
-    await repos.settings.set(ONBOARDING_SEEN_KEY, true, nowIso());
-    set({ onboardingSeen: true });
-  },
-
-  async setNetworkEnabled(enabled) {
-    const repos = await getRepos();
-    await repos.settings.set(NETWORK_ENABLED_KEY, enabled, nowIso());
-    set({ networkEnabled: enabled });
-  },
-
-  async setFeatureSwitch(feature, enabled) {
-    const featureSwitches = { ...get().featureSwitches, [feature]: enabled };
-    const repos = await getRepos();
-    await repos.settings.set(FEATURE_SWITCHES_KEY, featureSwitches, nowIso());
-    set({ featureSwitches });
-  },
-
-  async setMainlandNetwork(enabled) {
-    const repos = await getRepos();
-    await repos.settings.set(MAINLAND_NETWORK_KEY, enabled, nowIso());
-    set({ mainlandNetwork: enabled });
-  },
-
-  async setLearningMode(mode) {
-    const repos = await getRepos();
-    await repos.settings.set(LEARNING_MODE_KEY, mode, nowIso());
-    set({ learningMode: mode });
-  },
-
-  async setRouteParams(params) {
-    const repos = await getRepos();
-    await repos.settings.set(ROUTE_PARAMS_KEY, params, nowIso());
-    set({ routeParams: params });
-  },
-
-  async setCompareCategory(category) {
-    const repos = await getRepos();
-    await repos.settings.set(COMPARE_CATEGORY_KEY, category, nowIso());
-    set({ compareCategory: category });
-  },
-
-  /** Switches the running interface first, then remembers it: a language picker that needs
-   * a restart to take effect is a language picker nobody trusts. */
-  async setLanguage(code) {
-    if (!UI_LANGUAGE_CODES.includes(code) && !isPseudoLocale(code)) return;
-    forgetAnswerLanguageWatch();
-    await changeLanguage(code);
-    const repos = await getRepos();
-    await repos.settings.set(LANGUAGE_KEY, code, nowIso());
-    set({ language: code, languageUnchosen: false });
-  },
-
-  async setRecommendationWeights(weights) {
-    const sanitized = sanitizeRecommendationWeights(weights);
-    const repos = await getRepos();
-    await repos.settings.set(RECOMMENDATION_WEIGHTS_KEY, sanitized, nowIso());
-    set({ recommendationWeights: sanitized });
-  },
-
-  async setAnswerLanguage(code) {
-    // The escalation was about the old language; the new one starts from the plain directive.
-    forgetAnswerLanguageWatch();
-    const next = code && isLanguageCode(code) ? code : null;
-    const repos = await getRepos();
-    await repos.settings.set(ANSWER_LANGUAGE_KEY, next, nowIso());
-    set({ answerLanguage: next });
-  },
+  ...createSettingsWriteActions(set, get),
 }));

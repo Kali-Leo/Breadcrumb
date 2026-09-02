@@ -10,6 +10,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { z } from "zod";
+import { normalize } from "./shared.mjs";
 
 const [, , postingsPath, socCode, outPath] = process.argv;
 if (!postingsPath || !socCode || !outPath) {
@@ -30,10 +31,6 @@ const CompletionSchema = z.object({
 });
 
 const MIN_POSTINGS = 3;
-
-function normalize(text) {
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
-}
 
 const SYSTEM = `You are a verbatim requirement extractor. Given one real job posting, list the concrete technologies, tools and skills it explicitly requires or mentions, as JSON:
 {"items":[{"label":"the technology/skill name (short, canonical casing, e.g. \\"React\\", \\"CI/CD\\")","quote":"the exact sentence fragment from the posting containing it, copied verbatim"}]}

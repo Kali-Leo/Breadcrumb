@@ -1,62 +1,31 @@
 /**
  * Purpose: the AI-service section of the general settings page — the credentials every AI
  * feature runs on, plus the billing currency for models the provider sells in more than one
- * (extracted from SettingsPanel when the currency picker arrived).
+ * (extracted from SettingsPanel when the currency picker arrived). The unsaved draft and the
+ * price parsing live in apiSettingsForm; the three field groups are their own components.
  * Main exports: ApiSettingsSection.
  */
 import { type Currency, modelCurrencies, resolveModelRates } from "@breadcrumb/core-llm";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type PriceOverride, useSettingsStore } from "../../stores/settingsStore";
-
-/** The API form's unsaved edits, module-level so switching views (which unmounts this
- * panel) does not silently discard them — they come back on the next visit until saved
- * (Leo-approved 2026-08-16: keep the 保存 button, never lose typed text). */
-let apiFormDraft: {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  currency?: Currency;
-  prices?: PriceFields;
-} | null = null;
-
-/** The three prices, as typed — kept as text so a half-entered number is not swallowed and
- * an empty box stays empty rather than becoming zero. */
-interface PriceFields {
-  input: string;
-  output: string;
-  cached: string;
-}
-
-const EMPTY_PRICES: PriceFields = { input: "", output: "", cached: "" };
-
-function priceFieldsOf(config: { priceOverride?: PriceOverride } | null): PriceFields {
-  const override = config?.priceOverride;
-  if (override === undefined) return EMPTY_PRICES;
-  return {
-    input: String(override.inputPerMillionTokens),
-    output: String(override.outputPerMillionTokens),
-    cached:
-      override.cachedInputPerMillionTokens === undefined
-        ? ""
-        : String(override.cachedInputPerMillionTokens),
-  };
-}
-
-/** A number the learner typed, or undefined when the box is empty or holds nonsense — a
- * price we cannot read is a price we do not use. */
-function readPrice(text: string): number | undefined {
-  const value = Number(text.trim());
-  return text.trim() !== "" && Number.isFinite(value) && value >= 0 ? value : undefined;
-}
-
-const INPUT_CLASS =
-  "w-full rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400";
+import { useSettingsStore } from "../../stores/settingsStore";
+import { ApiCredentialFields } from "./ApiCredentialFields";
+import { ApiCurrencyPicker } from "./ApiCurrencyPicker";
+import { ApiPriceFields } from "./ApiPriceFields";
+import {
+  clearApiFormDraft,
+  type PriceFields,
+  priceFieldsOf,
+  readApiFormDraft,
+  readPrice,
+  writeApiFormDraft,
+} from "./apiSettingsForm";
 
 export function ApiSettingsSection() {
   const { t } = useTranslation(["settings", "common"]);
   const apiConfig = useSettingsStore((state) => state.apiConfig);
   const saveApiConfig = useSettingsStore((state) => state.saveApiConfig);
+  const apiFormDraft = readApiFormDraft();
 
   const savedBaseUrl = apiConfig?.baseUrl ?? "https://api.deepseek.com/v1";
   const savedApiKey = apiConfig?.apiKey ?? "";
@@ -99,18 +68,18 @@ export function ApiSettingsSection() {
     setBaseUrl(next.baseUrl);
     setApiKey(next.apiKey);
     setModel(next.model);
-    apiFormDraft = { ...next, currency: pickedCurrency, prices };
+    writeApiFormDraft({ ...next, currency: pickedCurrency, prices });
   }
 
   function pickCurrency(value: Currency): void {
     setPickedCurrency(value);
-    apiFormDraft = { baseUrl, apiKey, model, currency: value, prices };
+    writeApiFormDraft({ baseUrl, apiKey, model, currency: value, prices });
   }
 
   function editPrice(patch: Partial<PriceFields>): void {
     const next = { ...prices, ...patch };
     setPrices(next);
-    apiFormDraft = { baseUrl, apiKey, model, currency: pickedCurrency, prices: next };
+    writeApiFormDraft({ baseUrl, apiKey, model, currency: pickedCurrency, prices: next });
   }
 
   async function save() {
@@ -135,7 +104,7 @@ export function ApiSettingsSection() {
       ...(currencies.length > 1 && currency !== undefined ? { priceCurrency: currency } : {}),
       ...(priceOverride !== undefined ? { priceOverride } : {}),
     });
-    apiFormDraft = null;
+    clearApiFormDraft();
     setSavedHint(true);
     setTimeout(() => setSavedHint(false), 2000);
   }
@@ -144,104 +113,9 @@ export function ApiSettingsSection() {
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <h3 className="font-medium text-stone-700">{t("api.title")}</h3>
       <p className="text-sm text-stone-500">{t("api.hint")}</p>
-      <label className="block space-y-1 text-sm text-stone-500">
-        {t("api.baseUrl")}
-        <input
-          value={baseUrl}
-          onChange={(e) => edit({ baseUrl: e.target.value })}
-          className={INPUT_CLASS}
-        />
-      </label>
-      <label className="block space-y-1 text-sm text-stone-500">
-        {t("api.apiKey")}
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => edit({ apiKey: e.target.value })}
-          placeholder="sk-…"
-          className={INPUT_CLASS}
-        />
-      </label>
-      <label className="block space-y-1 text-sm text-stone-500">
-        {t("api.model")}
-        <input
-          value={model}
-          onChange={(e) => edit({ model: e.target.value })}
-          className={INPUT_CLASS}
-        />
-      </label>
-
-      {currencies.length > 1 && (
-        <div className="space-y-1">
-          <p className="text-sm text-stone-500">{t("api.priceCurrency")}</p>
-          <div className="inline-flex rounded-full bg-stone-100 p-1">
-            {currencies.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => pickCurrency(option)}
-                aria-pressed={currency === option}
-                className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-                  currency === option ? "bg-amber-500 text-white" : "text-stone-500"
-                }`}
-              >
-                {t(`api.currency${option}` as const)}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-stone-400">{t("api.priceCurrencyHint")}</p>
-        </div>
-      )}
-
-      <div className="space-y-1">
-        <p className="text-sm text-stone-500">{t("api.priceOverride")}</p>
-        <p className="text-xs text-stone-400">{t("api.priceOverrideHint")}</p>
-        <div className="flex flex-wrap gap-2">
-          <label className="flex-1 space-y-1 text-xs text-stone-400">
-            {t("api.priceInput")}
-            <input
-              inputMode="decimal"
-              value={prices.input}
-              onChange={(e) => editPrice({ input: e.target.value })}
-              placeholder={
-                catalogueRates
-                  ? String(catalogueRates.inputPerMillionTokens)
-                  : t("api.priceUnknown")
-              }
-              className={INPUT_CLASS}
-            />
-          </label>
-          <label className="flex-1 space-y-1 text-xs text-stone-400">
-            {t("api.priceOutput")}
-            <input
-              inputMode="decimal"
-              value={prices.output}
-              onChange={(e) => editPrice({ output: e.target.value })}
-              placeholder={
-                catalogueRates
-                  ? String(catalogueRates.outputPerMillionTokens)
-                  : t("api.priceUnknown")
-              }
-              className={INPUT_CLASS}
-            />
-          </label>
-          <label className="flex-1 space-y-1 text-xs text-stone-400">
-            {t("api.priceCached")}
-            <input
-              inputMode="decimal"
-              value={prices.cached}
-              onChange={(e) => editPrice({ cached: e.target.value })}
-              placeholder={
-                catalogueRates?.cachedInputPerMillionTokens === undefined
-                  ? t("api.priceNone")
-                  : String(catalogueRates.cachedInputPerMillionTokens)
-              }
-              className={INPUT_CLASS}
-            />
-          </label>
-        </div>
-      </div>
-
+      <ApiCredentialFields baseUrl={baseUrl} apiKey={apiKey} model={model} onEdit={edit} />
+      <ApiCurrencyPicker currencies={currencies} currency={currency} onPick={pickCurrency} />
+      <ApiPriceFields prices={prices} catalogueRates={catalogueRates} onEdit={editPrice} />
       <button
         type="button"
         onClick={() => void save()}

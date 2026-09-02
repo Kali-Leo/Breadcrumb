@@ -1,10 +1,11 @@
 /**
- * Purpose: unit tests for exactly-once migration tracking using a fake SqlClient.
+ * Purpose: unit tests for exactly-once migration tracking using a fake SqlClient, plus the
+ * guard that splitting the list into numbered segment files did not change a single id.
  */
 import { describe, expect, it, vi } from "vitest";
-import { MIGRATIONS, RETIRED_MIGRATION_IDS, runMigrations } from "./migrations";
-import { withSequentialTransactions } from "./transactionFallback";
-import type { SqlClient } from "./types";
+import { withSequentialTransactions } from "../transactionFallback";
+import type { SqlClient } from "../types";
+import { MIGRATIONS, RETIRED_MIGRATION_IDS, runMigrations } from "./index";
 
 /** In-memory fake: records executed statements and simulates the _migrations table. */
 function makeFakeSql() {
@@ -131,6 +132,72 @@ describe("runMigrations", () => {
     } finally {
       warn.mockRestore();
     }
+  });
+});
+
+/**
+ * The exact id sequence MIGRATIONS held on 2026-09-02, immediately before the single
+ * migrations.ts was split into the numbered segment files this directory now contains
+ * (`git show 1535e0a:packages/core-db/src/migrations.ts`). A shipped database records these
+ * ids in its _migrations table, so reordering, renaming or dropping any of them would make
+ * existing installs re-run or silently skip migrations. Appending is fine — the assertion
+ * below only pins the prefix.
+ */
+const IDS_BEFORE_THE_SPLIT: readonly string[] = [
+  "0001_initial",
+  "0002_knowledge_and_trail",
+  "0003_user_level_tree",
+  "0004_node_embeddings",
+  "0005_map_place_names",
+  "0006_factcheck",
+  "0007_knowledge_edges",
+  "0008_interest_and_claims",
+  "0009_goals",
+  "0010_ai_failures",
+  "0011_interest_signal_confidence",
+  "0012_node_aliases",
+  "0013_goal_ladders",
+  "0014_goal_ladders_v2",
+  "0015_goal_ladder_v4",
+  "0016_goal_ladder_self_title",
+  "0017_goal_ladder_assessment_board",
+  "0018_comparison_profiles",
+  "0019_comparison_alignments",
+  "0020_canonical_anchors",
+  "0021_occupation_practice",
+  "0022_practice_scores",
+  "0023_goal_title_ladder",
+  "0024_drop_ladder_tables",
+  "0025_diglot_weave",
+  "0026_diglot_context_embeddings",
+  "0027_teach_quality_claims",
+  "0028_research_tasks",
+  "0029_companion_cast",
+  "0030_message_teaching_mode",
+  "0031_message_parent",
+  "0032_conversation_auto_title",
+  "0033_sighting_origin",
+  "0034_focus_sessions",
+  "0035_focus_session_source_message",
+  "0036_term_marks",
+  "0037_companion_proposal_kind",
+  "0040_study_mode",
+  "0044_sighting_grades",
+  "0045_dedup_bookkeeping",
+  "0046_canonical_concept_embeddings",
+  "0047_ascii_alignment_confidence",
+  "0048_edge_reasoning_provenance",
+  "0049_llm_calls_conversation_index",
+  "0050_llm_calls_cached_input_tokens",
+  "0051_diglot_pack_payload",
+  "0052_drop_dead_table_and_indexes",
+];
+
+describe("the segment-file split", () => {
+  it("concatenates back into the exact id sequence that shipped before it", () => {
+    const ids = MIGRATIONS.map((migration) => migration.id);
+    expect(ids.length).toBeGreaterThanOrEqual(IDS_BEFORE_THE_SPLIT.length);
+    expect(ids.slice(0, IDS_BEFORE_THE_SPLIT.length)).toEqual(IDS_BEFORE_THE_SPLIT);
   });
 });
 

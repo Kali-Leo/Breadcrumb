@@ -4,7 +4,8 @@
  * ever instead of on every startup. Mirrors the discipline node_concept_anchors already had.
  * Main exports: normalizeNodePairKey, createNodePairVerdictsRepo.
  */
-import type { AlignmentVerdict, NodePairVerdictRow, SqlClient } from "./types";
+import type { NodePairVerdictRow } from "./knowledgeTypes";
+import type { AlignmentVerdict, SqlClient } from "./types";
 
 /** One pair, one key: the two node ids sorted, so a pair generated as (B, A) by one sweep and
  * as (A, B) by the next resolves to the same row. */

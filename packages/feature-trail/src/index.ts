@@ -1,28 +1,24 @@
 /**
- * Purpose: headless trail logic — day boundaries, and the plain daily-summary contract.
+ * Purpose: headless trail logic — day boundaries, and the plain daily-summary contract. The
+ * day boundaries come from @breadcrumb/core-time (2026-09-02): the trail's "yesterday" and
+ * the feedback heatmap's cells must cut the calendar at the same instant, and until now that
+ * agreement was three byte-identical private copies of the same six lines.
  * Tone rule (product principle 1, 2026-08-02): summaries only state what WAS learned, as
  * fact, without praise or exclamation; they never mention gaps, streaks or "you haven't...".
  * Main exports: localDayRange, localDateString, trailSummarySchema, buildTrailSummaryMessages.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
+import { shiftLocalDays, startOfLocalDay, toLocalDateKey } from "@breadcrumb/core-time";
 import { z } from "zod";
 
 /** "2026-07-29" for the local calendar day containing the given date. */
-export function localDateString(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+export { toLocalDateKey as localDateString };
 
 /** [startIso, endIso) covering the local calendar day offset by dayOffset (0=today, -1=yesterday). */
 export function localDayRange(now: Date, dayOffset: number): { fromIso: string; toIso: string } {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() + dayOffset);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const start = shiftLocalDays(startOfLocalDay(now), dayOffset);
+  const end = shiftLocalDays(start, 1);
   return { fromIso: start.toISOString(), toIso: end.toISOString() };
 }
 

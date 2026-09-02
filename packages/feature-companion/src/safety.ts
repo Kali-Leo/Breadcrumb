@@ -8,6 +8,7 @@
  * COMPANION_COPY.
  */
 import type { CopyMessage } from "@breadcrumb/core-i18n";
+import { fnv1a32 } from "@breadcrumb/core-random";
 
 /** Farewell/absence-manipulation phrases banned from all companion copy and cards — the six
  * HBS companion-app audit tactics (guilt appeal, neediness, pressure to respond, FOMO, coercive
@@ -125,7 +126,7 @@ export const COMPANION_COPY = {
    * 2026-08-16 — the messenger convention; the topic rides along as secondary text), picked
    * deterministically from the pool so the same helper always keeps the same name. */
   helperName: (topic: string): string =>
-    HELPER_PERSON_NAMES[hashText(topic) % HELPER_PERSON_NAMES.length] as string,
+    HELPER_PERSON_NAMES[fnv1a32(topic) % HELPER_PERSON_NAMES.length] as string,
 } as const;
 
 /** Everyday plants, animals and fruits (Leo 2026-08-16) — real, common, instantly
@@ -158,13 +159,3 @@ const HELPER_PERSON_NAMES = [
   "海豹",
   "麻雀",
 ] as const;
-
-/** FNV-1a over UTF-16 code units — tiny, dependency-free, stable across sessions. */
-function hashText(text: string): number {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}

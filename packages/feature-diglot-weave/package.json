@@ -13,6 +13,8 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-i18n": "workspace:*",
+    "@breadcrumb/core-random": "workspace:*",
+    "@breadcrumb/core-vectors": "workspace:*",
     "ts-fsrs": "^5.2.1",
     "zod": "^4.1.0"
   },

@@ -6,6 +6,7 @@
  * an on-disk cache. Usage: node scripts/canonical/enrich-esco-wikidata.mjs [min_occupations]
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { normalize } from "./shared.mjs";
 
 const MIN_OCCUPATIONS = Number(process.argv[2] ?? "10");
 const MAX_ALIASES_PER_CONCEPT = 12;
@@ -15,10 +16,6 @@ const datasetPath = new URL(
   import.meta.url,
 );
 const cachePath = new URL("./out/esco-wikidata-cache.json", import.meta.url);
-
-function normalize(text) {
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/gu, "");
-}
 
 async function wikidata(params) {
   const query = new URLSearchParams({ format: "json", ...params }).toString();

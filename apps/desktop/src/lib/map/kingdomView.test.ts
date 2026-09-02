@@ -6,8 +6,8 @@
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { FrontierCandidate } from "@breadcrumb/feature-planner";
 import { describe, expect, it } from "vitest";
+import { computeVisibleTree } from "./kingdomCollapse";
 import {
-  computeVisibleTree,
   deriveKingdomNodes,
   type KingdomViewNode,
   pickRecommendation,

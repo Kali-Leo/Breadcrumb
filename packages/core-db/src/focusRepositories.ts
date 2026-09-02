@@ -5,7 +5,8 @@
  * session gets on exit (Leo 2026-08-14 revision to spec 042 §5).
  * Main exports: createFocusSessionsRepo, createFocusNodesRepo factories.
  */
-import type { FocusNodeRow, FocusSessionRow, SqlClient } from "./types";
+import type { FocusNodeRow, FocusSessionRow } from "./focusTypes";
+import type { SqlClient } from "./types";
 
 export function createFocusSessionsRepo(sql: SqlClient) {
   return {

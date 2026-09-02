@@ -12,15 +12,17 @@
  * landscape: sim ≥ mean + fraction×(best − mean), and by at least MIN_AFFINITY_EXCESS over
  * the mean, so a title related to nothing (flat landscape) crowns no node at all.
  *
- * Pure math, no DB, no I/O. Local cosine helper per 行为局部性 > DRY (mirrors
- * feature-interest/spread.ts and feature-knowledge-tree/similarityGate.ts).
+ * Pure math, no DB, no I/O. Cosine and the gate come from @breadcrumb/core-vectors, shared
+ * with feature-interest and feature-knowledge-tree (2026-09-02).
  * Main exports: browsingAffinityByNode, watchedTitleSignals, watchedTitleWeight,
  * WatchedTitleVector.
  */
+import { cosineSimilarity, relativeGate, similarityBaseline } from "@breadcrumb/core-vectors";
 import type { ProContent } from "./schemas";
 
-/** Same constant, same meaning as similarityGate.ts / feature-graph's RELATIVE_GATE. */
-export const AFFINITY_RELATIVE_GATE_FRACTION = 0.5;
+/** Re-exported under this module's own name: the affinity bridge gates on the same fraction
+ * as the dedup tier and feature-graph's candidate ranking, and there is only one of it. */
+export { RELATIVE_GATE_FRACTION as AFFINITY_RELATIVE_GATE_FRACTION } from "@breadcrumb/core-vectors";
 
 /** A node must exceed the title's mean similarity by at least this much, on top of the
  * relative gate. The relative gate alone always passes each title's best node, even when the
@@ -106,15 +108,10 @@ export function browsingAffinityByNode(
       const nodeVector = nodeVectors.get(nodeId);
       return nodeVector === undefined ? 0 : cosineSimilarity(titleVector.vector, nodeVector);
     });
-    let sum = 0;
-    let best = 0;
-    for (const similarity of similarities) {
-      sum += similarity;
-      best = Math.max(best, similarity);
-    }
-    // Clamped like similarityGate.ts: float rounding must not push mean above best.
-    const mean = Math.min(sum / similarities.length, best);
-    const gate = mean + AFFINITY_RELATIVE_GATE_FRACTION * (best - mean);
+    // similarityBaseline clamps the mean to best: float rounding must not push it above.
+    const baseline = similarityBaseline(similarities);
+    const mean = baseline.mean;
+    const gate = relativeGate(baseline);
 
     for (let index = 0; index < nodeIds.length; index += 1) {
       const similarity = similarities[index] ?? 0;
@@ -128,20 +125,4 @@ export function browsingAffinityByNode(
     }
   }
   return result;
-}
-
-function cosineSimilarity(a: readonly number[], b: readonly number[]): number {
-  const length = Math.min(a.length, b.length);
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let index = 0; index < length; index += 1) {
-    const valueA = a[index] ?? 0;
-    const valueB = b[index] ?? 0;
-    dotProduct += valueA * valueB;
-    normA += valueA * valueA;
-    normB += valueB * valueB;
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
