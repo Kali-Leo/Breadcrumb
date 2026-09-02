@@ -5,7 +5,12 @@
  * by changeLanguage, one language at a time (see catalogues.ts).
  * Main exports: initI18n, applyLanguageToDocument, changeLanguage.
  */
-import { DEFAULT_LANGUAGE_CODE, fontStackFor, languageOf } from "@breadcrumb/core-i18n";
+import {
+  DEFAULT_LANGUAGE_CODE,
+  fontStackFor,
+  isLanguageCode,
+  languageOf,
+} from "@breadcrumb/core-i18n";
 import i18next, { type FormatFunction, type ResourceLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
 import zhChat from "../locales/zh-CN/chat.json";
@@ -93,6 +98,37 @@ export async function initI18n(): Promise<void> {
   });
   isolateInterpolatedValues();
   applyLanguageToDocument(DEFAULT_LANGUAGE_CODE);
+  // The chosen language lives in the database, which a second browser tab cannot open, and
+  // which every launch reads only after the first paint. A mirror outside the database lets
+  // both the first frame and a locked tab speak the language the learner picked.
+  const remembered = rememberedLanguage();
+  if (remembered !== null && remembered !== DEFAULT_LANGUAGE_CODE) {
+    try {
+      await changeLanguage(remembered);
+    } catch {
+      // A stale or removed code falls back to the source language; the settings store will
+      // resolve the real preference once it loads.
+    }
+  }
+}
+
+const REMEMBERED_LANGUAGE_KEY = "breadcrumb.interfaceLanguage";
+
+function rememberedLanguage(): string | null {
+  try {
+    const code = globalThis.localStorage?.getItem(REMEMBERED_LANGUAGE_KEY) ?? null;
+    return code !== null && isLanguageCode(code) ? code : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLanguage(code: string): void {
+  try {
+    globalThis.localStorage?.setItem(REMEMBERED_LANGUAGE_KEY, code);
+  } catch {
+    // Storage may be unavailable (private windows, headless runs); the database still has it.
+  }
 }
 
 /** Writing direction and script font follow the language; both are document-level facts.
@@ -135,4 +171,5 @@ export async function changeLanguage(code: string): Promise<void> {
   await ensureCatalogue(code);
   await i18next.changeLanguage(code);
   applyLanguageToDocument(code);
+  rememberLanguage(code);
 }
