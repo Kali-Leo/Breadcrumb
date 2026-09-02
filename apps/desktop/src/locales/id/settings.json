@@ -70,6 +70,7 @@
   "billing": {
     "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",
     "estimateIntro": "Perkiraan di bawah tiap item memakai pemakaianmu sendiri yang terakhir untuk yang sudah kamu pakai, dan {{scenario}} untuk yang belum; di sebelahnya adalah yang benar-benar kamu keluarkan.",
+    "measurementScenario": "Seseorang yang sudah belajar sekitar tiga bulan: 80 simpul di peta pengetahuan, satu tanya-jawab dalam Mode belajar (pertanyaan ~40 karakter, jawaban ~600 karakter)",
     "estimate": "sekitar {{cost}} {{cadence}}",
     "estimateUnknownModel": "Modelmu tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
     "estimateFree": "Tidak memakan biaya",

@@ -71,6 +71,7 @@
   "billing": {
     "intro": "Kila hatua inayogharimu pesa ina swichi yake hapa, na matumizi yake huhesabiwa peke yake. Ukurasa huu unaonyesha kilichotumika kweli.",
     "estimateIntro": "Makadirio chini ya kila kipengele yanatumia matumizi yako ya hivi karibuni kwa ulichokitumia, na {{scenario}} kwa ambacho hujakitumia; kando yake kuna ulichotumia kweli.",
+    "measurementScenario": "Mtu anayejifunza kwa takriban miezi mitatu: nodi 80 kwenye ramani ya maarifa, mzunguko mmoja wa swali na jibu katika Hali ya kusoma (swali herufi ~40, jibu herufi ~600)",
     "estimate": "takribani {{cost}} {{cadence}}",
     "estimateUnknownModel": "Modeli yako haipo kwenye orodha ya bei iliyojengwa ndani, hivyo makadirio kwa kila matumizi hayapatikani",
     "estimateFree": "Haigharimu chochote",

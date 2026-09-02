@@ -12,7 +12,12 @@
  * purpose's token profile is the estimate. Adding a model touches only the model catalogue;
  * changing a prompt touches only this table's measured row.
  *
- * Main exports: PurposeCadence, PurposeUsage, PURPOSE_USAGE, MEASUREMENT_SCENARIO,
+ * The fixture scenario every row was measured in: 学了约三个月的学习者：知识树 80 个节点，一轮
+ * 学习模式问答（提问 ~40 字，回答 ~600 字）。The spending page quotes it to the learner from
+ * settings:billing.measurementScenario, translated per language — never from here, or an
+ * English interface would print a Chinese sentence in the middle of a paragraph.
+ *
+ * Main exports: PurposeCadence, PurposeUsage, PURPOSE_USAGE, PURPOSE_CADENCE,
  * estimatePurposeCostMicros.
  */
 import type { ModelRates } from "./modelCatalogue";
@@ -42,10 +47,6 @@ export interface PurposeUsage {
   cadence: PurposeCadence;
 }
 
-/** The scenario every row was measured in — quoted wherever an estimate is explained. */
-export const MEASUREMENT_SCENARIO =
-  "学了约三个月的学习者：知识树 80 个节点，一轮学习模式问答（提问 ~40 字，回答 ~600 字）";
-
 export const MEASURED_AT = "2026-08-31";
 
 /**
@@ -72,6 +73,32 @@ export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
   "diglot-weave": { inputTokens: 398, outputTokens: 86, cadence: "per-message" },
   "focus-explain": { inputTokens: 395, outputTokens: 223, cadence: "on-demand" },
   "trail-summary": { inputTokens: 220, outputTokens: 26, cadence: "per-day" },
+};
+
+/**
+ * Cadence for purposes whose prompts live in Tauri-coupled modules, so PURPOSE_USAGE has no
+ * measured row for them. Cadence is not a measurement — it is what the feature does — so it
+ * can be stated from the call site while the token profile still waits for a harness. With
+ * one of these plus enough recorded calls of its own, the spending page can price the feature
+ * from the learner's ledger instead of saying it has never been measured.
+ *
+ * Kept out of PURPOSE_USAGE on purpose: that table's contract is "every number here was
+ * measured", and purposeUsage.test.ts enforces it.
+ */
+export const PURPOSE_CADENCE: Readonly<Record<string, PurposeCadence>> = {
+  // The learner asks for a comparison to be built and one proposal call runs; nothing fires
+  // on its own. (compareBuildActions.runProposalPipeline — same shape as goal-planning.)
+  "compare-profile": "on-demand",
+  // The companion's own reply to a message — the companion-side twin of `chat`, billed once
+  // per exchange. (chatSendRound.ts picks this purpose when the conversation is a companion.)
+  "companion-chat": "per-round",
+  // Every finished companion exchange is condensed into one scored observation; the
+  // occasional reflection rides on top of that same round.
+  // (companionMemoryActions.recordCompanionMemoryForFinishedRound.)
+  "companion-memory": "per-round",
+  // The reflect pass runs on each teach-back round; the one-off script generation when a
+  // teach-back starts is the smaller half. (companionTeachBackPrompt.ts, companionActions.ts.)
+  "companion-script": "per-round",
 };
 
 /** What one call of this purpose costs at the given rates, or undefined when the purpose has

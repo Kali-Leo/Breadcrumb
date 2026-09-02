@@ -71,6 +71,7 @@
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
     "estimateIntro": "The estimate under each item uses your own recent usage where you have used it, and {{scenario}} where you have not; what you have actually spent is beside it.",
+    "measurementScenario": "A learner about three months in: 80 nodes on the knowledge map, one Study mode exchange (question ~40 characters, answer ~600 characters)",
     "estimate": "about {{cost}} {{cadence}}",
     "estimateUnknownModel": "Your model is not in the built-in price list, so a per-use estimate is not available",
     "estimateFree": "Costs nothing",

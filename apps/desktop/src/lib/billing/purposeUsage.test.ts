@@ -6,7 +6,7 @@
  * Tolerance is deliberately tight. Re-run the measurement and update PURPOSE_USAGE when this
  * fails — do not widen the tolerance.
  */
-import { PURPOSE_USAGE } from "@breadcrumb/core-llm";
+import { PURPOSE_CADENCE, PURPOSE_USAGE } from "@breadcrumb/core-llm";
 import { describe, expect, it } from "vitest";
 import { measurePurposeUsage } from "./purposeUsage.measure";
 
@@ -35,6 +35,14 @@ describe("the published purpose catalogue", () => {
       expect(published.outputTokens).toBeLessThan(row.outputTokens * (1 + TOLERANCE));
     });
   }
+
+  it("keeps the cadence-only table clear of purposes that do have a measured profile", () => {
+    // A purpose in both tables would have two cadences to disagree about; the measured row
+    // is the one that carries a cadence, so the other table must not repeat it.
+    for (const purpose of Object.keys(PURPOSE_CADENCE)) {
+      expect(PURPOSE_USAGE[purpose], `${purpose} is in both tables`).toBeUndefined();
+    }
+  });
 
   it("never publishes a zero-token profile, which would read as free", () => {
     for (const [purpose, usage] of Object.entries(PURPOSE_USAGE)) {

@@ -72,6 +72,7 @@
   "billing": {
     "intro": "Cada passo que custa dinheiro tem sua própria chave aqui, e seu gasto é registrado à parte. Esta página mostra o que foi realmente gasto.",
     "estimateIntro": "A estimativa sob cada item usa o seu consumo recente no que você já usou, e {{scenario}} no que ainda não; o que você gastou de verdade está ao lado.",
+    "measurementScenario": "Alguém que aprende há cerca de três meses: 80 nós no mapa do conhecimento, uma troca no Modo estudo (pergunta ~40 caracteres, resposta ~600 caracteres)",
     "estimate": "cerca de {{cost}} {{cadence}}",
     "estimateUnknownModel": "Seu modelo não está na lista de preços embutida, então não há estimativa por uso",
     "estimateFree": "Não custa nada",

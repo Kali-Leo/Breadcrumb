@@ -128,12 +128,43 @@ describe("estimateFeatureCost", () => {
     ).toEqual({ kind: "unknown-model" });
   });
 
-  it("says unmeasured for a purpose with no cadence, even with recorded calls", () => {
+  it("prices a purpose the catalogue never measured from the ledger, once it has a cadence", () => {
+    // companion-chat's prompt is built inside Tauri-coupled code, so it has no measured
+    // token profile — only PURPOSE_CADENCE and the learner's own recorded calls.
+    const estimate = estimateFeatureCost(
+      ["companion-chat"],
+      PRICING,
+      ledger(average("companion-chat", 9, 1000, 1000)),
+    );
+
+    // 1000 × ¥3/M + 1000 × ¥9/M = ¥0.012.
+    expect(estimate).toEqual({
+      kind: "estimate",
+      cost: "¥0.0120",
+      cadence: "per-round",
+      source: "ledger",
+      samples: 9,
+    });
+  });
+
+  it("still says unmeasured when there is neither a recorded average nor a token profile", () => {
+    const noLedger = estimateFeatureCost(["companion-chat"], PRICING);
+    const tooFewCalls = estimateFeatureCost(
+      ["companion-chat"],
+      PRICING,
+      ledger(average("companion-chat", LEDGER_MIN_SAMPLES - 1, 1000, 1000)),
+    );
+
+    expect(noLedger).toEqual({ kind: "unmeasured" });
+    expect(tooFewCalls).toEqual({ kind: "unmeasured" });
+  });
+
+  it("says unmeasured for a purpose with no cadence at all, even with recorded calls", () => {
     expect(
       estimateFeatureCost(
-        ["companion-chat"],
+        ["teach-quality"],
         PRICING,
-        ledger(average("companion-chat", 9, 1000, 1000)),
+        ledger(average("teach-quality", 9, 1000, 1000)),
       ),
     ).toEqual({ kind: "unmeasured" });
   });

@@ -4,7 +4,7 @@
  * (today / all time, from llm_calls). Metering exists so features can run boldly.
  * Main exports: BillingSettingsPanel.
  */
-import { formatCost, MEASUREMENT_SCENARIO } from "@breadcrumb/core-llm";
+import { formatCost } from "@breadcrumb/core-llm";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../../lib/platform/db";
@@ -122,7 +122,7 @@ export function BillingSettingsPanel() {
     <div className="space-y-4">
       <p className="text-sm text-stone-500">{t("billing.intro")}</p>
       <p className="text-xs text-stone-400">
-        {t("billing.estimateIntro", { scenario: MEASUREMENT_SCENARIO })}
+        {t("billing.estimateIntro", { scenario: t("billing.measurementScenario") })}
       </p>
       <p className="text-sm text-stone-600">
         {t("billing.grandTotal", {

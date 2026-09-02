@@ -72,6 +72,7 @@
   "billing": {
     "intro": "Chaque étape qui coûte de l'argent a son propre interrupteur ici, et sa dépense est suivie séparément. Cette page montre ce qui a réellement été dépensé.",
     "estimateIntro": "L'estimation sous chaque élément se base sur ton usage récent pour ce que tu as déjà utilisé, et sur {{scenario}} pour le reste ; ce que tu as réellement dépensé est à côté.",
+    "measurementScenario": "Quelqu'un qui apprend depuis environ trois mois : 80 nœuds sur la carte des connaissances, un échange en Mode étude (question ~40 caractères, réponse ~600 caractères)",
     "estimate": "environ {{cost}} {{cadence}}",
     "estimateUnknownModel": "Ton modèle n'est pas dans la liste de prix intégrée, il n'y a donc pas d'estimation par utilisation",
     "estimateFree": "Ne coûte rien",

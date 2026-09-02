@@ -72,6 +72,7 @@
   "billing": {
     "intro": "Cada paso que cuesta dinero tiene aquí su propio interruptor y su gasto se registra por separado. Esta página muestra lo que se ha gastado de verdad.",
     "estimateIntro": "La estimación bajo cada elemento usa tu consumo reciente en lo que ya has usado, y {{scenario}} en lo que no; lo que has gastado realmente aparece al lado.",
+    "measurementScenario": "Alguien que lleva unos tres meses aprendiendo: 80 nodos en el mapa de conocimiento, un intercambio en Modo estudio (pregunta ~40 caracteres, respuesta ~600 caracteres)",
     "estimate": "unos {{cost}} {{cadence}}",
     "estimateUnknownModel": "Tu modelo no está en la lista de precios incorporada, así que no hay estimación por uso",
     "estimateFree": "No cuesta nada",

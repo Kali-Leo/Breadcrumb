@@ -12,6 +12,10 @@
  *      lands well under the real bill — which is exactly why the ledger wins when there is
  *      one. Rates are always today's rates; only the token counts differ.
  *
+ * A purpose the catalogue has never measured can still be priced from the ledger alone, as
+ * long as PURPOSE_CADENCE says what one call is "per" — a number with no unit is not an
+ * estimate. With neither a ledger average nor a measured profile, the row says so.
+ *
  * Main exports: FeatureCostEstimate, LEDGER_MIN_SAMPLES, estimateFeatureCost.
  */
 
@@ -21,6 +25,7 @@ import {
   calculateCostMicros,
   estimatePurposeCostMicros,
   formatCost,
+  PURPOSE_CADENCE,
   PURPOSE_USAGE,
   type PurposeCadence,
   resolveModelRates,
@@ -84,9 +89,9 @@ export function estimateFeatureCost(
   let cadence: PurposeCadence | undefined;
   let samples: number | undefined;
   for (const purpose of purposes) {
-    // Cadence only ever comes from the catalogue: the ledger knows what a call cost, not
-    // how often the feature fires, and a cost with no "per what" is not worth showing.
-    const purposeCadence = PURPOSE_USAGE[purpose]?.cadence;
+    // Cadence never comes from the ledger: it knows what a call cost, not how often the
+    // feature fires, and a cost with no "per what" is not worth showing.
+    const purposeCadence = PURPOSE_USAGE[purpose]?.cadence ?? PURPOSE_CADENCE[purpose];
     if (purposeCadence === undefined) continue;
     const average = ledgerUsageOf(purpose, ledger);
     if (average !== undefined) {
@@ -100,7 +105,11 @@ export function estimateFeatureCost(
       );
       samples = samples === undefined ? average.samples : Math.min(samples, average.samples);
     } else {
-      totalMicros += estimatePurposeCostMicros(purpose, rates) ?? 0;
+      // Cadence-only purposes have no token profile to fall back on. Skip them rather than
+      // adding a zero, which would quietly understate the row.
+      const catalogueMicros = estimatePurposeCostMicros(purpose, rates);
+      if (catalogueMicros === undefined) continue;
+      totalMicros += catalogueMicros;
     }
     cadence ??= purposeCadence;
   }
