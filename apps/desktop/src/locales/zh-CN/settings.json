@@ -64,7 +64,8 @@
     "companion-memory": "伙伴记忆",
     "companion-script": "伙伴预习",
     "focus-explain": "专注讲解",
-    "term-marking": "生词标注"
+    "term-marking": "生词标注",
+    "trail-summary": "昨天的足迹"
   },
   "billing": {
     "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",
@@ -78,6 +79,7 @@
     "cadencePerAnswer": "每条回答",
     "cadenceOnDemand": "每次使用",
     "cadencePerItemOnce": "每个，且只算一次",
+    "cadencePerDay": "每天最多一次",
     "grandTotal": "今日合计 {{today}} · 累计 {{total}}",
     "nothingSpent": "还没花钱",
     "neverUsed": "尚未产生费用",
@@ -131,6 +133,10 @@
       "feedbackLab": {
         "name": "🪞 这段时间",
         "hint": "地图右栏的回顾内容：全部由本地数据算出，不花钱。"
+      },
+      "trailSummary": {
+        "name": "🐾 昨天的足迹",
+        "hint": "每天第一次打开时，AI 会用一句话记下你前一天学了什么，显示在地图右栏「这段时间」的最上面。"
       },
       "companionChat": {
         "name": "🎭 伙伴聊天",

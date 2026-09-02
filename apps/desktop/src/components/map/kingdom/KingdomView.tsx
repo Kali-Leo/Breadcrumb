@@ -10,6 +10,7 @@ import { formatDayMonth } from "@breadcrumb/core-i18n";
 import { useTranslation } from "react-i18next";
 import { goToKingdomOrigin } from "../../../lib/map/kingdomActions";
 import { BackArrow } from "../../DirectionalArrow";
+import { PlaceNameEditor } from "../PlaceNameEditor";
 import { RegionMirror } from "../RegionMirror";
 import { KingdomNodeCard } from "./KingdomNodeCard";
 import { KingdomTreeSvg } from "./KingdomTreeSvg";
@@ -19,6 +20,9 @@ export type { KingdomRef };
 
 interface KingdomViewProps {
   kingdom: KingdomRef;
+  /** False for the one kingdom that shares its island's id (a cluster continent's earliest
+   * member) — renaming it would rename the island, so the action is not offered there. */
+  renamable: boolean;
   onClose(): void;
 }
 
@@ -27,7 +31,7 @@ function plainDate(iso: string, locale: string): string {
   return Number.isNaN(date.getTime()) ? "" : formatDayMonth(locale, date);
 }
 
-export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
+export function KingdomView({ kingdom, renamable, onClose }: KingdomViewProps) {
   const { t, i18n } = useTranslation("palace");
   const { model, feedbackSources } = useKingdomModel(kingdom);
   const cardNode = model.cardNode;
@@ -47,7 +51,17 @@ export function KingdomView({ kingdom, onClose }: KingdomViewProps) {
           >
             <BackArrow />
           </button>
-          <h2 className="text-sm font-semibold text-stone-700">{kingdom.label}</h2>
+          <h2 className="min-w-0 text-sm font-semibold text-stone-700">
+            {renamable ? (
+              <PlaceNameEditor
+                nodeId={kingdom.nodeId}
+                name={kingdom.label}
+                nameClassName="text-sm font-semibold text-stone-700"
+              />
+            ) : (
+              kingdom.label
+            )}
+          </h2>
           {model.hasLateralEdges && (
             <label
               className="ms-auto flex items-center gap-1 text-xs text-stone-500"

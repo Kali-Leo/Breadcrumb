@@ -27,6 +27,9 @@ import "./stores/edgeStore";
 import "./stores/interestStore";
 // Side-effect only: teach-back quality judgment on finished teach rounds (vision/09 #2).
 import "./lib/companion/teachQuality";
+// Side-effect only: yesterday's trail sentence, written once per launch on app:launched.
+import "./lib/trail/trailSummaryActions";
+import { nowIso } from "./lib/platform/time";
 import { useCompanionStore } from "./stores/companionStore";
 import { useDiglotStore } from "./stores/diglotStore";
 import { useFocusSessionsStore } from "./stores/focusSessionsStore";
@@ -57,6 +60,8 @@ export default function App() {
       await useChatStore.getState().loadFromDatabase();
       await useKnowledgeStore.getState().loadTree();
       await useCompanionStore.getState().initialize();
+      // Settings are in by now, so launch-time work can read its switches and credentials.
+      appEventBus.emit("app:launched", { launchedAt: nowIso() });
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
       void backfillMissingEmbeddings().then(() => runDedupSweep());

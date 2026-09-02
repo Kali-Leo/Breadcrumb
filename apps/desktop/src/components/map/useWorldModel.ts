@@ -13,8 +13,10 @@ import type { ContinentAssignment, WorldModel } from "@breadcrumb/feature-map";
 import { useEffect, useMemo, useState } from "react";
 import { loadContinentAssignment } from "../../lib/map/mapContinentActions";
 import { applyAiContinentNames } from "../../lib/map/mapNamingActions";
+import { applyPlaceNames } from "../../lib/map/placeNames";
 import { goalNodeIds as parseGoalNodeIds } from "../../lib/planner/plannerGapActions";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
+import { useMapPlaceNameStore } from "../../stores/mapPlaceNameStore";
 import { useMemoryStore } from "../../stores/memoryStore";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -69,9 +71,16 @@ export function useWorldModel(demoMode: boolean): WorldModelState {
   // Demo nodes never match a real-data assignment's member ids, so demo mode always uses
   // the tree-root fallback.
   const effectiveAssignment = demoMode ? null : continentAssignment;
+  // The learner's own place names go on last — over the tree labels and over the AI names —
+  // so a rename always shows, and shows the moment it is saved: the daily freeze covers
+  // positions and sizes only, and applyPlaceNames never touches those.
+  const placeNames = useMapPlaceNameStore((state) => state.names);
+  useEffect(() => {
+    void useMapPlaceNameStore.getState().load();
+  }, []);
   const world = useMemo(
-    () => cachedWorldModel(nodes, effectiveAssignment),
-    [nodes, effectiveAssignment],
+    () => applyPlaceNames(cachedWorldModel(nodes, effectiveAssignment), placeNames),
+    [nodes, effectiveAssignment, placeNames],
   );
 
   // Goal mode redraws the map to the goal's cut (Leo: 目标截取的树意味着目标地图要重绘):

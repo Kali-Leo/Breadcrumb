@@ -66,7 +66,8 @@
     "companion-memory": "Mémoire des compagnons",
     "companion-script": "Préparation du compagnon",
     "focus-explain": "Explications en mode focus",
-    "term-marking": "Marquage des mots"
+    "term-marking": "Marquage des mots",
+    "trail-summary": "La trace d'hier"
   },
   "billing": {
     "intro": "Chaque étape qui coûte de l'argent a son propre interrupteur ici, et sa dépense est suivie séparément. Cette page montre ce qui a réellement été dépensé.",
@@ -80,6 +81,7 @@
     "cadencePerAnswer": "par réponse",
     "cadenceOnDemand": "à chaque utilisation",
     "cadencePerItemOnce": "par élément, facturé une fois",
+    "cadencePerDay": "au plus une fois par jour",
     "grandTotal": "Aujourd'hui {{today}} · au total {{total}}",
     "nothingSpent": "rien de dépensé pour l'instant",
     "neverUsed": "Rien de dépensé pour l'instant",
@@ -133,6 +135,10 @@
       "feedbackLab": {
         "name": "🪞 Ces derniers temps",
         "hint": "Le panneau de revue à côté de la carte : entièrement calculé à partir de données locales, ne coûte rien."
+      },
+      "trailSummary": {
+        "name": "🐾 La trace d'hier",
+        "hint": "À la première ouverture de la journée, l'IA écrit une phrase sur ce que tu as appris la veille ; elle s'affiche en haut du panneau « Ces derniers temps », à côté de la carte."
       },
       "companionChat": {
         "name": "🎭 Chat avec les compagnons",

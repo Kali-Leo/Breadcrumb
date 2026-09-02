@@ -34,5 +34,19 @@ export function createKnowledgeNodesRepo(sql: SqlClient) {
         [fromIso, toIso],
       );
     },
+    /** Distinct nodes with ANY footprint inside [fromIso, toIso) — met for the first time or
+     * met again — in the order they were first met that day. The raw material of the daily
+     * trail summary: a day's learning is what was extracted or revisited, not only what was
+     * new. */
+    async listSightedBetween(fromIso: string, toIso: string): Promise<KnowledgeNodeRow[]> {
+      return sql.select<KnowledgeNodeRow>(
+        `SELECT n.* FROM knowledge_nodes n
+         JOIN (SELECT node_id, MIN(created_at) seen FROM node_sightings
+                WHERE created_at >= ? AND created_at < ? GROUP BY node_id) s
+           ON s.node_id = n.id
+         ORDER BY s.seen ASC, n.id ASC`,
+        [fromIso, toIso],
+      );
+    },
   };
 }

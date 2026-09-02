@@ -30,7 +30,12 @@
     "placementSkip": "Ahora no",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "¿Qué significa «{{word}}»?",
-    "placementDontKnow": "Esta no la sé"
+    "placementDontKnow": "Esta no la sé",
+    "installedTitle": "Datos de palabras descargados",
+    "installedHint": "Puedes volver a descargarlos cuando quieras; las palabras que aprendiste se conservan.",
+    "removePack": "Quitar",
+    "removePackAria": "Quitar los datos de palabras para leer {{source}} y aprender {{target}}",
+    "removedCurrentPack": "Esos datos de palabras ya no están; vuelves a leer {{source}} y aprender {{target}}."
   },
   "door": {
     "guessPrompt": "Adivina primero: ¿qué es, en una frase?",

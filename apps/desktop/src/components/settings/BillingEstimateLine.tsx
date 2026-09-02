@@ -16,6 +16,7 @@ const CADENCE_KEYS = {
   "per-answer": "billing.cadencePerAnswer",
   "on-demand": "billing.cadenceOnDemand",
   "per-item-once": "billing.cadencePerItemOnce",
+  "per-day": "billing.cadencePerDay",
 } as const;
 
 export function BillingEstimateLine({ purposes }: { purposes: readonly string[] }) {

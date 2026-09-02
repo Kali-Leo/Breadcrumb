@@ -30,7 +30,12 @@
     "placementSkip": "Agora não",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "O que significa «{{word}}»?",
-    "placementDontKnow": "Essa eu não sei"
+    "placementDontKnow": "Essa eu não sei",
+    "installedTitle": "Dados de palavras baixados",
+    "installedHint": "Você pode baixar de novo quando quiser; as palavras que aprendeu ficam guardadas.",
+    "removePack": "Remover",
+    "removePackAria": "Remover os dados de palavras para ler {{source}} e aprender {{target}}",
+    "removedCurrentPack": "Esses dados de palavras foram removidos; você voltou a ler {{source}} e aprender {{target}}."
   },
   "door": {
     "guessPrompt": "Chute primeiro: o que é isso, em uma frase?",

@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { BUNDLED_PAIR_ID, PACK_CATALOG } from "../../lib/diglot/languagePacks";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { VocabPlacementTest } from "../diglot/VocabPlacementTest";
+import { DiglotInstalledPacks } from "./DiglotInstalledPacks";
 
 /** Every pair on offer: the bundled one first, then whatever the catalogue was built with. */
 function pairOptions(): { id: string; sourceLang: string; targetLang: string; bytes: number }[] {
@@ -115,6 +116,7 @@ export function DiglotSettingsSection() {
           {installFailedPairId !== null && installingPairId === null && (
             <p className="text-xs text-stone-500">{t("learning:diglot.pairDownloadFailed")}</p>
           )}
+          <DiglotInstalledPacks />
           <div className="flex items-center justify-between gap-4">
             <div>
               <span>{t("learning:diglot.llmRefineLabel")}</span>

@@ -30,7 +30,12 @@
     "placementSkip": "এখন নয়",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "«{{word}}» মানে কী?",
-    "placementDontKnow": "এটা আমার জানা নেই"
+    "placementDontKnow": "এটা আমার জানা নেই",
+    "installedTitle": "নামানো শব্দের তথ্য",
+    "installedHint": "যেকোনো সময় আবার নামাতে পারেন; আপনার শেখা শব্দগুলো থেকে যাবে।",
+    "removePack": "সরান",
+    "removePackAria": "{{source}} পড়ে {{target}} শেখার শব্দের তথ্য সরান",
+    "removedCurrentPack": "ওই ভাষার শব্দের তথ্য সরানো হয়েছে; আপনি আবার {{source}} পড়ে {{target}} শিখছেন।"
   },
   "door": {
     "guessPrompt": "আগে আন্দাজ করুন: এক বাক্যে এটা কী?",

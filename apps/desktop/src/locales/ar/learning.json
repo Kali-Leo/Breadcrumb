@@ -30,7 +30,12 @@
     "placementSkip": "ليس الآن",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "ما معنى «{{word}}»؟",
-    "placementDontKnow": "هذه لا أعرفها"
+    "placementDontKnow": "هذه لا أعرفها",
+    "installedTitle": "بيانات الكلمات التي تم تنزيلها",
+    "installedHint": "يمكنك تنزيلها مجددًا في أي وقت؛ والكلمات التي تعلمتها تبقى.",
+    "removePack": "إزالة",
+    "removePackAria": "إزالة بيانات الكلمات لقراءة {{source}} وتعلّم {{target}}",
+    "removedCurrentPack": "أُزيلت بيانات كلمات تلك اللغة؛ عدت إلى قراءة {{source}} وتعلّم {{target}}."
   },
   "door": {
     "guessPrompt": "خمّن أولًا: ما هو، في جملة واحدة؟",

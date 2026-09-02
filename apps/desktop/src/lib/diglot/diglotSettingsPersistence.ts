@@ -20,7 +20,13 @@ import {
 } from "./diglotSettings";
 import { loadCards } from "./diglotSignals";
 import { bumpWeaveEpoch } from "./diglotWeaveRun";
-import { installLanguagePack, listInstalledPairs, loadPack } from "./languagePacks";
+import { type PackRemovalOutcome, removePairWith } from "./languagePackRemoval";
+import {
+  installLanguagePack,
+  listInstalledPairs,
+  loadPack,
+  removeLanguagePack,
+} from "./languagePacks";
 
 export async function refreshDiglotConfusions(): Promise<void> {
   const { settings, loaded } = useDiglotStore.getState();
@@ -48,6 +54,22 @@ export async function chooseDiglotPair(pairId: string): Promise<void> {
     store.setState({ installingPairId: null });
   }
   await store.getState().saveSettings({ pairId });
+}
+
+/** Removes a downloaded pack; the pair in use is first switched back to the bundled one so
+ * the weave never points at a dictionary that is gone. Word states stay. */
+export function removeDiglotPair(pairId: string): Promise<PackRemovalOutcome> {
+  const store = useDiglotStore;
+  return removePairWith(
+    {
+      currentPairId: () => store.getState().settings.pairId,
+      switchPair: (nextPairId) => store.getState().saveSettings({ pairId: nextPairId }),
+      removePack: removeLanguagePack,
+      listInstalled: listInstalledPairs,
+      setInstalled: (installedPairs) => store.setState({ installedPairs }),
+    },
+    pairId,
+  );
 }
 
 export async function loadDiglotFromDatabase(): Promise<void> {

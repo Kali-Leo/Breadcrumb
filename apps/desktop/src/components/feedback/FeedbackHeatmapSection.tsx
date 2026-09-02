@@ -10,6 +10,7 @@ import { type Activity, ActivityCalendar } from "react-activity-calendar";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { useFeedbackStore } from "../../stores/feedbackStore";
+import { TrailSummaryCard } from "./TrailSummaryCard";
 
 /** Fixed count→level buckets driving block color intensity only — never rendered as text,
  * so this is not a new user-facing metric name (注意力设计手册 §本项目特有规矩 1). */
@@ -59,43 +60,48 @@ export function FeedbackHeatmapSection() {
     }
   }, [cells]);
 
+  // The trail card sits above the heatmap as the first thing in the 「这段时间」 stack: the
+  // stack's own file lives with the map, so the card rides in here as a leading sibling.
   return (
-    <section className="rounded-xl bg-white p-3 shadow-sm">
-      <h3 className="font-semibold text-stone-600">{t("palace:mirror.heatmapTitle")}</h3>
-      {continuity.activeDays === 0 ? (
-        <p className="mt-2 text-stone-400">{t("palace:mirror.heatmapEmpty")}</p>
-      ) : (
-        <>
-          {/* How-to-read note lives on hover over the calendar area (progressive
+    <>
+      <TrailSummaryCard />
+      <section className="rounded-xl bg-white p-3 shadow-sm">
+        <h3 className="font-semibold text-stone-600">{t("palace:mirror.heatmapTitle")}</h3>
+        {continuity.activeDays === 0 ? (
+          <p className="mt-2 text-stone-400">{t("palace:mirror.heatmapEmpty")}</p>
+        ) : (
+          <>
+            {/* How-to-read note lives on hover over the calendar area (progressive
               disclosure); each cell adds its own date + footprint-count title. */}
-          <div
-            ref={scrollRef}
-            className="mt-2 overflow-x-auto"
-            title={t("palace:mirror.heatmapHoverNote")}
-          >
-            <ActivityCalendar
-              data={activities}
-              theme={AMBER_THEME}
-              colorScheme="light"
-              blockSize={10}
-              blockMargin={3}
-              fontSize={10}
-              labels={{ months: monthLabels(i18n.language) }}
-              renderBlock={(block, activity) =>
-                cloneElement(
-                  block,
-                  {},
-                  <title>{copy(heatmapCellMessage(activity.date, activity.count))}</title>,
-                )
-              }
-              showColorLegend={false}
-              showTotalCount={false}
-              showWeekdayLabels={false}
-            />
-          </div>
-          <p className="mt-2 text-stone-500">{copy(activityMessage(continuity.activeDays))}</p>
-        </>
-      )}
-    </section>
+            <div
+              ref={scrollRef}
+              className="mt-2 overflow-x-auto"
+              title={t("palace:mirror.heatmapHoverNote")}
+            >
+              <ActivityCalendar
+                data={activities}
+                theme={AMBER_THEME}
+                colorScheme="light"
+                blockSize={10}
+                blockMargin={3}
+                fontSize={10}
+                labels={{ months: monthLabels(i18n.language) }}
+                renderBlock={(block, activity) =>
+                  cloneElement(
+                    block,
+                    {},
+                    <title>{copy(heatmapCellMessage(activity.date, activity.count))}</title>,
+                  )
+                }
+                showColorLegend={false}
+                showTotalCount={false}
+                showWeekdayLabels={false}
+              />
+            </div>
+            <p className="mt-2 text-stone-500">{copy(activityMessage(continuity.activeDays))}</p>
+          </>
+        )}
+      </section>
+    </>
   );
 }

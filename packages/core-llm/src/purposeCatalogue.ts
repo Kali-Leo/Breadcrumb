@@ -29,7 +29,9 @@ export type PurposeCadence =
   /** Once when the learner does the thing, and not otherwise. */
   | "on-demand"
   /** Once per item, then cached forever against that item. */
-  | "per-item-once";
+  | "per-item-once"
+  /** At most once a calendar day, and only on a day that had learning in it. */
+  | "per-day";
 
 export interface PurposeUsage {
   /** Prompt tokens one call sends, from the real builder over the fixture scenario. */
@@ -69,6 +71,7 @@ export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
   "term-marking": { inputTokens: 570, outputTokens: 22, cadence: "per-answer" },
   "diglot-weave": { inputTokens: 398, outputTokens: 86, cadence: "per-message" },
   "focus-explain": { inputTokens: 395, outputTokens: 223, cadence: "on-demand" },
+  "trail-summary": { inputTokens: 220, outputTokens: 26, cadence: "per-day" },
 };
 
 /** What one call of this purpose costs at the given rates, or undefined when the purpose has

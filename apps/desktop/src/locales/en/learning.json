@@ -30,7 +30,12 @@
     "placementSkip": "Not now",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "What does “{{word}}” mean?",
-    "placementDontKnow": "I don't know this one"
+    "placementDontKnow": "I don't know this one",
+    "installedTitle": "Downloaded word data",
+    "installedHint": "You can download it again any time; the words you learned stay.",
+    "removePack": "Remove",
+    "removePackAria": "Remove the word data for reading {{source}}, learning {{target}}",
+    "removedCurrentPack": "That language's word data is gone; you are back to reading {{source}}, learning {{target}}."
   },
   "door": {
     "guessPrompt": "Have a guess first: what is it, in one sentence?",

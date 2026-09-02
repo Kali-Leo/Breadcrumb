@@ -30,7 +30,12 @@
     "placementSkip": "Не сейчас",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "Что значит «{{word}}»?",
-    "placementDontKnow": "Это слово не знаю"
+    "placementDontKnow": "Это слово не знаю",
+    "installedTitle": "Скачанные словарные данные",
+    "installedHint": "Можно скачать снова в любой момент; выученные слова сохраняются.",
+    "removePack": "Удалить",
+    "removePackAria": "Удалить словарные данные: читаете {{source}}, учите {{target}}",
+    "removedCurrentPack": "Словарные данные того языка удалены; снова читаете {{source}}, учите {{target}}."
   },
   "door": {
     "guessPrompt": "Сначала догадка: что это такое, одним предложением?",

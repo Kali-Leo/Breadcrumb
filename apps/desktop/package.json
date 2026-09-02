@@ -36,6 +36,7 @@
     "@breadcrumb/feature-memory": "workspace:*",
     "@breadcrumb/feature-planner": "workspace:*",
     "@breadcrumb/feature-research": "workspace:*",
+    "@breadcrumb/feature-trail": "workspace:*",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-http": "^2.5.9",
     "@tauri-apps/plugin-opener": "^2",

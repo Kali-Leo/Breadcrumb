@@ -66,7 +66,8 @@
     "companion-memory": "Memoria de los compañeros",
     "companion-script": "Preparación del compañero",
     "focus-explain": "Explicaciones en modo enfoque",
-    "term-marking": "Marcado de palabras"
+    "term-marking": "Marcado de palabras",
+    "trail-summary": "El rastro de ayer"
   },
   "billing": {
     "intro": "Cada paso que cuesta dinero tiene aquí su propio interruptor y su gasto se registra por separado. Esta página muestra lo que se ha gastado de verdad.",
@@ -80,6 +81,7 @@
     "cadencePerAnswer": "por respuesta",
     "cadenceOnDemand": "cada vez que lo usas",
     "cadencePerItemOnce": "por elemento, una sola vez",
+    "cadencePerDay": "como máximo una vez al día",
     "grandTotal": "Hoy {{today}} · en total {{total}}",
     "nothingSpent": "todavía sin gasto",
     "neverUsed": "Todavía sin gasto",
@@ -133,6 +135,10 @@
       "feedbackLab": {
         "name": "🪞 Últimamente",
         "hint": "El panel de repaso junto al mapa: se calcula por completo con datos locales y no cuesta nada."
+      },
+      "trailSummary": {
+        "name": "🐾 El rastro de ayer",
+        "hint": "La primera vez que abres la app cada día, la IA escribe una frase sobre lo que aprendiste el día anterior; aparece arriba del panel «Últimamente», junto al mapa."
       },
       "companionChat": {
         "name": "🎭 Chat con compañeros",

@@ -14,7 +14,13 @@
     "sql:allow-select",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://**" }, { "url": "http://127.0.0.1:21456/*" }]
+      "allow": [
+        { "url": "https://**" },
+        { "url": "http://127.0.0.1:21456/*" },
+        { "url": "http://127.0.0.1:*/*" },
+        { "url": "http://localhost:*/*" },
+        { "url": "http://[\\:\\:1]:*/*" }
+      ]
     }
   ]
 }

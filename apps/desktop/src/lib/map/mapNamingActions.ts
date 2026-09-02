@@ -7,6 +7,13 @@
  * Main exports: applyAiContinentNames.
  * Side effects: reads/writes the "mapTopicNameCache" settings row, meters the call, and logs
  * silent failures. The caller decides whether to call at all (switch + network + apiConfig).
+ *
+ * Storage (evaluated 2026-09-02 against map_place_names, source 'ai'): the names stay here,
+ * keyed by member set, on purpose. A cluster continent's id is its earliest member's node id,
+ * which is also that member kingdom's id — a node-keyed AI row would put the continent's
+ * name on the kingdom too — and a member-set key is what lets a reshuffled cluster be named
+ * afresh while an unchanged one is never paid for twice. The learner's own names
+ * (lib/map/placeNames) are laid over the world AFTER these, so a user name always wins.
  */
 import { chatJson } from "@breadcrumb/core-llm";
 import {

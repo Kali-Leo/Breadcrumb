@@ -65,7 +65,8 @@
     "companion-memory": "Companion memory",
     "companion-script": "Companion prep",
     "focus-explain": "Focus explanations",
-    "term-marking": "Word marking"
+    "term-marking": "Word marking",
+    "trail-summary": "Yesterday's trail"
   },
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
@@ -79,6 +80,7 @@
     "cadencePerAnswer": "per answer",
     "cadenceOnDemand": "each time you use it",
     "cadencePerItemOnce": "per item, charged once",
+    "cadencePerDay": "at most once a day",
     "grandTotal": "Today {{today}} · all time {{total}}",
     "nothingSpent": "nothing spent yet",
     "neverUsed": "Nothing spent yet",
@@ -132,6 +134,10 @@
       "feedbackLab": {
         "name": "🪞 Recently",
         "hint": "The review panel beside the map: computed entirely from local data, costs nothing."
+      },
+      "trailSummary": {
+        "name": "🐾 Yesterday's trail",
+        "hint": "The first time you open the app each day, the AI writes one sentence about what you learned the day before; it shows at the top of the \"Recently\" panel beside the map."
       },
       "companionChat": {
         "name": "🎭 Companion chat",

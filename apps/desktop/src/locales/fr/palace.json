@@ -24,7 +24,10 @@
     "trendWordsMemoryNote": "Une estimation du nombre de mots que tu pourrais encore retrouver ce jour-là ; sans contact, cela s'estompe tout seul avec le temps.",
     "trendWordsIntuitionNote": "L'estimation la plus grossière : les mots stables depuis longtemps et que tu as utilisés dans tes propres phrases.",
     "trendWordsSettledNote": "Compte les mots stables depuis plus d'un mois ; les mots nouveaux mettent du temps à se poser, un départ plat à zéro est donc normal.",
-    "regionEmpty": "Aucun apprentissage enregistré dans cette zone pour l'instant"
+    "regionEmpty": "Aucun apprentissage enregistré dans cette zone pour l'instant",
+    "trailTitle": "La trace d'hier",
+    "trailTitleDated": "Trace du {{date}}",
+    "trailEarlier": "Jours précédents"
   },
   "map": {
     "loadFailed": "La carte ne s'est pas chargée. Quitte cette page et reviens, elle réessaiera.",
@@ -50,7 +53,10 @@
     "modeCasual": "Libre",
     "modeCasualHint": "Parcours toute la carte ; les suggestions suivent ce qui t'intéresse",
     "modeRanked": "Objectif",
-    "modeRankedHint": "N'afficher que ce qui touche à l'objectif en cours"
+    "modeRankedHint": "N'afficher que ce qui touche à l'objectif en cours",
+    "rename": "Renommer",
+    "renameHint": "Entrée enregistre, Échap annule. Laisse vide pour revenir au nom d'origine.",
+    "renameInputAria": "Nouveau nom"
   },
   "continue": {
     "title": "Continuer par ici",

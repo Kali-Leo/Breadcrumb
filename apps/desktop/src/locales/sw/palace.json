@@ -22,7 +22,10 @@
     "trendWordsMemoryNote": "Makadirio ya maneno mangapi ungeweza kuyakumbuka siku hiyo; bila kuyagusa tena, hufifia yenyewe kadri muda unavyopita.",
     "trendWordsIntuitionNote": "Makadirio ya jumla zaidi: maneno yaliyokaa imara kwa muda mrefu na uliyoyatumia kwenye sentensi zako mwenyewe.",
     "trendWordsSettledNote": "Huhesabu maneno yaliyokaa imara zaidi ya mwezi; maneno mapya huhitaji muda kutulia, hivyo mwanzo tambarare kwenye sifuri ni jambo la kawaida.",
-    "regionEmpty": "Bado hakuna kujifunza kulikorekodiwa katika eneo hili"
+    "regionEmpty": "Bado hakuna kujifunza kulikorekodiwa katika eneo hili",
+    "trailTitle": "Nyayo za jana",
+    "trailTitleDated": "Nyayo za {{date}}",
+    "trailEarlier": "Siku zilizopita"
   },
   "map": {
     "loadFailed": "Ramani haikupakia. Ondoka kwenye ukurasa huu kisha urudi, itajaribu tena.",
@@ -46,7 +49,10 @@
     "modeCasual": "Huru",
     "modeCasualHint": "Tembea ramani nzima; mapendekezo hufuata kinachokuvutia",
     "modeRanked": "Lengo",
-    "modeRankedHint": "Onyesha tu vinavyohusiana na lengo la sasa"
+    "modeRankedHint": "Onyesha tu vinavyohusiana na lengo la sasa",
+    "rename": "Badilisha jina",
+    "renameHint": "Enter huhifadhi, Esc hughairi. Acha wazi ili kurudisha jina la awali.",
+    "renameInputAria": "Jina jipya"
   },
   "continue": {
     "title": "Endelea kutoka hapa",

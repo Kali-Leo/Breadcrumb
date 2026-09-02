@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isPlaceRenamable } from "../../lib/map/placeNames";
 import { degradeSilently } from "../../lib/platform/failureLog";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
@@ -36,7 +37,9 @@ export function MapView() {
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [level, setLevel] = useState<MapLevel>({ kind: "world" });
   const [goalViewOpen, setGoalViewOpen] = useState(false);
-  const [subwayKingdom, setSubwayKingdom] = useState<KingdomRef | null>(null);
+  const [subwayKingdom, setSubwayKingdom] = useState<(KingdomRef & { islandId: string }) | null>(
+    null,
+  );
 
   // Fog data should be fresh whenever the palace opens.
   useEffect(() => {
@@ -114,8 +117,16 @@ export function MapView() {
       nodeId: kingdom.nodeId,
       label: kingdom.label,
       memberNodeIds: kingdom.memberNodeIds,
+      islandId: level.islandId,
     });
   }
+  // The overlay's header reads the kingdom's name from the live world, not the click-time
+  // snapshot, so a rename made inside the overlay shows there at once.
+  const subwayIsland =
+    subwayKingdom === null ? undefined : findIsland(displayWorld, subwayKingdom.islandId);
+  const subwayLabel =
+    subwayIsland?.kingdoms.find((candidate) => candidate.nodeId === subwayKingdom?.nodeId)?.label ??
+    subwayKingdom?.label;
 
   // The goal view and a kingdom's subway map cover the palace as overlays instead of
   // replacing it — the Pixi application initializes once per mount and its canvas would not
@@ -159,7 +170,13 @@ export function MapView() {
       )}
       {subwayKingdom !== null && (
         <div className="absolute inset-0 z-20 bg-stone-50">
-          <KingdomView kingdom={subwayKingdom} onClose={() => setSubwayKingdom(null)} />
+          <KingdomView
+            kingdom={{ ...subwayKingdom, label: subwayLabel ?? subwayKingdom.label }}
+            renamable={
+              subwayIsland !== undefined && isPlaceRenamable(subwayIsland, subwayKingdom.nodeId)
+            }
+            onClose={() => setSubwayKingdom(null)}
+          />
         </div>
       )}
     </div>

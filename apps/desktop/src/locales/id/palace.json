@@ -20,7 +20,10 @@
     "trendWordsMemoryNote": "Perkiraan berapa kata yang masih bisa kamu ingat pada hari itu; tanpa disentuh lagi, ia memudar sendiri seiring waktu.",
     "trendWordsIntuitionNote": "Perkiraan paling kasar: kata-kata yang sudah lama mantap dan pernah kamu pakai dalam kalimatmu sendiri.",
     "trendWordsSettledNote": "Menghitung kata yang mantap lebih dari sebulan; kata baru butuh waktu untuk mengendap, jadi awal yang datar di nol itu wajar.",
-    "regionEmpty": "Belum ada catatan belajar di wilayah ini"
+    "regionEmpty": "Belum ada catatan belajar di wilayah ini",
+    "trailTitle": "Jejak kemarin",
+    "trailTitleDated": "Jejak {{date}}",
+    "trailEarlier": "Hari-hari sebelumnya"
   },
   "map": {
     "loadFailed": "Peta tidak termuat. Tinggalkan halaman ini lalu kembali, ia akan mencoba lagi.",
@@ -42,7 +45,10 @@
     "modeCasual": "Bebas",
     "modeCasualHint": "Jelajahi seluruh peta; sarannya mengikuti apa yang menarik bagimu",
     "modeRanked": "Tujuan",
-    "modeRankedHint": "Hanya tampilkan yang berkaitan dengan tujuan saat ini"
+    "modeRankedHint": "Hanya tampilkan yang berkaitan dengan tujuan saat ini",
+    "rename": "Ganti nama",
+    "renameHint": "Enter menyimpan, Esc membatalkan. Kosongkan untuk kembali ke nama semula.",
+    "renameInputAria": "Nama baru"
   },
   "continue": {
     "title": "Lanjutkan dari sini",

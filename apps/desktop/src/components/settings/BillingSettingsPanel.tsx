@@ -28,6 +28,7 @@ const FEATURE_ROWS = [
   { feature: "teachQuality", purposes: ["teach-quality"] },
   { feature: "mapTopicNaming", purposes: ["map-naming"] },
   { feature: "feedbackLab", purposes: [] },
+  { feature: "trailSummary", purposes: ["trail-summary"] },
   { feature: "companionChat", purposes: ["companion-chat"] },
   { feature: "companionMemory", purposes: ["companion-memory"] },
   { feature: "companionScript", purposes: ["companion-script"] },

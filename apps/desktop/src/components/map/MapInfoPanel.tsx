@@ -15,6 +15,7 @@ import {
 } from "../../lib/feedback/regionFeedbackData";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { ForwardArrow } from "../DirectionalArrow";
+import { CurrentIslandCard } from "./CurrentIslandCard";
 import { findIsland, type MapLevel } from "./levels";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
@@ -129,6 +130,9 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
 
   const region =
     settledHover !== null && feedbackLabEnabled ? regionNodeIds(world, level, settledHover) : null;
+  // Inside an island with nothing under the pointer, the island itself is what the map
+  // points at — its card (and the rename action) sits where the rail was blank before.
+  const currentIsland = level.kind === "island" ? findIsland(world, level.islandId) : undefined;
 
   return (
     <aside className="flex h-full w-full flex-col border-s border-stone-200 bg-stone-50">
@@ -169,6 +173,8 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
           />
         ) : level.kind === "world" ? (
           <MirrorStack />
+        ) : currentIsland !== undefined ? (
+          <CurrentIslandCard island={currentIsland} />
         ) : null}
       </div>
     </aside>

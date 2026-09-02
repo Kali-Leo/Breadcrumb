@@ -44,10 +44,13 @@ Windows 用 `certutil -hashfile <文件名> SHA256` 再和文件里对应那行�
 **你还需要一个 AI 服务账号。** 这个应用本身不含 AI，也不收费 ——
 任何兼容 OpenAI 接口的服务都行（DeepSeek、通义千问、OpenAI…），
 钱花在你自己的账号上。首次启动的引导会带你填。
+跑在本机回环上的 http 服务（Ollama、LM Studio、llama.cpp…）同样可用；
+非本机地址必须是 https —— 密钥是明文跟着请求头走的。
 
 **You bring your own AI service.** The app contains no AI and charges nothing. Any
-OpenAI-compatible endpoint works; you spend on your own account. The first-run guide walks
-you through it.
+OpenAI-compatible endpoint works; you spend on your own account. A plain-http server on the
+loopback interface (Ollama, LM Studio, llama.cpp…) works too; anything not on this machine
+must be https. The first-run guide walks you through it.
 
 ---
 

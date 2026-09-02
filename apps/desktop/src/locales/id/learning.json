@@ -30,7 +30,12 @@
     "placementSkip": "Nanti saja",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "Apa arti «{{word}}»?",
-    "placementDontKnow": "Yang ini saya tidak tahu"
+    "placementDontKnow": "Yang ini saya tidak tahu",
+    "installedTitle": "Data kata yang sudah diunduh",
+    "installedHint": "Kamu bisa mengunduhnya lagi kapan saja; kata yang sudah kamu pelajari tetap tersimpan.",
+    "removePack": "Hapus",
+    "removePackAria": "Hapus data kata untuk membaca {{source}}, belajar {{target}}",
+    "removedCurrentPack": "Data kata bahasa itu sudah dihapus; kamu kembali membaca {{source}}, belajar {{target}}."
   },
   "door": {
     "guessPrompt": "Tebak dulu: apa ini, dalam satu kalimat?",

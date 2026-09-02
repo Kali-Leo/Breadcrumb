@@ -65,7 +65,8 @@
     "companion-memory": "Kumbukumbu za wenzako",
     "companion-script": "Maandalizi ya mwenzako",
     "focus-explain": "Maelezo ya hali ya umakini",
-    "term-marking": "Kuweka alama kwenye maneno"
+    "term-marking": "Kuweka alama kwenye maneno",
+    "trail-summary": "Nyayo za jana"
   },
   "billing": {
     "intro": "Kila hatua inayogharimu pesa ina swichi yake hapa, na matumizi yake huhesabiwa peke yake. Ukurasa huu unaonyesha kilichotumika kweli.",
@@ -79,6 +80,7 @@
     "cadencePerAnswer": "kwa kila jibu",
     "cadenceOnDemand": "kila unapoitumia",
     "cadencePerItemOnce": "kwa kila kipengele, mara moja",
+    "cadencePerDay": "si zaidi ya mara moja kwa siku",
     "grandTotal": "Leo {{today}} · jumla {{total}}",
     "nothingSpent": "bado hakuna kilichotumika",
     "neverUsed": "Bado hakuna kilichotumika",
@@ -132,6 +134,10 @@
       "feedbackLab": {
         "name": "🪞 Hivi karibuni",
         "hint": "Kidirisha cha kupitia kando ya ramani: huhesabiwa kabisa kwa data ya kompyuta hii, hakigharimu chochote."
+      },
+      "trailSummary": {
+        "name": "🐾 Nyayo za jana",
+        "hint": "Unapofungua programu kwa mara ya kwanza kila siku, AI huandika sentensi moja kuhusu ulichojifunza siku iliyopita; huonekana juu kabisa ya kidirisha cha «Hivi karibuni» kando ya ramani."
       },
       "companionChat": {
         "name": "🎭 Mazungumzo na wenzako",

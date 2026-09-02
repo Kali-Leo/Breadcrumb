@@ -20,7 +20,10 @@
     "trendWordsMemoryNote": "估算这一天你还能想起来的词有多少；一阵子不接触，会随时间自然消退。",
     "trendWordsIntuitionNote": "最粗略的估算：已经长期稳固、而且你在自己的话里用过的那部分词。",
     "trendWordsSettledNote": "数的是已经稳固超过一个月的词；新词稳固需要时间，这条线前段为 0 是正常的。",
-    "regionEmpty": "这片区域还没有学习记录"
+    "regionEmpty": "这片区域还没有学习记录",
+    "trailTitle": "昨天的足迹",
+    "trailTitleDated": "{{date}} 的足迹",
+    "trailEarlier": "更早几天"
   },
   "map": {
     "loadFailed": "地图没有加载成功。离开这一页再回来，会重新尝试。",
@@ -42,7 +45,10 @@
     "modeCasual": "休闲",
     "modeCasualHint": "自由查看整张地图，推荐跟着你的兴趣走",
     "modeRanked": "目标",
-    "modeRankedHint": "只显示和当前目标有关的部分"
+    "modeRankedHint": "只显示和当前目标有关的部分",
+    "rename": "重命名",
+    "renameHint": "回车保存，Esc 取消。留空就恢复原来的名字。",
+    "renameInputAria": "新名字"
   },
   "continue": {
     "title": "从这里继续",

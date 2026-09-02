@@ -30,7 +30,12 @@
     "placementSkip": "Pas maintenant",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "Que veut dire « {{word}} » ?",
-    "placementDontKnow": "Celui-là, je ne sais pas"
+    "placementDontKnow": "Celui-là, je ne sais pas",
+    "installedTitle": "Données de mots téléchargées",
+    "installedHint": "Tu peux les retélécharger quand tu veux ; les mots appris restent.",
+    "removePack": "Retirer",
+    "removePackAria": "Retirer les données de mots pour lire {{source}} et apprendre {{target}}",
+    "removedCurrentPack": "Ces données de mots ont été retirées ; tu reviens à lire {{source}} et apprendre {{target}}."
   },
   "door": {
     "guessPrompt": "Devine d'abord : c'est quoi, en une phrase ?",

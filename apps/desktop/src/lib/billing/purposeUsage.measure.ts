@@ -25,6 +25,7 @@ import { buildInterestMessages, buildSelfReportMessages } from "@breadcrumb/feat
 import { buildExtractionMessages } from "@breadcrumb/feature-knowledge-tree";
 import { buildContinentNamingMessages } from "@breadcrumb/feature-map";
 import { buildGoalMappingMessages } from "@breadcrumb/feature-planner";
+import { buildTrailSummaryMessages } from "@breadcrumb/feature-trail";
 import { LONG_ANSWER, ROUND, treeLabels, treeNodes } from "./purposeUsage.fixtures";
 
 export interface MeasuredPurpose {
@@ -59,6 +60,7 @@ const REPLIES = {
   mapNaming: `{"clusters":[{"id":"c0","name":"集合与函数"},{"id":"c1","name":"微分学"},{"id":"c2","name":"数列与极限"}]}`,
   termMarking: `{"terms":[{"term":"瞬时变化率"},{"term":"平均变化率"},{"term":"可导"}]}`,
   diglot: `{"words":[{"lemma":"变化","verdict":"keep","target":"change"},{"lemma":"极限","verdict":"retranslate","target":"limit"},{"lemma":"定义","verdict":"keep","target":"definition"}],"phrase":{"original":"无限接近","replacement":"approaches arbitrarily closely","gloss":"无限地靠近某个值"}}`,
+  trailSummary: `{"summary":"昨天你搞懂了集合的含义与表示，理清了集合间的关系和交并补三种基本运算。"}`,
   // Focus stations and chat replies are prose, not JSON — the answer itself is the output.
   focusExplain: LONG_ANSWER.slice(0, 420),
   chat: LONG_ANSWER,
@@ -82,6 +84,10 @@ const alignPairs = Array.from({ length: 8 }, (_, index) => ({
   nodeSummary: treeNodes[index + 3]?.summary ?? "",
   similarity: 0.82,
 }));
+
+/** Footprints a study day leaves for the trail summary: three rounds, two nodes each — the
+ * knowledge-tree reply above extracts two per round. */
+const TRAIL_DAY_NODES = 6;
 
 /** How many prior turns a mid-length conversation carries when a round is sent. Chat resends
  * its whole history, so this — not the system prompt — is what its input bill is made of. */
@@ -162,6 +168,11 @@ export function measurePurposeUsage(): MeasuredPurpose[] {
       REPLIES.diglot,
     ],
     ["focus-explain", buildWordExplainMessages(LONG_ANSWER, "瞬时变化率"), REPLIES.focusExplain],
+    [
+      "trail-summary",
+      buildTrailSummaryMessages(treeNodes.slice(0, TRAIL_DAY_NODES)),
+      REPLIES.trailSummary,
+    ],
   ];
 
   return measurements.map(([purpose, messages, reply]) => ({

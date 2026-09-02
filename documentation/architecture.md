@@ -182,6 +182,11 @@ packages/                    27 个无界面的库，被 apps/desktop 直接以�
   已经没有 `http://`。
 - **导航守卫**（`lib.rs` 的 `navigation_guard` 插件）：主窗口只允许加载 `tauri:` 协议、
   `tauri.localhost`，以及**仅开发构建**下的 Vite 服务器；别的一律拒绝。
+- **LLM 的出网地址**：**本机回环的 http 服务（如 Ollama）可用；非本机地址必须 https。**
+  两道门用同一条规则 —— `core-llm/completionsUrl.ts` 只放行 https 和回环上的 http，
+  桌面壳 `capabilities/default.json` 的 `http:default` 只列了 `https://**` 和
+  `127.0.0.1` / `localhost` / `[::1]` 的任意端口。密钥是明文 `Authorization: Bearer`，
+  离开本机就必须有 TLS。
 - **语言包下载先校验 sha256**：摘要随安装包一起发（`assets/language-packs/catalog.json`），
   对不上就拒绝，然后才轮到 Zod 契约校验。
 - **外链抓取逐跳重检**：`fetchExternalPage` 自己跟随重定向（最多 3 跳），

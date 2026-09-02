@@ -64,7 +64,8 @@
     "companion-memory": "Ingatan teman",
     "companion-script": "Persiapan teman",
     "focus-explain": "Penjelasan mode fokus",
-    "term-marking": "Penandaan kata"
+    "term-marking": "Penandaan kata",
+    "trail-summary": "Jejak kemarin"
   },
   "billing": {
     "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",
@@ -78,6 +79,7 @@
     "cadencePerAnswer": "per jawaban",
     "cadenceOnDemand": "setiap kali dipakai",
     "cadencePerItemOnce": "per item, sekali saja",
+    "cadencePerDay": "paling banyak sekali sehari",
     "grandTotal": "Hari ini {{today}} · total {{total}}",
     "nothingSpent": "belum ada pengeluaran",
     "neverUsed": "Belum ada pengeluaran",
@@ -131,6 +133,10 @@
       "feedbackLab": {
         "name": "🪞 Belakangan ini",
         "hint": "Panel tinjauan di samping peta: dihitung sepenuhnya dari data di komputer ini, tidak memakan biaya."
+      },
+      "trailSummary": {
+        "name": "🐾 Jejak kemarin",
+        "hint": "Saat aplikasi pertama kali dibuka setiap hari, AI menulis satu kalimat tentang apa yang kamu pelajari sehari sebelumnya; kalimat itu tampil paling atas di panel «Belakangan ini» di samping peta."
       },
       "companionChat": {
         "name": "🎭 Obrolan dengan teman",

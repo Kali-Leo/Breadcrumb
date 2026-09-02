@@ -30,7 +30,12 @@
     "placementSkip": "अभी नहीं",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "«{{word}}» का क्या अर्थ है?",
-    "placementDontKnow": "यह मुझे नहीं आता"
+    "placementDontKnow": "यह मुझे नहीं आता",
+    "installedTitle": "डाउनलोड किया हुआ शब्दों का डेटा",
+    "installedHint": "आप इसे कभी भी दोबारा डाउनलोड कर सकते हैं; सीखे हुए शब्द बने रहेंगे।",
+    "removePack": "हटाएँ",
+    "removePackAria": "{{source}} पढ़कर {{target}} सीखने का शब्द डेटा हटाएँ",
+    "removedCurrentPack": "उस भाषा का शब्द डेटा हटा दिया गया; आप फिर से {{source}} पढ़कर {{target}} सीख रहे हैं।"
   },
   "door": {
     "guessPrompt": "पहले अंदाज़ा लगाइए: एक वाक्य में यह क्या है?",

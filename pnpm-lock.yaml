@@ -101,6 +101,9 @@ importers:
       '@breadcrumb/feature-research':
         specifier: workspace:*
         version: link:../../packages/feature-research
+      '@breadcrumb/feature-trail':
+        specifier: workspace:*
+        version: link:../../packages/feature-trail
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.1

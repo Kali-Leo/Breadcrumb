@@ -30,7 +30,12 @@
     "placementSkip": "Si sasa",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "«{{word}}» maana yake nini?",
-    "placementDontKnow": "Hili sijui"
+    "placementDontKnow": "Hili sijui",
+    "installedTitle": "Data ya maneno iliyopakuliwa",
+    "installedHint": "Unaweza kuipakua tena wakati wowote; maneno uliyojifunza yanabaki.",
+    "removePack": "Ondoa",
+    "removePackAria": "Ondoa data ya maneno ya kusoma {{source}} na kujifunza {{target}}",
+    "removedCurrentPack": "Data ya maneno ya lugha hiyo imeondolewa; umerudi kusoma {{source}} na kujifunza {{target}}."
   },
   "door": {
     "guessPrompt": "Kisia kwanza: ni nini hasa, kwa sentensi moja?",

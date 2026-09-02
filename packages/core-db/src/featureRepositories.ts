@@ -45,6 +45,14 @@ export function createTrailSummariesRepo(sql: SqlClient) {
       );
       return rows[0] ?? null;
     },
+    /** Every summary dated on or after `fromDate` (a "YYYY-MM-DD" key), newest first — the
+     * card's "last few days" list. */
+    async listSince(fromDate: string): Promise<TrailSummaryRow[]> {
+      return sql.select<TrailSummaryRow>(
+        "SELECT * FROM trail_summaries WHERE date >= ? ORDER BY date DESC",
+        [fromDate],
+      );
+    },
     async set(row: TrailSummaryRow): Promise<void> {
       await sql.execute(
         `INSERT INTO trail_summaries (date, content, created_at) VALUES (?, ?, ?)

@@ -22,7 +22,10 @@
     "trendWordsMemoryNote": "An estimate of how many words you could still recall that day; without contact, it fades on its own over time.",
     "trendWordsIntuitionNote": "The roughest estimate: words that have been stable for a long time and that you have used in your own sentences.",
     "trendWordsSettledNote": "Counts words that have been stable for over a month; new words take time to settle, so a flat start at zero is normal.",
-    "regionEmpty": "No learning recorded in this area yet"
+    "regionEmpty": "No learning recorded in this area yet",
+    "trailTitle": "Yesterday's trail",
+    "trailTitleDated": "Trail from {{date}}",
+    "trailEarlier": "Earlier days"
   },
   "map": {
     "loadFailed": "The map did not load. Leave this page and come back, and it will try again.",
@@ -46,7 +49,10 @@
     "modeCasual": "Casual",
     "modeCasualHint": "Roam the whole map; suggestions follow what interests you",
     "modeRanked": "Goal",
-    "modeRankedHint": "Show only what relates to the current goal"
+    "modeRankedHint": "Show only what relates to the current goal",
+    "rename": "Rename",
+    "renameHint": "Enter saves, Esc cancels. Leave it empty to go back to the original name.",
+    "renameInputAria": "New name"
   },
   "continue": {
     "title": "Continue from here",

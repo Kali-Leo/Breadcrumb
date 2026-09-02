@@ -30,7 +30,12 @@
     "placementSkip": "先不测了",
     "placementProgress": "{{done}} / {{total}}",
     "placementQuestion": "「{{word}}」是什么意思？",
-    "placementDontKnow": "这个不认识"
+    "placementDontKnow": "这个不认识",
+    "installedTitle": "已下载的词库",
+    "installedHint": "移除后随时可以再下载，学过的词都会留着。",
+    "removePack": "移除",
+    "removePackAria": "移除{{source}}学{{target}}的词库",
+    "removedCurrentPack": "那门语言的词库已移除，现在换回了用{{source}}学{{target}}。"
   },
   "door": {
     "guessPrompt": "先猜猜：一句话说它是什么？",

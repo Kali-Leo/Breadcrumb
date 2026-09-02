@@ -80,6 +80,10 @@ export interface FeatureSwitches {
    * words would trip up this learner — the primary source of explore doors. Off leaves doors
    * to the zero-LLM legacy node-matching source only. */
   termMarking: boolean;
+  /** Daily trail summary: on the first launch of a day, one small call turns yesterday's
+   * footprints into a single plain sentence for the 「这段时间」 panel. At most one call a
+   * day, none on a day nothing was learned. Off shows nothing — no empty card. */
+  trailSummary: boolean;
 }
 
 /** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
@@ -134,6 +138,7 @@ export const DEFAULT_SWITCHES: FeatureSwitches = {
   companionScript: true,
   focusExplain: true,
   termMarking: true,
+  trailSummary: true,
 };
 
 /** First run: the language the machine is set to, if we have an interface in it. Null when

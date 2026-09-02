@@ -24,7 +24,10 @@
     "trendWordsMemoryNote": "Una estimación de cuántas palabras todavía podrías recordar ese día; sin contacto se difumina sola con el tiempo.",
     "trendWordsIntuitionNote": "La estimación más aproximada: palabras que llevan mucho tiempo estables y que has usado en tus propias frases.",
     "trendWordsSettledNote": "Cuenta las palabras que llevan más de un mes estables; las palabras nuevas tardan en asentarse, así que empezar plano en cero es lo normal.",
-    "regionEmpty": "Todavía no hay estudio registrado en esta zona"
+    "regionEmpty": "Todavía no hay estudio registrado en esta zona",
+    "trailTitle": "El rastro de ayer",
+    "trailTitleDated": "Rastro del {{date}}",
+    "trailEarlier": "Días anteriores"
   },
   "map": {
     "loadFailed": "El mapa no se cargó. Sal de esta página y vuelve, y lo intentará otra vez.",
@@ -50,7 +53,10 @@
     "modeCasual": "Libre",
     "modeCasualHint": "Recorre todo el mapa; las sugerencias siguen lo que te interesa",
     "modeRanked": "Objetivo",
-    "modeRankedHint": "Mostrar solo lo relacionado con el objetivo actual"
+    "modeRankedHint": "Mostrar solo lo relacionado con el objetivo actual",
+    "rename": "Cambiar nombre",
+    "renameHint": "Intro guarda, Esc cancela. Déjalo vacío para volver al nombre original.",
+    "renameInputAria": "Nombre nuevo"
   },
   "continue": {
     "title": "Continuar por aquí",
