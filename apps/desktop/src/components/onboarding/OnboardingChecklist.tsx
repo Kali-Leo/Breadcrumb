@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../../lib/platform/db";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface ChecklistState {
@@ -78,12 +79,43 @@ export function OnboardingChecklist({
     { done: state.sawMap, label: t("checklist.map"), action: onOpenMap },
   ];
 
+  // On touch the card would sit over the map's hints or the context panel (2026-09-03
+  // walkthrough), so there it starts as a pill and only opens when asked; a mouse layout
+  // keeps the open card, unchanged.
+  const coarse = useInputMode() === "coarse";
+  const [expanded, setExpanded] = useState(false);
+  if (coarse && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        aria-expanded={false}
+        className="absolute start-3 bottom-[calc(var(--composer-height,0px)+0.75rem)] z-30 flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-sm text-stone-700 shadow-lg"
+      >
+        {t("checklist.title")}
+        <span aria-hidden>▸</span>
+      </button>
+    );
+  }
+
   return (
     // Bottom-end corner of the content — which on a small or touch screen is the send button,
     // so there it moves up above the composer (ChatView publishes --composer-height).
     <div className="absolute end-3 bottom-3 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white p-4 shadow-lg coarse:end-auto coarse:start-3 coarse:bottom-[calc(var(--composer-height,0px)+0.75rem)] stacked:bottom-[calc(var(--composer-height,0px)+0.75rem)]">
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium text-sm text-stone-700">{t("checklist.title")}</p>
+        {coarse ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            aria-expanded
+            className="flex min-h-11 items-center gap-2 font-medium text-sm text-stone-700"
+          >
+            {t("checklist.title")}
+            <span aria-hidden>▾</span>
+          </button>
+        ) : (
+          <p className="font-medium text-sm text-stone-700">{t("checklist.title")}</p>
+        )}
         <button
           type="button"
           onClick={onDismiss}

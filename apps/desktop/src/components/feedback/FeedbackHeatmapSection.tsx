@@ -73,10 +73,6 @@ export function FeedbackHeatmapSection() {
           <>
             {/* How-to-read note lives on hover over the calendar area (progressive
               disclosure); each cell adds its own date + footprint-count title. */}
-            {/* Touch has no hover, so the same note is printed under the calendar there. */}
-            <p className="mt-2 hidden text-stone-400 coarse:block">
-              {t("palace:mirror.heatmapHoverNote")}
-            </p>
             <div
               ref={scrollRef}
               className="mt-2 overflow-x-auto"
@@ -102,6 +98,10 @@ export function FeedbackHeatmapSection() {
                 showWeekdayLabels={false}
               />
             </div>
+            {/* Touch has no hover, so the same note is printed below the calendar there. */}
+            <p className="mt-2 hidden text-stone-400 coarse:block">
+              {t("palace:mirror.heatmapHoverNote")}
+            </p>
             <p className="mt-2 text-stone-500">{copy(activityMessage(continuity.activeDays))}</p>
           </>
         )}
