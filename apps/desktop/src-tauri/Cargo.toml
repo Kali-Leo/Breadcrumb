@@ -27,7 +27,7 @@ sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runti
 tauri-plugin-http = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-fastembed = "5.17.4"
+fastembed = "6.0.2"
 fsrs = "6.6.1"
 
 # Unix only, and only for getuid(): validated_binary has to know whether the file it is about
