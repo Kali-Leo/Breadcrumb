@@ -15,8 +15,8 @@
     "@breadcrumb/core-i18n": "workspace:*",
     "@breadcrumb/core-time": "workspace:*",
     "@breadcrumb/feature-memory": "workspace:*",
-    "@noble/curves": "^2.3.0",
-    "zod": "^4.4.3"
+    "@noble/curves": "^2.4.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

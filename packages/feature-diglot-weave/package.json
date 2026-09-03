@@ -16,7 +16,7 @@
     "@breadcrumb/core-random": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
     "ts-fsrs": "^5.2.1",
-    "zod": "^4.1.0"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
