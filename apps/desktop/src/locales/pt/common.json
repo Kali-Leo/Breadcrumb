@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "Nova conversa de estudo",
+    "menu": "Menu",
+    "closeMenu": "Fechar menu",
     "settings": "Configurações",
     "vocabulary": "Vocabulário",
     "discover": "Descobrir",

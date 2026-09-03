@@ -76,7 +76,7 @@ export function PlaceNameEditor({ nodeId, name, nameClassName }: PlaceNameEditor
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={onKeyDown}
         onBlur={(event) => commit(event.currentTarget.value)}
-        className="w-full rounded-lg border border-stone-200 bg-white px-2 py-1 text-sm text-stone-700 outline-none focus:border-amber-400"
+        className="w-full rounded-lg border border-stone-200 bg-white px-2 py-1 text-sm text-stone-700 outline-none focus:border-amber-400 coarse:text-base"
       />
       <span className="text-xs text-stone-400">{t("map.renameHint")}</span>
     </span>

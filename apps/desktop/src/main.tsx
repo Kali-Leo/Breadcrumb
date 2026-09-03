@@ -45,6 +45,10 @@ if (import.meta.env.DEV) {
 
 import App from "./App";
 import { initI18n } from "./i18n";
+import { applyInputMode } from "./lib/platform/inputMode";
+
+// Finger or pointer is decided before the first paint, so nothing renders for the wrong one.
+applyInputMode();
 
 // Messages must be loaded before the first render, or the first paint is raw keys.
 void initI18n().then(() => {

@@ -16,6 +16,7 @@
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { requestDrawerFor } from "../shell/drawerRequests";
 import { cardPosition, type SpotlightPlace } from "./spotlightPlacement";
 import { useSpotlightPosition } from "./useSpotlightPosition";
 
@@ -48,6 +49,12 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
   useEffect(() => {
     if (step?.view !== undefined) onNavigate(step.view);
   }, [step?.view, onNavigate]);
+
+  // On a stacked screen the sidebar is a drawer: a step pointing into it needs it open, and
+  // every other step needs it out of the way.
+  useEffect(() => {
+    requestDrawerFor(step?.target);
+  }, [step?.target]);
 
   const rect = useSpotlightPosition(step?.target);
 

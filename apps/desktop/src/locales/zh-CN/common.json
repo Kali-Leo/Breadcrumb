@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "新的学习对话",
+    "menu": "菜单",
+    "closeMenu": "关闭菜单",
     "settings": "设置",
     "vocabulary": "词汇",
     "discover": "发现",

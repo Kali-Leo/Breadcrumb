@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "Percakapan belajar baru",
+    "menu": "Menu",
+    "closeMenu": "Tutup menu",
     "settings": "Pengaturan",
     "vocabulary": "Kosakata",
     "discover": "Jelajah",

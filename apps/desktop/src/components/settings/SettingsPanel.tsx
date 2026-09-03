@@ -41,7 +41,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto bg-stone-50 p-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-semibold text-stone-700">{t("title")}</h2>
         {PAGE_TABS.map((target) => (
           <button

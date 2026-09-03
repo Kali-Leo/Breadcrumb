@@ -159,7 +159,7 @@ export function ExperimentalBuildForm() {
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
           placeholder={t("compare.customPlaceholder")}
-          className="flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
+          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:text-base"
         />
         <button
           type="button"

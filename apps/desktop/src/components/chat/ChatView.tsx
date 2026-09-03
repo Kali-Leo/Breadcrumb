@@ -44,6 +44,7 @@ export function ChatView() {
   const ensureFactchecksLoaded = useFactcheckStore((state) => state.ensureLoaded);
   const entrySessionByMessageId = useFocusSessionsStore((state) => state.entrySessionByMessageId);
   const listRef = useRef<MessageListHandle>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(true);
   const [locatedMessageId, setLocatedMessageId] = useState<string | null>(null);
 
@@ -75,6 +76,23 @@ export function ChatView() {
     return () => window.clearTimeout(timer);
   }, [locatedMessageId, messages]);
 
+  // The composer's height, published to the enclosing <main> as --composer-height so an
+  // overlay anchored to its bottom corner (the first-steps checklist) can sit above the input
+  // row instead of on the send button where the screen is too small for both.
+  useEffect(() => {
+    const composer = rootRef.current?.querySelector<HTMLElement>('[data-tour="composer"]');
+    const host = rootRef.current?.closest("main");
+    if (!composer || !host) return;
+    const observer = new ResizeObserver(() =>
+      host.style.setProperty("--composer-height", `${composer.offsetHeight}px`),
+    );
+    observer.observe(composer);
+    return () => {
+      observer.disconnect();
+      host.style.removeProperty("--composer-height");
+    };
+  }, []);
+
   const isStreaming = streamingText !== null;
   // Shape-derived, so the affordance survives a session reload that wiped errorText:
   // an unanswered user leaf is retryable whether or not the failure banner is still around.
@@ -82,7 +100,7 @@ export function ChatView() {
     !isStreaming && activeConversationId !== null && messages.at(-1)?.role === "user";
 
   return (
-    <div className="flex h-full flex-col bg-stone-50">
+    <div ref={rootRef} className="flex h-full flex-col bg-stone-50">
       <CompanionChatBanners />
       <FocusSessionsBar />
       <ContinuationBanner />

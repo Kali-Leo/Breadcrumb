@@ -13,7 +13,7 @@ export function LanguageFirstRun() {
   const setLanguage = useSettingsStore((state) => state.setLanguage);
 
   return (
-    <div className="flex h-screen items-center justify-center bg-stone-50 p-8">
+    <div className="flex h-dvh items-center justify-center bg-stone-50 p-8">
       <div className="w-full max-w-md space-y-2">
         {UI_LANGUAGE_CODES.map((code) => {
           const language = languageOf(code);

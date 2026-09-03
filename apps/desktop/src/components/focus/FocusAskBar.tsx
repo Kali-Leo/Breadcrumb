@@ -29,7 +29,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         placeholder={t("learning:focus.askPlaceholder")}
-        className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm"
+        className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm coarse:text-base"
       />
       {streaming && (
         <button

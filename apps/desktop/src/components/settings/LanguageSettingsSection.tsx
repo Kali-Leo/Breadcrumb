@@ -28,13 +28,13 @@ export function LanguageSettingsSection() {
   const choice = resolveAnswerLanguage(language, answerLanguage);
   const fallback = languageOf(FALLBACK_ANSWER_LANGUAGE_CODE);
   const selectClass =
-    "rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400";
+    "min-w-0 max-w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:text-base stacked:w-full";
 
   return (
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
       <h3 className="font-medium text-stone-700">{t("language.title")}</h3>
 
-      <label className="flex items-center justify-between gap-4 text-sm text-stone-500">
+      <label className="flex flex-wrap items-center justify-between gap-4 text-sm text-stone-500">
         {t("language.interface")}
         <select
           value={language}
@@ -51,7 +51,7 @@ export function LanguageSettingsSection() {
         </select>
       </label>
 
-      <label className="flex items-center justify-between gap-4 text-sm text-stone-500">
+      <label className="flex flex-wrap items-center justify-between gap-4 text-sm text-stone-500">
         {t("language.answer")}
         <select
           value={answerLanguage ?? SAME_AS_INTERFACE}

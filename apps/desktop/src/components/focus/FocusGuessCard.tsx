@@ -37,7 +37,7 @@ export function FocusGuessCard({
           autoFocus
           value={guessText}
           onChange={(event) => setGuessText(event.target.value)}
-          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm"
+          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm coarse:text-base"
           placeholder={t("learning:door.guessPlaceholder")}
         />
         <button

@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "Mazungumzo mapya ya kujifunza",
+    "menu": "Menyu",
+    "closeMenu": "Funga menyu",
     "settings": "Mipangilio",
     "vocabulary": "Msamiati",
     "discover": "Gundua",

@@ -91,7 +91,7 @@ export function DiglotWordCard({
   // gloss card: expression, original, gloss, audio. The guess gate never applies.
   if (patch.kind === "phrase") {
     return (
-      <div className="w-64 space-y-1.5 p-3 text-sm text-stone-700">
+      <div className="w-64 max-w-[calc(100vw-2rem)] space-y-1.5 p-3 text-sm text-stone-700">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-medium">{patch.replacement}</span>
           {showSpeaker && (
@@ -121,7 +121,7 @@ export function DiglotWordCard({
 
   if (!guessDone) {
     return (
-      <div className="w-64 space-y-2 p-3 text-sm text-stone-700">
+      <div className="w-64 max-w-[calc(100vw-2rem)] space-y-2 p-3 text-sm text-stone-700">
         <p className="text-xs text-stone-400">{t("learning:diglot.guessPrompt")}</p>
         <p className="rounded bg-stone-50 px-2 py-1 text-xs leading-relaxed">{context}</p>
         <form
@@ -136,7 +136,7 @@ export function DiglotWordCard({
             autoFocus
             value={guessText}
             onChange={(event) => setGuessText(event.target.value)}
-            className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm"
+            className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm coarse:text-base"
             placeholder={t("learning:diglot.guessPlaceholder")}
           />
           <button
@@ -152,7 +152,7 @@ export function DiglotWordCard({
   }
 
   return (
-    <div className="w-64 space-y-1.5 p-3 text-sm text-stone-700">
+    <div className="w-64 max-w-[calc(100vw-2rem)] space-y-1.5 p-3 text-sm text-stone-700">
       {feedback !== null && <p className="text-stone-600">{copy(feedback)}</p>}
       <div className="flex items-baseline gap-2">
         <span className="text-base font-medium">{patch.replacement}</span>

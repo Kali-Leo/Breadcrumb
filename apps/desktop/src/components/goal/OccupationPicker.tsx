@@ -30,7 +30,7 @@ export function OccupationPicker() {
           });
         }}
         placeholder={t("compare.searchPlaceholder")}
-        className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400"
+        className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:text-base"
       />
       {hits.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">

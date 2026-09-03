@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "New learning chat",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
     "settings": "Settings",
     "vocabulary": "Vocabulary",
     "discover": "Discover",

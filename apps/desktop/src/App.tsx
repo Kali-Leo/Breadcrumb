@@ -10,7 +10,7 @@ import "./App.css";
 import "./lib/platform/zodConfig";
 import { LazyBoundary } from "./components/LazyBoundary";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
-import { Sidebar } from "./components/Sidebar";
+import { ShellSidebar } from "./components/shell/ShellSidebar";
 import {
   ChatView,
   CompanionChatPopup,
@@ -135,9 +135,9 @@ export default function App() {
   const onboardingRunning = settingsLoaded && !(onboardingSeen && checklistDismissed);
 
   return (
-    <div className="flex h-screen flex-col text-stone-800">
-      <div className="flex min-h-0 flex-1">
-        <Sidebar
+    <div className="flex h-dvh flex-col text-stone-800">
+      <div className="flex min-h-0 flex-1 stacked:flex-col">
+        <ShellSidebar
           activeView={view}
           companionsOpen={companionsOpen}
           onOpenChat={() => setView("chat")}
@@ -147,7 +147,7 @@ export default function App() {
           onOpenDiscovery={() => setView("discovery")}
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
-        <main className="relative min-w-0 flex-1">
+        <main className="relative min-w-0 flex-1 stacked:min-h-0">
           <LazyBoundary resetKey={view}>
             {view === "chat" && <ChatView />}
             {view === "settings" && <SettingsPanel onClose={() => setView("chat")} />}
@@ -165,7 +165,7 @@ export default function App() {
                 onClick={() => setCompanionsOpen(false)}
                 className="absolute inset-0 z-20 cursor-default"
               />
-              <div className="absolute bottom-2 start-2 z-30 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+              <div className="absolute bottom-2 start-2 z-30 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
                 <LazyBoundary resetKey={String(companionsOpen)}>
                   <CompanionSection onPicked={() => setCompanionsOpen(false)} />
                 </LazyBoundary>

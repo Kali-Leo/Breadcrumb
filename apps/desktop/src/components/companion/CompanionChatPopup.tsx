@@ -47,7 +47,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
   }, [messages.length, streamingText, pinned, scrollToBottom]);
 
   return (
-    <div className="absolute bottom-3 end-3 z-40 flex h-[26rem] w-96 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+    <div className="absolute bottom-3 end-3 z-40 flex h-[26rem] max-h-[calc(100%-1.5rem)] w-96 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-stone-100 px-3 py-2">
         {/* The main view labels a companion thread as AI in its own banner; this popup is
             where most of these conversations actually happen, and it was carrying the

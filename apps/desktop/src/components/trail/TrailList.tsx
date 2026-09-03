@@ -71,7 +71,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
         onChange={(event) => setQuery(event.target.value)}
         placeholder={t("trail.search")}
         aria-label={t("trail.search")}
-        className="mb-1 w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-700 placeholder:text-stone-400 focus:border-amber-300 focus:outline-none"
+        className="mb-1 w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-700 placeholder:text-stone-400 focus:border-amber-300 focus:outline-none coarse:text-base"
       />
       {visibleConversations.map((conversation) => {
         const active = conversation.id === activeConversationId && isChatViewActive;
@@ -92,7 +92,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
               }}
               // biome-ignore lint/a11y/noAutofocus: the row turned into this field on request.
               autoFocus
-              className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-stone-800 focus:outline-none"
+              className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-stone-800 focus:outline-none coarse:text-base"
             />
           );
         }
@@ -102,7 +102,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
             <button
               type="button"
               onClick={() => open(conversation)}
-              className={`block w-full truncate rounded-lg py-2 pe-9 ps-3 text-start text-sm transition-colors ${
+              className={`block w-full truncate rounded-lg py-2 pe-9 ps-3 text-start text-sm transition-colors coarse:pe-12 ${
                 active ? "bg-amber-100 text-stone-800" : "text-stone-600 hover:bg-stone-100"
               }`}
             >
@@ -112,10 +112,12 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
               type="button"
               aria-label={t("trail.more", { name })}
               onClick={() => setMenuFor(menuFor === conversation.id ? null : conversation.id)}
-              className={`absolute end-1 top-1.5 rounded-md px-1.5 py-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-600 ${
+              // Hover reveals it with a mouse; a finger has no hover, so on touch it is always
+              // there and grown to a 44px target (the row's end padding makes room).
+              className={`absolute end-1 top-1.5 rounded-md px-1.5 py-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-600 coarse:top-1/2 coarse:flex coarse:min-h-11 coarse:min-w-11 coarse:-translate-y-1/2 coarse:items-center coarse:justify-center ${
                 menuFor === conversation.id
                   ? ""
-                  : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  : "opacity-0 group-hover:opacity-100 focus:opacity-100 coarse:opacity-100"
               }`}
             >
               ⋯

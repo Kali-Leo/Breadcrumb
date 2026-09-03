@@ -1,28 +1,27 @@
 /**
  * Purpose: left column — new-chat button, the conversation list (companion chats appear in
- * it by recency like any conversation), and the bottom icon row: the companions button
- * (opens the center flyout, carries the unread dot), the view switcher and the
- * connectivity dot that replaced the status bar. (Leo 2026-08-15: roster and recents are
- * different things — the roster lives behind 👥, not inside the list.)
- * Main exports: Sidebar.
+ * it by recency like any conversation), and the bottom row (SidebarNav): the companions
+ * button, the view switcher and the connectivity dot that replaced the status bar. (Leo
+ * 2026-08-15: roster and recents are different things — the roster lives behind 👥, not
+ * inside the list.)
+ *
+ * Wide screens keep it as a 240px column. Stacked screens (narrow or portrait — an iPad held
+ * upright, a phone) have no room for a permanent column, so the same element becomes a
+ * drawer: off-screen until the menu button in the top bar opens it, sliding in over the
+ * content, closed by the scrim, Escape, the ✕, or choosing anything in it (ShellSidebar owns
+ * that state). Inert while closed so nothing in it can take focus.
+ * Main exports: Sidebar, SidebarProps.
  */
-import {
-  ALargeSmall,
-  Compass,
-  type LucideIcon,
-  Map as MapIcon,
-  Settings,
-  Users,
-} from "lucide-react";
+import { ALargeSmall, Compass, Map as MapIcon, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isBrowserEdition } from "../lib/platform/edition";
+import { useLayoutMode } from "../lib/platform/layoutMode";
 import { useChatStore } from "../stores/chatStore";
-import { useCompanionStore } from "../stores/companionStore";
-import { useSettingsStore } from "../stores/settingsStore";
 import { PalaceRail } from "./map/PalaceRail";
+import { type NavEntry, SidebarNav } from "./SidebarNav";
 import { TrailList } from "./trail/TrailList";
 
-interface SidebarProps {
+export interface SidebarProps {
   activeView: "chat" | "settings" | "map" | "vocab" | "discovery";
   companionsOpen: boolean;
   onOpenChat(): void;
@@ -33,45 +32,19 @@ interface SidebarProps {
   onToggleCompanions(): void;
 }
 
-/** Offline indicator (spec 048 follow-up, Leo: an unexplained always-on dot is bad
- * design) — the normal online state shows nothing at all; only being offline earns a
- * quiet grey dot with its explanation on hover. */
-function ConnectivityDot() {
-  const { t } = useTranslation("common");
-  const networkEnabled = useSettingsStore((state) => state.networkEnabled);
-  if (networkEnabled) return null;
-  return (
-    <span title={t("nav.offline")} className="h-2 w-2 cursor-help rounded-full bg-stone-300" />
-  );
+interface SidebarDrawerProps extends SidebarProps {
+  /** Only meaningful on a stacked screen; ignored while the column is permanent. */
+  drawerOpen: boolean;
+  onCloseDrawer(): void;
 }
 
-/** The companions roster button — hidden with the companionChat switch, dotted while an
- * invitation waits unread. */
-function CompanionsButton({ open, onToggle }: { open: boolean; onToggle(): void }) {
-  const { t } = useTranslation("common");
-  const companionChatEnabled = useSettingsStore((state) => state.featureSwitches.companionChat);
-  const helpers = useCompanionStore((state) => state.helpers);
-  const seenHelperIds = useCompanionStore((state) => state.seenHelperIds);
-  if (!companionChatEnabled) return null;
-  const unread = helpers.some((helper) => !seenHelperIds.has(helper.companion_id));
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      title={t("nav.friends")}
-      aria-label={t("nav.friends")}
-      className={`relative rounded-lg px-2 py-1.5 transition-colors ${
-        open ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"
-      }`}
-    >
-      <Users size={19} strokeWidth={1.8} />
-      {unread && <span className="absolute end-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-rose-400" />}
-    </button>
-  );
-}
-
-/** One button in the bottom row: icon, its name, what it opens, whether it is the open one. */
-type NavEntry = readonly [LucideIcon, string, () => void, boolean];
+/** The column, and on stacked screens the drawer it turns into: fixed over the content,
+ * 280px or 85% of the width, whichever is smaller, slid out of view along the start edge
+ * while closed. Left padding follows the safe area for a notch in landscape. */
+const ASIDE =
+  "flex h-full w-60 flex-col border-e border-stone-200 bg-white stacked:fixed stacked:inset-y-0 stacked:start-0 stacked:z-40 stacked:w-[min(280px,85vw)] stacked:ps-[env(safe-area-inset-left)] stacked:shadow-xl stacked:transition-transform stacked:duration-200";
+const ASIDE_OPEN = "stacked:translate-x-0";
+const ASIDE_CLOSED = "stacked:-translate-x-full stacked:rtl:translate-x-full";
 
 export function Sidebar({
   activeView,
@@ -82,9 +55,13 @@ export function Sidebar({
   onOpenVocab,
   onOpenDiscovery,
   onToggleCompanions,
-}: SidebarProps) {
+  drawerOpen,
+  onCloseDrawer,
+}: SidebarDrawerProps) {
   const { t } = useTranslation("common");
   const startNewConversation = useChatStore((state) => state.startNewConversation);
+  const stacked = useLayoutMode() === "stacked";
+  const hiddenDrawer = stacked && !drawerOpen;
 
   const navEntries: NavEntry[] = [
     [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
@@ -104,10 +81,24 @@ export function Sidebar({
   }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-e border-stone-200 bg-white">
-      <div className="flex items-center gap-2 p-3">
+    <aside
+      data-shell="sidebar"
+      inert={hiddenDrawer || undefined}
+      aria-hidden={hiddenDrawer || undefined}
+      className={`${ASIDE} ${drawerOpen ? ASIDE_OPEN : ASIDE_CLOSED}`}
+    >
+      {/* Top padding follows the safe area (the status bar when installed to a home screen). */}
+      <div className="flex items-center gap-2 p-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
         <span className="text-xl">🍞</span>
         <span className="font-semibold text-stone-700">Breadcrumb</span>
+        <button
+          type="button"
+          onClick={onCloseDrawer}
+          aria-label={t("nav.closeMenu")}
+          className="ms-auto hidden h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 stacked:flex"
+        >
+          <X size={20} strokeWidth={1.8} />
+        </button>
       </div>
       <button
         type="button"
@@ -115,7 +106,7 @@ export function Sidebar({
           void startNewConversation();
           onOpenChat();
         }}
-        className="mx-3 mb-2 rounded-xl border border-dashed border-amber-400 px-3 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50"
+        className="mx-3 mb-2 rounded-xl border border-dashed border-amber-400 px-3 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50 coarse:min-h-11"
       >
         ＋ {t("nav.newChat")}
       </button>
@@ -131,26 +122,11 @@ export function Sidebar({
       {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友,
           with 发现 added in front of the map (spec 057).
           One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
-      <div className="flex items-center border-t border-stone-100 px-2 py-2">
-        <ConnectivityDot />
-        <div className="flex flex-1 items-center justify-evenly">
-          {navEntries.map(([Icon, name, onClick, active]) => (
-            <button
-              key={name}
-              type="button"
-              onClick={onClick}
-              title={name}
-              aria-label={name}
-              className={`rounded-lg px-2 py-1.5 transition-colors ${
-                active ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"
-              }`}
-            >
-              <Icon size={19} strokeWidth={1.8} />
-            </button>
-          ))}
-          <CompanionsButton open={companionsOpen} onToggle={onToggleCompanions} />
-        </div>
-      </div>
+      <SidebarNav
+        entries={navEntries}
+        companionsOpen={companionsOpen}
+        onToggleCompanions={onToggleCompanions}
+      />
     </aside>
   );
 }

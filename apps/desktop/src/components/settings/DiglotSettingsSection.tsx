@@ -67,7 +67,7 @@ export function DiglotSettingsSection() {
 
   return (
     <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="font-medium text-stone-700">{t("learning:diglot.settingsTitle")}</h3>
           <p className="text-xs text-stone-400">{t("learning:diglot.settingsHint")}</p>
@@ -86,13 +86,13 @@ export function DiglotSettingsSection() {
               target: languageNameOf(current?.targetLang ?? "en"),
             })}
           </p>
-          <label className="flex items-center justify-between gap-4">
+          <label className="flex flex-wrap items-center justify-between gap-4">
             <span>{t("learning:diglot.pairPicker")}</span>
             <select
               value={settings.pairId}
               disabled={installingPairId !== null}
               onChange={(event) => void choosePair(event.target.value)}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400"
+              className="min-w-0 max-w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:text-base stacked:w-full"
             >
               {options.map((option) => (
                 <option key={option.id} value={option.id}>

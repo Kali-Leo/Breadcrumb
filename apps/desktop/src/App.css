@@ -23,10 +23,61 @@
   --app-font-stack: system-ui, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
 }
 
+/* Input mode and layout mode, the two axes every touch/small-screen rule hangs on.
+   `coarse:` / `fine:` read <html data-input>, stamped by lib/platform/inputMode.ts from the
+   pointer hardware (never the user agent — an iPad says it is a Mac). `stacked:` / `wide:`
+   are the one breakpoint: narrow OR portrait stacks (a 1024×1366 iPad Pro held upright is
+   stacked; the same width in landscape is wide). Anything at or above 1024px wide in
+   landscape with a mouse gets no rule from any of these, by contract: the desktop is the
+   baseline and never moves. The stacked query is mirrored verbatim in
+   lib/platform/layoutMode.ts. Tailwind's own `hover:` only applies under (hover: hover), so a
+   control that appears on hover needs `coarse:opacity-100` or it never appears on a tablet. */
+@custom-variant coarse (&:where(html[data-input="coarse"] *));
+@custom-variant fine (&:where(html:not([data-input="coarse"]) *));
+@custom-variant stacked {
+  @media (max-width: 1023.98px), (orientation: portrait) {
+    @slot;
+  }
+}
+@custom-variant wide {
+  @media (min-width: 1024px) and (orientation: landscape) {
+    @slot;
+  }
+}
+
+/* The dynamic viewport: on a phone or tablet browser 100vh is the height with the toolbars
+   hidden, so a 100vh page is taller than the screen while they show and the whole thing
+   scrolls. dvh follows the toolbars; the vh line is the fallback for browsers without it. */
 html,
 body,
 #root {
-  height: 100%;
+  height: 100dvh;
   margin: 0;
   font-family: var(--app-font-stack);
+}
+@supports not (height: 100dvh) {
+  html,
+  body,
+  #root,
+  .h-dvh {
+    height: 100vh;
+  }
+}
+
+/* Touch fundamentals. No rubber-banding of the whole page when a list hits its end, no
+   300ms double-tap wait on buttons, no grey flash on tap; the map canvas sets its own
+   touch-action (Pixi) and is not in this list. */
+html,
+body {
+  overscroll-behavior: none;
+}
+button,
+a,
+[role="button"],
+input,
+textarea,
+select,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

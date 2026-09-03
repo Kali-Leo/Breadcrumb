@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "নতুন শেখার আলাপ",
+    "menu": "মেনু",
+    "closeMenu": "মেনু বন্ধ করুন",
     "settings": "সেটিংস",
     "vocabulary": "শব্দভান্ডার",
     "discover": "খোঁজ",

@@ -79,7 +79,9 @@ export function OnboardingChecklist({
   ];
 
   return (
-    <div className="absolute end-3 bottom-3 z-30 w-72 rounded-2xl border border-stone-200 bg-white p-4 shadow-lg">
+    // Bottom-end corner of the content — which on a small or touch screen is the send button,
+    // so there it moves up above the composer (ChatView publishes --composer-height).
+    <div className="absolute end-3 bottom-3 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white p-4 shadow-lg coarse:bottom-[calc(var(--composer-height,0px)+0.75rem)] stacked:bottom-[calc(var(--composer-height,0px)+0.75rem)]">
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium text-sm text-stone-700">{t("checklist.title")}</p>
         <button

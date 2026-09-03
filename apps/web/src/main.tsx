@@ -11,6 +11,7 @@
 
 import App from "@desktop/App";
 import { initI18n } from "@desktop/i18n";
+import { applyInputMode } from "@desktop/lib/platform/inputMode";
 import i18next from "i18next";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -68,12 +69,18 @@ function warnIfNotPersistent(): void {
   const text = bannerText();
   if (text === null) return;
   const banner = document.createElement("div");
+  // Top padding grows by the safe area: installed to a home screen, the status bar would
+  // otherwise sit on the first line.
   banner.style.cssText =
     "position:fixed;top:0;left:0;right:0;z-index:99999;background:#fef3c7;color:#78350f;" +
-    "padding:8px 14px;font-size:13px;text-align:center;font-family:system-ui,sans-serif";
+    "padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top));" +
+    "font-size:13px;text-align:center;font-family:system-ui,sans-serif";
   banner.textContent = text;
   document.body.appendChild(banner);
 }
+
+// Finger or pointer is decided before the first paint, so nothing renders for the wrong one.
+applyInputMode();
 
 void (async () => {
   // Not awaited: Firefox answers persist() with a permission prompt, and a page that waits

@@ -1,12 +1,15 @@
 /**
  * Purpose: the message input area — a CONTROLLED textarea + send button (drafts live in
  * chatStore per conversation, so switching views or conversations never loses text); Enter
- * to send, Shift+Enter for newline; while its conversation streams, the send button morphs
- * into a 停止 button. Applies composer:prefill only when addressed to its own conversation.
+ * to send, Shift+Enter for newline with a keyboard — on a touch screen Enter is a newline and
+ * the button is the only way to send, as in every phone chat app (a soft keyboard has no
+ * Shift+Enter); while its conversation streams, the send button morphs into a 停止 button.
+ * Applies composer:prefill only when addressed to its own conversation.
  * Main exports: Composer.
  */
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { appEventBus } from "../../stores/chatStore";
 
 /* Study-mode switch (spec 052, redesigned per Leo 2026-08-17: a pill segmented switch above
@@ -37,6 +40,7 @@ export function Composer(props: ComposerProps) {
   const { conversationId, value, streaming, disabled, onChange, onSend, onStop } = props;
   const { studyMode, onSetStudyMode } = props;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const coarse = useInputMode() === "coarse";
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -85,27 +89,30 @@ export function Composer(props: ComposerProps) {
           </div>
         </div>
       )}
-      <div className="flex items-end gap-2 p-3">
+      {/* Bottom padding grows by the safe area so a home indicator never sits on the row.
+          16px text on touch: below that, iOS zooms the whole page into the field. */}
+      <div className="flex items-end gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !coarse) {
               event.preventDefault();
               submit();
             }
           }}
+          enterKeyHint={coarse ? "enter" : undefined}
           rows={2}
           disabled={disabled}
           placeholder={t("composer.placeholder")}
-          className="flex-1 resize-none rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 disabled:bg-stone-50"
+          className="min-w-0 flex-1 resize-none rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 disabled:bg-stone-50 coarse:text-base"
         />
         {streaming ? (
           <button
             type="button"
             onClick={onStop}
-            className="rounded-xl border border-stone-300 px-4 py-2 text-stone-600 transition-colors hover:bg-stone-100"
+            className="rounded-xl border border-stone-300 px-4 py-2 text-stone-600 transition-colors hover:bg-stone-100 coarse:min-h-11 coarse:min-w-11"
           >
             {t("common:actions.stop")}
           </button>
@@ -114,7 +121,7 @@ export function Composer(props: ComposerProps) {
             type="button"
             onClick={submit}
             disabled={disabled || value.trim() === ""}
-            className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-stone-300"
+            className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-stone-300 coarse:min-h-11 coarse:min-w-11"
           >
             {t("common:actions.send")}
           </button>

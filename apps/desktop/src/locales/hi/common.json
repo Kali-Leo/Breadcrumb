@@ -11,6 +11,8 @@
   },
   "nav": {
     "newChat": "नई पढ़ाई की बातचीत",
+    "menu": "मेनू",
+    "closeMenu": "मेनू बंद करें",
     "settings": "सेटिंग्स",
     "vocabulary": "शब्द",
     "discover": "खोज",
