@@ -122,14 +122,14 @@ export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
             <button
               type="button"
               onClick={() => void deleteResult(result.id)}
-              className="rounded bg-red-500 px-2 py-1 text-white"
+              className="rounded bg-red-500 px-2 py-1 text-white coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("research.deleteConfirmAction")}
             </button>
             <button
               type="button"
               onClick={() => setConfirmingDelete(false)}
-              className="rounded border border-stone-200 px-2 py-1 text-stone-500"
+              className="rounded border border-stone-200 px-2 py-1 text-stone-500 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("common:actions.cancel")}
             </button>
@@ -138,7 +138,7 @@ export function ResearchResultCard({ result }: { result: ResearchResultRow }) {
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            className="text-stone-400 hover:text-red-500"
+            className="text-stone-400 hover:text-red-500 coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {t("research.deleteAction")}
           </button>

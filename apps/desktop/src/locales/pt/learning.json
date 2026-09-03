@@ -55,6 +55,7 @@
     "upButton": "Subir um nível",
     "mapHint": "Toque numa parada para ir até lá. As linhas cheias nasceram de uma palavra que você escolheu; as tracejadas, de uma pergunta.",
     "selectHint": "Aperte Enter para explicar «{{text}}»",
+    "selectionButton": "Foco",
     "errorPlain": "Esta parada não saiu. Você pode tentar de novo ou sair do foco.",
     "errorWithReason": "Esta parada não saiu: {{reason}}. Você pode tentar de novo ou sair do foco.",
     "badgeLine_one": "🔎 Explorado: {{label}} · {{count}} parada",

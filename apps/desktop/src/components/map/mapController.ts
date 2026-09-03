@@ -7,9 +7,6 @@
  * MapView hands in a goal-filtered world model (goalWorldFilter.ts) and the exact-fit
  * framing refits to it automatically.
  * Main exports: createMapController, MapController, MapHooks.
- *
- * Directory note: the non-component .ts files in components/map/ are the Pixi rendering
- * layer and belong to the view layer; logic with no DOM or Pixi lives in lib/.
  */
 import type { WorldModel } from "@breadcrumb/feature-map";
 import { type Application, Container } from "pixi.js";
@@ -23,20 +20,25 @@ import {
 } from "./mapBands";
 import { drawHoverHighlight, type HoverInfo, type HoverResult } from "./mapHover";
 import { counterScaleLabels, setLabelEmphasis } from "./mapLabels";
-import { createMapNavigation } from "./mapNavigation";
+import { createMapNavigation, type MapNavigation, readStampedInputMode } from "./mapNavigation";
 import { drawRecommendMarkers, type RecommendTarget } from "./mapRecommendPins";
 import { buildWorldScene, type WorldScene } from "./sceneBuild";
 
 export type { RecommendTarget };
 
 export interface MapHooks {
+  /** What the map points at: the mouse's hover, or a finger's tap selection. */
   onHover(info: HoverInfo | null): void;
   onLevel(level: MapLevel): void;
+  /** A kingdom entered at the island level — its subway map is a DOM overlay (MapView). */
+  onEnterKingdom(nodeId: string): void;
 }
 
 export interface MapController {
   scene: WorldScene | null;
   footprintPhase: number;
+  /** The input grammar (tap/click/wheel/pinch verbs) for the DOM chrome to call into. */
+  navigation: MapNavigation;
   setWorld(
     world: WorldModel,
     retentionByNode: ReadonlyMap<string, number>,
@@ -64,7 +66,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   let level: MapLevel = { kind: "world" };
   let cameraTarget = { scale: 1, x: 0, y: 0 };
   let pendingAppear: PendingAppear | null = null;
-  let lastHoverId: string | null = null;
+  let lastHover: HoverInfo | null = null;
   let lastRetention: ReadonlyMap<string, number> = new Map();
   let lastNewNodeIds: ReadonlySet<string> = new Set();
   let resizeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,9 +87,25 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     paintRecommendMarkers();
   }
 
+  const navigation = createMapNavigation({
+    app,
+    worldRoot,
+    getWorld: () => world,
+    getLevel: () => level,
+    goToLevel(next) {
+      level = next;
+      applyLevel(false);
+    },
+    enterKingdom: (nodeId) => hooks.onEnterKingdom(nodeId),
+    showHover,
+    currentHover: () => lastHover,
+    getInputMode: readStampedInputMode,
+  });
+
   const controller: MapController = {
     scene: null,
     footprintPhase: 0,
+    navigation,
     setWorld(nextWorld, retentionByNode, newNodeIds) {
       world = nextWorld;
       lastRetention = retentionByNode;
@@ -133,7 +151,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   };
 
   function showHover(hover: HoverResult | null): void {
-    lastHoverId = hover === null ? null : `${hover.info.kind}:${hover.info.nodeId}`;
+    lastHover = hover === null ? null : hover.info;
     if (controller.scene !== null) {
       drawHoverHighlight(controller.scene.highlightLayer, hover);
       // The hovered land's name lights up with it — a name that drifted to open water
@@ -162,19 +180,6 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     }
     hooks.onLevel(level);
   }
-
-  const navigation = createMapNavigation({
-    app,
-    worldRoot,
-    getWorld: () => world,
-    getLevel: () => level,
-    goToLevel(next) {
-      level = next;
-      applyLevel(false);
-    },
-    showHover,
-    currentHoverId: () => lastHoverId,
-  });
 
   app.canvas.addEventListener("wheel", navigation.onWheel, { passive: false });
   app.canvas.addEventListener("click", navigation.onClick);

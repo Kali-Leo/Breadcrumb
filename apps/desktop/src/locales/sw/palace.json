@@ -52,7 +52,11 @@
     "modeRankedHint": "Onyesha tu vinavyohusiana na lengo la sasa",
     "rename": "Badilisha jina",
     "renameHint": "Enter huhifadhi, Esc hughairi. Acha wazi ili kurudisha jina la awali.",
-    "renameInputAria": "Jina jipya"
+    "renameInputAria": "Jina jipya",
+    "enterButton": "Ingia",
+    "backButton": "Rudi ngazi moja",
+    "tapHint": "Gusa kisiwa ili kukiona; gusa tena ili kuingia",
+    "pinchHint": "Bana vidole viwili: rudi ngazi moja"
   },
   "continue": {
     "title": "Endelea kutoka hapa",

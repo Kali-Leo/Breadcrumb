@@ -119,7 +119,7 @@ export function ApiSettingsSection() {
       <button
         type="button"
         onClick={() => void save()}
-        className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600"
+        className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 coarse:min-h-11"
       >
         {t("common:actions.save")}
       </button>

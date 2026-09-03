@@ -10,6 +10,7 @@ import { layoutFocusMap } from "@breadcrumb/feature-explore";
 import { useTranslation } from "react-i18next";
 import type { VisibleTreeNode } from "../../../lib/map/kingdomCollapse";
 import type { LateralEdgeView } from "../../../lib/map/kingdomView";
+import { useInputMode } from "../../../lib/platform/inputMode";
 import { KingdomTreeStation } from "./KingdomTreeStation";
 import { GREY, LINE } from "./kingdomTreeStyle";
 import { useKingdomTreePane } from "./useKingdomTreePane";
@@ -18,6 +19,8 @@ import { useKingdomTreePane } from "./useKingdomTreePane";
  * stations smaller than that stop being readable or clickable. */
 const MIN_SCALE = 0.55;
 const PANE_PADDING = 16;
+/** A fingertip's target around each station, in screen pixels (WCAG 2.5.5's 44px square). */
+const TOUCH_HIT_RADIUS_PX = 22;
 
 interface KingdomTreeSvgProps {
   visibleNodes: readonly VisibleTreeNode[];
@@ -45,6 +48,7 @@ export function KingdomTreeSvg({
   onExpandAggregate,
 }: KingdomTreeSvgProps) {
   const { t } = useTranslation("palace");
+  const coarse = useInputMode() === "coarse";
   const { paneRef, size: paneSize } = useKingdomTreePane(primaryId);
   const layout = layoutFocusMap(
     visibleNodes.map((node) => ({
@@ -73,10 +77,13 @@ export function KingdomTreeSvg({
       : 1;
   const scale = Math.max(MIN_SCALE, fitScale);
 
+  // shrink-0: as a flex item the svg would otherwise be squeezed below its own width and
+  // the floor silently broken (0.55 became 0.32 on an upright iPad, layout B4); at its true
+  // size the pane scrolls as intended.
   return (
     <div ref={paneRef} className="flex h-full w-full overflow-auto p-4">
       <svg
-        className="m-auto"
+        className="m-auto shrink-0"
         width={layout.width * scale}
         height={layout.height * scale}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
@@ -133,6 +140,7 @@ export function KingdomTreeSvg({
               y={station.y}
               isPinned={pinnedIds.has(station.id)}
               isSelected={station.id === selectedId}
+              touchHitRadius={coarse ? TOUCH_HIT_RADIUS_PX / scale : null}
               onSelect={onSelect}
               onEnter={onEnter}
               onHover={onHover}

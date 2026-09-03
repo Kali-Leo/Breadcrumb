@@ -1,10 +1,15 @@
 /**
  * Purpose: the memory palace page — one persistent Pixi renderer, discrete level
- * jumps (world → island, the deepest view) on the wheel with exact-fit framing, no free
- * zoom or panning. The world model (continents, caching, the goal cut) is assembled in
- * useWorldModel and pushed to the controller by useMapSceneSync. The Pixi lifecycle lives in
+ * jumps (world → island, the deepest view) with exact-fit framing, no free zoom or panning.
+ * The world model (continents, caching, the goal cut) is assembled in useWorldModel and
+ * pushed to the controller by useMapSceneSync. The Pixi lifecycle lives in
  * useMapApplication; if its init fails the page says so in place instead of staying blank.
  * StrictMode-safe; DEV keys 0 demo, 1..2 jumps.
+ *
+ * Two shapes, one page. Wide (≥1024px landscape): the square map hugs the left, the context
+ * rail stands beside it. Stacked (narrow or portrait): the left rail's cards run across the
+ * top, the map is a square as wide as the screen (capped at 70% of its height), the rail
+ * follows underneath and the whole page scrolls — content always wins over geometry.
  * Main exports: MapView.
  */
 
@@ -12,6 +17,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isPlaceRenamable } from "../../lib/map/placeNames";
 import { degradeSilently } from "../../lib/platform/failureLog";
+import { useInputMode } from "../../lib/platform/inputMode";
+import { useLayoutMode } from "../../lib/platform/layoutMode";
 import { appEventBus } from "../../stores/chatStore";
 import { useFeedbackStore } from "../../stores/feedbackStore";
 import { useKnowledgeStore } from "../../stores/knowledgeStore";
@@ -22,15 +29,27 @@ import { GoalView } from "../goal/GoalView";
 import { demoSessionTrail } from "./demoWorld";
 import { type KingdomRef, KingdomView } from "./kingdom/KingdomView";
 import { findIsland, type MapLevel } from "./levels";
+import { MapCanvasChrome } from "./MapCanvasChrome";
 import { MapInfoPanel } from "./MapInfoPanel";
-import { MapModeToggle } from "./MapModeToggle";
 import type { HoverInfo } from "./mapHover";
+import { PalaceRail } from "./PalaceRail";
 import { useMapApplication } from "./useMapApplication";
+import { useMapPinch } from "./useMapPinch";
 import { useMapSceneSync } from "./useMapSceneSync";
 import { useWorldModel } from "./useWorldModel";
 
+/** The square map box. Wide: as tall as the page, never wider than what leaves the rail its
+ * 16rem (floored at 0 — a negative max-width used to erase the canvas on a phone, B1).
+ * Stacked: as wide as the page, capped so some rail stays in view under it. */
+const MAP_BOX =
+  "relative h-full wide:max-w-[max(0px,calc(100%_-_16rem))] stacked:h-auto stacked:w-[min(100%,70dvh)] stacked:shrink-0";
+const RAIL_BOX =
+  "h-full min-w-64 flex-1 overflow-y-auto stacked:h-auto stacked:min-w-0 stacked:flex-none stacked:overflow-visible";
+
 export function MapView() {
   const { t } = useTranslation(["palace", "common"]);
+  const coarse = useInputMode() === "coarse";
+  const stacked = useLayoutMode() === "stacked";
 
   const storeSessionNodeIds = useKnowledgeStore((state) => state.sessionNodeIds);
   const [demoMode, setDemoMode] = useState(false);
@@ -71,6 +90,18 @@ export function MapView() {
   const { containerRef, controllerRef, trailIdsRef, ready, initFailed } = useMapApplication({
     onHover: setHover,
     onLevel: setLevel,
+    // Entering a kingdom (click, second tap, pinch, or the rail's button) opens its subway
+    // map. The hit is resolved by the controller at event time — never from React's `hover`,
+    // which on a tap was still the previous render's null (touch-audit 1.6).
+    onEnterKingdom(nodeId) {
+      if (level.kind !== "island") return;
+      const kingdom = findIsland(displayWorld, level.islandId)?.kingdoms.find(
+        (candidate) => candidate.nodeId === nodeId,
+      );
+      if (kingdom === undefined) return;
+      const { label, memberNodeIds } = kingdom;
+      setSubwayKingdom({ nodeId, label, memberNodeIds, islandId: level.islandId });
+    },
   });
   trailIdsRef.current = demoMode ? demoSessionTrail : storeSessionNodeIds;
   useMapSceneSync({
@@ -82,11 +113,8 @@ export function MapView() {
     demoMode,
     setDemoMode,
   });
+  useMapPinch({ ready, coarse, containerRef, controllerRef });
 
-  // The goal view is the palace's drill-in (spec 047) — it replaces the whole page and
-  // returns to the exact map state on close (level/camera state lives in the controller
-  // and is not reset by this swap... the Pixi app unmounts; cachedWorldModel keeps the
-  // rebuild cheap and the world level is the natural landing).
   if (initFailed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
@@ -106,20 +134,6 @@ export function MapView() {
       </div>
     );
   }
-  // Clicking a kingdom while dived into its island opens the kingdom's subway map — the
-  // Pixi controller only navigates world→island itself, so this stays a plain DOM handler.
-  function onCanvasClick() {
-    if (level.kind !== "island" || hover === null || hover.kind !== "kingdom") return;
-    const island = findIsland(displayWorld, level.islandId);
-    const kingdom = island?.kingdoms.find((candidate) => candidate.nodeId === hover.nodeId);
-    if (kingdom === undefined) return;
-    setSubwayKingdom({
-      nodeId: kingdom.nodeId,
-      label: kingdom.label,
-      memberNodeIds: kingdom.memberNodeIds,
-      islandId: level.islandId,
-    });
-  }
   // The overlay's header reads the kingdom's name from the live world, not the click-time
   // snapshot, so a rename made inside the overlay shows there at once.
   const subwayIsland =
@@ -133,34 +147,28 @@ export function MapView() {
   // survive an unmount/remount of its container (spec 048 walkthrough finding).
   return (
     <div className="relative h-full w-full">
-      <div className="flex h-full w-full overflow-hidden">
-        {/* Square map hugging the left when space allows; when the window is small the
-            rail keeps its minimum width and the map gives way (the camera fit letterboxes
-            a non-square canvas) — content always wins over geometry. */}
-        <div
-          className="relative h-full"
-          style={{ aspectRatio: "1 / 1", maxWidth: "calc(100% - 16rem)" }}
-        >
-          {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the Pixi canvas owns pointer semantics; this handler only augments its hover state */}
+      <div className="flex h-full w-full overflow-hidden stacked:flex-col stacked:overflow-y-auto">
+        {stacked && <PalaceRail layout="row" />}
+        <div className={MAP_BOX} style={{ aspectRatio: "1 / 1" }}>
           <div
             ref={containerRef}
             data-tour="map-canvas"
             className="h-full w-full overflow-hidden"
-            onClick={onCanvasClick}
           />
-          <div className="absolute start-3 top-3 z-10">
-            <MapModeToggle />
-          </div>
-          {/* Operation hints live on the map itself (owner fix 5) — quiet ink in the
-              bottom-left corner of the parchment, never a rail resident. */}
-          <div className="pointer-events-none absolute bottom-3 start-3 z-10 rounded bg-stone-100/60 px-2 py-1 text-[11px] leading-4 text-stone-600/75">
-            <p>{t("palace:map.zoomInHint")}</p>
-            <p>{t("palace:map.zoomOutHint")}</p>
-            <p>{t("palace:map.clickNameHint")}</p>
-          </div>
+          <MapCanvasChrome
+            level={level}
+            coarse={coarse}
+            onBack={() => controllerRef.current?.navigation.back()}
+          />
         </div>
-        <div className="h-full min-w-64 flex-1 overflow-y-auto">
-          <MapInfoPanel hover={hover} level={level} world={displayWorld} goalScope={goalScope} />
+        <div className={RAIL_BOX}>
+          <MapInfoPanel
+            hover={hover}
+            level={level}
+            world={displayWorld}
+            goalScope={goalScope}
+            onEnter={(info) => controllerRef.current?.navigation.enter(info)}
+          />
         </div>
       </div>
       {goalViewOpen && (

@@ -63,7 +63,12 @@ export function Composer(props: ComposerProps) {
   }
 
   return (
-    <div data-tour="composer" className="border-t border-stone-200 bg-white">
+    // pb: the soft keyboard's height, when a browser is telling us (apps/web/src/main.tsx
+    // publishes --keyboard-inset); zero everywhere else, so nothing moves on a desktop.
+    <div
+      data-tour="composer"
+      className="border-t border-stone-200 bg-white pb-[var(--keyboard-inset,0px)]"
+    >
       {onSetStudyMode !== undefined && (
         <div className="px-3 pt-2">
           <div className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm">

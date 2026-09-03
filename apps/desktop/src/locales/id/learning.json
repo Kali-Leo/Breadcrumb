@@ -55,6 +55,7 @@
     "upButton": "Naik satu tingkat",
     "mapHint": "Ketuk sebuah perhentian untuk menuju ke sana. Garis penuh tumbuh dari kata yang kamu pilih; garis putus-putus dari sebuah pertanyaan.",
     "selectHint": "Tekan Enter untuk menjelaskan «{{text}}»",
+    "selectionButton": "Fokus",
     "errorPlain": "Perhentian ini tidak jadi. Kamu bisa mencoba lagi, atau keluar dari fokus.",
     "errorWithReason": "Perhentian ini tidak jadi: {{reason}}. Kamu bisa mencoba lagi, atau keluar dari fokus.",
     "badgeLine_other": "🔎 Dijelajahi: {{label}} · {{count}} perhentian",

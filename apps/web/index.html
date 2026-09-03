@@ -7,7 +7,14 @@
 <html lang="zh-CN" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- interactive-widget=resizes-content: where it is honoured (Chrome, Android) the soft
+         keyboard shrinks the layout viewport, so a 100dvh column simply gets shorter and the
+         input row stays above the keys. Safari ignores it, which costs nothing — there
+         main.tsx measures the visual viewport and publishes --keyboard-inset instead. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>Breadcrumb</title>
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
     <!-- iOS has no install prompt: someone adds this to their home screen by hand, and this

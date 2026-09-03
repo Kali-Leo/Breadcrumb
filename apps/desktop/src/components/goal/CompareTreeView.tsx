@@ -2,13 +2,15 @@
  * Purpose: the comparison tree's SVG rendering (spec 023, ADR-0016) — d3-hierarchy tidy
  * layout starting from ONE visible root (the profile itself, so the tree reads as a tree,
  * not a list), amber depth = overlap ratio with the ratio printed on every node, drag-to-pan
- * on the whole canvas, and auto-focus scrolling that glides the newly expanded children into
- * view. Layout math lives in compareTreeLayout.ts, panning in useDragPan, one box in
- * CompareTreeNode. Main exports: CompareTreeView.
+ * on the whole canvas (with a mouse — a finger scrolls the container itself, see useDragPan),
+ * and auto-focus scrolling that glides the newly expanded children into view. Layout math
+ * lives in compareTreeLayout.ts, panning in useDragPan, one box in CompareTreeNode.
+ * Main exports: CompareTreeView.
  */
 import type { OverlapNode } from "@breadcrumb/feature-compare";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { CompareTreeNode } from "./CompareTreeNode";
 import {
   buildCompareTreeLayout,
@@ -33,7 +35,8 @@ export function CompareTreeView({
   onSelectDetail(key: string): void;
 }) {
   const { t } = useTranslation("palace");
-  const { containerRef, dragRef, suppressClickRef, handlers } = useDragPan();
+  const coarse = useInputMode() === "coarse";
+  const { containerRef, dragRef, suppressClickRef, handlers } = useDragPan(!coarse);
   const [focusKey, setFocusKey] = useState<string | null>(null);
 
   const layout = useMemo(() => buildCompareTreeLayout(root, expandedKeys), [root, expandedKeys]);
@@ -114,7 +117,12 @@ export function CompareTreeView({
       className="overflow-auto rounded border border-stone-200 bg-white"
       style={{
         maxHeight: 420,
-        cursor: dragRef.current?.moved ? "grabbing" : "grab",
+        // A finger gets the container's own scrolling in both directions, declared so the
+        // browser can start it on the first frame instead of waiting to see whether the page
+        // wants the gesture. A mouse gets the grab cursor and the JS pan.
+        ...(coarse
+          ? { touchAction: "pan-x pan-y" }
+          : { cursor: dragRef.current?.moved ? "grabbing" : "grab" }),
         // WebKitGTK (Tauri Linux) ignores the unprefixed property — without the prefix a
         // drag turns into app-wide text selection instead of panning.
         userSelect: "none",
@@ -123,6 +131,7 @@ export function CompareTreeView({
       onPointerDown={handlers.onPointerDown}
       onPointerMove={handlers.onPointerMove}
       onPointerUp={handlers.onPointerUp}
+      onPointerCancel={handlers.onPointerCancel}
       onPointerLeave={handlers.onPointerLeave}
     >
       <svg
@@ -167,6 +176,7 @@ export function CompareTreeView({
               y={position.y + offsetY}
               selected={node.key === detailKey}
               hasHiddenChildren={point.data.hasHiddenChildren}
+              coarse={coarse}
               onActivate={handleNodeActivate}
             />
           );

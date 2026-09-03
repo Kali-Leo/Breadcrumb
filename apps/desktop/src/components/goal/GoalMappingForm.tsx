@@ -10,9 +10,9 @@ import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 const inputClass =
-  "min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:text-base";
+  "min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:min-h-11 coarse:text-base";
 const buttonClass =
-  "rounded bg-amber-500 px-2 py-1 text-xs text-white transition-colors hover:bg-amber-600 disabled:opacity-50";
+  "rounded bg-amber-500 px-2 py-1 text-xs text-white transition-colors hover:bg-amber-600 disabled:opacity-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3";
 
 interface GoalMappingFormProps {
   goalText: string;

@@ -48,7 +48,11 @@
     "modeRankedHint": "只显示和当前目标有关的部分",
     "rename": "重命名",
     "renameHint": "回车保存，Esc 取消。留空就恢复原来的名字。",
-    "renameInputAria": "新名字"
+    "renameInputAria": "新名字",
+    "enterButton": "进入",
+    "backButton": "返回上一层",
+    "tapHint": "轻点岛屿：先看一眼，再点一次进入",
+    "pinchHint": "双指捏合：返回上一层"
   },
   "continue": {
     "title": "从这里继续",

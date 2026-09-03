@@ -56,7 +56,11 @@
     "modeRankedHint": "Mostrar solo lo relacionado con el objetivo actual",
     "rename": "Cambiar nombre",
     "renameHint": "Intro guarda, Esc cancela. Déjalo vacío para volver al nombre original.",
-    "renameInputAria": "Nombre nuevo"
+    "renameInputAria": "Nombre nuevo",
+    "enterButton": "Entrar",
+    "backButton": "Volver un nivel",
+    "tapHint": "Toca una isla para verla; tócala otra vez para entrar",
+    "pinchHint": "Pellizca para volver un nivel"
   },
   "continue": {
     "title": "Continuar por aquí",

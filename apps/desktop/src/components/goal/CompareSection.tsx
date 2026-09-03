@@ -65,7 +65,7 @@ export function CompareSection() {
             key={category}
             type="button"
             onClick={() => void setCompareCategory(category)}
-            className={`px-3 py-0.5 transition-colors ${
+            className={`px-3 py-0.5 transition-colors coarse:inline-flex coarse:min-h-11 coarse:items-center ${
               compareCategory === category
                 ? "bg-amber-500 text-white"
                 : "bg-white text-stone-500 hover:bg-stone-50"
@@ -84,10 +84,12 @@ export function CompareSection() {
               type="button"
               onClick={() => void selectProfile(profile.id)}
               // Built comparisons can carry a title as long as the sentence someone typed;
-              // the chip truncates instead of pushing the row off screen, and keeps the whole
-              // title in its tooltip.
+              // with a mouse the chip truncates and keeps the whole title in its tooltip. A
+              // tooltip is unreachable with a finger, so on a touch screen the chip wraps and
+              // shows the whole title rather than hiding half of it behind a gesture nobody
+              // has.
               title={profile.title}
-              className={`max-w-56 truncate rounded px-2 py-1 ${
+              className={`max-w-56 truncate rounded px-2 py-1 coarse:inline-flex coarse:min-h-11 coarse:max-w-full coarse:items-center coarse:whitespace-normal coarse:text-start ${
                 profile.id === selectedProfileId
                   ? "bg-amber-100 text-stone-700"
                   : "bg-stone-100 text-stone-500"

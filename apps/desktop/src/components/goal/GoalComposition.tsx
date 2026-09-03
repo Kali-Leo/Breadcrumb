@@ -55,10 +55,17 @@ export function GoalComposition() {
             >
               {labelById.get(nodeId) ?? nodeId}
               {isNewDirection && (
-                <span
-                  title={t("goal.compositionNewDirection")}
-                  className="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle"
-                />
+                <>
+                  {/* The dot's meaning lives in its tooltip, and a finger cannot open one —
+                      so on a touch screen the words stand there instead of the dot. */}
+                  <span
+                    title={t("goal.compositionNewDirection")}
+                    className="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle coarse:hidden"
+                  />
+                  <span className="ms-1 hidden text-[10px] text-amber-600 coarse:inline">
+                    {t("goal.compositionNewDirection")}
+                  </span>
+                </>
               )}
             </li>
           );

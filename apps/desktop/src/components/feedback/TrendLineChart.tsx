@@ -2,9 +2,14 @@
  * Purpose: the minimal line chart shared by the palace's trend cards (spec 035 T7a) — one
  * Y axis, thin lines, sparse date ticks, a plain date+value tooltip, and a legend whose
  * items explain themselves on hover (one sentence per line, no standing captions).
+ *
+ * A finger cannot hover, so on a touch screen both readings move to a tap: recharts shows
+ * the date+value box on click instead of on mouse-over, and a legend item is a button that
+ * opens its own sentence. Nothing on a pointer screen changes.
  * Main exports: TrendSeries, TrendLineChart.
  */
 import type { TrendPoint } from "@breadcrumb/feature-feedback";
+import { useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -15,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useInputMode } from "../../lib/platform/inputMode";
 
 export interface TrendSeries {
   key: string;
@@ -73,34 +79,51 @@ function TrendTooltip({ active, payload, label }: TooltipContentProps) {
   );
 }
 
-/** Legend row below the plot: a colored line sample + plain name per series; hovering (or
- * keyboard-focusing) an item reveals its one-sentence explanation in a small tooltip.
- * Names stay in text ink — the colored sample alone carries series identity. */
+/** Legend row below the plot: a colored line sample + plain name per series; hovering,
+ * keyboard-focusing or tapping an item reveals its one-sentence explanation in a small
+ * tooltip. Names stay in text ink — the colored sample alone carries series identity. */
 function TrendLegend({ series }: { series: readonly TrendSeries[] }) {
+  // Which item is showing its sentence because it was tapped. A mouse still opens them by
+  // hovering, which is CSS and needs no state.
+  const [openKey, setOpenKey] = useState<string | null>(null);
   return (
     <div className="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px]">
-      {series.map((oneSeries) => (
-        <span
-          key={oneSeries.key}
-          tabIndex={oneSeries.explanation !== undefined ? 0 : undefined}
-          className="group relative flex cursor-help items-center gap-1.5 focus:outline-none"
-        >
-          <span
-            aria-hidden
-            className="inline-block h-0.5 w-4 rounded-full"
-            style={{ backgroundColor: oneSeries.color }}
-          />
-          <span className="text-stone-600">{oneSeries.label}</span>
-          {oneSeries.explanation !== undefined && (
+      {series.map((oneSeries) => {
+        const explained = oneSeries.explanation !== undefined;
+        return (
+          <button
+            key={oneSeries.key}
+            type="button"
+            tabIndex={explained ? 0 : -1}
+            aria-expanded={explained ? openKey === oneSeries.key : undefined}
+            onClick={
+              explained
+                ? () => setOpenKey((current) => (current === oneSeries.key ? null : oneSeries.key))
+                : undefined
+            }
+            className="group relative flex cursor-help items-center gap-1.5 focus:outline-none coarse:min-h-11"
+          >
             <span
-              role="tooltip"
-              className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-56 -translate-x-1/2 rounded border border-stone-200 bg-white p-2 text-start leading-relaxed text-stone-600 shadow-sm group-hover:block group-focus-visible:block"
-            >
-              {oneSeries.explanation}
-            </span>
-          )}
-        </span>
-      ))}
+              aria-hidden
+              className="inline-block h-0.5 w-4 rounded-full"
+              style={{ backgroundColor: oneSeries.color }}
+            />
+            <span className="text-stone-600">{oneSeries.label}</span>
+            {oneSeries.explanation !== undefined && (
+              <span
+                role="tooltip"
+                className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 w-56 -translate-x-1/2 rounded border border-stone-200 bg-white p-2 text-start leading-relaxed text-stone-600 shadow-sm ${
+                  openKey === oneSeries.key
+                    ? "block"
+                    : "hidden group-hover:block group-focus-visible:block"
+                }`}
+              >
+                {oneSeries.explanation}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -117,6 +140,7 @@ export function TrendLineChart({
   valueDecimals?: number;
   height?: number;
 }) {
+  const coarse = useInputMode() === "coarse";
   const data = mergeSeries(series);
   const dates = data.map((row) => row.date as string);
   // A single unexplained series needs no legend box — the card title names it.
@@ -146,7 +170,9 @@ export function TrendLineChart({
               valueDecimals > 0 ? (value: number) => value.toFixed(valueDecimals) : undefined
             }
           />
-          <Tooltip content={TrendTooltip} />
+          {/* Tap a point (or anywhere along its date) to read it, tap again to put it away.
+              recharts' own touch path only reacts to a moving finger. */}
+          <Tooltip content={TrendTooltip} trigger={coarse ? "click" : "hover"} />
           {series.map((oneSeries) => (
             <Line
               key={oneSeries.key}

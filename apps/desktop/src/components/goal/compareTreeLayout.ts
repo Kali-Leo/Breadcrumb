@@ -4,13 +4,16 @@
  * drawing constants every part of the view shares, and the two number-to-ink helpers.
  * No React, no rendering.
  * Main exports: CompareTreeLayout, CompareTreePoint, buildCompareTreeLayout, fillFor,
- * percentOf, NODE_WIDTH, NODE_HEIGHT, PADDING.
+ * percentOf, NODE_WIDTH, NODE_HEIGHT, TOUCH_TARGET_HEIGHT, PADDING.
  */
 import type { OverlapNode } from "@breadcrumb/feature-compare";
 import { type HierarchyNode, hierarchy, tree } from "d3-hierarchy";
 
 export const NODE_WIDTH = 168;
 export const NODE_HEIGHT = 34;
+/** A fingertip's target (Apple HIG 44pt / WCAG 2.5.5). The box is shorter than that, so on
+ * a touch screen the node's hit area is padded out into the row gap instead. */
+export const TOUCH_TARGET_HEIGHT = 44;
 const LEVEL_GAP = 216;
 const ROW_GAP = 44;
 export const PADDING = 16;

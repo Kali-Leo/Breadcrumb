@@ -56,7 +56,11 @@
     "modeRankedHint": "N'afficher que ce qui touche à l'objectif en cours",
     "rename": "Renommer",
     "renameHint": "Entrée enregistre, Échap annule. Laisse vide pour revenir au nom d'origine.",
-    "renameInputAria": "Nouveau nom"
+    "renameInputAria": "Nouveau nom",
+    "enterButton": "Entrer",
+    "backButton": "Revenir au niveau précédent",
+    "tapHint": "Touche une île pour la voir ; touche-la encore pour y entrer",
+    "pinchHint": "Pince pour revenir au niveau précédent"
   },
   "continue": {
     "title": "Continuer par ici",

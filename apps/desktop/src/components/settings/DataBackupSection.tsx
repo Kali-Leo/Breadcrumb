@@ -34,7 +34,7 @@ export function DataBackupSection() {
   if (!isBrowserEdition()) return null;
 
   const buttonClass =
-    "rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50";
+    "rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50 coarse:min-h-11";
 
   async function exportBackup(): Promise<void> {
     setBusy("export");
@@ -114,7 +114,7 @@ export function DataBackupSection() {
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
-              className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+              className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-amber-600 disabled:opacity-50 coarse:min-h-11"
               disabled={busy !== null}
               onClick={() => void restore()}
             >

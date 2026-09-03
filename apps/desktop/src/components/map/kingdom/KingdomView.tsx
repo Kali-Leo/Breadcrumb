@@ -3,6 +3,10 @@
  * relations switch, the subway tree, and the right rail's node card plus region mirror. The
  * view model (planner data, selection, persisted collapse) lives in useKingdomModel; the
  * card's actions in lib/map/kingdomActions.
+ *
+ * Wide: the tree fills the page with the 288px rail beside it. Stacked (narrow or portrait):
+ * the tree keeps the top 60% of the screen and the rail's cards follow underneath, the whole
+ * page scrolling — a 288px column would otherwise eat a phone's full width (layout B5).
  * Main exports: KingdomView, KingdomRef.
  */
 
@@ -37,8 +41,8 @@ export function KingdomView({ kingdom, renamable, onClose }: KingdomViewProps) {
   const cardNode = model.cardNode;
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full w-full overflow-hidden stacked:flex-col stacked:overflow-y-auto">
+      <div className="flex min-w-0 flex-1 flex-col stacked:h-[60dvh] stacked:flex-none">
         <div className="flex items-center gap-2 border-b border-stone-200 px-4 py-2">
           {/* Back sits on the left, icon only — the arrow is the whole vocabulary
               (Leo 2026-08-31 #5); the label survives as the accessible name. */}
@@ -47,7 +51,7 @@ export function KingdomView({ kingdom, renamable, onClose }: KingdomViewProps) {
             onClick={onClose}
             aria-label={t("kingdom.backToIsland")}
             title={t("kingdom.backToIsland")}
-            className="rounded-lg px-2 py-1.5 text-stone-500 hover:bg-stone-100"
+            className="rounded-lg px-2 py-1.5 text-stone-500 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:justify-center"
           >
             <BackArrow />
           </button>
@@ -90,7 +94,7 @@ export function KingdomView({ kingdom, renamable, onClose }: KingdomViewProps) {
           />
         </div>
       </div>
-      <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-s border-stone-200 bg-stone-50 p-4">
+      <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-s border-stone-200 bg-stone-50 p-4 stacked:w-full stacked:overflow-visible stacked:border-s-0 stacked:border-t">
         {model.recommendation.regionDone && (
           <p className="rounded-xl bg-white p-3 text-xs text-stone-500 shadow-sm">
             {t("kingdom.areaDone")}

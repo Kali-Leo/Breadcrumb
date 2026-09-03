@@ -64,6 +64,7 @@ export function useMapApplication(hooks: MapHooks): MapApplication {
       const controller = createMapController(created, art, {
         onHover: (info) => hooksRef.current.onHover(info),
         onLevel: (level) => hooksRef.current.onLevel(level),
+        onEnterKingdom: (nodeId) => hooksRef.current.onEnterKingdom(nodeId),
       });
       controllerRef.current = controller;
 

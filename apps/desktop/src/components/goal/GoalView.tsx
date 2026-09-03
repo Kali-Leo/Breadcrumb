@@ -35,7 +35,7 @@ export function GoalView({ onClose }: GoalViewProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100"
+            className="rounded-lg px-3 py-1.5 text-stone-500 hover:bg-stone-100 coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             <BackArrow /> {t("goal.backToMap")}
           </button>
@@ -51,7 +51,7 @@ export function GoalView({ onClose }: GoalViewProps) {
                 key={goal.id}
                 type="button"
                 onClick={() => selectGoal(goal.id)}
-                className={`rounded px-2 py-1 ${
+                className={`rounded px-2 py-1 coarse:inline-flex coarse:min-h-11 coarse:items-center ${
                   goal.id === selectedGoalId
                     ? "bg-amber-100 text-stone-700"
                     : "bg-stone-100 text-stone-500"

@@ -49,14 +49,14 @@ export function ResearchTasksSettingsRow() {
                 void setFeatureSwitch("researchTasks", false);
                 setConfirmingClose(false);
               }}
-              className="rounded bg-red-500 px-2 py-1 text-white"
+              className="rounded bg-red-500 px-2 py-1 text-white coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("research.closeConfirmAction")}
             </button>
             <button
               type="button"
               onClick={() => setConfirmingClose(false)}
-              className="rounded border border-stone-200 px-2 py-1 text-stone-500"
+              className="rounded border border-stone-200 px-2 py-1 text-stone-500 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("common:actions.cancel")}
             </button>

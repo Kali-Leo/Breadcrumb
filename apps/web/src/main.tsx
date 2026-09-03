@@ -79,8 +79,37 @@ function warnIfNotPersistent(): void {
   document.body.appendChild(banner);
 }
 
+/** How much of the window the soft keyboard is covering, published to the page as
+ * `--keyboard-inset` on <html> so the chat's input row can hold itself above it.
+ *
+ * The keyboard is invisible to CSS. It does not resize the window and it fires no event of
+ * its own; the one thing that reacts to it is the *visual* viewport, which shrinks by exactly
+ * the height of the keys. So the gap between the window and the visual viewport is the
+ * measurement, and it is nothing at all on a browser that honours the viewport meta's
+ * interactive-widget (there the window itself already shrank).
+ *
+ * The floor exists because a browser's own bars come and go through the same number: on iOS
+ * the toolbar takes something like 50–90px of visual viewport while the window height never
+ * moves, and nothing is covering the input row in that case. A keyboard is far taller. */
+const KEYBOARD_FLOOR_PX = 120;
+
+function followSoftKeyboard(): void {
+  const viewport = globalThis.visualViewport;
+  if (viewport == null) return;
+  const publish = (): void => {
+    const covered = window.innerHeight - viewport.height - viewport.offsetTop;
+    const inset = covered >= KEYBOARD_FLOOR_PX ? Math.round(covered) : 0;
+    document.documentElement.style.setProperty("--keyboard-inset", `${inset}px`);
+  };
+  publish();
+  viewport.addEventListener("resize", publish);
+  // A pinch or a scroll under an open keyboard moves offsetTop without changing the height.
+  viewport.addEventListener("scroll", publish);
+}
+
 // Finger or pointer is decided before the first paint, so nothing renders for the wrong one.
 applyInputMode();
+followSoftKeyboard();
 
 void (async () => {
   // Not awaited: Firefox answers persist() with a permission prompt, and a page that waits

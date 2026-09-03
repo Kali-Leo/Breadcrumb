@@ -48,7 +48,11 @@
     "modeRankedHint": "Hanya tampilkan yang berkaitan dengan tujuan saat ini",
     "rename": "Ganti nama",
     "renameHint": "Enter menyimpan, Esc membatalkan. Kosongkan untuk kembali ke nama semula.",
-    "renameInputAria": "Nama baru"
+    "renameInputAria": "Nama baru",
+    "enterButton": "Masuk",
+    "backButton": "Kembali satu tingkat",
+    "tapHint": "Ketuk pulau untuk melihat; ketuk lagi untuk masuk",
+    "pinchHint": "Cubit ke dalam: kembali satu tingkat"
   },
   "continue": {
     "title": "Lanjutkan dari sini",

@@ -35,7 +35,7 @@ export function GoalCard({ onOpenGoalView }: GoalCardProps) {
         <button
           type="button"
           onClick={onOpenGoalView}
-          className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600"
+          className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600 coarse:min-h-11 coarse:px-3"
         >
           {t("palace:goalCard.settings")}
         </button>

@@ -57,7 +57,7 @@ export function CompanionChatBanners() {
           <button
             type="button"
             onClick={() => activeConversationId !== null && dismissCrisis(activeConversationId)}
-            className="mt-1 text-stone-400 text-xs underline"
+            className="mt-1 text-stone-400 text-xs underline coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {t("common:actions.gotIt")}
           </button>
@@ -69,7 +69,7 @@ export function CompanionChatBanners() {
           <button
             type="button"
             onClick={dismissBreakReminder}
-            className="text-stone-400 text-xs underline"
+            className="text-stone-400 text-xs underline coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {t("common:actions.gotIt")}
           </button>

@@ -56,7 +56,11 @@
     "modeRankedHint": "Mostrar só o que se liga à meta atual",
     "rename": "Renomear",
     "renameHint": "Enter salva, Esc cancela. Deixe em branco para voltar ao nome original.",
-    "renameInputAria": "Novo nome"
+    "renameInputAria": "Novo nome",
+    "enterButton": "Entrar",
+    "backButton": "Voltar um nível",
+    "tapHint": "Toque numa ilha para ver; toque de novo para entrar",
+    "pinchHint": "Junte os dedos para voltar um nível"
   },
   "continue": {
     "title": "Continuar por aqui",

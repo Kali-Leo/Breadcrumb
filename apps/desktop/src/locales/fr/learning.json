@@ -55,6 +55,7 @@
     "upButton": "Remonter d'un niveau",
     "mapHint": "Touche une étape pour y aller. Les traits pleins sont nés d'un mot que tu as choisi ; les pointillés, d'une question.",
     "selectHint": "Appuie sur Entrée pour expliquer « {{text}} »",
+    "selectionButton": "Focus",
     "errorPlain": "Cette étape n'a pas abouti. Tu peux réessayer, ou quitter le focus.",
     "errorWithReason": "Cette étape n'a pas abouti : {{reason}}. Tu peux réessayer, ou quitter le focus.",
     "badgeLine_one": "🔎 Exploré : {{label}} · {{count}} étape",

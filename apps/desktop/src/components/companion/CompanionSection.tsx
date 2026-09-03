@@ -48,7 +48,7 @@ export function CompanionSection({ onPicked }: CompanionSectionProps) {
               <button
                 type="button"
                 onClick={() => void open(helper.companion_id, helper.topic)}
-                className="w-full rounded-lg px-2 py-1.5 text-start text-sm text-stone-600 hover:bg-stone-100"
+                className="w-full rounded-lg px-2 py-1.5 text-start text-sm text-stone-600 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:items-center"
               >
                 <span className="flex items-center gap-2">
                   <span className="truncate">{COMPANION_COPY.helperName(helper.topic)}</span>

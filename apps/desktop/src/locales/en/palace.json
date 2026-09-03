@@ -52,7 +52,11 @@
     "modeRankedHint": "Show only what relates to the current goal",
     "rename": "Rename",
     "renameHint": "Enter saves, Esc cancels. Leave it empty to go back to the original name.",
-    "renameInputAria": "New name"
+    "renameInputAria": "New name",
+    "enterButton": "Enter",
+    "backButton": "Back one level",
+    "tapHint": "Tap an island to look; tap it again to go in",
+    "pinchHint": "Pinch in: back one level"
   },
   "continue": {
     "title": "Continue from here",

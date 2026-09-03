@@ -30,7 +30,7 @@ export function OccupationPicker() {
           });
         }}
         placeholder={t("compare.searchPlaceholder")}
-        className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:text-base"
+        className="w-full rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:min-h-11 coarse:text-base"
       />
       {hits.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
@@ -44,7 +44,7 @@ export function OccupationPicker() {
                 setHits([]);
                 void createOccupation(hit.code);
               }}
-              className="rounded border border-amber-300 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
+              className="rounded border border-amber-300 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {hit.title}（{hit.code}）
               {hit.matchedAlt !== null && ` · ${t("compare.alsoCalled", { name: hit.matchedAlt })}`}

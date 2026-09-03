@@ -2,6 +2,12 @@
  * Purpose: drag-to-pan on a scrolling container — pointer capture only once the gesture is
  * definitely a pan, so plain clicks keep their normal click flow, and a suppression flag so
  * the click ending a pan does not activate whatever sat under the cursor.
+ *
+ * A finger needs none of it, and is actively hurt by it: the container already scrolls
+ * itself, with momentum, and writing scrollLeft/scrollTop from a pointermove handler at the
+ * same time makes the two fight. Worse, a fingertip wobbles well past the five pixels that
+ * tell a mouse "this is a pan", so every tap on a node was being swallowed as the end of a
+ * drag. So `enabled` switches the whole mechanism off for touch and the browser drives.
  * Main exports: useDragPan, DragPan.
  */
 import { type PointerEvent as ReactPointerEvent, type RefObject, useRef } from "react";
@@ -27,11 +33,20 @@ export interface DragPan {
     onPointerDown(event: ReactPointerEvent): void;
     onPointerMove(event: ReactPointerEvent): void;
     onPointerUp(event: ReactPointerEvent): void;
+    onPointerCancel(event: ReactPointerEvent): void;
     onPointerLeave(): void;
   };
 }
 
-export function useDragPan(): DragPan {
+/** releasePointerCapture throws when the pointer is already gone, which is exactly the case
+ * pointercancel reports. Ask first. */
+function releaseCapture(container: HTMLElement | null | undefined, pointerId: number): void {
+  if (container?.hasPointerCapture(pointerId) === true) container.releasePointerCapture(pointerId);
+}
+
+/** @param enabled false on a touch screen, where the container's own scrolling is better
+ * than anything this can do. */
+export function useDragPan(enabled: boolean): DragPan {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const suppressClickRef = useRef(false);
@@ -42,7 +57,7 @@ export function useDragPan(): DragPan {
     handlers: {
       onPointerDown(event) {
         const container = containerRef.current;
-        if (container === null) return;
+        if (!enabled || container === null) return;
         dragRef.current = {
           x: event.clientX,
           y: event.clientY,
@@ -54,7 +69,7 @@ export function useDragPan(): DragPan {
       onPointerMove(event) {
         const drag = dragRef.current;
         const container = containerRef.current;
-        if (drag === null || container === null) return;
+        if (!enabled || drag === null || container === null) return;
         const dx = event.clientX - drag.x;
         const dy = event.clientY - drag.y;
         if (!drag.moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD_PX) return;
@@ -69,13 +84,21 @@ export function useDragPan(): DragPan {
         container.scrollTop = drag.top - dy;
       },
       onPointerUp(event) {
-        containerRef.current?.releasePointerCapture(event.pointerId);
+        releaseCapture(containerRef.current, event.pointerId);
         suppressClickRef.current = dragRef.current?.moved ?? false;
         dragRef.current = null;
         // Let the click event (which fires right after pointerup) see the flag, then clear.
         setTimeout(() => {
           suppressClickRef.current = false;
         }, 0);
+      },
+      onPointerCancel(event) {
+        // The browser has taken the gesture over (a native scroll, a system gesture). No
+        // click follows a cancelled pointer, so nothing is suppressed — but the capture and
+        // the half-finished drag must go, or the next gesture starts on stale state.
+        releaseCapture(containerRef.current, event.pointerId);
+        dragRef.current = null;
+        suppressClickRef.current = false;
       },
       onPointerLeave() {
         dragRef.current = null;

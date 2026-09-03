@@ -1,9 +1,12 @@
 /**
- * Purpose: the map's right rail — hovering a continent or kingdom shows that region's
+ * Purpose: the map's right rail — pointing at a continent or kingdom shows that region's
  * mirror readout (activity heatmap + trend lines scoped to its member nodes, debounced
- * 150ms so skimming across regions does not thrash); an islet keeps its plain line, and
- * with nothing hovered the world level shows the global mirror stack. The wheel/click
- * operation hints moved onto the map canvas itself (MapView).
+ * 150ms under a mouse so skimming across regions does not thrash); an islet keeps its plain
+ * line, and with nothing pointed at the world level shows the global mirror stack. "Pointed
+ * at" is the mouse's hover or a finger's tap selection — the same channel, so the rail
+ * reads one state and never asks which hand drove it. Under a finger the swap is immediate
+ * (a tap is already a settled intent) and the island card's "go in" line becomes a real
+ * button, the tap's second step for anyone who reads the card first.
  * Main exports: MapInfoPanel.
  */
 import type { WorldModel } from "@breadcrumb/feature-map";
@@ -13,15 +16,18 @@ import {
   loadRegionFeedbackSources,
   type RegionFeedbackSources,
 } from "../../lib/feedback/regionFeedbackData";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { ForwardArrow } from "../DirectionalArrow";
 import { CurrentIslandCard } from "./CurrentIslandCard";
 import { findIsland, type MapLevel } from "./levels";
+import { IsletCard, PlaceCards } from "./MapPlaceCards";
 import { MirrorStack } from "./MirrorStack";
 import type { HoverInfo } from "./mapHover";
 import { RegionMirror } from "./RegionMirror";
 
 interface MapInfoPanelProps {
+  /** What the map points at: hover under a mouse, the tap selection under a finger. */
   hover: HoverInfo | null;
   level: MapLevel;
   world: WorldModel;
@@ -30,6 +36,8 @@ interface MapInfoPanelProps {
    * blank-state numbers can never contradict the hover numbers (2026-08-16 bug: global
    * charts while idle + empty goal regions on hover read as broken). */
   goalScope: { title: string; nodeIds: ReadonlySet<string> } | null;
+  /** The card's own way in (an island dives, a kingdom opens its subway map). */
+  onEnter(info: HoverInfo): void;
 }
 
 /** Skimming across regions settles before the rail swaps content (owner's ruling: 150ms). */
@@ -54,59 +62,9 @@ function regionNodeIds(
   return null;
 }
 
-/** An islet is one node with nothing around it — a plain line, not a region readout. */
-function IsletCard({ hover }: { hover: HoverInfo }) {
+export function MapInfoPanel({ hover, level, world, goalScope, onEnter }: MapInfoPanelProps) {
   const { t } = useTranslation("palace");
-  return (
-    <div className="rounded-xl bg-white p-3 shadow-sm">
-      <p className="text-sm text-stone-600">{t("map.unnamedIsle", { label: hover.label })}</p>
-      <p className="mt-1.5 text-xs leading-5 text-stone-400">{t("map.unnamedIsleHint")}</p>
-    </div>
-  );
-}
-
-const KIND_KEYS = {
-  island: "map.kindIsland",
-  islet: "map.kindIsland",
-  kingdom: "map.kindKingdom",
-} as const;
-
-/** Fallback place card when the mirror modules are switched off — name and residents only. */
-function PlaceCards({ hover }: { hover: HoverInfo }) {
-  const { t } = useTranslation("palace");
-  return (
-    <>
-      <div className="rounded-xl bg-white p-3 shadow-sm">
-        <p className="text-xs text-stone-400">{t(KIND_KEYS[hover.kind])}</p>
-        <p className="mt-0.5 text-base font-semibold text-stone-700">{hover.label}</p>
-        <p className="mt-1 text-sm text-stone-500">
-          {t("map.memberCount", { count: hover.memberCount })}
-        </p>
-      </div>
-      <div className="rounded-xl bg-white p-3 shadow-sm">
-        <p className="mb-1.5 text-xs font-medium text-stone-600">{t("map.livesHere")}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {hover.pointLabels.slice(0, 12).map((label) => (
-            <span
-              key={label}
-              className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800"
-            >
-              {label}
-            </span>
-          ))}
-          {hover.pointLabels.length > 12 && (
-            <span className="px-1 text-xs text-stone-400">
-              {t("map.andMore", { count: hover.pointLabels.length - 12 })}
-            </span>
-          )}
-        </div>
-      </div>
-    </>
-  );
-}
-
-export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelProps) {
-  const { t } = useTranslation("palace");
+  const coarse = useInputMode() === "coarse";
   const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
   const [sources, setSources] = useState<RegionFeedbackSources | null>(null);
   const [settledHover, setSettledHover] = useState<HoverInfo | null>(null);
@@ -124,19 +82,24 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
   }, [feedbackLabEnabled]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setSettledHover(hover), HOVER_SETTLE_MS);
+    const timer = setTimeout(() => setSettledHover(hover), coarse ? 0 : HOVER_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [hover]);
+  }, [hover, coarse]);
 
   const region =
     settledHover !== null && feedbackLabEnabled ? regionNodeIds(world, level, settledHover) : null;
   // Inside an island with nothing under the pointer, the island itself is what the map
   // points at — its card (and the rename action) sits where the rail was blank before.
   const currentIsland = level.kind === "island" ? findIsland(world, level.islandId) : undefined;
+  // Only an island can be entered from the world (the island view is the deepest one); a
+  // kingdom's way in is its subway map, offered as a button where a second tap would do it.
+  const enterable =
+    settledHover !== null &&
+    (settledHover.kind === "island" || (coarse && settledHover.kind === "kingdom"));
 
   return (
-    <aside className="flex h-full w-full flex-col border-s border-stone-200 bg-stone-50">
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+    <aside className="flex h-full w-full flex-col border-s border-stone-200 bg-stone-50 stacked:h-auto stacked:border-s-0 stacked:border-t">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 stacked:overflow-visible">
         {settledHover !== null ? (
           settledHover.kind === "islet" ? (
             <IsletCard hover={settledHover} />
@@ -154,8 +117,16 @@ export function MapInfoPanel({ hover, level, world, goalScope }: MapInfoPanelPro
               ) : (
                 <PlaceCards hover={settledHover} />
               )}
-              {/* Only an island can be entered — the island view is the deepest one. */}
-              {settledHover.kind === "island" && (
+              {enterable && coarse && (
+                <button
+                  type="button"
+                  onClick={() => onEnter(settledHover)}
+                  className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-amber-500 text-sm text-white"
+                >
+                  {t("map.enterButton")} <ForwardArrow />
+                </button>
+              )}
+              {enterable && !coarse && (
                 <p className="text-xs text-stone-400">
                   {t("map.zoomInPrompt")} <ForwardArrow />
                 </p>

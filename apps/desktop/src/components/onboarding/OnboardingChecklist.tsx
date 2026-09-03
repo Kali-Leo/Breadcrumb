@@ -81,14 +81,14 @@ export function OnboardingChecklist({
   return (
     // Bottom-end corner of the content — which on a small or touch screen is the send button,
     // so there it moves up above the composer (ChatView publishes --composer-height).
-    <div className="absolute end-3 bottom-3 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white p-4 shadow-lg coarse:bottom-[calc(var(--composer-height,0px)+0.75rem)] stacked:bottom-[calc(var(--composer-height,0px)+0.75rem)]">
+    <div className="absolute end-3 bottom-3 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white p-4 shadow-lg coarse:end-auto coarse:start-3 coarse:bottom-[calc(var(--composer-height,0px)+0.75rem)] stacked:bottom-[calc(var(--composer-height,0px)+0.75rem)]">
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium text-sm text-stone-700">{t("checklist.title")}</p>
         <button
           type="button"
           onClick={onDismiss}
           aria-label={t("checklist.dismiss")}
-          className="rounded px-1.5 text-stone-400 hover:bg-stone-100"
+          className="rounded px-1.5 text-stone-400 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:justify-center"
         >
           ✕
         </button>
@@ -97,7 +97,7 @@ export function OnboardingChecklist({
       <button
         type="button"
         onClick={onReplayTour}
-        className="mt-3 w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-white transition-colors hover:bg-amber-600"
+        className="mt-3 w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-white transition-colors hover:bg-amber-600 coarse:min-h-11"
       >
         {t("checklist.takeTour")}
       </button>
@@ -120,7 +120,7 @@ export function OnboardingChecklist({
               <button
                 type="button"
                 onClick={item.action}
-                className="text-start text-stone-600 underline decoration-stone-300 hover:text-stone-800"
+                className="text-start text-stone-600 underline decoration-stone-300 hover:text-stone-800 coarse:inline-flex coarse:min-h-11 coarse:items-center"
               >
                 {item.label}
               </button>
@@ -146,7 +146,7 @@ export function OnboardingChecklist({
                 .then(() => window.location.reload())
                 .finally(() => setRemoving(false));
             }}
-            className="mt-1.5 text-amber-700 text-xs underline disabled:opacity-60"
+            className="mt-1.5 text-amber-700 text-xs underline disabled:opacity-60 coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {removing ? t("checklist.removingDemo") : t("checklist.removeDemo")}
           </button>

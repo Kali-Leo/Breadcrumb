@@ -29,13 +29,13 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         placeholder={t("learning:focus.askPlaceholder")}
-        className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm coarse:text-base"
+        className="min-w-0 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-sm coarse:min-h-11 coarse:text-base"
       />
       {streaming && (
         <button
           type="button"
           onClick={() => useFocusStore.getState().stopStreaming()}
-          className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 hover:bg-amber-200"
+          className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 coarse:min-h-11 coarse:min-w-11 coarse:px-4 hover:bg-amber-200"
         >
           {t("common:actions.stop")}
         </button>
@@ -43,7 +43,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
       <button
         type="submit"
         disabled={streaming || draft.trim().length === 0}
-        className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 disabled:opacity-40"
+        className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm text-stone-700 coarse:min-h-11 coarse:min-w-11 coarse:px-4 disabled:opacity-40"
       >
         {t("common:actions.send")}
       </button>

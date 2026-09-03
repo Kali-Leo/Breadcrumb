@@ -37,7 +37,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [page, setPage] = useState<SettingsPage>("general");
 
   const tabClass = (active: boolean) =>
-    `rounded-lg px-3 py-1.5 text-sm ${active ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"}`;
+    `rounded-lg px-3 py-1.5 text-sm coarse:inline-flex coarse:min-h-11 coarse:items-center ${active ? "bg-amber-100 text-stone-700" : "text-stone-500 hover:bg-stone-100"}`;
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto bg-stone-50 p-6">
@@ -57,7 +57,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <button
           type="button"
           onClick={onClose}
-          className="ms-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
+          className="ms-auto rounded-lg px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-100 coarse:inline-flex coarse:min-h-11 coarse:items-center"
         >
           <BackArrow /> {t("back")}
         </button>

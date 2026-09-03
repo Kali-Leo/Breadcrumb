@@ -1,8 +1,14 @@
 /**
- * Purpose: keeps the spotlight hole on its target — re-measures when the step changes and
- * on resize. The target may not exist the instant a view is switched to (the map mounts a
- * Pixi canvas and generates terrain first), so it polls rather than guessing one delay: a
- * single timeout is either too short on a slow machine or a needless wait on a fast one.
+ * Purpose: keeps the spotlight hole on its target — re-measures when the step changes, when
+ * the window resizes, when anything on the page scrolls, and when the visual viewport moves.
+ * The target may not exist the instant a view is switched to (the map mounts a Pixi canvas
+ * and generates terrain first), so it polls rather than guessing one delay: a single timeout
+ * is either too short on a slow machine or a needless wait on a fast one.
+ *
+ * Window resize alone is not enough on a tablet. A soft keyboard opening, or the browser's
+ * own bars sliding away, moves the visual viewport without touching the layout viewport, and
+ * a target that lives inside a scrolling panel moves whenever that panel scrolls — in both
+ * cases the ring would stay behind, framing empty space.
  * Main exports: useSpotlightPosition.
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -38,8 +44,19 @@ export function useSpotlightPosition(target: string | undefined): SpotlightRect 
   }, [target]);
 
   useEffect(() => {
+    // Scroll in the capture phase: it does not bubble, so a panel scrolling somewhere in the
+    // tree is only heard on the way down.
     window.addEventListener("resize", remeasure);
-    return () => window.removeEventListener("resize", remeasure);
+    window.addEventListener("scroll", remeasure, true);
+    const viewport = globalThis.visualViewport;
+    viewport?.addEventListener("resize", remeasure);
+    viewport?.addEventListener("scroll", remeasure);
+    return () => {
+      window.removeEventListener("resize", remeasure);
+      window.removeEventListener("scroll", remeasure, true);
+      viewport?.removeEventListener("resize", remeasure);
+      viewport?.removeEventListener("scroll", remeasure);
+    };
   }, [remeasure]);
 
   return rect;

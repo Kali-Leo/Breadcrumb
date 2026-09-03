@@ -28,7 +28,7 @@ export interface ApiFormDraft {
 export const EMPTY_PRICES: PriceFields = { input: "", output: "", cached: "" };
 
 export const INPUT_CLASS =
-  "w-full rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:text-base";
+  "w-full rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:min-h-11 coarse:text-base";
 
 let apiFormDraft: ApiFormDraft | null = null;
 

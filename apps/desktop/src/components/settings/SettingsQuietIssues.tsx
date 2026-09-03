@@ -40,7 +40,7 @@ export function SettingsQuietIssues() {
         <p className="mt-1 text-sm text-stone-500">{t("quietIssues.allGood")}</p>
       ) : (
         <details className="mt-1 text-sm text-stone-500">
-          <summary className="cursor-pointer list-none">
+          <summary className="cursor-pointer list-none coarse:flex coarse:min-h-11 coarse:items-center">
             {t("quietIssues.summary", { count: failures.length })}
           </summary>
           <ul className="mt-2 space-y-1 text-xs text-stone-400">

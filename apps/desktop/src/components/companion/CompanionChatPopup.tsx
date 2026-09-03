@@ -61,7 +61,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           type="button"
           onClick={onClose}
           aria-label={t("popup.close")}
-          className="rounded px-2 text-stone-400 hover:bg-stone-100"
+          className="rounded px-2 text-stone-400 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:justify-center"
         >
           ✕
         </button>
@@ -72,7 +72,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
           <button
             type="button"
             onClick={() => useCompanionStore.getState().dismissCrisis(conversationId)}
-            className="mt-1 text-stone-400 underline"
+            className="mt-1 text-stone-400 underline coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {t("common:actions.gotIt")}
           </button>
@@ -107,7 +107,7 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
                 <button
                   type="button"
                   onClick={() => void useChatStore.getState().retryRound(conversationId)}
-                  className="ms-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200"
+                  className="ms-2 rounded bg-amber-100 px-1.5 py-0.5 text-stone-700 hover:bg-amber-200 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
                 >
                   {t("common:actions.retry")}
                 </button>

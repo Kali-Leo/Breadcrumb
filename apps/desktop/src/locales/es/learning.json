@@ -55,6 +55,7 @@
     "upButton": "Subir un nivel",
     "mapHint": "Toca una parada para ir allí. Las líneas continuas nacieron de una palabra que elegiste; las discontinuas, de una pregunta.",
     "selectHint": "Pulsa Enter para explicar «{{text}}»",
+    "selectionButton": "Enfoque",
     "errorPlain": "Esta parada no salió. Puedes reintentarlo o salir del enfoque.",
     "errorWithReason": "Esta parada no salió: {{reason}}. Puedes reintentarlo o salir del enfoque.",
     "badgeLine_one": "🔎 Explorado: {{label}} · {{count}} parada",

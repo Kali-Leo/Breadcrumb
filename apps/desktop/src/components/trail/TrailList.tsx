@@ -102,7 +102,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
             <button
               type="button"
               onClick={() => open(conversation)}
-              className={`block w-full truncate rounded-lg py-2 pe-9 ps-3 text-start text-sm transition-colors coarse:pe-12 ${
+              className={`block w-full truncate rounded-lg py-2 pe-9 ps-3 text-start text-sm transition-colors coarse:flex coarse:min-h-11 coarse:items-center coarse:pe-12 ${
                 active ? "bg-amber-100 text-stone-800" : "text-stone-600 hover:bg-stone-100"
               }`}
             >
@@ -137,7 +137,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
                   <button
                     type="button"
                     onClick={() => startRename(conversation)}
-                    className="block w-full rounded-lg px-3 py-2 text-start text-sm text-stone-700 hover:bg-stone-100"
+                    className="block w-full rounded-lg px-3 py-2 text-start text-sm text-stone-700 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:items-center"
                   >
                     {t("trail.rename")}
                   </button>
@@ -151,7 +151,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
                           setConfirmingId(null);
                           void deleteConversation(conversation.id);
                         }}
-                        className="w-full rounded-lg bg-stone-800 px-3 py-1.5 text-sm text-white"
+                        className="w-full rounded-lg bg-stone-800 px-3 py-1.5 text-sm text-white coarse:min-h-11"
                       >
                         {t("trail.deleteAction")}
                       </button>
@@ -160,7 +160,7 @@ export function TrailList({ isChatViewActive, onOpenChat }: TrailListProps) {
                     <button
                       type="button"
                       onClick={() => setConfirmingId(conversation.id)}
-                      className="block w-full rounded-lg px-3 py-2 text-start text-sm text-stone-700 hover:bg-stone-100"
+                      className="block w-full rounded-lg px-3 py-2 text-start text-sm text-stone-700 hover:bg-stone-100 coarse:flex coarse:min-h-11 coarse:items-center"
                     >
                       {t("trail.delete")}
                     </button>

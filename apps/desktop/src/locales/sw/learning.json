@@ -55,6 +55,7 @@
     "upButton": "Panda ngazi moja",
     "mapHint": "Gusa kituo ili kwenda huko. Mistari mizima ilianzia neno ulilochagua; ya vipande ilianzia swali.",
     "selectHint": "Bonyeza Enter ili kueleza «{{text}}»",
+    "selectionButton": "Umakini",
     "errorPlain": "Kituo hiki hakikutoka. Unaweza kujaribu tena, au kutoka kwenye umakini.",
     "errorWithReason": "Kituo hiki hakikutoka: {{reason}}. Unaweza kujaribu tena, au kutoka kwenye umakini.",
     "badgeLine_one": "🔎 Imechunguzwa: {{label}} · kituo {{count}}",

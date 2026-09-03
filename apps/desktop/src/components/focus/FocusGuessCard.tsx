@@ -37,20 +37,20 @@ export function FocusGuessCard({
           autoFocus
           value={guessText}
           onChange={(event) => setGuessText(event.target.value)}
-          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm coarse:text-base"
+          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-sm coarse:min-h-11 coarse:text-base"
           placeholder={t("learning:door.guessPlaceholder")}
         />
         <button
           type="submit"
           disabled={guessText.trim().length === 0}
-          className="rounded bg-amber-100 px-2 py-1 text-xs text-stone-700 disabled:opacity-40"
+          className="rounded bg-amber-100 px-2 py-1 text-xs text-stone-700 coarse:min-h-11 coarse:min-w-11 coarse:px-3 coarse:text-sm disabled:opacity-40"
         >
           {t("learning:door.guessSubmit")}
         </button>
         <button
           type="button"
           onClick={onSkip}
-          className="rounded px-2 py-1 text-xs text-stone-500 hover:bg-stone-100"
+          className="rounded px-2 py-1 text-xs text-stone-500 coarse:min-h-11 coarse:min-w-11 coarse:px-3 coarse:text-sm hover:bg-stone-100"
         >
           {t("learning:focus.guessSkipButton")}
         </button>

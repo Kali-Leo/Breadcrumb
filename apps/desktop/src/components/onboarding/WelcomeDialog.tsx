@@ -45,7 +45,7 @@ export function WelcomeDialog({ onTryDemo, onStartClean, onSkip }: WelcomeDialog
               setInstalling(true);
               void onTryDemo().finally(() => setInstalling(false));
             }}
-            className="w-full rounded-xl bg-amber-500 px-5 py-3 text-white transition-colors hover:bg-amber-600 disabled:opacity-70"
+            className="w-full rounded-xl bg-amber-500 px-5 py-3 text-white transition-colors hover:bg-amber-600 disabled:opacity-70 coarse:min-h-11"
           >
             {installing ? t("welcome.installing") : t("welcome.tryDemo")}
           </button>
@@ -55,7 +55,7 @@ export function WelcomeDialog({ onTryDemo, onStartClean, onSkip }: WelcomeDialog
             type="button"
             disabled={installing}
             onClick={onStartClean}
-            className="w-full rounded-xl border border-stone-200 px-5 py-2.5 text-sm text-stone-600 transition-colors hover:bg-stone-50"
+            className="w-full rounded-xl border border-stone-200 px-5 py-2.5 text-sm text-stone-600 transition-colors hover:bg-stone-50 coarse:min-h-11"
           >
             {t("welcome.startClean")}
           </button>
@@ -64,7 +64,7 @@ export function WelcomeDialog({ onTryDemo, onStartClean, onSkip }: WelcomeDialog
         <button
           type="button"
           onClick={onSkip}
-          className="mt-4 w-full text-center text-sm text-stone-400 underline"
+          className="mt-4 w-full text-center text-sm text-stone-400 underline coarse:min-h-11"
         >
           {t("skip")}
         </button>

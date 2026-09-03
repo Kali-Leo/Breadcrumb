@@ -55,6 +55,7 @@
     "upButton": "Up one level",
     "mapHint": "Tap a stop to jump there. Solid lines grew from a word you picked; dashed ones grew from a question.",
     "selectHint": "Press Enter to explain \"{{text}}\"",
+    "selectionButton": "Focus",
     "errorPlain": "This stop did not come out. You can try again, or leave focus.",
     "errorWithReason": "This stop did not come out: {{reason}}. You can try again, or leave focus.",
     "badgeLine_one": "🔎 Explored: {{label}} · {{count}} stop",

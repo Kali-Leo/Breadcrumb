@@ -1,30 +1,26 @@
 /**
  * Purpose: the focus overlay's main pane (spec 042 §3) — the current station's answer with
- * door-word marks, select-by-selection ("按 Enter 解释"), the guess-gate card, streaming/error
- * states, and the bottom ask bar. Selection handling lives here because it's scoped to this
- * pane's own text, not the whole overlay.
+ * door-word marks, select-a-phrase-to-explain, the guess-gate card, streaming/error states,
+ * and the bottom ask bar. The selection offer is scoped to this pane's own text, not the whole
+ * overlay, but the rule behind it is the shared one in lib/focus/selectionFocus.
  * Main exports: FocusContentPane.
  */
 import type { FocusNodeRow } from "@breadcrumb/core-db";
 import type { DoorCandidate } from "@breadcrumb/feature-explore";
 import { focusSelectHintMessage } from "@breadcrumb/feature-explore";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { normalizeMathDelimiters } from "../../lib/chat/markdownMath";
 import { computeFocusDoorPatches } from "../../lib/focus/focusDoors";
+import { useSelectionFocus } from "../../lib/focus/selectionFocus";
 import { useFocusStore } from "../../stores/focusStore";
 import { MarkdownContent } from "../chat/MarkdownContent";
 import { FocusAskBar } from "./FocusAskBar";
 import { FocusGuessCard } from "./FocusGuessCard";
+import { SelectionFocusPrompt } from "./SelectionFocusPrompt";
 
 const SELECTION_HINT_MAX_CHARS = 40;
-
-interface SelectionHint {
-  text: string;
-  left: number;
-  top: number;
-}
 
 export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | null }) {
   const copy = useCopyMessage();
@@ -39,12 +35,12 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
   const skipGuess = useFocusStore((state) => state.skipGuess);
   const askQuestion = useFocusStore((state) => state.askQuestion);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [hint, setHint] = useState<SelectionHint | null>(null);
-  // Mirrors hint so the keydown handler acts OUTSIDE a state updater — side effects inside
-  // updaters get double-invoked by React's dev purity check (one Enter made two stations).
-  const hintRef = useRef<SelectionHint | null>(null);
-  hintRef.current = hint;
+  // Escape is claimed: it dismisses the offer only, and the overlay's own handler checks
+  // defaultPrevented and stays open.
+  const { containerRef, selection, confirm } = useSelectionFocus<HTMLDivElement>({
+    onConfirm: (text) => void selectWord(text),
+    claimEscape: true,
+  });
   const [doors, setDoors] = useState<DoorCandidate[]>([]);
 
   // The canonical display source, same as MessageBubble: \[..\]/\(..\) become the dollar
@@ -74,50 +70,6 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
     };
   }, [currentNode, displaySource, openedDoorNodeIds, conversationId]);
 
-  useEffect(() => {
-    function onMouseUp() {
-      const selection = window.getSelection();
-      const text = selection?.toString().trim() ?? "";
-      const container = containerRef.current;
-      if (
-        text.length === 0 ||
-        selection === null ||
-        selection.rangeCount === 0 ||
-        container === null
-      ) {
-        setHint(null);
-        return;
-      }
-      const range = selection.getRangeAt(0);
-      if (!container.contains(range.commonAncestorContainer)) {
-        setHint(null);
-        return;
-      }
-      const rect = range.getBoundingClientRect();
-      setHint({ text, left: rect.left, top: rect.top - 32 });
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      const current = hintRef.current;
-      if (current === null) return;
-      if (event.key === "Enter") {
-        void selectWord(current.text);
-        window.getSelection()?.removeAllRanges();
-        setHint(null);
-      } else if (event.key === "Escape") {
-        // Claim the key: Esc dismisses the hint only — the overlay's own Escape handler
-        // checks defaultPrevented and stays open.
-        event.preventDefault();
-        setHint(null);
-      }
-    }
-    document.addEventListener("mouseup", onMouseUp);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mouseup", onMouseUp);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [selectWord]);
-
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <div ref={containerRef} className="flex-1 overflow-y-auto px-6 py-4">
@@ -141,27 +93,28 @@ export function FocusContentPane({ currentNode }: { currentNode: FocusNodeRow | 
             <button
               type="button"
               onClick={() => void useFocusStore.getState().retryCurrent()}
-              className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
+              className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 coarse:inline-flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:justify-center coarse:px-4 hover:bg-amber-200"
             >
               {t("learning:focus.retryButton")}
             </button>
           </div>
         )}
       </div>
-      {hint !== null && (
-        <div
-          style={{ position: "fixed", left: hint.left, top: hint.top }}
-          className="z-20 rounded-lg border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 shadow-lg"
-        >
-          {copy(
-            focusSelectHintMessage(
-              hint.text.length > SELECTION_HINT_MAX_CHARS
-                ? `${hint.text.slice(0, SELECTION_HINT_MAX_CHARS)}…`
-                : hint.text,
-            ),
-          )}
-        </div>
-      )}
+      <SelectionFocusPrompt
+        selection={selection}
+        onConfirm={confirm}
+        hint={
+          selection === null
+            ? null
+            : copy(
+                focusSelectHintMessage(
+                  selection.text.length > SELECTION_HINT_MAX_CHARS
+                    ? `${selection.text.slice(0, SELECTION_HINT_MAX_CHARS)}…`
+                    : selection.text,
+                ),
+              )
+        }
+      />
       <FocusAskBar onAsk={(question) => void askQuestion(question)} />
     </div>
   );

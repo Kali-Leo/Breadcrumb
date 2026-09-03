@@ -35,7 +35,7 @@ function ExperienceDetail({ node }: { node: OverlapNode }) {
       <button
         type="button"
         onClick={() => void setPracticeScore(node.key, done ? 0 : 10)}
-        className={`rounded px-2 py-0.5 transition-colors ${
+        className={`rounded px-2 py-0.5 transition-colors coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3 ${
           done ? "bg-amber-500 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
         }`}
       >
@@ -45,7 +45,7 @@ function ExperienceDetail({ node }: { node: OverlapNode }) {
       <button
         type="button"
         onClick={() => void discussPractice(node)}
-        className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50"
+        className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
       >
         {t("compare.discuss")}
       </button>
@@ -68,7 +68,7 @@ function HubDetail({ node }: { node: OverlapNode }) {
           type="button"
           disabled={decomposingHub}
           onClick={() => void decomposeHub(node)}
-          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
+          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
         >
           {decomposingHub ? t("compare.decomposing") : t("compare.decompose")}
         </button>
@@ -159,13 +159,13 @@ export function ExperimentalBuildForm() {
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
           placeholder={t("compare.customPlaceholder")}
-          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:text-base"
+          className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-xs outline-none focus:border-amber-400 coarse:min-h-11 coarse:text-base"
         />
         <button
           type="button"
           disabled={building || topic.trim().length === 0}
           onClick={() => void buildFromTopic(topic.trim())}
-          className="rounded bg-amber-500 px-2 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+          className="rounded bg-amber-500 px-2 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
         >
           {t("compare.generate")}
         </button>

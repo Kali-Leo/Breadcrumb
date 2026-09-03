@@ -27,7 +27,7 @@ export function ApiCurrencyPicker({
             type="button"
             onClick={() => onPick(option)}
             aria-pressed={currency === option}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm transition-colors coarse:inline-flex coarse:min-h-11 coarse:items-center ${
               currency === option ? "bg-amber-500 text-white" : "text-stone-500"
             }`}
           >

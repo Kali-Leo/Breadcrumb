@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { usePlannerStore } from "../../stores/plannerStore";
 
 const actionButtonClass =
-  "rounded border border-stone-200 px-1.5 py-0.5 text-stone-500 transition-colors hover:border-amber-400 hover:text-amber-700";
+  "rounded border border-stone-200 px-1.5 py-0.5 text-stone-500 transition-colors hover:border-amber-400 hover:text-amber-700 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3";
 
 export function GoalGapActions() {
   const { t } = useTranslation("palace");

@@ -2,6 +2,10 @@
  * Purpose: the two curves of the interest dashboard — what the platforms put in front of the
  * user (投喂) against what the user opened (选择), scored from +2 to -2. Geometry comes from
  * the module; this file only draws it and follows the cursor.
+ *
+ * A finger has no cursor to follow, so on a touch screen the reading is pinned by a tap
+ * instead: tap the chart to read the nearest day, tap the same spot or anywhere outside to
+ * put it away. Nothing on a pointer screen changes.
  * Main exports: InterestEmotionPanel.
  */
 
@@ -12,8 +16,9 @@ import {
   type EmotionSeriesKey,
   findNearestChartPoint,
 } from "@breadcrumb/feature-browsing-interest";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { useBrowsingInterestStore } from "../../stores/browsingInterestStore";
 import { InterestPanel, InterestPanelEmptyLine, InterestSegmentedControl } from "./InterestPanel";
 
@@ -30,6 +35,10 @@ interface HoverState {
   text: string;
 }
 
+/** A tapped reading sits above the fingertip instead of beside the pointer, or the hand
+ * covers the very thing it just asked for. */
+const TOUCH_LIFT_PX = 34;
+
 export function InterestEmotionPanel() {
   const { t, i18n } = useTranslation("discovery");
   const series = useBrowsingInterestStore((state) => state.emotion);
@@ -37,30 +46,48 @@ export function InterestEmotionPanel() {
   const setCategory = useBrowsingInterestStore((state) => state.setEmotionCategory);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = useState<HoverState | null>(null);
+  const coarse = useInputMode() === "coarse";
 
   const chart = useMemo(() => (series ? buildEmotionChart(series) : null), [series]);
 
-  function trackCursor(event: React.MouseEvent<SVGSVGElement>) {
-    if (!chart || !svgRef.current) return;
+  // A reading pinned by a tap stays until it is dismissed, so tapping anywhere else on the
+  // page has to be one of the ways out.
+  useEffect(() => {
+    if (!coarse || hover === null) return undefined;
+    const close = (event: PointerEvent) => {
+      if (svgRef.current?.contains(event.target as Node) !== true) setHover(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [coarse, hover]);
+
+  function readingAt(event: React.MouseEvent<SVGSVGElement>): HoverState | null {
+    if (!chart || !svgRef.current) return null;
     const box = svgRef.current.getBoundingClientRect();
     const x = ((event.clientX - box.left) / box.width) * chart.width;
     const y = ((event.clientY - box.top) / box.height) * chart.height;
     const nearest = findNearestChartPoint(chart, x, y);
-    if (!nearest) {
-      setHover(null);
-      return;
-    }
-    const valence = nearest.point.valence;
-    setHover({
-      left: event.clientX - box.left + 12,
-      top: event.clientY - box.top - 8,
+    if (!nearest) return null;
+    return {
+      left: event.clientX - box.left + (coarse ? 0 : 12),
+      top: event.clientY - box.top - (coarse ? TOUCH_LIFT_PX : 8),
       text: t("emotion.tooltip", {
         date: formatDayMonth(i18n.language, new Date(nearest.point.day * 1000)),
         line: t(`emotion.${nearest.key}`),
-        value: formatSignedDecimal(i18n.language, valence),
+        value: formatSignedDecimal(i18n.language, nearest.point.valence),
         count: nearest.point.n,
       }),
-    });
+    };
+  }
+
+  function trackCursor(event: React.MouseEvent<SVGSVGElement>) {
+    setHover(readingAt(event));
+  }
+
+  /** Tap: pin the nearest day's reading, or put away the one already showing here. */
+  function tapChart(event: React.MouseEvent<SVGSVGElement>) {
+    const next = readingAt(event);
+    setHover((current) => (current !== null && current.text === next?.text ? null : next));
   }
 
   return (
@@ -92,6 +119,9 @@ export function InterestEmotionPanel() {
         <InterestPanelEmptyLine>{t("emotion.empty")}</InterestPanelEmptyLine>
       ) : (
         <div className="relative">
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: the tap reading is the pointer's
+              equivalent of hovering, and there is nothing discrete here for a key to land on
+              — the chart is one <svg role="img"> whose label already states what it shows. */}
           <svg
             ref={svgRef}
             width="100%"
@@ -99,8 +129,9 @@ export function InterestEmotionPanel() {
             viewBox={`0 0 ${chart.width} ${chart.height}`}
             role="img"
             aria-label={t("emotion.chartAria")}
-            onMouseMove={trackCursor}
-            onMouseLeave={() => setHover(null)}
+            onMouseMove={coarse ? undefined : trackCursor}
+            onMouseLeave={coarse ? undefined : () => setHover(null)}
+            onClick={coarse ? tapChart : undefined}
           >
             <title>{t("emotion.chartAria")}</title>
             {chart.gridLines.map((line) => (

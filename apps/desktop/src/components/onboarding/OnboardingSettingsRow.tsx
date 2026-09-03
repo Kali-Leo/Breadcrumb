@@ -35,7 +35,7 @@ export function OnboardingSettingsRow() {
               .resetOnboarding()
               .then(() => window.location.reload());
           }}
-          className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
+          className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 coarse:min-h-11"
         >
           {t("settings.replay")}
         </button>
@@ -47,7 +47,7 @@ export function OnboardingSettingsRow() {
               setBusy(true);
               void removeDemoData().then(() => window.location.reload());
             }}
-            className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-60"
+            className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-60 coarse:min-h-11"
           >
             {t("settings.removeDemo")}
           </button>

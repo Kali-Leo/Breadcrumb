@@ -49,7 +49,7 @@ function RelationRow({
           key={item.id}
           type="button"
           onClick={() => onJump(item.id)}
-          className="ms-1 rounded bg-stone-100 px-1 py-0.5 text-stone-600 hover:bg-stone-200"
+          className="ms-1 rounded bg-stone-100 px-1 py-0.5 text-stone-600 hover:bg-stone-200 coarse:my-0.5 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-2"
         >
           {item.label}
         </button>
@@ -113,7 +113,7 @@ export function KingdomNodeCard({
           type="button"
           disabled={opening}
           onClick={onMainAction}
-          className="rounded bg-amber-500 px-3 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+          className="rounded bg-amber-500 px-3 py-1 text-white transition-colors hover:bg-amber-600 disabled:opacity-50 coarse:min-h-11 coarse:px-4"
         >
           {opening ? t("kingdom.opening") : t(MAIN_ACTION_KEY[node.state])}
         </button>
@@ -121,7 +121,7 @@ export function KingdomNodeCard({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="rounded border border-stone-200 px-2 py-1 text-stone-500 hover:border-amber-400"
+            className="rounded border border-stone-200 px-2 py-1 text-stone-500 hover:border-amber-400 coarse:min-h-11 coarse:px-3"
           >
             {collapsed ? t("kingdom.expandBranch") : t("kingdom.collapseBranch")}
           </button>
@@ -132,7 +132,7 @@ export function KingdomNodeCard({
         <button
           type="button"
           onClick={onGoToOrigin}
-          className="mt-2 text-stone-400 underline decoration-stone-300 underline-offset-2 hover:text-stone-600"
+          className="mt-2 text-stone-400 underline decoration-stone-300 underline-offset-2 hover:text-stone-600 coarse:inline-flex coarse:min-h-11 coarse:items-center"
         >
           {t("kingdom.goToOrigin")}
         </button>
@@ -147,7 +147,7 @@ export function KingdomNodeCard({
                 <button
                   type="button"
                   onClick={() => onJump(alternate.nodeId)}
-                  className="w-full rounded border border-stone-200 px-2 py-1 text-start text-stone-600 hover:border-amber-400"
+                  className="w-full rounded border border-stone-200 px-2 py-1 text-start text-stone-600 hover:border-amber-400 coarse:min-h-11"
                 >
                   <span className="font-medium">{alternate.label}</span>
                   <span className="mt-0.5 block text-stone-400">

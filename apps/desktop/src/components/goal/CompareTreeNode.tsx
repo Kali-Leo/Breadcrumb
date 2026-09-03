@@ -6,7 +6,13 @@
  */
 import type { OverlapNode } from "@breadcrumb/feature-compare";
 import { useTranslation } from "react-i18next";
-import { fillFor, NODE_HEIGHT, NODE_WIDTH, percentOf } from "./compareTreeLayout";
+import {
+  fillFor,
+  NODE_HEIGHT,
+  NODE_WIDTH,
+  percentOf,
+  TOUCH_TARGET_HEIGHT,
+} from "./compareTreeLayout";
 
 export function CompareTreeNode({
   node,
@@ -14,6 +20,7 @@ export function CompareTreeNode({
   y,
   selected,
   hasHiddenChildren,
+  coarse,
   onActivate,
 }: {
   node: OverlapNode;
@@ -21,6 +28,8 @@ export function CompareTreeNode({
   y: number;
   selected: boolean;
   hasHiddenChildren: boolean;
+  /** Touch screen: the box is padded out to a fingertip's target. */
+  coarse: boolean;
   onActivate(node: OverlapNode): void;
 }) {
   const { t } = useTranslation("palace");
@@ -48,6 +57,17 @@ export function CompareTreeNode({
         if (event.key === "Enter" || event.key === " ") onActivate(node);
       }}
     >
+      {coarse && (
+        // Invisible, and painted (so it takes the tap): fill "transparent" is a fill, fill
+        // "none" would not be hit at all. It grows into the 44px gap between rows, so no two
+        // nodes' targets touch and nothing on screen moves.
+        <rect
+          y={(NODE_HEIGHT - TOUCH_TARGET_HEIGHT) / 2}
+          width={NODE_WIDTH}
+          height={TOUCH_TARGET_HEIGHT}
+          fill="transparent"
+        />
+      )}
       <rect
         width={NODE_WIDTH}
         height={NODE_HEIGHT}

@@ -12,12 +12,21 @@
  * all, so hit-testing works without pointer-events games, and each panel is a plain rectangle
  * the compositor can animate.
  *
+ * The card is measured after it renders and placed from that measurement, because its height
+ * is whatever the step's two sentences wrap to in the reader's language — see
+ * spotlightPlacement.
+ *
  * Main exports: SpotlightTour, TourStep.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { requestDrawerFor } from "../shell/drawerRequests";
-import { cardPosition, type SpotlightPlace } from "./spotlightPlacement";
+import {
+  type CardSize,
+  cardPosition,
+  defaultCardSize,
+  type SpotlightPlace,
+} from "./spotlightPlacement";
 import { useSpotlightPosition } from "./useSpotlightPosition";
 
 export interface TourStep {
@@ -57,6 +66,30 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
   }, [step?.target]);
 
   const rect = useSpotlightPosition(step?.target);
+
+  // The card's own size, so it can be placed against what it really is rather than against a
+  // guess. One observer for the life of the tour: the box reflows when the step's text
+  // changes just as it does when the window does, and either way that is what it reports.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<CardSize | null>(null);
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (card === null) return undefined;
+    const measure = () => {
+      const box = card.getBoundingClientRect();
+      setSize((previous) =>
+        previous !== null &&
+        Math.abs(previous.width - box.width) < 1 &&
+        Math.abs(previous.height - box.height) < 1
+          ? previous
+          : { width: box.width, height: box.height },
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
 
   // Escape leaves. A tour nobody can get out of is worse than no tour.
   useEffect(() => {
@@ -107,10 +140,14 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
       )}
 
       <div
+        ref={cardRef}
         role="dialog"
         aria-label={t("tour.label")}
-        className="pointer-events-auto fixed rounded-2xl bg-white p-4 shadow-2xl"
-        style={cardPosition(rect, step.place)}
+        // The card is the way out of the tour, so it can never be taller than the screen it
+        // is on: past that it scrolls inside itself rather than putting its buttons under
+        // the bottom edge.
+        className="pointer-events-auto fixed max-h-[calc(100dvh-1.75rem)] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
+        style={cardPosition(rect, step.place, size ?? defaultCardSize())}
       >
         <p className="font-medium text-stone-700">{t(`tour.${step.id}Title` as never)}</p>
         <p className="mt-1.5 text-sm text-stone-600 leading-relaxed">
@@ -125,7 +162,7 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
             <button
               type="button"
               onClick={() => setIndex(index - 1)}
-              className="rounded-lg px-2.5 py-1.5 text-sm text-stone-500 hover:bg-stone-100"
+              className="rounded-lg px-2.5 py-1.5 text-sm text-stone-500 hover:bg-stone-100 coarse:inline-flex coarse:min-h-11 coarse:items-center"
             >
               {t("back")}
             </button>
@@ -133,11 +170,15 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
           <button
             type="button"
             onClick={() => (isLast ? onFinish() : setIndex(index + 1))}
-            className="ms-auto rounded-lg bg-amber-500 px-4 py-1.5 text-sm text-white transition-colors hover:bg-amber-600"
+            className="ms-auto rounded-lg bg-amber-500 px-4 py-1.5 text-sm text-white transition-colors hover:bg-amber-600 coarse:inline-flex coarse:min-h-11 coarse:items-center"
           >
             {isLast ? t("tour.finish") : t("next")}
           </button>
-          <button type="button" onClick={onFinish} className="text-stone-400 text-xs underline">
+          <button
+            type="button"
+            onClick={onFinish}
+            className="text-stone-400 text-xs underline coarse:inline-flex coarse:min-h-11 coarse:items-center"
+          >
             {t("tour.exit")}
           </button>
         </div>

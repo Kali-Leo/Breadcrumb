@@ -1,8 +1,9 @@
 /**
  * Purpose: the full-screen focus (explain-word) overlay (spec 042 §3) — header (back-to-parent,
  * root word, exit; Escape exits too unless a lower layer claimed the key), the current station's
- * content pane, and the session's own-sized subway map pane (spec 042 §4). Renders nothing when
- * no session is open; mounted once at the app shell's top level.
+ * content pane, and the session's own-sized subway map pane (spec 042 §4). Side by side when
+ * there is room; on a narrow or upright screen the map moves to the top and the content sits
+ * under it. Renders nothing when no session is open; mounted once at the app shell's top level.
  * Main exports: FocusOverlay.
  */
 import { useEffect } from "react";
@@ -47,7 +48,7 @@ export function FocusOverlay() {
             <button
               type="button"
               onClick={() => jumpTo(parentId)}
-              className="rounded-lg px-2 py-1 text-sm text-stone-500 hover:bg-stone-100"
+              className="rounded-lg px-2 py-1 text-sm text-stone-500 coarse:inline-flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:px-3 hover:bg-stone-100"
             >
               <BackArrow /> {t("learning:focus.upButton")}
             </button>
@@ -57,12 +58,12 @@ export function FocusOverlay() {
         <button
           type="button"
           onClick={exitFocus}
-          className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
+          className="rounded-lg px-3 py-1.5 text-sm text-stone-600 coarse:inline-flex coarse:min-h-11 coarse:min-w-11 coarse:items-center coarse:justify-center coarse:px-4 hover:bg-stone-100"
         >
           {t("learning:focus.exitButton")}
         </button>
       </div>
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 stacked:flex-col">
         <FocusContentPane currentNode={currentNode} />
         <FocusMap />
       </div>

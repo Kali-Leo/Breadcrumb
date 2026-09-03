@@ -1,9 +1,10 @@
 /**
  * Purpose: renders a woven assistant message (spec 033) — patch segments with highlighted
- * target words, hover-opened cards (guess gate decided at open), abandonment on close,
- * and viewport exposure signals (once per message per session, in useDiglotExposure). The
- * word and its portal card render in DiglotWordSpan; placement math lives in
- * lib/diglot/diglotCardPosition.
+ * target words, their cards (guess gate decided at open), abandonment on close, and viewport
+ * exposure signals (once per message per session, in useDiglotExposure). The word and its
+ * portal card render in DiglotWordSpan; placement math lives in lib/diglot/diglotCardPosition.
+ * With a mouse a card opens on hover and closes on leave. A finger has neither: there a tap
+ * opens, a tap on the same word closes, and a press outside the card closes. Scroll closes both.
  * Main exports: DiglotText.
  */
 
@@ -12,6 +13,7 @@ import type { ReplacementPatch } from "@breadcrumb/feature-diglot-weave";
 import { applyPatches } from "@breadcrumb/feature-diglot-weave";
 import { useEffect, useRef, useState } from "react";
 import { computeDiglotCardPosition } from "../../lib/diglot/diglotCardPosition";
+import { useInputMode } from "../../lib/platform/inputMode";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { DiglotWordSpan, type OpenCard } from "./DiglotWordSpan";
 import { useDiglotExposure } from "./useDiglotExposure";
@@ -38,6 +40,7 @@ export function DiglotText({
   const hoverTimer = useRef<number | null>(null);
   const closeTimer = useRef<number | null>(null);
   const containerRef = useRef<HTMLSpanElement>(null);
+  const hoverEnabled = useInputMode() === "fine";
   const loaded = useDiglotStore((state) => state.loaded);
   const shouldAskGuess = useDiglotStore((state) => state.shouldAskGuess);
   const recordSignal = useDiglotStore((state) => state.recordSignal);
@@ -74,6 +77,22 @@ export function DiglotText({
     window.addEventListener("scroll", closeOnScroll, { capture: true, passive: true });
     return () => window.removeEventListener("scroll", closeOnScroll, { capture: true });
   }, [openCard]);
+
+  // Touch only: what mouseleave used to do. A press inside the card is the card being used;
+  // a press on one of this run's own words is left to that word's click, which toggles.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeCard is recreated per render; the open card alone decides (re)subscription
+  useEffect(() => {
+    if (hoverEnabled || openCard === null) return;
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest("[data-diglot-card]") !== null) return;
+      const ownWord =
+        target.closest("[data-diglot-word]") !== null && containerRef.current?.contains(target);
+      if (ownWord !== true) closeCard(openCard);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress, true);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress, true);
+  }, [openCard, hoverEnabled]);
 
   const base = rangeStart ?? 0;
   const slice = rangeEnd === undefined ? content.slice(base) : content.slice(base, rangeEnd);
@@ -131,6 +150,7 @@ export function DiglotText({
               end: segment.patch.end + base,
             })}
             messageId={messageId}
+            hoverEnabled={hoverEnabled}
             onHoverStart={(anchor) => {
               hoverTimer.current = window.setTimeout(
                 () =>
@@ -147,14 +167,19 @@ export function DiglotText({
               if (hoverTimer.current !== null) window.clearTimeout(hoverTimer.current);
               if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);
             }}
-            onActivate={(anchor) =>
+            onActivate={(anchor) => {
+              // A second tap on the open word closes it — the finger's mouseleave.
+              if (!hoverEnabled && openCard?.patchStart === segment.patch.start) {
+                closeCard(openCard);
+                return;
+              }
               openFor(
                 segment.patch.start,
                 segment.patch.lemma,
                 anchor,
                 segment.patch.kind === "phrase",
-              )
-            }
+              );
+            }}
             onBlurWord={() => {
               if (openCard?.patchStart === segment.patch.start) scheduleClose(openCard);
             }}

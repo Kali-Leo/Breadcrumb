@@ -43,7 +43,9 @@ function ToggleSwitch({
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className={`h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors ${on ? "bg-amber-500" : "bg-stone-300"}`}
+      // Same 44px tap band as settings/SettingsToggle.tsx: the pill's own 28px is a look,
+      // not a target.
+      className={`relative h-7 w-13 shrink-0 rounded-full p-0.5 transition-colors coarse:after:absolute coarse:after:inset-x-0 coarse:after:top-1/2 coarse:after:h-11 coarse:after:-translate-y-1/2 coarse:after:content-[''] ${on ? "bg-amber-500" : "bg-stone-300"}`}
     >
       <span
         className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-6 rtl:-translate-x-6" : "translate-x-0"}`}
@@ -92,7 +94,7 @@ export function DiglotSettingsSection() {
               value={settings.pairId}
               disabled={installingPairId !== null}
               onChange={(event) => void choosePair(event.target.value)}
-              className="min-w-0 max-w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:text-base stacked:w-full"
+              className="min-w-0 max-w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-amber-400 coarse:min-h-11 coarse:text-base stacked:w-full"
             >
               {options.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -139,7 +141,7 @@ export function DiglotSettingsSection() {
               <button
                 type="button"
                 onClick={() => setPlacementOpen(true)}
-                className="shrink-0 rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:border-amber-400"
+                className="shrink-0 rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:border-amber-400 coarse:min-h-11"
               >
                 {settings.placementTestTaken
                   ? t("learning:diglot.placementRetake")

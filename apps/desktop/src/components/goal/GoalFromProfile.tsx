@@ -27,14 +27,14 @@ export function GoalFromProfile() {
                 setConfirming(false);
                 void generateGoalFromProfile();
               }}
-              className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+              className="rounded bg-amber-500 px-2 py-0.5 text-white transition-colors hover:bg-amber-600 disabled:opacity-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("compare.generate")}
             </button>
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded border border-stone-200 px-2 py-0.5 text-stone-500"
+              className="rounded border border-stone-200 px-2 py-0.5 text-stone-500 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
             >
               {t("compare.notNow")}
             </button>
@@ -45,7 +45,7 @@ export function GoalFromProfile() {
           type="button"
           disabled={generatingGoal}
           onClick={() => setConfirming(true)}
-          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50"
+          className="rounded border border-amber-400 px-2 py-0.5 text-amber-700 transition-colors hover:bg-amber-50 disabled:opacity-50 coarse:inline-flex coarse:min-h-11 coarse:items-center coarse:px-3"
         >
           {generatingGoal ? t("compare.generating") : t("compare.generateGoal")}
         </button>

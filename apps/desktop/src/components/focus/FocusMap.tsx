@@ -3,13 +3,19 @@
  * (nothing hides), the current line amber, the rest grey; clicking a station jumps to it. Owns
  * its own pane: width grows with the map (capped so it never crowds the content pane), the svg
  * scales down to fit before the pane resorts to scrolling, and the current station scrolls into
- * view on every jump. Visual vocabulary matches the old station map's (dot r5, current ring,
+ * view on every jump. On a narrow or upright screen the pane becomes a band across the top of
+ * the overlay instead, a third of the screen tall and scrolling sideways. A dot drawn 5px wide
+ * is a fine mouse target and no target at all for a finger, so on a touch screen each station
+ * also carries an invisible circle big enough to hit — the map's own "点一个站可以跳过去" only
+ * became true with it. Visual vocabulary matches the old station map's (dot r5, current ring,
  * dashed = 3 3), spec 040's provenance-tree view that spec 042 §6 retired.
  * Main exports: FocusMap.
  */
 import { layoutFocusMap } from "@breadcrumb/feature-explore";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useInputMode } from "../../lib/platform/inputMode";
+import { useLayoutMode } from "../../lib/platform/layoutMode";
 import { truncate } from "../../lib/platform/truncateText";
 import { useFocusStore } from "../../stores/focusStore";
 
@@ -28,6 +34,13 @@ const PANE_PADDING = 32;
 /** Below this the map stops shrinking and the pane scrolls instead — a station this small
  * stops being clickable. */
 const MIN_SCALE = 0.6;
+/** Stacked, the map is a band across the top; the answer keeps the rest of the screen. */
+const STACKED_PANE_MAX_HEIGHT = "35dvh";
+/** Half of the 44px touch target every station gets on a touch screen (WCAG 2.1 SC 2.5.5).
+ * Divided by the svg's scale, because the shape is drawn in user units and the whole map may
+ * have been shrunk to fit. Reaching past the dot to the label start (x + 10) also makes the
+ * station's hit area one continuous shape instead of two islands. */
+const TOUCH_HIT_RADIUS = 22;
 
 function activateOnKey(event: React.KeyboardEvent, action: () => void) {
   if (event.key === "Enter" || event.key === " ") action();
@@ -60,6 +73,8 @@ export function FocusMap() {
   const nodes = useFocusStore((state) => state.nodes);
   const currentNodeId = useFocusStore((state) => state.currentNodeId);
   const jumpTo = useFocusStore((state) => state.jumpTo);
+  const inputMode = useInputMode();
+  const layoutMode = useLayoutMode();
 
   const [paneRef, paneSize] = useElementSize<HTMLDivElement>();
 
@@ -91,11 +106,16 @@ export function FocusMap() {
       : 1;
   const scale = Math.max(MIN_SCALE, fitScale);
   const paneWidth = Math.max(PANE_MIN_WIDTH, layout.width + PANE_PADDING);
+  const hitRadius = TOUCH_HIT_RADIUS / scale;
 
   return (
     <aside
-      style={{ width: `${paneWidth}px`, maxWidth: PANE_MAX_WIDTH_PERCENT }}
-      className="flex shrink-0 flex-col border-stone-200 border-s"
+      style={
+        layoutMode === "stacked"
+          ? { width: "100%", maxWidth: "100%", maxHeight: STACKED_PANE_MAX_HEIGHT }
+          : { width: `${paneWidth}px`, maxWidth: PANE_MAX_WIDTH_PERCENT }
+      }
+      className="flex shrink-0 flex-col border-stone-200 border-s stacked:order-first stacked:border-s-0 stacked:border-b"
     >
       <div ref={paneRef} className="flex-1 overflow-auto p-3">
         <svg
@@ -140,6 +160,15 @@ export function FocusMap() {
                   onClick={activate}
                   onKeyDown={(event) => activateOnKey(event, activate)}
                 >
+                  {inputMode === "coarse" && (
+                    <circle
+                      cx={station.x}
+                      cy={station.y}
+                      r={hitRadius}
+                      fill="transparent"
+                      pointerEvents="all"
+                    />
+                  )}
                   <circle
                     cx={station.x}
                     cy={station.y}

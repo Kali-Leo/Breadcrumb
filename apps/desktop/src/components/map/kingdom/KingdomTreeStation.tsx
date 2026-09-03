@@ -2,7 +2,11 @@
  * Purpose: one station of the kingdom's subway map — a minimal neutral state mark (done
  * filled, visited outlined amber, untouched outlined grey, an aggregate as a counted box),
  * the recommendation pin, the goal-domain tick, and the label. Click selects (or expands an
- * aggregate), double-click enters (Leo 2026-08-31 #3).
+ * aggregate), double-click enters (Leo 2026-08-31 #3). Under a finger the dot is 10px and
+ * there is no double-click to speak of, so a transparent hit disc widens the target and a
+ * second tap on the already-selected station enters — the same two-step grammar as the
+ * world map's islands; the hover readout stays a mouse thing (a tap's synthetic mouseenter
+ * would otherwise stick until the next tap somewhere else).
  * Main exports: KingdomTreeStation.
  */
 import { useTranslation } from "react-i18next";
@@ -24,6 +28,7 @@ export function KingdomTreeStation({
   y,
   isPinned,
   isSelected,
+  touchHitRadius,
   onSelect,
   onEnter,
   onHover,
@@ -34,6 +39,8 @@ export function KingdomTreeStation({
   y: number;
   isPinned: boolean;
   isSelected: boolean;
+  /** Finger-driven screens only: the hit disc's radius in viewBox units (null with a mouse). */
+  touchHitRadius: number | null;
   onSelect(nodeId: string): void;
   onEnter(nodeId: string): void;
   onHover(nodeId: string | null): void;
@@ -41,9 +48,14 @@ export function KingdomTreeStation({
 }) {
   const { t } = useTranslation("palace");
   const isAggregate = node.collapsedCount !== null;
+  const touch = touchHitRadius !== null;
   const dotFill = node.state === "done" ? AMBER : "white";
   const dotStroke = node.state === "untouched" ? GREY : AMBER;
   const activate = () => (isAggregate ? onExpandAggregate(node.id) : onSelect(node.id));
+  const tap = () => {
+    if (touch && isSelected && !isAggregate) onEnter(node.id);
+    else activate();
+  };
   return (
     // biome-ignore lint/a11y/useSemanticElements: SVG nodes cannot be <button> elements
     <g
@@ -56,16 +68,17 @@ export function KingdomTreeStation({
       }
       data-station-id={node.id}
       style={{ cursor: "pointer" }}
-      onClick={activate}
+      onClick={tap}
       onDoubleClick={() => {
         if (!isAggregate) onEnter(node.id);
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") activate();
       }}
-      onMouseEnter={() => onHover(node.id)}
-      onMouseLeave={() => onHover(null)}
+      onMouseEnter={touch ? undefined : () => onHover(node.id)}
+      onMouseLeave={touch ? undefined : () => onHover(null)}
     >
+      {touch && <circle cx={x} cy={y} r={touchHitRadius} fill="transparent" />}
       {isPinned && (
         <path
           d={PIN_PATH}
