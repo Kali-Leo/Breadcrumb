@@ -70,6 +70,8 @@ export function ShellSidebar(props: SidebarProps) {
         >
           <Menu size={22} strokeWidth={1.8} />
         </button>
+        {/* Chrome that must never cover content (the onboarding pill) portals in here. */}
+        <div id="shell-topbar-slot" className="ms-auto me-2 flex items-center" />
       </header>
       {drawerOpen && (
         <button

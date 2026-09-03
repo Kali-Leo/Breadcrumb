@@ -122,6 +122,8 @@ export function Sidebar({
       {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友,
           with 发现 added in front of the map (spec 057).
           One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
+      {/* Same purpose as shell-topbar-slot, for the wide layout where the sidebar is visible. */}
+      <div id="shell-sidebar-slot" className="hidden px-2 pb-2 empty:hidden coarse:block" />
       <SidebarNav
         entries={navEntries}
         companionsOpen={companionsOpen}

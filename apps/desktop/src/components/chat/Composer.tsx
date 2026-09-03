@@ -110,7 +110,7 @@ export function Composer(props: ComposerProps) {
           enterKeyHint={coarse ? "enter" : undefined}
           rows={2}
           disabled={disabled}
-          placeholder={t("composer.placeholder")}
+          placeholder={t(coarse ? "composer.placeholderTouch" : "composer.placeholder")}
           className="min-w-0 flex-1 resize-none rounded-xl border border-stone-200 px-3 py-2 text-[15px] outline-none focus:border-amber-400 disabled:bg-stone-50 coarse:text-base"
         />
         {streaming ? (

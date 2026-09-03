@@ -5,6 +5,7 @@
   "backToLatest": "সর্বশেষটিতে ফিরুন",
   "composer": {
     "placeholder": "কী শিখতে চান? বলে ফেলুন… (পাঠাতে Enter, নতুন লাইনে Shift+Enter)",
+    "placeholderTouch": "কী শিখতে চান? বলে ফেলুন…",
     "freeLabel": "খোলা আলাপ",
     "freeHint": "যা খুশি, যেভাবে খুশি বলুন।",
     "studyLabel": "পড়ার ধরন",

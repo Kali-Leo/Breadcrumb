@@ -5,6 +5,7 @@
   "backToLatest": "العودة إلى الأحدث",
   "composer": {
     "placeholder": "ما الذي تريد تعلّمه؟ قله ببساطة… (Enter للإرسال، Shift+Enter لسطر جديد)",
+    "placeholderTouch": "ما الذي تريد تعلّمه؟ قله ببساطة…",
     "freeLabel": "حديث حر",
     "freeHint": "تحدث عن أي شيء، بالطريقة التي تحب.",
     "studyLabel": "وضع الدراسة",

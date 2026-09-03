@@ -15,9 +15,11 @@
  * Main exports: OnboardingChecklist.
  */
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { getRepos } from "../../lib/platform/db";
 import { useInputMode } from "../../lib/platform/inputMode";
+import { useLayoutMode } from "../../lib/platform/layoutMode";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface ChecklistState {
@@ -83,19 +85,28 @@ export function OnboardingChecklist({
   // walkthrough), so there it starts as a pill and only opens when asked; a mouse layout
   // keeps the open card, unchanged.
   const coarse = useInputMode() === "coarse";
+  const stacked = useLayoutMode() === "stacked";
   const [expanded, setExpanded] = useState(false);
   if (coarse && !expanded) {
-    return (
+    // The pill lives in the shell's chrome — top bar when stacked, sidebar foot when wide —
+    // where nothing is underneath it. Only if neither slot exists does it float.
+    const slot = document.getElementById(stacked ? "shell-topbar-slot" : "shell-sidebar-slot");
+    const pill = (
       <button
         type="button"
         onClick={() => setExpanded(true)}
         aria-expanded={false}
-        className="absolute start-3 bottom-[calc(var(--composer-height,0px)+0.75rem)] z-30 flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-sm text-stone-700 shadow-lg"
+        className={`flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-sm text-stone-700 ${
+          slot === null
+            ? "absolute start-3 bottom-[calc(var(--composer-height,0px)+0.75rem)] z-30 shadow-lg"
+            : "w-full justify-center"
+        }`}
       >
         {t("checklist.title")}
         <span aria-hidden>▸</span>
       </button>
     );
+    return slot === null ? pill : createPortal(pill, slot);
   }
 
   return (

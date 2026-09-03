@@ -5,6 +5,7 @@
   "backToLatest": "Voltar ao mais recente",
   "composer": {
     "placeholder": "O que você gostaria de aprender? É só dizer… (Enter para enviar, Shift+Enter para nova linha)",
+    "placeholderTouch": "O que você gostaria de aprender? É só dizer…",
     "freeLabel": "Conversa livre",
     "freeHint": "Fale do que quiser, do jeito que quiser.",
     "studyLabel": "Modo estudo",

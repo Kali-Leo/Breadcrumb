@@ -5,6 +5,7 @@
   "backToLatest": "Kembali ke yang terbaru",
   "composer": {
     "placeholder": "Apa yang ingin kamu pelajari? Katakan saja… (Enter untuk kirim, Shift+Enter untuk baris baru)",
+    "placeholderTouch": "Apa yang ingin kamu pelajari? Katakan saja…",
     "freeLabel": "Ngobrol bebas",
     "freeHint": "Bicarakan apa saja, dengan cara apa saja.",
     "studyLabel": "Mode belajar",

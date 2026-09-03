@@ -5,6 +5,7 @@
   "backToLatest": "Volver a lo último",
   "composer": {
     "placeholder": "¿Qué te gustaría aprender? Dilo sin más… (Enter para enviar, Mayús+Enter para otra línea)",
+    "placeholderTouch": "¿Qué te gustaría aprender? Dilo sin más…",
     "freeLabel": "Charla libre",
     "freeHint": "Habla de lo que quieras, como quieras.",
     "studyLabel": "Modo estudio",

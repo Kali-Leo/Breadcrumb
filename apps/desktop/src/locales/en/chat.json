@@ -5,6 +5,7 @@
   "backToLatest": "Back to the latest",
   "composer": {
     "placeholder": "What would you like to learn? Just say it… (Enter to send, Shift+Enter for a new line)",
+    "placeholderTouch": "What would you like to learn? Just say it…",
     "freeLabel": "Free chat",
     "freeHint": "Talk about anything, in any way you like.",
     "studyLabel": "Study mode",

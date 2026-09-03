@@ -5,6 +5,7 @@
   "backToLatest": "Revenir au plus récent",
   "composer": {
     "placeholder": "Qu'aimerais-tu apprendre ? Dis-le simplement… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)",
+    "placeholderTouch": "Qu'aimerais-tu apprendre ? Dis-le simplement…",
     "freeLabel": "Discussion libre",
     "freeHint": "Parle de ce que tu veux, comme tu veux.",
     "studyLabel": "Mode étude",

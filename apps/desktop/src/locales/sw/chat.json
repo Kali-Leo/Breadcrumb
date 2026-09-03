@@ -5,6 +5,7 @@
   "backToLatest": "Rudi kwenye la mwisho",
   "composer": {
     "placeholder": "Ungependa kujifunza nini? Sema tu… (Enter kutuma, Shift+Enter kwa mstari mpya)",
+    "placeholderTouch": "Ungependa kujifunza nini? Sema tu…",
     "freeLabel": "Mazungumzo huru",
     "freeHint": "Zungumza lolote, kwa namna yoyote unayotaka.",
     "studyLabel": "Hali ya kusoma",

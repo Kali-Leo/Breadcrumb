@@ -5,6 +5,7 @@
   "backToLatest": "回到最新",
   "composer": {
     "placeholder": "想学点什么？说说看…（Enter 发送，Shift+Enter 换行）",
+    "placeholderTouch": "想学点什么？说说看…",
     "freeLabel": "自由对话",
     "freeHint": "自由聊天，任何话题、任何形式都可以。",
     "studyLabel": "学习模式",

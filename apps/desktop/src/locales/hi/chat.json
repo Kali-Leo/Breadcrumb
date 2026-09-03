@@ -5,6 +5,7 @@
   "backToLatest": "सबसे नए पर वापस",
   "composer": {
     "placeholder": "आप क्या सीखना चाहेंगे? बस कह दीजिए… (भेजने के लिए Enter, नई पंक्ति के लिए Shift+Enter)",
+    "placeholderTouch": "आप क्या सीखना चाहेंगे? बस कह दीजिए…",
     "freeLabel": "खुली बातचीत",
     "freeHint": "जिस बारे में चाहें, जैसे चाहें बात कीजिए।",
     "studyLabel": "पढ़ाई मोड",
