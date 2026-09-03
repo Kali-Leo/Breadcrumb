@@ -11,3 +11,10 @@ allowBuilds:
   onnxruntime-node: false
   protobufjs: false
   sharp: false
+# Security overrides for transitive packages we cannot upgrade through their parents yet
+# (2026-09-03 CI audit). sharp and adm-zip sit on @huggingface/transformers' Node-only
+# optional path and are never installed for the browser build; @xmldom/xmldom is pixi.js's.
+overrides:
+  "@xmldom/xmldom": ">=0.8.15"   # GHSA-6gmq-8vp8-gcm6
+  sharp: ">=0.35.0"              # GHSA-f88m-g3jw-g9cj
+  adm-zip: ">=0.6.0"             # GHSA-xcpc-8h2w-3j85
