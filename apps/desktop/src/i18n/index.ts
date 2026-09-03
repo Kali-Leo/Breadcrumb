@@ -3,13 +3,14 @@
  * chosen language — the html lang/dir attributes and the font stack for that language's
  * script. Import once from main.tsx, before anything renders; every other language is fetched
  * by changeLanguage, one language at a time (see catalogues.ts).
- * Main exports: initI18n, applyLanguageToDocument, changeLanguage.
+ * Main exports: initI18n, applyLanguageToDocument, changeLanguage, rememberLanguage,
+ * rememberedLanguage.
  */
 import {
   DEFAULT_LANGUAGE_CODE,
   fontStackFor,
-  isLanguageCode,
   languageOf,
+  UI_LANGUAGE_CODES,
 } from "@breadcrumb/core-i18n";
 import i18next, { type FormatFunction, type ResourceLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -101,8 +102,13 @@ export async function initI18n(): Promise<void> {
   // The chosen language lives in the database, which a second browser tab cannot open, and
   // which every launch reads only after the first paint. A mirror outside the database lets
   // both the first frame and a locked tab speak the language the learner picked.
+  //
+  // The source language is honoured here like any other: "the mirror says zh-CN" and "there is
+  // no mirror" look identical from the first frame, but they are not the same fact, and
+  // settingsStoreLoad has to be able to tell them apart (2026-09-03 walkthrough — a learner
+  // who chose Chinese got English for the first seconds of every reload).
   const remembered = rememberedLanguage();
-  if (remembered !== null && remembered !== DEFAULT_LANGUAGE_CODE) {
+  if (remembered !== null) {
     try {
       await changeLanguage(remembered);
     } catch {
@@ -114,10 +120,13 @@ export async function initI18n(): Promise<void> {
 
 const REMEMBERED_LANGUAGE_KEY = "breadcrumb.interfaceLanguage";
 
-function rememberedLanguage(): string | null {
+/** The language the learner chose, as last seen outside the database — null when nobody has
+ * chosen one yet. Only a language we actually have an interface in counts: a code we can
+ * translate *into* but have no catalogue *for* would paint the first frame in message keys. */
+export function rememberedLanguage(): string | null {
   try {
     const code = globalThis.localStorage?.getItem(REMEMBERED_LANGUAGE_KEY) ?? null;
-    return code !== null && isLanguageCode(code) ? code : null;
+    return code !== null && UI_LANGUAGE_CODES.includes(code) ? code : null;
   } catch {
     return null;
   }

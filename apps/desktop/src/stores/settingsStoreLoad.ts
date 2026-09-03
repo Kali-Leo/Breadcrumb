@@ -1,18 +1,19 @@
 /**
  * Purpose: the one-time startup read of the settings table — split out of settingsStore.ts
  * purely to keep that file under the file-size ceiling. Reads every persisted key in one
- * round, resolves the interface language (and switches the running app to it), and hands the
- * store a ready-to-set snapshot; it never touches the store itself, so this module has no
+ * round, resolves the interface language (database, then the mirror initI18n reads, then the
+ * machine's own language — and switches the running app to it), and hands the store a
+ * ready-to-set snapshot; it never touches the store itself, so this module has no
  * runtime dependency back on the store file.
  * Main exports: loadSettingsSnapshot, SettingsSnapshot.
  */
 import { DEFAULT_LANGUAGE_CODE, isLanguageCode, UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
-import { changeLanguage, rememberLanguage } from "../i18n";
+import { changeLanguage, rememberedLanguage, rememberLanguage } from "../i18n";
 import {
   sanitizeRecommendationWeights,
   type UserRecommendationWeights,
 } from "../lib/planner/recommendationWeights";
-import { getRepos } from "../lib/platform/db";
+import { getRepos, type Repos } from "../lib/platform/db";
 import {
   ANSWER_LANGUAGE_KEY,
   API_CONFIG_KEY,
@@ -36,6 +37,7 @@ import {
   ROUTE_PARAMS_KEY,
   type RouteParams,
 } from "../lib/platform/settingsSchema";
+import { nowIso } from "../lib/platform/time";
 import type { SettingsState } from "./settingsStore";
 
 /** Everything loadFromDatabase() writes into the store in one set() — the store's data
@@ -87,16 +89,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     repos.settings.get<string>(ANSWER_LANGUAGE_KEY),
     repos.settings.get<Partial<UserRecommendationWeights>>(RECOMMENDATION_WEIGHTS_KEY),
   ]);
-  // An interface language that was removed (or was never ours) must not leave the app
-  // showing raw message keys — fall back to the machine's own language, and if that is not
-  // one we speak either, open the picker.
-  const chosen =
-    storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage) ? storedLanguage : guessLanguage();
-  const language = chosen ?? DEFAULT_LANGUAGE_CODE;
-  await changeLanguage(language);
-  // Only a preference the database really holds is mirrored; a guessed fallback is not.
-  if (storedLanguage && UI_LANGUAGE_CODES.includes(storedLanguage))
-    rememberLanguage(storedLanguage);
+  const { language, chosen } = await resolveLanguage(repos, storedLanguage);
   return {
     loaded: true,
     apiConfig,
@@ -114,4 +107,33 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
       storedAnswerLanguage && isLanguageCode(storedAnswerLanguage) ? storedAnswerLanguage : null,
     recommendationWeights: sanitizeRecommendationWeights(storedRecommendationWeights),
   };
+}
+
+/** Where the interface language comes from, in order of authority: the database (the choice
+ * the learner made), then the mirror beside it (that same choice, in the one place a first
+ * frame — or a tab that cannot open the database at all — can read), and only then the
+ * machine's own language.
+ *
+ * The mirror belongs in that chain rather than below the guess. Reading it last would undo,
+ * one frame after the first paint, the very switch initI18n had just made from it: someone who
+ * chose Chinese got the browser's English for as long as the database took to open, on every
+ * reload (2026-09-03 walkthrough). An interface language that was removed (or was never ours)
+ * still falls through to the machine's language, and if that is not one we speak either,
+ * `chosen` is null and the app opens the picker.
+ */
+async function resolveLanguage(
+  repos: Repos,
+  storedLanguage: string | null,
+): Promise<{ language: string; chosen: string | null }> {
+  const stored =
+    storedLanguage !== null && UI_LANGUAGE_CODES.includes(storedLanguage) ? storedLanguage : null;
+  const mirrored = stored === null ? rememberedLanguage() : null;
+  const chosen = stored ?? mirrored ?? guessLanguage();
+  const language = chosen ?? DEFAULT_LANGUAGE_CODE;
+  await changeLanguage(language);
+  // The two stores of the same choice are brought into line, whichever one had it: a guess is
+  // written to neither, because nobody chose it.
+  if (stored !== null) rememberLanguage(stored);
+  else if (mirrored !== null) await repos.settings.set(LANGUAGE_KEY, mirrored, nowIso());
+  return { language, chosen };
 }
