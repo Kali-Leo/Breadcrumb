@@ -44,8 +44,20 @@ jobs:
       # There is no .npmrc in this repo; the registry is named explicitly so that running this
       # command on a dev machine whose global npm config points at a mirror gives the same
       # answer as CI does.
+      # A real advisory fails the build; the advisory service being unreachable does not.
+      # On 2026-09-03 npm's bulk endpoint timed out on the runner and turned a green tree red,
+      # which teaches people to ignore a red build rather than to read it.
       - name: Audit production dependencies
-        run: pnpm audit --prod --registry=https://registry.npmjs.org/
+        run: |
+          set +e
+          output=$(pnpm audit --prod --registry=https://registry.npmjs.org/ 2>&1)
+          status=$?
+          echo "$output"
+          if [ $status -ne 0 ] && printf '%s' "$output" | grep -qE "TimeoutError|ENDPOINT_NOT_EXISTS|ECONNRESET|ETIMEDOUT|EAI_AGAIN|error \(23\)"; then
+            echo "::warning::npm advisory service unreachable — dependency audit skipped this run"
+            exit 0
+          fi
+          exit $status
 
   rust:
     name: Rust check
