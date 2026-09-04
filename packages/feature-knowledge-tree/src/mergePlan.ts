@@ -18,9 +18,17 @@ import type { SynonymVerdict } from "./synonymGate";
 /** Whitespace sitting between a CJK character and a latin letter/digit, on either side. Only
  * that boundary is folded: whether "if缩进" is written "if 缩进" is pure typography (writers
  * add the space for legibility, CJK needs none), while whitespace between two latin words is
- * meaningful and must stay. Design audit 2026-08-28 #9. */
+ * meaningful and must stay. Design audit 2026-08-28 #9.
+ *
+ * The left-hand character is captured and written back rather than matched with a lookbehind
+ * `(?<=…)`. WebKit only learned lookbehind in Safari 16.4, and an unsupported assertion is a
+ * *parse* error: on an older iPad the whole chunk this module lands in would fail to load,
+ * taking the knowledge tree down with it rather than just this one fold. A lookahead needs no
+ * such caution — it has worked everywhere since ES3 — so the right-hand side keeps one, and
+ * that asymmetry is what makes the two forms equivalent: the right-hand character is never
+ * consumed, so it is still available as the left-hand context of the very next match. */
 const CJK_LATIN_SPACE =
-  /(?<=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])\s+(?=[A-Za-z0-9])|(?<=[A-Za-z0-9])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu;
+  /([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])\s+(?=[A-Za-z0-9])|([A-Za-z0-9])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu;
 
 /** Collapses cosmetic label variants to one comparison key: trims, folds full-width
  * latin/punctuation to half-width (NFKC — also unifies full/half-width parentheses so the
@@ -37,7 +45,7 @@ const CJK_LATIN_SPACE =
 export function normalizeLabel(label: string): string {
   const widthUnified = label.trim().normalize("NFKC");
   const withoutTrailingParenthetical = stripOneTrailingParenthetical(widthUnified).trim();
-  return withoutTrailingParenthetical.replace(CJK_LATIN_SPACE, "").toLowerCase();
+  return withoutTrailingParenthetical.replace(CJK_LATIN_SPACE, "$1$2").toLowerCase();
 }
 
 function stripOneTrailingParenthetical(text: string): string {

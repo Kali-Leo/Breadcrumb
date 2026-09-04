@@ -17,6 +17,7 @@ import { getRepos, type Repos } from "../lib/platform/db";
 import {
   ANSWER_LANGUAGE_KEY,
   API_CONFIG_KEY,
+  API_CONNECTION_OK_KEY,
   type ApiConfig,
   CHECKLIST_DISMISSED_KEY,
   COMPARE_CATEGORY_KEY,
@@ -46,6 +47,7 @@ export type SettingsSnapshot = Pick<
   SettingsState,
   | "loaded"
   | "apiConfig"
+  | "apiConnectionOk"
   | "networkEnabled"
   | "onboardingSeen"
   | "checklistDismissed"
@@ -64,6 +66,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
   const repos = await getRepos();
   const [
     apiConfig,
+    apiConnectionOk,
     networkEnabled,
     onboardingSeen,
     checklistDismissed,
@@ -77,6 +80,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     storedRecommendationWeights,
   ] = await Promise.all([
     repos.settings.get<ApiConfig>(API_CONFIG_KEY),
+    repos.settings.get<boolean>(API_CONNECTION_OK_KEY),
     repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
     repos.settings.get<boolean>(ONBOARDING_SEEN_KEY),
     repos.settings.get<boolean>(CHECKLIST_DISMISSED_KEY),
@@ -93,6 +97,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
   return {
     loaded: true,
     apiConfig,
+    apiConnectionOk: apiConnectionOk ?? false,
     networkEnabled: networkEnabled ?? true,
     onboardingSeen: onboardingSeen ?? false,
     checklistDismissed: checklistDismissed ?? false,

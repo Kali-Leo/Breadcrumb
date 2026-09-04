@@ -100,6 +100,11 @@ export type LearningMode = "ranked" | "casual";
 export type RouteParams = RecommendRouteParams;
 
 export const API_CONFIG_KEY = "apiConfig";
+/** Whether the saved credentials have ever answered a real request. Set by the settings
+ * page's 测试连接 button and cleared whenever the credentials are saved again, so it can
+ * only ever describe the configuration that is currently in the box. A boolean and nothing
+ * else — the key itself is never copied out of API_CONFIG_KEY. */
+export const API_CONNECTION_OK_KEY = "apiConnectionOk";
 export const NETWORK_ENABLED_KEY = "networkEnabled";
 /** Set once the first-run guide has been finished or skipped, so it never reappears. */
 export const ONBOARDING_SEEN_KEY = "onboardingSeen";

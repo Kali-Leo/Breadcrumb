@@ -45,6 +45,32 @@ describe("completionsUrl", () => {
     expect(() => completionsUrl("")).toThrow("not a valid absolute URL");
   });
 
+  it("does not double a base that is already the full endpoint", () => {
+    // Every provider's quickstart prints both the base URL and the full endpoint; pasting
+    // the second one is an ordinary mistake, and doubling it produces a bare 404.
+    expect(completionsUrl("https://api.deepseek.com/chat/completions")).toBe(
+      "https://api.deepseek.com/chat/completions",
+    );
+    expect(completionsUrl("https://api.deepseek.com/v1/chat/completions")).toBe(
+      "https://api.deepseek.com/v1/chat/completions",
+    );
+    expect(completionsUrl("https://api.example.com/v1/chat/completions/")).toBe(
+      "https://api.example.com/v1/chat/completions",
+    );
+    expect(completionsUrl("https://api.example.com/v1/Chat/Completions")).toBe(
+      "https://api.example.com/v1/Chat/Completions",
+    );
+    expect(completionsUrl("http://127.0.0.1:11434/v1/chat/completions")).toBe(
+      "http://127.0.0.1:11434/v1/chat/completions",
+    );
+  });
+
+  it("still appends when the path merely mentions the words elsewhere", () => {
+    expect(completionsUrl("https://api.example.com/chat/completions/v1")).toBe(
+      "https://api.example.com/chat/completions/v1/chat/completions",
+    );
+  });
+
   it("drops query and fragment, which would otherwise swallow the path", () => {
     expect(completionsUrl("https://api.example.com/v1?token=abc#x")).toBe(
       "https://api.example.com/v1/chat/completions",

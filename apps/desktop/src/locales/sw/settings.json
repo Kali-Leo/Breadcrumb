@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Imehifadhiwa ✓",
     "unsaved": "Mabadiliko bado hayajahifadhiwa",
+    "testConnection": "Jaribu muunganisho",
+    "testing": "Inaunganisha…",
+    "testResult": {
+      "ok": "Imeunganishwa.",
+      "badUrl": "Anwani hiyo ya huduma si anwani ya wavuti inayoweza kutumika. Inapaswa kuanza na https://, kwa mfano https://api.deepseek.com.",
+      "offline": "Kwa sasa hakuna muunganisho wa mtandao. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti, kisha angalia kama swichi ya mtandao iliyo hapa chini imezimwa.",
+      "timeout": "Mtoa huduma hakujibu kabisa. Huenda muunganisho ni wa polepole; jaribu tena baada ya muda mfupi.",
+      "blockedByBrowser": "Kivinjari hakikuweza kufikia huduma hii, na hakisemi kwa nini. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti; kama bado haifanyi kazi, kuna uwezekano mkubwa mtoa huduma huyu haruhusu kurasa za wavuti kuunganishwa moja kwa moja. Jaribu mtoa huduma mwingine, au tumia programu ya kompyuta.",
+      "unreachable": "Huduma hii haikufikika. Angalia kama anwani ya huduma ina kosa la kuandika, au jaribu tena baada ya muda mfupi.",
+      "unauthorized": "Mtoa huduma anasema ufunguo huu hauwezi kutumika. Rudi kwenye tovuti ya mtoa huduma wako na unakili ufunguo wa API tena.",
+      "insufficientBalance": "Akaunti hii haina salio. Ongeza salio kwenye tovuti ya mtoa huduma wako, kisha jaribu tena.",
+      "notFound": "Hakuna huduma ya AI kwenye anwani hiyo. Angalia kama mwisho wa anwani umepungukiwa na sehemu, au una sehemu ya ziada — kwa mfano /v1.",
+      "rateLimited": "Mtoa huduma anasema maombi yanakuja karibu mno kwa sasa. Jaribu tena baada ya dakika moja au mbili.",
+      "badRequest": "Mtoa huduma hakukubali ombi hili. Sababu ya kawaida ni jina la modeli lililoandikwa vibaya; linganisha na nyaraka za mtoa huduma.",
+      "serverError": "Tatizo limetokea upande wa mtoa huduma, si katika mipangilio yako. Jaribu tena baada ya muda."
+    },
     "priceOverride": "Bei zako mwenyewe (kwa kila tokeni milioni)",
     "priceOverrideHint": "Zijaze pale orodha ya bei iliyojengwa ndani isipoijua modeli yako, au bei imebadilika. Lazima ingizo na matokeo vijazwe vyote ili zihesabiwe; ziache tupu ili itumike orodha ya ndani.",
     "priceInput": "Ingizo",
@@ -66,7 +82,8 @@
     "companion-script": "Maandalizi ya mwenzako",
     "focus-explain": "Maelezo ya hali ya umakini",
     "term-marking": "Kuweka alama kwenye maneno",
-    "trail-summary": "Nyayo za jana"
+    "trail-summary": "Nyayo za jana",
+    "connection-test": "Jaribio la muunganisho"
   },
   "billing": {
     "intro": "Kila hatua inayogharimu pesa ina swichi yake hapa, na matumizi yake huhesabiwa peke yake. Ukurasa huu unaonyesha kilichotumika kweli.",

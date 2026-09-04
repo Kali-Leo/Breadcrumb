@@ -18,6 +18,22 @@
     "currencyUSD": "$ 美元",
     "saved": "已保存 ✓",
     "unsaved": "有修改还没保存",
+    "testConnection": "测试连接",
+    "testing": "正在连接…",
+    "testResult": {
+      "ok": "连上了。",
+      "badUrl": "服务地址不是一个能用的网址。它要以 https:// 开头，例如 https://api.deepseek.com。",
+      "offline": "现在连不上网络。先确认这台设备能上网，再看看下面的「网络总开关」是不是关着。",
+      "timeout": "服务商一直没有回应。可能是网络太慢，过一会儿再试一次。",
+      "blockedByBrowser": "浏览器没能连上这个服务，而且它不会说明原因。先确认这台设备能正常上网；如果还是连不上，多半是这家服务商不允许网页直接连接，可以换一家服务商，或者用桌面版。",
+      "unreachable": "没能连上这个服务。检查一下服务地址有没有写错，或者过一会儿再试。",
+      "unauthorized": "服务商说这个密钥用不了。回到你的服务商网站，重新复制一遍 API Key。",
+      "insufficientBalance": "这个账号的余额不够了。到服务商网站充值之后再试一次。",
+      "notFound": "这个地址上没有找到 AI 服务。检查一下地址是不是少了或多了结尾的一段，比如 /v1。",
+      "rateLimited": "服务商说这会儿请求太密集了。过一两分钟再试一次。",
+      "badRequest": "服务商没有接受这次请求。最常见的原因是模型名写错了，对着服务商的文档核对一下。",
+      "serverError": "服务商那边出了问题，不是你这边的设置。过一会儿再试一次。"
+    },
     "priceOverride": "自己填单价（每百万 token）",
     "priceOverrideHint": "内置价目表里没有你的模型、或者价格变了，就在这里填。输入和输出都填上才生效；留空就用内置的。",
     "priceInput": "输入",
@@ -65,7 +81,8 @@
     "companion-script": "伙伴预习",
     "focus-explain": "专注讲解",
     "term-marking": "生词标注",
-    "trail-summary": "昨天的足迹"
+    "trail-summary": "昨天的足迹",
+    "connection-test": "测试连接"
   },
   "billing": {
     "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",

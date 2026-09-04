@@ -5,10 +5,18 @@
  * price parsing live in apiSettingsForm; the three field groups are their own components.
  * Main exports: ApiSettingsSection.
  */
-import { type Currency, modelCurrencies, resolveModelRates } from "@breadcrumb/core-llm";
+import {
+  type ConnectionProbeOutcome,
+  type Currency,
+  modelCurrencies,
+  resolveModelRates,
+} from "@breadcrumb/core-llm";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { testAiConnection } from "../../lib/billing/connectionTest";
+import type { ApiConfig } from "../../lib/platform/settingsSchema";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { ApiConnectionTest } from "./ApiConnectionTest";
 import { ApiCredentialFields } from "./ApiCredentialFields";
 import { ApiCurrencyPicker } from "./ApiCurrencyPicker";
 import { ApiPriceFields } from "./ApiPriceFields";
@@ -82,7 +90,7 @@ export function ApiSettingsSection() {
     writeApiFormDraft({ baseUrl, apiKey, model, currency: pickedCurrency, prices: next });
   }
 
-  async function save() {
+  function currentConfig(): ApiConfig {
     // Input and output are the pair that makes a rate card; one on its own would price half
     // of every call at zero, so an incomplete pair is treated as "no override at all".
     const input = readPrice(prices.input);
@@ -96,17 +104,34 @@ export function ApiSettingsSection() {
             ...(cached !== undefined ? { cachedInputPerMillionTokens: cached } : {}),
           }
         : undefined;
-    await saveApiConfig({
+    return {
       baseUrl: baseUrl.trim(),
       apiKey: apiKey.trim(),
       model: model.trim(),
       // Only a model sold in several currencies has an answer worth storing.
       ...(currencies.length > 1 && currency !== undefined ? { priceCurrency: currency } : {}),
       ...(priceOverride !== undefined ? { priceOverride } : {}),
-    });
+    };
+  }
+
+  async function persist(config: ApiConfig): Promise<void> {
+    await saveApiConfig(config);
     clearApiFormDraft();
+  }
+
+  async function save() {
+    await persist(currentConfig());
     setSavedHint(true);
     setTimeout(() => setSavedHint(false), 2000);
+  }
+
+  /** Testing saves first, deliberately: a result that described half-typed boxes rather than
+   * the configuration the app will actually use would be a worse kind of not-knowing than the
+   * one this button exists to end. */
+  async function test(): Promise<ConnectionProbeOutcome> {
+    const config = currentConfig();
+    await persist(config);
+    return testAiConnection(config);
   }
 
   return (
@@ -116,17 +141,20 @@ export function ApiSettingsSection() {
       <ApiCredentialFields baseUrl={baseUrl} apiKey={apiKey} model={model} onEdit={edit} />
       <ApiCurrencyPicker currencies={currencies} currency={currency} onPick={pickCurrency} />
       <ApiPriceFields prices={prices} catalogueRates={catalogueRates} onEdit={editPrice} />
-      <button
-        type="button"
-        onClick={() => void save()}
-        className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 coarse:min-h-11"
-      >
-        {t("common:actions.save")}
-      </button>
-      {savedHint && <span className="ms-3 text-sm text-amber-600">{t("api.saved")}</span>}
-      {!savedHint && dirty && (
-        <span className="ms-3 text-sm text-stone-400">{t("api.unsaved")}</span>
-      )}
+      <div>
+        <button
+          type="button"
+          onClick={() => void save()}
+          className="rounded-xl bg-amber-500 px-4 py-2 text-white transition-colors hover:bg-amber-600 coarse:min-h-11"
+        >
+          {t("common:actions.save")}
+        </button>
+        {savedHint && <span className="ms-3 text-sm text-amber-600">{t("api.saved")}</span>}
+        {!savedHint && dirty && (
+          <span className="ms-3 text-sm text-stone-400">{t("api.unsaved")}</span>
+        )}
+      </div>
+      <ApiConnectionTest onTest={test} />
     </section>
   );
 }

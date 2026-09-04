@@ -8,26 +8,17 @@
  * what has happened rather than a set of chores — nothing here counts down, scolds, or shows
  * a percentage.
  *
- * It dismisses permanently and can be brought back from settings.
- *
- * The demo module is reached through import(), for the reason OnboardingHost gives.
+ * It dismisses permanently and can be brought back from settings. What each item reads to
+ * decide whether it is done lives in useChecklistState.
  *
  * Main exports: OnboardingChecklist.
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { getRepos } from "../../lib/platform/db";
 import { useInputMode } from "../../lib/platform/inputMode";
 import { useLayoutMode } from "../../lib/platform/layoutMode";
-import { useSettingsStore } from "../../stores/settingsStore";
-
-interface ChecklistState {
-  connected: boolean;
-  asked: boolean;
-  sawMap: boolean;
-  demoInstalled: boolean;
-}
+import { useChecklistState } from "./useChecklistState";
 
 interface OnboardingChecklistProps {
   onOpenSettings(): void;
@@ -49,31 +40,8 @@ export function OnboardingChecklist({
   sawMap,
 }: OnboardingChecklistProps) {
   const { t } = useTranslation("onboarding");
-  const apiConfig = useSettingsStore((state) => state.apiConfig);
-  const [state, setState] = useState<ChecklistState>({
-    connected: false,
-    asked: false,
-    sawMap: false,
-    demoInstalled: false,
-  });
+  const state = useChecklistState(sawMap);
   const [removing, setRemoving] = useState(false);
-
-  useEffect(() => {
-    void (async () => {
-      const { hasDemoData } = await import("../../lib/platform/demoData");
-      const repos = await getRepos();
-      const conversations = await repos.conversations.listRecentFirst();
-      // Demo conversations do not count as having asked anything — the point of the item is
-      // that the learner has talked to it themselves.
-      const own = conversations.filter((conversation) => !conversation.id.startsWith("demo-"));
-      setState({
-        connected: apiConfig !== null && apiConfig.apiKey.length > 0,
-        asked: own.length > 0,
-        sawMap,
-        demoInstalled: await hasDemoData(),
-      });
-    })();
-  }, [apiConfig, sawMap]);
 
   const items = [
     { done: state.connected, label: t("checklist.connect"), action: onOpenSettings },

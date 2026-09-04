@@ -57,7 +57,22 @@ export default defineConfig({
     exclude: ["@sqlite.org/sqlite-wasm"],
   },
   build: {
-    target: "es2022",
+    // Tailwind v4's own support matrix, restated: it is already the hard floor of this app —
+    // its stylesheet leans on @property and color-mix(), so a browser below this line gets an
+    // unstyled page no matter what the JavaScript compiles to. Naming it here keeps the script
+    // and the stylesheet honest about the same set of browsers.
+    //
+    // Safari is the half that matters, because iPadOS has no browser choice: whatever Safari
+    // the tablet is on IS the floor. 16.4 (2023-03) is also where three other things land
+    // exactly — RegExp lookbehind, the OPFS sync-handle fix that sqlite's SAHPool VFS needs,
+    // and Tailwind itself — so it is a real edge, not a round number. Vite 7's own default
+    // (`baseline-widely-available`) says safari16, which promises a version the stylesheet
+    // cannot keep.
+    //
+    // What this does NOT do is polyfill. esbuild rewrites *syntax* and leaves every missing
+    // *API* exactly as missing; it also cannot touch a regular expression. Those are the
+    // audit's job (scratchpad/safari-audit.md), and no build setting substitutes for it.
+    target: ["chrome111", "edge111", "firefox128", "safari16.4"],
     rollupOptions: { output: { manualChunks } },
     // Back to a number that means something. The occupation datasets are still megabytes and
     // will still say so on every build — they are named chunks now, so the warning points at

@@ -59,3 +59,8 @@ specs/
 
 # Language-pack build inputs: hundreds of megabytes of upstream dictionary dumps.
 scripts/language-packs/.cache/
+
+# ===== working notes =====
+# Audit/walkthrough write-ups are working notes, not repository content — the 2026-09-02
+# purge took the specs, ADRs and audit reports out on purpose. Keep them out by default.
+scratchpad/

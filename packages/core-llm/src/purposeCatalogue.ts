@@ -86,6 +86,10 @@ export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
  * measured", and purposeUsage.test.ts enforces it.
  */
 export const PURPOSE_CADENCE: Readonly<Record<string, PurposeCadence>> = {
+  // The settings page's 测试连接 button: one deliberately tiny request (max_tokens: 1) that
+  // only runs when the learner presses it. It costs a rounding error, but it is a real billed
+  // call, so it is metered like every other. (lib/billing/connectionTest.ts.)
+  "connection-test": "on-demand",
   // The learner asks for a comparison to be built and one proposal call runs; nothing fires
   // on its own. (compareBuildActions.runProposalPipeline — same shape as goal-planning.)
   "compare-profile": "on-demand",

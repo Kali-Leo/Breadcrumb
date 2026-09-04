@@ -5,8 +5,28 @@
  * Main exports: newId(), nowIso(), todayLocalMidnightIso(), onLocalDayChange().
  */
 
+/**
+ * A random v4 UUID.
+ *
+ * `crypto.randomUUID` is the whole implementation on any origin that counts as a secure
+ * context, which the shipped app always is (Tauri's custom protocol, and https for the
+ * browser edition). It is missing on one that is not — the method is [SecureContext]-gated —
+ * and the origin that is not is the one we test iPads from: `vite preview` served to a tablet
+ * over the LAN is plain http, where the call is a TypeError rather than a degraded id, and it
+ * is reached before the first screen renders. So the same randomness is assembled by hand
+ * there instead: `crypto.getRandomValues` carries no such gate, and it is the source
+ * `randomUUID` itself draws on, so the fallback is the same 122 bits from the same CSPRNG —
+ * a different way of writing them down, not a weaker id. Version and variant bits per
+ * RFC 4122 §4.4. Never Math.random: an id that lands in the database as a merge key and a
+ * cross-device identity must not be predictable.
+ */
 export function newId(): string {
-  return crypto.randomUUID();
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = ((bytes[6] as number) & 0x0f) | 0x40;
+  bytes[8] = ((bytes[8] as number) & 0x3f) | 0x80;
+  const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 export function nowIso(): string {

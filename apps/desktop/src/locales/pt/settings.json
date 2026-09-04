@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Salvo ✓",
     "unsaved": "Alterações ainda não salvas",
+    "testConnection": "Testar a conexão",
+    "testing": "Conectando…",
+    "testResult": {
+      "ok": "Conectado.",
+      "badUrl": "Esse endereço de serviço não é um endereço web utilizável. Ele precisa começar com https://, por exemplo https://api.deepseek.com.",
+      "offline": "Não há conexão de rede agora. Verifique se este dispositivo está conectado à internet e depois veja se o interruptor de rede abaixo está desligado.",
+      "timeout": "O provedor nunca respondeu. A conexão pode estar lenta; tente de novo daqui a pouco.",
+      "blockedByBrowser": "O navegador não conseguiu alcançar este serviço e não diz o motivo. Verifique se este dispositivo está conectado à internet; se ainda assim falhar, é provável que este provedor não permita que páginas web se conectem diretamente. Experimente outro provedor ou use o aplicativo para computador.",
+      "unreachable": "Não foi possível alcançar este serviço. Confira se há algum erro no endereço do serviço, ou tente de novo daqui a pouco.",
+      "unauthorized": "O provedor diz que esta chave não pode ser usada. Volte ao site do seu provedor e copie a chave de API novamente.",
+      "insufficientBalance": "Esta conta ficou sem saldo. Adicione créditos no site do seu provedor e tente de novo.",
+      "notFound": "Não há nenhum serviço de IA nesse endereço. Veja se falta uma parte no fim do endereço, ou se há uma a mais — /v1, por exemplo.",
+      "rateLimited": "O provedor diz que as solicitações estão chegando muito próximas umas das outras agora. Tente de novo em um ou dois minutos.",
+      "badRequest": "O provedor não aceitou esta solicitação. A causa mais comum é um nome de modelo digitado errado; confira na documentação do provedor.",
+      "serverError": "Algo deu errado do lado do provedor, não nas suas configurações. Tente de novo daqui a pouco."
+    },
     "priceOverride": "Seus próprios preços (por milhão de tokens)",
     "priceOverrideHint": "Preencha quando a lista embutida não conhecer seu modelo, ou o preço tiver mudado. Entrada e saída precisam estar preenchidas para valer; deixe em branco para usar a lista embutida.",
     "priceInput": "Entrada",
@@ -67,7 +83,8 @@
     "companion-script": "Preparo do companheiro",
     "focus-explain": "Explicações no modo foco",
     "term-marking": "Marcação de palavras",
-    "trail-summary": "O rastro de ontem"
+    "trail-summary": "O rastro de ontem",
+    "connection-test": "Teste de conexão"
   },
   "billing": {
     "intro": "Cada passo que custa dinheiro tem sua própria chave aqui, e seu gasto é registrado à parte. Esta página mostra o que foi realmente gasto.",

@@ -47,6 +47,24 @@ describe("normalizeLabel", () => {
     expect(normalizeLabel("用 Python 写脚本")).toBe(normalizeLabel("用Python写脚本"));
   });
 
+  it("folds both sides of a latin run wedged between CJK, in one pass", () => {
+    // The boundary characters are what the two alternatives take turns using as context, so
+    // back-to-back boundaries are where a lookbehind and a captured-and-rewritten left
+    // context could plausibly disagree. They do not: the right-hand side stays a lookahead,
+    // so it is never consumed and is still there to open the next match. Pinned because the
+    // no-lookbehind form exists for Safari/WebKit (lookbehind is Safari 16.4+) and a future
+    // simplification back to `(?<=…)` would silently cost older iPads the whole module.
+    expect(normalizeLabel("用 Python 写")).toBe("用python写");
+    expect(normalizeLabel("中 a 文 b 中")).toBe("中a文b中");
+    expect(normalizeLabel("a 中 b")).toBe("a中b");
+  });
+
+  it("leaves the space between two CJK characters alone", () => {
+    // Neither alternative applies, and the fold must not reach past the boundary it is for.
+    expect(normalizeLabel("中 文")).toBe("中 文");
+    expect(normalizeLabel("中 中 a")).toBe("中 中a");
+  });
+
   it("keeps whitespace between latin words, where it carries meaning", () => {
     expect(normalizeLabel("machine learning")).toBe("machine learning");
     expect(normalizeLabel("machine learning")).not.toBe(normalizeLabel("machinelearning"));

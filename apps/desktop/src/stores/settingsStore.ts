@@ -40,6 +40,9 @@ export type {
 export interface SettingsState extends SettingsWriteActions {
   loaded: boolean;
   apiConfig: ApiConfig | null;
+  /** True once the saved credentials have actually answered a request (settings' 测试连接).
+   * Saving new credentials clears it: an untested configuration has not been shown to work. */
+  apiConnectionOk: boolean;
   networkEnabled: boolean;
   /** False until the newcomer guide has been shown. */
   onboardingSeen: boolean;
@@ -71,6 +74,7 @@ export interface SettingsState extends SettingsWriteActions {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   loaded: false,
   apiConfig: null,
+  apiConnectionOk: false,
   networkEnabled: true,
   onboardingSeen: true,
   checklistDismissed: true,

@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Enregistré ✓",
     "unsaved": "Modifications non enregistrées",
+    "testConnection": "Tester la connexion",
+    "testing": "Connexion en cours…",
+    "testResult": {
+      "ok": "Connecté.",
+      "badUrl": "Cette adresse de service n'est pas une adresse web utilisable. Elle doit commencer par https://, par exemple https://api.deepseek.com.",
+      "offline": "Il n'y a pas de connexion réseau pour le moment. Vérifie que cet appareil est connecté à internet, puis regarde si l'interrupteur réseau ci-dessous est éteint.",
+      "timeout": "Le fournisseur n'a jamais répondu. La connexion est peut-être lente ; réessaie dans un instant.",
+      "blockedByBrowser": "Le navigateur n'a pas pu joindre ce service, et il ne dit pas pourquoi. Vérifie que cet appareil est connecté à internet ; si cela échoue toujours, ce fournisseur n'autorise probablement pas les pages web à s'y connecter directement. Essaie un autre fournisseur, ou utilise l'application de bureau.",
+      "unreachable": "Impossible de joindre ce service. Vérifie s'il y a une erreur dans l'adresse du service, ou réessaie dans un instant.",
+      "unauthorized": "Le fournisseur dit que cette clé ne peut pas être utilisée. Retourne sur le site de ton fournisseur et copie de nouveau la clé API.",
+      "insufficientBalance": "Ce compte n'a plus de crédit. Recharge-le sur le site de ton fournisseur, puis réessaie.",
+      "notFound": "Il n'y a aucun service d'IA à cette adresse. Regarde s'il manque une partie à la fin de l'adresse, ou s'il y en a une de trop — /v1, par exemple.",
+      "rateLimited": "Le fournisseur dit que les requêtes arrivent trop rapprochées en ce moment. Réessaie dans une ou deux minutes.",
+      "badRequest": "Le fournisseur n'a pas accepté cette requête. La cause habituelle est un nom de modèle mal écrit ; vérifie-le dans la documentation du fournisseur.",
+      "serverError": "Quelque chose s'est mal passé du côté du fournisseur, pas dans tes réglages. Réessaie un peu plus tard."
+    },
     "priceOverride": "Tes propres tarifs (par million de tokens)",
     "priceOverrideHint": "À remplir quand la liste intégrée ne connaît pas ton modèle, ou que son prix a changé. L'entrée et la sortie doivent toutes deux être renseignées pour être prises en compte ; laisse vide pour utiliser la liste intégrée.",
     "priceInput": "Entrée",
@@ -67,7 +83,8 @@
     "companion-script": "Préparation du compagnon",
     "focus-explain": "Explications en mode focus",
     "term-marking": "Marquage des mots",
-    "trail-summary": "La trace d'hier"
+    "trail-summary": "La trace d'hier",
+    "connection-test": "Test de connexion"
   },
   "billing": {
     "intro": "Chaque étape qui coûte de l'argent a son propre interrupteur ici, et sa dépense est suivie séparément. Cette page montre ce qui a réellement été dépensé.",

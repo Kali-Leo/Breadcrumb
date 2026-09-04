@@ -3,7 +3,7 @@
  * transformers.js would have given it.
  */
 import { describe, expect, it } from "vitest";
-import { isSafariLike, ORT_FILES, ortWasmPaths } from "./embedding/ortAssets";
+import { isSafariLike, ORT_FILES, ortWasmPaths, safariSimdIsBroken } from "./embedding/ortAssets";
 
 const BASE = "https://example.github.io/Breadcrumb/ort/";
 const SAFARI = {
@@ -50,5 +50,30 @@ describe("ortWasmPaths", () => {
         expect(ORT_FILES).toContain(url.slice(BASE.length));
       }
     }
+  });
+});
+
+describe("safariSimdIsBroken", () => {
+  const safari = (version: string) => ({
+    userAgent: `Mozilla/5.0 (iPad; CPU OS 16_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${version} Safari/604.1`,
+    vendor: "Apple Computer, Inc.",
+  });
+
+  it("refuses the one version whose SIMD returns wrong numbers", () => {
+    expect(safariSimdIsBroken(safari("16.4"))).toBe(true);
+  });
+
+  it("allows the versions either side of it", () => {
+    expect(safariSimdIsBroken(safari("16.3"))).toBe(false);
+    expect(safariSimdIsBroken(safari("16.5"))).toBe(false);
+    expect(safariSimdIsBroken(safari("18.2"))).toBe(false);
+  });
+
+  it("allows other browsers and unreadable user agents", () => {
+    expect(safariSimdIsBroken({ userAgent: "Mozilla/5.0 Chrome/124", vendor: "Google Inc." })).toBe(
+      false,
+    );
+    expect(safariSimdIsBroken({ userAgent: "Safari", vendor: "Apple Computer, Inc." })).toBe(false);
+    expect(safariSimdIsBroken(undefined)).toBe(false);
   });
 });

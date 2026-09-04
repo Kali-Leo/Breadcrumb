@@ -4,6 +4,7 @@
  */
 export * from "./client";
 export * from "./completionsUrl";
+export * from "./connectionProbe";
 export * from "./jsonClient";
 export * from "./modelCatalogue";
 export * from "./pricing";

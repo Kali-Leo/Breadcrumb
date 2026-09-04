@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Tersimpan ✓",
     "unsaved": "Perubahan belum tersimpan",
+    "testConnection": "Uji koneksi",
+    "testing": "Menghubungkan…",
+    "testResult": {
+      "ok": "Terhubung.",
+      "badUrl": "Alamat layanan itu bukan alamat web yang bisa dipakai. Alamat harus diawali https://, misalnya https://api.deepseek.com.",
+      "offline": "Saat ini tidak ada koneksi jaringan. Pastikan perangkat ini terhubung ke internet, lalu periksa apakah sakelar jaringan di bawah dalam keadaan mati.",
+      "timeout": "Penyedia layanan tidak pernah menjawab. Koneksi mungkin lambat; coba lagi sebentar lagi.",
+      "blockedByBrowser": "Peramban tidak bisa menjangkau layanan ini, dan tidak menjelaskan alasannya. Pastikan perangkat ini terhubung ke internet; kalau tetap gagal, kemungkinan besar penyedia ini tidak mengizinkan halaman web terhubung langsung. Coba penyedia lain, atau pakai aplikasi desktop.",
+      "unreachable": "Layanan ini tidak bisa dijangkau. Periksa apakah alamat layanan salah ketik, atau coba lagi sebentar lagi.",
+      "unauthorized": "Penyedia layanan bilang kunci ini tidak bisa dipakai. Kembali ke situs penyedia layananmu dan salin ulang kunci API-nya.",
+      "insufficientBalance": "Saldo akun ini habis. Isi ulang di situs penyedia layananmu, lalu coba lagi.",
+      "notFound": "Tidak ada layanan AI di alamat itu. Periksa apakah bagian di ujung alamat kurang satu, atau justru kelebihan satu — misalnya /v1.",
+      "rateLimited": "Penyedia layanan bilang permintaan datang terlalu rapat saat ini. Coba lagi satu atau dua menit lagi.",
+      "badRequest": "Penyedia layanan tidak menerima permintaan ini. Penyebab paling umum adalah nama model yang salah ketik; cocokkan dengan dokumentasi penyedia.",
+      "serverError": "Ada masalah di sisi penyedia layanan, bukan di pengaturanmu. Coba lagi beberapa saat lagi."
+    },
     "priceOverride": "Harga kamu sendiri (per juta token)",
     "priceOverrideHint": "Isi kalau daftar harga bawaan tidak mengenal modelmu, atau harganya berubah. Masukan dan keluaran harus sama-sama diisi agar berlaku; kosongkan untuk memakai daftar bawaan.",
     "priceInput": "Masukan",
@@ -65,7 +81,8 @@
     "companion-script": "Persiapan teman",
     "focus-explain": "Penjelasan mode fokus",
     "term-marking": "Penandaan kata",
-    "trail-summary": "Jejak kemarin"
+    "trail-summary": "Jejak kemarin",
+    "connection-test": "Uji koneksi"
   },
   "billing": {
     "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",

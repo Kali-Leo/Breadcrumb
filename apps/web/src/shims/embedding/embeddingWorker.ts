@@ -14,7 +14,7 @@
 import { env, type FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
 import { createModelCache, MODEL_CACHE_NAME } from "./modelCache";
 import { createSourceResolver, isModelSourceUrl, MODEL_ID, MODEL_SOURCES } from "./modelSource";
-import { ortWasmPaths } from "./ortAssets";
+import { ortWasmPaths, safariSimdIsBroken } from "./ortAssets";
 import type { EmbedReply, EmbedRequest } from "./protocol";
 import { prefixForE5, splitIntoBatches } from "./textBatches";
 
@@ -57,6 +57,11 @@ function createPipeline(): Promise<FeatureExtractionPipeline> {
 }
 
 async function loadPipeline(allowDownload: boolean): Promise<FeatureExtractionPipeline> {
+  if (safariSimdIsBroken(navigator)) {
+    // Refusing leaves every caller on its existing "no embeddings" path; running would write
+    // wrong vectors into the database, where nothing downstream could tell they were wrong.
+    throw new Error("this Safari version computes WebAssembly SIMD incorrectly");
+  }
   networkAllowed = false;
   try {
     return await createPipeline();

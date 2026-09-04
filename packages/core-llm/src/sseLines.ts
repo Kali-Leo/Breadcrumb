@@ -14,9 +14,12 @@ export const MAX_SSE_LINE_CHARS = 1_000_000;
 
 /** Yields the payload of every `data:` line across chunk boundaries of an SSE byte stream,
  * stopping at `[DONE]`. The stream is then drained to its natural end instead of being
- * cancelled: breaking out of `for await` cancels the underlying stream, and the Tauri http
- * plugin's cancel on an already-finished response rejects a detached promise with
- * "The resource id N is invalid" — an unhandled rejection we must never produce.
+ * cancelled: cancelling mid-flight makes the Tauri http plugin reject a detached promise
+ * with "The resource id N is invalid" — an unhandled rejection we must never produce.
+ *
+ * Read through a reader rather than `for await (… of body)`: async iteration over a
+ * ReadableStream is still unimplemented in WebKit, so the iterating version threw on every
+ * answer in Safari and on iPad while working in every browser we test with (2026-09-03).
  *
  * `onChunk` fires once per received chunk, before it is parsed — the hook the client uses to
  * re-arm its silence deadline. It has to be per chunk rather than per payload so that a
@@ -26,12 +29,15 @@ export async function* readSseDataLines(
   onChunk?: () => void,
 ): AsyncGenerator<string> {
   const decoder = new TextDecoder();
+  const reader = body.getReader();
   let buffered = "";
   let sawDone = false;
-  for await (const chunk of body as unknown as AsyncIterable<Uint8Array>) {
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
     onChunk?.();
-    if (sawDone) continue;
-    buffered += decoder.decode(chunk, { stream: true });
+    if (sawDone || value === undefined) continue;
+    buffered += decoder.decode(value, { stream: true });
     const lines = buffered.split("\n");
     buffered = lines.pop() ?? "";
     // Checked on the leftover, not on the whole append: a big chunk full of newlines is a

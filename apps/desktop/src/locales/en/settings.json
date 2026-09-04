@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Saved ✓",
     "unsaved": "Changes not saved yet",
+    "testConnection": "Test connection",
+    "testing": "Connecting…",
+    "testResult": {
+      "ok": "Connected.",
+      "badUrl": "That service address is not a usable web address. It has to start with https://, for example https://api.deepseek.com.",
+      "offline": "There is no network connection right now. Check that this device is online, then check whether the network switch below is turned off.",
+      "timeout": "The provider never answered. The connection may be slow — try again in a moment.",
+      "blockedByBrowser": "The browser could not reach this service, and it will not say why. Check that this device is online; if it still fails, this provider most likely does not allow web pages to connect to it directly. Try a different provider, or use the desktop app.",
+      "unreachable": "Could not reach this service. Check the service address for a typo, or try again in a moment.",
+      "unauthorized": "The provider says this key cannot be used. Go back to your provider's website and copy the API key again.",
+      "insufficientBalance": "This account has no credit left. Add funds on your provider's website, then try again.",
+      "notFound": "There is no AI service at that address. Check whether the end of the address is missing a part, or has one too many — /v1, for example.",
+      "rateLimited": "The provider says the requests are coming too close together right now. Try again in a minute or two.",
+      "badRequest": "The provider did not accept this request. The usual cause is a mistyped model name; check it against the provider's documentation.",
+      "serverError": "Something went wrong on the provider's side, not in your settings. Try again in a little while."
+    },
     "priceOverride": "Your own prices (per million tokens)",
     "priceOverrideHint": "Fill these in when the built-in list has never heard of your model, or its price has moved. Input and output both have to be filled for them to count; leave them empty to use the built-in list.",
     "priceInput": "Input",
@@ -66,7 +82,8 @@
     "companion-script": "Companion prep",
     "focus-explain": "Focus explanations",
     "term-marking": "Word marking",
-    "trail-summary": "Yesterday's trail"
+    "trail-summary": "Yesterday's trail",
+    "connection-test": "Connection test"
   },
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",

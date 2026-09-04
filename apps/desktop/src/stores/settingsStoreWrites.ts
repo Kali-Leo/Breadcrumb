@@ -17,6 +17,7 @@ import { getRepos } from "../lib/platform/db";
 import {
   ANSWER_LANGUAGE_KEY,
   API_CONFIG_KEY,
+  API_CONNECTION_OK_KEY,
   type ApiConfig,
   CHECKLIST_DISMISSED_KEY,
   COMPARE_CATEGORY_KEY,
@@ -38,6 +39,7 @@ import type { SettingsState } from "./settingsStore";
 
 export interface SettingsWriteActions {
   saveApiConfig(config: ApiConfig): Promise<void>;
+  setApiConnectionOk(ok: boolean): Promise<void>;
   markOnboardingSeen(): Promise<void>;
   resetOnboarding(): Promise<void>;
   dismissChecklist(): Promise<void>;
@@ -57,10 +59,19 @@ export function createSettingsWriteActions(
   get: () => SettingsState,
 ): SettingsWriteActions {
   return {
+    /** Credentials that were just changed have not been shown to work, so the remembered
+     * "it answered" is dropped here rather than left to describe the previous ones. */
     async saveApiConfig(config) {
       const repos = await getRepos();
       await repos.settings.set(API_CONFIG_KEY, config, nowIso());
-      set({ apiConfig: config });
+      await repos.settings.set(API_CONNECTION_OK_KEY, false, nowIso());
+      set({ apiConfig: config, apiConnectionOk: false });
+    },
+
+    async setApiConnectionOk(ok) {
+      const repos = await getRepos();
+      await repos.settings.set(API_CONNECTION_OK_KEY, ok, nowIso());
+      set({ apiConnectionOk: ok });
     },
 
     /** Puts the newcomer experience back so it runs again on the next load. */

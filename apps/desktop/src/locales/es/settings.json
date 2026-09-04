@@ -18,6 +18,22 @@
     "currencyUSD": "$ USD",
     "saved": "Guardado ✓",
     "unsaved": "Cambios sin guardar",
+    "testConnection": "Probar la conexión",
+    "testing": "Conectando…",
+    "testResult": {
+      "ok": "Conectado.",
+      "badUrl": "Esa dirección del servicio no es una dirección web utilizable. Tiene que empezar por https://, por ejemplo https://api.deepseek.com.",
+      "offline": "Ahora mismo no hay conexión a la red. Comprueba que este dispositivo tenga internet y luego mira si el interruptor de red de abajo está apagado.",
+      "timeout": "El proveedor nunca respondió. Puede que la conexión sea lenta; inténtalo de nuevo en un momento.",
+      "blockedByBrowser": "El navegador no pudo llegar a este servicio y no dice por qué. Comprueba que este dispositivo tenga internet; si sigue fallando, lo más probable es que este proveedor no permita que las páginas web se conecten directamente. Prueba con otro proveedor o usa la aplicación de escritorio.",
+      "unreachable": "No se pudo llegar a este servicio. Revisa si la dirección del servicio tiene algún error, o inténtalo de nuevo en un momento.",
+      "unauthorized": "El proveedor dice que esta clave no se puede usar. Vuelve al sitio web de tu proveedor y copia la clave API otra vez.",
+      "insufficientBalance": "Esta cuenta se quedó sin saldo. Añade fondos en el sitio web de tu proveedor y vuelve a intentarlo.",
+      "notFound": "En esa dirección no hay ningún servicio de IA. Fíjate si al final de la dirección falta una parte o sobra una, por ejemplo /v1.",
+      "rateLimited": "El proveedor dice que ahora mismo las solicitudes llegan demasiado seguidas. Inténtalo de nuevo dentro de uno o dos minutos.",
+      "badRequest": "El proveedor no aceptó esta solicitud. La causa habitual es un nombre de modelo mal escrito; compáralo con la documentación del proveedor.",
+      "serverError": "Algo falló del lado del proveedor, no en tu configuración. Inténtalo de nuevo dentro de un rato."
+    },
     "priceOverride": "Tus propios precios (por millón de tokens)",
     "priceOverrideHint": "Rellénalos cuando la lista incorporada no conozca tu modelo o su precio haya cambiado. Hay que rellenar entrada y salida para que cuenten; déjalos vacíos y se usa la lista incorporada.",
     "priceInput": "Entrada",
@@ -67,7 +83,8 @@
     "companion-script": "Preparación del compañero",
     "focus-explain": "Explicaciones en modo enfoque",
     "term-marking": "Marcado de palabras",
-    "trail-summary": "El rastro de ayer"
+    "trail-summary": "El rastro de ayer",
+    "connection-test": "Prueba de conexión"
   },
   "billing": {
     "intro": "Cada paso que cuesta dinero tiene aquí su propio interruptor y su gasto se registra por separado. Esta página muestra lo que se ha gastado de verdad.",

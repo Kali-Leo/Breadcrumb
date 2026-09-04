@@ -19,7 +19,7 @@ import {
 } from "@breadcrumb/feature-diglot-weave";
 import type { Card } from "ts-fsrs";
 import { getRepos } from "../platform/db";
-import { nowIso } from "../platform/time";
+import { newId, nowIso } from "../platform/time";
 
 /** Records one signal event and applies its FSRS rating (if any) to the word's card.
  * Returns the updated card so the caller can refresh its in-memory map. */
@@ -42,7 +42,7 @@ export async function applyDiglotSignal(input: {
     input.card.reps,
   );
   await repos.diglot.insertEvent({
-    id: crypto.randomUUID(),
+    id: newId(),
     lemma: input.lemma,
     pair: input.pair,
     kind: input.kind,

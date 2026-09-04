@@ -12,7 +12,7 @@ import {
 } from "@breadcrumb/feature-diglot-weave";
 import { getRepos } from "../platform/db";
 import { embedTexts } from "../platform/embeddings";
-import { nowIso } from "../platform/time";
+import { newId, nowIso } from "../platform/time";
 
 export { guessFeedbackMessage } from "@breadcrumb/feature-diglot-weave";
 
@@ -41,7 +41,7 @@ export async function submitDiglotGuess(input: {
   });
   const repos = await getRepos();
   await repos.diglot.insertGuess({
-    id: crypto.randomUUID(),
+    id: newId(),
     lemma: input.lemma,
     pair: input.loaded.pack.id,
     guess: input.guess,

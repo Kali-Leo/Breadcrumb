@@ -104,8 +104,21 @@ export async function listInstalledPairs(): Promise<string[]> {
   return [...installed].sort();
 }
 
-/** Lowercase hex SHA-256 of a string, via the WebCrypto both builds already have. */
+/** Lowercase hex SHA-256 of a string, via the WebCrypto both builds already have.
+ *
+ * `crypto.subtle` is [SecureContext]-gated and is simply absent on an origin that is not one
+ * — plain http, which is what a `vite preview` opened from an iPad over the LAN is. The check
+ * is the only thing standing between a swapped release asset and a poisoned dictionary, so
+ * there is nothing to fall back to and nothing to skip: the download is refused, and the
+ * sentence says which of the two problems it is, because "checksum mismatch" would send
+ * someone hunting a corrupt file that is perfectly fine. */
 async function sha256Hex(text: string): Promise<string> {
+  if (crypto.subtle === undefined) {
+    throw new Error(
+      "cannot verify the language pack: WebCrypto is unavailable on this origin " +
+        "(it needs https or localhost), and an unverified pack is never installed",
+    );
+  }
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
