@@ -7,6 +7,7 @@
  * Main exports: discoverTopics, TopicSummary, TopicAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { compareCodePoints } from "./ordering";
 import { clusterEmbeddedNodes, pickMedoid } from "./topicCluster";
 import { buildParentMap, groupByRoot, sumEngagement } from "./topicFallback";
 
@@ -43,7 +44,7 @@ function findEmbeddedAncestorKey(
 }
 
 function orderTopics(topics: readonly TopicSummary[]): TopicSummary[] {
-  return [...topics].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
+  return [...topics].sort((a, b) => b.weight - a.weight || compareCodePoints(a.label, b.label));
 }
 
 /** A one-member group is a single touch, not a topic — it leaves the continents and becomes

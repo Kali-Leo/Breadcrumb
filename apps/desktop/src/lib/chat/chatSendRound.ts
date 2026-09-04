@@ -6,7 +6,7 @@
  * Main exports: SendRoundResult, appendUserMessage, runSendRound.
  */
 import type { ConversationKind, MessageRow } from "@breadcrumb/core-db";
-import { type ChatMessage, createLlmClient, type TokenUsage } from "@breadcrumb/core-llm";
+import type { ChatMessage } from "@breadcrumb/core-llm";
 import type { ApiConfig } from "../../stores/settingsStore";
 import { buildRoundSystemMessages } from "../companion/companionChatPrompt";
 import { noteReplyLanguage, shouldUseFirmDirective } from "../platform/answerLanguageWatch";
@@ -20,15 +20,16 @@ import {
   buildLearnerContextSystemMessage,
 } from "./chatRoundContext";
 import { type RoundCostSnapshot, recordRoundCost } from "./chatRoundMetering";
-import { isAbortError } from "./chatStreamControl";
+import { streamRoundReply } from "./chatRoundStream";
 import { resolveSendParentId, type TreeSlice } from "./chatTreeActions";
 
 export interface SendRoundResult {
   assistantMessage: MessageRow;
   cost: RoundCostSnapshot;
   /** True when the user stopped the stream mid-reply (ChatGPT model): the streamed-so-far
-   * content is persisted as the assistant message, usage is whatever the truncated stream
-   * reported (normally zero — recorded as-is), and no error is surfaced. */
+   * content is persisted as the assistant message, usage is whatever the provider had
+   * reported by then (recorded as-is, because it was billed as-is), and no error is
+   * surfaced. */
   stoppedEarly: boolean;
 }
 
@@ -71,6 +72,7 @@ export async function runSendRound(params: {
   signal?: AbortSignal;
 }): Promise<SendRoundResult | null> {
   const { repos, activeKind, conversationId, userMessage, apiConfig } = params;
+  const purpose = activeKind === "companion" ? "companion-chat" : "chat";
 
   // Stable content first, volatile content last — that is what makes provider prefix caching
   // possible at all. DeepSeek only counts a request as a cache hit when the prefix matches
@@ -90,7 +92,7 @@ export async function runSendRound(params: {
   });
 
   // Rebuilt every round and never persisted (spec 038 §2.3 precedent). These sit immediately
-  // before the round's user turn: last thing the model reads, and behind the cached prefix.
+  // before the round's user turn: last read by the model, behind the cached prefix.
   const perRoundSteering: ChatMessage[] = [];
   // 学习模式 gate (spec 052): a free chat round carries no learner-context or focus-context
   // steering — silent measurement continues elsewhere, but nothing shapes the reply.
@@ -105,37 +107,34 @@ export async function runSendRound(params: {
 
   // baseMessages always ends with this round's user message (see chatAssistantRound), so the
   // steering slides in just ahead of it. The language directive is appended after everything
-  // by the client itself (spec 058 §1) and stays where it is.
+  // by the client itself (spec 058 §1).
   const priorTurns = params.baseMessages.slice(0, -1);
   const userTurn = params.baseMessages.slice(-1);
   const history = [...contractMessages, ...priorTurns, ...perRoundSteering, ...userTurn];
 
-  const client = createLlmClient(
-    llmConfigFrom(apiConfig, { firm: shouldUseFirmDirective(conversationId) }),
-  );
-  let content: string;
-  let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
-  let stoppedEarly = false;
-  let streamedSoFar = "";
-  try {
-    const result = await client.chatStream(
-      history,
-      (delta) => {
-        streamedSoFar += delta;
-        params.onDelta(delta);
-      },
-      { signal: params.signal },
-    );
-    content = result.content;
-    usage = result.usage;
-  } catch (error) {
-    if (!isAbortError(error)) throw error;
-    // Stop semantics (ChatGPT model): keep the partial reply and run the normal persist +
-    // meter path below. A stop before the first delta keeps nothing — the round dissolves.
-    if (streamedSoFar.length === 0) return null;
-    content = streamedSoFar;
-    stoppedEarly = true;
+  const streamed = await streamRoundReply({
+    config: llmConfigFrom(apiConfig, { firm: shouldUseFirmDirective(conversationId) }),
+    history,
+    onDelta: params.onDelta,
+    signal: params.signal,
+  });
+  const usage = streamed.usage;
+  const stoppedEarly = streamed.stoppedEarly;
+  if (streamed.content === null) {
+    // Stopped before the first delta: nothing to persist. What the provider had already
+    // reported it billed still has to reach the ledger, though.
+    if (usage.inputTokens > 0 || usage.outputTokens > 0) {
+      await recordRoundCost(repos, {
+        conversationId,
+        purpose,
+        model: apiConfig.model,
+        usage,
+        responseHadContent: false,
+      });
+    }
+    return null;
   }
+  const content = streamed.content;
 
   // Did it write in the language we asked for? (spec 058 §1 — the check, not a rewrite.)
   // Fire-and-forget: the verdict only hardens the *next* round's directive, so the reader
@@ -166,7 +165,7 @@ export async function runSendRound(params: {
 
   const cost = await recordRoundCost(repos, {
     conversationId,
-    purpose: activeKind === "companion" ? "companion-chat" : "chat",
+    purpose,
     model: apiConfig.model,
     usage,
     responseHadContent: assistantMessage.content.length > 0,

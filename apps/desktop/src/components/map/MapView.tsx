@@ -14,7 +14,6 @@
  */
 
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { isPlaceRenamable } from "../../lib/map/placeNames";
 import { degradeSilently } from "../../lib/platform/failureLog";
 import { useInputMode } from "../../lib/platform/inputMode";
@@ -31,6 +30,7 @@ import { type KingdomRef, KingdomView } from "./kingdom/KingdomView";
 import { findIsland, type MapLevel } from "./levels";
 import { MapCanvasChrome } from "./MapCanvasChrome";
 import { MapInfoPanel } from "./MapInfoPanel";
+import { MapStateOverlay, mapOverlayState } from "./MapStateOverlay";
 import type { HoverInfo } from "./mapHover";
 import { PalaceRail } from "./PalaceRail";
 import { useMapApplication } from "./useMapApplication";
@@ -47,7 +47,6 @@ const RAIL_BOX =
   "h-full min-w-64 flex-1 overflow-y-auto stacked:h-auto stacked:min-w-0 stacked:flex-none stacked:overflow-visible";
 
 export function MapView() {
-  const { t } = useTranslation(["palace", "common"]);
   const coarse = useInputMode() === "coarse";
   const stacked = useLayoutMode() === "stacked";
 
@@ -115,25 +114,11 @@ export function MapView() {
   });
   useMapPinch({ ready, coarse, containerRef, controllerRef });
 
-  if (initFailed) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
-        <span className="text-4xl">🏛️</span>
-        <p className="text-sm">{t("palace:map.loadFailed")}</p>
-      </div>
-    );
-  }
-  if (world.islands.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
-        <span className="text-4xl">🏛️</span>
-        <p className="text-sm">{t("palace:map.emptySea")}</p>
-        {import.meta.env.DEV && (
-          <p className="text-xs text-stone-300">{t("palace:map.devDemoHint")}</p>
-        )}
-      </div>
-    );
-  }
+  // Neither of these may return early: the Pixi container has to stay mounted or the renderer
+  // never initializes, and useMapApplication's effect runs once (bug hunt 2026-09-03 — an
+  // empty sea on the first visit left the map dead for the whole session). They cover instead.
+  const overlay = mapOverlayState({ initFailed, islandCount: world.islands.length });
+
   // The overlay's header reads the kingdom's name from the live world, not the click-time
   // snapshot, so a rename made inside the overlay shows there at once.
   const subwayIsland =
@@ -171,6 +156,7 @@ export function MapView() {
           />
         </div>
       </div>
+      {overlay !== null && <MapStateOverlay state={overlay} />}
       {goalViewOpen && (
         <div className="absolute inset-0 z-20 bg-stone-50">
           <GoalView onClose={() => setGoalViewOpen(false)} />

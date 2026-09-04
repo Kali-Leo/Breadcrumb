@@ -44,6 +44,62 @@ describe("chatJson", () => {
     ).rejects.toThrow();
   });
 
+  it("carries the usage out when the envelope has no message content", async () => {
+    // Regression: the provider billed a real call (content filter, tool-only reply,
+    // max_tokens hit at length 0) and reported its usage, but the envelope check threw
+    // before the usage was ever read — so the ledger recorded nothing at all.
+    const fetchImpl = () =>
+      Promise.resolve(
+        Response.json({ choices: [], usage: { prompt_tokens: 7, completion_tokens: 0 } }),
+      );
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ChatJsonError);
+    expect((error as ChatJsonError).usage).toMatchObject({ inputTokens: 7, outputTokens: 0 });
+  });
+
+  it("carries the usage out when the envelope shape itself is unusable", async () => {
+    const fetchImpl = () =>
+      Promise.resolve(
+        Response.json({
+          choices: "not-an-array",
+          usage: { prompt_tokens: 15, completion_tokens: 4 },
+        }),
+      );
+    const error = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ChatJsonError);
+    expect((error as ChatJsonError).usage).toMatchObject({ inputTokens: 15, outputTokens: 4 });
+  });
+
+  it("accepts a usage object that is missing a count instead of losing the reply", async () => {
+    // Non-OpenAI backends often report only prompt_tokens, or null placeholders. Demanding
+    // both counts threw away an answer the model had already got right.
+    const fetchImpl = () =>
+      Promise.resolve(
+        Response.json({
+          choices: [{ message: { content: '{"name":"Momo","age":3}' } }],
+          usage: { prompt_tokens: 30, completion_tokens: null },
+        }),
+      );
+    const result = await chatJson(
+      makeConfig(fetchImpl),
+      [{ role: "user", content: "pet?" }],
+      petSchema,
+    );
+
+    expect(result.parsed).toEqual({ name: "Momo", age: 3 });
+    expect(result.usage).toMatchObject({ inputTokens: 30, outputTokens: 0 });
+  });
+
   it("throws a clear error on a non-retryable non-2xx response (a bad key fails twice too)", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()

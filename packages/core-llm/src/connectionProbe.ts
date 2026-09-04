@@ -20,6 +20,7 @@ import { z } from "zod";
 import type { LlmClientConfig } from "./client";
 import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
+import { usageFromPayload } from "./streamFrame";
 
 /**
  * What the one probe request found out. Every value here has to lead to a different sentence
@@ -30,11 +31,14 @@ import type { TokenUsage } from "./pricing";
  *   Decided locally, so this one costs nothing and never leaves the machine.
  * - `offline` — the device reports no network, or the app's own network switch is off.
  * - `timeout` — nothing came back inside the probe's budget.
- * - `blockedByBrowser` — `fetch` threw a TypeError. In a browser that is the single shape
- *   used for BOTH a CORS refusal and a dead link: the page is not allowed to know which.
+ * - `blockedByBrowser` — nothing we sent reached the API. Either `fetch` threw a TypeError
+ *   (in a browser that is the single shape used for BOTH a CORS refusal and a dead link: the
+ *   page is not allowed to know which), or something in between answered with an HTML page
+ *   where the API would have answered with JSON — a WAF challenge, a captive portal, a
+ *   corporate gateway.
  * - `unreachable` — the request threw in some other way (the desktop build's HTTP client
  *   does not use TypeError), so all we know is that it did not arrive.
- * - `unauthorized` (401/403) — the key was rejected.
+ * - `unauthorized` (401/403 with a JSON body) — the provider itself rejected the key.
  * - `insufficientBalance` (402) — the account has no credit left.
  * - `notFound` (404, and a 200 that is not a chat completion) — something is at that address,
  *   but it is not an OpenAI-compatible chat endpoint.
@@ -75,20 +79,25 @@ const NETWORK_DISABLED_ERROR_NAME = "NetworkDisabledError";
 
 /** `choices` being a present array is what separates a real completion from an HTML error
  * page or a proxy's "hello" — both of which arrive as HTTP 200 and would otherwise be
- * reported as a working AI service. */
+ * reported as a working AI service. Usage is read separately (usageFromPayload) and never
+ * gates this verdict: a provider that reports its tokens oddly is still a working provider. */
 const probeEnvelopeSchema = z.object({
   choices: z.array(z.unknown()),
-  usage: z
-    .object({
-      prompt_tokens: z.number(),
-      completion_tokens: z.number(),
-      prompt_cache_hit_tokens: z.number().nullish(),
-    })
-    .nullish(),
 });
 
-function classifyStatus(status: number): ConnectionProbeOutcome {
-  if (status === 401 || status === 403) return "unauthorized";
+/** An HTML body is never the provider talking: every OpenAI-compatible API answers 401/403
+ * with JSON. HTML on those two statuses is something BETWEEN us and the API — a CDN/WAF
+ * challenge page, a captive portal, a corporate gateway — and calling that "your key was
+ * rejected" sends the learner to reissue a key that was never the problem. The other statuses
+ * keep their meaning whatever the body looks like (a 502 HTML page really is a bad gateway). */
+function looksLikeHtml(contentType: string | null): boolean {
+  return contentType?.toLowerCase().includes("text/html") === true;
+}
+
+function classifyStatus(status: number, contentType: string | null): ConnectionProbeOutcome {
+  if (status === 401 || status === 403) {
+    return looksLikeHtml(contentType) ? "blockedByBrowser" : "unauthorized";
+  }
   if (status === 402) return "insufficientBalance";
   if (status === 404) return "notFound";
   if (status === 429) return "rateLimited";
@@ -101,15 +110,6 @@ function classifyThrow(error: unknown, expired: boolean): ConnectionProbeOutcome
   if (error instanceof Error && error.name === NETWORK_DISABLED_ERROR_NAME) return "offline";
   if (error instanceof TypeError) return "blockedByBrowser";
   return "unreachable";
-}
-
-function usageOf(envelope: z.infer<typeof probeEnvelopeSchema>): TokenUsage | undefined {
-  if (!envelope.usage) return undefined;
-  return {
-    inputTokens: envelope.usage.prompt_tokens,
-    outputTokens: envelope.usage.completion_tokens,
-    cachedInputTokens: envelope.usage.prompt_cache_hit_tokens ?? undefined,
-  };
 }
 
 /** The smallest thing that still exercises the whole path: authentication, the model name,
@@ -156,7 +156,9 @@ export async function probeConnection(config: LlmClientConfig): Promise<Connecti
       body: probeBody(config.model),
       signal: controller.signal,
     });
-    if (!response.ok) return { outcome: classifyStatus(response.status) };
+    if (!response.ok) {
+      return { outcome: classifyStatus(response.status, response.headers.get("content-type")) };
+    }
     let payload: unknown;
     try {
       payload = await response.json();
@@ -164,11 +166,10 @@ export async function probeConnection(config: LlmClientConfig): Promise<Connecti
       // Not JSON at all: an error page, or a proxy that answers everything with a greeting.
       return { outcome: expired ? "timeout" : "notFound" };
     }
-    const envelope = probeEnvelopeSchema.safeParse(payload);
     // A 200 that is not a chat completion means the address points at something else
     // entirely — the same thing a 404 means, and the same thing to do about it.
-    if (!envelope.success) return { outcome: "notFound" };
-    return { outcome: "ok", usage: usageOf(envelope.data) };
+    if (!probeEnvelopeSchema.safeParse(payload).success) return { outcome: "notFound" };
+    return { outcome: "ok", usage: usageFromPayload(payload) ?? undefined };
   } catch (error) {
     return { outcome: classifyThrow(error, expired) };
   } finally {

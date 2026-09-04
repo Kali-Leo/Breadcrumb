@@ -80,6 +80,7 @@ export const useChatStore = create<ChatState>((set, get) => {
       readNewConversationStudyMode: () => get().newConversationStudyMode,
       setGlobalMeters: (patch) => set(patch),
       emitMessageSent: (payload) => appEventBus.emit("chat:messageSent", payload),
+      isConversationLive: (id) => get().sessions.has(id),
       emitResponseFinished: (payload) => appEventBus.emit("chat:responseFinished", payload),
     };
   }

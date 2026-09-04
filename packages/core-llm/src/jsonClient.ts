@@ -10,6 +10,7 @@ import { type ChatMessage, type LlmClientConfig, withLanguageDirective } from ".
 import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
 import { fetchWithRetry, NON_STREAMING_TIMEOUT_MS } from "./retry";
+import { usageFromPayload } from "./streamFrame";
 
 export interface ChatJsonResult<Parsed> {
   parsed: Parsed;
@@ -37,17 +38,10 @@ export class ChatJsonError extends Error {
  * the temperature for the whole entry point is safe. */
 const JUDGEMENT_TEMPERATURE = 0;
 
+/** Usage is read separately (usageFromPayload) and deliberately BEFORE this runs, so a
+ * response we cannot use is still a response we can bill honestly. */
 const completionEnvelopeSchema = z.object({
   choices: z.array(z.object({ message: z.object({ content: z.string() }).nullish() })).default([]),
-  usage: z
-    .object({
-      prompt_tokens: z.number(),
-      completion_tokens: z.number(),
-      /** See the same field in client.ts: cache hits cost ~1/30 of a miss, so ignoring the
-       * split over-bills every call with a repeated prefix. */
-      prompt_cache_hit_tokens: z.number().nullish(),
-    })
-    .nullish(),
 });
 
 const ZERO_USAGE: TokenUsage = { inputTokens: 0, outputTokens: 0 };
@@ -71,6 +65,10 @@ function sumUsage(a: TokenUsage, b: TokenUsage): TokenUsage {
 async function requestCompletion(
   config: LlmClientConfig,
   messages: readonly ChatMessage[],
+  /** Called the moment the provider's own usage is known, before anything about the envelope
+   * can throw — that is what keeps a billed-but-unusable response out of the ledger's blind
+   * spot. */
+  onBilled: (usage: TokenUsage) => void,
 ): Promise<{ content: string; usage: TokenUsage }> {
   const { response, release } = await fetchWithRetry(
     config.fetchImpl,
@@ -94,21 +92,17 @@ async function requestCompletion(
   );
 
   try {
-    const envelope = completionEnvelopeSchema.parse(await response.json());
+    const payload: unknown = await response.json();
+    // Usage first, and leniently. Everything below can throw, and the call has already been
+    // charged whatever this says.
+    const usage = usageFromPayload(payload) ?? ZERO_USAGE;
+    onBilled(usage);
+    const envelope = completionEnvelopeSchema.parse(payload);
     const content = envelope.choices[0]?.message?.content;
     if (typeof content !== "string") {
       throw new Error("LLM response missing message content");
     }
-    return {
-      content,
-      usage: envelope.usage
-        ? {
-            inputTokens: envelope.usage.prompt_tokens,
-            outputTokens: envelope.usage.completion_tokens,
-            cachedInputTokens: envelope.usage.prompt_cache_hit_tokens ?? undefined,
-          }
-        : ZERO_USAGE,
-    };
+    return { content, usage };
   } finally {
     release();
   }
@@ -147,8 +141,9 @@ async function requestWithOneCorrection<Schema extends z.ZodType>(
   schema: Schema,
   billed: BilledUsage,
 ): Promise<ChatJsonResult<z.infer<Schema>>> {
-  const first = await requestCompletion(config, messages);
-  billed.usage = first.usage;
+  const first = await requestCompletion(config, messages, (usage) => {
+    billed.usage = usage;
+  });
   try {
     return { parsed: parseAndValidate(first.content, schema), usage: billed.usage };
   } catch (error) {
@@ -163,8 +158,9 @@ async function requestWithOneCorrection<Schema extends z.ZodType>(
         content: `你上一条回复不是合法 JSON，或不满足要求的结构。错误信息：${validationMessage}\n请只输出修正后的合法 JSON，不要有其他文字。`,
       },
     ];
-    const retry = await requestCompletion(config, retryMessages);
-    billed.usage = sumUsage(first.usage, retry.usage);
+    const retry = await requestCompletion(config, retryMessages, (usage) => {
+      billed.usage = sumUsage(first.usage, usage);
+    });
     return { parsed: parseAndValidate(retry.content, schema), usage: billed.usage };
   }
 }

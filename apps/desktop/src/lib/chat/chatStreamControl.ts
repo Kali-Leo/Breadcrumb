@@ -8,10 +8,15 @@
 
 const controllersByConversation = new Map<string, AbortController>();
 
-/** Registers a fresh controller for this conversation's in-flight round. A conversation
- * runs at most one round at a time (the composer blocks sends while streaming), so a plain
- * overwrite is safe. */
-export function beginStreamControl(conversationId: string): AbortController {
+/** Registers a fresh controller for this conversation's in-flight round, or null when one is
+ * already registered — the caller must then not start a round at all.
+ *
+ * Null rather than an overwrite: overwriting dropped the RUNNING round's controller on the
+ * floor, so its stop button (and a delete, and a shutdown) aborted the newcomer instead and
+ * the original stream ran to completion, unstoppable, still spending money. A conversation
+ * runs at most one round at a time; this is where that invariant is actually enforced. */
+export function beginStreamControl(conversationId: string): AbortController | null {
+  if (controllersByConversation.has(conversationId)) return null;
   const controller = new AbortController();
   controllersByConversation.set(conversationId, controller);
   return controller;

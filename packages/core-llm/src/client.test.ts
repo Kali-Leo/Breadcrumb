@@ -3,7 +3,7 @@
  * using an injected fake fetch — no network involved.
  */
 import { describe, expect, it, vi } from "vitest";
-import { createLlmClient, MAX_STREAM_CONTENT_CHARS } from "./client";
+import { ChatStreamAbortedError, createLlmClient, MAX_STREAM_CONTENT_CHARS } from "./client";
 import { STREAM_FIRST_BYTE_TIMEOUT_MS, STREAM_IDLE_TIMEOUT_MS } from "./retry";
 
 function sseResponseFromLines(lines: readonly string[]): Response {
@@ -139,6 +139,109 @@ describe("createLlmClient.chatStream", () => {
     abortController.abort();
 
     await expect(streaming).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("skips a non-JSON data frame instead of losing the whole answer", async () => {
+    // Regression: nginx/gateway heartbeats ride on `data:` lines as bare words. JSON.parse
+    // threw, chatStream rejected, and an answer already streamed into the UI was discarded
+    // and metered as nothing while the provider billed it in full.
+    const response = sseResponseFromLines([
+      'data: {"choices":[{"delta":{"content":"Hello"}}]}',
+      "data: ping",
+      "data: keep-alive",
+      'data: {"choices":[{"delta":{"content":" world"}}]}',
+      'data: {"choices":[],"usage":{"prompt_tokens":9,"completion_tokens":2}}',
+      "data: [DONE]",
+    ]);
+    const result = await makeClient(response).chatStream(
+      [{ role: "user", content: "hi" }],
+      () => undefined,
+    );
+    expect(result.content).toBe("Hello world");
+    expect(result.usage).toMatchObject({ inputTokens: 9, outputTokens: 2 });
+    expect(result.skippedFrames).toBe(2);
+  });
+
+  it("skips a frame whose shape the schema rejects, keeping what already streamed", async () => {
+    const response = sseResponseFromLines([
+      'data: {"choices":[{"delta":{"content":"Hi"}}]}',
+      'data: {"choices":"not-an-array"}',
+      'data: {"choices":[],"usage":{"prompt_tokens":4,"completion_tokens":1}}',
+      "data: [DONE]",
+    ]);
+    const result = await makeClient(response).chatStream(
+      [{ role: "user", content: "hi" }],
+      () => undefined,
+    );
+    expect(result.content).toBe("Hi");
+    expect(result.usage).toMatchObject({ inputTokens: 4, outputTokens: 1 });
+    expect(result.skippedFrames).toBe(1);
+  });
+
+  it("defaults a usage field the provider left null or absent instead of throwing", async () => {
+    const response = sseResponseFromLines([
+      'data: {"choices":[{"delta":{"content":"Hi"}}]}',
+      'data: {"choices":[],"usage":{"prompt_tokens":null,"completion_tokens":7}}',
+      "data: [DONE]",
+    ]);
+    const result = await makeClient(response).chatStream(
+      [{ role: "user", content: "hi" }],
+      () => undefined,
+    );
+    expect(result.content).toBe("Hi");
+    expect(result.usage).toMatchObject({ inputTokens: 0, outputTokens: 7 });
+    expect(result.skippedFrames).toBe(0);
+  });
+
+  it("keeps the last real usage when a later frame reports usage with nothing in it", async () => {
+    const response = sseResponseFromLines([
+      'data: {"choices":[],"usage":{"prompt_tokens":11,"completion_tokens":3}}',
+      'data: {"choices":[],"usage":{}}',
+      "data: [DONE]",
+    ]);
+    const result = await makeClient(response).chatStream(
+      [{ role: "user", content: "hi" }],
+      () => undefined,
+    );
+    expect(result.usage).toMatchObject({ inputTokens: 11, outputTokens: 3 });
+  });
+
+  it("carries the partial content and the billed usage out on an abort", async () => {
+    // Regression: a stop used to throw a bare DOMException, so the round recorded 0 tokens
+    // for a call the provider had already billed for prompt + everything generated.
+    const encoder = new TextEncoder();
+    let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        bodyController = controller;
+      },
+    });
+    const client = clientWith((_url, init) => {
+      init?.signal?.addEventListener("abort", () =>
+        bodyController?.error(new Error("The resource id 7 is invalid")),
+      );
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const abortController = new AbortController();
+    const deltas: string[] = [];
+    const streaming = client.chatStream([{ role: "user", content: "hi" }], (t) => deltas.push(t), {
+      signal: abortController.signal,
+    });
+    bodyController?.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"部分"}}]}\n'));
+    bodyController?.enqueue(
+      encoder.encode('data: {"choices":[],"usage":{"prompt_tokens":80,"completion_tokens":6}}\n'),
+    );
+    await vi.waitFor(() => expect(deltas).toEqual(["部分"]));
+    abortController.abort();
+
+    const error = await streaming.catch((thrown: unknown) => thrown);
+    expect(error).toBeInstanceOf(ChatStreamAbortedError);
+    expect(error).toMatchObject({
+      name: "AbortError",
+      content: "部分",
+      usage: { inputTokens: 80, outputTokens: 6 },
+    });
   });
 
   it("still resolves normally when the signal never fires", async () => {

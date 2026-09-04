@@ -58,16 +58,25 @@ export async function runDedupSweep(): Promise<void> {
   if (settings.featureSwitches.knowledgeTree && settings.networkEnabled && settings.apiConfig) {
     try {
       const repos = await getRepos();
-      const merges = await planLlmTierMerges(settings.apiConfig);
-      for (const merge of merges) {
-        await repos.nodeMerge.mergeNode(
-          merge.canonicalId,
-          merge.duplicateId,
-          merge.duplicateLabel,
-          nowIso(),
-          newId(),
-        );
-        mergedNodeIds.add(merge.canonicalId);
+      const { merges, pairs, verdicts } = await planLlmTierMerges(settings.apiConfig);
+      const gone = new Set<string>();
+      try {
+        for (const merge of merges) {
+          await repos.nodeMerge.mergeNode(
+            merge.canonicalId,
+            merge.duplicateId,
+            merge.duplicateLabel,
+            nowIso(),
+            newId(),
+          );
+          mergedNodeIds.add(merge.canonicalId);
+          gone.add(merge.duplicateId);
+        }
+      } finally {
+        // Cached only once the merges are done, and never for a "same" — see cacheVerdicts.
+        // `finally`, so the "different" answers already paid for in this batch survive a
+        // merge that throws partway through.
+        await cacheVerdicts(pairs, verdicts, gone);
       }
     } catch (error) {
       void recordAiFailure("knowledge-tree", error);
@@ -89,6 +98,8 @@ export async function runDedupSweep(): Promise<void> {
   }
 }
 
+/** The merges to run plus the raw judgments behind them — the caller caches the judgments
+ * only after the merges land, so the two cannot get out of step. */
 async function planLlmTierMerges(apiConfig: ApiConfig) {
   const repos = await getRepos();
   const [nodes, embeddings, aliases, cachedVerdicts] = await Promise.all([
@@ -108,7 +119,7 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
     aliasNodeIdByLabel,
     judgedPairKeys,
   }).slice(0, MAX_LLM_DEDUP_PAIRS_PER_SWEEP);
-  if (suspectPairs.length === 0) return [];
+  if (suspectPairs.length === 0) return { merges: [], pairs: [], verdicts: [] };
 
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
   const pairs: JudgedNodePair[] = suspectPairs.map((pair, index) => ({
@@ -137,24 +148,43 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
     usage,
   });
 
-  await cacheVerdicts(pairs, parsed.verdicts);
-  return planSynonymVerdictMerges(pairs, parsed.verdicts, nodesById);
+  return {
+    merges: planSynonymVerdictMerges(pairs, parsed.verdicts, nodesById),
+    pairs,
+    verdicts: parsed.verdicts,
+  };
 }
 
-/** Persists every returned verdict — "different" above all, since that is the answer this
- * sweep used to forget. Rows about a node the merge then deletes are cleaned up inside
- * mergeNode's own transaction. Best-effort: a cache write must never abort the merges. */
+/**
+ * Persists the "different" verdicts — the answer this sweep used to forget and re-buy on
+ * every startup. Two rules, both learned the hard way:
+ *
+ * A "same" is never cached. node_pair_verdicts is a PERMANENT filter (planLlmTierMerges drops
+ * every pair already in it), so a cached "same" whose merge did not actually happen retires
+ * the pair forever: never merged, never re-judged, the duplicate left in the tree with
+ * nothing anywhere to say why. Caching it when the merge DID happen was always pointless
+ * anyway — mergeNode deletes every verdict row mentioning the duplicate inside its own
+ * transaction.
+ *
+ * A pair touching a node this sweep merged away is skipped: node_pair_verdicts has no foreign
+ * key, so such a row would sit there pointing at an id that no longer exists.
+ *
+ * Best-effort throughout: a cache write must never take the sweep down.
+ */
 async function cacheVerdicts(
   pairs: readonly JudgedNodePair[],
   verdicts: readonly { pairId: string; verdict: "same" | "different" }[],
+  mergedAwayNodeIds: ReadonlySet<string>,
 ): Promise<void> {
   try {
     const repos = await getRepos();
     const pairById = new Map(pairs.map((pair) => [pair.pairId, pair]));
     const judgedAt = nowIso();
     for (const verdict of verdicts) {
+      if (verdict.verdict !== "different") continue;
       const pair = pairById.get(verdict.pairId);
       if (pair === undefined) continue;
+      if (mergedAwayNodeIds.has(pair.nodeAId) || mergedAwayNodeIds.has(pair.nodeBId)) continue;
       await repos.nodePairVerdicts.record(pair.nodeAId, pair.nodeBId, verdict.verdict, judgedAt);
     }
   } catch (error) {

@@ -16,12 +16,16 @@
  * layer and belong to the view layer; logic with no DOM or Pixi lives in lib/.
  */
 import type { WorldModel, WorldPoint } from "@breadcrumb/feature-map";
-import type { Application, Container } from "pixi.js";
+import type { Application } from "pixi.js";
 import type { InputMode } from "../../lib/platform/inputMode";
-import { hitIsland, type MapLevel } from "./levels";
+import { CAMERA_SETTLE_MS, type CameraFrame, hitIsland, type MapLevel } from "./levels";
 import { type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
 
-const WHEEL_COOLDOWN_MS = 380;
+/** One wheel notch per camera flight. The map has no free zoom: a notch is a whole level
+ * change, and until the camera has arrived the picture on screen is not yet the level the
+ * next notch would act on. Tied to the settle time rather than a hand-picked number so the
+ * two can never drift apart (bug hunt 2026-09-03). */
+const WHEEL_COOLDOWN_MS = CAMERA_SETTLE_MS;
 
 /** The answer lib/platform/inputMode stamps on <html> — read, never re-derived, so the map
  * and its CSS (`coarse:`) can never disagree about which hand is driving. */
@@ -45,9 +49,15 @@ export interface MapNavigation {
 
 export function createMapNavigation(deps: {
   app: Application;
-  worldRoot: Container;
   getWorld(): WorldModel | null;
   getLevel(): MapLevel;
+  /** Where the camera is HEADED. Every hit test converts through this rather than through the
+   * live worldRoot transform: a level change moves `getLevel()` at once while the camera eases
+   * in over CAMERA_SETTLE_MS, so during that flight the live transform belongs to neither
+   * level and a pinch or wheel read through it landed in the wrong place (bug hunt
+   * 2026-09-03). Reading the target makes a gesture mid-flight mean what it will look like it
+   * meant once the camera lands. */
+  getCameraTarget(): CameraFrame;
   /** Enters the given level and re-frames the camera (animated). */
   goToLevel(level: MapLevel): void;
   /** Opens a kingdom's subway map (a DOM overlay the controller never draws). */
@@ -58,14 +68,15 @@ export function createMapNavigation(deps: {
   currentHover(): HoverInfo | null;
   getInputMode(): InputMode;
 }): MapNavigation {
-  const { app, worldRoot } = deps;
+  const { app } = deps;
   const pointer = { x: 0, y: 0 };
   let lastWheelAt = 0;
 
   function toWorldPoint(screenX: number, screenY: number): WorldPoint {
+    const camera = deps.getCameraTarget();
     return {
-      x: (screenX - worldRoot.position.x) / worldRoot.scale.x,
-      y: (screenY - worldRoot.position.y) / worldRoot.scale.x,
+      x: (screenX - camera.x) / camera.scale,
+      y: (screenY - camera.y) / camera.scale,
     };
   }
 

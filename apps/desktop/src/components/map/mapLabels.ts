@@ -50,9 +50,23 @@ export interface MapLabel {
   baseAlpha: number;
 }
 
-/** Fog dims a name through this factor but never below a readable floor. */
+/** The dimmest a faded name is ever drawn — fog never makes a name unreadable. */
+const LABEL_ALPHA_FLOOR = 0.72;
+
+/**
+ * Fog dims a name through this factor but never below a readable floor.
+ *
+ * The input is clamped, not trusted (bug hunt 2026-09-03). Pixi takes `alpha` on faith and a
+ * NaN there silently draws nothing at all — an island whose name simply is not there — and NaN
+ * is exactly what a retention average produces the moment one member's stored retrievability is
+ * NaN, which is one bad row away at any time. Out-of-range values are the same class of
+ * problem from the other side: an alpha above 1 or below 0 is undefined territory. An
+ * unreadable number is treated as fully remembered, because fog is a claim about the learner
+ * and this code has no grounds to make it.
+ */
 export function labelDim(retention: number): number {
-  return 0.72 + 0.28 * retention;
+  const remembered = Number.isFinite(retention) ? Math.min(1, Math.max(0, retention)) : 1;
+  return LABEL_ALPHA_FLOOR + (1 - LABEL_ALPHA_FLOOR) * remembered;
 }
 
 export interface LabelOptions {

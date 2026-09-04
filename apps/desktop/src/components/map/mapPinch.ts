@@ -4,16 +4,19 @@
  * no free zoom: every level is an exact-fit frame (levels.ts), so the pinch is read as one
  * discrete verb per gesture, not as a scale factor. Recognition is @use-gesture/vanilla's
  * PinchGesture; this file only decides when the scale has moved far enough to mean it and
- * makes sure one gesture can fire at most once, with a short cooldown so two levels are never
+ * makes sure one gesture can fire at most once, with a cooldown so two levels are never
  * skipped in one motion.
  * Main exports: bindMapPinch, MapPinchActions.
  */
 import { PinchGesture } from "@use-gesture/vanilla";
+import { CAMERA_SETTLE_MS } from "./levels";
 
 /** Scale ratios that count as "meant it" — well past the jitter of two resting fingertips. */
 const OPEN_RATIO = 1.25;
 const CLOSE_RATIO = 0.8;
-const COOLDOWN_MS = 300;
+/** One level per camera flight, the same rule the wheel follows — a second pinch before the
+ * camera has landed is aimed at a picture that is still moving (bug hunt 2026-09-03). */
+const COOLDOWN_MS = CAMERA_SETTLE_MS;
 
 export interface MapPinchActions {
   /** Fingers spreading, centred at these client coordinates. */

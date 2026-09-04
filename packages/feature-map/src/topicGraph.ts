@@ -15,6 +15,7 @@ import {
   similarityLandscape,
 } from "@breadcrumb/core-vectors";
 import Graph from "graphology";
+import { compareCodePoints } from "./ordering";
 import { computeCentroid, cosineSimilarity } from "./topicVectors";
 
 const K_NEAREST = 5;
@@ -111,7 +112,7 @@ export function mergeSingletonCommunities(
   const singletons = [...initialCommunities.entries()]
     .filter(([, memberIds]) => memberIds.length === 1)
     .map(([key, memberIds]) => ({ key, nodeId: memberIds[0] as string }))
-    .sort((a, b) => a.nodeId.localeCompare(b.nodeId));
+    .sort((a, b) => compareCodePoints(a.nodeId, b.nodeId));
 
   for (const singleton of singletons) {
     const vector = embeddingByNodeId.get(singleton.nodeId);

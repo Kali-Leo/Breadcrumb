@@ -4,7 +4,9 @@
  * own, and loading a pair's stored cards into the scheduler's working map. Split out of
  * diglotWeave.ts (which keeps the per-message patch pipeline) purely to keep both files
  * under the file-size ceiling.
- * Side effects: DB writes (word events, card state).
+ * Side effects: DB writes (word events, card state); on import, subscribes productive-use
+ * detection to chat:messageSent (moved here from stores/diglotStore.ts, 2026-09-04, for the
+ * file-size ceiling — the store imports this module, so the subscription still registers).
  * Main exports: applyDiglotSignal, findProductiveUses, loadCards.
  */
 import type { DiglotEventKind, DiglotPairId } from "@breadcrumb/core-db";
@@ -18,6 +20,8 @@ import {
   tokenizeMessage,
 } from "@breadcrumb/feature-diglot-weave";
 import type { Card } from "ts-fsrs";
+import { appEventBus, useChatStore } from "../../stores/chatStore";
+import { useDiglotStore } from "../../stores/diglotStore";
 import { getRepos } from "../platform/db";
 import { newId, nowIso } from "../platform/time";
 
@@ -97,3 +101,19 @@ export async function loadCards(pair: DiglotPairId): Promise<Map<string, Card>> 
   }
   return cards;
 }
+
+// Productive use (spec 033 signal table): when the user's own message contains a target
+// word they are learning, record the strongest signal — once per lemma per message.
+appEventBus.on("chat:messageSent", ({ conversationId, messageId }) => {
+  const { settings, loaded, cardsByLemma, recordSignal } = useDiglotStore.getState();
+  if (!settings.enabled || loaded === null) return;
+  const message = useChatStore
+    .getState()
+    .messagesFor(conversationId)
+    .find((m) => m.id === messageId);
+  if (message === undefined) return;
+  const used = findProductiveUses(loaded, new Set(cardsByLemma.keys()), message.content);
+  for (const lemma of used) {
+    void recordSignal(lemma, "productive_use", messageId, message.content, null);
+  }
+});

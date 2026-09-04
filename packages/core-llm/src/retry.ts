@@ -23,6 +23,8 @@ export const RETRY_MAX_DELAY_MS = 8_000;
 /** A provider may ask (via Retry-After) for a longer wait than our backoff. We obey it, but
  * never sleep longer than this — past a minute the app just looks frozen. */
 export const RETRY_AFTER_MAX_MS = 60_000;
+/** ...and never shorter than this, however impatient (or broken) the header is. */
+export const RETRY_AFTER_MIN_MS = RETRY_BASE_DELAY_MS;
 
 /** Whole-request budget for a non-streaming call: connect, generate, and read the body.
  * Generous on purpose — a structured-output verdict arriving late over a poor link is still
@@ -116,21 +118,31 @@ function sleep(ms: number, userSignal: AbortSignal | undefined): Promise<void> {
   });
 }
 
-/** Retry-After is either a seconds count or an HTTP date; both are in the spec and both are
- * seen in the wild. Returns null when the header is absent or unparseable. */
-function parseRetryAfterMs(header: string | null): number | null {
+/** Retry-After is either a seconds count or an HTTP date; both are in the spec, both are seen
+ * in the wild, and both arrive malformed often enough to matter. Null = absent or unparseable
+ * (the caller falls back to its own backoff); otherwise a delay clamped into the range we are
+ * willing to obey. Exported for its own test: arithmetic on hostile input. */
+export function retryAfterDelayMs(header: string | null): number | null {
   if (header === null) return null;
-  const seconds = Number(header.trim());
-  if (header.trim() !== "" && Number.isFinite(seconds) && seconds >= 0) return seconds * 1000;
-  const at = Date.parse(header);
-  return Number.isNaN(at) ? null : Math.max(0, at - Date.now());
+  const trimmed = header.trim();
+  if (trimmed === "") return null;
+  const seconds = Number(trimmed);
+  if (Number.isFinite(seconds)) return clampRetryAfter(seconds * 1000);
+  const at = Date.parse(trimmed);
+  return Number.isNaN(at) ? null : clampRetryAfter(at - Date.now());
+}
+
+/** A 429 that then asks us back in -5 seconds (or at a moment already past) is malformed, not
+ * an invitation to fire the next two attempts with no pause — which an unclamped 0 did. */
+function clampRetryAfter(ms: number): number {
+  return Math.min(Math.max(ms, RETRY_AFTER_MIN_MS), RETRY_AFTER_MAX_MS);
 }
 
 /** "Equal jitter" (half fixed, half random) over the capped exponential delay, so clients
  * rate-limited at the same instant do not all come back in lockstep. */
 function backoffDelayMs(attemptIndex: number, retryAfter: string | null): number {
-  const requested = parseRetryAfterMs(retryAfter);
-  if (requested !== null) return Math.min(requested, RETRY_AFTER_MAX_MS);
+  const requested = retryAfterDelayMs(retryAfter);
+  if (requested !== null) return requested;
   const capped = Math.min(RETRY_MAX_DELAY_MS, RETRY_BASE_DELAY_MS * 2 ** attemptIndex);
   return capped / 2 + Math.random() * (capped / 2);
 }

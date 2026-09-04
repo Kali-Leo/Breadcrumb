@@ -46,17 +46,32 @@ export async function* readSseDataLines(
       throw new Error(`SSE line exceeded ${MAX_SSE_LINE_CHARS} characters`);
     }
     for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
+      const payload = dataPayloadOf(line);
+      if (payload === null) continue;
       if (payload === "[DONE]") {
         sawDone = true;
         break;
       }
-      // Some reverse proxies send a bare `data:` as a heartbeat. Yielding "" would reach
-      // JSON.parse and kill the whole answer with a SyntaxError.
-      if (payload.length === 0) continue;
       yield payload;
     }
   }
+  // The stream ended. Two tails are still owed to the caller, and dropping either used to
+  // lose the final frame outright: any bytes the decoder was holding for an unfinished
+  // multi-byte character, and the leftover line that never got its newline. Providers that
+  // close the connection right after the usage frame (llama.cpp, several gateways) send
+  // exactly that shape, and losing it metered a real, billed call as free.
+  buffered += decoder.decode();
+  if (sawDone) return;
+  const payload = dataPayloadOf(buffered);
+  if (payload !== null && payload !== "[DONE]") yield payload;
+}
+
+/** The payload of one SSE line, or null when the line is not a `data:` line or carries
+ * nothing. Some reverse proxies send a bare `data:` as a heartbeat; yielding "" for it would
+ * reach JSON.parse and kill the whole answer with a SyntaxError. */
+function dataPayloadOf(line: string): string | null {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("data:")) return null;
+  const payload = trimmed.slice(5).trim();
+  return payload.length === 0 ? null : payload;
 }

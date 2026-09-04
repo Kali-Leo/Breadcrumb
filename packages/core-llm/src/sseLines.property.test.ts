@@ -131,6 +131,48 @@ describe("reading SSE data lines", () => {
     );
   });
 
+  it("yields the last frame even when the stream ends without a newline", async () => {
+    // Regression: providers that close right after the usage frame send no trailing newline,
+    // and the leftover was dropped on the floor — the usage frame vanished and the whole
+    // call was metered as free.
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(payload, { minLength: 1, maxLength: 12 }),
+        fc.array(fc.nat(), { maxLength: 20 }),
+        async (payloads, cuts) => {
+          const body = payloads.map((one) => `data: ${one}`).join("\n");
+          const bytes = new TextEncoder().encode(body);
+          expect(await collect(streamOf(cutAt(bytes, cuts)))).toEqual(payloads);
+        },
+      ),
+      { numRuns: 300 },
+    );
+  });
+
+  it("keeps a usage frame that arrives without its trailing newline", async () => {
+    const bytes = new TextEncoder().encode(
+      'data: {"choices":[{"delta":{"content":"hi"}}]}\ndata: {"usage":{"prompt_tokens":10}}',
+    );
+    expect(await collect(streamOf([bytes]))).toEqual([
+      '{"choices":[{"delta":{"content":"hi"}}]}',
+      '{"usage":{"prompt_tokens":10}}',
+    ]);
+  });
+
+  it("flushes a multi-byte character that ended the stream without a newline", async () => {
+    const bytes = new TextEncoder().encode("data: 闭包与作用域链 🍞");
+    for (let cut = 1; cut < bytes.length; cut += 1) {
+      expect(await collect(streamOf([bytes.slice(0, cut), bytes.slice(cut)]))).toEqual([
+        "闭包与作用域链 🍞",
+      ]);
+    }
+  });
+
+  it("still stops at a [DONE] that carried no trailing newline", async () => {
+    const bytes = new TextEncoder().encode("data: one\ndata: [DONE]");
+    expect(await collect(streamOf([bytes]))).toEqual(["one"]);
+  });
+
   it("refuses a line that never ends, however the bytes were cut up", async () => {
     // The pathological stream: bytes forever, no newline, so the buffer would grow without
     // bound. The cap has to fire on the accumulation, not on any single chunk.

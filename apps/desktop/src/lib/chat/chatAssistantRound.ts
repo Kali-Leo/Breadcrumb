@@ -33,6 +33,10 @@ export interface AssistantRoundDeps {
     finishedAt: string;
     anchoredNodeId: string | null;
   }): void;
+  /** Whether the conversation still exists. A round whose conversation was deleted mid-stream
+   * must not announce itself: chat:responseFinished is what starts extraction, auto-naming
+   * and the map refresh, and all three would go looking for a row that is gone. */
+  isConversationLive(conversationId: string): boolean;
 }
 
 export async function runAssistantRound(
@@ -55,6 +59,10 @@ export async function runAssistantRound(
 ): Promise<void> {
   const { conversationId } = args;
   const controller = beginStreamControl(conversationId);
+  // Another round is already streaming into this conversation. Starting a second one would
+  // take its stop button away and bill two answers for one question; the in-flight round owns
+  // the session's streamingText, so there is nothing to clean up here either.
+  if (controller === null) return;
   try {
     const baseMessages: ChatMessage[] = [...args.historyBeforeUser, args.userMessage].map((m) => ({
       role: m.role,
@@ -102,6 +110,9 @@ export async function runAssistantRound(
       conversationCost: cost.conversationCost,
     }));
     deps.setGlobalMeters({ todayCost: cost.todayCost, conversations: cost.conversations });
+    // The spend is real and stays on the books above; the announcement is not sent, because
+    // there is no longer a conversation for anyone to react about.
+    if (!deps.isConversationLive(conversationId)) return;
     deps.emitResponseFinished({
       conversationId,
       messageId: assistantMessage.id,

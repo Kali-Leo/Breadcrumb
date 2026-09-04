@@ -11,8 +11,10 @@
  * continent's name away from its members.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { growClusters } from "./continentGrowth";
 import type { ContinentSummary } from "./continents";
-import { clusterEmbeddedNodes, pickMedoid } from "./topicCluster";
+import { compareCodePoints } from "./ordering";
+import { pickMedoid } from "./topicCluster";
 import { sumEngagement } from "./topicFallback";
 import type { TopicSummary } from "./topics";
 
@@ -27,18 +29,18 @@ export function layoutMemberIds(
   return memberNodeIds.filter((id) => (createdAtById.get(id) ?? "") < layoutDayStartIso);
 }
 
-/** The cluster's oldest member — its identity anchor. Ties (same creation instant) and
- * members with no known creation time fall back to id order, so the choice is total and
- * deterministic. Undefined only for an empty member list. */
-function earliestMemberId(
-  memberNodeIds: readonly string[],
+/** Arrival order — (created_at, id), with an unknown creation time sorting first. It is what
+ * growClusters' whole stability guarantee rests on, so this file sorts by it rather than
+ * trusting the caller's iteration order. Ties fall back to id, so the order is total. */
+function byArrival(
+  nodeIds: readonly string[],
   createdAtById: ReadonlyMap<string, string>,
-): string | undefined {
-  return [...memberNodeIds].sort((a, b) => {
-    const createdA = createdAtById.get(a) ?? "";
-    const createdB = createdAtById.get(b) ?? "";
-    return createdA.localeCompare(createdB) || a.localeCompare(b);
-  })[0];
+): string[] {
+  return [...nodeIds].sort(
+    (a, b) =>
+      compareCodePoints(createdAtById.get(a) ?? "", createdAtById.get(b) ?? "") ||
+      compareCodePoints(a, b),
+  );
 }
 
 /**
@@ -55,26 +57,32 @@ export function clusterOrphanRoots(
   layoutDayStartIso: string | undefined,
 ): { continents: ContinentSummary[]; islets: TopicSummary[] } {
   const nodesById = new Map(orphanRoots.map((node) => [node.id, node]));
-  const embeddedIds = orphanRoots
-    .filter((node) => (embeddingByNodeId.get(node.id)?.length ?? 0) > 0)
-    .map((node) => node.id);
-  const communities = clusterEmbeddedNodes(embeddedIds, embeddingByNodeId);
+  const embeddedIds = byArrival(
+    orphanRoots
+      .filter((node) => (embeddingByNodeId.get(node.id)?.length ?? 0) > 0)
+      .map((node) => node.id),
+    createdAtById,
+  );
+  const communities = growClusters(embeddedIds, embeddingByNodeId);
 
   const continents: ContinentSummary[] = [];
   const gathered = new Set<string>();
-  for (const memberNodeIds of communities.values()) {
+  for (const { anchorId, memberIds: memberNodeIds } of communities) {
     if (memberNodeIds.length < 2) continue;
     const medoid = pickMedoid(memberNodeIds, embeddingByNodeId, nodesById);
     if (medoid === undefined) continue;
     for (const id of memberNodeIds) gathered.add(id);
     const layoutMembers = layoutMemberIds(memberNodeIds, createdAtById, layoutDayStartIso);
     continents.push({
-      // Identity — and through it the terrain seed — is the cluster's oldest member, not its
-      // medoid: joining a cluster never changes which of its members came first, so the island
-      // a learner already knows keeps its shape as the cluster grows (Leo 2026-09-01: shape is
-      // the one thing that stays put). The label still comes from the medoid, which is the
-      // member that actually says what the cluster is about.
-      id: earliestMemberId(memberNodeIds, createdAtById) ?? medoid.id,
+      // Identity — and through it the terrain seed — is the cluster's anchor, never its medoid:
+      // the oldest member on the day the landmass formed, frozen from that instant. growClusters
+      // is what makes "frozen" true (see its header): it replays arrivals in order and never
+      // revisits a landmass's membership, so a cluster only ever grows and its id outlives every
+      // later joiner (Leo 2026-09-01: shape is the one thing that stays put; bug hunt 2026-09-03
+      // finding 3 is why that guarantee had to move into the clustering itself). The label still
+      // comes from the medoid, the member that actually says what the cluster is about — a name
+      // may broaden as the landmass grows, its shape may not.
+      id: anchorId,
       label: medoid.label,
       memberNodeIds: [...memberNodeIds],
       weight: sumEngagement(layoutMembers, engagementByNodeId),

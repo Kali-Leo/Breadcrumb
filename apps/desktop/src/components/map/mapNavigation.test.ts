@@ -1,14 +1,15 @@
 /**
  * Purpose: the two input grammars of the map's navigation — a click enters at once under a
  * mouse; under a finger a tap selects, the same tap again enters, open sea clears, and moving
- * the finger never retargets the selection. Pixi is stubbed to the two things the navigation
- * reads (the canvas rect and the world root's transform); the world is the real demo model.
+ * the finger never retargets the selection — plus the hit test's camera. Pixi is stubbed to the
+ * two things the navigation reads (the canvas rect and the world root's transform); the world
+ * is the real demo model.
  */
 import { buildWorldModel } from "@breadcrumb/feature-map";
-import type { Application, Container } from "pixi.js";
+import type { Application } from "pixi.js";
 import { describe, expect, it, vi } from "vitest";
 import { demoKnowledgeNodes } from "./demoWorld";
-import type { MapLevel } from "./levels";
+import { CAMERA_SETTLE_MS, type CameraFrame, frameForLevel, type MapLevel } from "./levels";
 import type { HoverInfo, HoverResult } from "./mapHover";
 import { createMapNavigation } from "./mapNavigation";
 
@@ -21,8 +22,13 @@ if (kingdom === undefined) throw new Error("demo island has no kingdom");
 function harness(mode: "coarse" | "fine", startLevel: MapLevel = { kind: "world" }) {
   let level = startLevel;
   let hover: HoverInfo | null = null;
+  // The live Pixi transform, which during a level animation is somewhere between the frame
+  // being left and the frame being entered; the camera TARGET is what the level means.
+  const worldRoot = { position: { x: 0, y: 0 }, scale: { x: 1 } };
+  let camera: CameraFrame = { scale: 1, x: 0, y: 0 };
   const goToLevel = vi.fn((next: MapLevel) => {
     level = next;
+    camera = frameForLevel(world, next, 1000, 1000);
   });
   const enterKingdom = vi.fn();
   const showHover = vi.fn((next: HoverResult | null) => {
@@ -32,9 +38,9 @@ function harness(mode: "coarse" | "fine", startLevel: MapLevel = { kind: "world"
     app: {
       canvas: { getBoundingClientRect: () => ({ left: 0, top: 0 }) },
     } as unknown as Application,
-    worldRoot: { position: { x: 0, y: 0 }, scale: { x: 1 } } as unknown as Container,
     getWorld: () => world,
     getLevel: () => level,
+    getCameraTarget: () => camera,
     goToLevel,
     enterKingdom,
     showHover,
@@ -45,7 +51,20 @@ function harness(mode: "coarse" | "fine", startLevel: MapLevel = { kind: "world"
     navigation.onClick({ clientX: x, clientY: y } as MouseEvent);
   const move = (x: number, y: number) =>
     navigation.onPointerMove({ clientX: x, clientY: y } as PointerEvent);
-  return { navigation, goToLevel, enterKingdom, showHover, click, move, hover: () => hover };
+  return {
+    navigation,
+    goToLevel,
+    enterKingdom,
+    showHover,
+    click,
+    move,
+    hover: () => hover,
+    worldRoot,
+    camera: () => camera,
+    setCamera(next: CameraFrame) {
+      camera = next;
+    },
+  };
 }
 
 const sea = { x: -100_000, y: -100_000 };
@@ -115,5 +134,87 @@ describe("finger", () => {
     expect(h.goToLevel).toHaveBeenCalledWith({ kind: "world" });
     h.navigation.back();
     expect(h.goToLevel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the camera a hit test reads", () => {
+  const screen = 1000;
+
+  it("resolves a pinch mid-dive against the target camera, not the animating one", () => {
+    // The bug (hunt 2026-09-03): a level change moves `level` at once but the camera eases
+    // into place over ~0.66 s. A second gesture during that window converted its screen point
+    // with the frame the camera happened to be passing through, so it entered the wrong
+    // kingdom — or nothing at all. Reproduced here by freezing worldRoot at the world frame
+    // while the level and the camera target have already moved to the island.
+    const h = harness("coarse");
+    h.click(island.center.x, island.center.y);
+    h.click(island.center.x, island.center.y);
+    expect(h.goToLevel).toHaveBeenCalledWith({ kind: "island", islandId: island.nodeId });
+
+    const worldFrame = frameForLevel(world, { kind: "world" }, screen, screen);
+    // Mid-animation: the transform is still the frame being left.
+    h.worldRoot.position.x = worldFrame.x;
+    h.worldRoot.position.y = worldFrame.y;
+    h.worldRoot.scale.x = worldFrame.scale;
+
+    const target = h.camera();
+    // Every kingdom, so the assertion cannot be satisfied by the hit test's
+    // nearest-label fallback collapsing them all onto the same one.
+    for (const place of island.kingdoms) {
+      h.enterKingdom.mockClear();
+      // The screen point that lands on this kingdom once the camera arrives.
+      h.navigation.enterAt(
+        place.labelPosition.x * target.scale + target.x,
+        place.labelPosition.y * target.scale + target.y,
+      );
+      expect(h.enterKingdom).toHaveBeenCalledWith(place.nodeId);
+    }
+  });
+
+  it("resolves hover and clicks against the target camera too", () => {
+    const h = harness("fine", { kind: "island", islandId: island.nodeId });
+    const target = frameForLevel(
+      world,
+      { kind: "island", islandId: island.nodeId },
+      screen,
+      screen,
+    );
+    h.setCamera(target);
+    h.worldRoot.position.x = 0;
+    h.worldRoot.position.y = 0;
+    h.worldRoot.scale.x = 1;
+
+    h.move(
+      kingdom.labelPosition.x * target.scale + target.x,
+      kingdom.labelPosition.y * target.scale + target.y,
+    );
+    expect(h.hover()?.nodeId).toBe(kingdom.nodeId);
+  });
+});
+
+describe("wheel cooldown", () => {
+  it("takes one notch per camera flight and ignores the rest", () => {
+    const now = vi.spyOn(performance, "now");
+    try {
+      const h = harness("fine");
+      const wheel = (deltaY: number) =>
+        h.navigation.onWheel({ deltaY, preventDefault: () => {} } as WheelEvent);
+      h.move(island.center.x, island.center.y);
+
+      now.mockReturnValue(10_000);
+      wheel(-1);
+      expect(h.goToLevel).toHaveBeenLastCalledWith({ kind: "island", islandId: island.nodeId });
+      expect(h.goToLevel).toHaveBeenCalledTimes(1);
+      // Still in flight: the picture the next notch would act on has not arrived yet.
+      now.mockReturnValue(10_000 + CAMERA_SETTLE_MS - 1);
+      wheel(1);
+      expect(h.goToLevel).toHaveBeenCalledTimes(1);
+      now.mockReturnValue(10_000 + CAMERA_SETTLE_MS);
+      wheel(1);
+      expect(h.goToLevel).toHaveBeenLastCalledWith({ kind: "world" });
+      expect(h.goToLevel).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+    }
   });
 });

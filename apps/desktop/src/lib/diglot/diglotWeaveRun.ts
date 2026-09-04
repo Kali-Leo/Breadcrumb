@@ -19,14 +19,12 @@ import { REFINE_HARD_TIMEOUT_MS, refineWithHardTimeout } from "./diglotReveal";
 import { DIGLOT_SETTINGS_KEY } from "./diglotSettings";
 import { weaveAssistantMessage } from "./diglotWeave";
 
-/** Bumped when a weave-affecting setting changes — in-flight weaves compare it to discard
- * stale output. */
-let weaveEpoch = 0;
-
 /** Called by saveSettings when a weave-affecting key changed, so that every weave already in
- * flight (computed against the old settings) throws its result away. */
+ * flight (computed against the old settings) throws its result away and starts over, and so
+ * that whatever asked for a weave asks again — the epoch lives in the store because a swept
+ * patch cache is invisible to a React effect otherwise, and the message stays blank. */
 export function bumpWeaveEpoch(): void {
-  weaveEpoch += 1;
+  useDiglotStore.setState({ weaveEpoch: useDiglotStore.getState().weaveEpoch + 1 });
 }
 
 /** Persists what the placement rules made of one signal (see lib/diglot/diglotPlacement.ts). */
@@ -74,43 +72,59 @@ export async function weaveAndStore(
   displaySource: string,
   refine: boolean,
 ): Promise<void> {
-  const { settings, loaded, patchesByMessage, cardsByLemma } = useDiglotStore.getState();
-  if (!settings.enabled || loaded === null) return;
-  if (patchesByMessage.has(messageId) || weaveInFlight.has(messageId)) return;
+  if (weaveInFlight.has(messageId)) return;
+  if (useDiglotStore.getState().patchesByMessage.has(messageId)) return;
   weaveInFlight.add(messageId);
-  const epochAtStart = weaveEpoch;
   try {
-    const result = await weaveAssistantMessage({
-      loaded,
-      content: displaySource,
-      density: settings.density,
-      newWordDailyBase: settings.newWordDailyBase,
-      introductionRankFloor: settings.introductionRankFloor,
-      cardsByLemma,
-      newWordsIntroducedToday: useDiglotStore.getState().newWordsIntroducedToday,
-    });
-    let patches = result.patches;
-    // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
-    const { apiConfig, networkEnabled } = useSettingsStore.getState();
-    if (refine && settings.llmRefineEnabled && networkEnabled && apiConfig !== null) {
-      const basePatches = patches;
-      if (basePatches.length > 0) {
-        patches = await refineWithHardTimeout(
-          () => refineWeavePatches(apiConfig, loaded, displaySource, basePatches),
-          basePatches,
-          REFINE_HARD_TIMEOUT_MS,
-        );
-      }
+    // Loop rather than return: a settings change mid-weave invalidates the result, and
+    // returning empty-handed is what left every message on screen blank (2026-09-04). The
+    // next round reads the new settings; epochs only change when a person changes a setting.
+    while (!(await weaveOnce(messageId, displaySource, refine))) {
+      /* weave again against the settings that superseded the last round */
     }
-    // Settings changed underneath (the epoch bump also swept patchesByMessage) — this
-    // weave was computed against stale inputs and must not land.
-    if (epochAtStart !== weaveEpoch) return;
-    const state = useDiglotStore.getState();
-    useDiglotStore.setState({
-      patchesByMessage: new Map(state.patchesByMessage).set(messageId, patches),
-      newWordsIntroducedToday: state.newWordsIntroducedToday + result.introducedLemmas.length,
-    });
   } finally {
     weaveInFlight.delete(messageId);
   }
+}
+
+/** One weave attempt. Returns false when a settings change during it made the result stale
+ * (nothing was stored), true when the patches landed or there is nothing to weave. */
+async function weaveOnce(
+  messageId: string,
+  displaySource: string,
+  refine: boolean,
+): Promise<boolean> {
+  const { settings, loaded, cardsByLemma, weaveEpoch } = useDiglotStore.getState();
+  if (!settings.enabled || loaded === null) return true;
+  const result = await weaveAssistantMessage({
+    loaded,
+    content: displaySource,
+    density: settings.density,
+    newWordDailyBase: settings.newWordDailyBase,
+    introductionRankFloor: settings.introductionRankFloor,
+    cardsByLemma,
+    newWordsIntroducedToday: useDiglotStore.getState().newWordsIntroducedToday,
+  });
+  let patches = result.patches;
+  // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
+  const { apiConfig, networkEnabled } = useSettingsStore.getState();
+  if (refine && settings.llmRefineEnabled && networkEnabled && apiConfig !== null) {
+    const basePatches = patches;
+    if (basePatches.length > 0) {
+      patches = await refineWithHardTimeout(
+        () => refineWeavePatches(apiConfig, loaded, displaySource, basePatches),
+        basePatches,
+        REFINE_HARD_TIMEOUT_MS,
+      );
+    }
+  }
+  // Settings changed underneath (the epoch bump also swept patchesByMessage) — this weave
+  // was computed against stale inputs and must not land.
+  const state = useDiglotStore.getState();
+  if (weaveEpoch !== state.weaveEpoch) return false;
+  useDiglotStore.setState({
+    patchesByMessage: new Map(state.patchesByMessage).set(messageId, patches),
+    newWordsIntroducedToday: state.newWordsIntroducedToday + result.introducedLemmas.length,
+  });
+  return true;
 }

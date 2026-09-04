@@ -1,8 +1,8 @@
 /**
- * Purpose: the whole send round for one conversation (guards -> persist user turn -> clear
- * that conversation's draft -> assistant half via runAssistantRound), bound to its own
- * session for its entire life — extracted from chatStore so the store stays an orchestrator
- * under the file-size cap.
+ * Purpose: the whole send round for one conversation (concurrency gate -> guards -> persist
+ * user turn -> clear that conversation's draft -> assistant half via runAssistantRound),
+ * bound to its own session for its entire life — extracted from chatStore so the store stays
+ * an orchestrator under the file-size cap.
  * Main exports: runChatSendPipeline, ChatSendDeps.
  */
 
@@ -32,14 +32,40 @@ export interface ChatSendDeps extends AssistantRoundDeps {
   emitMessageSent(payload: { conversationId: string; messageId: string; sentAt: string }): void;
 }
 
+/** Composers currently mid-send, keyed by the conversation the send was bound to (null = the
+ * new-conversation composer). Module-level because a second window addressing the same
+ * conversation has its own component tree but not its own round. */
+const sendsInFlight = new Set<string | null>();
+
+/**
+ * One send, from the guards to the assistant's last token. Re-entrant calls for the SAME
+ * conversation are dropped: a double-clicked 发送 (or a second window) otherwise persisted two
+ * user messages against one question and billed two answers, and the second round took the
+ * first one's stop button with it. The gate closes synchronously, before the first await, so
+ * two clicks in one tick cannot both get through.
+ */
 export async function runChatSendPipeline(
   deps: ChatSendDeps,
   content: string,
   targetConversationId: string | undefined,
 ): Promise<void> {
+  const requestedId = targetConversationId ?? deps.activeConversationId();
+  if (sendsInFlight.has(requestedId)) return;
+  sendsInFlight.add(requestedId);
+  try {
+    await sendRound(deps, content, requestedId);
+  } finally {
+    sendsInFlight.delete(requestedId);
+  }
+}
+
+async function sendRound(
+  deps: ChatSendDeps,
+  content: string,
+  requestedId: string | null,
+): Promise<void> {
   const { useSettingsStore } = await import("../../stores/settingsStore");
   const settings = useSettingsStore.getState();
-  const requestedId = targetConversationId ?? deps.activeConversationId();
   if (!settings.networkEnabled) {
     deps.setRoundError(requestedId, CHAT_ROUND_GUARD_COPY.offline);
     return;

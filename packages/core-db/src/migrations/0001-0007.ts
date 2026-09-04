@@ -69,6 +69,20 @@ export const MIGRATIONS_0001_0007: readonly Migration[] = [
   {
     // The tree becomes a USER attribute: nodes are globally unique by label;
     // conversations leave sightings (footprints) instead of owning nodes.
+    //
+    // KNOWN DEFECT, deliberately left as it shipped: the `INSERT OR IGNORE` below drops every
+    // later row sharing a label, and if a dropped row was ANOTHER row's parent, the child it
+    // left behind fails the foreign key at the end of that statement — 0003 aborts and the
+    // database can never move past it. (The re-pointing UPDATE that would have fixed the
+    // parent runs after, so it never gets the chance.) Only 0002-era databases with a
+    // duplicated label whose row is a parent are affected, which per-conversation trees made
+    // ordinary.
+    //
+    // It is not fixed here because these statements are frozen: every database that ran 0003
+    // recorded it and will never run it again, so editing this list changes only what FRESH
+    // databases get and silently forks the two schemas apart. 0053 repairs the parent links a
+    // surviving database can still be carrying; a database stuck AT 0003 cannot be rescued by
+    // any later migration and needs a hand repair of the old knowledge_nodes table first.
     id: "0003_user_level_tree",
     statements: [
       `CREATE TABLE knowledge_nodes_v2 (

@@ -66,6 +66,54 @@ describe("probeConnection", () => {
     expect(await probeWith(async () => completionResponse({ error: "x" }, status))).toBe(outcome);
   });
 
+  it("does not blame the key for a 403 that is really a WAF challenge page", async () => {
+    // Regression: an airport proxy / CDN / corporate gateway answers 403 with an HTML
+    // challenge, and the learner was told "your key was rejected" — sending them off to
+    // reissue a key that was fine. A real OpenAI-compatible 401/403 is always JSON.
+    const html = (status: number) =>
+      new Response("<!doctype html><title>Attention Required!</title>", {
+        status,
+        headers: { "Content-Type": "text/html; charset=UTF-8" },
+      });
+    expect(await probeWith(async () => html(403))).toBe("blockedByBrowser");
+    expect(await probeWith(async () => html(401))).toBe("blockedByBrowser");
+  });
+
+  it("still blames the key when the provider itself rejects it (JSON, as real APIs do)", async () => {
+    expect(await probeWith(async () => completionResponse({ error: "bad key" }, 401))).toBe(
+      "unauthorized",
+    );
+    expect(await probeWith(async () => completionResponse({ error: "forbidden" }, 403))).toBe(
+      "unauthorized",
+    );
+  });
+
+  it("leaves the other statuses alone when the body happens to be HTML", async () => {
+    const html = (status: number) =>
+      new Response("<html>proxy error</html>", {
+        status,
+        headers: { "Content-Type": "text/html" },
+      });
+    expect(await probeWith(async () => html(502))).toBe("serverError");
+    expect(await probeWith(async () => html(404))).toBe("notFound");
+    expect(await probeWith(async () => html(429))).toBe("rateLimited");
+  });
+
+  it("still reports ok when the provider's usage object is missing a count", async () => {
+    // Regression: an all-or-nothing usage schema made a perfectly working endpoint read as
+    // "no AI service at that address" purely because it reported tokens its own way.
+    const result = await probeConnection({
+      ...CONFIG,
+      fetchImpl: async () =>
+        completionResponse({
+          choices: [{ message: { content: "hi" } }],
+          usage: { prompt_tokens: 8 },
+        }),
+    });
+    expect(result.outcome).toBe("ok");
+    expect(result.usage).toMatchObject({ inputTokens: 8, outputTokens: 0 });
+  });
+
   it("does not retry — one 429 must read as a rate limit, not as a long wait", async () => {
     const fetchImpl = vi.fn(async () => completionResponse({}, 429));
     await probeConnection({ ...CONFIG, fetchImpl: fetchImpl as unknown as typeof fetch });

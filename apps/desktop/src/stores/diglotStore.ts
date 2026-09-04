@@ -5,11 +5,11 @@
  * (MessageBubble blanks the text until patches land, so the original never paints first);
  * a fresh reply weaves ONCE via ensureWovenBeforeReveal — awaited by chatAssistantRound
  * BEFORE the streamingText→message swap, with the LLM refine raced against a hard timeout —
- * so visible text is never morphed after the fact. Side effect on import: subscribes
- * productive-use detection to chat:messageSent.
+ * so visible text is never morphed after the fact.
  * Split out to keep this file under the file-size ceiling: the settings shape
  * (lib/diglot/diglotSettings.ts), the durable-storage actions (…SettingsPersistence.ts), the
- * weave run (…WeaveRun.ts) and the daily density loop (…Density.ts).
+ * weave run (…WeaveRun.ts), the daily density loop (…Density.ts), the productive-use
+ * subscription (…Signals.ts) and the answer-language follow (…LanguageSync.ts).
  * Main exports: useDiglotStore, DiglotSettings.
  */
 import type { DiglotEventKind } from "@breadcrumb/core-db";
@@ -32,10 +32,9 @@ import {
   refreshDiglotConfusions,
   saveDiglotSettings,
 } from "../lib/diglot/diglotSettingsPersistence";
-import { applyDiglotSignal, findProductiveUses } from "../lib/diglot/diglotSignals";
+import { applyDiglotSignal } from "../lib/diglot/diglotSignals";
 import { foldPlacement, weaveAndStore } from "../lib/diglot/diglotWeaveRun";
 import { BUNDLED_PAIR_ID } from "../lib/diglot/languagePacks";
-import { appEventBus, useChatStore } from "./chatStore";
 
 export type { DiglotSettings } from "../lib/diglot/diglotSettings";
 
@@ -59,6 +58,12 @@ interface DiglotState {
   installingPairId: string | null;
   /** Set when the last download did not finish — the picker says so and offers a retry. */
   installFailedPairId: string | null;
+  /** Bumped whenever a weave-affecting settings change swept the cached patches: whatever
+   * asks for a weave depends on it, so it asks again instead of leaving the message blank. */
+  weaveEpoch: number;
+  /** What the learner is now learning, when the answer language moved and the pair had to
+   * follow it — one line on the settings page, cleared by their own next choice. */
+  pairResetTargetLang: string | null;
   refreshConfusions(): Promise<void>;
   /** Downloads the pack for a pair if needed, then switches to it. */
   choosePair(pairId: string): Promise<void>;
@@ -93,6 +98,8 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   installedPairs: [BUNDLED_PAIR_ID],
   installingPairId: null,
   installFailedPairId: null,
+  weaveEpoch: 0,
+  pairResetTargetLang: null,
   loaded: null,
   cardsByLemma: new Map(),
   patchesByMessage: new Map(),
@@ -182,19 +189,3 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
     });
   },
 }));
-
-// Productive use (spec 033 signal table): when the user's own message contains a target
-// word they are learning, record the strongest signal — once per lemma per message.
-appEventBus.on("chat:messageSent", ({ conversationId, messageId }) => {
-  const { settings, loaded, cardsByLemma, recordSignal } = useDiglotStore.getState();
-  if (!settings.enabled || loaded === null) return;
-  const message = useChatStore
-    .getState()
-    .messagesFor(conversationId)
-    .find((m) => m.id === messageId);
-  if (message === undefined) return;
-  const used = findProductiveUses(loaded, new Set(cardsByLemma.keys()), message.content);
-  for (const lemma of used) {
-    void recordSignal(lemma, "productive_use", messageId, message.content, null);
-  }
-});

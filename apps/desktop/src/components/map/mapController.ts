@@ -3,14 +3,15 @@
  * (world → island, the deepest view since the kingdom and village dives were removed
  * 2026-08-11, backup: branch backup/village-town-scene), exact-fit camera animation and the
  * hover readout plus its highlight. Band fades live in mapBands, the recommendation pins in
- * mapRecommendPins, and pointer input in mapNavigation. Goal mode is not handled here:
+ * mapRecommendPins, pointer input in mapNavigation and the DOM/renderer subscriptions in
+ * mapControllerEvents. Goal mode is not handled here:
  * MapView hands in a goal-filtered world model (goalWorldFilter.ts) and the exact-fit
  * framing refits to it automatically.
  * Main exports: createMapController, MapController, MapHooks.
  */
 import type { WorldModel } from "@breadcrumb/feature-map";
 import { type Application, Container } from "pixi.js";
-import { findIsland, frameForLevel, type MapLevel } from "./levels";
+import { CAMERA_EASE_RATE, findIsland, frameForLevel, type MapLevel } from "./levels";
 import type { MapArt } from "./mapArtAssets";
 import {
   advancePendingAppear,
@@ -18,6 +19,7 @@ import {
   beginAppearTransition,
   type PendingAppear,
 } from "./mapBands";
+import { bindMapEvents } from "./mapControllerEvents";
 import { drawHoverHighlight, type HoverInfo, type HoverResult } from "./mapHover";
 import { counterScaleLabels, setLabelEmphasis } from "./mapLabels";
 import { createMapNavigation, type MapNavigation, readStampedInputMode } from "./mapNavigation";
@@ -69,7 +71,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
   let lastHover: HoverInfo | null = null;
   let lastRetention: ReadonlyMap<string, number> = new Map();
   let lastNewNodeIds: ReadonlySet<string> = new Set();
-  let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  let unbindEvents: (() => void) | null = null;
 
   function paintRecommendMarkers(): void {
     drawRecommendMarkers(recommendLayer, controller.scene, level, recommendTargets);
@@ -89,9 +91,9 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
 
   const navigation = createMapNavigation({
     app,
-    worldRoot,
     getWorld: () => world,
     getLevel: () => level,
+    getCameraTarget: () => cameraTarget,
     goToLevel(next) {
       level = next;
       applyLevel(false);
@@ -128,7 +130,7 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       applyLevel(false);
     },
     tick(deltaSeconds) {
-      const ease = 1 - Math.exp(-deltaSeconds * 7);
+      const ease = 1 - Math.exp(-deltaSeconds * CAMERA_EASE_RATE);
       worldRoot.scale.x += (cameraTarget.scale - worldRoot.scale.x) * ease;
       worldRoot.scale.y = worldRoot.scale.x;
       worldRoot.position.x += (cameraTarget.x - worldRoot.position.x) * ease;
@@ -144,9 +146,8 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
       });
     },
     destroy() {
-      app.canvas.removeEventListener("wheel", navigation.onWheel);
-      app.canvas.removeEventListener("click", navigation.onClick);
-      app.canvas.removeEventListener("pointermove", navigation.onPointerMove);
+      unbindEvents?.();
+      unbindEvents = null;
     },
   };
 
@@ -181,18 +182,12 @@ export function createMapController(app: Application, art: MapArt, hooks: MapHoo
     hooks.onLevel(level);
   }
 
-  app.canvas.addEventListener("wheel", navigation.onWheel, { passive: false });
-  app.canvas.addEventListener("click", navigation.onClick);
-  app.canvas.addEventListener("pointermove", navigation.onPointerMove);
-  // Label placement is computed against the screen size, so a resize must re-place the
-  // names (debounced) — stale positions are how names end up lying on each other.
-  app.renderer.on("resize", () => {
-    applyLevel(true);
-    if (resizeTimer !== null) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
+  unbindEvents = bindMapEvents(app, navigation, {
+    reframe: () => applyLevel(true),
+    replace: () => {
       rebuildScene();
       applyLevel(true);
-    }, 200);
+    },
   });
   return controller;
 }

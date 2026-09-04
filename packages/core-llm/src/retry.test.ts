@@ -9,6 +9,9 @@ import {
   LlmTimeoutError,
   MAX_TRANSPORT_RETRIES,
   NON_STREAMING_TIMEOUT_MS,
+  RETRY_AFTER_MAX_MS,
+  RETRY_AFTER_MIN_MS,
+  retryAfterDelayMs,
 } from "./retry";
 
 const URL = "https://api.example.com/v1/chat/completions";
@@ -164,5 +167,37 @@ describe("fetchWithRetry", () => {
     controller.abort();
     await assertion;
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("retryAfterDelayMs", () => {
+  it("clamps a negative Retry-After instead of retrying with no wait at all", () => {
+    // Regression: Number("-5") failed the old `seconds >= 0` guard and fell through to
+    // Date.parse("-5"), which V8 resolves to a moment in the past — so the delay came out 0
+    // and one rate limit turned into three requests fired back to back.
+    expect(retryAfterDelayMs("-5")).toBe(RETRY_AFTER_MIN_MS);
+    expect(retryAfterDelayMs("-0.5")).toBe(RETRY_AFTER_MIN_MS);
+  });
+
+  it("clamps a Retry-After that points into the past", () => {
+    const past = new Date(Date.now() - 60_000).toUTCString();
+    expect(retryAfterDelayMs(past)).toBe(RETRY_AFTER_MIN_MS);
+  });
+
+  it("clamps an absurdly long Retry-After down to the ceiling", () => {
+    expect(retryAfterDelayMs("99999")).toBe(RETRY_AFTER_MAX_MS);
+  });
+
+  it("still obeys an ordinary seconds count and an HTTP date", () => {
+    expect(retryAfterDelayMs("5")).toBe(5_000);
+    expect(retryAfterDelayMs(" 3 ")).toBe(3_000);
+    const soon = new Date(Date.now() + 4_000).toUTCString();
+    expect(retryAfterDelayMs(soon)).toBeGreaterThan(RETRY_AFTER_MIN_MS);
+  });
+
+  it("falls back to our own backoff for an absent or unparseable header", () => {
+    expect(retryAfterDelayMs(null)).toBeNull();
+    expect(retryAfterDelayMs("")).toBeNull();
+    expect(retryAfterDelayMs("abc")).toBeNull();
   });
 });

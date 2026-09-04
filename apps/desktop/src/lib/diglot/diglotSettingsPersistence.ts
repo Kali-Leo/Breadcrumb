@@ -12,6 +12,7 @@ import { useDiglotStore } from "../../stores/diglotStore";
 import { getRepos } from "../platform/db";
 import { nowIso } from "../platform/time";
 import { wireDailyWordCounterTrigger } from "./diglotDensity";
+import { syncDiglotPairToAnswerLanguage, wireAnswerLanguageSync } from "./diglotLanguageSync";
 import {
   DEFAULT_DIGLOT_SETTINGS,
   DIGLOT_SETTINGS_KEY,
@@ -41,7 +42,10 @@ export async function refreshDiglotConfusions(): Promise<void> {
  * they already had. */
 export async function chooseDiglotPair(pairId: string): Promise<void> {
   const store = useDiglotStore;
-  if (pairId === store.getState().settings.pairId) return;
+  // Their own choice replaces the line explaining the last automatic one.
+  store.setState({ pairResetTargetLang: null });
+  const before = store.getState().settings;
+  if (pairId === before.pairId && before.enabled) return;
   if (!store.getState().installedPairs.includes(pairId)) {
     store.setState({ installingPairId: pairId, installFailedPairId: null });
     try {
@@ -53,7 +57,9 @@ export async function chooseDiglotPair(pairId: string): Promise<void> {
     }
     store.setState({ installingPairId: null });
   }
-  await store.getState().saveSettings({ pairId });
+  // Picking a language to learn is also how it gets switched on: the picker is the only
+  // thing on screen when the answer language changed out from under the old pair.
+  await store.getState().saveSettings({ pairId, enabled: true });
 }
 
 /** Removes a downloaded pack; the pair in use is first switched back to the bundled one so
@@ -63,7 +69,14 @@ export function removeDiglotPair(pairId: string): Promise<PackRemovalOutcome> {
   return removePairWith(
     {
       currentPairId: () => store.getState().settings.pairId,
-      switchPair: (nextPairId) => store.getState().saveSettings({ pairId: nextPairId }),
+      switchPair: async (nextPairId) => {
+        // Out of the ready list before the switch, because this pack is about to be deleted
+        // and the answer-language correction would otherwise pick it straight back up.
+        store.setState({
+          installedPairs: store.getState().installedPairs.filter((id) => id !== pairId),
+        });
+        await store.getState().saveSettings({ pairId: nextPairId });
+      },
       removePack: removeLanguagePack,
       listInstalled: listInstalledPairs,
       setInstalled: (installedPairs) => store.setState({ installedPairs }),
@@ -82,6 +95,13 @@ export async function loadDiglotFromDatabase(): Promise<void> {
     settingsHydrated: true,
     installedPairs: await listInstalledPairs(),
   });
+  // The source half of a pair is not the learner's choice — it has to be the language the AI
+  // answers in, or the pack's word list and tokenizer match nothing at all. Correct it before
+  // a pack is loaded; when it moves, its own save re-entered this function and did the rest.
+  wireAnswerLanguageSync();
+  await syncDiglotPairToAnswerLanguage();
+  const corrected = useDiglotStore.getState().settings;
+  if (corrected.pairId !== settings.pairId || corrected.enabled !== settings.enabled) return;
   if (!settings.enabled) return;
   const loaded = await loadPack(settings.pairId);
   const cardsByLemma = await loadCards(settings.pairId);

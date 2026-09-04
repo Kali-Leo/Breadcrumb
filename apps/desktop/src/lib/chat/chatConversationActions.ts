@@ -10,6 +10,7 @@ import { getRepos } from "../platform/db";
 import { todayLocalMidnightIso } from "../platform/time";
 import { type ChatSession, type CostByCurrency, loadChatSession } from "./chatSessions";
 import type { SessionWriters } from "./chatSessionWriters";
+import { abortStreamControl } from "./chatStreamControl";
 
 /** The slice of chatStore state these actions read and produce. */
 export interface ConversationSliceState {
@@ -91,8 +92,11 @@ export function createConversationActions(
     },
 
     async deleteConversation(id) {
-      const repos = await getRepos();
-      await repos.conversations.remove(id);
+      // Both before the round-trip, and in this order. A round still streaming into this
+      // conversation is spending money on an answer nobody will ever be able to read, so it
+      // is stopped first; dropping the session then makes the conversation observably gone,
+      // which is what keeps the dying round from broadcasting its finish into a ghost.
+      abortStreamControl(id);
       const sessions = new Map(get().sessions);
       sessions.delete(id);
       const wasActive = get().activeConversationId === id;
@@ -100,6 +104,8 @@ export function createConversationActions(
         conversations: get().conversations.filter((conversation) => conversation.id !== id),
         sessions,
       });
+      const repos = await getRepos();
+      await repos.conversations.remove(id);
       // A deleted conversation must not stay on screen; the composer returns to the blank
       // state a new chat starts from.
       if (wasActive) get().startNewConversation();

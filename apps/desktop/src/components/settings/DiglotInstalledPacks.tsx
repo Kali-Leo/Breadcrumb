@@ -52,10 +52,9 @@ export function DiglotInstalledPacks() {
         </div>
       )}
       {downloaded.map((pack) => {
-        const names = {
-          source: languageNameOf(pack.sourceLang),
-          target: languageNameOf(pack.targetLang),
-        };
+        // Only the language being learned: what it is learned FROM is not a choice here, it
+        // is whatever the AI answers in (lib/diglot/diglotPairsForLanguage.ts).
+        const names = { target: languageNameOf(pack.targetLang) };
         return (
           <div key={pack.id} className="flex items-center justify-between gap-4">
             <span className="text-sm text-stone-600">{t("diglot.pairOption", names)}</span>

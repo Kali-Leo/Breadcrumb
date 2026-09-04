@@ -10,4 +10,5 @@ export * from "./modelCatalogue";
 export * from "./pricing";
 export * from "./purposeCatalogue";
 export * from "./retry";
+export * from "./streamFrame";
 export * from "./tokenEstimate";

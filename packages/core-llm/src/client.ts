@@ -3,20 +3,19 @@
  * responses. Headless: the fetch implementation is injected (Tauri http plugin in the app,
  * a fake in tests).
  * Main exports: createLlmClient, LlmClientConfig, ChatMessage, ChatStreamResult,
- * ChatStreamOptions.
+ * ChatStreamOptions, ChatStreamAbortedError.
  */
 
-import { z } from "zod";
 import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
 import {
   fetchWithRetry,
   LlmTimeoutError,
-  llmAbortError,
   STREAM_FIRST_BYTE_TIMEOUT_MS,
   STREAM_IDLE_TIMEOUT_MS,
 } from "./retry";
 import { readSseDataLines } from "./sseLines";
+import { decodeStreamFrame } from "./streamFrame";
 
 /** Ceiling on one answer. Roughly 2M characters is far beyond any model's context, let alone
  * one reply; reaching it means the endpoint is feeding us an endless stream, and the renderer
@@ -51,30 +50,36 @@ export function withLanguageDirective(
 export interface ChatStreamResult {
   content: string;
   usage: TokenUsage;
+  /** How many `data:` frames were unreadable and skipped. Always 0 against a well-behaved
+   * provider; anything else is a silent degradation the caller may want to surface. */
+  skippedFrames: number;
 }
 
-const streamChunkSchema = z.object({
-  choices: z
-    .array(z.object({ delta: z.object({ content: z.string().nullish() }).nullish() }))
-    .default([]),
-  usage: z
-    .object({
-      prompt_tokens: z.number(),
-      completion_tokens: z.number(),
-      /** DeepSeek (and OpenAI-compatible providers that copy its shape) split the prompt
-       * into what the prefix cache served and what had to be read fresh. A cache hit costs
-       * roughly 1/30 of a miss, so dropping this field means over-billing every long
-       * conversation. Optional: providers that do not cache simply omit it. */
-      prompt_cache_hit_tokens: z.number().nullish(),
-    })
-    .nullish(),
-});
+/**
+ * The abort chatStream throws when its caller pressed stop. Named "AbortError" so every
+ * existing abort check still recognizes it, but unlike the bare DOMException it carries what
+ * the round had already produced: the content streamed so far and, crucially, the usage the
+ * provider reported before the stop. The provider bills the prompt and everything it
+ * generated whether or not we kept listening, so dropping this usage under-counts a real
+ * charge (宪法原则 2).
+ */
+export class ChatStreamAbortedError extends Error {
+  readonly content: string;
+  readonly usage: TokenUsage;
+  constructor(message: string, content: string, usage: TokenUsage) {
+    super(message);
+    this.name = "AbortError";
+    this.content = content;
+    this.usage = usage;
+  }
+}
 
 export interface ChatStreamOptions {
   /** Aborting this signal is the ONE supported way to cancel a stream mid-flight: it
    * cancels at the fetch layer, whose implementation owns its stream teardown. Consumers
    * must never break out of the stream themselves (see readSseDataLines). On abort,
-   * chatStream rejects with a DOMException named "AbortError". */
+   * chatStream rejects with a ChatStreamAbortedError — named "AbortError", and carrying the
+   * partial content and billed usage so the caller can still persist and meter them. */
   signal?: AbortSignal;
 }
 
@@ -120,6 +125,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
 
       let content = "";
       let sawChunk = false;
+      let skippedFrames = 0;
       let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
       const onChunk = (): void => {
         sawChunk = true;
@@ -127,22 +133,22 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
       };
       try {
         for await (const dataLine of readSseDataLines(response.body, onChunk)) {
-          const chunk = streamChunkSchema.parse(JSON.parse(dataLine));
-          const delta = chunk.choices[0]?.delta?.content;
-          if (delta) {
-            content += delta;
+          // One bad frame is a degradation, not a failure: heartbeats written as `data: ping`
+          // and half-shaped chunks are ordinary gateway behaviour, and throwing here threw
+          // away an answer the reader was already looking at.
+          const frame = decodeStreamFrame(dataLine);
+          if (frame === null) {
+            skippedFrames += 1;
+            continue;
+          }
+          if (frame.delta !== "") {
+            content += frame.delta;
             if (content.length > MAX_STREAM_CONTENT_CHARS) {
               throw new Error(`LLM stream exceeded ${MAX_STREAM_CONTENT_CHARS} characters`);
             }
-            onDelta(delta);
+            onDelta(frame.delta);
           }
-          if (chunk.usage) {
-            usage = {
-              inputTokens: chunk.usage.prompt_tokens,
-              outputTokens: chunk.usage.completion_tokens,
-              cachedInputTokens: chunk.usage.prompt_cache_hit_tokens ?? undefined,
-            };
-          }
+          if (frame.usage !== null) usage = frame.usage;
         }
       } catch (error) {
         // An aborted fetch errors the body stream from the inside, so the drain-not-cancel
@@ -150,7 +156,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
         // the fetch implementation throws for its own teardown (Tauri's http plugin surfaces
         // internal resource errors, not AbortError) is normalized to one recognizable shape.
         if (signal?.aborted) {
-          throw llmAbortError("chatStream aborted by its caller");
+          throw new ChatStreamAbortedError("chatStream aborted by its caller", content, usage);
         }
         // The other abort we can cause ourselves: the deadline fired — before the first
         // chunk, or after the stream went silent mid-answer. Either way it died from a hang
@@ -164,7 +170,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
       } finally {
         release();
       }
-      return { content, usage };
+      return { content, usage, skippedFrames };
     },
   };
 }

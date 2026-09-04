@@ -39,6 +39,10 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
   const patches = useDiglotStore((state) =>
     messageId === undefined ? undefined : state.patchesByMessage.get(messageId),
   );
+  // A weave-affecting settings change sweeps every cached patch; nothing else this effect
+  // reads changes with it, so without the epoch the ask-for-a-weave below never re-runs and
+  // the gate blanks every assistant message on screen for good (caught 2026-09-04).
+  const weaveEpoch = useDiglotStore((state) => state.weaveEpoch);
 
   // The display source: math delimiters normalized for remark-math. Weaving runs on the
   // same string so diglot patch offsets and markdown node offsets agree.
@@ -50,11 +54,12 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
   const shouldWeave = diglotEnabled && author === "assistant" && messageId !== undefined;
   // diglotPackLoaded is a dep on purpose: an early bubble rendered while the pack was
   // still loading must retry once it lands, or its gate below would blank forever.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: weaveEpoch is a pure refresh trigger — a settings change sweeps the cached patches, and this re-run is what asks for them again; without it the gate below blanks every message for good
   useEffect(() => {
     if (shouldWeave && diglotPackLoaded && messageId !== undefined) {
       void useDiglotStore.getState().ensureWoven(messageId, displaySource);
     }
-  }, [shouldWeave, diglotPackLoaded, messageId, displaySource]);
+  }, [shouldWeave, diglotPackLoaded, messageId, displaySource, weaveEpoch]);
 
   // Weave-before-first-paint gate (Leo 2026-08-16): a persisted assistant message must
   // never paint its original and then re-render woven. While weaving is enabled (or its

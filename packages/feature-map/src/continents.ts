@@ -12,6 +12,7 @@
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { clusterOrphanRoots, layoutMemberIds } from "./continentClusters";
+import { compareCodePoints } from "./ordering";
 import { sumEngagement } from "./topicFallback";
 import type { TopicSummary } from "./topics";
 import { collectSubtree, indexChildren } from "./treeShape";
@@ -44,12 +45,15 @@ export interface ContinentAssignment {
   islets: TopicSummary[];
 }
 
-/** Heaviest first, then alphabetically — engagement pulls a landmass toward the map centre
- * (golden-angle slots fill centre-out), and the same input always yields the same order. */
+/** Heaviest first, then by name — engagement pulls a landmass toward the map centre
+ * (golden-angle slots fill centre-out), and the same input always yields the same order.
+ * The tie-break is code-point order, not localeCompare: the host locale and the runtime's ICU
+ * build must not be able to hand two machines different slot orders for the same tree
+ * (ordering.ts). */
 function orderByWeight<Summary extends { weight: number; label: string }>(
   summaries: readonly Summary[],
 ): Summary[] {
-  return [...summaries].sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
+  return [...summaries].sort((a, b) => b.weight - a.weight || compareCodePoints(a.label, b.label));
 }
 
 /** Landmasses born on the layout day queue at the outer rim in arrival order, so today's
@@ -64,7 +68,7 @@ function orderByArrival<Summary extends { id: string; memberNodeIds: string[] }>
       return min === "" || (createdAt !== "" && createdAt < min) ? createdAt : min;
     }, "");
   return [...summaries].sort(
-    (a, b) => earliest(a).localeCompare(earliest(b)) || a.id.localeCompare(b.id),
+    (a, b) => compareCodePoints(earliest(a), earliest(b)) || compareCodePoints(a.id, b.id),
   );
 }
 

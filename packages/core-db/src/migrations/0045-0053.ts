@@ -1,14 +1,14 @@
 /**
- * Purpose: shipped migrations 0045-0052. Part of the append-only MIGRATIONS list
+ * Purpose: shipped migrations 0045-0053. Part of the append-only MIGRATIONS list
  * assembled in ./index.ts — see that file for the rules.
- * 0045-0052 — dedup bookkeeping, canonical concept embeddings, the anchor-confidence
- * rebuild, edge provenance, llm_calls indexing and columns, the diglot pack payload, and the
- * dead-table/index housekeeping drop.
- * Main exports: MIGRATIONS_0045_0052.
+ * 0045-0053 — dedup bookkeeping, canonical concept embeddings, the anchor-confidence
+ * rebuild, edge provenance, llm_calls indexing and columns, the diglot pack payload, the
+ * dead-table/index housekeeping drop, and the parent-link repair.
+ * Main exports: MIGRATIONS_0045_0053.
  */
 import type { Migration } from "./migration";
 
-export const MIGRATIONS_0045_0052: readonly Migration[] = [
+export const MIGRATIONS_0045_0053: readonly Migration[] = [
   {
     // Design audit 2026-08-28 (知识图谱与去重 #3 and #5): the dedup sweep's two missing
     // memories. node_merges snapshots the whole duplicate row before mergeNode deletes it, so
@@ -140,6 +140,49 @@ export const MIGRATIONS_0045_0052: readonly Migration[] = [
       `DROP TABLE IF EXISTS practice_attestations;`,
       `DROP INDEX IF EXISTS idx_factcheck_runs_message;`,
       `DROP INDEX IF EXISTS idx_node_merges_canonical;`,
+    ],
+  },
+  {
+    // A one-shot repair for knowledge_nodes.parent_id, the column whose corruption is
+    // invisible: a foreign key cannot express "and not in a cycle", and feature-map's
+    // indexChildren silently drops any node it cannot reach from a root, so a bad parent link
+    // does not throw — it deletes a branch of the map in the learner's eyes.
+    //
+    // Two sources, both real. (a) Until 2026-09-04 a merge whose duplicate was an ANCESTOR of
+    // its canonical re-pointed the duplicate's children onto the canonical and closed a loop;
+    // the canonical and everything under it disappeared. nodeMergeStatements.ts's cycle guard
+    // stops new ones, but databases that already merged carry the loop. (b) A parent_id
+    // pointing at a row that no longer exists — reachable on any host that ever ran with
+    // foreign keys off, and left behind by hand-edited databases.
+    //
+    // Why this is a NEW migration and not a fix inside 0003_user_level_tree, which is where
+    // parent_id trouble first appeared: 0003 shipped, and every database that ran it recorded
+    // it in _migrations and will never run it again. Editing it would change what a FRESH
+    // database gets while leaving every existing one untouched — the two would drift apart
+    // permanently, with no error to say so. An append-only list is only trustworthy if the
+    // entries behind you are frozen. (Note this therefore does NOT rescue a database still
+    // stuck AT 0003: if 0003 itself aborts, the runner never reaches this migration. See the
+    // 0003 comment.)
+    //
+    // Cycle members are flattened to roots rather than re-parented, because there is no
+    // honest place to put them: the loop destroyed the information about where they belonged.
+    // A root is visible and correctable; an invisible node is neither. The depth bound is
+    // orders of magnitude past any real tree and exists only so an already-cyclic database
+    // cannot make the recursive walk run forever.
+    id: "0053_repair_knowledge_node_parents",
+    statements: [
+      `UPDATE knowledge_nodes SET parent_id = NULL
+        WHERE parent_id IS NOT NULL
+          AND parent_id NOT IN (SELECT id FROM knowledge_nodes);`,
+      `WITH RECURSIVE ancestor_chain(start_id, node_id, depth) AS (
+         SELECT id, parent_id, 1 FROM knowledge_nodes WHERE parent_id IS NOT NULL
+         UNION ALL
+         SELECT c.start_id, n.parent_id, c.depth + 1
+           FROM ancestor_chain c JOIN knowledge_nodes n ON n.id = c.node_id
+          WHERE c.node_id <> c.start_id AND n.parent_id IS NOT NULL AND c.depth < 1000
+       )
+       UPDATE knowledge_nodes SET parent_id = NULL
+        WHERE id IN (SELECT start_id FROM ancestor_chain WHERE node_id = start_id);`,
     ],
   },
 ];

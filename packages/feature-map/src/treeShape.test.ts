@@ -1,10 +1,10 @@
 /**
  * Purpose: tests for the tree-to-cartography reshaping — depth mapping, tiers,
- * shallow/deep edge cases, dangling parents, deterministic ordering.
+ * shallow/deep edge cases, dangling parents, parent-link cycles, deterministic ordering.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
-import { shapeTree } from "./treeShape";
+import { collectSubtree, indexChildren, shapeTree } from "./treeShape";
 
 function node(
   id: string,
@@ -83,5 +83,63 @@ describe("shapeTree", () => {
       rows.push(node(`point-${index}`, "village"));
     }
     expect(shapeTree(rows).at(0)?.kingdoms.at(0)?.villages.at(0)?.tier).toBe(4);
+  });
+});
+
+/**
+ * A parent cycle used to be catastrophic here and completely silent: a node on the cycle is
+ * in no root bucket, so it and its whole subtree simply stopped being drawn. Until 2026-09-04
+ * a merge whose duplicate was an ancestor of its canonical produced exactly this. Migration
+ * 0053 repairs the stored rows; these tests are the map's own guard, so a database that
+ * carries a loop (or acquires one some other way) loses at most one parent link.
+ */
+describe("parent-link cycles", () => {
+  it("still draws a node that is its own parent, and everything under it", () => {
+    const islands = shapeTree([node("r1", null), node("canon", "canon"), node("leaf", "canon")]);
+
+    const ids = islands.flatMap((island) => island.memberNodeIds).sort();
+    expect(ids).toEqual(["canon", "leaf", "r1"]);
+    const canonIsland = islands.find((island) => island.nodeId === "canon");
+    expect(canonIsland?.memberNodeIds.sort()).toEqual(["canon", "leaf"]);
+  });
+
+  it("cuts a longer loop at one node and keeps the rest of the chain", () => {
+    const islands = shapeTree([node("b", "a"), node("c", "b"), node("a", "c")]);
+
+    // "a" is the smallest id on the loop, so it becomes the root; the choice is stable.
+    expect(islands.map((island) => island.nodeId)).toEqual(["a"]);
+    expect(islands[0]?.memberNodeIds.sort()).toEqual(["a", "b", "c"]);
+    expect(islands[0]?.subtreeCount).toBe(3);
+  });
+
+  it("keeps two separate loops separate", () => {
+    const islands = shapeTree([node("a", "b"), node("b", "a"), node("x", "y"), node("y", "x")]);
+
+    expect(islands.map((island) => island.nodeId).sort()).toEqual(["a", "x"]);
+    expect(islands.flatMap((island) => island.memberNodeIds).sort()).toEqual(["a", "b", "x", "y"]);
+  });
+
+  it("terminates when collectSubtree is handed a children map that still loops", () => {
+    // Not something indexChildren can produce any more; collectSubtree is exported, so this
+    // pins that the failure mode is a smaller picture and never an unbounded loop.
+    const a = node("a", "b");
+    const b = node("b", "a");
+    const looping = new Map([
+      [null, [a]],
+      ["a", [b]],
+      ["b", [a]],
+    ]);
+
+    const collected = collectSubtree(a, looping);
+
+    expect(collected.map((row) => row.id)).toEqual(["a", "b"]);
+  });
+
+  it("leaves an ordinary tree indexed exactly as before", () => {
+    const children = indexChildren([node("r1", null), node("k1", "r1"), node("v1", "k1")]);
+
+    expect(children.get(null)?.map((row) => row.id)).toEqual(["r1"]);
+    expect(children.get("r1")?.map((row) => row.id)).toEqual(["k1"]);
+    expect(children.get("k1")?.map((row) => row.id)).toEqual(["v1"]);
   });
 });
