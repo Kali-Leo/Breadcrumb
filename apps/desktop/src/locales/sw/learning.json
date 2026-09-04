@@ -19,8 +19,8 @@
     "llmRefineAria": "Swichi ya ubadilishaji makini",
     "dataSources": "Data ya kamusi na matamshi: {{sources}}",
     "pairPicker": "Lugha unayojifunza",
-    "pairOption": "Unasoma {{source}}, unajifunza {{target}}",
-    "pairOptionToDownload": "Unasoma {{source}}, unajifunza {{target}} · pakua MB {{size}}",
+    "pairOption": "{{target}} (kutoka {{source}})",
+    "pairOptionToDownload": "{{target}} (kutoka {{source}}) · pakua MB {{size}}",
     "pairDownloading": "Inapakua data ya maneno…",
     "pairDownloadFailed": "Upakuaji haukukamilika. Unaweza kuichagua tena kujaribu; lugha yako ya sasa haijaguswa.",
     "placementTitle": "Ukaguzi wa msamiati",
@@ -34,7 +34,7 @@
     "installedTitle": "Data ya maneno iliyopakuliwa",
     "installedHint": "Unaweza kuipakua tena wakati wowote; maneno uliyojifunza yanabaki.",
     "removePack": "Ondoa",
-    "removePackAria": "Ondoa data ya maneno ya kusoma {{source}} na kujifunza {{target}}",
+    "removePackAria": "Ondoa msamiati wa {{target}} (kutoka {{source}})",
     "removedCurrentPack": "Data ya maneno ya lugha hiyo imeondolewa; umerudi kusoma {{source}} na kujifunza {{target}}."
   },
   "door": {

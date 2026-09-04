@@ -24,6 +24,7 @@ import {
 } from "./lazyViews";
 import { runDedupSweep } from "./lib/knowledge/dedupSweep";
 import { backfillMissingEmbeddings } from "./lib/platform/embeddings";
+import { degradeSilently } from "./lib/platform/failureLog";
 import { appEventBus, useChatStore } from "./stores/chatStore";
 // Side-effect only: registers edgeStore's knowledge:nodesExtracted subscription.
 import "./stores/edgeStore";
@@ -63,16 +64,29 @@ export default function App() {
 
   useEffect(() => {
     void (async () => {
-      await useSettingsStore.getState().loadFromDatabase();
-      await useDiglotStore.getState().loadFromDatabase();
-      await useChatStore.getState().loadFromDatabase();
-      await useKnowledgeStore.getState().loadTree();
-      await useCompanionStore.getState().initialize();
+      // Each step stands alone. They used to be a bare chain of awaits, so one feature failing
+      // to load — a language pack the schema now refuses, a table a migration left odd — took
+      // the chat, the knowledge tree and the launch event down with it, and the app looked
+      // like it could not reach the AI service at all (2026-09-03).
+      const step = async (purpose: string, load: () => Promise<unknown>): Promise<void> => {
+        try {
+          await load();
+        } catch (error) {
+          await degradeSilently(purpose, error);
+        }
+      };
+      await step("settings", () => useSettingsStore.getState().loadFromDatabase());
+      await step("diglot-weave", () => useDiglotStore.getState().loadFromDatabase());
+      await step("chat", () => useChatStore.getState().loadFromDatabase());
+      await step("knowledge-tree", () => useKnowledgeStore.getState().loadTree());
+      await step("companion", () => useCompanionStore.getState().initialize());
       // Settings are in by now, so launch-time work can read its switches and credentials.
       appEventBus.emit("app:launched", { launchedAt: nowIso() });
       // Fire-and-forget: catches up any node missing its embedding without blocking the UI,
       // then runs the duplicate-node merge sweep once embeddings are in place (spec 015 #4).
-      void backfillMissingEmbeddings().then(() => runDedupSweep());
+      void backfillMissingEmbeddings()
+        .then(() => runDedupSweep())
+        .catch((error: unknown) => degradeSilently("embeddings", error));
     })();
   }, []);
 

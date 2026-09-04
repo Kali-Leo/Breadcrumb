@@ -1,24 +1,20 @@
 /**
  * Purpose: what a live text selection offers, drawn once for both selection sites (the chat
  * bubble and the focus overlay's pane). With a mouse it is the hint line it has always been,
- * pixel for pixel, and Enter confirms. With a finger there is no Enter key, so it is a real
- * button, 44px tall, placed BELOW the selection — iOS puts its own copy/look-up bar above,
- * and the two would otherwise sit on top of each other. Placement is @floating-ui/dom's job
- * (flip when the bottom of the screen is close, shift to stay inside it) against a virtual
- * reference element made of the selection's own rectangle.
+ * pixel for pixel, and Enter confirms.
+ *
+ * With a finger there is no Enter key, so it is a real button, 44px tall — and it does NOT
+ * follow the selection. iOS draws its own copy/look-up bar hugging the selection, above it or
+ * below it depending on the room left, so anything placed near the selection is covered about
+ * half the time (Leo's iPad, 2026-09-03; placing it below was not enough). It sits instead in
+ * a bar at the foot of the reading area, above whatever input the surface has, where the
+ * system bar never reaches. The surface publishes that input's height as --composer-height.
  * Main exports: SelectionFocusPrompt.
  */
-import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SelectionCapture } from "../../lib/focus/selectionFocus";
 import { useInputMode } from "../../lib/platform/inputMode";
-
-/** Clear of the selection's own highlight, and of the fat finger that made it. */
-const BUTTON_GAP_PX = 8;
-/** The button never touches the edge of the screen. */
-const VIEWPORT_PADDING_PX = 8;
 
 export function SelectionFocusPrompt({
   selection,
@@ -32,47 +28,23 @@ export function SelectionFocusPrompt({
 }) {
   const { t } = useTranslation(["learning", "common"]);
   const inputMode = useInputMode();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [placement, setPlacement] = useState<{ left: number; top: number } | null>(null);
-
-  useEffect(() => {
-    setPlacement(null);
-    const floating = buttonRef.current;
-    if (selection === null || inputMode !== "coarse" || floating === null) return;
-    let cancelled = false;
-    const rect = selection.rect;
-    void computePosition({ getBoundingClientRect: () => rect }, floating, {
-      strategy: "fixed",
-      placement: "bottom",
-      middleware: [offset(BUTTON_GAP_PX), flip(), shift({ padding: VIEWPORT_PADDING_PX })],
-    }).then(({ x, y }) => {
-      if (!cancelled) setPlacement({ left: x, top: y });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [selection, inputMode]);
 
   if (selection === null) return null;
 
   if (inputMode === "coarse") {
     return (
-      <button
-        type="button"
-        ref={buttonRef}
+      <div
         data-selection-prompt
-        onClick={onConfirm}
-        style={{
-          position: "fixed",
-          left: placement?.left ?? 0,
-          top: placement?.top ?? 0,
-          // Measured before it is placed: shown only once floating-ui has answered.
-          visibility: placement === null ? "hidden" : "visible",
-        }}
-        className="z-30 flex min-h-11 min-w-11 items-center rounded-xl border border-stone-200 bg-white px-4 font-medium text-sm text-stone-700 shadow-lg"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--composer-height,0px)+0.75rem+env(safe-area-inset-bottom))] z-30 flex justify-center px-3"
       >
-        {t("learning:focus.selectionButton")}
-      </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="pointer-events-auto flex min-h-11 min-w-11 items-center rounded-full border border-stone-200 bg-white px-5 font-medium text-sm text-stone-700 shadow-lg"
+        >
+          {t("learning:focus.selectionButton")}
+        </button>
+      </div>
     );
   }
 

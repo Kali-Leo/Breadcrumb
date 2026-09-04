@@ -19,8 +19,8 @@
     "llmRefineAria": "বুদ্ধিমান বদলের সুইচ",
     "dataSources": "অভিধান ও উচ্চারণের তথ্য: {{sources}}",
     "pairPicker": "আপনি কোন ভাষা শিখছেন",
-    "pairOption": "{{source}} পড়ুন, {{target}} শিখুন",
-    "pairOptionToDownload": "{{source}} পড়ুন, {{target}} শিখুন · {{size}} MB নামাতে হবে",
+    "pairOption": "{{target}} ({{source}} থেকে)",
+    "pairOptionToDownload": "{{target}} ({{source}} থেকে) · {{size}} MB নামাতে হবে",
     "pairDownloading": "শব্দের তথ্য নামানো হচ্ছে…",
     "pairDownloadFailed": "নামানো শেষ হয়নি। আবার বেছে নিয়ে চেষ্টা করতে পারেন; আপনার এখনকার ভাষা অপরিবর্তিত আছে।",
     "placementTitle": "শব্দের ছোট যাচাই",
@@ -34,7 +34,7 @@
     "installedTitle": "নামানো শব্দের তথ্য",
     "installedHint": "যেকোনো সময় আবার নামাতে পারেন; আপনার শেখা শব্দগুলো থেকে যাবে।",
     "removePack": "সরান",
-    "removePackAria": "{{source}} পড়ে {{target}} শেখার শব্দের তথ্য সরান",
+    "removePackAria": "{{target}} ({{source}} থেকে) শব্দভান্ডার সরান",
     "removedCurrentPack": "ওই ভাষার শব্দের তথ্য সরানো হয়েছে; আপনি আবার {{source}} পড়ে {{target}} শিখছেন।"
   },
   "door": {

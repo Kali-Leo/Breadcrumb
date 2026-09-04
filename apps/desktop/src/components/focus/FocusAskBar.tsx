@@ -15,6 +15,7 @@ export function FocusAskBar({ onAsk }: { onAsk: (question: string) => void }) {
 
   return (
     <form
+      data-focus-askbar
       className="flex shrink-0 gap-2 border-stone-200 border-t p-3"
       onSubmit={(event) => {
         event.preventDefault();

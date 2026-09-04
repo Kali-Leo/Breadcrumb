@@ -6,7 +6,7 @@
  * under it. Renders nothing when no session is open; mounted once at the app shell's top level.
  * Main exports: FocusOverlay.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusStore } from "../../stores/focusStore";
 import { BackArrow } from "../DirectionalArrow";
@@ -14,6 +14,22 @@ import { FocusContentPane } from "./FocusContentPane";
 import { FocusMap } from "./FocusMap";
 
 export function FocusOverlay() {
+  // The ask bar's height, published the way ChatView publishes the composer's, so the
+  // selection button on touch sits above it instead of over the answer.
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    const askBar = root?.querySelector<HTMLElement>("[data-focus-askbar]");
+    if (!root || !askBar) return;
+    const observer = new ResizeObserver(() =>
+      root.style.setProperty("--composer-height", `${askBar.offsetHeight}px`),
+    );
+    observer.observe(askBar);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--composer-height");
+    };
+  }, []);
   const { t } = useTranslation(["learning", "common"]);
   const open = useFocusStore((state) => state.open);
   const rootLabel = useFocusStore((state) => state.rootLabel);
@@ -41,7 +57,7 @@ export function FocusOverlay() {
   const parentId = currentNode?.parent_id ?? null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div ref={rootRef} className="fixed inset-0 z-50 flex flex-col bg-white">
       <div className="flex shrink-0 items-center justify-between border-stone-200 border-b px-6 py-3">
         <div className="flex items-center gap-3">
           {parentId !== null && (

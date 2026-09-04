@@ -84,6 +84,12 @@ export function pwaPlugin(base: string): PluginOption {
       ],
     },
     workbox: {
+      // Spelled out rather than left to registerType. vite-plugin-pwa only turns these on for
+      // `injectRegister: "auto" | null` (its dist/index.js), so with the CSP-safe script-defer
+      // above, "autoUpdate" quietly meant "update whenever every tab of this origin is closed"
+      // — a new version could not reach an installed app at all (Leo's iPad, 2026-09-03).
+      skipWaiting: true,
+      clientsClaim: true,
       globPatterns: ["**/*.{js,css,html,png,svg}", "assets/sqlite3-*.wasm"],
       globIgnores: NOT_THE_SHELL,
       // Left at Workbox's 2 MiB default deliberately: it is a second, size-based guard over

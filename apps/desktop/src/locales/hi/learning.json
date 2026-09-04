@@ -19,8 +19,8 @@
     "llmRefineAria": "समझदार बदलाव का स्विच",
     "dataSources": "शब्दकोश और उच्चारण के आँकड़े: {{sources}}",
     "pairPicker": "आप कौन-सी भाषा सीख रहे हैं",
-    "pairOption": "{{source}} पढ़िए, {{target}} सीखिए",
-    "pairOptionToDownload": "{{source}} पढ़िए, {{target}} सीखिए · {{size}} MB डाउनलोड",
+    "pairOption": "{{target}} ({{source}} से)",
+    "pairOptionToDownload": "{{target}} ({{source}} से) · {{size}} MB डाउनलोड",
     "pairDownloading": "शब्दों का डेटा डाउनलोड हो रहा है…",
     "pairDownloadFailed": "डाउनलोड पूरा नहीं हुआ। दोबारा चुनकर कोशिश कर सकते हैं; आपकी मौजूदा भाषा वैसी ही है।",
     "placementTitle": "शब्दों की छोटी जाँच",
@@ -34,7 +34,7 @@
     "installedTitle": "डाउनलोड किया हुआ शब्दों का डेटा",
     "installedHint": "आप इसे कभी भी दोबारा डाउनलोड कर सकते हैं; सीखे हुए शब्द बने रहेंगे।",
     "removePack": "हटाएँ",
-    "removePackAria": "{{source}} पढ़कर {{target}} सीखने का शब्द डेटा हटाएँ",
+    "removePackAria": "{{target}} ({{source}} से) की शब्द-सूची हटाइए",
     "removedCurrentPack": "उस भाषा का शब्द डेटा हटा दिया गया; आप फिर से {{source}} पढ़कर {{target}} सीख रहे हैं।"
   },
   "door": {

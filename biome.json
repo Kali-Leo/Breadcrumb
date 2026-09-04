@@ -7,6 +7,7 @@
       "!**/target",
       "!**/node_modules",
       "!docs",
+      "!scratchpad",
       "!**/*.svg",
       "!**/src-tauri/gen",
       "!**/src/data/generated",

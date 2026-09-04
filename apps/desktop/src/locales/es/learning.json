@@ -19,8 +19,8 @@
     "llmRefineAria": "Interruptor de sustituciones inteligentes",
     "dataSources": "Datos de diccionario y pronunciación: {{sources}}",
     "pairPicker": "Qué idioma estás aprendiendo",
-    "pairOption": "Lees {{source}}, aprendes {{target}}",
-    "pairOptionToDownload": "Lees {{source}}, aprendes {{target}} · {{size}} MB por descargar",
+    "pairOption": "{{target}} (desde {{source}})",
+    "pairOptionToDownload": "{{target}} (desde {{source}}) · {{size}} MB por descargar",
     "pairDownloading": "Descargando los datos de palabras…",
     "pairDownloadFailed": "La descarga no terminó. Puedes volver a elegirlo para reintentar; tu idioma actual sigue igual.",
     "placementTitle": "Comprobación de vocabulario",
@@ -34,7 +34,7 @@
     "installedTitle": "Datos de palabras descargados",
     "installedHint": "Puedes volver a descargarlos cuando quieras; las palabras que aprendiste se conservan.",
     "removePack": "Quitar",
-    "removePackAria": "Quitar los datos de palabras para leer {{source}} y aprender {{target}}",
+    "removePackAria": "Quitar el vocabulario de {{target}} (desde {{source}})",
     "removedCurrentPack": "Esos datos de palabras ya no están; vuelves a leer {{source}} y aprender {{target}}."
   },
   "door": {

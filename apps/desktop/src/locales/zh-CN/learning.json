@@ -19,8 +19,8 @@
     "llmRefineAria": "智能替换开关",
     "dataSources": "词典与发音数据来自：{{sources}}",
     "pairPicker": "学哪门语言",
-    "pairOption": "读{{source}}，学{{target}}",
-    "pairOptionToDownload": "读{{source}}，学{{target}} · 需下载 {{size}} MB",
+    "pairOption": "{{target}}（从{{source}}）",
+    "pairOptionToDownload": "{{target}}（从{{source}}）· 需下载 {{size}} MB",
     "pairDownloading": "正在下载词库…",
     "pairDownloadFailed": "词库没下完，可以再选一次试试。语言暂时没换，你原来那门还在。",
     "placementTitle": "词汇量小测",
@@ -34,7 +34,7 @@
     "installedTitle": "已下载的词库",
     "installedHint": "移除后随时可以再下载，学过的词都会留着。",
     "removePack": "移除",
-    "removePackAria": "移除{{source}}学{{target}}的词库",
+    "removePackAria": "移除{{target}}（从{{source}}）的词库",
     "removedCurrentPack": "那门语言的词库已移除，现在换回了用{{source}}学{{target}}。"
   },
   "door": {

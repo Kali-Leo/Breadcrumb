@@ -19,8 +19,8 @@
     "llmRefineAria": "مفتاح الاستبدال الذكي",
     "dataSources": "بيانات المعجم والنطق: {{sources}}",
     "pairPicker": "أي لغة تتعلّم",
-    "pairOption": "تقرأ {{source}} وتتعلّم {{target}}",
-    "pairOptionToDownload": "تقرأ {{source}} وتتعلّم {{target}} · تنزيل {{size}} ميغابايت",
+    "pairOption": "{{target}} (من {{source}})",
+    "pairOptionToDownload": "{{target}} (من {{source}}) · تنزيل {{size}} ميغابايت",
     "pairDownloading": "يجري تنزيل بيانات الكلمات…",
     "pairDownloadFailed": "لم يكتمل التنزيل. يمكنك اختياره مرة أخرى للمحاولة؛ ولغتك الحالية كما هي.",
     "placementTitle": "فحص سريع للمفردات",
@@ -34,7 +34,7 @@
     "installedTitle": "بيانات الكلمات التي تم تنزيلها",
     "installedHint": "يمكنك تنزيلها مجددًا في أي وقت؛ والكلمات التي تعلمتها تبقى.",
     "removePack": "إزالة",
-    "removePackAria": "إزالة بيانات الكلمات لقراءة {{source}} وتعلّم {{target}}",
+    "removePackAria": "إزالة مفردات {{target}} (من {{source}})",
     "removedCurrentPack": "أُزيلت بيانات كلمات تلك اللغة؛ عدت إلى قراءة {{source}} وتعلّم {{target}}."
   },
   "door": {
