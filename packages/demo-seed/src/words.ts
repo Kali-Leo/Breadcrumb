@@ -13,16 +13,12 @@ import type {
 } from "@breadcrumb/core-db";
 import { loadLanguagePack } from "@breadcrumb/feature-diglot-weave";
 import { DEMO_PAIR, isoAt } from "./shared";
+import type { DemoText } from "./text/demoText";
 import { introducedOffsetDays, planWordEvents, replayWord } from "./wordEvents";
 
 export const WORD_COUNT = 50;
 
 const WRONG_GUESS_POOL = ["something", "thing", "stuff", "idea", "maybe"] as const;
-const CONTEXT_TEMPLATES = [
-  (lemma: string) => `对话里提到了「${lemma}」这个说法。`,
-  (lemma: string) => `这段内容中出现了「${lemma}」。`,
-  (lemma: string) => `复习卡片上写着「${lemma}」。`,
-] as const;
 
 export interface WordSeedResult {
   pack: DiglotLanguagePackRow;
@@ -38,7 +34,7 @@ export interface WordSeedResult {
  * The pack arrives as an argument rather than being read off disk: this runs inside the app
  * (and in a browser) as well as in the dev CLI, and only one of those has a filesystem. It is
  * still Zod-validated here through loadLanguagePack, exactly as the app validates its own. */
-export function buildWordSeed(now: Date, rawPack: unknown): WordSeedResult {
+export function buildWordSeed(now: Date, rawPack: unknown, text: DemoText): WordSeedResult {
   const loaded = loadLanguagePack(rawPack);
   const lemmas = loaded.introductionQueue.slice(0, WORD_COUNT);
 
@@ -50,13 +46,12 @@ export function buildWordSeed(now: Date, rawPack: unknown): WordSeedResult {
     const entry = loaded.pack.entries[lemma];
     const intro = introducedOffsetDays(index, lemmas.length);
     const plan = planWordEvents(index, lemmas.length, intro);
-    const template =
-      CONTEXT_TEMPLATES[index % CONTEXT_TEMPLATES.length] ??
-      CONTEXT_TEMPLATES[0] ??
-      ((word: string) => word);
+    // "{word}" is the only placeholder these sentences have; everything around it, quotation
+    // marks included, is the sentence as that language writes it.
+    const pattern = text.wordContexts[index % text.wordContexts.length] ?? "{word}";
     const wrongGuess = WRONG_GUESS_POOL[index % WRONG_GUESS_POOL.length] ?? "something";
     const guessOf = (kind: DiglotEventKind): { guess: string; context: string } => {
-      const context = template(lemma);
+      const context = pattern.replace("{word}", lemma);
       if (kind === "guess_correct") return { guess: entry?.target ?? lemma, context };
       if (kind === "guess_close") {
         const alt = entry?.altTargets[0];

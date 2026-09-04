@@ -17,29 +17,19 @@ function currentSourceLang(): string {
 }
 
 /**
- * Moves the pair onto the answer language when it no longer reads it. With nothing installed
- * for that language, language learning is switched off rather than left on top of a
- * dictionary it cannot use — the settings page then says what can be learned instead.
+ * Switches language learning off when the pair no longer reads the language the AI answers in.
+ * It does not pick a replacement: which language someone learns is their decision, and having
+ * it swapped underneath them because they changed how the AI writes would be a decision made
+ * for them (Leo, 2026-09-04). The settings page then shows what can be learned instead.
  */
 export async function syncDiglotPairToAnswerLanguage(): Promise<void> {
-  const { settings, installedPairs } = useDiglotStore.getState();
+  const { settings } = useDiglotStore.getState();
   const correction = correctPairForSourceLang({
     sourceLang: currentSourceLang(),
     currentPairId: settings.pairId,
-    installedPairs,
   });
   if (!correction.changed) return;
-  if (correction.pairId === null) {
-    useDiglotStore.setState({ pairResetTargetLang: null });
-    if (settings.enabled) await useDiglotStore.getState().saveSettings({ enabled: false });
-    return;
-  }
-  // Only worth a sentence when the learner had it running: a pair quietly corrected under an
-  // off switch is not something that happened to them.
-  useDiglotStore.setState({
-    pairResetTargetLang: settings.enabled ? (correction.pairId.split(":")[1] ?? null) : null,
-  });
-  await useDiglotStore.getState().saveSettings({ pairId: correction.pairId });
+  if (settings.enabled) await useDiglotStore.getState().saveSettings({ enabled: false });
 }
 
 /** Guards against double registration (StrictMode double-invokes loadFromDatabase). */

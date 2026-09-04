@@ -63,7 +63,6 @@ interface DiglotState {
   weaveEpoch: number;
   /** What the learner is now learning, when the answer language moved and the pair had to
    * follow it — one line on the settings page, cleared by their own next choice. */
-  pairResetTargetLang: string | null;
   refreshConfusions(): Promise<void>;
   /** Downloads the pack for a pair if needed, then switches to it. */
   choosePair(pairId: string): Promise<void>;
@@ -99,7 +98,6 @@ export const useDiglotStore = create<DiglotState>((set, get) => ({
   installingPairId: null,
   installFailedPairId: null,
   weaveEpoch: 0,
-  pairResetTargetLang: null,
   loaded: null,
   cardsByLemma: new Map(),
   patchesByMessage: new Map(),

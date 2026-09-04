@@ -1,7 +1,8 @@
 /**
  * Purpose: unit tests for frontier() — the ever-lit requires-gate, normalized score
  * composition (interest must be able to outrank helps), concept/method bucketing, the
- * exploration slot, the explainable reason payload, and deterministic ordering.
+ * explainable reason payload, and deterministic ordering. The exploration slot moved to
+ * visibleCount.test.ts along with the slot itself.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -395,7 +396,7 @@ describe("frontier kind bucketing: method nodes don't crowd out concepts", () =>
   });
 });
 
-describe("frontier exploration slot (2026-08-28 audit: deterministic, no bandit)", () => {
+describe("frontier keeps every bucket strictly score-descending", () => {
   const nodes = [node("a", "A"), node("b", "B"), node("c", "C"), node("d", "D")];
   const interestByNode = new Map([
     ["a", 1],
@@ -404,7 +405,7 @@ describe("frontier exploration slot (2026-08-28 audit: deterministic, no bandit)
     ["d", 0.4],
   ]);
 
-  function rank(evidenceWeightByNode?: ReadonlyMap<string, number>): string[] {
+  function rank(evidenceWeightByNode?: ReadonlyMap<string, number>) {
     return frontier({
       nodes,
       edges: [],
@@ -413,50 +414,34 @@ describe("frontier exploration slot (2026-08-28 audit: deterministic, no bandit)
       litThreshold: LIT,
       previouslyLitNodeIds: new Set(),
       ...(evidenceWeightByNode === undefined ? {} : { evidenceWeightByNode }),
-    }).map((candidate) => candidate.nodeId);
+    });
   }
 
-  it("promotes the thinnest-evidence candidate into the third slot", () => {
-    // D is the least-supported guess in the pool, so it takes the exploration slot from C —
-    // the top two, which the learner has actually shown interest in, are left alone.
+  /** Regression (bug hunt 2026-09-03, P1-1): the exploration slot used to be spliced in here,
+   * which handed visibleFrontier a list whose scores went back up in the middle — and its
+   * cliff search, which assumes descending scores, then cut the genuine 4th place while
+   * keeping a 0.000-scoring exploration pick. The slot now runs inside visibleFrontier, after
+   * the cut. What frontier() owes that function is a monotonic list. */
+  it("does not reorder for exploration, whatever the evidence weights say", () => {
     const evidence = new Map([
       ["a", 5],
       ["b", 4],
       ["c", 3],
       ["d", 0.2],
     ]);
-    expect(rank(evidence)).toEqual(["a", "b", "d", "c"]);
+    expect(rank(evidence).map((candidate) => candidate.nodeId)).toEqual(["a", "b", "c", "d"]);
   });
 
-  it("leaves the pure score order alone when the natural third place is already thinnest", () => {
-    const evidence = new Map([
-      ["a", 5],
-      ["b", 4],
-      ["c", 0.2],
-      ["d", 3],
-    ]);
-    expect(rank(evidence)).toEqual(["a", "b", "c", "d"]);
+  it("emits scores that never go back up", () => {
+    const scores = rank(new Map([["d", 0.2]])).map((candidate) => candidate.score);
+    for (let index = 1; index < scores.length; index += 1) {
+      expect(scores[index - 1] ?? 0).toBeGreaterThanOrEqual(scores[index] ?? 0);
+    }
   });
 
-  it("does not reserve the slot when the caller supplies no evidence weights", () => {
-    expect(rank()).toEqual(["a", "b", "c", "d"]);
-  });
-
-  it("does not reserve the slot when there is nothing outside the top three", () => {
-    const result = frontier({
-      nodes: [node("a", "A"), node("b", "B"), node("c", "C")],
-      edges: [],
-      masteryByNode: new Map(),
-      interestByNode,
-      litThreshold: LIT,
-      previouslyLitNodeIds: new Set(),
-      evidenceWeightByNode: new Map([
-        ["a", 5],
-        ["b", 4],
-        ["c", 3],
-      ]),
-    });
-    expect(result.map((candidate) => candidate.nodeId)).toEqual(["a", "b", "c"]);
+  it("still carries the evidence weight through for the slot to rank on", () => {
+    const evidence = new Map([["d", 0.2]]);
+    expect(rank(evidence).find((candidate) => candidate.nodeId === "d")?.evidenceWeight).toBe(0.2);
   });
 });
 
@@ -540,5 +525,112 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now' (2026-08-28 a
       weights: { helps: 0, interest: 1, difficulty: 0.5, goalGap: 2, browsing: 0.5 },
     });
     expect(interestOnly[0]?.nodeId).toBe("liked");
+  });
+});
+
+/**
+ * Regression (bug hunt 2026-09-03, P1-2): the difficulty component is subtracted, and it used
+ * to measure the chain hanging *below* a node. A foundation concept — the thing with half the
+ * tree standing on it — therefore scored maximum difficulty and was pushed down, while an
+ * advanced node with nothing after it scored the minimum and went to the top. The slider the
+ * learner pulls to get there says 先挑轻松的 / "Prefer lighter steps", so the feature did the
+ * opposite of what its own label promises. Difficulty is prerequisite depth now: how many
+ * courses you have to make up before this one makes sense.
+ */
+describe("frontier difficulty means 'how much to make up first'", () => {
+  // 基础 --requires--> 中级 --requires--> 高级, and 预备(lit) --requires--> 边缘叶子.
+  // Both 基础 and 边缘叶子 are admissible candidates; only 边缘叶子 stands behind a prerequisite.
+  const nodes = [
+    node("foundation", "基础"),
+    node("middle", "中级"),
+    node("advanced", "高级"),
+    node("prep", "预备"),
+    node("leaf", "边缘叶子"),
+  ];
+  const edges = [
+    requires("foundation", "middle"),
+    requires("middle", "advanced"),
+    requires("prep", "leaf"),
+  ];
+
+  function rank(difficultyWeight: number): string[] {
+    return frontier({
+      nodes,
+      edges,
+      masteryByNode: new Map([["prep", 1]]),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(["prep"]),
+      weights: {
+        helps: 0,
+        interest: 0,
+        difficulty: difficultyWeight,
+        goalGap: 0,
+        browsing: 0,
+      },
+    }).map((candidate) => candidate.nodeId);
+  }
+
+  it("puts the foundation concept ahead of the node buried behind a prerequisite", () => {
+    expect(rank(0.5)).toEqual(["foundation", "leaf"]);
+  });
+
+  it("is the difficulty component doing it, and the slider governs how hard", () => {
+    // At weight 0 the two are indistinguishable and only the label decides (边缘叶子 sorts
+    // before 基础), so the ordering above came from the difficulty component and nothing else.
+    expect(rank(0)).toEqual(["leaf", "foundation"]);
+    expect(rank(2)).toEqual(["foundation", "leaf"]);
+  });
+});
+
+/**
+ * Regression (bug hunt 2026-09-03, P1-3): one non-finite component used to make Math.min and
+ * Math.max both NaN inside normalizeAndScore, which gave EVERY candidate a NaN score; the
+ * comparator then returned NaN for every pair, V8 read that as "already ordered", and the
+ * whole recommendation list came out in the order the rows happened to arrive from the
+ * database. Nothing threw and nothing looked wrong on screen.
+ */
+describe("frontier survives one poisoned candidate", () => {
+  const nodes = [node("zeta", "Zeta"), node("alpha", "Alpha"), node("mu", "Mu")];
+
+  function rank(interestByNode: ReadonlyMap<string, number>): string[] {
+    return frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode,
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    }).map((candidate) => candidate.nodeId);
+  }
+
+  const CLEAN = new Map([
+    ["zeta", 0],
+    ["alpha", 0.5],
+    ["mu", 1],
+  ]);
+
+  it("keeps the other candidates in their true order when one interest score is NaN", () => {
+    const poisoned = new Map(CLEAN).set("zeta", Number.NaN);
+    // zeta scored 0 anyway, so the honest reading of NaN as "no evidence" leaves the order
+    // exactly as it was — rather than the insertion order alpha, zeta, mu it used to produce.
+    expect(rank(poisoned)).toEqual(rank(CLEAN));
+  });
+
+  it("never emits a NaN score", () => {
+    const scores = frontier({
+      nodes,
+      edges: [],
+      masteryByNode: new Map(),
+      interestByNode: new Map(CLEAN).set("mu", Number.POSITIVE_INFINITY),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    }).map((candidate) => candidate.score);
+    for (const score of scores) expect(Number.isFinite(score)).toBe(true);
+  });
+
+  it("does not let an infinite component flatten everyone else's range", () => {
+    const infinite = new Map(CLEAN).set("zeta", Number.POSITIVE_INFINITY);
+    expect(rank(infinite)).toEqual(rank(CLEAN));
   });
 });

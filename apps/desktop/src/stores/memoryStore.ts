@@ -7,6 +7,7 @@
 import { computeNodeMemoryByNode } from "@breadcrumb/feature-memory";
 import { create } from "zustand";
 import { getRepos } from "../lib/platform/db";
+import { degradeSilently } from "../lib/platform/failureLog";
 import { nowIso } from "../lib/platform/time";
 import { appEventBus } from "./chatStore";
 
@@ -22,16 +23,27 @@ export const useMemoryStore = create<MemoryState>((set) => ({
   reviewPriorityByNode: new Map(),
 
   async refresh() {
-    const repos = await getRepos();
-    const sightings = await repos.nodeSightings.listAll();
-    const memory = computeNodeMemoryByNode(sightings, nowIso());
-    const retentionByNode = new Map<string, number>();
-    const reviewPriorityByNode = new Map<string, number>();
-    for (const [nodeId, node] of memory) {
-      retentionByNode.set(nodeId, node.retention);
-      reviewPriorityByNode.set(nodeId, node.reviewPriority);
+    // The whole body is guarded. Two of the three callers `await` this (chatConversationActions,
+    // companionDailyGate) and the third — MapView's mount effect — is a bare `void refresh()`,
+    // so before the guard a single throw in here left retentionByNode empty forever: an
+    // all-fog map and no daily helpers, with an unhandled rejection as the only trace.
+    // Degrading is right for this store: fog and helper ordering are enrichments of a map that
+    // still renders, so the app keeps working on the previous (or empty) maps and the reason
+    // lands in ai_failures where the lab panel shows it.
+    try {
+      const repos = await getRepos();
+      const sightings = await repos.nodeSightings.listAll();
+      const memory = computeNodeMemoryByNode(sightings, nowIso());
+      const retentionByNode = new Map<string, number>();
+      const reviewPriorityByNode = new Map<string, number>();
+      for (const [nodeId, node] of memory) {
+        retentionByNode.set(nodeId, node.retention);
+        reviewPriorityByNode.set(nodeId, node.reviewPriority);
+      }
+      set({ retentionByNode, reviewPriorityByNode });
+    } catch (error) {
+      await degradeSilently("memory-refresh", error);
     }
-    set({ retentionByNode, reviewPriorityByNode });
   },
 }));
 

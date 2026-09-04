@@ -12,8 +12,25 @@
  */
 import type { CSSProperties } from "react";
 
-/** Which side of the target the card prefers. */
+/** Which side of the target the card prefers. `start`/`end` are the reading-order sides, so
+ * a step that wants the card "after" its target gets the right side in English and the left
+ * side in Arabic — the same rule CSS uses for `inset-inline-start`. */
 export type SpotlightPlace = "top" | "bottom" | "start" | "end";
+
+/** True when the document is laid out right-to-left. Read from the live document rather than
+ * from the language table: the same attribute the stylesheet's logical properties follow, so
+ * the card can never end up on the opposite side from the layout it is pointing at. */
+export function isRightToLeft(): boolean {
+  const root = globalThis.document?.documentElement;
+  const dir = root?.getAttribute("dir") ?? root?.dir ?? "";
+  return dir.toLowerCase() === "rtl";
+}
+
+/** The physical side a reading-order side lands on. */
+function physicalSide(place: "start" | "end", rightToLeft: boolean): "left" | "right" {
+  const isEnd = place === "end";
+  return isEnd === rightToLeft ? "left" : "right";
+}
 
 export interface SpotlightRect {
   top: number;
@@ -79,11 +96,14 @@ export function cardPosition(
   const clampLeft = (left: number) => clamp(left, GAP, innerWidth - size.width - GAP);
   const preferred = place ?? "bottom";
 
-  if (preferred === "end" && rect.left + rect.width + GAP + size.width <= innerWidth - GAP) {
-    return { top: clampTop(rect.top), left: rect.left + rect.width + GAP, width };
-  }
-  if (preferred === "start" && rect.left - GAP - size.width >= GAP) {
-    return { top: clampTop(rect.top), left: rect.left - GAP - size.width, width };
+  if (preferred === "start" || preferred === "end") {
+    const side = physicalSide(preferred, isRightToLeft());
+    if (side === "right" && rect.left + rect.width + GAP + size.width <= innerWidth - GAP) {
+      return { top: clampTop(rect.top), left: rect.left + rect.width + GAP, width };
+    }
+    if (side === "left" && rect.left - GAP - size.width >= GAP) {
+      return { top: clampTop(rect.top), left: rect.left - GAP - size.width, width };
+    }
   }
   const above = rect.top - GAP - size.height;
   if (preferred === "top" && above >= GAP) {

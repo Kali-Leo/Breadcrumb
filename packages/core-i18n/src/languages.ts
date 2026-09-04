@@ -37,7 +37,22 @@ export interface Language {
   code: string;
   /** The language's name in itself — what goes in the picker (never a translated name). */
   endonym: string;
-  /** ISO 639-3 codes franc may return for this language. */
+  /**
+   * Every ISO 639-3 code franc actually returns for prose written in this language — not
+   * just the "correct" one. franc reads trigrams, so a language with close relatives in the
+   * same script is regularly labelled as one of them, and that is a property of the detector,
+   * not a mistake by the model: a reply written in perfectly good Indonesian comes back as
+   * `zlm` (Malay) most of the time. Treating those as a wrong-language answer files a fake
+   * background failure and sends the next request out with a scolding directive, on every
+   * single turn, for the reader of that language.
+   *
+   * These lists are measured, not guessed: see replyLanguage.test.ts, which runs the real
+   * detector over real sentences in all eleven shipped languages and fails if any of them is
+   * judged as anything outside its own list. Add a code here only after a real sentence
+   * produced it. The cost of one extra code is small and one-sided — a genuinely wrong
+   * answer in a near neighbour (Spanish where Portuguese was asked for) slips through, while
+   * a wrong answer in any unrelated language is still caught.
+   */
   detectionCodes: string[];
   direction: TextDirection;
   script: ScriptFamily;
@@ -68,7 +83,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "en",
     endonym: "English",
-    detectionCodes: ["eng"],
+    detectionCodes: ["eng", "sco"],
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
@@ -77,7 +92,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "es",
     endonym: "Español",
-    detectionCodes: ["spa"],
+    detectionCodes: ["spa", "glg"],
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
@@ -95,7 +110,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "pt",
     endonym: "Português",
-    detectionCodes: ["por"],
+    detectionCodes: ["por", "glg", "spa"],
     direction: "ltr",
     script: "latin",
     modelSupport: "strong",
@@ -104,7 +119,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "ru",
     endonym: "Русский",
-    detectionCodes: ["rus"],
+    detectionCodes: ["rus", "bul", "mkd", "srp"],
     direction: "ltr",
     script: "cyrillic",
     modelSupport: "strong",
@@ -122,7 +137,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "hi",
     endonym: "हिन्दी",
-    detectionCodes: ["hin"],
+    detectionCodes: ["hin", "bho", "mag"],
     direction: "ltr",
     script: "devanagari",
     modelSupport: "workable",
@@ -131,7 +146,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "id",
     endonym: "Bahasa Indonesia",
-    detectionCodes: ["ind"],
+    detectionCodes: ["ind", "zlm"],
     direction: "ltr",
     script: "latin",
     modelSupport: "workable",
@@ -149,7 +164,7 @@ export const LANGUAGES: readonly Language[] = [
   {
     code: "sw",
     endonym: "Kiswahili",
-    detectionCodes: ["swh"],
+    detectionCodes: ["swh", "yao"],
     direction: "ltr",
     script: "latin",
     modelSupport: "thin",

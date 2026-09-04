@@ -6,60 +6,12 @@
 import { ASTRO_ROOT, type ConceptSpec, JS_ROOT } from "./conceptSpecTypes";
 
 export const FRESH: readonly ConceptSpec[] = [
-  {
-    label: "引力透镜",
-    domain: "astro",
-    parentLabel: ASTRO_ROOT,
-    summary: "大质量天体弯曲背景光路径的现象。",
-    offsetsDays: [0],
-  },
-  {
-    label: "防抖与节流",
-    domain: "js",
-    parentLabel: JS_ROOT,
-    summary: "限制高频事件触发频率的两种手法。",
-    offsetsDays: [1],
-  },
-  {
-    label: "白矮星",
-    domain: "astro",
-    parentLabel: ASTRO_ROOT,
-    summary: "恒星耗尽核燃料后的致密残骸。",
-    offsetsDays: [3],
-  },
-  {
-    label: "模块化与ES Modules",
-    domain: "js",
-    parentLabel: JS_ROOT,
-    summary: "用 import/export 组织依赖关系。",
-    offsetsDays: [5],
-  },
-  {
-    label: "中子星",
-    domain: "astro",
-    parentLabel: ASTRO_ROOT,
-    summary: "超新星爆发后留下的致密星体。",
-    offsetsDays: [6],
-  },
-  {
-    label: "递归与调用栈",
-    domain: "js",
-    parentLabel: JS_ROOT,
-    summary: "函数调用自身,依赖调用栈保存状态。",
-    offsetsDays: [9],
-  },
-  {
-    label: "宇宙微波背景辐射",
-    domain: "astro",
-    parentLabel: ASTRO_ROOT,
-    summary: "大爆炸残留的均匀微波辐射。",
-    offsetsDays: [11],
-  },
-  {
-    label: "正则表达式捕获组",
-    domain: "js",
-    parentLabel: JS_ROOT,
-    summary: "用括号在正则里截取匹配子串。",
-    offsetsDays: [13],
-  },
+  { id: "gravitational-lensing", domain: "astro", parentId: ASTRO_ROOT, offsetsDays: [0] },
+  { id: "debounce-throttle", domain: "js", parentId: JS_ROOT, offsetsDays: [1] },
+  { id: "white-dwarf", domain: "astro", parentId: ASTRO_ROOT, offsetsDays: [3] },
+  { id: "es-modules", domain: "js", parentId: JS_ROOT, offsetsDays: [5] },
+  { id: "neutron-star", domain: "astro", parentId: ASTRO_ROOT, offsetsDays: [6] },
+  { id: "recursion-call-stack", domain: "js", parentId: JS_ROOT, offsetsDays: [9] },
+  { id: "cmb", domain: "astro", parentId: ASTRO_ROOT, offsetsDays: [11] },
+  { id: "regex-capture-groups", domain: "js", parentId: JS_ROOT, offsetsDays: [13] },
 ];

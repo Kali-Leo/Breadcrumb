@@ -14,13 +14,44 @@ const MAX_TEXTS_PER_CALL: usize = 512;
 /// A node label plus its summary. Anything longer is truncated by the model anyway.
 const MAX_TEXT_CHARS: usize = 2000;
 
+/// Where hf-hub puts this model's files under the cache directory, and what fastembed then
+/// opens: the ONNX graph plus the four tokenizer files `load_tokenizer_hf_hub` reads. Kept in
+/// step with fastembed by `the_model_this_app_asks_for_is_the_one_these_names_describe`.
+const MODEL_REPO_DIR: &str = "models--intfloat--multilingual-e5-small";
+const REQUIRED_MODEL_FILES: [&str; 5] = [
+    "onnx/model.onnx",
+    "tokenizer.json",
+    "config.json",
+    "special_tokens_map.json",
+    "tokenizer_config.json",
+];
+
 /// Whether the model has already been fetched into the cache. `TextEmbedding::try_new`
 /// downloads when it has not, which is a network request the user may have switched off.
+///
+/// The question has to be "are the files there", not "is there anything there". hf-hub creates
+/// the blob directory BEFORE it downloads a byte, so a first download that was interrupted —
+/// the lid closed, the network dropped, the app killed — leaves the cache holding exactly one
+/// directory and no usable file. Answering "cached" to that let the guard below wave through a
+/// fetch from huggingface.co under someone who had switched the network off, which is the one
+/// promise this switch makes. Any other directory in the cache (a model swapped out, something
+/// dropped in by hand) used to be enough as well.
 fn model_is_cached(cache_dir: &std::path::Path) -> bool {
-    let Ok(entries) = std::fs::read_dir(cache_dir) else {
+    let Ok(snapshots) = std::fs::read_dir(cache_dir.join(MODEL_REPO_DIR).join("snapshots")) else {
         return false;
     };
-    entries.flatten().any(|entry| entry.path().is_dir())
+    snapshots.flatten().any(|snapshot| {
+        REQUIRED_MODEL_FILES
+            .iter()
+            .all(|name| is_complete_file(&snapshot.path().join(name)))
+    })
+}
+
+/// hf-hub writes each file to a `.part` under `blobs/` and only renames it into place — and
+/// only then links it into the snapshot — once the whole body has arrived. So a snapshot entry
+/// that resolves (metadata follows the symlink) to a non-empty file is a finished download.
+fn is_complete_file(path: &std::path::Path) -> bool {
+    std::fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.len() > 0)
 }
 
 fn embed_blocking(
@@ -72,3 +103,7 @@ pub async fn embed_texts(
         .await
         .map_err(|e| e.to_string())?
 }
+
+#[cfg(test)]
+#[path = "embeddings_tests.rs"]
+mod tests;

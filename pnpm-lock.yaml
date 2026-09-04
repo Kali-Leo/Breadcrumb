@@ -631,6 +631,9 @@ importers:
       '@breadcrumb/core-vectors':
         specifier: workspace:*
         version: link:../core-vectors
+      '@breadcrumb/feature-memory':
+        specifier: workspace:*
+        version: link:../feature-memory
       zod:
         specifier: ^4.1.0
         version: 4.4.3
@@ -731,6 +734,9 @@ importers:
       '@breadcrumb/feature-graph':
         specifier: workspace:*
         version: link:../feature-graph
+      '@breadcrumb/feature-memory':
+        specifier: workspace:*
+        version: link:../feature-memory
       zod:
         specifier: ^4.1.0
         version: 4.4.3

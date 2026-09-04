@@ -9,6 +9,7 @@
  */
 import type { InterestSignalRow } from "@breadcrumb/core-db";
 import { parseJsonColumn, StringListJsonSchema } from "@breadcrumb/core-db";
+import { clampUnit, finiteOr } from "@breadcrumb/feature-memory";
 
 /** The short channel: what the learner has been into these couple of weeks.
  *
@@ -72,6 +73,14 @@ export function aggregateInterest(
   const longByNode = new Map<string, WeightedAccumulator>();
 
   for (const signal of signals) {
+    // One unreadable created_at costs that signal, never the node — the same rule
+    // aggregateStyles applies to an unreadable styles_json two functions down, and the rule
+    // layers.ts already applied to a bad sighting. Before this, the NaN decay weight it
+    // produced poisoned the node's whole accumulator: all four of its reported numbers came
+    // out NaN, survived every clamp, and flattened the frontier's sort (bug hunt 2026-09-03,
+    // P1-3). Nothing writes such a row today; a hand-edited or externally imported one can.
+    if (!Number.isFinite(Date.parse(signal.created_at))) continue;
+    if (!Number.isFinite(signal.confidence)) continue;
     const channels = [
       { accByNode: shortByNode, halfLifeDays: INTEREST_SHORT_HALF_LIFE_DAYS },
       { accByNode: longByNode, halfLifeDays: INTEREST_LONG_HALF_LIFE_DAYS },
@@ -92,12 +101,14 @@ export function aggregateInterest(
     const shortAcc = shortByNode.get(nodeId) ?? emptyAccumulator();
     const shrunk = (acc: WeightedAccumulator, dimension: keyof WeightedAccumulator) =>
       acc[dimension] / (acc.weightTotal + pseudoCount);
+    const best = (dimension: keyof WeightedAccumulator) =>
+      clampUnit(Math.max(shrunk(shortAcc, dimension), shrunk(longAcc, dimension)));
     scores.set(nodeId, {
       nodeId,
-      curiosity: Math.max(shrunk(shortAcc, "curiosity"), shrunk(longAcc, "curiosity")),
-      confusion: Math.max(shrunk(shortAcc, "confusion"), shrunk(longAcc, "confusion")),
-      boredom: Math.max(shrunk(shortAcc, "boredom"), shrunk(longAcc, "boredom")),
-      evidenceWeight: longAcc.weightTotal,
+      curiosity: best("curiosity"),
+      confusion: best("confusion"),
+      boredom: best("boredom"),
+      evidenceWeight: finiteOr(longAcc.weightTotal, 0),
     });
   }
   return scores;

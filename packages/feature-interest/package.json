@@ -14,6 +14,7 @@
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
+    "@breadcrumb/feature-memory": "workspace:*",
     "zod": "^4.1.0"
   },
   "devDependencies": {

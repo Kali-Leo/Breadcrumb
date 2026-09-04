@@ -1,14 +1,16 @@
 /**
  * Purpose: embedding-similarity neighborhood diffusion — a node with no direct interest
  * signal but close (by cosine similarity) to interested nodes inherits some of that
- * interest. Pure math, no DB, no I/O. Cosine comes from @breadcrumb/core-vectors (2026-09-02:
- * the private copy this module kept was one of six, and they had already drifted).
+ * interest. Pure math, no DB, no I/O. The all-pairs sweep behind it lives in
+ * spreadNeighbors.ts (2026-09-02: cosine itself came from @breadcrumb/core-vectors, because
+ * the private copy this module kept was one of six and they had already drifted).
  * Main exports: spreadInterest, DEFAULT_SPREAD_FACTOR, SPREAD_SIMILARITY_FLOOR,
  * SPREAD_NEIGHBOR_TOP_K.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
-import { cosineSimilarity } from "@breadcrumb/core-vectors";
+import { clampUnit } from "@breadcrumb/feature-memory";
+import { type NeighborSlots, topNeighbors } from "./spreadNeighbors";
 
 /** How much of the similarity-weighted neighborhood average bleeds into a node's own
  * score; 0 = no diffusion, 1 = a node with no signal fully inherits its neighbors'. */
@@ -22,66 +24,60 @@ export const SPREAD_SIMILARITY_FLOOR = 0.5;
 /** However many neighbors clear the floor, only the closest this many diffuse — the same
  * absolute cost ceiling feature-graph's DEFAULT_TOP_K_SIMILAR (= 8) puts on its own candidate
  * pool, for the same reason: it bounds the worst case (a node sitting in a dense cluster of
- * near-equal matches) without being the primary cutoff. Also caps the O(n²) sweep's damage as
- * the tree grows. */
+ * near-equal matches) without being the primary cutoff. */
 export const SPREAD_NEIGHBOR_TOP_K = 8;
 
-/** Diffuses per-node scores (e.g. curiosity) across the embedding neighborhood. Nodes
- * without an embedding pass through unchanged (own score, or 0 if absent). Diffusion only
- * ever fills the gap toward the neighborhood average — it never lowers a node's own score. */
+/**
+ * Diffuses per-node scores (e.g. curiosity) across the embedding neighborhood. Diffusion only
+ * ever fills the gap toward the neighborhood average — it never lowers a node's own score.
+ *
+ * Every node the caller scored comes back, embedded or not. A node without an embedding row
+ * has no neighborhood, so it passes through carrying its own score unchanged — it is not a
+ * node with no interest. This is what the comment on this function always claimed and what
+ * the dead `vector === undefined` branch under it was reaching for, but the loop ran over the
+ * embedding keys, so an unembedded node was simply missing from the result and
+ * plannerRecompute read the map as complete: `interestByNode.get(id) ?? 0` (bug hunt
+ * 2026-09-03, P0-2). That silently zeroed exactly the wrong nodes — embeddings are backfilled
+ * asynchronously, so the ones missing a row are the ones that appeared most recently, i.e.
+ * whatever the learner just got curious about — and zeroed the entire tree whenever the local
+ * embedding model had not been downloaded, with the interest slider still showing full tilt.
+ */
 export function spreadInterest(
   scoresByNodeId: ReadonlyMap<string, number>,
   embeddings: readonly NodeEmbeddingRow[],
   factor: number,
 ): Map<string, number> {
   const vectorByNodeId = parseVectorRows(embeddings, (row) => row.node_id);
-  const nodeIds = [...vectorByNodeId.keys()];
-
   const result = new Map<string, number>();
-  for (const nodeId of nodeIds) {
-    const own = scoresByNodeId.get(nodeId) ?? 0;
-    const vector = vectorByNodeId.get(nodeId);
-    if (vector === undefined) {
-      result.set(nodeId, own);
-      continue;
-    }
-    const neighborAverage = weightedNeighborAverage(
-      nodeId,
-      vector,
-      nodeIds,
-      vectorByNodeId,
-      scoresByNodeId,
-    );
-    const spread = own + factor * neighborAverage * (1 - own);
-    result.set(nodeId, Math.max(0, Math.min(1, spread)));
-  }
+  for (const [nodeId, own] of scoresByNodeId) result.set(nodeId, clampUnit(own));
+
+  const slots = topNeighbors(
+    [...vectorByNodeId].map(([id, vector]) => ({ id, vector })),
+    SPREAD_NEIGHBOR_TOP_K,
+    SPREAD_SIMILARITY_FLOOR,
+  );
+  slots.packed.ids.forEach((nodeId, row) => {
+    const own = clampUnit(scoresByNodeId.get(nodeId) ?? 0);
+    const neighborAverage = weightedNeighborAverage(slots, row, scoresByNodeId);
+    result.set(nodeId, clampUnit(own + factor * neighborAverage * (1 - own)));
+  });
   return result;
 }
 
+/** Similarity-weighted mean of one row's kept neighbors' scores; 0 when it kept none. */
 function weightedNeighborAverage(
-  nodeId: string,
-  vector: readonly number[],
-  allNodeIds: readonly string[],
-  vectorByNodeId: ReadonlyMap<string, readonly number[]>,
+  slots: NeighborSlots,
+  row: number,
   scoresByNodeId: ReadonlyMap<string, number>,
 ): number {
-  const neighbors: { id: string; similarity: number }[] = [];
-  for (const otherId of allNodeIds) {
-    if (otherId === nodeId) continue;
-    const otherVector = vectorByNodeId.get(otherId);
-    if (otherVector === undefined) continue;
-    const similarity = cosineSimilarity(vector, otherVector);
-    if (similarity < SPREAD_SIMILARITY_FLOOR) continue;
-    neighbors.push({ id: otherId, similarity });
-  }
-  // Closest first, node id as the tie-break so the top-K cut is deterministic.
-  neighbors.sort((a, b) => b.similarity - a.similarity || a.id.localeCompare(b.id));
-
+  const base = row * slots.capacity;
   let weightedSum = 0;
   let weightTotal = 0;
-  for (const neighbor of neighbors.slice(0, SPREAD_NEIGHBOR_TOP_K)) {
-    weightedSum += neighbor.similarity * (scoresByNodeId.get(neighbor.id) ?? 0);
-    weightTotal += neighbor.similarity;
+  for (let index = 0; index < (slots.count[row] ?? 0); index += 1) {
+    const similarity = slots.similarity[base + index] ?? 0;
+    const neighborId = slots.packed.ids[slots.partner[base + index] ?? 0] ?? "";
+    weightedSum += similarity * clampUnit(scoresByNodeId.get(neighborId) ?? 0);
+    weightTotal += similarity;
   }
   return weightTotal > 0 ? weightedSum / weightTotal : 0;
 }

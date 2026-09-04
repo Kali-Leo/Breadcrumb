@@ -4,28 +4,24 @@
  * set first (helps-support, interest, structural depth, goal-gap membership, browsing; see
  * frontierScore.ts). The hard gate reads "every requires-prerequisite has been lit at some
  * point", not "is lit right now" — forgetting decides what to review, not what you are allowed
- * to look at next. Concept candidates are bucketed ahead of method candidates, and the third
- * concept slot is reserved for the thinnest-evidence candidate. No DB, no I/O; mastery/interest
- * are pre-computed maps from the caller.
+ * to look at next. Concept candidates are bucketed ahead of method candidates, and each bucket
+ * stays strictly score-descending so visibleCount.ts can find the cliff in it. No DB, no I/O;
+ * mastery/interest are pre-computed maps from the caller.
  * Main exports: frontier, FrontierCandidate, FrontierReason, FrontierInput,
  * GOAL_GAP_SCORE_BOOST, FRONTIER_WEIGHTS.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors } from "@breadcrumb/feature-graph";
+import { compareDesc } from "@breadcrumb/feature-memory";
 import {
   bucketConceptsFirst,
   type FrontierScoreParts,
   type FrontierWeights,
   normalizeAndScore,
 } from "./frontierScore";
-import { longestRequiresChainBelow } from "./graphDepth";
+import { longestRequiresChainAbove } from "./graphDepth";
 
-export {
-  EXPLORATION_SLOT_INDEX,
-  FRONTIER_WEIGHTS,
-  type FrontierWeights,
-  GOAL_GAP_SCORE_BOOST,
-} from "./frontierScore";
+export { FRONTIER_WEIGHTS, type FrontierWeights, GOAL_GAP_SCORE_BOOST } from "./frontierScore";
 
 export interface FrontierReason {
   /** Labels of this node's requires-prerequisites — all of them satisfied, since that's the
@@ -119,8 +115,9 @@ function incomingHelpsEdgesByTarget(
  * or lit before — the hard gate; a node with zero requires-prerequisites also qualifies), but
  * the node itself is not lit right now. The "right now" on the candidate's own exclusion is
  * deliberate and differs from the gate: a decayed node has to be able to come back as a
- * reunion candidate. Ordered by score desc then label inside each kind bucket, concepts first,
- * with the third concept position reserved for exploration. */
+ * reunion candidate. Ordered by score desc then label inside each kind bucket, concepts first;
+ * the exploration slot is applied later, by visibleFrontier, over the candidates it decided to
+ * show — reordering the ranked list here hid the score cliff from it (bug hunt 2026-09-03). */
 export function frontier(input: FrontierInput): FrontierCandidate[] {
   const {
     nodes,
@@ -140,7 +137,9 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
   const wasEverLit = (nodeId: string) => isLit(nodeId) || previouslyLitNodeIds.has(nodeId);
   const helpsByTarget = incomingHelpsEdgesByTarget(edges);
   const allNodeIds = nodes.map((node) => node.id);
-  const depthByNode = longestRequiresChainBelow(allNodeIds, new Set(allNodeIds), edges);
+  // Prerequisite depth, not downstream depth: the score subtracts this, and 先挑轻松的 has
+  // to mean "fewest things to make up first". See longestRequiresChainAbove.
+  const depthByNode = longestRequiresChainAbove(allNodeIds, new Set(allNodeIds), edges);
 
   const candidates: FrontierCandidate[] = [];
   const parts: FrontierScoreParts[] = [];
@@ -190,6 +189,9 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
     ...candidate,
     score: scores[index] ?? 0,
   }));
-  scored.sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
-  return bucketConceptsFirst(scored, evidenceWeightByNode !== undefined);
+  // compareDesc, not `b.score - a.score`: a NaN there makes every comparison false and V8
+  // leaves the array untouched, i.e. the ranking silently becomes database insertion order.
+  // normalizeAndScore no longer emits one, so this is the belt to that braces.
+  scored.sort((a, b) => compareDesc(a.score, b.score) || a.label.localeCompare(b.label));
+  return bucketConceptsFirst(scored);
 }

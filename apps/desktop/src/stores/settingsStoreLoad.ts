@@ -8,6 +8,7 @@
  * Main exports: loadSettingsSnapshot, SettingsSnapshot.
  */
 import { DEFAULT_LANGUAGE_CODE, isLanguageCode, UI_LANGUAGE_CODES } from "@breadcrumb/core-i18n";
+import { sanitizeRouteParams } from "@breadcrumb/feature-planner";
 import { changeLanguage, rememberedLanguage, rememberLanguage } from "../i18n";
 import {
   sanitizeRecommendationWeights,
@@ -22,7 +23,6 @@ import {
   CHECKLIST_DISMISSED_KEY,
   COMPARE_CATEGORY_KEY,
   type CompareCategory,
-  DEFAULT_ROUTE_PARAMS,
   DEFAULT_SWITCHES,
   FEATURE_SWITCHES_KEY,
   type FeatureSwitches,
@@ -104,7 +104,9 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
     mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
     learningMode: learningMode ?? "casual",
-    routeParams: routeParams ?? DEFAULT_ROUTE_PARAMS,
+    // Sanitised here as well as where it is used: an unreadable row would otherwise reach the
+    // sliders and show a value the planner is not actually using.
+    routeParams: sanitizeRouteParams(routeParams),
     compareCategory: compareCategory ?? "occupation",
     language,
     languageUnchosen: chosen === null,

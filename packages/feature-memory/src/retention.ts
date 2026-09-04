@@ -8,6 +8,7 @@
  */
 import type { NodeSightingGrade, NodeSightingRow } from "@breadcrumb/core-db";
 import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
+import { clampUnit } from "./clampUnit";
 
 // enable_short_term is stated explicitly (design audit 2026-08-28 #7): the library default is
 // true, which parks a just-reviewed card in the Learning state on learning-step intervals.
@@ -77,9 +78,13 @@ export function buildNodeCheckpoints(
 /** Recall probability (0..1) of one card at an instant — the one place the fog engine's FSRS
  * retrievability call lives, so retention, the layer series and review priority always read it
  * the same way. Clamped here rather than at each call site: every consumer treats it as a
- * probability, so an out-of-range value from the library must never reach one of them. */
+ * probability, so an out-of-range value from the library must never reach one of them.
+ * clampUnit, not a hand-written min/max: a card replayed from an unparsable `created_at` has
+ * NaN fields and the library then returns NaN, which `Math.max(0, Math.min(1, x))` passes
+ * through untouched. Such a node reports 0 — the same thing layers.ts already did by skipping
+ * the row, instead of the opposite thing mastery.ts used to do by spreading it. */
 export function retrievabilityOf(card: Card, now: Date): number {
-  return Math.max(0, Math.min(1, scheduler.get_retrievability(card, now, false)));
+  return clampUnit(scheduler.get_retrievability(card, now, false));
 }
 
 /** Retention probability (0..1) for one node given its graded sightings. */

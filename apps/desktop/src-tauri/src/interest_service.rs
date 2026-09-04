@@ -73,6 +73,20 @@ static SPAWNING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 /// How long after a spawn the latch stays closed, matching the frontend's own start grace.
 const SPAWN_GRACE: Duration = Duration::from_secs(60);
 
+/// Waits for the daemon in the background, so the kernel is allowed to let it go.
+///
+/// A `Child` dropped without being waited for leaves a zombie: the process is gone, but the
+/// exit status it still owes its parent keeps its entry in the process table until this app
+/// exits. And the path that produces one is the ordinary failure rather than the rare one —
+/// python3 starts, meets an ImportError and dies within the second — while the discovery page
+/// can ask for a start every time it is opened. The thread costs one parked stack and lives
+/// exactly as long as the daemon does.
+fn reap_in_background(mut child: std::process::Child) -> std::thread::JoinHandle<()> {
+    std::thread::spawn(move || {
+        let _ = child.wait();
+    })
+}
+
 #[tauri::command]
 pub fn start_interest_service(app: tauri::AppHandle) -> ServiceStart {
     if service_is_up() {
@@ -105,7 +119,10 @@ pub fn start_interest_service(app: tauri::AppHandle) -> ServiceStart {
         command.stdout(log).stderr(errors);
     }
     match command.spawn() {
-        Ok(_) => ServiceStart::of("starting", script.display().to_string(), String::new()),
+        Ok(child) => {
+            reap_in_background(child);
+            ServiceStart::of("starting", script.display().to_string(), String::new())
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             ServiceStart::of("pythonMissing", script.display().to_string(), String::new())
         }
@@ -121,5 +138,53 @@ pub fn read_interest_service_token(app: tauri::AppHandle) -> Option<String> {
         None
     } else {
         Some(token)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::reap_in_background;
+    #[cfg(target_os = "linux")]
+    use std::time::Duration;
+
+    /// Reads the process state letter out of /proc. The `comm` field can hold spaces and
+    /// parentheses, so the state is taken from after the last ')' rather than by field index.
+    #[cfg(target_os = "linux")]
+    fn process_state(pid: u32) -> Option<char> {
+        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+        stat.rsplit_once(')')?.1.split_whitespace().next()?.chars().next()
+    }
+
+    /// Gives the child a moment to actually exit, then reports what it settled as: gone, or
+    /// still holding a slot as a zombie.
+    #[cfg(target_os = "linux")]
+    fn settled_state(pid: u32) -> Option<char> {
+        for _ in 0..200 {
+            match process_state(pid) {
+                None => return None,
+                Some('Z') => return Some('Z'),
+                Some(_) => std::thread::sleep(Duration::from_millis(10)),
+            }
+        }
+        process_state(pid)
+    }
+
+    /// Every visit to the discovery page could ask for a start, and the daemon's commonest
+    /// failure is to die immediately. Each of those used to leave a process-table entry behind
+    /// for the rest of the app's life.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_daemon_that_exits_leaves_nothing_in_the_process_table() {
+        let child = std::process::Command::new("/bin/sh")
+            .arg("-c")
+            .arg("exit 3")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .expect("/bin/sh should start");
+        let pid = child.id();
+        reap_in_background(child).join().expect("the reaper thread should finish");
+        assert_eq!(settled_state(pid), None, "the child is still holding a process slot");
     }
 }

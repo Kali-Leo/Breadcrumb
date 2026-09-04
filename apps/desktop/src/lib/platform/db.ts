@@ -75,16 +75,32 @@ export interface Repos {
 let sqlClientPromise: Promise<SqlClient> | null = null;
 let reposPromise: Promise<Repos> | null = null;
 
+/** Remembers the result, and forgets it again the moment it fails. `??=` on its own caches a
+ * REJECTED promise just as happily as a resolved one, so a single transient failure — the
+ * database busy, a migration that met a locked file — would hand every later caller that same
+ * stale error for the rest of the session and never open anything again. Clearing on failure
+ * is what the rest of this app already does (apps/web/src/shims/embedding/embeddingWorker.ts). */
+function memoize<T>(build: () => Promise<T>, forget: () => void): Promise<T> {
+  return build().catch((error: unknown) => {
+    forget();
+    throw error;
+  });
+}
+
 /** The raw SQL client — for the callers that need statements rather than repositories:
  * feature-research's executor (it builds its own research repo), and the demo-data seed the
  * guided tour installs and removes. */
 export function getSqlClient(): Promise<SqlClient> {
-  sqlClientPromise ??= openAndMigrate();
+  sqlClientPromise ??= memoize(openAndMigrate, () => {
+    sqlClientPromise = null;
+  });
   return sqlClientPromise;
 }
 
 export function getRepos(): Promise<Repos> {
-  reposPromise ??= buildRepos();
+  reposPromise ??= memoize(buildRepos, () => {
+    reposPromise = null;
+  });
   return reposPromise;
 }
 
@@ -157,29 +173,17 @@ async function openAndMigrate(): Promise<SqlClient> {
       });
     },
   };
-  await applyPragmas(sqlClient);
   await runMigrations(sqlClient);
   return sqlClient;
 }
 
-/** States the two PRAGMAs this app wants rather than inheriting them (design audit 2026-08-28,
- * 数据层与性能 #4). The file is already WAL — sqlx sets that once at creation and it persists —
- * and under WAL `synchronous=NORMAL` is the documented recommendation: a crash can lose the
- * last few committed transactions but cannot corrupt the database, and it drops one fsync per
- * commit, which is the dominant cost of bulk writes on a slow disk. busy_timeout is restated
- * at sqlx's own default so a dependency change cannot silently shorten it.
- *
- * Honest about the reach: both are per-connection settings and tauri-plugin-sql's pool holds
- * up to 10 connections, so this arms the connection these two calls land on — the one that
- * then serves sequential traffic — not the whole pool. Arming every connection would need
- * SqlitePoolOptions::after_connect on the Rust side, which the plugin does not expose.
- *
- * `foreign_keys` is deliberately absent for the same reason: arming one connection out of ten
- * with the constraint the whole schema depends on would buy a false sense of coverage. It is
- * on because sqlx sends `PRAGMA foreign_keys=ON` when it opens EVERY connection — a default
- * pinned by sqlx_enables_foreign_keys_on_every_connection in src-tauri/src/pragma_defaults.rs,
- * so an upgrade that changes it turns red instead of silently dropping referential integrity. */
-async function applyPragmas(sqlClient: SqlClient): Promise<void> {
-  await sqlClient.execute("PRAGMA busy_timeout = 5000");
-  await sqlClient.execute("PRAGMA synchronous = NORMAL");
-}
+/* No PRAGMAs are sent from here, and the two that used to be were not doing what their comment
+ * claimed. They are per-connection settings, tauri-plugin-sql's pool holds up to ten
+ * connections, and sqlx hands a connection back to the pool asynchronously — so two execute()
+ * calls in a row land on two different connections and the statement after them on a third.
+ * Measured 2026-09-03: `PRAGMA synchronous = NORMAL` sent from here armed one connection and
+ * the very next statement still read FULL. Worse, the comment's premise was wrong in the other
+ * direction too: the file was never in WAL mode (sqlx does not set journal_mode unless asked),
+ * which is the one mode that makes NORMAL safe rather than corruption-on-power-loss.
+ * Both now live in src-tauri/src/pragma_defaults.rs, applied through
+ * SqlitePoolOptions::after_connect to every connection the pool opens. */

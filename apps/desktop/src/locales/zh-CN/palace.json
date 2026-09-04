@@ -47,7 +47,7 @@
     "modeRanked": "目标",
     "modeRankedHint": "只显示和当前目标有关的部分",
     "rename": "重命名",
-    "renameHint": "回车保存，Esc 取消。留空就恢复原来的名字。",
+    "renameHint": "离开这个输入框就保存。留空就恢复原来的名字。",
     "renameInputAria": "新名字",
     "enterButton": "进入",
     "backButton": "返回上一层",

@@ -12,7 +12,7 @@
       "via": "gh api repos/cmusphinx/cmudict/commits/master --jq .sha"
     }
   },
-  "kaikkiSnapshot": "2026-09-01",
+  "kaikkiSnapshot": "2026-09-01 (bn, hi, id, ko, sw, vi) and 2026-09-04 (ar, de, es, fr, it, ja, pt, ru, tr, zh)",
   "sources": {
     "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz": {
       "sha256": "d42a2f5503bbb3f8a11fa4f9ae710afcbaf6f6110a4619435dd9fe51e485aec4",
@@ -65,6 +65,94 @@
     "https://kaikki.org/dictionary/Vietnamese/kaikki.org-dictionary-Vietnamese.jsonl": {
       "sha256": "c507001f32b211a5f18f4379c5e81098377c6e73d827b82e98cffde73964fec5",
       "bytes": 78748680
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/es/es_50k.txt": {
+      "sha256": "dcff3ad4316192f4dc4ff7d26e637c6ff314ef1ca0f3f720c5649018a71056c0",
+      "bytes": 658626
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/fr/fr_50k.txt": {
+      "sha256": "f81f7c570b6433764da99aa30f4dfb08d81c5926301377b709af23a13b1f9596",
+      "bytes": 653452
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/pt_br/pt_br_50k.txt": {
+      "sha256": "a61d6f2ede97c5daad5fb3907b72a228f0aff12668be6d24da590d20804fa611",
+      "bytes": 650066
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/ru/ru_50k.txt": {
+      "sha256": "6095f507cc167488ec66ada5a85ac50433503a08ad24a07c6eabdf54352c4e7f",
+      "bytes": 998861
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/ar/ar_50k.txt": {
+      "sha256": "bbe98b4b92902b392bdefa2e555a108fdb42a5dd79d261674be5ab666229e19f",
+      "bytes": 805779
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/de/de_50k.txt": {
+      "sha256": "d9e50546fd7e8b6fe6542a2b33c51d1331092b2a3916ec09f80d97856068705b",
+      "bytes": 662497
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/it/it_50k.txt": {
+      "sha256": "bb96cdcb56d28342c1e909db6b2525448b7767136b7e86a2ccc649a1be66fc19",
+      "bytes": 653205
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/tr/tr_50k.txt": {
+      "sha256": "480192844e7fdfe9591bbf0b9cfbb96ed5751cfbba7024fd45d8cb7508e07d5c",
+      "bytes": 711935
+    },
+    "https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl": {
+      "sha256": "5ad7568656f904b02ce7f63e94a62f0287708f445c7b05ac80d8ccb8bbac23b2",
+      "bytes": 1026517383
+    },
+    "https://kaikki.org/dictionary/French/kaikki.org-dictionary-French.jsonl": {
+      "sha256": "8902a7327b08e82c9c45095621e653c24446de42017a7e07e36370c34dd616c2",
+      "bytes": 573614254
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2018/ko/ko_50k.txt": {
+      "sha256": "8d00401b6728c8d6feeaa5455583c1a33408dd020aae4aa55609b25004d1d99d",
+      "bytes": 695053
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2016/ja/ja_50k.txt": {
+      "sha256": "6f734851c4881295d66947e09987ccb17010bb71cd9df7b6e326870c847508d6",
+      "bytes": 624618
+    },
+    "https://raw.githubusercontent.com/hermitdave/FrequencyWords/525f9b560de45753a5ea01069454e72e9aa541c6/content/2016/hi/hi_50k.txt": {
+      "sha256": "8609874880f94d2056f5fe3e5a58bee533687315fec154c9c551a7180f1dc352",
+      "bytes": 29946
+    },
+    "https://kaikki.org/dictionary/Portuguese/kaikki.org-dictionary-Portuguese.jsonl": {
+      "sha256": "c72ee0716c3996dbefbe7295fae9329da06c4a3490c1ddc032b354645fd4c81e",
+      "bytes": 560987550
+    },
+    "https://kaikki.org/dictionary/Russian/kaikki.org-dictionary-Russian.jsonl": {
+      "sha256": "db91f3524353c7d82050fd1ca58188dbd290a24869afb845e8f3e42a286f0c44",
+      "bytes": 936640504
+    },
+    "https://kaikki.org/dictionary/Arabic/kaikki.org-dictionary-Arabic.jsonl": {
+      "sha256": "9add95bc3e2ea36c489a1eac290c2897d1bef1d28a66b9b10038dcdfa24e6bb1",
+      "bytes": 512415746
+    },
+    "https://kaikki.org/dictionary/German/kaikki.org-dictionary-German.jsonl": {
+      "sha256": "02caa501e35f4d1d49c4561f62577c57450c2c510be322f345a1c6f0b0814729",
+      "bytes": 1071107495
+    },
+    "https://kaikki.org/dictionary/Japanese/kaikki.org-dictionary-Japanese.jsonl": {
+      "sha256": "eab1f969840ee21aa76ad08ccee13c04f6f5765e43ba14a8c3f374d9d45d8c89",
+      "bytes": 329102084
+    },
+    "https://kaikki.org/dictionary/Italian/kaikki.org-dictionary-Italian.jsonl": {
+      "sha256": "11be11e55f7ed076cc4172aae4c3d59238374ea56016aa8b5a9adcd930b517b0",
+      "bytes": 761816243
+    },
+    "https://kaikki.org/dictionary/Turkish/kaikki.org-dictionary-Turkish.jsonl": {
+      "sha256": "381e24db224512f29b4207f86db9277ea3edf9271eb974054733eb87631d56d6",
+      "bytes": 430875096
+    },
+    "https://kaikki.org/dictionary/Chinese/kaikki.org-dictionary-Chinese.jsonl": {
+      "sha256": "4f2ec4d34067c11b2a7ce624d10d6ac758780030ed983b1ad12b716878ca582a",
+      "bytes": 1193012401
+    },
+    "https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl": {
+      "sha256": "3f6f69a190036ae40606f5cf565c12806ce44233a76fc6558a1de2e3b0967398",
+      "bytes": 3212282689
     }
   }
 }

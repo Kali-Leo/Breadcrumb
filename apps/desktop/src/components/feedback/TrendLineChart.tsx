@@ -8,8 +8,10 @@
  * opens its own sentence. Nothing on a pointer screen changes.
  * Main exports: TrendSeries, TrendLineChart.
  */
+import { formatDayMonth } from "@breadcrumb/core-i18n";
 import type { TrendPoint } from "@breadcrumb/feature-feedback";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Line,
@@ -36,9 +38,13 @@ const AXIS_TICK_STYLE = { fontSize: 10, fill: "#a8a29e" };
 const CHART_HEIGHT = 160;
 const X_AXIS_TICK_TARGET = 5;
 
-/** "YYYY-MM-DD" -> "MM-DD"; the year rarely matters at trend-window scale. */
-function formatTickDate(date: string): string {
-  return date.slice(5);
+/** "YYYY-MM-DD" -> a short day-and-month the way the reader writes one ("Aug 27", "27 août",
+ * "২৭ আগস্ট") — it was `date.slice(5)`, the ISO month number, for everyone. */
+function tickDateFormatter(locale: string): (date: string) => string {
+  return (date) => {
+    const parsed = new Date(`${date}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? date : formatDayMonth(locale, parsed);
+  };
 }
 
 /** Evenly-spaced subset of dates for a readable X axis instead of one tick per day. */
@@ -141,6 +147,7 @@ export function TrendLineChart({
   height?: number;
 }) {
   const coarse = useInputMode() === "coarse";
+  const { i18n } = useTranslation();
   const data = mergeSeries(series);
   const dates = data.map((row) => row.date as string);
   // A single unexplained series needs no legend box — the card title names it.
@@ -155,7 +162,7 @@ export function TrendLineChart({
           <XAxis
             dataKey="date"
             ticks={sparseTicks(dates)}
-            tickFormatter={formatTickDate}
+            tickFormatter={tickDateFormatter(i18n.language)}
             tickLine={false}
             axisLine={false}
             tick={AXIS_TICK_STYLE}

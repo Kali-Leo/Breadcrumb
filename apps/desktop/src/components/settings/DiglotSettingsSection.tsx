@@ -35,7 +35,6 @@ export function DiglotSettingsSection() {
   const installedPairs = useDiglotStore((state) => state.installedPairs);
   const installingPairId = useDiglotStore((state) => state.installingPairId);
   const installFailedPairId = useDiglotStore((state) => state.installFailedPairId);
-  const pairResetTargetLang = useDiglotStore((state) => state.pairResetTargetLang);
   const loaded = useDiglotStore((state) => state.loaded);
   const interfaceLanguage = useSettingsStore((state) => state.language);
   const answerLanguage = useSettingsStore((state) => state.answerLanguage);
@@ -86,14 +85,6 @@ export function DiglotSettingsSection() {
               {t("learning:diglot.pairStatus", {
                 source: languageNameOf(sourceLang),
                 target: languageNameOf(current.targetLang),
-              })}
-            </p>
-          )}
-          {pairResetTargetLang !== null && (
-            <p className="text-xs text-stone-500">
-              {t("learning:diglot.pairResetForLanguage", {
-                language: languageNameOf(sourceLang),
-                target: languageNameOf(pairResetTargetLang),
               })}
             </p>
           )}

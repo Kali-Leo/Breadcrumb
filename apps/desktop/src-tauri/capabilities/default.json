@@ -9,7 +9,6 @@
       "identifier": "opener:allow-open-url",
       "allow": [{ "url": "https://*" }]
     },
-    "sql:allow-close",
     "sql:allow-execute",
     "sql:allow-select",
     {

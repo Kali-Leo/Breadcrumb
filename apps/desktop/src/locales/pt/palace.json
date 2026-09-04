@@ -55,7 +55,7 @@
     "modeRanked": "Meta",
     "modeRankedHint": "Mostrar só o que se liga à meta atual",
     "rename": "Renomear",
-    "renameHint": "Enter salva, Esc cancela. Deixe em branco para voltar ao nome original.",
+    "renameHint": "Salva assim que você sai do campo. Deixe em branco para voltar ao nome original.",
     "renameInputAria": "Novo nome",
     "enterButton": "Entrar",
     "backButton": "Voltar um nível",

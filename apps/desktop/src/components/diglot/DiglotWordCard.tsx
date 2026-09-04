@@ -176,9 +176,14 @@ export function DiglotWordCard({
           </button>
         )}
       </div>
+      {/* One sentence, one key: the quotation marks, the colon and the copula are all part
+          of how a language writes this, not punctuation the component gets to choose. */}
       {confusion !== undefined && (
         <p className="text-stone-400 text-xs">
-          {t("learning:diglot.contrastLabel")}:「{confusion.lemma}」是 {confusion.target}
+          {t("learning:diglot.contrastLine", {
+            lemma: confusion.lemma,
+            target: confusion.target,
+          })}
         </p>
       )}
       <p>

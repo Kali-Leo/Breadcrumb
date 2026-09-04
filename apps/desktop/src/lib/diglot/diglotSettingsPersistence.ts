@@ -43,7 +43,6 @@ export async function refreshDiglotConfusions(): Promise<void> {
 export async function chooseDiglotPair(pairId: string): Promise<void> {
   const store = useDiglotStore;
   // Their own choice replaces the line explaining the last automatic one.
-  store.setState({ pairResetTargetLang: null });
   const before = store.getState().settings;
   if (pairId === before.pairId && before.enabled) return;
   if (!store.getState().installedPairs.includes(pairId)) {

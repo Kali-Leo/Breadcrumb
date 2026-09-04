@@ -55,7 +55,7 @@
     "modeRanked": "Objetivo",
     "modeRankedHint": "Mostrar solo lo relacionado con el objetivo actual",
     "rename": "Cambiar nombre",
-    "renameHint": "Intro guarda, Esc cancela. Déjalo vacío para volver al nombre original.",
+    "renameHint": "Se guarda en cuanto sales del campo. Déjalo vacío para volver al nombre original.",
     "renameInputAria": "Nombre nuevo",
     "enterButton": "Entrar",
     "backButton": "Volver un nivel",

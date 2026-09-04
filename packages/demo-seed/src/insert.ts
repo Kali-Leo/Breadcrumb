@@ -16,6 +16,7 @@ import {
 import { buildClaimSeed } from "./claims";
 import { buildConceptSeed } from "./concepts";
 import { buildDemoConversations } from "./conversations";
+import { demoTextFor } from "./text";
 import { wipeDemoData } from "./wipe";
 import { buildWordSeed } from "./words";
 
@@ -39,6 +40,10 @@ export interface DemoSeedOptions {
    * does not need words, and language learning is off by default, so a caller that has no
    * pack to hand still gets a complete map, heatmap and history. */
   languagePack?: unknown;
+  /** Interface language of the reader this demo is being installed for. The example is the
+   * first thing a newcomer reads, so it has to be in a language they read; omit only where
+   * there is no reader, and the source language stands in. */
+  language?: string;
 }
 
 /**
@@ -57,6 +62,7 @@ export async function insertDemoData(
   options: DemoSeedOptions = {},
 ): Promise<SeedSummary> {
   await wipeDemoData(sql);
+  const text = demoTextFor(options.language);
   const knowledgeNodes = createKnowledgeNodesRepo(sql);
   const nodeSightings = createNodeSightingsRepo(sql);
   const conversationsRepo = createConversationsRepo(sql);
@@ -66,7 +72,7 @@ export async function insertDemoData(
 
   const existingLabels = new Set((await knowledgeNodes.listAll()).map((node) => node.label));
 
-  const conversations = buildDemoConversations(now);
+  const conversations = buildDemoConversations(now, text);
   for (const conversation of conversations.conversations) {
     await conversationsRepo.create(conversation);
   }
@@ -74,7 +80,7 @@ export async function insertDemoData(
     await messagesRepo.append(message);
   }
 
-  const concepts = buildConceptSeed(now, existingLabels, conversations);
+  const concepts = buildConceptSeed(now, existingLabels, conversations, text);
   for (const node of concepts.nodes) {
     await knowledgeNodes.insert(node);
   }
@@ -82,13 +88,13 @@ export async function insertDemoData(
     await nodeSightings.record(sighting);
   }
 
-  const claims = buildClaimSeed(now, concepts.nodeIdByLabel);
+  const claims = buildClaimSeed(now, concepts.nodeIdById);
   for (const claim of claims) {
     await masteryClaims.insert(claim);
   }
 
   const words =
-    options.languagePack === undefined ? null : buildWordSeed(now, options.languagePack);
+    options.languagePack === undefined ? null : buildWordSeed(now, options.languagePack, text);
   if (words !== null) {
     await diglot.upsertPack(words.pack);
     for (const state of words.states) {

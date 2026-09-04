@@ -78,13 +78,25 @@
     "map-naming": "Noms de la carte",
     "diglot-weave": "Apprentissage des langues · remplacements intelligents",
     "teach-quality": "Retour sur l'explication",
-    "companion-chat": "Chat avec les compagnons",
     "companion-memory": "Mémoire des compagnons",
     "companion-script": "Préparation du compagnon",
     "focus-explain": "Explications en mode focus",
     "term-marking": "Marquage des mots",
     "trail-summary": "La trace d'hier",
-    "connection-test": "Test de connexion"
+    "planner": "Progression de l'objectif",
+    "map-place-names": "Tes propres noms sur la carte",
+    "map-continents": "Régions de la carte",
+    "concept-doors": "Liens vers les notions dans une réponse",
+    "diglot-audio": "Prononciation des mots",
+    "focus-guess": "Rapprochement des réponses en mode focus",
+    "metering": "Relevé des dépenses",
+    "embeddings": "Rapprochement des notions proches",
+    "fsrs-fitting": "Réglage du rythme des révisions",
+    "research-task": "Tâche de recherche",
+    "lazy-chunk": "Chargement de la page",
+    "chat-stream": "Réception de la réponse",
+    "settings": "Chargement des réglages",
+    "companion": "Chargement des compagnons"
   },
   "billing": {
     "intro": "Chaque étape qui coûte de l'argent a son propre interrupteur ici, et sa dépense est suivie séparément. Cette page montre ce qui a réellement été dépensé.",
@@ -116,7 +128,7 @@
     "features": {
       "knowledgeTree": {
         "name": "🌳 Carte des connaissances",
-        "hint": "Après chaque échange, l'IA range sur ta carte ce dont vous avez parlé."
+        "hint": "Après chaque échange, l'IA range sur ta carte ce dont tu as parlé."
       },
       "factcheck": {
         "name": "🔍 Vérification des faits",
@@ -164,7 +176,7 @@
       },
       "companionMemory": {
         "name": "🧠 Mémoire des compagnons",
-        "hint": "Les compagnons se souviennent de vos échanges et rangent ces souvenirs de temps en temps pour qu'ils restent cohérents."
+        "hint": "Les compagnons se souviennent de tes échanges et rangent ces souvenirs de temps en temps pour qu'ils restent cohérents."
       },
       "companionScript": {
         "name": "📜 Préparation du compagnon",
@@ -216,14 +228,14 @@
   },
   "backup": {
     "title": "Sauvegarde et restauration",
-    "hint": "Dans la version navigateur, vos données vivent dans ce seul navigateur. Exportez une sauvegarde et vous pourrez continuer depuis un autre appareil ou un autre navigateur.",
+    "hint": "Dans la version navigateur, tes données vivent dans ce seul navigateur. Exporte une sauvegarde et tu pourras continuer depuis un autre appareil ou un autre navigateur.",
     "export": "Exporter une sauvegarde",
     "import": "Restaurer depuis une sauvegarde",
-    "replaceWarning": "La restauration remplace toutes vos données actuelles par celles de la sauvegarde, et ce qui est remplacé ne peut pas être récupéré. Vous pouvez d'abord exporter une sauvegarde des données actuelles.",
+    "replaceWarning": "La restauration remplace toutes tes données actuelles par celles de la sauvegarde, et ce qui est remplacé ne peut pas être récupéré. Tu peux d'abord exporter une sauvegarde des données actuelles.",
     "confirmImport": "Restaurer",
     "exporting": "Exportation…",
     "importing": "Restauration…",
     "exportFailed": "Cette session n'a aucun fichier à exporter : le navigateur n'a pas laissé cette page enregistrer de données.",
-    "importFailed": "Ce fichier n'est pas une sauvegarde Breadcrumb, et vos données actuelles sont inchangées. Essayez un autre fichier."
+    "importFailed": "Ce fichier n'est pas une sauvegarde Breadcrumb, et tes données actuelles sont inchangées. Essaie un autre fichier."
   }
 }

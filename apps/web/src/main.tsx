@@ -35,6 +35,37 @@ const UNKNOWN_CAUSE =
   "（非无痕模式）就可以正常保存。 · This browser will not let the page store data, so " +
   "nothing from this session will be kept. A normal (non-private) window will save it.";
 
+/**
+ * The one failure the boot screen must not sit through. Everything below the database open is
+ * behind it — i18n included — so a rejection there leaves index.html's breathing square going
+ * forever, with no message and nothing to try. This replaces it with a sentence, written out in
+ * both languages for the same reason UNKNOWN_CAUSE is: the translations are not loaded yet, and
+ * whichever one we guessed would be the wrong half of the time.
+ */
+const DATABASE_UNAVAILABLE =
+  "Breadcrumb 打不开这台设备上的数据库，界面无法启动。刷新页面通常就能好；如果一直这样，" +
+  "请检查浏览器是否禁止了本站保存数据，或换一个普通窗口（非无痕模式）再试。 · Breadcrumb " +
+  "could not open its database on this device, so the interface cannot start. Reloading the " +
+  "page usually fixes it; if it keeps happening, check whether this browser is blocking " +
+  "storage for this site, or try a normal (non-private) window.";
+
+function showBootFailure(): void {
+  const root = document.getElementById("root");
+  // Emptying #root takes the boot animation with it. A square still breathing under an error
+  // message would say "still loading", which is the one thing that is no longer true.
+  if (root !== null) root.textContent = "";
+  const panel = document.createElement("div");
+  panel.style.cssText =
+    "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#ffffff;" +
+    "padding:24px 20px;padding-top:calc(24px + env(safe-area-inset-top));color:#78350f;" +
+    "font-size:14px;line-height:1.7;text-align:center;font-family:system-ui,sans-serif";
+  const sentence = document.createElement("p");
+  sentence.style.cssText = "max-width:34rem;margin:0";
+  sentence.textContent = DATABASE_UNAVAILABLE;
+  panel.appendChild(sentence);
+  document.body.appendChild(panel);
+}
+
 function bannerText(): string | null {
   switch (storageBlocker()) {
     case null:
@@ -119,7 +150,15 @@ void (async () => {
   void requestPersistentStorage();
   // Opening the database first means the persistence question is answered before the first
   // paint, rather than a banner appearing under someone who has already started typing.
-  await openBrowserDatabase();
+  try {
+    await openBrowserDatabase();
+  } catch (error) {
+    // Nothing after this line can run without a database, and there is no interface yet to
+    // report into, so the boot screen itself has to carry the news.
+    console.error("Breadcrumb could not open its database", error);
+    showBootFailure();
+    return;
+  }
   await initI18n();
   // The interface language is chosen by the settings store once the app mounts, so a banner
   // drawn now would always speak the source language. Wait for that first switch (or a short

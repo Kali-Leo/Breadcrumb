@@ -110,18 +110,26 @@ describe("message catalogues", () => {
     }
   });
 
+  // `{{count}}` is the one placeholder a plural form may leave out, and only a plural form
+  // may. Grammars that inflect for one and two write those numbers as words or as a dual
+  // ending — Arabic says مفهومان, not "2 concepts" — and demanding the digit anyway produced
+  // real shipped sentences like "مفهوم واحد (1)": the number said twice, once in words and
+  // once in brackets, because the gate would not accept it otherwise. i18next always has
+  // `count` in hand, so nothing breaks when a form does not print it.
   it.each(otherLanguages)("%s keeps every placeholder the sentence needs", (code) => {
     const target = catalogueOf(code);
     const source = catalogueOf(SOURCE_LANGUAGE);
     const categories = pluralCategoriesOf(code);
     for (const namespace of NAMESPACES) {
       for (const path of leafPaths(source[namespace] ?? {})) {
-        const sourceText = String(leafAt(source[namespace] ?? {}, path));
+        const sourcePlaceholders = placeholdersIn(String(leafAt(source[namespace] ?? {}, path)));
         for (const spelling of variantsOf(target[namespace] ?? {}, path, categories)) {
           const targetText = String(leafAt(target[namespace] ?? {}, spelling));
-          expect(placeholdersIn(targetText), `${code}/${namespace}:${spelling}`).toEqual(
-            placeholdersIn(sourceText),
-          );
+          const found = placeholdersIn(targetText);
+          const spellsCountInWords =
+            spelling !== path && sourcePlaceholders.includes("count") && !found.includes("count");
+          const comparable = spellsCountInWords ? [...found, "count"].sort() : found;
+          expect(comparable, `${code}/${namespace}:${spelling}`).toEqual(sourcePlaceholders);
         }
       }
     }

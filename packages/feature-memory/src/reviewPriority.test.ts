@@ -71,3 +71,55 @@ describe("computeNodeMemoryByNode", () => {
     expect(memory.get("b")?.reviewPriority).toBeLessThan(a?.reviewPriority ?? 0);
   });
 });
+
+/** Regression (bug hunt 2026-09-03, P0-1): a system clock that went backwards used to make
+ * ts-fsrs throw FSRSValidationError on the negative delta_t, and memoryStore.refresh() had no
+ * catch — so one rolled-back clock stopped the whole memory layer, not one node. */
+describe("a clock that went backwards", () => {
+  // 31 days BEFORE the newest sighting: delta_t = -31, which is what ts-fsrs threw on.
+  const AFTER_ROLLBACK = daysAgo(76);
+
+  it("scores instead of throwing when now is earlier than the last sighting", () => {
+    expect(() => computeNodeReviewPriority(LEARNED_AND_LEFT, AFTER_ROLLBACK)).not.toThrow();
+    expect(Number.isFinite(computeNodeReviewPriority(LEARNED_AND_LEFT, AFTER_ROLLBACK))).toBe(true);
+  });
+
+  it("reads a rollback as delta_t = 0 — the same answer as scoring at the last review", () => {
+    // No time has passed that this card knows about, so a review buys nothing yet. That is
+    // the same instant retentionOf already clamped to 1 for; the two paths now agree, and a
+    // rolled-back clock costs the ordering (every gain is 0) instead of the whole layer.
+    const atLastReview = computeNodeReviewPriority(LEARNED_AND_LEFT, daysAgo(45));
+    expect(computeNodeReviewPriority(LEARNED_AND_LEFT, AFTER_ROLLBACK)).toBeCloseTo(
+      atLastReview,
+      10,
+    );
+  });
+
+  it("still returns every node's pair, so the map never comes back empty", () => {
+    const rows = [sighting("a", 60, "good"), sighting("a", 45, "good"), sighting("b", 2, "good")];
+    const memory = computeNodeMemoryByNode(rows, AFTER_ROLLBACK);
+    expect([...memory.keys()].sort()).toEqual(["a", "b"]);
+    for (const entry of memory.values()) {
+      expect(Number.isFinite(entry.retention)).toBe(true);
+      expect(Number.isFinite(entry.reviewPriority)).toBe(true);
+    }
+  });
+});
+
+/** Regression (P1-3): one unparsable created_at used to reach the sort comparators as NaN. */
+describe("an unparsable timestamp", () => {
+  it("reports 0 for that node rather than NaN", () => {
+    const memory = computeNodeMemoryByNode(
+      [sighting("bad", 3, "good"), sighting("ok", 30, "good")],
+      NOW,
+    );
+    const withBadRow = computeNodeMemoryByNode(
+      [{ ...sighting("bad", 3, "good"), created_at: "not-a-date" }, sighting("ok", 30, "good")],
+      NOW,
+    );
+    expect(withBadRow.get("bad")?.retention).toBe(0);
+    expect(withBadRow.get("bad")?.reviewPriority).toBe(0);
+    // and the healthy node beside it is untouched
+    expect(withBadRow.get("ok")?.retention).toBeCloseTo(memory.get("ok")?.retention ?? -1, 10);
+  });
+});

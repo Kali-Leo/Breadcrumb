@@ -6,7 +6,7 @@
  * learning curve solves this the same way (Notion's starter workspace, Figma's example files,
  * Pipedrive's sample pipeline): show it working first, on data that is obviously not yours.
  *
- * The demo is a real learner's three months: 24 concepts across astronomy and JavaScript,
+ * The demo is a real learner's three months: 39 concepts across astronomy and JavaScript,
  * with sighting histories checked against the real FSRS curve so the map genuinely has bright
  * regions, faded ones and things waiting to be reviewed. It goes into the same tables real
  * data goes into, because anything else would be a mock-up that drifts.
@@ -17,6 +17,7 @@
  * Main exports: installDemoData, removeDemoData, hasDemoData.
  */
 import { insertDemoData, wipeDemoData } from "@breadcrumb/demo-seed";
+import i18next from "i18next";
 import { getSqlClient } from "./db";
 
 /** One demo node id is enough to answer "is the demo installed" without a schema flag that
@@ -38,7 +39,9 @@ export async function hasDemoData(): Promise<boolean> {
 export async function installDemoData(): Promise<void> {
   const sql = await getSqlClient();
   const languagePack = (await import("../../assets/language-packs/zh-en.json")).default;
-  await insertDemoData(sql, new Date(), { languagePack });
+  // The example is written in whatever language the interface is in. It is the first thing a
+  // newcomer reads, and a demo they cannot read teaches them nothing about the product.
+  await insertDemoData(sql, new Date(), { languagePack, language: i18next.language });
 }
 
 /** Removes every demo row and everything the app derived from one. */

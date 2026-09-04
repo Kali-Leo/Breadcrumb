@@ -1,0 +1,142 @@
+{
+  "$comment": "Every language the interlingua pipeline knows. `kaikkiLanguage` is the language's English name as kaikki.org spells it in its extract URL. English's half is built differently (englishHalf.mjs): English IS the interlingua, so its bridge key is the word itself rather than its glosses, but its extract is still read for part of speech and inflection, without which `going` and `divorced` look like ordinary high-frequency words. A language with no usable frequency list can still be learned (it is a target) but cannot be read (it is never a source): without a rank there is no defensible answer to 'which word should this learner meet first'. hi's only list is the 2016 edition with 2,968 words and sw has none at all, which is why both are targets only. The eleven interface languages of apps/desktop/src/locales come first; ko/vi/ja/de/it/tr follow from pairs.json.",
+  "downloadBase": "https://github.com/Kali-Leo/Breadcrumb/releases/download/language-packs",
+  "minimumWords": 20000,
+  "languages": [
+    {
+      "code": "en",
+      "kaikkiLanguage": "English",
+      "frequency": {
+        "code": "en",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "zh",
+      "kaikkiLanguage": "Chinese",
+      "frequency": {
+        "code": "zh_cn",
+        "editions": ["2018"]
+      }
+    },
+    {
+      "code": "es",
+      "kaikkiLanguage": "Spanish",
+      "frequency": {
+        "code": "es",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "fr",
+      "kaikkiLanguage": "French",
+      "frequency": {
+        "code": "fr",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "pt",
+      "kaikkiLanguage": "Portuguese",
+      "frequency": {
+        "code": "pt_br",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "ru",
+      "kaikkiLanguage": "Russian",
+      "frequency": {
+        "code": "ru",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "ar",
+      "kaikkiLanguage": "Arabic",
+      "rtl": true,
+      "frequency": {
+        "code": "ar",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "hi",
+      "kaikkiLanguage": "Hindi",
+      "frequency": {
+        "code": "hi",
+        "editions": ["2016"]
+      }
+    },
+    {
+      "code": "id",
+      "kaikkiLanguage": "Indonesian",
+      "frequency": {
+        "code": "id",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "bn",
+      "kaikkiLanguage": "Bengali",
+      "frequency": {
+        "code": "bn",
+        "editions": ["2018"]
+      }
+    },
+    {
+      "code": "sw",
+      "kaikkiLanguage": "Swahili",
+      "frequency": null
+    },
+    {
+      "code": "ko",
+      "kaikkiLanguage": "Korean",
+      "frequency": {
+        "code": "ko",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "vi",
+      "kaikkiLanguage": "Vietnamese",
+      "frequency": {
+        "code": "vi",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "ja",
+      "kaikkiLanguage": "Japanese",
+      "ruby": true,
+      "frequency": {
+        "code": "ja",
+        "editions": ["2016"]
+      }
+    },
+    {
+      "code": "de",
+      "kaikkiLanguage": "German",
+      "frequency": {
+        "code": "de",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "it",
+      "kaikkiLanguage": "Italian",
+      "frequency": {
+        "code": "it",
+        "editions": ["2018", "2016"]
+      }
+    },
+    {
+      "code": "tr",
+      "kaikkiLanguage": "Turkish",
+      "frequency": {
+        "code": "tr",
+        "editions": ["2018", "2016"]
+      }
+    }
+  ]
+}

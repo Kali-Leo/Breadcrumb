@@ -1,20 +1,25 @@
 /**
- * Purpose: the shared shape and domain roots for the demo seed's 24 knowledge-node specs
+ * Purpose: the shared shape and domain roots for the demo seed's 39 knowledge-node specs
  * (spec 035 T7b) — split from the per-bucket spec lists so each stays under the file-size
  * budget.
+ *
+ * A spec carries no words: its label and summary are looked up by `id` in the language the
+ * reader is using (see text/demoText.ts). Relationships are ids too, so translating the demo
+ * cannot change the tree's shape by accident.
  * Main exports: ConceptSpec, ASTRO_ROOT, JS_ROOT.
  */
-import type { Domain } from "./shared";
 
-export const ASTRO_ROOT = "天文观测基础";
-export const JS_ROOT = "JavaScript核心机制";
+import type { Domain } from "./shared";
+import type { ConceptId } from "./text/demoText";
+
+export const ASTRO_ROOT = "astro-root" satisfies ConceptId;
+export const JS_ROOT = "js-root" satisfies ConceptId;
 
 export interface ConceptSpec {
-  label: string;
+  id: ConceptId;
   domain: Domain;
-  /** null = a tree root; otherwise the label of this domain's root node. */
-  parentLabel: string | null;
-  summary: string;
+  /** null = a tree root; otherwise the id of this node's parent. */
+  parentId: ConceptId | null;
   /** Sighting instants, days before `now` — encodes the three buckets by construction:
    * ~5 spaced sightings ending recently (settled/mastered), one old sighting past the FSRS
    * ~65-day decay point (waiting for reunion), or one sighting inside the last two weeks

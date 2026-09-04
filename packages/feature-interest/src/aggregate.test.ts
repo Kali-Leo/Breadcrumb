@@ -151,3 +151,49 @@ describe("aggregateStyles", () => {
     expect(aggregateStyles([signal({ node_id: "n1", created_at: daysAgo(0) })])).toEqual([]);
   });
 });
+
+/**
+ * Regression (bug hunt 2026-09-03, P1-3): one interest_signals row whose created_at does not
+ * parse used to make the node's decay weight NaN, and from there all four reported numbers.
+ * Those NaNs survived every downstream clamp and reached frontier()'s comparator, where NaN
+ * makes every comparison false and V8 leaves the list in database order — the whole
+ * recommendation ranking silently collapsed, with nothing visibly wrong.
+ */
+describe("a row with an unreadable timestamp", () => {
+  const good = signal({ node_id: "n1", created_at: daysAgo(1), curiosity: 0.8 });
+  const unreadable = (nodeId: string, createdAt: string, curiosity: number) =>
+    signal({ node_id: nodeId, created_at: createdAt, curiosity });
+
+  it("costs that row only, leaving the node's other signals intact", () => {
+    const clean = aggregateInterest([good], NOW);
+    const withBadRow = aggregateInterest([unreadable("n1", "yesterday-ish", 0.9), good], NOW);
+    expect(withBadRow.get("n1")?.curiosity).toBeCloseTo(clean.get("n1")?.curiosity ?? -1, 10);
+  });
+
+  it("never reports NaN on any dimension, nor on the evidence weight", () => {
+    const scores = aggregateInterest(
+      [
+        unreadable("n1", "", 0.9),
+        signal({ node_id: "n1", created_at: daysAgo(2), curiosity: 0.5 }),
+      ],
+      NOW,
+    );
+    for (const score of scores.values()) {
+      expect(Number.isFinite(score.curiosity)).toBe(true);
+      expect(Number.isFinite(score.confusion)).toBe(true);
+      expect(Number.isFinite(score.boredom)).toBe(true);
+      expect(Number.isFinite(score.evidenceWeight)).toBe(true);
+    }
+  });
+
+  it("does not let a node with only bad rows outrank a node with real ones", () => {
+    const scores = aggregateInterest(
+      [
+        unreadable("poisoned", "not-a-date", 1),
+        signal({ node_id: "real", created_at: daysAgo(0), curiosity: 0.6 }),
+      ],
+      NOW,
+    );
+    expect(scores.get("poisoned")?.curiosity ?? 0).toBeLessThan(scores.get("real")?.curiosity ?? 0);
+  });
+});

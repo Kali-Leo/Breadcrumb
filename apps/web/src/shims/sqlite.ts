@@ -58,23 +58,48 @@ export async function requestPersistentStorage(): Promise<boolean> {
   }
 }
 
+/**
+ * A worker can die instead of replying — a script that failed to load half way through a
+ * deployment, an out-of-memory crash while a large database is being exported, a worker the
+ * browser reclaimed. Nothing else notices: the only report is the error event below. Without
+ * it every in-flight promise stays pending for good, and since the first screen waits on this
+ * module, that is an application that never appears rather than an error someone can act on.
+ */
 function connect(): Link {
   const worker = new Worker(new URL("./sqliteWorker.ts", import.meta.url), { type: "module" });
-  const pending = new Map<number, (reply: WorkerReply) => void>();
+  const pending = new Map<number, (reply: WorkerReply | Error) => void>();
   let nextId = 1;
+  /** Set once the worker is gone, so later calls are refused here instead of posted to it. */
+  let dead: Error | null = null;
+
+  function failAll(error: Error): void {
+    dead = error;
+    const waiting = [...pending.values()];
+    pending.clear();
+    worker.terminate();
+    for (const settle of waiting) settle(error);
+  }
 
   worker.onmessage = (event: MessageEvent<WorkerReply>) => {
     const settle = pending.get(event.data.id);
     pending.delete(event.data.id);
     settle?.(event.data);
   };
+  worker.onerror = (event: ErrorEvent) => {
+    failAll(new Error(event.message || "the database worker failed"));
+  };
+  worker.onmessageerror = () => {
+    failAll(new Error("the database worker sent an unreadable message"));
+  };
 
   return {
     send(request) {
+      if (dead !== null) return Promise.reject(dead);
       const id = nextId++;
       return new Promise((resolve, reject) => {
         pending.set(id, (reply) => {
-          if (reply.ok) resolve(reply);
+          if (reply instanceof Error) reject(reply);
+          else if (reply.ok) resolve(reply);
           else reject(new Error(reply.error));
         });
         worker.postMessage({ ...request, id } as WorkerRequest);
@@ -85,7 +110,7 @@ function connect(): Link {
 
 /** Opens once and reuses; concurrent callers share the same in-flight open. */
 export async function openBrowserDatabase(): Promise<BrowserDatabase> {
-  opening ??= (async () => {
+  opening ??= (async (): Promise<BrowserDatabase> => {
     const active = connect();
     link = active;
     blocker = (await active.send({ kind: "open" })).blocker ?? null;
@@ -107,7 +132,14 @@ export async function openBrowserDatabase(): Promise<BrowserDatabase> {
         });
       },
     };
-  })();
+  })().catch((error: unknown) => {
+    // A failed open is not held against the next call. Caching the rejected promise would make
+    // a wasm load that lost a race, or a worker that crashed once, permanent for the rest of
+    // the session: no new worker would ever be spawned and the page could only be reloaded.
+    opening = null;
+    link = null;
+    throw error;
+  });
   return opening;
 }
 

@@ -12,6 +12,7 @@ import type {
   NodeSightingGrade,
   NodeSightingRow,
 } from "@breadcrumb/core-db";
+import { clampUnit } from "./clampUnit";
 import { computeRetentionByNode } from "./retention";
 
 export const LIT_THRESHOLD = 0.85;
@@ -79,7 +80,9 @@ export function computeMastery(
     const retention = retentionByNode.get(nodeId) ?? 0;
     const claimScore = computeClaimScore(nodeClaims, nowIso);
     const mastery = retention + claimScore * (1 - retention);
-    const bounded = Math.max(0, Math.min(1, mastery));
+    // clampUnit, not min/max: see clampUnit.ts — a NaN here used to survive the clamp, reach
+    // frontier()'s comparator through masteryByNode, and flatten the whole ranking.
+    const bounded = clampUnit(mastery);
     // Design audit 2026-08-28 (掌握度评估 G1): without this, one passing mention by the AI
     // produced retention 1.0 → mastery 1.0 → "已完成" on a concept the learner was never asked
     // a single question about. Exposure alone can reach "dim" (the concept is on the map and

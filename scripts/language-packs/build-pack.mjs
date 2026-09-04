@@ -29,14 +29,9 @@ import {
   ENGLISH_FUNCTION_WORDS,
   glossCandidates,
 } from "./entry-builder.mjs";
+import { englishFrequentSet, loadCmudict, loadFrequencyList } from "./frequency.mjs";
 import { downloadCachedStream, kaikkiUrlFor, streamKaikkiEntries } from "./kaikki.mjs";
-import {
-  downloadCached,
-  lockedSource,
-  parseCmudict,
-  parseFrequencyList,
-  requireLockedSource,
-} from "./parsers.mjs";
+import { lockedSource } from "./parsers.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.join(HERE, ".cache");
@@ -53,19 +48,10 @@ const CATALOG_PATH = path.join(
   "catalog.json",
 );
 const PAIRS_PATH = path.join(HERE, "pairs.json");
-// GitHub sources are pinned to a commit, never to `master`: a branch is whatever the upstream
-// account holds today, and this data ends up inside packs shipped to learners. The commit ids
-// and every file's digest live in upstream.lock.json.
-const HERMITDAVE_COMMIT = "525f9b560de45753a5ea01069454e72e9aa541c6";
-const CMUDICT_COMMIT = "74790861f652b15e4ac49015a90074ad62a27690";
-const CMUDICT_URL = `https://raw.githubusercontent.com/cmusphinx/cmudict/${CMUDICT_COMMIT}/cmudict.dict`;
 /** A hostile or broken upstream should not be able to fill the disk; the pinned size plus half
  * leaves room for an honest upstream that grew a little between re-pins. */
 const SIZE_CEILING_FACTOR = 1.5;
 
-/** English targets must be words a learner will actually meet again; same cutoff the zh→en
- * build settled on. */
-const EN_FREQUENCY_CUTOFF = 20000;
 /** Below this many weavable entries a pack is not worth offering — the weave would keep
  * showing the same handful of words. */
 const MIN_T1SAFE_ENTRIES = 1500;
@@ -92,30 +78,6 @@ function sortedObject(object) {
   const out = Object.create(null); // same reason as the accumulators: the keys are upstream text
   for (const key of Object.keys(object).sort()) out[key] = object[key];
   return out;
-}
-
-/** hermitdave's FrequencyWords has two editions and not every language is in both. */
-async function loadFrequencyList(spec) {
-  for (const edition of spec.editions) {
-    const url = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/${HERMITDAVE_COMMIT}/content/${edition}/${spec.code}/${spec.code}_50k.txt`;
-    const filename = `freq-${spec.code}-${edition}.txt`;
-    const source = lockedSource(url);
-    if (source === null) {
-      console.log(`  ${spec.code}/${edition} is not pinned in upstream.lock.json, skipping`);
-      continue;
-    }
-    try {
-      const bytes = await downloadCached(url, CACHE_DIR, filename, source.sha256);
-      const ranks = parseFrequencyList(bytes.toString("utf-8"));
-      if (ranks.size >= spec.minimumWords) return ranks;
-      console.log(
-        `  frequency list ${spec.code}/${edition} has only ${ranks.size} words, skipping`,
-      );
-    } catch {
-      console.log(`  no frequency list at ${spec.code}/${edition}`);
-    }
-  }
-  return null;
 }
 
 /** The first sense's first gloss, which is where Wiktionary puts the dominant meaning. */
@@ -280,7 +242,7 @@ async function buildFromEnglish({ extractPath, sourceRanks, englishFrequent }) {
 async function buildPair(pair, shared) {
   const [sourceLang, targetLang] = pair.id.split(":");
   console.log(`\n${pair.id} — ${pair.name}`);
-  const sourceFrequency = await loadFrequencyList(pair.frequency);
+  const sourceFrequency = await loadFrequencyList(pair.frequency, CACHE_DIR);
   if (sourceFrequency === null) {
     console.log(`  refused: no frequency list for ${sourceLang}`);
     return null;
@@ -378,23 +340,10 @@ async function main() {
 
   const now = new Date();
   const version = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
-  const cmuMap = parseCmudict(
-    (
-      await downloadCached(
-        CMUDICT_URL,
-        CACHE_DIR,
-        "cmudict.dict",
-        requireLockedSource(CMUDICT_URL).sha256,
-      )
-    ).toString("utf-8"),
-  );
-  const englishRanks = await loadFrequencyList(config.englishFrequency);
+  const cmuMap = await loadCmudict(CACHE_DIR);
+  const englishRanks = await loadFrequencyList(config.englishFrequency, CACHE_DIR);
   if (englishRanks === null) throw new Error("the English frequency list is required");
-  const englishFrequent = new Set(
-    [...englishRanks.entries()]
-      .filter(([, rank]) => rank <= EN_FREQUENCY_CUTOFF)
-      .map(([word]) => word),
-  );
+  const englishFrequent = englishFrequentSet(englishRanks);
 
   const catalog = fs.existsSync(CATALOG_PATH)
     ? readJson(CATALOG_PATH)

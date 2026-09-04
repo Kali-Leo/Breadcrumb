@@ -1,10 +1,11 @@
 /**
  * Purpose: how frontier() turns raw per-candidate components into one comparable number and
  * one ordered list — min-max normalization inside the candidate set, named (provisional)
- * weights, the concept/method bucketing that keeps method nodes out of the concept top-3, and
- * the deterministic uncertainty-driven exploration slot. Pure math, no DB, no I/O.
- * Main exports: FRONTIER_WEIGHTS, GOAL_GAP_SCORE_BOOST, EXPLORATION_SLOT_INDEX,
- * normalizeAndScore, bucketConceptsFirst, FrontierScoreParts.
+ * weights, and the concept/method bucketing that keeps method nodes out of the concept top-3.
+ * The exploration slot lives in visibleCount.ts, because it may only reorder candidates that
+ * are already being shown. Pure math, no DB, no I/O.
+ * Main exports: FRONTIER_WEIGHTS, GOAL_GAP_SCORE_BOOST, normalizeAndScore,
+ * bucketConceptsFirst, FrontierScoreParts.
  */
 
 /** Weight on the goal-gap indicator, kept under its original name because
@@ -35,15 +36,12 @@ export const FRONTIER_WEIGHTS = {
  * the palace's 推荐偏好 panel persists the learner's own values in this shape. */
 export type FrontierWeights = { -readonly [Component in keyof typeof FRONTIER_WEIGHTS]: number };
 
-/** Which position in the concept bucket the exploration slot occupies (0-based): the top two
- * stay purely score-ranked, the third is where a thin-evidence candidate may be promoted. */
-export const EXPLORATION_SLOT_INDEX = 2;
-
 export interface FrontierScoreParts {
   helps: number;
   interest: number;
-  /** Longest downstream requires-chain starting at this node — how much structure still hangs
-   * off it. Subtracted, so a candidate at the head of a long chain is the heavier commitment. */
+  /** Longest chain of prerequisites standing behind this node — how much the learner has to
+   * have covered before it makes sense. Subtracted, so the candidate with the fewest courses
+   * to make up first wins, which is what the 先挑轻松的 slider says on the tin. */
   difficulty: number;
   /** 1 when inside the selected goal's gap, 0 otherwise. */
   goalGap: number;
@@ -57,10 +55,22 @@ export interface FrontierScoreParts {
  * carries no information and normalizes to 0 for all of them, which is exactly right — it
  * then cannot decide the order. */
 function normalizer(values: readonly number[]): (value: number) => number {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  // Only finite values define the range, and a non-finite one normalizes to 0 rather than
+  // travelling on (bug hunt 2026-09-03, P1-3). One NaN used to reach Math.min/Math.max, make
+  // both endpoints NaN, and hand *every* candidate a NaN score; frontier()'s comparator then
+  // returned NaN for every pair, V8 read that as "equal", and the recommendation list came out
+  // in database insertion order with no error anywhere. Infinity did the same via span = ∞.
+  // A reduce, not Math.min(...values): the spread threw RangeError past ~100k candidates.
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  for (const value of values) {
+    if (!Number.isFinite(value)) continue;
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
   const span = max - min;
-  return span === 0 ? () => 0 : (value: number) => (value - min) / span;
+  if (!Number.isFinite(span) || span === 0) return () => 0;
+  return (value: number) => (Number.isFinite(value) ? (value - min) / span : 0);
 }
 
 /** Weighted sum of the five normalized components, in candidate order. */
@@ -86,50 +96,23 @@ export function normalizeAndScore(
 
 interface Bucketable {
   kind: "concept" | "method";
-  label: string;
-  evidenceWeight?: number;
 }
 
 /** Concept candidates first, method candidates after, each bucket keeping the score-ranked
- * order it came in with; the exploration slot applies to the concept bucket only. Every
- * consumer reads this list as a prefix (ContinueCard takes 3, kingdomView takes [0] +
- * slice(1,3), MapView takes [0]), so ordering the buckets IS the bucketing — no new field for
- * callers to learn, and a method node can still be reached once the concepts run out. Without
- * it a method node ("费曼技巧") parks itself at the head forever: it has no prerequisites and
- * conversation never lights it, which is the mechanism behind simlab's frozen-frontier
- * tripwire. */
-export function bucketConceptsFirst<T extends Bucketable>(
-  ranked: readonly T[],
-  hasEvidenceWeights: boolean,
-): T[] {
+ * order it came in with. Every consumer reads this list as a prefix (ContinueCard takes 3,
+ * kingdomView takes [0] + slice(1,3), MapView takes [0]), so ordering the buckets IS the
+ * bucketing — no new field for callers to learn, and a method node can still be reached once
+ * the concepts run out. Without it a method node ("费曼技巧") parks itself at the head forever:
+ * it has no prerequisites and conversation never lights it, which is the mechanism behind
+ * simlab's frozen-frontier tripwire.
+ *
+ * Both buckets stay strictly score-descending. That is a contract, not an accident:
+ * visibleFrontier reads this list for the largest score cliff and can only do that on a list
+ * whose scores never go back up. The exploration slot used to be spliced in right here, which
+ * broke it — see visibleCount.ts (bug hunt 2026-09-03, P1-1). */
+export function bucketConceptsFirst<T extends Bucketable>(ranked: readonly T[]): T[] {
   return [
-    ...withExplorationSlot(
-      ranked.filter((candidate) => candidate.kind !== "method"),
-      hasEvidenceWeights,
-    ),
+    ...ranked.filter((candidate) => candidate.kind !== "method"),
     ...ranked.filter((candidate) => candidate.kind === "method"),
   ];
-}
-
-/** Reserves the third position for the candidate with the least evidence behind its interest
- * score (aggregateInterest's shrinkage mass) among those outside the top two — uncertainty-
- * driven exploration, so the top three can't be the same frozen trio forever. Deterministic:
- * no randomness, no bandit (single-user sparse data cannot train one — 2026-08-28 audit).
- * A no-op when the caller supplies no evidence weights (nothing to be uncertain about), when
- * there is no candidate outside the top two, or when that candidate is already the one with
- * the least evidence — the slot is never spent on a swap that buys no information. */
-function withExplorationSlot<T extends Bucketable>(
-  ranked: readonly T[],
-  hasEvidenceWeights: boolean,
-): T[] {
-  if (!hasEvidenceWeights || ranked.length <= EXPLORATION_SLOT_INDEX + 1) return [...ranked];
-  const head = ranked.slice(0, EXPLORATION_SLOT_INDEX);
-  const rest = ranked.slice(EXPLORATION_SLOT_INDEX);
-  const evidence = (candidate: T) => candidate.evidenceWeight ?? 0;
-  // Strict `<` keeps the incumbent on ties, so the promotion only ever happens when the
-  // exploration pick genuinely has thinner evidence than the natural third place.
-  const explorer = rest.reduce((best, candidate) =>
-    evidence(candidate) < evidence(best) ? candidate : best,
-  );
-  return [...head, explorer, ...rest.filter((candidate) => candidate !== explorer)];
 }

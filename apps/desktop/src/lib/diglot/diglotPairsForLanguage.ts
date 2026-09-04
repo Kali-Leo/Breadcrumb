@@ -64,22 +64,20 @@ export const SOURCE_LANGS_WITH_PACKS: readonly string[] = [
 ];
 
 /**
- * Where the pair has to move after the answer language changed: stay put when the pair
- * already reads that language, otherwise the first pair for it this machine has downloaded
- * (the bundled pair counts as downloaded, so a Chinese answer language always lands on it),
- * and otherwise nowhere.
+ * What happens to the pair after the answer language changed. It never moves the learner onto
+ * a different language: what someone is learning is their decision, not a consequence of
+ * changing how the AI writes (Leo, 2026-09-04). A pair that no longer reads the answer
+ * language is simply switched off, and the picker asks for a choice.
  */
 export function correctPairForSourceLang(input: {
   sourceLang: string;
   currentPairId: string;
-  installedPairs: readonly string[];
 }): PairCorrection {
   const options = pairsForSourceLang(input.sourceLang);
   if (options.some((option) => option.id === input.currentPairId)) {
     return { pairId: input.currentPairId, changed: false };
   }
-  const ready = options.find((option) => input.installedPairs.includes(option.id));
-  return { pairId: ready?.id ?? null, changed: true };
+  return { pairId: null, changed: true };
 }
 
 export interface DiglotPickerView {

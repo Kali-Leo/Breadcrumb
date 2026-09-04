@@ -10,6 +10,15 @@ on:
       - "apps/web/**"
       - "apps/desktop/src/**"
       - "packages/**"
+      # Not under apps/desktop/src: the shared chunking rules, and the file behind the
+      # 2026-09-02 offline white screen. Fixing it alone used to deploy nothing.
+      - "apps/desktop/vite.chunks.ts"
+      # The build's own guards run from here — check-bundle-size.mjs decides whether a bundle
+      # ships at all, so a change to it can change what this workflow accepts.
+      - "scripts/**"
+      # Installs are --frozen-lockfile, so this file is what decides which dependency versions
+      # end up in the bundle; an upgrade with no source change still ships different code.
+      - "pnpm-lock.yaml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 

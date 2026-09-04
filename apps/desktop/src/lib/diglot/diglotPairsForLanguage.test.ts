@@ -5,6 +5,7 @@
  * exactly "which packs does this catalogue actually offer a Vietnamese reader".
  */
 import { describe, expect, it, vi } from "vitest";
+import catalogJson from "../../assets/language-packs/catalog.json";
 import {
   correctPairForSourceLang,
   diglotPickerView,
@@ -19,6 +20,8 @@ vi.mock("./languagePacks", async () => {
   const catalog = (await import("../../assets/language-packs/catalog.json")).default;
   return { BUNDLED_PAIR_ID: "zh:en", PACK_CATALOG: catalog.packs };
 });
+
+const CATALOGUE_PACKS: { sourceLang: string; targetLang: string }[] = catalogJson.packs;
 
 const targetsFor = (sourceLang: string) =>
   pairsForSourceLang(sourceLang).map((option) => option.targetLang);
@@ -40,21 +43,44 @@ describe("the language a pack has to read", () => {
   });
 });
 
+/** A language the catalogue does not read — picked from the list rather than written down,
+ * so publishing a pack for one of them turns this into a different case instead of a failure.
+ * hi and sw lead it because they are the durable cases: a pack has to rank its source language
+ * by frequency, neither has a usable frequency list, and so neither can ever be read from,
+ * however many packs are published that teach them. */
+function unreadLanguage(): string {
+  const candidate = ["hi", "sw", "ja", "de", "tr", "it", "ar"].find(
+    (code) => !SOURCE_LANGS_WITH_PACKS.includes(code),
+  );
+  if (candidate === undefined) throw new Error("every language in this case now has a pack");
+  return candidate;
+}
+
 describe("what the picker offers", () => {
   it("offers a Chinese reader the bundled pair first", () => {
     expect(pairsForSourceLang("zh")[0]).toEqual({ id: "zh:en", targetLang: "en", bytes: 0 });
   });
 
-  it("offers each answer language only the packs that read it", () => {
-    expect(targetsFor("zh")).toEqual(["en"]);
-    expect(targetsFor("en")).toEqual(["hi", "id", "ko", "sw", "vi"]);
-    expect(targetsFor("bn")).toEqual(["en"]);
-    expect(targetsFor("id")).toEqual(["en"]);
-    expect(targetsFor("vi")).toEqual(["en"]);
+  // Read from the catalogue rather than written out: packs are published over time, and a
+  // list frozen here would fail the day one is added rather than the day the rule breaks.
+  it("offers each answer language exactly the packs the catalogue says read it", () => {
+    for (const code of SOURCE_LANGS_WITH_PACKS) {
+      const expected = CATALOGUE_PACKS.filter((pack) => pack.sourceLang === code).map(
+        (pack) => pack.targetLang,
+      );
+      if (code === "zh") expected.unshift("en");
+      expect(targetsFor(code), code).toEqual(expected);
+    }
   });
 
   it("offers nothing at all for a language no pack reads", () => {
-    for (const code of ["es", "fr", "pt", "ru", "ar", "hi", "sw", "ko"]) {
+    const unread = ["es", "fr", "pt", "ru", "ar", "hi", "sw", "ko", "de", "ja"].filter(
+      (code) => !SOURCE_LANGS_WITH_PACKS.includes(code),
+    );
+    expect(unread.length, "the catalogue now reads every language this case knows").toBeGreaterThan(
+      0,
+    );
+    for (const code of unread) {
       expect(pairsForSourceLang(code), `${code} should have no packs`).toEqual([]);
     }
   });
@@ -67,8 +93,9 @@ describe("what the picker offers", () => {
     }
   });
 
-  it("names every language something can be learned from", () => {
-    expect([...SOURCE_LANGS_WITH_PACKS].sort()).toEqual(["bn", "en", "id", "vi", "zh"]);
+  it("names every language something can be learned from, and nothing else", () => {
+    const fromCatalogue = new Set(["zh", ...CATALOGUE_PACKS.map((pack) => pack.sourceLang)]);
+    expect([...SOURCE_LANGS_WITH_PACKS].sort()).toEqual([...fromCatalogue].sort());
   });
 
   it("carries the download size of everything not bundled", () => {
@@ -80,53 +107,31 @@ describe("what the picker offers", () => {
 
 describe("correcting the pair after the answer language moved", () => {
   it("leaves a pair that already reads the answer language alone", () => {
-    expect(
-      correctPairForSourceLang({
-        sourceLang: "en",
-        currentPairId: "en:ko",
-        installedPairs: ["zh:en", "en:ko"],
-      }),
-    ).toEqual({ pairId: "en:ko", changed: false });
+    expect(correctPairForSourceLang({ sourceLang: "en", currentPairId: "en:ko" })).toEqual({
+      pairId: "en:ko",
+      changed: false,
+    });
   });
 
-  it("moves to the first pack for the new language this machine already has", () => {
-    expect(
-      correctPairForSourceLang({
-        sourceLang: "en",
-        currentPairId: "zh:en",
-        installedPairs: ["zh:en", "en:sw", "en:id"],
-      }),
-    ).toEqual({ pairId: "en:id", changed: true });
+  it("does not move the learner onto another language, even one with a pack", () => {
+    expect(correctPairForSourceLang({ sourceLang: "en", currentPairId: "zh:en" })).toEqual({
+      pairId: null,
+      changed: true,
+    });
   });
 
-  it("lands a Chinese answer language on the bundled pair, which needs no download", () => {
-    expect(
-      correctPairForSourceLang({
-        sourceLang: "zh",
-        currentPairId: "en:ko",
-        installedPairs: ["zh:en", "en:ko"],
-      }),
-    ).toEqual({ pairId: "zh:en", changed: true });
-  });
-
-  it("has nowhere to go when nothing for the new language is downloaded", () => {
-    expect(
-      correctPairForSourceLang({
-        sourceLang: "en",
-        currentPairId: "zh:en",
-        installedPairs: ["zh:en"],
-      }),
-    ).toEqual({ pairId: null, changed: true });
+  it("does not fall back to the bundled pair either", () => {
+    expect(correctPairForSourceLang({ sourceLang: "zh", currentPairId: "en:ko" })).toEqual({
+      pairId: null,
+      changed: true,
+    });
   });
 
   it("has nowhere to go when no pack reads the new language at all", () => {
-    expect(
-      correctPairForSourceLang({
-        sourceLang: "es",
-        currentPairId: "zh:en",
-        installedPairs: ["zh:en", "en:ko"],
-      }),
-    ).toEqual({ pairId: null, changed: true });
+    expect(correctPairForSourceLang({ sourceLang: "nl", currentPairId: "zh:en" })).toEqual({
+      pairId: null,
+      changed: true,
+    });
   });
 });
 
@@ -141,7 +146,7 @@ describe("what the settings section shows", () => {
   });
 
   it("replaces the picker with one sentence when no pack reads this language", () => {
-    const view = diglotPickerView({ sourceLang: "es", pairId: "zh:en", enabled: true });
+    const view = diglotPickerView({ sourceLang: unreadLanguage(), pairId: "zh:en", enabled: true });
     expect(view.noPackForLanguage).toBe(true);
     expect(view.options).toEqual([]);
     // The stored setting still says on; showing it on would be claiming to work.
@@ -150,7 +155,11 @@ describe("what the settings section shows", () => {
   });
 
   it("keeps that sentence out of the way of a switch that is already off", () => {
-    const view = diglotPickerView({ sourceLang: "es", pairId: "zh:en", enabled: false });
+    const view = diglotPickerView({
+      sourceLang: unreadLanguage(),
+      pairId: "zh:en",
+      enabled: false,
+    });
     expect(view).toMatchObject({ switchOn: false, noPackForLanguage: true, mustChoose: false });
   });
 

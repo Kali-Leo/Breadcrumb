@@ -9,11 +9,15 @@ mod embeddings;
 mod fsrs_optim;
 mod interest_service;
 mod open_database;
-// Test-only: asserts sqlx still enables foreign keys on every connection it opens.
 #[cfg(test)]
+mod open_database_tests;
+// The per-connection settings the pool arms every connection with, and the tests that pin
+// both them and the sqlx defaults underneath them.
 mod pragma_defaults;
 mod transactions;
 mod tts;
+// The renderer-supplied path checks tts.rs runs before it executes anything.
+mod tts_paths;
 
 /// Addresses the main webview may load. The app serves itself over the `tauri:` protocol
 /// (`http(s)://tauri.localhost` on the platforms that need a real origin) and, in development
@@ -111,5 +115,28 @@ mod tests {
         assert_eq!(is_app_url(&url("http://localhost:1420/")), cfg!(dev));
         // Another port on the same host is never the app.
         assert!(!is_app_url(&url("http://localhost:3000/")));
+    }
+
+    /// `sql:allow-close` is deliberately absent, and this is the test that keeps it absent.
+    ///
+    /// The plugin's close command closes the pool and leaves the key in its map. Rust rebuilds
+    /// a closed pool now (open_database.rs), so this is no longer the session-ending bug it
+    /// was — but nothing in the frontend has ever called it: `@tauri-apps/plugin-sql` is
+    /// imported in exactly one file, apps/desktop/src/lib/platform/db.ts, which never closes
+    /// anything. A permission with no caller is only a way in.
+    #[test]
+    fn the_capability_set_grants_nothing_the_frontend_does_not_call() {
+        let capabilities = include_str!("../capabilities/default.json");
+        assert!(
+            !capabilities.contains("sql:allow-close"),
+            "nothing in the app closes the database; granting the renderer the ability to is \
+             a way to end a session, not a feature"
+        );
+        // The two that are called, on every screen.
+        assert!(capabilities.contains("sql:allow-execute"));
+        assert!(capabilities.contains("sql:allow-select"));
+        // The reason open_app_database exists at all (see open_database.rs).
+        assert!(!capabilities.contains("sql:allow-load"));
+        assert!(!capabilities.contains("sql:default"));
     }
 }

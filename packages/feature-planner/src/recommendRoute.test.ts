@@ -7,7 +7,7 @@
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
 import { gapAndPath } from "./gapAndPath";
-import { recommendRoute } from "./recommendRoute";
+import { DEFAULT_ROUTE_PARAMS, recommendRoute, sanitizeRouteParams } from "./recommendRoute";
 
 function node(id: string, label: string): KnowledgeNodeRow {
   return {
@@ -168,5 +168,88 @@ describe("recommendRoute interestWeight pulls a high-interest node earlier", () 
   it("interestWeight=1 pulls the high-interest node (y) ahead of x", () => {
     const steps = recommendRoute(input, { pace: 0.5, interestWeight: 1 });
     expect(steps.map((step) => step.nodeId)).toEqual(["y", "x", "g"]);
+  });
+});
+
+/**
+ * Regression (bug hunt 2026-09-03, P2-1): routeParams is read out of the settings table with a
+ * bare `JSON.parse(...) as Value`, and `routeParams ?? DEFAULT_ROUTE_PARAMS` only ever caught a
+ * missing row, never a malformed one. A row without `pace` made every step score NaN, the
+ * greedy comparator returned NaN at every step, and the "route" came back in gap-enumeration
+ * order — silently, with the sliders still showing sensible values.
+ */
+describe("sanitizeRouteParams", () => {
+  it("keeps a well-formed pair untouched", () => {
+    expect(sanitizeRouteParams({ pace: 0.25, interestWeight: 0.75 })).toEqual({
+      pace: 0.25,
+      interestWeight: 0.75,
+    });
+  });
+
+  it("fills in a missing field and keeps the one that was there", () => {
+    expect(sanitizeRouteParams({ interestWeight: 0.9 })).toEqual({
+      pace: DEFAULT_ROUTE_PARAMS.pace,
+      interestWeight: 0.9,
+    });
+  });
+
+  it("refuses a string that would otherwise be coerced by the arithmetic", () => {
+    expect(sanitizeRouteParams({ pace: 0.5, interestWeight: "0.9" })).toEqual(DEFAULT_ROUTE_PARAMS);
+  });
+
+  it("clamps nothing and defaults everything out of range — a pace of -3 inverts the score", () => {
+    expect(sanitizeRouteParams({ pace: -3, interestWeight: 0.5 }).pace).toBe(
+      DEFAULT_ROUTE_PARAMS.pace,
+    );
+    expect(sanitizeRouteParams({ pace: 7, interestWeight: 0.5 }).pace).toBe(
+      DEFAULT_ROUTE_PARAMS.pace,
+    );
+  });
+
+  it("rejects NaN and Infinity", () => {
+    expect(sanitizeRouteParams({ pace: Number.NaN, interestWeight: 0.5 })).toEqual(
+      DEFAULT_ROUTE_PARAMS,
+    );
+    expect(sanitizeRouteParams({ pace: 0.5, interestWeight: Number.POSITIVE_INFINITY })).toEqual(
+      DEFAULT_ROUTE_PARAMS,
+    );
+  });
+
+  it("survives a row that is not an object at all", () => {
+    expect(sanitizeRouteParams(null)).toEqual(DEFAULT_ROUTE_PARAMS);
+    expect(sanitizeRouteParams("{}")).toEqual(DEFAULT_ROUTE_PARAMS);
+    expect(sanitizeRouteParams(undefined)).toEqual(DEFAULT_ROUTE_PARAMS);
+  });
+});
+
+/** The same failure end to end: a stored row missing `pace` must still produce a route whose
+ * order comes from the score, not from whatever order the gap enumerated. */
+describe("a route computed from a malformed settings row", () => {
+  it("orders by score rather than falling back to enumeration order", () => {
+    const nodes = [node("a", "La"), node("b", "Lb"), node("c", "Lc"), node("d", "Ld")];
+    const edges: KnowledgeEdgeRow[] = [];
+    const interestByNode = new Map([
+      ["a", 0],
+      ["b", 0.2],
+      ["c", 0.6],
+      ["d", 1],
+    ]);
+    const input = {
+      nodes,
+      edges,
+      masteryByNode: new Map<string, number>(),
+      interestByNode,
+      litThreshold: 0.85,
+      claims: [],
+      goalNodeIds: ["a", "b", "c", "d"],
+    };
+    const broken = { interestWeight: 0.5 } as unknown as typeof DEFAULT_ROUTE_PARAMS;
+    const order = recommendRoute(input, broken).map((step) => step.nodeId);
+    expect(order).toEqual(recommendRoute(input, sanitizeRouteParams(broken)).map((s) => s.nodeId));
+    // Interest is the only component that separates them, so the route follows it.
+    expect(order).toEqual(["d", "c", "b", "a"]);
+    for (const step of recommendRoute(input, broken)) {
+      expect(Number.isFinite(step.score)).toBe(true);
+    }
   });
 });

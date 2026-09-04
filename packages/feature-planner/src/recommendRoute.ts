@@ -4,10 +4,12 @@
  * Step score = (1-pace)*helpsSupport_norm + interestWeight*interest - pace*remainingDepth_norm,
  * deterministic tie-break score then label. No DB, no I/O.
  * Main exports: recommendRoute, RecommendRouteParams, RecommendedRouteStep, RouteStepReason,
- * ROUTE_INTEREST_CHIP_THRESHOLD.
+ * ROUTE_INTEREST_CHIP_THRESHOLD, DEFAULT_ROUTE_PARAMS, sanitizeRouteParams.
  */
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors, outgoingNeighbors } from "@breadcrumb/feature-graph";
+import { compareDesc } from "@breadcrumb/feature-memory";
+import { z } from "zod";
 import {
   computeGap,
   type GapAndPathInput,
@@ -27,6 +29,45 @@ export interface RecommendRouteParams {
   pace: number;
   /** 0 = ignore interest entirely; 1 = interest can outweigh everything else. */
   interestWeight: number;
+}
+
+/** Both sliders at the middle — what a learner who has never touched them gets. */
+export const DEFAULT_ROUTE_PARAMS: RecommendRouteParams = { pace: 0.5, interestWeight: 0.5 };
+
+/** Each slider is a fraction, and the score formula reads them as one: `1 - pace` weighs
+ * helps-support and `-pace` weighs remaining depth, so a pace of -3 turns the support term
+ * into a 4x reward and the depth penalty into a bonus — a "route" that is neither steady nor
+ * fast, silently. */
+const RouteParamsSchema = z.object({
+  pace: z.number().min(0).max(1),
+  interestWeight: z.number().min(0).max(1),
+});
+
+/**
+ * Route params from wherever they were stored, with anything unusable replaced by its
+ * default. Never throws — bad settings degrade to defaults, exactly like
+ * sanitizeRecommendationWeights does for the frontier's weight table.
+ *
+ * Why this exists (bug hunt 2026-09-03, P2-1): the settings row is read back with a bare
+ * `JSON.parse(...) as Value` and the only guard was `routeParams ?? DEFAULT_ROUTE_PARAMS`,
+ * which catches a missing row and nothing inside one. A row missing `pace` — an old version's
+ * leftovers, a hand-edited dev database, an import — made `(1 - undefined)` NaN, every step
+ * score NaN, and the greedy comparator return NaN at every step, so the route came out in
+ * whatever order the gap happened to enumerate: the 2026-08-28 audit's planning gap 1, back
+ * again. `z.number()` in Zod v4 also rejects NaN and Infinity, so those cannot reach the
+ * arithmetic either.
+ */
+export function sanitizeRouteParams(stored: unknown): RecommendRouteParams {
+  const whole = RouteParamsSchema.safeParse(stored);
+  if (whole.success) return whole.data;
+  // Field by field, so one broken slider does not throw away the other one's stored value.
+  const fields: Record<string, unknown> =
+    typeof stored === "object" && stored !== null ? (stored as Record<string, unknown>) : {};
+  const field = (name: keyof RecommendRouteParams) => {
+    const parsed = RouteParamsSchema.shape[name].safeParse(fields[name]);
+    return parsed.success ? parsed.data : DEFAULT_ROUTE_PARAMS[name];
+  };
+  return { pace: field("pace"), interestWeight: field("interestWeight") };
 }
 
 export interface RouteStepReason {
@@ -59,7 +100,9 @@ export function recommendRoute(
   params: RecommendRouteParams,
 ): RecommendedRouteStep[] {
   const { nodes, edges, interestByNode, goalNodeIds } = input;
-  const { pace, interestWeight } = params;
+  // Sanitized here, at the point the numbers become arithmetic, so every caller is covered by
+  // one guard rather than each remembering to apply it.
+  const { pace, interestWeight } = sanitizeRouteParams(params);
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const goalNodeIdSet = new Set(goalNodeIds);
   const isLit = isSatisfiedBy(input);
@@ -94,7 +137,11 @@ export function recommendRoute(
       interestWeight * (interestByNode.get(id) ?? 0) -
       pace * depthNorm(id);
 
-    const next = [...ready].sort((a, b) => score(b) - score(a) || byLabel(a, b))[0] as string;
+    // compareDesc, not `score(b) - score(a)`: a NaN comparator result is read as "equal" and
+    // the greedy walk then just takes ready[0] every time — a route in enumeration order.
+    const next = [...ready].sort(
+      (a, b) => compareDesc(score(a), score(b)) || byLabel(a, b),
+    )[0] as string;
 
     const helpsSources = (edges as readonly KnowledgeEdgeRow[])
       .filter(

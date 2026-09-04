@@ -1,86 +1,31 @@
 // Purpose: local TTS bridge for the diglot weave (spec 033 T9) — runs a user-configured
 // Piper binary and returns the synthesized WAV bytes to the frontend for playback.
 //
-// SECURITY: this command takes a program path from the webview, so it is the one place in
-// the app where renderer code could otherwise ask Rust to execute an arbitrary binary. The
-// path is therefore validated against what Piper actually is before anything is spawned:
-// a real file, named `piper`, that the user pointed at. Without that check a single injected
-// script — or one compromised npm dependency — would be local code execution as the user.
+// The paths are checked first, by tts_paths.rs, which is where the reasoning about executing
+// a renderer-supplied program lives. What is left here is the run itself, and the two ways a
+// child process can hurt the app that spawned it: by never finishing, and by finishing on a
+// thread the rest of the app needed.
 // Main exports: piper_synthesize (Tauri command).
 
+use crate::tts_paths::{validated_binary, validated_model};
 use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-
-/// Filenames the Piper binary is actually distributed under. Anything else is refused, so
-/// naming `/bin/sh` or an interpreter here does not work.
-const ALLOWED_BINARY_NAMES: [&str; 2] = ["piper", "piper.exe"];
-
-/// Voice models are ONNX files. Refusing anything else keeps the second argument from being
-/// used to smuggle a script path into whatever the first argument turned out to be.
-const REQUIRED_MODEL_EXTENSION: &str = "onnx";
+use std::path::Path;
+use std::process::{Child, Command, ExitStatus, Stdio};
+use std::time::{Duration, Instant};
 
 /// A synthesis request is one word or phrase from a chat message, not a document. Capping it
 /// bounds both the child's work and the WAV that comes back over IPC.
 const MAX_TEXT_BYTES: usize = 4096;
 
-/// Resolves a caller-supplied path and refuses anything that is not the program we mean to
-/// run. Symlinks are followed first (`canonicalize`), so pointing a file called `piper` at
-/// `/bin/sh` does not get past the name check either.
-fn validated_binary(piper_path: &str) -> Result<PathBuf, String> {
-    let resolved = Path::new(piper_path)
-        .canonicalize()
-        .map_err(|_| "piper binary not found".to_string())?;
-    if !resolved.is_file() {
-        return Err("configured piper path is not a file".to_string());
-    }
-    let name = resolved
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or_default();
-    if !ALLOWED_BINARY_NAMES.contains(&name) {
-        return Err("configured piper path is not a piper binary".to_string());
-    }
-    #[cfg(unix)]
-    check_unix_provenance(&resolved)?;
-    Ok(resolved)
-}
+/// How long a word may take. Piper answers a phrase in well under a second on any machine that
+/// can run this app; a run still going after this is not slow, it is stuck — waiting on a
+/// terminal that is not there, or on a model file that is being written to. Without a limit
+/// `wait()` never returns, and the promise on the page never settles either.
+const SYNTHESIS_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// `canonicalize` resolves symlinks but cannot see a HARD link, a second name for the same
-/// inode: `ln /usr/bin/python3 ~/piper` yields a real file named `piper` that IS the
-/// interpreter. A Piper the user installed has their uid and exactly one name; demand both.
-#[cfg(unix)]
-fn check_unix_provenance(resolved: &Path) -> Result<(), String> {
-    use std::os::unix::fs::MetadataExt;
-    let metadata = resolved
-        .metadata()
-        .map_err(|_| "piper binary not readable".to_string())?;
-    // SAFETY: getuid() reads a property of this process. It cannot fail and touches no memory.
-    if metadata.uid() != unsafe { libc::getuid() } {
-        return Err("configured piper path is not owned by this user".to_string());
-    }
-    if metadata.nlink() != 1 {
-        return Err("configured piper path has more than one name".to_string());
-    }
-    Ok(())
-}
-
-fn validated_model(model_path: &str) -> Result<PathBuf, String> {
-    let resolved = Path::new(model_path)
-        .canonicalize()
-        .map_err(|_| "voice model not found".to_string())?;
-    if !resolved.is_file() {
-        return Err("configured voice model is not a file".to_string());
-    }
-    let extension = resolved
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .unwrap_or_default();
-    if !extension.eq_ignore_ascii_case(REQUIRED_MODEL_EXTENSION) {
-        return Err("configured voice model is not an .onnx file".to_string());
-    }
-    Ok(resolved)
-}
+/// Short enough that a normal synthesis is not noticeably delayed by the polling, long enough
+/// that waiting costs nothing measurable.
+const POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 /// Synthesizes `text` with a local Piper installation. The binary and voice model are
 /// user-configured paths (nothing is bundled); the frontend falls back to system TTS or
@@ -119,10 +64,18 @@ pub async fn piper_synthesize(
             .unwrap_or(0)
     ));
 
-    let result = synthesize_blocking(&binary, &model, &output_file, &text);
-    // Removed on every path, not just success — a failed run used to leave the file behind.
-    let _ = std::fs::remove_file(&output_file);
-    result
+    // On the blocking pool, not on a tokio worker. Spawning a process, writing to its stdin
+    // and waiting for it are all blocking calls, and this command used to make them from
+    // inside an async fn — one synthesis held a runtime worker for its whole duration, and a
+    // piper that hung held it until the app closed.
+    tauri::async_runtime::spawn_blocking(move || {
+        let result = synthesize_blocking(&binary, &model, &output_file, &text, SYNTHESIS_TIMEOUT);
+        // Removed on every path, not just success — a failed run used to leave the file behind.
+        let _ = std::fs::remove_file(&output_file);
+        result
+    })
+    .await
+    .map_err(|error| format!("piper did not finish: {error}"))?
 }
 
 fn synthesize_blocking(
@@ -130,6 +83,7 @@ fn synthesize_blocking(
     model: &Path,
     output_file: &Path,
     text: &str,
+    timeout: Duration,
 ) -> Result<Vec<u8>, String> {
     let mut child = Command::new(binary)
         .arg("--model")
@@ -141,60 +95,53 @@ fn synthesize_blocking(
         .stderr(Stdio::null())
         .spawn()
         .map_err(|error| format!("failed to start piper: {error}"))?;
-    child
+    let written = child
         .stdin
         .take()
-        .ok_or_else(|| "piper stdin unavailable".to_string())?
-        .write_all(text.as_bytes())
-        .map_err(|error| format!("failed to write to piper: {error}"))?;
-    let status = child
-        .wait()
-        .map_err(|error| format!("piper did not finish: {error}"))?;
+        .ok_or_else(|| "piper stdin unavailable".to_string())
+        .and_then(|mut stdin| {
+            stdin
+                .write_all(text.as_bytes())
+                .map_err(|error| format!("failed to write to piper: {error}"))
+        });
+    if let Err(error) = written {
+        stop(&mut child);
+        return Err(error);
+    }
+    let status = wait_with_timeout(&mut child, timeout)?;
     if !status.success() {
         return Err(format!("piper exited with {status}"));
     }
     std::fs::read(output_file).map_err(|error| format!("failed to read wav: {error}"))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn refuses_a_binary_that_is_not_piper() {
-        // The exact shape of the attack: name any interpreter and pipe it a script.
-        assert!(validated_binary("/bin/sh").is_err());
-        assert!(validated_binary("/usr/bin/python3").is_err());
-    }
-
-    #[test]
-    fn refuses_a_path_that_does_not_exist() {
-        assert!(validated_binary("/nonexistent/piper").is_err());
-        assert!(validated_model("/nonexistent/voice.onnx").is_err());
-    }
-
-    #[test]
-    fn refuses_a_model_that_is_not_onnx() {
-        assert!(validated_model("/etc/passwd").is_err());
-    }
-
-    /// A hard link is how the name check gets defeated: another file's inode, named `piper`.
-    #[cfg(unix)]
-    #[test]
-    fn refuses_a_hardlink_but_accepts_a_file_with_one_name() {
-        let dir = std::env::temp_dir().join(format!("breadcrumb-tts-{}", std::process::id()));
-        let sub = dir.join("sub");
-        std::fs::create_dir_all(&sub).expect("temp dirs");
-        let (other, alone, linked) = (dir.join("other"), dir.join("piper"), sub.join("piper"));
-        std::fs::write(&other, b"not really piper").expect("write");
-        std::fs::write(&alone, b"not really piper").expect("write");
-        std::fs::hard_link(&other, &linked).expect("hard link");
-
-        let accepted = validated_binary(alone.to_str().expect("utf-8 path"));
-        let refused = validated_binary(linked.to_str().expect("utf-8 path"));
-        std::fs::remove_dir_all(&dir).ok();
-
-        assert!(accepted.is_ok(), "a plain owned file named piper must pass");
-        assert!(refused.is_err(), "a hardlinked binary must be refused");
+/// `Child::wait` with a deadline. Polling rather than a signal handler: this app already runs
+/// the call on the blocking pool, and a handler would be a process-wide change made for one
+/// feature. A child still running at the deadline is killed and reaped, so a stuck piper costs
+/// one failed word rather than a leaked process.
+fn wait_with_timeout(child: &mut Child, timeout: Duration) -> Result<ExitStatus, String> {
+    let deadline = Instant::now() + timeout;
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return Ok(status),
+            Ok(None) => {}
+            Err(error) => return Err(format!("piper did not finish: {error}")),
+        }
+        if Instant::now() >= deadline {
+            stop(child);
+            return Err("piper did not finish in time".to_string());
+        }
+        std::thread::sleep(POLL_INTERVAL);
     }
 }
+
+/// Kills and then waits: without the wait the killed child stays in the process table as a
+/// zombie for the rest of the app's life.
+fn stop(child: &mut Child) {
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
+#[cfg(test)]
+#[path = "tts_tests.rs"]
+mod tests;
