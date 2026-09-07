@@ -28,7 +28,7 @@ export interface KnowledgeNodeRow {
 export type KnowledgeEdgeType = "requires" | "helps";
 export type KnowledgeEdgeOrigin = "llm" | "user";
 
-/** A directed learning-structure edge between two knowledge_nodes (spec 010). */
+/** A directed learning-structure edge between two knowledge_nodes. */
 export interface KnowledgeEdgeRow {
   id: string;
   source_id: string;
@@ -40,8 +40,8 @@ export interface KnowledgeEdgeRow {
   created_at: string;
   /** The judge's one-sentence justification (migration 0048). NULL for edges recorded before
    * the column existed. Optional only at construction time, same convention as
-   * NodeSightingRow.grade (0044): callers with no justification to record omit it and the
-   * upsert writes NULL; every row read back from SQLite carries the key. */
+   * NodeSightingRow.grade: callers with no justification to record omit it and the upsert
+   * writes NULL; every row read back from SQLite carries the key. */
   reasoning?: string | null;
   /** The assistant reply whose round produced this edge (migration 0048) — provenance, so an
    * edge can be traced back to the text it was inferred from. NULL when unknown. Optional at
@@ -69,17 +69,17 @@ export interface NodeSightingRow {
   conversation_id: string;
   message_id: string | null;
   created_at: string;
-  /** Spec 040 §7 provenance: the station this node grew from (the round's anchored node, or a
-   * door's host station). NULL = unknown/legacy — the station map falls back to edge inference. */
+  /** Provenance: the station this node grew from (the round's anchored node, or a door's
+   * host station). NULL = unknown — the station map falls back to edge inference. */
   origin_node_id: string | null;
   /** Migration 0044. Optional only at construction time — callers that have no retrieval
    * signal omit it and the insert path writes 'good'. Every row read back from SQLite carries
    * a value (NOT NULL DEFAULT 'good'). The union is the whole validation: no CHECK constraint,
-   * same TypeScript-side convention as conversations.kind (0029) and term_marks.target_kind. */
+   * same TypeScript-side convention as conversations.kind and term_marks.target_kind. */
   grade?: NodeSightingGrade;
 }
 
-/** A label the node-dedup synonym gate (spec 015) judged identical to an existing node —
+/** A label the node-dedup synonym gate judged identical to an existing node —
  * every later extraction round that produces this exact label hits node_id directly
  * (a sighting, never a duplicate node), without ever re-asking the LLM. */
 export interface NodeAliasRow {
@@ -88,7 +88,7 @@ export interface NodeAliasRow {
   created_at: string;
 }
 
-/** One LLM-observed psychological signal for a node in one chat round (spec 011). */
+/** One LLM-observed psychological signal for a node in one chat round. */
 export interface InterestSignalRow {
   id: string;
   node_id: string;
@@ -99,7 +99,7 @@ export interface InterestSignalRow {
   confusion: number;
   /** 0 (none) ~ 1 (strong) — disengagement, wanting to skip ahead. */
   boredom: number;
-  /** How sure the extraction pass is about this whole read (spec 014, migration 0011):
+  /** How sure the extraction pass is about this whole read (migration 0011):
    * 0.3 (低) / 0.6 (中) / 0.9 (高). Rows from before the column existed default to 0.6. */
   confidence: number;
   /** JSON string array of preferred explanation-style tags, e.g. ["类比","代码示例"]. */
@@ -108,12 +108,12 @@ export interface InterestSignalRow {
 }
 
 /** 'learned' outweighs 'familiar'; taught_* levels come from teach-back explanation
- * quality judgments (vision/09 #2) — behavioral evidence, weighted above self-report. */
+ * quality judgments — behavioral evidence, weighted above self-report. */
 export type MasteryClaimLevel = "learned" | "familiar" | "taught_principled" | "taught_surface";
 export type MasteryClaimSource = "self-report" | "teach-back";
 
 /** A user's self-reported prior knowledge of a node — cold-start evidence, weighted below
- * real footprints (spec 011). */
+ * real footprints. */
 export interface MasteryClaimRow {
   id: string;
   node_id: string;
@@ -122,7 +122,7 @@ export interface MasteryClaimRow {
   created_at: string;
 }
 
-/** A learning goal set up in the experimental lab panel (spec 012) — a title plus the set
+/** A learning goal set up in the experimental lab panel — a title plus the set
  * of tree node ids it maps to (existing nodes and freshly-inserted suggested ones alike). */
 export interface GoalRow {
   id: string;

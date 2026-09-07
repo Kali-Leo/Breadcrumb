@@ -166,7 +166,7 @@ describe("runPendingResearchTasks", () => {
   });
 
   it("still runs a task on its own expiry date", async () => {
-    // expiresAt is a date, not an instant: "2026-08-13" used to sort before
+    // expiresAt is a date, not an instant: "2026-08-13" would otherwise sort before
     // "2026-08-13T10:00:00.000Z", retiring every task a full day early.
     const { client, taskRuns, results } = makeFakeSql();
     const expiringToday: ResearchTask = { ...baseTask, expiresAt: "2026-08-13" };

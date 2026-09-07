@@ -144,9 +144,9 @@ followSoftKeyboard();
 
 void (async () => {
   // Not awaited: Firefox answers persist() with a permission prompt, and a page that waits
-  // for that answer before it draws anything is a blank page until the prompt is dealt with
-  // (found in the 2026-09-02 headless walkthrough). The grant applies to the origin, so asking
-  // while the database opens still covers the files it creates.
+  // for that answer before it draws anything is a blank page until the prompt is dealt with.
+  // The grant applies to the origin, so asking while the database opens still covers the
+  // files it creates.
   void requestPersistentStorage();
   // Opening the database first means the persistence question is answered before the first
   // paint, rather than a banner appearing under someone who has already started typing.

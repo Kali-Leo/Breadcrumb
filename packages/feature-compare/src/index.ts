@@ -1,11 +1,11 @@
 /**
  * Purpose: public entry of the comparison-tree module (headless logic only — UI lives in
- * the desktop app's lab panel). The module is standalone by design (spec 023): it shares
+ * the desktop app's lab panel). The module is standalone by design: it shares
  * no logic with the planner, ladder, or goals.
  * Main exports: profile definition schema/validation (profileSchema.ts), conservative
  * leaf matching (matching.ts), overlap aggregation (overlap.ts), the experimental
  * search-build contract with URL-verification pruning (searchBuild.ts), and the semantic
- * alignment engine (alignment.ts, spec 024).
+ * alignment engine (alignment.ts).
  */
 export * from "./alignment";
 export * from "./anchorDormancy";

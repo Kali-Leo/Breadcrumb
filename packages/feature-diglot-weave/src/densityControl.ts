@@ -1,25 +1,23 @@
 /**
- * Purpose: the density closed loop (audit 2026-08-28, 语言织入 #10). Density — what share of a
- * reply's words get swapped — was a constant nothing ever wrote, while every signal needed to
- * steer it was already in the database and unused.
+ * Purpose: the density closed loop. Density — what share of a reply's words get swapped — is
+ * steered from the signals already in the database rather than held at a constant.
  *
  * What it aims at: **how often the learner has to look a woven word up**, not a coverage
- * percentage. Coverage was the wrong target (spec 033 quoted the 95–98% comprehensible-input
- * line, but that is a property of the text, not a thing this app can measure); the lookup rate
- * is the thing the learner actually feels, and it is what a spaced-repetition system's desired
- * retention plays the same role for. Too few lookups means the words on offer are ones they
- * already know; too many means the reply has turned into homework.
+ * percentage. Coverage is not a usable target (the 95–98% comprehensible-input figure is a
+ * property of the text, not a thing this app can measure); the lookup rate is the thing the
+ * learner actually feels, and it is what a spaced-repetition system's desired retention plays
+ * the same role for. Too few lookups means the words on offer are ones they already know; too
+ * many means the reply has turned into homework.
  *
- * The ceiling comes up from 5% to 7% on the audit's reading of Holley's 1-in-15 figure, and
- * the whole thing moves slowly: one step per day, a fifth of the distance to target, so a
- * single unusual day cannot swing it.
+ * The loop moves slowly: one step per day, a fifth of the distance to target, so a single
+ * unusual day cannot swing it.
  * Main exports: nextDensity, DENSITY_MIN, DENSITY_MAX, TARGET_LOOKUP_RATE_BAND,
  * MIN_WOVEN_WORDS_FOR_ADJUSTMENT.
  */
 
 /** Never below this: at zero the feature would silently switch itself off. */
 export const DENSITY_MIN = 0.01;
-/** Raised from 5% on the audit's reading of Holley (roughly one word in fifteen). */
+/** Roughly one word in fifteen (Holley). */
 export const DENSITY_MAX = 0.07;
 /**
  * The share of woven words the learner opens the meaning of. Below the band they are being

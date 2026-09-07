@@ -12,9 +12,9 @@ import { useTranslation } from "react-i18next";
 import { useInputMode } from "../../lib/platform/inputMode";
 import { appEventBus } from "../../stores/chatStore";
 
-/* Study-mode switch (spec 052, redesigned per Leo 2026-08-17: a pill segmented switch above
+/* Study-mode switch: a pill segmented switch above
    the input box, both states named — the same form as the map's 休闲|目标 pill and ChatGPT's
-   composer mode chips). Its wording lives in chat.json under composer.*, hover hints
+   composer mode chips. Its wording lives in chat.json under composer.*, hover hints
    included: they are full sentences for first-time visitors. */
 
 interface ComposerProps {
@@ -28,7 +28,7 @@ interface ComposerProps {
   onChange(text: string): void;
   onSend(content: string): void;
   onStop(): void;
-  /** 学习模式 (spec 052): present only on plain-chat composers — leaving both undefined
+  /** 学习模式: present only on plain-chat composers — leaving both undefined
    * hides the switch (companion/teach popups). */
   studyMode?: boolean;
   onSetStudyMode?: (on: boolean) => void;

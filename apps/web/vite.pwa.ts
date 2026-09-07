@@ -87,7 +87,7 @@ export function pwaPlugin(base: string): PluginOption {
       // Spelled out rather than left to registerType. vite-plugin-pwa only turns these on for
       // `injectRegister: "auto" | null` (its dist/index.js), so with the CSP-safe script-defer
       // above, "autoUpdate" quietly meant "update whenever every tab of this origin is closed"
-      // — a new version could not reach an installed app at all (Leo's iPad, 2026-09-03).
+      // — a new version could not reach an installed app at all.
       skipWaiting: true,
       clientsClaim: true,
       globPatterns: ["**/*.{js,css,html,png,svg}", "assets/sqlite3-*.wasm"],

@@ -1,6 +1,6 @@
 /**
- * Purpose: the send entry's one-round-per-conversation gate. Double-clicking 发送 (or a
- * second window sending into the same conversation) used to start two rounds against one
+ * Purpose: the send entry's one-round-per-conversation gate. Without it, double-clicking 发送
+ * (or a second window sending into the same conversation) can start two rounds against one
  * question: two user messages persisted, two answers billed, and the first round's stop
  * button silently re-pointed at the second.
  */

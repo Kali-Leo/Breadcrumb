@@ -1,5 +1,5 @@
 /**
- * Purpose: the background knowledge-extraction pipeline for a finished chat round (spec 002)
+ * Purpose: the background knowledge-extraction pipeline for a finished chat round
  * — LLM extraction, synonym gate, persistence, embeddings, alias anchoring, then folding the
  * results into the knowledge store's layered trail state at write time. Moved out of
  * knowledgeStore.ts to keep the store under the 200-line limit.
@@ -24,7 +24,7 @@ import { refreshConversationAutoTitle } from "../trail/trailNamingActions";
 import { foldExtractionIntoTrailState } from "./knowledgeTrailFold";
 import { runSynonymGate } from "./synonymGate";
 
-/** Extracts knowledge from the finished round; failures degrade silently (spec 002). */
+/** Extracts knowledge from the finished round; failures degrade silently. */
 export async function extractFromFinishedRound(
   conversationId: string,
   roundAnchoredNodeId: string | null,
@@ -65,7 +65,7 @@ export async function extractFromFinishedRound(
       newId,
       nowIso,
     });
-    // Node-dedup gate (spec 015): filters would-be-new nodes against the existing tree by
+    // Node-dedup gate: filters would-be-new nodes against the existing tree by
     // embedding similarity + one anchored LLM verdict before anything gets inserted.
     // Degrades to rawPlan unchanged on any failure — never blocks extraction.
     const plan = await runSynonymGate({
@@ -79,7 +79,7 @@ export async function extractFromFinishedRound(
     for (const node of plan.newNodes) {
       await repos.knowledgeNodes.insert(node);
     }
-    // Provenance (spec 040 §7): every station born this round grew from the round's
+    // Provenance: every station born this round grew from the round's
     // anchored node — captured at SEND time and carried in the event, because by now the
     // live anchor may have changed or cleared. A sighting whose own node IS the anchor has
     // no parent to record (it IS the anchor).
@@ -95,7 +95,7 @@ export async function extractFromFinishedRound(
     }
     // Local, zero-cost, and best-effort: powers edge-candidate ranking later, never blocks chat.
     await embedNodes(plan.newNodes);
-    // Entry anchoring (spec 025): newborn nodes try the free alias path against the
+    // Entry anchoring: newborn nodes try the free alias path against the
     // canonical inventory right where they are born — fire-and-forget, never blocks chat.
     void anchorNodesByAlias(plan.newNodes);
 
@@ -121,7 +121,7 @@ export async function extractFromFinishedRound(
         touchedNodeIds: plan.sightings.map((sighting) => sighting.node_id),
         sourceMessageId: answer.id,
       });
-      // Trail-card auto-naming (spec 041 §1): this round's new stations, if any, may move the
+      // Trail-card auto-naming: this round's new stations, if any, may move the
       // "first -> last" name; refresh the one card, then reload the sidebar's list to show it.
       const labelsByNode = new Map(refreshedNodes.map((node) => [node.id, node.label]));
       await refreshConversationAutoTitle(repos, conversationId, labelsByNode);

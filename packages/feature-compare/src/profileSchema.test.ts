@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the profile definition contract (spec 023) — field boundaries,
+ * Purpose: unit tests for the profile definition contract — field boundaries,
  * mandatory sourceRef, and the structural forest checks (unique keys, existing parents,
  * cycles, roots).
  */

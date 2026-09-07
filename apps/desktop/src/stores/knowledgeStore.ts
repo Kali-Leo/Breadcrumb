@@ -23,11 +23,9 @@ interface KnowledgeState {
   /** View-scoped: only the round that finished while its conversation was on screen sets
    * this (lib/knowledge/knowledgeTrailFold), and a switch resets it — highlights never leak across. */
   freshNodeIds: ReadonlySet<string>;
-  /** Steers the round's system prompt (chatRoundContext.ts) and stamps sighting provenance
-   * (spec 040 §7). Always null now that the ordinary-chat UI entries that used to set it
-   * (the explore door card, the station map) are gone (spec 042 §6) — kept as read-only state
-   * rather than removed outright, since both of those consumers still degrade correctly on
-   * null and a future entry point may want it again. */
+  /** Steers the round's system prompt (chatRoundContext.ts) and stamps sighting provenance.
+   * Always null now — kept as read-only state rather than removed outright, since consumers
+   * already degrade correctly on null and a future entry point may want it again. */
   anchoredNodeId: string | null;
   loadTree(): Promise<void>;
   /** Fill-on-first-visit: loads a conversation's trail layer once and mirrors it; revisits

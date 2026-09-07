@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for the guess-probability policy — information-gain shaping, recent-gloss
- * zeroing, abandonment damping and the ceiling (spec 033, acceptance 2).
+ * zeroing, abandonment damping and the ceiling.
  */
 import { Rating } from "ts-fsrs";
 import { describe, expect, it } from "vitest";

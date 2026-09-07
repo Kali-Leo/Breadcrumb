@@ -1,5 +1,5 @@
 /**
- * Purpose: the self-graded scripted-recovery eval (spec 013 T4, `sim recovery` subcommand) —
+ * Purpose: the self-graded scripted-recovery eval (`sim recovery` subcommand) —
  * runs a hard-confused and a hard-bored seed persona for a few real rounds each and checks
  * that the dominant extracted interest signal matches the persona's own script. The script
  * (the persona's behavior axis) IS the ground truth; no AI judge involved.

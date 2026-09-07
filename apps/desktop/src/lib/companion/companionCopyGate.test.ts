@@ -1,6 +1,6 @@
 /**
  * Purpose: mechanical copy-safety gate over every new desktop-introduced companion string
- * (spec 037 acceptance 5) — mirrors feature-companion's own copyGate.test.ts: scans
+ * — mirrors feature-companion's own copyGate.test.ts: scans
  * COMPANION_DESKTOP_COPY and a sample chat system prompt against both the manipulation
  * lexicon and the repo's shared pressure lexicon (read directly from packages/simlab, which
  * owns it — see feature-companion/src/copyGate.test.ts for why it's read rather than imported).

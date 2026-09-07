@@ -1,9 +1,9 @@
 /**
- * Purpose: the daily helpers roster inside the 👥 flyout (spec 050 §9) — today's
+ * Purpose: the daily helpers roster inside the 👥 flyout — today's
  * help-seeking characters, each anchored to a concept the system judged worth revisiting;
  * clicking one opens the floating chat popup (never the main chat view). Handled helpers
  * are gone for the day; tomorrow brings a fresh batch. Hidden entirely when the companion
- * chat switch is off (product principle 3).
+ * chat switch is off.
  * Main exports: CompanionSection.
  */
 import { COMPANION_COPY } from "@breadcrumb/feature-companion";

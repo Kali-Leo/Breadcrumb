@@ -2,7 +2,7 @@
  * Purpose: the goal-mapping LLM contract — prompt construction and Zod schema for turning a
  * free-text learning goal (e.g. "通过考研数学") into a subset of existing tree node labels
  * plus new concept-node suggestions the tree doesn't have yet. Both are persisted immediately
- * in full — there is no checkbox calibration step (2026-08-02: domain judgment is the
+ * in full — there is no checkbox calibration step (domain judgment is the
  * system's job, not something to ask of a learner who hasn't studied the material yet).
  * Main exports: goalMappingSchema, buildGoalMappingMessages, GoalMappingResult, SuggestedGoalNode.
  */
@@ -18,7 +18,7 @@ export const goalMappingSchema = z.object({
         label: z.string().min(1).max(40),
         summary: z.string().min(1).max(200),
         /** Hard prerequisites of this node, by label, drawn from this same mapping's
-         * existing + suggested set (spec 016 / 2026-08-28 audit). Unknown labels are dropped
+         * existing + suggested set. Unknown labels are dropped
          * by the caller — Zod can't cross-check them against a set it doesn't have. Optional
          * because an older/terser model response is still usable: a goal with no edges
          * degrades to the previous alphabetical route, it doesn't fail. */

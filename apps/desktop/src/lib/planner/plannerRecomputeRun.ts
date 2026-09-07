@@ -68,11 +68,11 @@ export function createPlannerRecompute(
         repos.goals.listAll(),
       ]);
 
-      // Best-effort (spec 059): null when the interest service or embedding model is absent,
-      // and the planner then behaves exactly as it did before the bridge existed.
+      // Best-effort: null when the interest service or embedding model is absent, and the
+      // planner then ignores the browsing signal entirely.
       const browsingAffinityByNode = await loadBrowsingAffinityByNode(embeddings);
 
-      // One interest, one slider (spec 060 §5): the browsing weight rides the interest
+      // One interest, one slider: the browsing weight rides the interest
       // weight at the hindsight-validated trust ratio. With no browsing data the component
       // carries no information, so the ratio is moot — skip the reconstruction.
       const userWeights = useSettingsStore.getState().recommendationWeights;

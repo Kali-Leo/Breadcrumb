@@ -10,15 +10,14 @@ import type { Migration } from "./migration";
 
 export const MIGRATIONS_0045_0053: readonly Migration[] = [
   {
-    // Design audit 2026-08-28 (知识图谱与去重 #3 and #5): the dedup sweep's two missing
-    // memories. node_merges snapshots the whole duplicate row before mergeNode deletes it, so
-    // a wrong merge is auditable and undoable (until now the duplicate's summary, created_at
-    // and history vanished with no record at all). node_pair_verdicts caches the "different"
-    // verdicts too — before this, only "same" produced a node_aliases row, so the same top-10
-    // suspect pairs were re-sent to the LLM on every single startup, forever.
+    // The dedup sweep's two memories. node_merges snapshots the whole duplicate row before
+    // mergeNode deletes it, so a wrong merge is auditable and undoable — otherwise the
+    // duplicate's summary, created_at and history vanish with no record at all.
+    // node_pair_verdicts caches the "different" verdicts too: only "same" produces a
+    // node_aliases row, so without this the same top-10 suspect pairs are re-sent to the LLM
+    // on every single startup, forever.
     // Deliberately NO foreign keys on either table: both reference node ids that the merge
-    // executor is in the middle of deleting, and a FK here would reintroduce exactly the
-    // constraint failure this audit round is fixing.
+    // executor is in the middle of deleting, and a FK here would fail that constraint.
     id: "0045_dedup_bookkeeping",
     statements: [
       `CREATE TABLE node_merges (
@@ -39,10 +38,10 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
     ],
   },
   {
-    // Design audit 2026-08-28 (知识图谱与去重 #2, 数据层 B8): every anchor sweep re-embedded all
-    // ~800 canonical concepts from scratch because there was nowhere to keep the vectors.
-    // content_hash is the hash of the exact text that was embedded, so a refreshed concept
-    // (new aliases, new label) invalidates just its own row instead of the whole cache.
+    // Cached embeddings for the canonical concepts, so an anchor sweep does not re-embed the
+    // whole inventory from scratch. content_hash is the hash of the exact text that was
+    // embedded, so a refreshed concept (new aliases, new label) invalidates just its own row
+    // instead of the whole cache.
     id: "0046_canonical_concept_embeddings",
     statements: [
       `CREATE TABLE canonical_concept_embeddings (
@@ -54,11 +53,11 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
     ],
   },
   {
-    // Design audit 2026-08-28 (多语言 B6): the alignment judge's confidence tier was stored as
-    // 高/中/低 — Chinese literals inside a JSON contract the model is separately instructed to
-    // answer in the learner's own language, which makes the enum fight the language directive.
-    // The tier becomes ASCII; existing rows map across. SQLite CHECK constraints cannot be
-    // altered, so the table is rebuilt (same shape as 0027's mastery_claims rebuild).
+    // The alignment judge's confidence tier is ASCII, not 高/中/低: it lives inside a JSON
+    // contract the model is separately instructed to answer in the learner's own language, so
+    // a Chinese-literal enum would fight that directive. Existing rows map across. SQLite
+    // CHECK constraints cannot be altered, so the table is rebuilt (same shape as 0027's
+    // mastery_claims rebuild).
     id: "0047_ascii_alignment_confidence",
     statements: [
       `ALTER TABLE node_concept_anchors RENAME TO node_concept_anchors_old;`,
@@ -88,11 +87,10 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
     ],
   },
   {
-    // Design audit 2026-08-28 (知识图谱与去重 #6): the edge judge is asked for a reasoning
-    // sentence, the schema parses it, and it was then thrown away — the cheapest possible
-    // hallucination defence (an auditable trail) cost one column that did not exist.
-    // source_message_id records which assistant reply the round's nodes came from, so an edge
-    // can be traced back to the text that produced it. Both NULL for every pre-0048 edge.
+    // The edge judge is asked for a reasoning sentence and the schema parses it; keeping it
+    // is the cheapest hallucination defence there is — an auditable trail. source_message_id
+    // records which assistant reply the round's nodes came from, so an edge can be traced back
+    // to the text that produced it. Both NULL for every edge predating these columns.
     id: "0048_edge_reasoning_provenance",
     statements: [
       `ALTER TABLE knowledge_edges ADD COLUMN reasoning TEXT;`,
@@ -100,12 +98,11 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
     ],
   },
   {
-    // Design audit 2026-08-28 (数据层与性能 #9): llm_calls is the fastest-growing table in the
-    // schema (1535 rows and climbing on the dev database) and sumCostForConversation filters it
-    // by conversation_id, which had no index — a full scan on every metering read. The audit
-    // named four other unindexed foreign-key columns and judged all four not worth an index:
-    // their tables are small enough that the scan is cheaper than the write cost of maintaining
-    // one. Do not add them without new evidence.
+    // llm_calls is the fastest-growing table in the schema and sumCostForConversation filters
+    // it by conversation_id, so without this index every metering read is a full scan. Four
+    // other unindexed foreign-key columns were judged not worth an index: their tables are
+    // small enough that the scan is cheaper than the write cost of maintaining one. Do not add
+    // them without new evidence.
     id: "0049_llm_calls_conversation_index",
     statements: [
       `CREATE INDEX IF NOT EXISTS idx_llm_calls_conversation ON llm_calls(conversation_id);`,
@@ -113,28 +110,27 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
   },
   {
     // Providers that keep a prefix cache bill a cache hit at roughly 1/30 of a fresh read
-    // (DeepSeek v4-flash: ¥0.10 vs ¥3.00 per million at peak). The client used to drop the
-    // split the API reports, so every input token was billed as a miss and the spending page
-    // over-stated long conversations badly. Recording the hit count makes the ledger right
-    // and makes the prefix cache's actual hit rate visible instead of guessed at.
+    // (DeepSeek v4-flash: ¥0.10 vs ¥3.00 per million at peak). Without the hit count from the
+    // split the API reports, every input token is billed as a miss and the spending page
+    // over-states long conversations badly. Recording it keeps the ledger right and makes the
+    // prefix cache's actual hit rate visible instead of guessed at.
     id: "0050_llm_calls_cached_input_tokens",
     statements: [`ALTER TABLE llm_calls ADD COLUMN cached_input_tokens INTEGER;`],
   },
   {
-    // Language packs beyond the bundled zh→en are downloaded when the learner picks a pair
-    // (2026-09-01): dozens of pairs at a megabyte or two each cannot all ride inside the
-    // installer. The payload lives here rather than on disk so the browser build, which has
-    // no filesystem, installs packs the same way the desktop does — one code path, and the
-    // pack disappears with the database it belongs to.
+    // Language packs beyond the bundled zh→en are downloaded when the learner picks a pair:
+    // dozens of pairs at a megabyte or two each cannot all ride inside the installer. The
+    // payload lives here rather than on disk so the browser build, which has no filesystem,
+    // installs packs the same way the desktop does — one code path, and the pack disappears
+    // with the database it belongs to.
     id: "0051_diglot_pack_payload",
     statements: [`ALTER TABLE diglot_language_packs ADD COLUMN payload_json TEXT;`],
   },
   {
-    // Housekeeping (dead-code audit 2026-09-02). practice_attestations was superseded by
-    // practice_scores in 0022, which copied its rows across and then deliberately left the
-    // old table standing; nothing has read or written it since, so it goes now. The two
-    // indexes cost every insert and serve no query: factcheck_runs is only ever read by
-    // conversation_id, and node_merges has no WHERE clause anywhere.
+    // Housekeeping. practice_attestations was superseded by practice_scores in 0022, which
+    // copied its rows across and left the old table standing; nothing reads or writes it, so
+    // it goes. The two indexes cost every insert and serve no query: factcheck_runs is only
+    // ever read by conversation_id, and node_merges has no WHERE clause anywhere.
     id: "0052_drop_dead_table_and_indexes",
     statements: [
       `DROP TABLE IF EXISTS practice_attestations;`,
@@ -148,10 +144,10 @@ export const MIGRATIONS_0045_0053: readonly Migration[] = [
     // indexChildren silently drops any node it cannot reach from a root, so a bad parent link
     // does not throw — it deletes a branch of the map in the learner's eyes.
     //
-    // Two sources, both real. (a) Until 2026-09-04 a merge whose duplicate was an ANCESTOR of
-    // its canonical re-pointed the duplicate's children onto the canonical and closed a loop;
-    // the canonical and everything under it disappeared. nodeMergeStatements.ts's cycle guard
-    // stops new ones, but databases that already merged carry the loop. (b) A parent_id
+    // Two sources, both real. (a) A merge whose duplicate was an ANCESTOR of its canonical
+    // re-pointed the duplicate's children onto the canonical and closed a loop; the canonical
+    // and everything under it disappeared. nodeMergeStatements.ts's cycle guard stops new
+    // ones, but databases that already merged carry the loop. (b) A parent_id
     // pointing at a row that no longer exists — reachable on any host that ever ran with
     // foreign keys off, and left behind by hand-edited databases.
     //

@@ -1,6 +1,6 @@
 /**
- * Purpose: dev-time internalization of ESCO-derived occupation knowledge (spec 027, CC BY
- * 4.0) — no LLM: official crosswalk picks ESCO occupations per O*NET code (exact > narrow >
+ * Purpose: dev-time internalization of ESCO-derived occupation knowledge (CC BY 4.0) — no
+ * LLM: official crosswalk picks ESCO occupations per O*NET code (exact > narrow >
  * broad > close, union within the winning tier), their essential/optional skills become the
  * fine-grained knowledge branch, broad concepts expand one narrower level.
  * Usage: node extract-esco.mjs <esco_csv_dir> <crosswalk_csv> <onet_dataset_json>

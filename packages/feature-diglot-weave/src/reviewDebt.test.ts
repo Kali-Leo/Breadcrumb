@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for the meetable review-debt window — only due words still circulating in
- * the recent conversation count, and the window forgets old topics (audit 2026-08-28 #3).
+ * the recent conversation count, and the window forgets old topics.
  */
 import { describe, expect, it } from "vitest";
 import { createMeetableDebtWindow } from "./reviewDebt";

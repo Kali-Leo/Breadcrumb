@@ -1,6 +1,6 @@
 /**
- * Purpose: pins the label-part matching added 2026-08-14 — canonical labels («闭包与作用域链»)
- * must still open doors when prose only contains a significant part («闭包»).
+ * Purpose: pins the label-part matching — canonical labels («闭包与作用域链») must still open
+ * doors when prose only contains a significant part («闭包»).
  */
 import { describe, expect, it } from "vitest";
 import { type DoorPickInput, pickDoors } from "./doorPick";

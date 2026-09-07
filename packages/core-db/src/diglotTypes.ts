@@ -1,14 +1,14 @@
 /**
- * Purpose: row types for the diglot weave data layer (spec 033) — word FSRS states, the
+ * Purpose: row types for the diglot weave data layer — word FSRS states, the
  * append-only signal event log, verbatim guesses, and installed language packs.
  * Main exports: DiglotWordStateRow, DiglotWordEventRow, DiglotWordGuessRow,
  * DiglotLanguagePackRow, DiglotEventKind, DiglotGuessGrade, DiglotPairId.
  */
 /** A language pair id, `${sourceLang}:${targetLang}` in BCP-47 (e.g. "zh:en") — the source
- * is the conversation language, the target is the language being learned (spec 033). */
+ * is the conversation language, the target is the language being learned. */
 export type DiglotPairId = string;
 
-/** One FSRS memory state per (lemma, pair) — spec 033. `fsrs_json` is the serialized
+/** One FSRS memory state per (lemma, pair). `fsrs_json` is the serialized
  * ts-fsrs card; `due` duplicates the card's due date as a column for cheap due queries. */
 export interface DiglotWordStateRow {
   lemma: string;
@@ -19,7 +19,7 @@ export interface DiglotWordStateRow {
   last_event_at: string | null;
 }
 
-/** Every implicit-signal kind the render layer can emit for a woven word (spec 033).
+/** Every implicit-signal kind the render layer can emit for a woven word.
  * Ordered roughly weakest→strongest: passive exposure, lookup, audio play, the four guess
  * outcomes, and productive use of the word in the user's own message. */
 export type DiglotEventKind =
@@ -32,7 +32,7 @@ export type DiglotEventKind =
   | "guess_abandoned"
   | "productive_use";
 
-/** One append-only signal event for a woven word (spec 033). `context_hash` identifies the
+/** One append-only signal event for a woven word. `context_hash` identifies the
  * sentence the word appeared in (for the contextual-diversity factor); `latency_ms` is only
  * set for guess events (hover→submit time). */
 export interface DiglotWordEventRow {
@@ -47,10 +47,10 @@ export interface DiglotWordEventRow {
 }
 
 /** How a guess was graded against the dictionary: exact/synonym match, embedding-close,
- * or neither (spec 033). */
+ * or neither. */
 export type DiglotGuessGrade = "correct" | "close" | "wrong";
 
-/** The raw text of one guess, kept verbatim for future confusion-pair mining (spec 033).
+/** The raw text of one guess, kept verbatim for future confusion-pair mining.
  * `context` is the full sentence shown with the guess card. */
 export interface DiglotWordGuessRow {
   id: string;
@@ -63,9 +63,9 @@ export interface DiglotWordGuessRow {
   created_at: string;
 }
 
-/** One installed language pack (spec 033). `meta_json` holds capability flags (t1Safe, TTS
+/** One installed language pack. `meta_json` holds capability flags (t1Safe, TTS
  * availability), entry counts and attribution strings. `payload_json` is the pack file itself
- * for packs the learner downloaded (2026-09-01); it is absent on the bundled pair, which ships
+ * for packs the learner downloaded; it is absent on the bundled pair, which ships
  * inside the app, and is not selected by listPacks — reading the list must not drag megabytes
  * of dictionary along. */
 export interface DiglotLanguagePackRow {
@@ -78,7 +78,7 @@ export interface DiglotLanguagePackRow {
   payload_json?: string | null;
 }
 
-/** One stored context vector for a woven word (spec 033) — the sentence the word appeared
+/** One stored context vector for a woven word — the sentence the word appeared
  * in, embedded locally; drives the scheduler's contextual-diversity discount. */
 export interface DiglotContextEmbeddingRow {
   lemma: string;

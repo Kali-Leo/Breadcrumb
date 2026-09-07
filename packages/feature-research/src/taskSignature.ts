@@ -1,5 +1,5 @@
 /**
- * Purpose: Ed25519 signature verification for research tasks (spec 036) — clients execute
+ * Purpose: Ed25519 signature verification for research tasks — clients execute
  * only tasks signed by the project key; a tampered byte anywhere fails verification.
  * Signing lives in signing.dev.ts and is not re-exported from index.ts: the product only ever
  * verifies, and keeping the signer out of the shipped bundle keeps the private key out of

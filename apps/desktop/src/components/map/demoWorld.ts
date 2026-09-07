@@ -5,8 +5,7 @@
  * Deliberately not translated, unlike the demo learner the guided tour installs
  * (packages/demo-seed). No shipped build can reach this: the only thing that turns demo mode
  * on is a "0" keypress behind `import.meta.env.DEV` in useMapSceneSync, so the audience is
- * whoever is running `pnpm dev` — never a learner. Translating a fixture nobody but us sees
- * into eleven languages would be eleven more files to keep in step for no reader.
+ * whoever is running `pnpm dev` — never a learner.
  *
  * Main exports: demoKnowledgeNodes, demoRetentionByNode.
  */

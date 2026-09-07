@@ -1,8 +1,8 @@
 /**
- * Purpose: zero-LLM door candidate selection (spec 039 §2.1) — picks which node labels
- * sighted in an assistant message become clickable "doors", capped by density and mastery.
- * Also the shared door-patch shape termAnnotator's locateTermPatches produces (spec 043 §6):
- * nodeId is null there until a caller enriches it against a known label.
+ * Purpose: zero-LLM door candidate selection — picks which node labels sighted in an
+ * assistant message become clickable "doors", capped by density and mastery. Also the shared
+ * door-patch shape termAnnotator's locateTermPatches produces: nodeId is null there until a
+ * caller enriches it against a known label.
  * Main exports: pickDoors, DoorCandidate, DoorPickInput, DOOR_LIT_THRESHOLD, MAX_DOORS_PER_MESSAGE.
  */
 
@@ -10,9 +10,9 @@ export interface DoorCandidate {
   start: number;
   end: number;
   original: string;
-  /** null = no known knowledge-tree node matches this door's word (spec 043 §6: an LLM
-   * term-marking pick may be a brand-new term with no node at all). Clicking it still opens a
-   * focus session — it just has nothing to mark "opened" or grade a guess against. */
+  /** null = no known knowledge-tree node matches this door's word — an LLM term-marking pick
+   * may be a brand-new term with no node at all. Clicking it still opens a focus session — it
+   * just has nothing to mark "opened" or grade a guess against. */
   nodeId: string | null;
 }
 
@@ -34,10 +34,10 @@ export const DOOR_LIT_THRESHOLD = 0.85;
 /** Density cap: never more than three doors per message. */
 export const MAX_DOORS_PER_MESSAGE = 3;
 /** How many of those doors are awarded on curiosity rank alone. The remaining one is the
- * exploration slot (2026-08-28 audit): filled from the candidates curiosity did NOT pick, so
- * a learner isn't offered the same narrow neighborhood forever and the system gets to see a
- * reaction to something it did not already believe was interesting. Deterministic — lowest
- * retention among the leftovers (hungriest for review), no randomness, no bandit. */
+ * exploration slot: filled from the candidates curiosity did NOT pick, so a learner isn't
+ * offered the same narrow neighborhood forever and the system gets to see a reaction to
+ * something it did not already believe was interesting. Deterministic — lowest retention
+ * among the leftovers (hungriest for review), no randomness, no bandit. */
 export const CURIOSITY_RANKED_DOORS = MAX_DOORS_PER_MESSAGE - 1;
 
 /** Labels shorter than this are too ambiguous to safely mark (e.g. single CJK characters

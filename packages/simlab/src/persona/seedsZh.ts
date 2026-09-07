@@ -1,5 +1,5 @@
 /**
- * Purpose: the Chinese-language seed personas (spec 013 T2) — each a named test scenario
+ * Purpose: the Chinese-language seed personas — each a named test scenario
  * covering a behavior extreme or a product-principle edge case. Kept as its own file so the
  * per-script seed sets (seedsLatinScript, seedsIndicArabic, seedsCjk) can be read side by
  * side against it.

@@ -1,6 +1,6 @@
 /**
  * Purpose: zero-LLM heuristic for "this user message signals confusion" — the trigger for
- * the same-round downshift line (spec 038 §2.3). Pattern-based v1; repeated-question
+ * the same-round downshift line. Pattern-based v1; repeated-question
  * similarity detection is deliberately out of scope until real transcripts justify it.
  * Main exports: detectConfusion.
  */

@@ -1,5 +1,5 @@
 /**
- * Purpose: the plain "后台小事" row on the general settings page (spec 045) — how many
+ * Purpose: the plain "后台小事" row on the general settings page — how many
  * background jobs recently failed, stated without alarm; expanding shows only the plain
  * feature name and date, never raw error text (ai_failures details stay developer-only).
  * Main exports: SettingsQuietIssues.

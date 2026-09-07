@@ -1,5 +1,5 @@
 /**
- * Purpose: tests for the empirical-Bayes pseudo-count estimate (spec 060 §4) — sharp tastes
+ * Purpose: tests for the empirical-Bayes pseudo-count estimate — sharp tastes
  * shrink less, noisy signals shrink more, thin data falls back to the constant, and the
  * clamp holds at both ends.
  */

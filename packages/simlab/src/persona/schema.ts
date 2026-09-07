@@ -1,10 +1,8 @@
 /**
- * Purpose: the simulated-student persona contract (spec 013 T2) — a knowledge axis (what the
+ * Purpose: the simulated-student persona contract — a knowledge axis (what the
  * persona actually knows, ground truth for "被看见" recall) kept strictly separate from a
  * behavior axis (how the persona acts), per UserSimCRS, plus the language axis: which
- * language this learner actually writes in. Every persona was Chinese until 2026-09-07, so
- * the whole non-Chinese path — prompt directive, clause segmentation, question counting —
- * ran unexercised in the harness that exists to exercise it.
+ * language this learner actually writes in.
  * Main exports: personaSchema, Persona, PersonaBehavior.
  */
 import { z } from "zod";

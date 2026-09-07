@@ -19,12 +19,12 @@ export type CostByCurrency = ReadonlyMap<Currency, number>;
 export interface ChatSession {
   kind: ConversationKind;
   companionId: string | null;
-  /** The 学习模式 toggle (spec 052), chat kind only — runtime source of truth for a round's
+  /** The 学习模式 toggle, chat kind only — runtime source of truth for a round's
    * prompt regime; persisted through conversations.study_mode. */
   studyMode: boolean;
-  /** Every row, tree edges and all (spec 040 §1). */
+  /** Every row, tree edges and all. */
   allMessages: MessageRow[];
-  /** Current station; null = the newest leaf (spec 040 §1). */
+  /** Current station; null = the newest leaf. */
   currentLeafId: string | null;
   /** The active path — renders and feeds LLM history. */
   messages: MessageRow[];
@@ -85,8 +85,8 @@ export function freshChatSession(studyMode = false): ChatSession {
   };
 }
 
-/** Loads one conversation's session from the database ("reopen lands where you left off",
- * spec 040 §1: the newest leaf's path). */
+/** Loads one conversation's session from the database ("reopen lands where you left off":
+ * the newest leaf's path). */
 export async function loadChatSession(repos: Repos, id: string): Promise<ChatSession> {
   const [allMessages, conversationCost, conversation] = await Promise.all([
     repos.messages.listByConversation(id),

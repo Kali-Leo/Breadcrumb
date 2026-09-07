@@ -26,7 +26,7 @@ export interface ChatSendDeps extends AssistantRoundDeps {
   setRoundError(conversationId: string | null, errorText: CopyMessage): void;
   /** Clears the draft of the composer this send was bound to (null = new-conversation). */
   clearDraft(conversationKey: string | null): void;
-  /** The new-conversation composer's 学习模式 state (spec 052) — a brand-new conversation
+  /** The new-conversation composer's 学习模式 state — a brand-new conversation
    * is born with whatever the toggle showed when the first message was sent. */
   readNewConversationStudyMode(): boolean;
   emitMessageSent(payload: { conversationId: string; messageId: string; sentAt: string }): void;
@@ -75,7 +75,7 @@ async function sendRound(
     return;
   }
   // Captured before anything can shift it: extraction stamps provenance with this value
-  // much later (spec 040 §7).
+  // much later.
   const { useKnowledgeStore } = await import("../../stores/knowledgeStore");
   const roundAnchoredNodeId = useKnowledgeStore.getState().anchoredNodeId;
 
@@ -126,7 +126,7 @@ async function sendRound(
     sentAt: userMessage.created_at,
   });
 
-  // Teaching contract v2 (spec 038): teach/companion prompts branch inside runSendRound.
+  // Teach/companion prompts branch inside runSendRound.
   const crisisActive =
     (kind === "companion" || kind === "teach") &&
     useCompanionStore.getState().crisisConversationIds.has(conversationId);

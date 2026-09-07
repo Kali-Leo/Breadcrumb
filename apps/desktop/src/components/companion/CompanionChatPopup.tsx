@@ -1,5 +1,5 @@
 /**
- * Purpose: the floating companion chat window (spec 050 §8) — binds to its conversation's
+ * Purpose: the floating companion chat window — binds to its conversation's
  * own session, so the main view keeps whatever it was showing and both can talk at the
  * same time without cross-wiring. Reuses the real message bubbles and composer.
  * Main exports: CompanionChatPopup.
@@ -49,10 +49,8 @@ export function CompanionChatPopup({ conversationId, title, onClose }: Companion
   return (
     <div className="absolute bottom-3 end-3 z-40 flex h-[26rem] max-h-[calc(100%-1.5rem)] w-96 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-stone-100 px-3 py-2">
-        {/* The main view labels a companion thread as AI in its own banner; this popup is
-            where most of these conversations actually happen, and it was carrying the
-            crisis banner but not the disclosure. Somebody being asked to explain something
-            to a character should never have to work out whether the character is a person. */}
+        {/* The main view labels a companion thread as AI in its own banner; this popup
+            carries the same disclosure, since most of these conversations happen here. */}
         <span className="flex min-w-0 items-baseline gap-2">
           <span className="truncate text-sm font-medium text-stone-700">{title}</span>
           <span className="shrink-0 text-stone-400 text-xs">{t("companion.aiLabel")}</span>

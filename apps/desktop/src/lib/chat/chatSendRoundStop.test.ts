@@ -1,8 +1,7 @@
 /**
  * Purpose: what a stopped round leaves behind. Pressing stop does not un-bill the call — the
  * provider charged the prompt and everything it had already generated — so the round has to
- * persist the partial reply AND record the usage the stream reported before the stop. This
- * used to meter every stopped round as 0.
+ * persist the partial reply AND record the usage the stream reported before the stop.
  */
 import type { MessageRow } from "@breadcrumb/core-db";
 import type { ChatMessage, TokenUsage } from "@breadcrumb/core-llm";

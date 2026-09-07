@@ -1,5 +1,5 @@
 /**
- * Purpose: fast-check property tests (spec 013 T5) — over arbitrary mastery/interest vectors
+ * Purpose: fast-check property tests — over arbitrary mastery/interest vectors
  * and cycle-safe edge sets, frontier() never surfaces a candidate with an unsatisfied requires-
  * prerequisite (the hard gate: lit now, or lit at some point before), and gapAndPath()'s three
  * routes are always exact permutations of its own gap set (no node invented, none dropped,
@@ -96,9 +96,9 @@ describe("frontier (property)", () => {
             litThreshold: LIT_THRESHOLD,
             previouslyLitNodeIds,
           });
-          // The gate reads "was ever lit", not "is lit now" (2026-08-28 audit, planning gap
-          // 4): mastery is a retention estimate that expires in days, so gating structure on
-          // it locks deep nodes out permanently. Unbypassability is unchanged — a prerequisite
+          // The gate reads "was ever lit", not "is lit now": mastery is a retention estimate
+          // that expires in days, so gating structure on it locks deep nodes out permanently.
+          // Unbypassability is unchanged — a prerequisite
           // with no mastery and no history still blocks its dependent, absolutely.
           const wasEverLit = (id: string) => isLit(id) || previouslyLitNodeIds.has(id);
           for (const candidate of candidatesOut) {

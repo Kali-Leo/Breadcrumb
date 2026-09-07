@@ -10,12 +10,11 @@ import type { Migration } from "./migration";
 
 export const MIGRATIONS_0015_0021: readonly Migration[] = [
   {
-    // Ranked-ladder v4 (spec 020, Leo's final form): the rank number becomes a pure incentive
-    // scalar and the board a cast of deceased famous people regenerated on a randomized
-    // schedule. Leo explicitly withdrew all record-keeping ("排行榜本来就会变，根本不需要保存
-    // 任何记录"), so the never-repeat identity backstop and the reuse-anchor columns are
-    // DROPPED, not migrated. The only persisted state is the current board (goal_ladder_figures,
-    // replaced whole on refresh) and one state row per goal (goal_ladder_state).
+    // Ranked-ladder v4: the rank number is a pure incentive scalar and the board a cast of
+    // deceased famous people regenerated on a randomized schedule. No record-keeping is kept,
+    // so the never-repeat identity backstop and the reuse-anchor columns are DROPPED, not
+    // migrated. The only persisted state is the current board (goal_ladder_figures, replaced
+    // whole on refresh) and one state row per goal (goal_ladder_state).
     id: "0015_goal_ladder_v4",
     statements: [
       `DROP TABLE IF EXISTS ladder_shown_identities;`,
@@ -46,12 +45,11 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Ranked-ladder v5 (spec 021): Leo withdrew the pseudo-people design entirely — no board
-    // of generated figures, no refresh cadence, only the learner's own title derived from the
-    // internal rank scalar. The figures table (including the spec 019 friend-chat foundation
-    // chat_profile_json) is DROPPED, and goal_ladder_state loses its board-lifecycle columns
-    // (next_refresh_at, generation) while last_shown_rank/last_view_fuel migrate losslessly —
-    // the never-worsen/bounded-slip rank history survives the redesign.
+    // Ranked-ladder v5: no board of generated figures and no refresh cadence, only the
+    // learner's own title derived from the internal rank scalar. The figures table (including
+    // the friend-chat chat_profile_json) is DROPPED, and goal_ladder_state loses its
+    // board-lifecycle columns (next_refresh_at, generation) while last_shown_rank/
+    // last_view_fuel migrate losslessly — the never-worsen/bounded-slip rank history survives.
     id: "0016_goal_ladder_self_title",
     statements: [
       `DROP TABLE IF EXISTS goal_ladder_figures;`,
@@ -69,11 +67,11 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Ranked-ladder v6 (spec 022, Leo's correction): the ladder is a real-time assessment
-    // system merely DISPLAYED as a leaderboard — it must carry no mechanism at all. The v5
-    // rank-scalar state (fuel/never-worsen machinery) is dropped without migration; the only
-    // persisted thing is the current three-title board (the learner's own AI summary flanked
-    // by slightly-ahead/slightly-behind states) and its cache expiry.
+    // Ranked-ladder v6: the ladder is a real-time assessment system merely DISPLAYED as a
+    // leaderboard — it carries no mechanism at all. The v5 rank-scalar state
+    // (fuel/never-worsen machinery) is dropped without migration; the only persisted thing is
+    // the current three-title board (the learner's own AI summary flanked by
+    // slightly-ahead/slightly-behind states) and its cache expiry.
     id: "0017_goal_ladder_assessment_board",
     statements: [
       `DROP TABLE IF EXISTS goal_ladder_state;`,
@@ -88,7 +86,7 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Comparison tree (spec 023): a standalone module, unrelated to the ladder/knowledge tree —
+    // Comparison tree: a standalone module, unrelated to the ladder/knowledge tree —
     // the user's own tree compared against an evidence-backed real-world profile (e.g. a
     // historical curriculum, a professional skill tree). AI-invented content is forbidden here,
     // so every item row carries a non-empty source_ref pointing at where it came from.
@@ -115,7 +113,7 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Comparison tree semantic-alignment crosswalk (spec 024): an LLM-judged verdict on
+    // Comparison tree semantic-alignment crosswalk: an LLM-judged verdict on
     // whether one profile item and one knowledge node denote the same concept, persisted once
     // and reused forever. Both 'same' AND 'different' verdicts are stored — the point is that a
     // pair is never re-judged, not just that matches are remembered.
@@ -135,10 +133,10 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Canonical concepts + node anchors (spec 025): the crosswalk moves from
-    // profile-item-scoped verdicts to node<->canonical-concept anchors so every profile joins
-    // for free; old comparison_alignments rows are deliberately dropped, not migrated — concept
-    // ids are unknowable at migration time and re-judging costs cents.
+    // Canonical concepts + node anchors: the crosswalk moves from profile-item-scoped
+    // verdicts to node<->canonical-concept anchors so every profile joins for free;
+    // comparison_alignments rows are dropped rather than migrated — concept ids are unknowable
+    // at migration time and re-judging costs cents.
     id: "0020_canonical_anchors",
     statements: [
       `DROP TABLE IF EXISTS comparison_alignments;`,
@@ -164,13 +162,13 @@ export const MIGRATIONS_0015_0021: readonly Migration[] = [
     ],
   },
   {
-    // Occupation profiles + practice attestations + practice conversations (spec 026):
+    // Occupation profiles + practice attestations + practice conversations:
     // comparison_profiles gains a category so the UI can split the 教材/真人 toggle;
     // comparison_profile_items gains a kind so leaves render as knowledge/practice/tool
     // (structure = non-leaf organizational node). practice_attestations holds the user's own
-    // self-report of a practice leaf — deliberately never AI-verified, mirroring the
-    // mastery_claims self-report design (spec 011). conversations gains a kind so a practice
-    // discussion opened from a practice item is saved but hidden from the sidebar's chat list.
+    // self-report of a practice leaf — never AI-verified, mirroring mastery_claims.
+    // conversations gains a kind so a practice discussion opened from a practice item is saved
+    // but hidden from the sidebar's chat list.
     id: "0021_occupation_practice",
     statements: [
       `ALTER TABLE comparison_profiles ADD COLUMN category TEXT NOT NULL DEFAULT 'curriculum';`,

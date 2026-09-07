@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for node_aliases — labels the synonym gate (spec 015) judged
+ * Purpose: SQL statements for node_aliases — labels the synonym gate judged
  * identical to an existing node, so a later extraction round hits the node directly instead
  * of asking the LLM again. The insert goes through knowledgeStatements.ts, shared with the
  * merge executor.

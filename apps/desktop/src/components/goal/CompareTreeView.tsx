@@ -1,5 +1,5 @@
 /**
- * Purpose: the comparison tree's SVG rendering (spec 023, ADR-0016) — d3-hierarchy tidy
+ * Purpose: the comparison tree's SVG rendering — d3-hierarchy tidy
  * layout starting from ONE visible root (the profile itself, so the tree reads as a tree,
  * not a list), amber depth = overlap ratio with the ratio printed on every node, drag-to-pan
  * on the whole canvas (with a mouse — a finger scrolls the container itself, see useDragPan),
@@ -45,7 +45,7 @@ export function CompareTreeView({
   const height = layout.maxX - layout.minX + NODE_HEIGHT + PADDING * 2;
   const offsetY = -layout.minX + PADDING;
 
-  // Enter animation (spec 026: 平滑而非闪现): a node absent from the previous layout starts
+  // Enter animation (平滑而非闪现): a node absent from the previous layout starts
   // at its parent's position for one frame, then transitions to its real spot — children
   // visually slide out of the node that revealed them.
   const knownKeysRef = useRef<Set<string>>(new Set());

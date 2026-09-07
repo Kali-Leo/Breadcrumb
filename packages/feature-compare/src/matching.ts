@@ -1,6 +1,6 @@
 /**
  * Purpose: conservative matching between a profile's leaf items and the user's knowledge
- * nodes (spec 023) — normalized string equality on labels and source-defensible aliases
+ * nodes — normalized string equality on labels and source-defensible aliases
  * only, deliberately NO fuzzy/semantic matching: a missed match keeps the ratio honest-low,
  * a wrong match would fake objectivity.
  * Main exports: normalizeLabel, matchProfileLeaves, LeafMatch, leafKeysOf.
@@ -18,7 +18,7 @@ export interface LeafMatch {
   nodeId: string;
   nodeLabel: string;
   /** How the match was made: the item's own label, one of its aliases, or a persisted
-   * semantic-alignment verdict (spec 024). */
+   * semantic-alignment verdict. */
   via: "label" | "alias" | "semantic";
   /** For label/alias: the profile-side text that matched. For semantic: the judge's reason. */
   matchedText: string;

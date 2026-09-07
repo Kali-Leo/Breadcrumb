@@ -1,9 +1,8 @@
 /**
- * Purpose: the pressure-language gate over everything the user reads. It used to run inside
- * simlab against four per-feature copy modules; now that all wording lives in the catalogues
- * (spec 058 §2), one scan covers every string in the app — including the ones those modules
- * never held — plus the bundled research task's own display text. The companion modules'
- * manipulation lexicon runs over the same set, so moving their copy here lost no gate.
+ * Purpose: the pressure-language gate over everything the user reads. Now that all wording
+ * lives in the catalogues, one scan covers every string in the app — plus the bundled
+ * research task's own display text. The companion modules' manipulation lexicon runs over
+ * the same set, so moving their copy here lost no gate.
  *
  * Every shipped language is scanned against its own lexicon: "reduce the pressure" is the
  * product's first principle, and a principle enforced in one language only is enforced

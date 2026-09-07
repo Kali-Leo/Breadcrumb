@@ -1,5 +1,5 @@
 /**
- * Purpose: text-span rendering for MarkdownContent's mdast "text" leaves (spec 039 diglot
+ * Purpose: text-span rendering for MarkdownContent's mdast "text" leaves (diglot
  * weave + explore doors) — merges diglot/door patches into runs and dispatches each run to its
  * span component. Split out of MarkdownContent.tsx to stay under the file-size cap.
  * Main exports: DiglotContext, DoorContext, AnyNode, offsetsOf, renderTextNode.
@@ -20,9 +20,8 @@ export interface DiglotContext {
 export interface DoorContext {
   patches: DoorCandidate[];
   /** A door word click-to-select handler — an ordinary reply opens a focus session directly,
-   * the focus overlay's own doors select a new station (spec 042 §5). Every caller supplies
-   * one now: the old hover/click popover (spec 039 §2.2) is gone. nodeId is null for a
-   * term-marked word with no matching knowledge node (spec 043 §6). */
+   * the focus overlay's own doors select a new station. nodeId is null for a
+   * term-marked word with no matching knowledge node. */
   onSelect: (word: string, nodeId: string | null) => void;
 }
 

@@ -1,5 +1,5 @@
 /**
- * Purpose: patch construction and the diff guard (spec 033) — replacements are expressed
+ * Purpose: patch construction and the diff guard — replacements are expressed
  * as non-destructive span patches over the original message; nothing outside a declared
  * span may ever change, and violating patch sets are rejected wholesale.
  * Main exports: ReplacementPatchSchema, buildPatches, verifyPatches, applyPatches,
@@ -10,9 +10,9 @@ import type { LoadedLanguagePack } from "./packSchema";
 import type { ScheduledReplacement } from "./scheduler";
 
 /** One display-layer replacement: message[start, end) === original, rendered as
- * `replacement`. The chat store and LLM context never see patches (ADR-0019).
+ * `replacement`. The chat store and LLM context never see patches.
  * kind "word" = dictionary lemma with FSRS state; "phrase" = an LLM-woven idiomatic
- * expression (spec 033 T13) — display and gloss only, no memory tracking. */
+ * expression — display and gloss only, no memory tracking. */
 export const ReplacementPatchSchema = z.object({
   start: z.number().int().nonnegative(),
   end: z.number().int().positive(),

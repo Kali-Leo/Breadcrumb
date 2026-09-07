@@ -1,6 +1,6 @@
 /**
  * Purpose: renders a CopyMessage — the {key, params} pair a pure-logic package returns when
- * it has decided which sentence applies but must not write it (spec 058 §2).
+ * it has decided which sentence applies but must not write it.
  * Main exports: useCopyMessage.
  */
 import type { CopyMessage } from "@breadcrumb/core-i18n";

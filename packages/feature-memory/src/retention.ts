@@ -10,7 +10,7 @@ import type { NodeSightingGrade, NodeSightingRow } from "@breadcrumb/core-db";
 import { type Card, createEmptyCard, fsrs, type Grade, Rating } from "ts-fsrs";
 import { clampUnit } from "./clampUnit";
 
-// enable_short_term is stated explicitly (design audit 2026-08-28 #7): the library default is
+// enable_short_term is stated explicitly: the library default is
 // true, which parks a just-reviewed card in the Learning state on learning-step intervals.
 // There is no such thing as a learning step on the concept side — a sighting is a review of a
 // concept met in conversation, never a card being drilled — so the scheduler is told so
@@ -81,8 +81,8 @@ export function buildNodeCheckpoints(
  * probability, so an out-of-range value from the library must never reach one of them.
  * clampUnit, not a hand-written min/max: a card replayed from an unparsable `created_at` has
  * NaN fields and the library then returns NaN, which `Math.max(0, Math.min(1, x))` passes
- * through untouched. Such a node reports 0 — the same thing layers.ts already did by skipping
- * the row, instead of the opposite thing mastery.ts used to do by spreading it. */
+ * through untouched. Such a node reports 0, same as everywhere else non-finite results are
+ * handled. */
 export function retrievabilityOf(card: Card, now: Date): number {
   return clampUnit(scheduler.get_retrievability(card, now, false));
 }

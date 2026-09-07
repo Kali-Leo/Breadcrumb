@@ -41,8 +41,8 @@ export async function streamRoundReply(params: {
       { signal: params.signal },
     );
     // Frames the client could not read (a gateway heartbeat, a half-shaped chunk). The answer
-    // survived, but a lost frame can be a lost tail or a lost usage report — spec 014's table
-    // is where a degradation nobody saw is supposed to become visible.
+    // survived, but a lost frame can be a lost tail or a lost usage report, so this is where a
+    // degradation nobody saw is supposed to become visible.
     if (result.skippedFrames > 0) {
       void recordAiFailure(
         "chat-stream",

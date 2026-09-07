@@ -1,8 +1,7 @@
 /**
- * Purpose: concept guess grading thresholds and feedback lines (spec 039 §2.2) — the cosine
- * cutoffs are an empirical starting point for e5-small embeddings, tunable constants, not a
- * calibrated model. Feedback is plain statement only (product principle 1: no praise, no
- * pressure).
+ * Purpose: concept guess grading thresholds and feedback lines — the cosine cutoffs are an
+ * empirical starting point for e5-small embeddings, tunable constants, not a calibrated
+ * model. Feedback is plain statement only (no praise, no pressure).
  * Main exports: gradeConceptGuess, guessFeedbackMessage, ConceptGuessGrade,
  * CORRECT_COSINE_THRESHOLD, CLOSE_COSINE_THRESHOLD.
  */
@@ -24,7 +23,7 @@ export function gradeConceptGuess(cosine: number): ConceptGuessGrade {
 }
 
 /** Plain-statement feedback for a graded concept guess (no praise, no pressure) — which of
- * the three lines applies; the app writes it (spec 058 §2). */
+ * the three lines applies; the app writes it. */
 export function guessFeedbackMessage(grade: ConceptGuessGrade, summary: string): CopyMessage {
   const params = { summary };
   switch (grade) {

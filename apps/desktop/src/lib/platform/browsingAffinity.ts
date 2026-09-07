@@ -2,8 +2,8 @@
  * Purpose: reads the learner's watched professional content out of this app's own browsing
  * table, embeds the titles with the same local model the knowledge nodes use, and hands
  * plannerStore a per-node browsing-affinity map. Everything is best-effort: no history yet or
- * a missing embedding model yields null and the planner runs exactly as it did before the
- * bridge existed. Titles stay in memory — never persisted, never sent to any LLM.
+ * a missing embedding model yields null and the planner runs exactly as if there were no
+ * browsing signal at all. Titles stay in memory — never persisted, never sent to any LLM.
  * Main exports: loadBrowsingAffinityByNode.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
@@ -17,7 +17,7 @@ import { readProContent } from "./browsingPanels";
 import { embedTexts } from "./embeddings";
 
 /** A watched title with everything downstream needs: the affinity path reads title/weight/
- * vector; hindsight validation (spec 060 §5) additionally reads ts/finished to recompute
+ * vector; hindsight validation additionally reads ts/finished to recompute
  * the weight as of a past moment. */
 export type WatchedTitleRecord = WatchedTitleSignal & { vector: readonly number[] };
 
@@ -69,8 +69,7 @@ async function readAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecord
 }
 
 /** Node embedding rows → id-keyed vectors. One corrupt vector row must cost that row, never
- * the whole caller — this is the promise that a broken bridge behaves as no bridge (spec
- * 059 出错三问). */
+ * the whole caller — this is the promise that a broken bridge behaves as no bridge. */
 export function parseNodeVectors(
   embeddings: readonly NodeEmbeddingRow[],
 ): Map<string, readonly number[]> {

@@ -1,5 +1,5 @@
 /**
- * Purpose: on-demand hub decomposition (spec 028 §3) — runs the verified proposal pipeline
+ * Purpose: on-demand hub decomposition — runs the verified proposal pipeline
  * for one hub's topic and appends the surviving cited items UNDER that hub inside the same
  * profile, so the hub graduates from 待细分 to an aggregating sub-tree.
  * Main exports: runHubDecomposition.

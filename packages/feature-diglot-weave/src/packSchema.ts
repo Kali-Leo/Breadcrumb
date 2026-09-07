@@ -1,5 +1,5 @@
 /**
- * Purpose: the language-pack contract (spec 033) — Zod schema every pack file must pass at
+ * Purpose: the language-pack contract — Zod schema every pack file must pass at
  * load time, plus the loaded in-memory shape with derived indexes (reverse target→lemmas).
  * Main exports: LanguagePackSchema, loadLanguagePack, resolveLemma, LanguagePack,
  * LoadedLanguagePack, PackEntry.
@@ -76,7 +76,7 @@ export interface LoadedLanguagePack {
   introductionQueue: string[];
   /** lemma → its index in introductionQueue. The queue is thousands of entries long and
    * both the weave and every signal event need this lookup, so it is indexed once at load
-   * instead of scanned (audit 2026-08-28 #11). */
+   * instead of scanned. */
   introductionRankByLemma: Map<string, number>;
 }
 

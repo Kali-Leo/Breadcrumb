@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for ICU tokenization — CJK dictionary segmentation, clause indexing for
- * the dispersion rule, and word counting (spec 033).
+ * the dispersion rule, and word counting.
  */
 import { describe, expect, it } from "vitest";
 import { clauseTextOf, countWordLikeTokens, tokenizeMessage } from "./tokenize";

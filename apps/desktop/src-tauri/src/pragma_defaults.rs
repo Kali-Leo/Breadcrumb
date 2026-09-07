@@ -4,10 +4,8 @@
 // Why every connection and not "the one we happened to send them on": pragmas are per
 // connection, tauri-plugin-sql's pool holds up to ten, and sqlx returns a connection to the
 // pool asynchronously — so two PRAGMA statements sent back to back from the frontend land on
-// two different connections and the statement after them on a third. Measured 2026-09-03: the
-// frontend's old `applyPragmas` armed one or two connections out of ten and the very next
-// statement still read `synchronous = 2`. The only place that can arm all of them is
-// SqlitePoolOptions::after_connect, which is why this lives in Rust.
+// two different connections and the statement after them on a third. The only place that can
+// arm all of them is SqlitePoolOptions::after_connect, which is why this lives in Rust.
 //
 // Main exports: arm_connection, BUSY_TIMEOUT_MS.
 
@@ -25,8 +23,7 @@ pub const BUSY_TIMEOUT_MS: i64 = 5_000;
 ///
 /// WAL, and the fallback: `synchronous = NORMAL` is only the documented-safe setting under WAL,
 /// where a crash costs the last few committed transactions but cannot corrupt the file. Under
-/// the rollback journal — which is what this database was actually running until 2026-09-03,
-/// because sqlx does not set journal_mode unless asked and nothing ever asked — NORMAL is the
+/// the rollback journal — because sqlx does not set journal_mode unless asked — NORMAL is the
 /// setting that can corrupt the database on power loss. So the mode is requested here, the
 /// answer SQLite gives back is read, and `synchronous` is chosen from what it actually says:
 /// WAL earns NORMAL, anything else (a network filesystem, a read-only directory, an in-memory

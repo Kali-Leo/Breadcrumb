@@ -1,12 +1,12 @@
 /**
- * Purpose: settings section for language learning (spec 033 T10, trimmed 2026-08-16) — the
+ * Purpose: settings section for language learning — the
  * enable switch, which language the learner is learning (with its download when they pick one
- * this machine does not have yet, 2026-09-01), and the metered smart-replacement toggle
+ * this machine does not have yet), and the metered smart-replacement toggle
  * (bound to the same llmRefineEnabled the billing page toggles). What the words are replaced
  * FROM is not offered: it has to be the language the AI answers in (see
  * lib/diglot/diglotPairsForLanguage.ts), so the picker lists target languages only, and an
- * answer language with no word data at all says so instead of offering an empty list
- * (Leo 2026-09-04). The algorithm's knobs (density, new-word cap, guess frequency, placement)
+ * answer language with no word data at all says so instead of offering an empty list.
+ * The algorithm's knobs (density, new-word cap, guess frequency, placement)
  * and the TTS setup are deliberately not user-tunable: the algorithm self-adjusts, and audio
  * either works out of the box or stays hidden.
  * Main exports: DiglotSettingsSection.
@@ -149,8 +149,8 @@ export function DiglotSettingsSection() {
                   </button>
                 </div>
               )}
-              {/* Each pack names its own upstreams; the Chinese pack's three were hardcoded
-                  here and stayed on screen for every other language (caught 2026-09-01). */}
+              {/* Each pack names its own upstreams — hardcoding one pack's sources here
+                  would leak onto every other language's screen. */}
               <p className="text-xs text-stone-300">
                 {t("learning:diglot.dataSources", {
                   sources: (loaded?.pack.attribution ?? []).join(" · "),

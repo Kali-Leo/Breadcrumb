@@ -1,5 +1,5 @@
 /**
- * Purpose: the anchor sweep's pure-ish candidate assembly (spec 025) — turns unanchored
+ * Purpose: the anchor sweep's pure-ish candidate assembly — turns unanchored
  * knowledge nodes plus the canonical inventory into the judge's A/B pairs, generated PER NODE
  * so the bill scales with the learner's few dozen nodes and never with the 800-concept
  * inventory. Split out of compareAlignActions.ts for the 200-line ceiling.
@@ -21,7 +21,7 @@ export function parseNodeVectors(
 }
 
 /**
- * Cost direction (spec 025): candidates are generated PER NODE (top-k concepts each), not per
+ * Cost direction: candidates are generated PER NODE (top-k concepts each), not per
  * concept — the bill scales with the user's few dozen nodes, never with the 800-concept
  * inventory. Roles are swapped through the generator, then unswapped for the judge whose
  * prompt expects A = material side, B = learner side.

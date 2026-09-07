@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
  * Purpose: builds a language pack for any pair listed in pairs.json from Wiktionary (via the
- * Kaikki extracts) plus a source-language frequency list — the general path that replaced the
- * CC-CEDICT-only builder, which could only ever produce zh→en.
+ * Kaikki extracts) plus a source-language frequency list.
  *
  * Two directions, one download each way round:
  *  - `x:en`  — you read your own language and meet English words. Source lemmas are the X
@@ -140,8 +139,8 @@ async function buildTowardEnglish({ extractPath, sourceRanks, cmuMap, englishFre
     const glosses = allGlossesOf(raw);
     if (glosses.length === 0) continue;
     // Each gloss can offer several synonyms ("to learn; to study"); reading it as one string
-    // dropped the entry entirely, which is what it did to 3,237 Chinese words before this was
-    // found (2026-09-01).
+    // drops the entry entirely — 3,237 Chinese words were missing from the pack for exactly
+    // this reason.
     const normalized = glosses.flatMap((gloss) => glossCandidates(gloss));
     if (normalized.length === 0) continue;
 

@@ -1,5 +1,5 @@
 /**
- * Purpose: renders a ```mermaid code fence as a diagram (spec 034 顺带) — mermaid.js
+ * Purpose: renders a ```mermaid code fence as a diagram — mermaid.js
  * lazy-loaded on first use; render is debounced until the source is stable so a growing
  * unclosed fence shows the plain code block instead of flickering; any parse/render
  * failure falls back to the plain code block.

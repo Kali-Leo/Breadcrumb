@@ -1,6 +1,6 @@
 /**
  * Purpose: the palace's world model — islands are derived continents once the async
- * assignment loads (tree roots first, clustering only for the flat leftovers, spec 031);
+ * assignment loads (tree roots first, clustering only for the flat leftovers);
  * until then the tree-root fallback renders, which is fine and intended, and AI continent
  * names (when that switch is on) patch in a moment later. The model is cached per (nodes,
  * assignment) pair so re-opening the palace skips the expensive terrain build (identical
@@ -40,9 +40,9 @@ export function useWorldModel(demoMode: boolean): WorldModelState {
   const [continentAssignment, setContinentAssignment] = useState<ContinentAssignment | null>(null);
 
   // Continents load asynchronously and re-derive whenever the tree changes; until the first
-  // load resolves, cachedWorldModel's null-assignment fallback renders. AI names (spec 031
-  // §3) arrive later still and simply replace the assignment once they do — the medoid-named
-  // map is already on screen by then.
+  // load resolves, cachedWorldModel's null-assignment fallback renders. AI names arrive later
+  // still and simply replace the assignment once they do — the medoid-named map is already on
+  // screen by then.
   useEffect(() => {
     let cancelled = false;
     void loadContinentAssignment(storeNodes).then((assignment) => {
@@ -83,8 +83,8 @@ export function useWorldModel(demoMode: boolean): WorldModelState {
     [nodes, effectiveAssignment, placeNames],
   );
 
-  // Goal mode redraws the map to the goal's cut (Leo: 目标截取的树意味着目标地图要重绘):
-  // places with zero goal nodes are removed from the world handed to the controller, and
+  // Goal mode redraws the map to the goal's cut: places with zero goal nodes are removed
+  // from the world handed to the controller, and
   // the exact-fit framing refits to what remains. A goal touching no place keeps the full
   // map (nothing to frame otherwise). Leaving goal mode restores the full world.
   const goals = usePlannerStore((state) => state.goals);

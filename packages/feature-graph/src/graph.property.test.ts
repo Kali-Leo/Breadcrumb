@@ -1,5 +1,5 @@
 /**
- * Purpose: fast-check property tests for the graph module (spec 013 T5) — over arbitrary
+ * Purpose: fast-check property tests for the graph module — over arbitrary
  * requires-edge sets, wouldCreateCycle's guard never lets topologicalOrder throw, and
  * prerequisiteClosure only grows (never shrinks) as the query node set grows.
  */

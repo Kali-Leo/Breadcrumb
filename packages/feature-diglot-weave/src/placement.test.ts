@@ -1,8 +1,7 @@
 /**
  * Purpose: tests for behavioral placement — exposures never move the floor on their own,
  * clean reads inside a worked-through message do, first-encounter lookups move it back, the
- * evidence ceiling holds, and the pair converges on a simulated learner's true boundary
- * (spec 033, audit 2026-08-28 #2).
+ * evidence ceiling holds, and the pair converges on a simulated learner's true boundary.
  */
 import { describe, expect, it } from "vitest";
 import {

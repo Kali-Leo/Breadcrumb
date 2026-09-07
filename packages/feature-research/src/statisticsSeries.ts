@@ -1,8 +1,8 @@
 /**
- * Purpose: shared helpers for the research statistic functions (spec 036) — local calendar
+ * Purpose: shared helpers for the research statistic functions — local calendar
  * day-bucketing, equal-width histogram binning, Pearson correlation, and the one thin per-day
  * SQL fetch correlation reuses for both series. Bucket labels leave as catalogue keys: this
- * package writes no wording (spec 058 §2).
+ * package writes no wording.
  * Main exports: localDateKey, buildDayKeys, windowStartIso, countsByLocalDay,
  * fetchDailyCounts, buildEqualWidthHistogram, buildWeekdayHistogram, pearsonCorrelation,
  * roundTo3.
@@ -13,8 +13,7 @@ import { dateKeyRange, dateKeyToLocalDate, toLocalDateKey } from "@breadcrumb/co
 import type { StatCall } from "./taskSchema";
 
 /** The day-cutting rule, under this module's name. It is @breadcrumb/core-time's, shared with
- * the feedback lab's heatmap and the trail's daily summary (2026-09-02 — the three used to
- * hold byte-identical copies kept in sync by comments pointing at each other). */
+ * the feedback lab's heatmap and the trail's daily summary. */
 export { toLocalDateKey as localDateKey };
 
 const DAILY_METRIC_TABLE: Record<Extract<StatCall, { fn: "correlation" }>["xMetric"], string> = {
@@ -97,7 +96,7 @@ export function roundTo3(value: number): number {
  * (or the data's own [min, max] when omitted). Every bucket is kept, including the empty
  * ones: results here are only ever shown on the machine that computed them, so dropping
  * small buckets bought no privacy and cost the picture its arithmetic — the bars stopped
- * summing to the count printed next to them (审计统计分报告差距 4). The disclosure floor
+ * summing to the count printed next to them. The disclosure floor
  * belongs on a future upload path, not on the local display path.
  */
 export function buildEqualWidthHistogram(

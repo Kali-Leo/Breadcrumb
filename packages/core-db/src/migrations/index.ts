@@ -32,11 +32,11 @@ export const MIGRATIONS: readonly Migration[] = [
 
 /**
  * Migration numbers that were shipped once, recorded in real `_migrations` tables, and then
- * deleted from this list — 0038/0039 and 0041-0043 all belonged to the discovery feed, torn
- * out on 2026-08-24. They must never be reused. `runMigrations` skips any id the database has
- * already recorded, so a NEW migration reusing one of these numbers would be silently skipped
- * on exactly the machines that ran the old one, leaving their schema permanently forked from
- * the code with nothing to show for it (design audit 2026-08-28, 数据层与性能 #8).
+ * deleted from this list — 0038/0039 and 0041-0043 all belonged to the discovery feed.
+ * They must never be reused. `runMigrations` skips any id the database has already recorded,
+ * so a NEW migration reusing one of these numbers would be silently skipped on exactly the
+ * machines that ran the old one, leaving their schema permanently forked from the code with
+ * nothing to show for it.
  */
 export const RETIRED_MIGRATION_IDS: readonly string[] = ["0038", "0039", "0041", "0042", "0043"];
 
@@ -80,9 +80,9 @@ export async function runMigrations(sql: SqlClient): Promise<void> {
  * worth saying out loud, because the same mechanism that makes it harmless (skip what's
  * recorded) is what would make a reused number vanish without a trace.
  *
- * Retired ids are deliberately silent (2026-08-30): they are expected on every machine that
- * ran the deleted feature, the reuse hazard is already institutionalized in the retired
- * list, and a startup warning nobody can act on is noise — it fired on every launch.
+ * Retired ids are deliberately silent: they are expected on every machine that ran the
+ * deleted feature, the reuse hazard is already institutionalized in the retired list, and a
+ * startup warning nobody can act on is noise on every launch.
  *
  * A warning, never a throw: the drift is already in the past by the time we can see it, and
  * refusing to start would brick the app over a row that costs nothing to carry.

@@ -1,8 +1,8 @@
 /**
  * Purpose: focusStore's station orchestrators — creating a word or question station under the
  * current one (each runs the runExplain stream cycle from focusExplainStream.ts), the retry
- * path, and the fire-and-forget LLM short-name request every new station schedules (spec 042
- * §2-4). Split out of focusStore.ts to stay under the file-size cap; not pure (talks to the DB
+ * path, and the fire-and-forget LLM short-name request every new station schedules.
+ * Split out of focusStore.ts to stay under the file-size cap; not pure (talks to the DB
  * and the LLM), so it lives here rather than in focusActions.ts.
  * Main exports: createWordChild, createQuestionChild, submitPendingGuess, skipPendingGuess,
  * retryCurrentNode, scheduleFocusLabelSummary (re-exports runExplain, stopExplainStream and
@@ -31,7 +31,7 @@ export type { FocusSessionGet, FocusSessionRuntimeState, FocusSessionSet };
 export { runExplain, stopExplainStream };
 
 /** Creates a child word station under the current one and streams its explanation — shared by
- * the no-gate path, a submitted guess, and a skipped guess (spec 042 §3). */
+ * the no-gate path, a submitted guess, and a skipped guess. */
 export async function createWordChild(
   set: FocusSessionSet,
   get: FocusSessionGet,
@@ -69,7 +69,7 @@ export async function createWordChild(
 }
 
 /** Creates a question station under the current one and streams its answer — the ask-bar's
- * counterpart to createWordChild (spec 042 §3). */
+ * counterpart to createWordChild. */
 export async function createQuestionChild(
   set: FocusSessionSet,
   get: FocusSessionGet,
@@ -98,7 +98,7 @@ export async function createQuestionChild(
 }
 
 /** Grades and records a submitted guess, then opens the guessed word's station — the guess
- * gate's accept path (spec 042 §3). */
+ * gate's accept path. */
 export async function submitPendingGuess(
   set: FocusSessionSet,
   get: FocusSessionGet,
@@ -129,12 +129,12 @@ export function skipPendingGuess(set: FocusSessionSet, get: FocusSessionGet): vo
   void createWordChild(set, get, pending.word, pending.matchedNodeId);
 }
 
-/** Shortens a freshly created station's label so the map stays readable (spec 042 §4).
+/** Shortens a freshly created station's label so the map stays readable.
  *
- * This used to be an LLM call per long label. It is now arithmetic on the label's own text:
- * free, instant, offline, and incapable of inventing a name for a station. The shortener
- * declines rather than cutting a word in half, and every path falls back to the raw label —
- * so the worst case is the map ellipsising a long name, which is what it did before anyway. */
+ * This is arithmetic on the label's own text: free, instant, offline, and incapable of
+ * inventing a name for a station. The shortener declines rather than cutting a word in half,
+ * and every path falls back to the raw label — so the worst case is the map ellipsising a
+ * long name. */
 export function scheduleFocusLabelSummary(
   set: FocusSessionSet,
   get: FocusSessionGet,
@@ -153,8 +153,8 @@ export function scheduleFocusLabelSummary(
   })();
 }
 
-/** Re-runs the CURRENT station's explanation after a failure or watchdog timeout (2026-08-14:
- * a stalled upstream used to leave "…" forever). Word stations rebuild from their parent's
+/** Re-runs the CURRENT station's explanation after a failure or watchdog timeout. Word
+ * stations rebuild from their parent's
  * answer (the root falls back to `rootParentText`, which reopened sessions no longer have —
  * an empty parent context degrades to a plain word explanation); question stations rebuild
  * from their ancestor chain. No-op while a stream is in flight or the answer already landed. */

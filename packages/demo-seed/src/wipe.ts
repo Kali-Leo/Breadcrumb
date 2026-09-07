@@ -1,5 +1,5 @@
 /**
- * Purpose: removes every row the demo seed ever writes (spec 035 T7b), plus anything the
+ * Purpose: removes every row the demo seed ever writes, plus anything the
  * running app derived from demo rows (embeddings, aliases, edges, anchors, signals, place
  * names, focus sessions, factcheck runs) — as ONE transaction, because a wipe that stops
  * halfway is worse than one that never ran.
@@ -12,11 +12,10 @@ import { DEMO_PAIR } from "./shared";
  * Every table the wipe must delete from because its rows point at a demo `knowledge_nodes`
  * or `conversations` row. Kept as data so wipe.test.ts can enumerate the LIVE schema
  * (pragma_foreign_key_list) and fail the moment a migration adds a referencing table without
- * a matching DELETE here — the same tripwire MERGE_REFERENCING_TABLES got after the
- * 2026-08-27 merge failure, and for the same reason: `map_place_names` was missing from this
- * list, so naming a single demo island on the map (the app's main screen) was enough to make
+ * a matching DELETE here — a missing entry (e.g. `map_place_names`, if a demo island is named
+ * on the map, the app's main screen) is enough to make
  * `DELETE FROM knowledge_nodes` fail with FOREIGN KEY constraint failed. Without a
- * transaction that left the database in a state it could not come back from — every demo
+ * transaction that would leave the database in a state it could not come back from — every demo
  * conversation, message and sighting gone, all 39 demo nodes still there — and since
  * insertDemoData starts by calling this, the demo could then never be installed or removed
  * again.

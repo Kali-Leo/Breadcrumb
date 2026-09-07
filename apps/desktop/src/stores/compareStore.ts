@@ -1,5 +1,5 @@
 /**
- * Purpose: zustand store for the comparison tree (spec 023) — profile list (builtins
+ * Purpose: zustand store for the comparison tree — profile list (builtins
  * imported on first load), the selected profile's overlap tree, expand/collapse and
  * detail-selection UI state, and the experimental search-build flow with its plain
  * cost/outcome line. Standalone module: no planner/ladder/goal state anywhere. The
@@ -28,7 +28,7 @@ export interface CompareState extends CompareSelectionActions, CompareSearchActi
   selectedProfileId: string | null;
   /** The profile's overlap tree under one visible root node (the profile itself). */
   tree: OverlapNode | null;
-  /** Keys the user has opened — initial view shows roots only (spec 023 §1). Mirrors the
+  /** Keys the user has opened — initial view shows roots only. Mirrors the
    * selected profile's entry in viewStateByProfile (chatStore sessions/mirror pattern). */
   expandedKeys: ReadonlySet<string>;
   /** Node whose match/source details are shown below the tree. Mirrors the selected
@@ -44,7 +44,7 @@ export interface CompareState extends CompareSelectionActions, CompareSearchActi
   aligning: boolean;
   /** Plain outcome line of the last experimental build (includes the token cost). */
   buildNote: string | null;
-  /** The learner's own 0–10 scores on pure experience leaves, item id → score (spec 029). */
+  /** The learner's own 0–10 scores on pure experience leaves, item id → score. */
   scoreByItemId: ReadonlyMap<string, number>;
   /** Plain outcome line of the last 一键生成目标 run. */
   goalNote: string | null;

@@ -1,6 +1,6 @@
 /**
- * Purpose: tests for hub-generic-node exclusion (spec 043 §7) — short label + many children,
- * high conversation-frequency, and conversation-coverage computation itself.
+ * Purpose: tests for hub-generic-node exclusion — short label + many children, high
+ * conversation-frequency, and conversation-coverage computation itself.
  */
 import { describe, expect, it } from "vitest";
 import {

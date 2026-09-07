@@ -1,5 +1,5 @@
 /**
- * Purpose: opening a learning session from a recommendation (spec 050 §2) — the invitation
+ * Purpose: opening a learning session from a recommendation — the invitation
  * leads straight into focus mode where the AI starts explaining the concept, instead of an
  * empty chat asking the learner what to talk about. A quiet anchor conversation is created
  * to receive the focus exit record; when the focus-explain switch is off, falls back to a

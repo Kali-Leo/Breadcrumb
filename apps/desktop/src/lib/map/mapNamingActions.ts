@@ -1,5 +1,5 @@
 /**
- * Purpose: spec 031 §3's optional naming stage — one batched LLM call names every clustered
+ * Purpose: the optional naming stage — one batched LLM call names every clustered
  * continent that has no name yet, keyed by its member set so the same heap is never paid for
  * twice; the renamed assignment is memoized per input object so reopening the palace gets a
  * stable identity back. Tree continents are never touched (a root already carries its own
@@ -8,7 +8,7 @@
  * Side effects: reads/writes the "mapTopicNameCache" settings row, meters the call, and logs
  * silent failures. The caller decides whether to call at all (switch + network + apiConfig).
  *
- * Storage (evaluated 2026-09-02 against map_place_names, source 'ai'): the names stay here,
+ * Storage (against map_place_names, source 'ai'): the names stay here,
  * keyed by member set, on purpose. A cluster continent's id is its earliest member's node id,
  * which is also that member kingdom's id — a node-keyed AI row would put the continent's
  * name on the kingdom too — and a member-set key is what lets a reshuffled cluster be named

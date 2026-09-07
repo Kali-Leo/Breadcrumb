@@ -1,5 +1,5 @@
 /**
- * Purpose: the node card's sentences (spec 049) — one plain, suggest-only reason for the
+ * Purpose: the node card's sentences — one plain, suggest-only reason for the
  * current invitation, the plain state statement, and the state-worded main action key.
  * Copy selection only; no rendering.
  * Main exports: reasonMessage, stateMessage, MAIN_ACTION_KEY.

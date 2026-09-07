@@ -5,11 +5,10 @@
  * mood of what a recommender pushes from the mood of what a person chooses.
  *
  * Ported from Kali-Leo/feed-mode (`interest-model/daemon/app.py:293-323` — `CAT_SQL` and
- * `emotion_series`), GPL-3.0, same copyright holder; modified 2026-09-07 (SQL GROUP BY → a pure
- * function over rows, so the aggregation is testable without a database). One deliberate
- * numerical change: the reference averages valence per (day, emotion) group and then re-weights
- * by the group size; summing the valences directly is the same quantity with one rounding step
- * fewer.
+ * `emotion_series`), GPL-3.0, same copyright holder (SQL GROUP BY → a pure function over rows,
+ * so the aggregation is testable without a database). One deliberate numerical change: the
+ * reference averages valence per (day, emotion) group and then re-weights by the group size;
+ * summing the valences directly is the same quantity with one rounding step fewer.
  *
  * The `gent` category filters on `valence >= 0.5` and then charts valence. Its curve is
  * therefore a consequence of its own filter and is not evidence about anything; a caller

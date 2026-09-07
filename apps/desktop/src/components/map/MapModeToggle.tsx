@@ -1,8 +1,7 @@
 /**
- * Purpose: the palace's 休闲/目标 mode switch (spec 016; restored at the map's top-left by
- * spec 048 §3, Leo's original design) — casual recommends naturally by curiosity, ranked
- * recommends toward the chosen goal. Switching recomputes the planner so recommendations
- * follow immediately.
+ * Purpose: the palace's 休闲/目标 mode switch, at the map's top-left — casual recommends
+ * naturally by curiosity, ranked recommends toward the chosen goal. Switching recomputes
+ * the planner so recommendations follow immediately.
  * Main exports: MapModeToggle.
  */
 

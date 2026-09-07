@@ -1,5 +1,5 @@
 /**
- * Purpose: the LLM refinement tier (spec 033 T13) — prompt, response contract and the
+ * Purpose: the LLM refinement tier — prompt, response contract and the
  * pure application logic: in-context disambiguation of scheduled word replacements plus
  * at most one idiomatic phrase weave, all behind hard diff guards. The actual LLM call
  * and metering live in the app layer.

@@ -1,5 +1,5 @@
 /**
- * Purpose: the dedicated switches-and-billing settings page (Leo 2026-08-12) — every
+ * Purpose: the dedicated switches-and-billing settings page — every
  * token-consuming feature in one place: its switch, what it does, and its real spend
  * (today / all time, from llm_calls). Metering exists so features can run boldly.
  * Main exports: BillingSettingsPanel.

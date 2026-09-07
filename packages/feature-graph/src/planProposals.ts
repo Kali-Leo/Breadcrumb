@@ -1,6 +1,6 @@
 /**
  * Purpose: the two OPTIONAL proposal planners of one edge-judge result — learning-method
- * nodes, and (casual mode, spec 016) adjacent-unlearned-concept nodes — each turned into
+ * nodes, and (casual mode) adjacent-unlearned-concept nodes — each turned into
  * knowledge_nodes rows plus their helps edges. Split out of plan.ts for the 200-line ceiling;
  * the pair-judgment planning it was extracted from stays there.
  * Main exports: planMethodNodes, planAdjacentConcepts, ADJACENT_CONCEPT_EDGE_CONFIDENCE.
@@ -9,7 +9,7 @@ import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { HELPS_WEIGHT_SCORES } from "./edgeJudge";
 import type { EdgeJudgePlanInput } from "./plan";
 
-/** Adjacent-concept proposals (spec 016) carry no separate confidence tier — helpsLevel is
+/** Adjacent-concept proposals carry no separate confidence tier — helpsLevel is
  * the only judgment asked of the model for these. A fixed mid confidence keeps the edge from
  * silently outweighing an explicitly-judged helps edge without inventing an ungrounded number. */
 export const ADJACENT_CONCEPT_EDGE_CONFIDENCE = 0.6;
@@ -57,7 +57,7 @@ export function planMethodNodes(input: EdgeJudgePlanInput): {
   return { methodNodesToInsert, methodEdges };
 }
 
-/** Casual-mode adjacent-concept proposals (spec 016) -> sighting-free concept nodes plus one
+/** Casual-mode adjacent-concept proposals -> sighting-free concept nodes plus one
  * helps edge each, from the concept they connect to. Guards: a proposal whose label already
  * names a known node is skipped (it isn't actually unlearned/new); a proposal whose
  * connectsToLabel doesn't resolve to any known node is skipped (nothing to attach to); two

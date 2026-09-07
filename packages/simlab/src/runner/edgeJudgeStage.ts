@@ -2,7 +2,7 @@
  * Purpose: replays edgeStore.ts's edge-discovery pipeline stage in-process — candidate
  * ranking (embeddings or same-parent/recent fallback), edge-judge LLM call, cycle-safe
  * planning, and edge/method-node persistence. Mirrors that store's
- * extractEdgesFromFinishedRound() stage-for-stage. Runs the prompt in casual mode (spec 016)
+ * extractEdgesFromFinishedRound() stage-for-stage. Runs the prompt in casual mode
  * to mirror the app's own default learningMode; per-persona mode selection is future work —
  * this stage has no mode input yet, it just always asks for adjacent-concept proposals.
  * Main exports: runEdgeJudgeStage, EdgeJudgeStageResult.
@@ -31,7 +31,7 @@ export interface EdgeJudgeStageResult {
    * are genuinely new tree nodes too, so callers counting "new nodes this round/day" must
    * include them alongside the knowledge-tree stage's own newNodes (S5). */
   methodNodes: KnowledgeNodeRow[];
-  /** Casual-mode adjacent-concept nodes (spec 016) the edge judge proposed and this stage
+  /** Casual-mode adjacent-concept nodes the edge judge proposed and this stage
    * inserted — sighting-free, same "genuinely new node" accounting as methodNodes above. */
   conceptNodes: KnowledgeNodeRow[];
 }
@@ -102,7 +102,7 @@ export async function runEdgeJudgeStage(
     });
     for (const methodNode of plan.methodNodesToInsert)
       await repos.knowledgeNodes.insert(methodNode);
-    // Casual-mode adjacent-concept nodes (spec 016): inserted WITHOUT a sighting, same as
+    // Casual-mode adjacent-concept nodes: inserted WITHOUT a sighting, same as
     // edgeStore.ts does — otherwise plan.edgesToUpsert below would reference a node id that
     // was never actually persisted.
     for (const conceptNode of plan.conceptNodesToInsert)

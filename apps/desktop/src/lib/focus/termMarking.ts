@@ -1,5 +1,5 @@
 /**
- * Purpose: the metered LLM term-marking call (spec 043) — one flash-level call per (message |
+ * Purpose: the metered LLM term-marking call — one flash-level call per (message |
  * focus_node) answer, picking words that would trip up this learner; caches its verdict so the
  * same target is never billed twice. Fails soft: any error logs to ai_failures and returns no
  * terms, leaving the reply's doors in their unmarked (legacy-source-only) state.
@@ -23,16 +23,16 @@ import { recordAiFailure } from "../platform/failureLog";
 import { llmConfigFrom } from "../platform/llmConfig";
 import { newId, nowIso } from "../platform/time";
 
-/** Both evidence lists handed to the model are capped here (spec 043 §2). */
+/** Both evidence lists handed to the model are capped here. */
 const LABEL_LIST_CAP = 50;
 
 /** Concurrent calls for the same target share one promise — without this, two renders racing
  * past the cache check would each bill an LLM call and the loser's insert would hit the
- * UNIQUE index (the recurring term-marking rows in ai_failures, 2026-08-15/16). */
+ * UNIQUE index. */
 const inflight = new Map<string, Promise<string[]>>();
 
 /** Returns the marked term strings for one target — computing and caching them on a first
- * call, reading the cache on every later one (spec 043 §5): the same target is never billed
+ * call, reading the cache on every later one: the same target is never billed
  * twice. Returns [] (no LLM call at all) while the switch is off, networking is off, there's
  * no API config, or the answer is blank; returns [] and logs a failure on any error along the
  * way — a target that fails is simply retried next time it's asked for (no cache row written). */
@@ -126,7 +126,7 @@ async function computeTermMarks(
   }
 }
 
-/** "了解度" (spec 043 §4): the union of distinct nodes with any footprint or self-report claim
+/** "了解度": the union of distinct nodes with any footprint or self-report claim
  * plus distinct looked-up words — a matched focus-session guess is already folded into
  * node_sightings (gradeFocusGuess records one there), so it needs no separate case here. */
 function computeEvidenceCount(

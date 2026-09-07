@@ -1,5 +1,5 @@
 /**
- * Purpose: research-task executor (spec 036) — validates, verifies signature, enforces the
+ * Purpose: research-task executor — validates, verifies signature, enforces the
  * run-once and time-budget guards, snapshots aggregate results for the panel. Failures are
  * recorded silently (ai_failures path); the UI never surfaces them.
  * Main exports: runPendingResearchTasks, ResearchExecutorDeps, TASK_TIME_BUDGET_MS.
@@ -15,7 +15,7 @@ export const TASK_TIME_BUDGET_MS = 5000;
 
 /**
  * `expiresAt` is a date, not an instant: a task that expires on the 13th is valid all through
- * the 13th. Comparing the bare date string against a full ISO instant (as this used to) made
+ * the 13th. Comparing the bare date string against a full ISO instant would make
  * "2026-08-13" sort before "2026-08-13T10:00:00.000Z", retiring every task a whole day early.
  */
 function hasExpired(expiresAt: string, now: Date): boolean {

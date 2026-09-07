@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Purpose: dev-only CLI that signs a research-task payload (spec 036) with
+ * Purpose: dev-only CLI that signs a research-task payload with
  * RESEARCH_SIGNING_PRIVATE_KEY and prints the hex Ed25519 signature to stdout. Reads the
  * payload as JSON on stdin, or falls back to the built-in demo payload (same one shipped
  * in apps/desktop/src/lib/research/researchSampleTask.ts) when stdin is empty/a TTY.
@@ -37,7 +37,7 @@ function bytesToHex(bytes) {
     .join("");
 }
 
-// The bundled demo task (spec 036 #6) — identical to the payload literal in
+// The bundled demo task — identical to the payload literal in
 // apps/desktop/src/lib/research/researchSampleTask.ts. Every optional field is spelled out
 // explicitly so the signed bytes never depend on Zod default-filling.
 const DEMO_PAYLOAD = {

@@ -1,5 +1,5 @@
 /**
- * Purpose: the third level's two-stage node card (spec 049) — concept summary, plain state
+ * Purpose: the third level's two-stage node card — concept summary, plain state
  * statement, the recommendation reason when this is the "下一步", the relation list
  * (clickable jumps), alternates on demand, and one state-worded main action. Opening a
  * conversation is deliberately never a single click on the map.

@@ -2,7 +2,7 @@
  * Purpose: the one string comparison the map is allowed to sort by. Pure, no dependencies.
  * Main exports: compareCodePoints.
  *
- * Why not `String.prototype.localeCompare` (bug hunt 2026-09-03). Called with no locale it uses
+ * Why not `String.prototype.localeCompare`. Called with no locale it uses
  * the HOST's default, and its collation table is the runtime's ICU build: two machines — a
  * WebKitGTK desktop and a Firefox browser edition, or the same app before and after an OS
  * update — can order the same two island names differently. The map's slot order is derived

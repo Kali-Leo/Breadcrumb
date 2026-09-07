@@ -1,5 +1,5 @@
 /**
- * Purpose: the experimental search-build LLM contract (spec 023 §5) — prompt + Zod schema
+ * Purpose: the experimental search-build LLM contract — prompt + Zod schema
  * for proposing an evidence-cited profile tree for a user-typed real-world role, plus the
  * pure pruning rules: drop every branch whose cited URL failed verification, and fail the
  * whole build when too little survives (宁缺毋假).
@@ -108,10 +108,10 @@ export interface SourceSearchResult {
 }
 
 /**
- * Search rescue for a dead citation (ai_failures 2026-08-10: the model cites deep links
- * from memory and those rot — three builds died at 0/N verified). If any search result's
- * title+snippet mentions the cited material, the source demonstrably exists: return that
- * reachable URL to replace the rotten one. No hit → null, and the branch dies as before.
+ * Search rescue for a dead citation: the model cites deep links from memory and those rot.
+ * If any search result's title+snippet mentions the cited material, the source demonstrably
+ * exists: return that reachable URL to replace the rotten one. No hit → null, and the
+ * branch dies as before.
  */
 export function findRescueUrl(
   results: readonly SourceSearchResult[],

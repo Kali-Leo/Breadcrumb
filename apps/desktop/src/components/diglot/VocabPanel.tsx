@@ -1,5 +1,5 @@
 /**
- * Purpose: the vocabulary page (spec 050 §6, own bottom-left icon) — the language-weave
+ * Purpose: the vocabulary page (own bottom-left icon) — the language-weave
  * settings, the learning-words list (word states joined with the pack's gloss, newest first)
  * and the word trend chart (memory + intuition layers and the settled line — words have no
  * claim data, so no understanding line) live together here, out of settings and out of the

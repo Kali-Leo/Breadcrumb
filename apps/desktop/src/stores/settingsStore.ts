@@ -4,8 +4,6 @@
  * changes write through. The value types, storage keys and defaults live in
  * lib/platform/settingsSchema.ts, the startup read in settingsStoreLoad.ts and the
  * write-through actions in settingsStoreWrites.ts; this file holds the state itself.
- * (Learning mode was removed by spec 045 and restored by spec 048 — Leo's original design
- * stands, so LearningMode is live.)
  * Main exports: useSettingsStore, SettingsState, ApiConfig, FeatureSwitches, RouteParams,
  * LearningMode.
  */
@@ -51,13 +49,13 @@ export interface SettingsState extends SettingsWriteActions {
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
-  /** casual by default (spec 016) — a new user wanders before they have a goal to rank against. */
+  /** casual by default — a new user wanders before they have a goal to rank against. */
   learningMode: LearningMode;
-  /** recommendRoute()'s pace/interestWeight sliders (spec 017 #1), 0.5/0.5 by default. */
+  /** recommendRoute()'s pace/interestWeight sliders, 0.5/0.5 by default. */
   routeParams: RouteParams;
   /** 教材/真人 display filter for the comparison tree — occupation (真人) by default. */
   compareCategory: CompareCategory;
-  /** Interface language (spec 058) — what the app's own text is written in. */
+  /** Interface language — what the app's own text is written in. */
   language: string;
   /** True when nobody has chosen a language and the machine's own language is not one we
    * have an interface in: the app opens on the language picker instead of guessing. */
@@ -66,7 +64,7 @@ export interface SettingsState extends SettingsWriteActions {
    * interface. Null means "same as the interface", which is the normal case. */
   answerLanguage: string | null;
   /** The four intent-level recommendation weights, user-tuned via the palace's 推荐偏好
-   * panel (spec 060 §3+§5); the browsing weight is derived, not stored. */
+   * panel; the browsing weight is derived, not stored. */
   recommendationWeights: UserRecommendationWeights;
   loadFromDatabase(): Promise<void>;
 }

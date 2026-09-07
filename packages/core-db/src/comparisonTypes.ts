@@ -1,5 +1,5 @@
 /**
- * Purpose: row types for the comparison domain (spec 023/025/026/029) — evidence-backed
+ * Purpose: row types for the comparison domain — evidence-backed
  * external profiles and their trees, the canonical concepts every profile item and knowledge
  * node crosswalks against, those anchors, and the learner's own practice self-scores.
  * Main exports: ComparisonProfileRow, ComparisonProfileItemRow, CanonicalConceptRow,
@@ -7,14 +7,14 @@
  */
 import type { AlignmentConfidence, AlignmentVerdict } from "./types";
 
-/** Which side of the 教材/真人 toggle a comparison profile belongs to (spec 026): 'curriculum'
- * = a syllabus/skill-tree profile (the original spec 023 shape); 'occupation' = a real person's
+/** Which side of the 教材/真人 toggle a comparison profile belongs to: 'curriculum'
+ * = a syllabus/skill-tree profile; 'occupation' = a real person's
  * self-reported career profile, whose leaves carry practice self-attestations rather than pure
  * knowledge matching. */
 export type ComparisonProfileCategory = "curriculum" | "occupation";
 
 /** A comparison tree's root: an evidence-backed real-world profile the user's own tree can be
- * measured against (spec 023). 'builtin' ships with the app; 'searched' was found on demand via
+ * measured against. 'builtin' ships with the app; 'searched' was found on demand via
  * an open web search. Standalone module — unrelated to the knowledge tree. */
 export interface ComparisonProfileRow {
   id: string;
@@ -26,8 +26,8 @@ export interface ComparisonProfileRow {
   category: ComparisonProfileCategory;
 }
 
-/** A leaf's nature (spec 026): 'knowledge' = matched against the user's knowledge tree as
- * before; 'practice' = matched against the user's own practice attestation, never AI-verified;
+/** A leaf's nature: 'knowledge' = matched against the user's knowledge tree;
+ * 'practice' = matched against the user's own practice attestation, never AI-verified;
  * 'tool' = a concrete tool/technology used in the role. 'structure' marks a non-leaf
  * organizational node (a branch heading), never itself matched or attested. */
 export type ComparisonItemKind = "knowledge" | "practice" | "tool" | "hub" | "structure";
@@ -45,13 +45,13 @@ export interface ComparisonProfileItemRow {
   aliases_json: string;
   source_ref: string;
   position: number;
-  /** The canonical concept this item embodies (spec 025); null for coarse/searched items that
+  /** The canonical concept this item embodies; null for coarse/searched items that
    * have not been anchored to a canonical concept. */
   concept_id: string | null;
   item_kind: ComparisonItemKind;
 }
 
-/** A concept-space anchor point, independent of any one comparison profile (spec 025) — the
+/** A concept-space anchor point, independent of any one comparison profile — the
  * unit every profile item and every knowledge node ultimately crosswalks against. */
 export interface CanonicalConceptRow {
   id: string;
@@ -66,7 +66,7 @@ export interface CanonicalConceptRow {
  * no LLM call needed; 'judge' = an LLM verdict was required. */
 export type AnchorMethod = "alias" | "judge";
 
-/** One crosswalk verdict between a user knowledge node and a canonical concept (spec 025).
+/** One crosswalk verdict between a user knowledge node and a canonical concept.
  * PRIMARY KEY (node_id, concept_id) means a pair is judged exactly once — both 'same' and
  * 'different' verdicts are stored so the LLM is never asked about the same pair twice. Because
  * this anchors nodes to concepts rather than to one profile's items, every profile that shares
@@ -81,9 +81,8 @@ export interface NodeConceptAnchorRow {
   anchored_at: string;
 }
 
-/** The learner's own 0–10 score on a pure experience leaf (spec 029) — never AI-verified,
- * deliberately: the user is the only expert on their own experience. One row per item, keyed
- * by item_id, overwritten in place as the self-report changes over time. */
+/** The learner's own 0–10 score on a pure experience leaf — never AI-verified. One row per
+ * item, keyed by item_id, overwritten in place as the self-report changes over time. */
 export interface PracticeScoreRow {
   item_id: string;
   /** Integer 0–10 (DB CHECK enforced); ratio contribution is score / 10. */

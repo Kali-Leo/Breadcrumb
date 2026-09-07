@@ -1,8 +1,7 @@
 /**
- * Purpose: concept guess-gate probability (spec 039 §2.2) — ported from the diglot weave
- * guess policy (spec 033, packages/feature-diglot-weave/src/guessPolicy.ts), stripped of the
- * user-visible level dial: the mechanism does not surface tiers, so the base probability is
- * fixed at the former "standard" level (0.25).
+ * Purpose: concept guess-gate probability — stripped of the user-visible level dial: the
+ * mechanism does not surface tiers, so the base probability is fixed at the former "standard"
+ * level (0.25).
  * Main exports: computeConceptGateProbability, ConceptGateInput.
  */
 
@@ -13,7 +12,7 @@ const NEW_NODE_PROBABILITY = 0.1;
 const PROBABILITY_CEILING = 0.6;
 /** A summary revealed this recently means asking now has near-zero information value. */
 const RECENT_REVEAL_MS = 60 * 60 * 1000;
-/** Fixed base probability — the mechanism has no user-visible dial (spec 039 §2.2). */
+/** Fixed base probability — the mechanism has no user-visible dial. */
 const BASE_PROBABILITY = 0.25;
 
 export interface ConceptGateInput {

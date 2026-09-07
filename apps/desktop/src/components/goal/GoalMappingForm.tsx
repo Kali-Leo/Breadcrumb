@@ -1,8 +1,8 @@
 /**
- * Purpose: goal-mapping form (spec 047; ex lab) — types a free-text goal, calls the
+ * Purpose: goal-mapping form — types a free-text goal, calls the
  * goal-mapping LLM, and persists the full result (all existing + all suggested nodes)
  * immediately. No checkbox calibration step: a learner who hasn't studied the material
- * can't judge what belongs, so domain judgment stays the system's job (spec 012 §2).
+ * can't judge what belongs, so domain judgment stays the system's job.
  * Main exports: GoalMappingForm.
  */
 import { useState } from "react";
@@ -25,7 +25,7 @@ export function GoalMappingForm({ goalText, onGoalTextChange }: GoalMappingFormP
   const createGoal = usePlannerStore((state) => state.createGoal);
 
   const [hint, setHint] = useState("");
-  // Guards double-submit: the LLM call is slow enough that a second click used to create a
+  // Guards double-submit: the LLM call is slow enough that a second click could create a
   // second goal and spend twice.
   const [busy, setBusy] = useState(false);
 

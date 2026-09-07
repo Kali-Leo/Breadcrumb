@@ -48,7 +48,7 @@ fn check_batch_size(count: usize) -> Result<(), String> {
 
 /// The rule that makes "all of it or none of it" true rather than merely intended.
 ///
-/// Two ways a batch could break its own atomicity, both measured 2026-09-03. A statement whose
+/// Two ways a batch could break its own atomicity. A statement whose
 /// text IS `COMMIT` ends the transaction early and a later failure then rolls back nothing. A
 /// statement that packs several together with `;` runs all of them while binding the parameters
 /// to only the first — so a batch that looks like one row silently writes several, and a rolled

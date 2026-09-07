@@ -1,5 +1,5 @@
 /**
- * Purpose: the focus overlay's guess-gate card (spec 042 §3) — shown at the top of the content
+ * Purpose: the focus overlay's guess-gate card — shown at the top of the content
  * pane when the gate opens on a selected word; submitting grades the guess (when the word
  * matches a known concept) and either way moves on to the new station's explanation.
  * Main exports: FocusGuessCard.

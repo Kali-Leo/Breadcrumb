@@ -1,5 +1,5 @@
 /**
- * Purpose: zustand store for explore doors (spec 039 §2.1) — door candidates and the
+ * Purpose: zustand store for explore doors — door candidates and the
  * opened-node bookkeeping pickDoors reads, both layered per conversation (parallel chat
  * windows each keep their own doors; switching the main view never wipes another
  * window's). Single-flight per message, mirroring diglotStore.ensureWoven.

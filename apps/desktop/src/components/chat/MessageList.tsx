@@ -1,6 +1,5 @@
 /**
- * Purpose: the message history itself, windowed (backlog / 2026-08-16 audit item "长消息列表
- * 虚拟化"). A conversation kept for months grows without bound, and every assistant row can
+ * Purpose: the message history itself, windowed. A conversation kept for months grows without bound, and every assistant row can
  * carry Markdown, KaTeX and a Mermaid diagram — rendering all of them to keep twenty on
  * screen is the kind of cost that only shows up on the machine of whoever uses the app most.
  *

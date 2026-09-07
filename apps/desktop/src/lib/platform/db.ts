@@ -187,13 +187,11 @@ async function openAndMigrate(): Promise<SqlClient> {
   return sqlClient;
 }
 
-/* No PRAGMAs are sent from here, and the two that used to be were not doing what their comment
- * claimed. They are per-connection settings, tauri-plugin-sql's pool holds up to ten
- * connections, and sqlx hands a connection back to the pool asynchronously — so two execute()
- * calls in a row land on two different connections and the statement after them on a third.
- * Measured 2026-09-03: `PRAGMA synchronous = NORMAL` sent from here armed one connection and
- * the very next statement still read FULL. Worse, the comment's premise was wrong in the other
- * direction too: the file was never in WAL mode (sqlx does not set journal_mode unless asked),
- * which is the one mode that makes NORMAL safe rather than corruption-on-power-loss.
- * Both now live in src-tauri/src/pragma_defaults.rs, applied through
- * SqlitePoolOptions::after_connect to every connection the pool opens. */
+/* No PRAGMAs are sent from here. They are per-connection settings, tauri-plugin-sql's pool
+ * holds up to ten connections, and sqlx hands a connection back to the pool asynchronously —
+ * so two execute() calls in a row can land on two different connections and the statement
+ * after them on a third, meaning a PRAGMA sent through this client would not reliably apply
+ * to the connection a later statement lands on. The file must also be in WAL mode for
+ * `PRAGMA synchronous = NORMAL` to be safe rather than corruption-on-power-loss; sqlx does
+ * not set journal_mode unless asked. Both now live in src-tauri/src/pragma_defaults.rs,
+ * applied through SqlitePoolOptions::after_connect to every connection the pool opens. */

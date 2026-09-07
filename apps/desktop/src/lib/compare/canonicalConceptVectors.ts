@@ -1,8 +1,6 @@
 /**
- * Purpose: the cached local embeddings of the ~800 canonical concepts (migration 0046). Every
- * anchor sweep used to re-embed the entire inventory from scratch because there was nowhere
- * to keep the vectors (design audit 2026-08-28 #2); now only concepts whose embedded text
- * actually changed are recomputed, keyed by a content hash.
+ * Purpose: the cached local embeddings of the ~800 canonical concepts. Only concepts whose
+ * embedded text actually changed are recomputed, keyed by a content hash.
  * Main exports: loadConceptVectors, hashText.
  */
 import type { CanonicalConceptEmbeddingRow, CanonicalConceptRow } from "@breadcrumb/core-db";
@@ -14,8 +12,8 @@ import { nowIso } from "../platform/time";
 import { conceptText } from "./canonicalConcepts";
 
 /** Stable FNV-1a hash of the exact text that was embedded — the cache's invalidation key.
- * @breadcrumb/core-random's, the same construction feature-diglot-weave's hashContext uses
- * (2026-09-02: it was a hand-copy of it); collision risk is irrelevant here because a miss
+ * @breadcrumb/core-random's, the same construction feature-diglot-weave's hashContext uses;
+ * collision risk is irrelevant here because a miss
  * only costs one re-embed. Written into canonical_concept_embeddings.content_hash, so
  * changing the construction would invalidate every cached row at once. */
 export const hashText = fnv1aHex8;

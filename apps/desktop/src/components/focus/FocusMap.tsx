@@ -1,14 +1,12 @@
 /**
- * Purpose: one focus session's subway map (spec 042 §4) — every station and link always drawn
+ * Purpose: one focus session's subway map — every station and link always drawn
  * (nothing hides), the current line amber, the rest grey; clicking a station jumps to it. Owns
  * its own pane: width grows with the map (capped so it never crowds the content pane), the svg
  * scales down to fit before the pane resorts to scrolling, and the current station scrolls into
  * view on every jump. On a narrow or upright screen the pane becomes a band across the top of
  * the overlay instead, a third of the screen tall and scrolling sideways. A dot drawn 5px wide
  * is a fine mouse target and no target at all for a finger, so on a touch screen each station
- * also carries an invisible circle big enough to hit — the map's own "点一个站可以跳过去" only
- * became true with it. Visual vocabulary matches the old station map's (dot r5, current ring,
- * dashed = 3 3), spec 040's provenance-tree view that spec 042 §6 retired.
+ * also carries an invisible circle big enough to hit.
  * Main exports: FocusMap.
  */
 import { layoutFocusMap } from "@breadcrumb/feature-explore";
@@ -26,7 +24,7 @@ const INACTIVE_DOT_COLOR = "#78716c";
 const INACTIVE_LINE_COLOR = "#d6d3d1";
 
 const PANE_MIN_WIDTH = 256;
-/** The map pane must not crowd out the content pane (Leo) — 45% of the overlay is its ceiling,
+/** The map pane must not crowd out the content pane — 45% of the overlay is its ceiling,
  * enforced via CSS max-width since the overlay's own pixel width isn't measured here. */
 const PANE_MAX_WIDTH_PERCENT = "45%";
 /** Breathing room around the map's natural size before the pane needs to shrink or scroll. */
@@ -46,7 +44,7 @@ function activateOnKey(event: React.KeyboardEvent, action: () => void) {
   if (event.key === "Enter" || event.key === " ") action();
 }
 
-/** Tracks one element's rendered content-box size (spec 042 §4's "先缩放" fit calculation needs
+/** Tracks one element's rendered content-box size ("先缩放" fit calculation needs
  * the pane's actual pixels, which CSS alone doesn't expose to JS). */
 function useElementSize<T extends HTMLElement>(): [
   React.RefObject<T | null>,

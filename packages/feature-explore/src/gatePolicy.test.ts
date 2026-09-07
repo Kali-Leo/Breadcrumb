@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for the concept guess-gate probability — pretest floor for new nodes,
  * recent-reveal zeroing, abandonment damping, the recall-band multiplier, starvation and the
- * 0.6 ceiling (spec 039 acceptance 3, ported from spec 033's guess policy test suite).
+ * 0.6 ceiling.
  */
 import { describe, expect, it } from "vitest";
 import { type ConceptGateInput, computeConceptGateProbability } from "./gatePolicy";

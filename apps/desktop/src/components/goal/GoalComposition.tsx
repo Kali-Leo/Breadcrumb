@@ -1,6 +1,6 @@
 /**
- * Purpose: read-only chip list showing every knowledge node the selected goal maps to (spec
- * 017 §1 goal-decomposition display; re-homed by spec 047) — lit chips filled amber, unlit
+ * Purpose: read-only chip list showing every knowledge node the selected goal maps to
+ * — lit chips filled amber, unlit
  * chips outlined, and a small "新方向" dot on unlit chips with zero footprints ever. No
  * checkboxes, no actions.
  * Main exports: GoalComposition.
@@ -43,8 +43,8 @@ export function GoalComposition() {
           // Whether a node arrived via THIS goal's own suggestions isn't persisted anywhere
           // (persistCalibratedGoal doesn't tag suggested-vs-existing after insert) — a node
           // that's still unlit and has never once been sighted in a real conversation
-          // approximates that origin closely enough for a quiet hint dot (2026-08-04, Leo's
-          // goal-decomposition display bullet; an approximation, not ground truth).
+          // approximates that origin closely enough for a quiet hint dot (an approximation,
+          // not ground truth).
           const isNewDirection = !lit && !sightedNodeIds.has(nodeId);
           return (
             <li

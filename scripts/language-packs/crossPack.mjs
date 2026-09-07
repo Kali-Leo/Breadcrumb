@@ -6,10 +6,10 @@
  * The whole risk of the method is a bad match, so the rules are about refusing rather than
  * reaching, and they come in two kinds. Meaning: a gloss key too many words claim on either
  * side is thrown away, and only the source word's DOMINANT sense may be woven. Grammar
- * (wordShape.mjs, added after Leo's 2026-09-04 review): a word that is somebody else's
- * conjugation, a function word, a bare letter or an acronym is never woven, however well its
- * gloss matched — the first pass got mid-frequency words right and the top of the list badly
- * wrong, because the top of a frequency list is almost entirely grammar.
+ * (wordShape.mjs): a word that is somebody else's conjugation, a function word, a bare letter
+ * or an acronym is never woven, however well its gloss matched — mid-frequency words are easy
+ * to get right this way, but the top of a frequency list is almost entirely grammar, so it goes
+ * badly wrong there without this check.
  *
  * Everything that fails these tests is kept for lookup with `t1Safe: false` — the pack is a
  * dictionary as well as a source of replacements.

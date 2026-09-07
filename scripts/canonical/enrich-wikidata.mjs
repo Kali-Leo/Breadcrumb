@@ -1,12 +1,12 @@
 /**
- * Purpose: dev-time canonical-pipeline step 2 (spec 025) — for every fine-grained concept
+ * Purpose: dev-time canonical-pipeline step 2 — for every fine-grained concept
  * label, look up a Wikidata QID (accepted ONLY when the label equals the entity's label or
  * one of its aliases after normalization — 宁缺勿错) and collect zh/en aliases. Emits the
  * canonical concept list; labels without a confident QID get a stable slug id and no extra
  * aliases.
  *
- * An exact label match is not enough on its own: a name is shared across fields, and spec
- * 025's own walkthrough caught CSS "Functions" bound to Q190686, the mathematical function.
+ * An exact label match is not enough on its own: a name is shared across fields, and CSS
+ * "Functions" has been found bound to Q190686, the mathematical function.
  * So the entity's description is read too, and a QID is refused when that description says
  * the entity is a person, a place, a work, an organism — or something from a field the
  * corpus being enriched is not about. Refusing costs a few aliases; accepting the wrong QID

@@ -16,7 +16,7 @@ export interface FocusState {
   nodes: FocusNodeRow[];
   currentNodeId: string | null;
   streamingText: string | null;
-  /** The failure to state, as a catalogue key (spec 058 §2); null while nothing failed. */
+  /** The failure to state, as a catalogue key; null while nothing failed. */
   errorText: CopyMessage | null;
   pendingGuess: FocusGuessState | null;
   guessedNodeIds: ReadonlySet<string>;
@@ -41,7 +41,7 @@ export interface FocusState {
   jumpTo(nodeId: string): void;
   exitFocus(): void;
   reopen(sessionId: string): Promise<void>;
-  /** Re-runs the current station after a failure/timeout (watchdog, 2026-08-14). */
+  /** Re-runs the current station after a failure/timeout (watchdog). */
   retryCurrent(): Promise<void>;
 }
 

@@ -2,7 +2,7 @@
  * Purpose: center column — message history, streaming reply, gentle error banner, composer.
  * Also renders the mid-tree continuation banner and handles station-map "locate" clicks —
  * scroll-into-view plus a brief highlight, resuming onto the target's branch first when it
- * isn't on the active path (spec 040 §§2-3).
+ * isn't on the active path.
  * Main exports: ChatView.
  */
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +22,7 @@ import { MessageBubble } from "./MessageBubble";
 import { MessageList, type MessageListHandle } from "./MessageList";
 import { BackToBottomPill } from "./scrollPinning";
 
-/** How long a located message stays highlighted (Slack-style: highlight + center, spec 040 §3). */
+/** How long a located message stays highlighted (Slack-style: highlight + center). */
 const LOCATE_HIGHLIGHT_MS = 2000;
 
 export function ChatView() {
@@ -53,7 +53,7 @@ export function ChatView() {
     void ensureFactchecksLoaded(activeConversationId);
   }, [activeConversationId, ensureFactchecksLoaded]);
 
-  // Station map click -> locate this round (spec 040 §3). A branch click resumes onto that
+  // Station map click -> locate this round. A branch click resumes onto that
   // leaf first (making it part of the active path) before scrolling to it.
   useEffect(() => {
     return appEventBus.on("chat:locateMessage", ({ messageId }) => {

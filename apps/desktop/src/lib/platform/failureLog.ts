@@ -1,6 +1,6 @@
 /**
  * Purpose: best-effort developer-visible failure logging for every silently-degraded AI
- * pipeline (spec 014) — writes one row to ai_failures. Never throws: a failure to record a
+ * pipeline — writes one row to ai_failures. Never throws: a failure to record a
  * failure must not compound whatever already went wrong.
  * Main exports: degradeSilently, recordAiFailure.
  */

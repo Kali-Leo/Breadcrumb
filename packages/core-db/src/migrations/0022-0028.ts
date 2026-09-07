@@ -9,10 +9,9 @@ import type { Migration } from "./migration";
 
 export const MIGRATIONS_0022_0028: readonly Migration[] = [
   {
-    // Spec 029 leaf contract: the tri-state attestation was an invented middle form — the
-    // user scores pure experience leaves directly (checkbox shortcut or 0–10). Old
-    // tri-state rows convert (done→10, partial→5, not_yet→0); practice_attestations stays
-    // behind unused rather than dropped (cheap, and keeps old builds from crashing).
+    // The user scores pure experience leaves directly (checkbox shortcut or 0–10). Tri-state
+    // attestation rows convert (done→10, partial→5, not_yet→0); practice_attestations stays
+    // behind unused rather than dropped, so builds that still read it keep working.
     id: "0022_practice_scores",
     statements: [
       `CREATE TABLE practice_scores (
@@ -28,7 +27,7 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // Spec 032: the goal's ten-rung flavor ladder is composed once by a strong model and
+    // The goal's ten-rung flavor ladder is composed once by a strong model and
     // cached forever (no reroll — the board positions the learner, the learner does not
     // position themself). Titles are recomposed from it as the rung moves.
     id: "0023_goal_title_ladder",
@@ -42,8 +41,8 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // The ladder module was removed entirely by product decision (2026-08-12): its two
-    // surviving tables are dropped, and nothing replaces them.
+    // The ladder module is gone: its two surviving tables are dropped, and nothing replaces
+    // them.
     id: "0024_drop_ladder_tables",
     statements: [
       `DROP TABLE IF EXISTS goal_ladder_board;`,
@@ -51,10 +50,10 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // Spec 033 diglot weave: display-layer word replacement for language learning. States
-    // hold one FSRS card per (lemma, pair); events are the append-only implicit-signal log
-    // that drives scheduling; guesses keep the raw guess text (future confusion mining);
-    // packs registers installed language packs. Chat storage is never touched (ADR-0019).
+    // Diglot weave: display-layer word replacement for language learning. States hold one
+    // FSRS card per (lemma, pair); events are the append-only implicit-signal log that drives
+    // scheduling; guesses keep the raw guess text (future confusion mining); packs registers
+    // installed language packs. Chat storage is never touched.
     id: "0025_diglot_weave",
     statements: [
       `CREATE TABLE diglot_word_states (
@@ -103,7 +102,7 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // Spec 033 contextual diversity: one local-embedding vector per (lemma, pair, context)
+    // Contextual diversity: one local-embedding vector per (lemma, pair, context)
     // a woven word appeared in. The scheduler discounts re-encounters in near-identical
     // contexts (novel contexts teach more). Rows are pruned to a small per-word cap.
     id: "0026_diglot_context_embeddings",
@@ -119,9 +118,9 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // Vision/09 #2: teach-back explanation quality becomes mastery evidence. SQLite CHECK
-    // constraints cannot be altered, so the claims table is rebuilt with the wider enums
-    // (levels taught_principled/taught_surface, source teach-back). Data copied verbatim.
+    // Teach-back explanation quality counts as mastery evidence. SQLite CHECK constraints
+    // cannot be altered, so the claims table is rebuilt with the wider enums (levels
+    // taught_principled/taught_surface, source teach-back). Data copied verbatim.
     id: "0027_teach_quality_claims",
     statements: [
       `ALTER TABLE mastery_claims RENAME TO mastery_claims_old;`,
@@ -138,7 +137,7 @@ export const MIGRATIONS_0022_0028: readonly Migration[] = [
     ],
   },
   {
-    // Spec 036 research tasks: runs are recorded independently of results so that deleting
+    // Research tasks: runs are recorded independently of results so that deleting
     // a result (user's right to withdraw) or toggling the feature never re-runs a task.
     // display_json/results_json are snapshotted so rendering survives task expiry.
     id: "0028_research_tasks",

@@ -1,6 +1,6 @@
 /**
  * Purpose: runs one focus-session node's streaming completion and meters it under the
- * dedicated "focus-explain" purpose (spec 042 §2) — no history assembly, no persistence;
+ * dedicated "focus-explain" purpose — no history assembly, no persistence;
  * callers own building the prompt messages, saving the resulting node, and error handling.
  * Main exports: streamFocusAnswer.
  */
@@ -23,7 +23,7 @@ export interface StreamFocusAnswerResult {
   usage: TokenUsage;
 }
 
-/** A stalled upstream once left the overlay on "…" forever (2026-08-14): the SSE promise
+/** A stalled upstream can leave the overlay on "…" forever: the SSE promise
  * never settles, so nothing errors and nothing recovers. The watchdog turns silence into a
  * plain, retryable failure. */
 const FIRST_DELTA_TIMEOUT_MS = 30_000;

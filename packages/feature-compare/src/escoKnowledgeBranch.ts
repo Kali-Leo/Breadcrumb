@@ -1,5 +1,5 @@
 /**
- * Purpose: pure builder of the ESCO-derived 知识与技能 branch (spec 027/028) — essential/
+ * Purpose: pure builder of the ESCO-derived 知识与技能 branch — essential/
  * optional sections where knowledge-type concepts become UNSCORED hubs (MATLAB-class
  * entities never take binary scores; canonical subtrees mount under them where available)
  * and skill/competence phrases become attestation-scored practice items. Verbatim official
@@ -38,9 +38,9 @@ export function clip(text: string, max: number): string {
 /**
  * Builds the flat item list of the branch (root item key "esco"). Knowledge-type concepts
  * are hubs: no conceptId, no binary score — their only paths to a number are a mounted
- * canonical subtree (here) or on-demand decomposition (spec 028 §3). Skill/competence
+ * canonical subtree (here) or on-demand decomposition. Skill/competence
  * phrases carry conceptId only for 线索 anchoring; they score by attestation. Every item
- * cites ESCO and the crosswalk path it arrived through (spec 027 三问).
+ * cites ESCO and the crosswalk path it arrived through.
  */
 export function buildEscoKnowledgeBranch(
   entry: EscoOccupationEntry,

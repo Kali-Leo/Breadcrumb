@@ -1,5 +1,5 @@
 /**
- * Purpose: the cluster half of continent derivation (spec 031) — childless orphan roots that no
+ * Purpose: the cluster half of continent derivation — childless orphan roots that no
  * tree continent claims gather by embedding similarity into a continent of member-kingdoms, and
  * whatever refuses to cluster leaves as an unnamed islet. Also owns layoutMemberIds, the
  * layout-day member filter the tree half in continents.ts shares. Pure: no DB, no UI.
@@ -7,8 +7,7 @@
  *
  * A cluster continent carries the ONE allowed exception to "大陆与国家永不同名": its name is the
  * medoid member's own label and that member is also one of its kingdoms, so the two read alike.
- * That is the honest node name; the optional AI naming pass exists precisely to lift a cluster
- * continent's name away from its members.
+ * The optional AI naming pass is what lifts a cluster continent's name away from its members.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { growClusters } from "./continentGrowth";
@@ -19,7 +18,7 @@ import { sumEngagement } from "./topicFallback";
 import type { TopicSummary } from "./topics";
 
 /** Layout inputs (weight, size) only count members known before the layout day, so browsing
- * and mid-day growth cannot move or resize anything until tomorrow (Leo 2026-08-31). */
+ * and mid-day growth cannot move or resize anything until tomorrow. */
 export function layoutMemberIds(
   memberNodeIds: readonly string[],
   createdAtById: ReadonlyMap<string, string>,
@@ -78,10 +77,8 @@ export function clusterOrphanRoots(
       // the oldest member on the day the landmass formed, frozen from that instant. growClusters
       // is what makes "frozen" true (see its header): it replays arrivals in order and never
       // revisits a landmass's membership, so a cluster only ever grows and its id outlives every
-      // later joiner (Leo 2026-09-01: shape is the one thing that stays put; bug hunt 2026-09-03
-      // finding 3 is why that guarantee had to move into the clustering itself). The label still
-      // comes from the medoid, the member that actually says what the cluster is about — a name
-      // may broaden as the landmass grows, its shape may not.
+      // later joiner. The label still comes from the medoid, the member that actually says what
+      // the cluster is about — a name may broaden as the landmass grows, its shape may not.
       id: anchorId,
       label: medoid.label,
       memberNodeIds: [...memberNodeIds],

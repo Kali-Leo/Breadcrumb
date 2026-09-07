@@ -1,14 +1,14 @@
 /**
  * Purpose: the end-to-end weave invariants that only a non-Latin, non-Chinese script can
- * break. Every fixture before 2026-09-07 was en:fr or zh:en, so the whole pipeline was only
- * ever driven over two punctuation systems and one direction of text; these tests drive it
- * over a right-to-left target (id:ar), a Cyrillic source (ru:en) and an abugida whose
- * letters carry combining vowel signs (bn:en), using slices of the REAL packs.
+ * break. A suite driven only over en:fr and zh:en exercises two punctuation systems and one
+ * direction of text; these tests drive the pipeline over a right-to-left target (id:ar), a
+ * Cyrillic source (ru:en) and an abugida whose letters carry combining vowel signs (bn:en),
+ * using slices of the REAL packs.
  *
- * Two of these fail against the code as it stood on 2026-09-06:
- *  - clause segmentation saw zero boundaries in Bengali (its danda was not a clause breaker),
- *    so the dispersion rule collapsed the whole message into clause 0 and only one word could
- *    ever be woven, however long the message;
+ * What they catch:
+ *  - clause segmentation seeing zero boundaries in Bengali (its danda missing from the clause
+ *    breakers), which collapses the whole message into clause 0 under the dispersion rule so
+ *    only one word can ever be woven, however long the message;
  *  - the same for Arabic's ، and ؟, which is why an Arabic-SOURCE pair is here and not just
  *    an Arabic-target one: a Latin sentence woven with Arabic words never exercises Arabic
  *    punctuation at all.

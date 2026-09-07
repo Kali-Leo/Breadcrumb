@@ -3,7 +3,7 @@
  * module a reload can get visibly wrong. The database is the authority; the mirror beside it
  * is what the first frame reads, so a mirror the database has not heard of has to win over the
  * machine's locale — otherwise the app un-picks the learner's language one frame after the
- * first paint (2026-09-03 walkthrough).
+ * first paint.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

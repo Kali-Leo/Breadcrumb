@@ -1,5 +1,5 @@
 /**
- * Purpose: spec 015 #4's auto-merge-duplicates planning — pure logic only. normalizeLabel
+ * Purpose: auto-merge-duplicates planning — pure logic only. normalizeLabel
  * collapses cosmetic label variants (whitespace, full/half-width, a trailing parenthetical,
  * latin case) to one comparison key; planMechanicalMerges groups existing nodes by that key
  * (zero LLM, zero risk); planSynonymVerdictMerges turns embedding-similar existing-node pairs
@@ -18,7 +18,7 @@ import type { SynonymVerdict } from "./synonymGate";
 /** Whitespace sitting between a CJK character and a latin letter/digit, on either side. Only
  * that boundary is folded: whether "if缩进" is written "if 缩进" is pure typography (writers
  * add the space for legibility, CJK needs none), while whitespace between two latin words is
- * meaningful and must stay. Design audit 2026-08-28 #9.
+ * meaningful and must stay.
  *
  * The left-hand character is captured and written back rather than matched with a lookbehind
  * `(?<=…)`. WebKit only learned lookbehind in Safari 16.4, and an unsupported assertion is a
@@ -38,7 +38,7 @@ const CJK_LATIN_SPACE =
  * tier; this only catches typographic near-duplicates of the same label.
  *
  * Traditional->simplified folding is NOT done here: it needs a character mapping table, and
- * as of 2026-08-28 no npm package offers one that is at once small enough, cleanly licensed
+ * no npm package offers one that is at once small enough, cleanly licensed
  * AND still maintained (the two small ones were last published in 2012 and 2017). So
  * 財務報表 and 财务报表 still read as different labels; the embedding tier is what catches
  * them today. */

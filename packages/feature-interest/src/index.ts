@@ -1,5 +1,5 @@
 /**
- * Purpose: public entry of the interest module (headless logic only — UI lands in spec 012).
+ * Purpose: public entry of the interest module (headless logic only — UI is separate).
  * Main exports: LLM extraction contract (extraction.ts), decay aggregation and style
  * ranking (aggregate.ts), embedding-similarity diffusion (spread.ts + its packed all-pairs
  * neighbour sweep in spreadNeighbors.ts), self-report mastery mapping (selfReport.ts).

@@ -1,7 +1,7 @@
 /**
- * Purpose: reveal-time refine guard for the diglot weave (Leo 2026-08-16 weave-timing
- * ruling): the LLM refine is raced against a hard timeout so the streaming→message swap is
- * never held up; on timeout the base weave ships and refine is skipped for that message
+ * Purpose: reveal-time refine guard for the diglot weave: the LLM refine is raced against a
+ * hard timeout so the streaming→message swap is never held up; on timeout the base weave
+ * ships and refine is skipped for that message
  * forever (refine only ever runs at the reveal moment, so a timed-out message never retries).
  * Main exports: refineWithHardTimeout, REFINE_HARD_TIMEOUT_MS.
  */

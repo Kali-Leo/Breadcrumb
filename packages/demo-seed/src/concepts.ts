@@ -1,6 +1,6 @@
 /**
  * Purpose: turns conceptSpecs.ts's 39 node specs into real KnowledgeNodeRow/NodeSightingRow
- * rows (spec 035 T7b) — names and summaries come from the chosen language's demo text, so a
+ * rows — names and summaries come from the chosen language's demo text, so a
  * spec never carries words; skips any label the DB already has, and wires each spec's
  * sightings to the demo conversations built by conversations.ts.
  * Main exports: ConceptSeedResult, buildConceptSeed.

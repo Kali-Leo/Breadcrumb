@@ -21,11 +21,11 @@ const DIMENSIONS = 8;
 
 /**
  * A vector inside the narrow high-cosine band the real local e5 model produces (every pair of
- * live nodes measured between 0.802 and 0.949 on 2026-08-28): a shared centroid plus a small
+ * live nodes lands between 0.802 and 0.949): a shared centroid plus a small
  * lean along one axis. Two vectors leaning along the SAME axis are the genuine near-duplicates;
  * different axes still land around 0.82-0.85. Orthogonal `[1,0]`/`[0,1]` fixtures are
- * deliberately not used here — they are what made an absolute 0.85 threshold look correct for
- * months while it passed 100% of real nodes.
+ * deliberately not used here — they would make an absolute threshold look correct even though
+ * it passes 100% of real nodes.
  */
 function packedVector(axis: number, lean: number): number[] {
   const base = 1 / Math.sqrt(DIMENSIONS);

@@ -1,5 +1,5 @@
 /**
- * Purpose: row types for the spec 036 research-task tables — run bookkeeping
+ * Purpose: row types for the research-task tables — run bookkeeping
  * (research_task_runs) and the user-visible results (research_results, physically deletable).
  * Main exports: ResearchTaskRunRow, ResearchResultRow.
  */

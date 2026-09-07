@@ -6,10 +6,8 @@
  * refresh must all agree on where midnight falls, or the same study session lands on two
  * different days depending on which screen is looking at it.
  *
- * Extracted 2026-09-02 from three byte-identical private copies (feature-feedback,
- * feature-research, feature-trail) plus two near-copies in the desktop app, whose agreement
- * was maintained only by comments pointing at each other. This lives in core rather than in
- * one of them because feedback → research would be the wrong dependency edge.
+ * This lives in core rather than in one of the features that use it because feedback →
+ * research would be the wrong dependency edge.
  * Main exports: toLocalDateKey, dateKeyToLocalDate, shiftLocalDays, shiftDateKey,
  * dateKeyRange, startOfLocalDay, startOfLocalDayIso.
  */

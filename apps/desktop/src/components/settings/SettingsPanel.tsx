@@ -1,8 +1,7 @@
 /**
  * Purpose: settings view with three pages — general (API config, language, network,
  * mainland mode, and in the browser edition backup and restore), switches-and-spending (the
- * per-feature billing page, Leo 2026-08-12), and research (the research task platform, moved
- * here from the top level by spec 044).
+ * per-feature billing page), and research (the research task platform).
  * Main exports: SettingsPanel.
  */
 import { useState } from "react";
@@ -16,7 +15,6 @@ import { BillingSettingsPanel } from "./BillingSettingsPanel";
 import { DataBackupSection } from "./DataBackupSection";
 import { LanguageSettingsSection } from "./LanguageSettingsSection";
 import { SettingsQuietIssues } from "./SettingsQuietIssues";
-// The same switch every settings row uses; this page carried its own copy of it until now.
 import { Toggle } from "./SettingsToggle";
 
 interface SettingsPanelProps {

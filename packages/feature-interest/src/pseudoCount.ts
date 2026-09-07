@@ -1,5 +1,5 @@
 /**
- * Purpose: empirical-Bayes estimate of the shrinkage pseudo-count K (spec 060 §4) — the one
+ * Purpose: empirical-Bayes estimate of the shrinkage pseudo-count K — the one
  * hyper-parameter that CAN be learned from a single user's data, because it reads the whole
  * ensemble of nodes (method of moments: within-node noise vs between-node spread on the
  * curiosity dimension), not any single node's small sample. Pure math, no DB, no I/O.

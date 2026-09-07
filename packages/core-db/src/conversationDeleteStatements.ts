@@ -11,8 +11,7 @@ import type { SqlTransactionStatement } from "./types";
  * below therefore MUST handle. Kept as data so conversationDelete.test.ts can enumerate the
  * live schema (pragma foreign_key_list) and fail the moment a new conversation-scoped table
  * appears without a matching statement here — the same tripwire MERGE_REFERENCING_TABLES
- * gives the node merge, which was added only after that list silently drifted out of date and
- * broke every merge (2026-08-27).
+ * gives the node merge, where a silently out-of-date list breaks every merge.
  *
  * **Registering a new table here is not optional.** Any table added later that carries a
  * conversation_id, or that hangs off messages, has to be added to this list AND handled in

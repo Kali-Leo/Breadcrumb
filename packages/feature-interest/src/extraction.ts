@@ -16,13 +16,13 @@ export interface InterestExtractionNode {
 }
 
 /** Anchored intensity tier for one interest dimension — the model picks a labeled level
- * instead of a bare float, for cross-call consistency (spec 014).
+ * instead of a bare float, for cross-call consistency.
  *
- * ASCII values (design audit 2026-08-28, 多语言 B6; same fix as feature-graph's
- * helpsWeightLevelSchema): jsonClient appends an answer-language directive to every call, so a
- * learner on English gets a model that dutifully replies "none"/"weak" — against a Chinese
- * literal that is a Zod failure, a retry, a second failure, and interest extraction silently
- * going dark. The prompt still explains each tier in prose. */
+ * ASCII values — the same fix as feature-graph's helpsWeightLevelSchema: jsonClient appends
+ * an answer-language directive to every call, so a learner on English gets a model that
+ * dutifully replies "none"/"weak" — against a Chinese literal that is a Zod failure, a retry,
+ * a second failure, and interest extraction silently going dark. The prompt still explains
+ * each tier in prose. */
 export const interestLevelSchema = z.enum(["none", "weak", "medium", "strong"]);
 export type InterestLevel = z.infer<typeof interestLevelSchema>;
 

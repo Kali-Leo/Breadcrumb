@@ -62,7 +62,7 @@ export interface Language {
 }
 
 /**
- * Ten ship complete (2026-09-01). Amharic is listed but not shipped: writing an interface in
+ * Ten ship complete. Amharic is listed but not shipped: writing an interface in
  * a language nobody here can check reads worse than not offering it, so it waits for a
  * translation someone can vouch for (tracked in the repo's language-data issue). Adding a
  * language is a folder of message files plus a row here, not a code change. The

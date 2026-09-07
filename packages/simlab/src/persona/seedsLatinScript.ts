@@ -1,11 +1,11 @@
 /**
- * Purpose: Latin-script seed personas outside Chinese (spec 013 T2, multilingual extension
- * 2026-09-07) — English, Spanish and Indonesian learners written natively, not translated
+ * Purpose: Latin-script seed personas outside Chinese — English, Spanish and Indonesian
+ * learners written natively, not translated
  * from the Chinese set. These are the cheap half of the coverage: same script and punctuation
  * as the harness's original assumptions, so a failure here is about language, not about
  * segmentation or glyphs.
  *
- * Provenance: persona prose and concept labels drafted with deepseek-v4-flash (2026-09-07)
+ * Provenance: persona prose and concept labels drafted with deepseek-v4-flash
  * from an archetype brief, then reviewed by hand; every concept label that the Wiktionary
  * extraction in scripts/language-packs/.cache/interlingua/ covers was checked against it
  * (e.g. id "variabel" → "variable", id "fungsi", es "fracción").

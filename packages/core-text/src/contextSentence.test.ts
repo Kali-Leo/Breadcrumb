@@ -1,7 +1,7 @@
 /**
- * Purpose: tests for guess/hover card context — sentence boundaries, and the audit's
- * red line: the context a guess card shows may never contain the answer, i.e. any patch's
- * original source word (audit 2026-08-28 #1).
+ * Purpose: tests for guess/hover card context — sentence boundaries, and the rule that the
+ * context a guess card shows may never contain the answer, i.e. any patch's
+ * original source word.
  */
 import { describe, expect, it } from "vitest";
 import { contextSentenceFor, wovenContextSentenceFor } from "./contextSentence";

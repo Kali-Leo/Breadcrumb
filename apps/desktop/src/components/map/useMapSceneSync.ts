@@ -26,10 +26,9 @@ export function useMapSceneSync(input: {
   const { ready, controllerRef, world, displayWorld, retentionByNode, demoMode } = input;
   const previousIdsRef = useRef(new Map<string, ReadonlySet<string>>());
 
-  // The visible recommendation set surfaces as map pins on every level (Leo's design +
-  // spec 060 §2): the containing islands at the world level, the containing kingdoms once
-  // dived in; the kingdom tree then rings the node itself. Demo worlds never match real
-  // planner ids, so the pins rest.
+  // The visible recommendation set surfaces as map pins on every level: the containing
+  // islands at the world level, the containing kingdoms once dived in; the kingdom tree then
+  // rings the node itself. Demo worlds never match real planner ids, so the pins rest.
   const frontierCandidates = usePlannerStore((state) => state.frontierCandidates);
   useEffect(() => {
     if (!ready) return;

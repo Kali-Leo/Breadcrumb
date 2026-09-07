@@ -3,8 +3,6 @@
  * everything deterministic from. Tiny, dependency-free, stable across sessions and platforms;
  * not cryptographic, and nothing here should ever be asked to be.
  *
- * Extracted 2026-09-02 from six byte-identical private copies (feature-map, feature-factcheck,
- * feature-companion, feature-diglot-weave, simlab, and the desktop concept-vector cache).
  * Two deliberate non-members stay where they are, because their output is baked into data the
  * learner already has: feature-diglot-weave/vocabTest.ts's hashToInt (Math.abs instead of
  * >>> 0 — a different number, and it picks which distractors a saved test shows) and

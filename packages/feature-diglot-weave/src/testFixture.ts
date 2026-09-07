@@ -3,12 +3,11 @@
  * and a tiny zh:en pack (CJK paths), both invented so a test can name an exact entry and
  * assert an exact outcome. Test-only; not exported from the package entry.
  *
- * These two are the only pairs the suite had until 2026-09-07, which meant every path was
- * only ever driven over Latin and CJK. The other scripts are covered by fixtures sliced from
- * the real pack build instead of typed by hand: testFixturePacks.ts (ru:en Cyrillic source,
- * bn:en Bengali source) and testFixturePacksRtl.ts (id:ar Arabic target, ar:en Arabic
- * source). Reach for those when the behaviour under test is about script or direction; reach
- * for these when it is about a specific entry's content.
+ * These two cover Latin and CJK only. Other scripts are covered by fixtures sliced from the
+ * real pack build instead of typed by hand: testFixturePacks.ts (ru:en Cyrillic source, bn:en
+ * Bengali source) and testFixturePacksRtl.ts (id:ar Arabic target, ar:en Arabic source).
+ * Reach for those when the behaviour under test is about script or direction; reach for these
+ * when it is about a specific entry's content.
  * Main exports: makeEnFrPack, makeZhEnPack.
  */
 import { type LoadedLanguagePack, loadLanguagePack } from "./packSchema";

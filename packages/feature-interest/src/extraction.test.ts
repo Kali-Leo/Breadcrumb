@@ -26,11 +26,10 @@ describe("buildInterestMessages", () => {
   });
 
   it("requires content-level evidence before a mid/high boredom read, and never treats brevity as one", () => {
-    // The constitution's one red line is 永不评判用户. The prompt used to hand "懂了懂了" /
-    // "行吧行吧" / "知道了知道了" straight to the strongest boredom tier, which reads an ADHD
-    // learner's or an ordinary Chinese speaker's acknowledgement token as contempt for the
-    // material (2026-08-28 audit, interest gap 4). Boredom now needs something the learner
-    // actually said about the topic.
+    // The constitution's one red line is 永不评判用户: acknowledgement tokens like "懂了懂了" /
+    // "行吧行吧" / "知道了知道了" must never be read as the strongest boredom tier — an ADHD
+    // learner's or an ordinary Chinese speaker's brevity is not contempt for the material.
+    // Boredom needs something the learner actually said about the topic.
     const messages = buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答");
     const systemContent = messages[0]?.content ?? "";
     expect(systemContent).toContain("明确说要跳过");
@@ -46,7 +45,7 @@ describe("buildInterestMessages", () => {
     // jsonClient appends an answer-language directive to every call, so a Chinese tier literal
     // makes an English-locale model answer "none"/"weak" into a schema that only accepts
     // 无/弱 — Zod fails, the retry fails the same way, and interest extraction goes silently
-    // dark (2026-08-28 audit, 多语言 B6).
+    // dark.
     const systemContent =
       buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答")[0]?.content ?? "";
     expect(systemContent).toContain("none|weak|medium|strong");

@@ -1,5 +1,5 @@
 /**
- * Purpose: zustand store for the 🔬 research task platform (spec 036) — loads persisted
+ * Purpose: zustand store for the 🔬 research task platform — loads persisted
  * results, deletes one on request (physical delete, the user's right to withdraw), and runs
  * any pending signed tasks from the bundled demo feed against the local DB when idle.
  * Main exports: useResearchStore.
@@ -36,7 +36,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   },
 
   /** Runs every not-yet-run signed task in the bundled feed. Silent-failure path matches
-   * every other AI pipeline (spec 014): a bad or expired task never surfaces to the user. */
+   * every other AI pipeline: a bad or expired task never surfaces to the user. */
   async runPending() {
     const sql = await getSqlClient();
     const executed = await runPendingResearchTasks(SIGNED_RESEARCH_TASKS, {

@@ -1,7 +1,7 @@
 /**
  * Purpose: runs the LLM half of one chat send round — system-message assembly, the streaming
  * completion (stop-aware: an aborted stream keeps its partial reply), assistant-message
- * persistence (parent = the triggering user message, spec 040 §1), conversation touch, and
+ * persistence (parent = the triggering user message), conversation touch, and
  * cost metering — so chatStore.ts's sendMessage stays a thin orchestrator under the cap.
  * Main exports: SendRoundResult, appendUserMessage, runSendRound.
  */
@@ -33,7 +33,7 @@ export interface SendRoundResult {
   stoppedEarly: boolean;
 }
 
-/** Builds and persists the round's user message; parent = the current station (spec 040 §2),
+/** Builds and persists the round's user message; parent = the current station,
  * so resuming mid-tree forks a new branch instead of overwriting what followed the old leaf. */
 export async function appendUserMessage(
   repos: Pick<Repos, "messages">,
@@ -64,7 +64,7 @@ export async function runSendRound(params: {
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
-  /** The session's 学习模式 state (spec 052); false on a chat round = free chat, no teaching
+  /** The session's 学习模式 state; false on a chat round = free chat, no teaching
    * program, no learner/focus context injection. */
   studyMode: boolean;
   onDelta: (delta: string) => void;
@@ -91,10 +91,10 @@ export async function runSendRound(params: {
     studyMode: params.studyMode,
   });
 
-  // Rebuilt every round and never persisted (spec 038 §2.3 precedent). These sit immediately
+  // Rebuilt every round and never persisted. These sit immediately
   // before the round's user turn: last read by the model, behind the cached prefix.
   const perRoundSteering: ChatMessage[] = [];
-  // 学习模式 gate (spec 052): a free chat round carries no learner-context or focus-context
+  // 学习模式 gate: a free chat round carries no learner-context or focus-context
   // steering — silent measurement continues elsewhere, but nothing shapes the reply.
   if (activeKind === "chat" && params.studyMode) {
     const learnerContextMessage = await buildLearnerContextSystemMessage(userMessage.content);
@@ -107,7 +107,7 @@ export async function runSendRound(params: {
 
   // baseMessages always ends with this round's user message (see chatAssistantRound), so the
   // steering slides in just ahead of it. The language directive is appended after everything
-  // by the client itself (spec 058 §1).
+  // by the client itself.
   const priorTurns = params.baseMessages.slice(0, -1);
   const userTurn = params.baseMessages.slice(-1);
   const history = [...contractMessages, ...priorTurns, ...perRoundSteering, ...userTurn];
@@ -136,7 +136,7 @@ export async function runSendRound(params: {
   }
   const content = streamed.content;
 
-  // Did it write in the language we asked for? (spec 058 §1 — the check, not a rewrite.)
+  // Did it write in the language we asked for? (the check, not a rewrite.)
   // Fire-and-forget: the verdict only hardens the *next* round's directive, so the reader
   // never waits on the detector loading.
   if (!stoppedEarly) void noteReplyLanguage(conversationId, content);
@@ -147,15 +147,15 @@ export async function runSendRound(params: {
     role: "assistant",
     content,
     created_at: nowIso(),
-    // Column kept dormant for future silent experiments (spec 038 revision 2026-08-14).
+    // Column kept dormant for future silent experiments.
     teaching_mode: null,
-    // A reply's parent is always the user message that triggered it (spec 040 §1).
+    // A reply's parent is always the user message that triggered it.
     parent_id: userMessage.id,
   };
   await repos.messages.append(assistantMessage);
   await repos.conversations.touch(conversationId, assistantMessage.created_at);
 
-  // Trail-card auto-naming (spec 041 §1) — reads whatever stations already exist; the round's
+  // Trail-card auto-naming — reads whatever stations already exist; the round's
   // own stations (if any) land a moment later via knowledge:nodesExtracted's own refresh.
   const { useKnowledgeStore } = await import("../../stores/knowledgeStore");
   const labelsByNode = new Map(

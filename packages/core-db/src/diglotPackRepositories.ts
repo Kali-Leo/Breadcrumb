@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the installed-pack side of the diglot weave (spec 033) —
+ * Purpose: SQL statements for the installed-pack side of the diglot weave —
  * diglot_language_packs (registration plus the pack file itself) and the cached context
  * embeddings used for the diversity discount. Word states, events and guesses live in
  * diglotWordRepositories.ts; createDiglotRepo composes the two halves.

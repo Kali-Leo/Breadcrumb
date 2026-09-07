@@ -1,5 +1,5 @@
 /**
- * Purpose: the demo seed's 4 hand-written conversations (spec 035 T7b) — two "today" threads
+ * Purpose: the demo seed's 4 hand-written conversations — two "today" threads
  * (astronomy, JS) whose messages ground a handful of today's node sightings in real user/
  * assistant text, one teach-back thread, and one vocabulary-recap filler thread. The words
  * come from the chosen language's demo text; the timing, the roles and the wiring do not.

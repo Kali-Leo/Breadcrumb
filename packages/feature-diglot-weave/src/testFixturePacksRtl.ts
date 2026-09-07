@@ -3,10 +3,10 @@
  * TARGET a Latin sentence is woven with (id:ar) and Arabic as the SOURCE being read (ar:en).
  * Both directions matter and they fail differently: a target-side bug is a rendering and
  * offset problem, a source-side bug is a segmentation problem, because Arabic prose is
- * punctuated with ، ؛ ؟ — none of which counted as a clause boundary before 2026-09-07.
+ * punctuated with ، ؛ ؟ — marks a Latin-only clause-breaker list does not know.
  *
- * Provenance: entries copied verbatim from the 2026.09.04 pack build (scripts/language-packs),
- * derived from Wiktionary via kaikki.org (CC BY-SA 4.0), the hermitdave/FrequencyWords
+ * Provenance: entries copied verbatim from a pack build (scripts/language-packs), derived
+ * from Wiktionary via kaikki.org (CC BY-SA 4.0), the hermitdave/FrequencyWords
  * OpenSubtitles lists (CC BY-SA 4.0) and CMUdict (BSD-2-Clause). The `،` row in the ar:en
  * slice is not a mistake — the real pack carries the comma as a non-t1Safe entry, and a
  * fixture that quietly tidied it away would hide the case where a clause breaker is also a

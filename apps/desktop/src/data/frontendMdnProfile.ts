@@ -1,7 +1,7 @@
 /**
- * Purpose: built-in comparison profile "前端工程师" (spec 023) — transcribed from the MDN
+ * Purpose: built-in comparison profile "前端工程师" — transcribed from the MDN
  * Curriculum, Mozilla's official front-end developer curriculum. Every module name and
- * every alias below was verified against the live pages on 2026-08-09; aliases exist ONLY
+ * every alias below was verified against the live pages; aliases exist ONLY
  * where the cited page explicitly names the concept (e.g. scope in Functions, prototypes
  * in Custom JS objects). Main exports: FRONTEND_MDN_PROFILE.
  */

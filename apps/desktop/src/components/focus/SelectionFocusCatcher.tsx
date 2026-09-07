@@ -1,5 +1,5 @@
 /**
- * Purpose: the assistant-message selection-to-focus catcher (spec 042 §5) — selecting text
+ * Purpose: the assistant-message selection-to-focus catcher — selecting text
  * inside the wrapped bubble offers to open a focus session rooted at the (truncated)
  * selection, with the caller supplying the full reply as parent context. The offer itself —
  * a hint line under a mouse, a button under a finger — and the events that raise it live in
@@ -13,8 +13,7 @@ import { useSelectionFocus } from "../../lib/focus/selectionFocus";
 import { truncate } from "../../lib/platform/truncateText";
 import { SelectionFocusPrompt } from "./SelectionFocusPrompt";
 
-/** Selections longer than this are truncated before becoming a focus session's root label
- * (spec 042 §5: "选区文本截 24 字"). */
+/** Selections longer than this are truncated before becoming a focus session's root label. */
 const MAX_ROOT_LABEL_CHARS = 24;
 
 export function SelectionFocusCatcher({

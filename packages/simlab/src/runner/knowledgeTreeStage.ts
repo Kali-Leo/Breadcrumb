@@ -57,7 +57,7 @@ export async function runKnowledgeTreeStage(
       newId: () => randomUUID(),
       nowIso: () => nowIso,
     });
-    // Node-dedup gate (spec 015) — strictly between planNodeChanges and insert, mirroring
+    // Node-dedup gate — strictly between planNodeChanges and insert, mirroring
     // knowledgeStore.ts's wiring.
     const plan = await runSynonymGateStage(input, rawPlan, existingNodes, failures);
 

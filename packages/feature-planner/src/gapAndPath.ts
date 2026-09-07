@@ -19,9 +19,7 @@ export interface GapAndPathInput {
   /** Nodes the learner has declared done FOR THIS GOAL ("我已经会了"), regardless of what
    * mastery says. Goal views believe the user's word — the node leaves this goal's remaining
    * work and counts toward its coverage — while mastery itself stays untouched, so review can
-   * still resurface the node later and the frontier is not handed a fabricated number
-   * (2026-08-28 audit: the previous version wrote a fake LIT-threshold mastery value into a
-   * copied map, which made one click mean two different things on two screens). */
+   * still resurface the node later and the frontier is not handed a fabricated number. */
   satisfiedNodeIds?: ReadonlySet<string>;
 }
 

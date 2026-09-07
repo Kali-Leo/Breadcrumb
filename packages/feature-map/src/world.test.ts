@@ -71,8 +71,8 @@ describe("buildWorldModel", () => {
   });
 
   it("keeps an island's shape when it grows a size tier — only its size changes", () => {
-    // Leo 2026-09-01: shape is the one thing that stays put. Growing the web island past a
-    // tier boundary must scale its coastline about its own centre, not redraw it.
+    // Shape is the one thing that stays put: growing the web island past a tier boundary must
+    // scale its coastline about its own centre, not redraw it.
     const before = buildWorldModel(demoTree());
     const grown = [...demoTree()];
     for (let index = 0; index < 12; index += 1) {

@@ -1,7 +1,7 @@
 /**
  * Purpose: the comparison tree's three network-spending flows — the experimental search
- * build (spec 023 §5), on-demand hub decomposition (spec 028 §3) and 一键生成目标 (spec 026
- * §3) — each gated on the feature/network switches and each reporting its own plain
+ * build, on-demand hub decomposition and 一键生成目标
+ * — each gated on the feature/network switches and each reporting its own plain
  * cost/outcome line. Split out of stores/compareStore.ts purely to keep that file under the
  * file-size ceiling; it takes set/get as parameters, so there is no runtime dependency back
  * on the store file.
@@ -22,9 +22,9 @@ import { runHubDecomposition } from "./compareHubActions";
 
 export interface CompareSearchActions {
   buildFromTopic(topic: string): Promise<void>;
-  /** Hub decomposition (spec 028 §3): verified search-build of a hub's sub-tree, in place. */
+  /** Hub decomposition: verified search-build of a hub's sub-tree, in place. */
   decomposeHub(node: OverlapNode): Promise<void>;
-  /** 一键生成目标 (spec 026 §3): feeds the profile's evidence leaves to goal planning. */
+  /** 一键生成目标: feeds the profile's evidence leaves to goal planning. */
   generateGoalFromProfile(): Promise<void>;
 }
 
@@ -104,7 +104,7 @@ export function createCompareSearchActions(
       if (selected === null || profile === undefined || tree === null) return;
       set({ generatingGoal: true, goalNote: null });
       try {
-        // Evidence-grounded goal text (spec 026 §3): the profile's own leaf list rides along,
+        // Evidence-grounded goal text: the profile's own leaf list rides along,
         // so decomposition selects from cited material instead of inventing.
         const leafLabels: string[] = [];
         const walk = (node: OverlapNode): void => {

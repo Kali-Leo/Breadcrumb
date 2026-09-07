@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for the language-pack contract — validation, reverse index and
- * introduction queue derivation (spec 033).
+ * introduction queue derivation.
  */
 import { describe, expect, it } from "vitest";
 import { loadLanguagePack, resolveLemma } from "./packSchema";

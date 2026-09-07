@@ -105,8 +105,8 @@ export async function initI18n(): Promise<void> {
   //
   // The source language is honoured here like any other: "the mirror says zh-CN" and "there is
   // no mirror" look identical from the first frame, but they are not the same fact, and
-  // settingsStoreLoad has to be able to tell them apart (2026-09-03 walkthrough — a learner
-  // who chose Chinese got English for the first seconds of every reload).
+  // settingsStoreLoad has to be able to tell them apart — a learner who chose Chinese would
+  // otherwise get English for the first seconds of every reload.
   const remembered = rememberedLanguage();
   if (remembered !== null) {
     try {
@@ -135,7 +135,7 @@ export function rememberedLanguage(): string | null {
 /** Mirrors a language the learner actually chose (or that the database holds for them). Not
  * called from changeLanguage itself: a tab that cannot open the database falls back to the
  * browser's locale, and letting that write the mirror would overwrite the real choice for
- * every other tab (2026-09-02 walkthrough). */
+ * every other tab. */
 export function rememberLanguage(code: string): void {
   try {
     globalThis.localStorage?.setItem(REMEMBERED_LANGUAGE_KEY, code);

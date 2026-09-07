@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the semantic-alignment engine (spec 024) — relative-gate candidate
+ * Purpose: unit tests for the semantic-alignment engine — relative-gate candidate
  * selection on vectors shaped like the REAL local model's output, top-k, the double pruning
  * (string-matched items, already-judged pairs), batch chunking, judge-verdict validation, and
  * the low-confidence scoring rule.
@@ -32,11 +32,10 @@ function item(overrides: Partial<ProfileItemDefinition>): ProfileItemDefinition 
 const DIMENSIONS = 8;
 
 /**
- * A vector inside the narrow high-cosine band the real local e5 model produces (every pair of
- * live nodes measured between 0.802 and 0.949 on 2026-08-28): a shared centroid plus a small
- * lean along one axis. Same axis = near-duplicate; different axes still land around 0.82-0.85,
- * i.e. ABOVE the absolute 0.72 floor this engine used to prune with — which is exactly why
- * that floor turned out to be a no-op on real data and why these tests must not use
+ * A vector inside the narrow high-cosine band the real local e5 model produces (live nodes
+ * measured between 0.802 and 0.949): a shared centroid plus a small
+ * lean along one axis. Same axis = near-duplicate; different axes still land around 0.82-0.85 —
+ * well above any naive fixed-threshold floor, which is exactly why these tests must not use
  * orthogonal `[1,0]`/`[0,1]` fixtures.
  */
 function packedVector(axis: number, lean: number): number[] {
@@ -90,9 +89,8 @@ describe("generateAlignmentCandidates", () => {
     const keys = pairs.map((pair) => `${pair.itemKey}:${pair.nodeId}`);
     expect(keys).toContain("leaf-a:n1");
     expect(keys).toContain("leaf-b:n2");
-    // n3 is NOT below any absolute floor — its cosine to leaf-a is ~0.84, comfortably past
-    // both the old 0.72 and the synonym gate's 0.85-era thinking. Only the relative gate,
-    // which sees that n1 is far better for this leaf, rejects it.
+    // n3 is NOT below any absolute floor — its cosine to leaf-a is ~0.84, comfortably high.
+    // Only the relative gate, which sees that n1 is far better for this leaf, rejects it.
     expect(keys).not.toContain("leaf-a:n3");
     expect(keys).not.toContain("parent:n1"); // internal node, never a candidate
   });

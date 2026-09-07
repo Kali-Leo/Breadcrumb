@@ -1,7 +1,7 @@
 /**
  * Purpose: unit tests for createCanonicalRepo using an in-memory fake SqlClient — the
  * canonical-concept upsert round-trip/overwrite, and node<->concept anchor listing order and
- * overwrite-on-conflict semantics (spec 025).
+ * overwrite-on-conflict semantics.
  */
 import { describe, expect, it } from "vitest";
 import { createCanonicalRepo } from "./canonicalRepositories";

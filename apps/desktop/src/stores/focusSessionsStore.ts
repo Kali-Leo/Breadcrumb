@@ -1,9 +1,9 @@
 /**
  * Purpose: zustand store assembling each conversation's focus sessions for two in-place
- * surfaces (Leo 2026-08-14 revision to spec 042 §5: a focus session's exit no longer posts a
- * chat message) — the per-message badge map and the top-of-chat bar's session list, plus the
- * legacy entry_message_id map so pre-revision exit-record messages still render as
- * FocusEntryCard. Assemblies are layered per conversation (filled on first visit, never wiped
+ * surfaces — a focus session's exit no longer posts a chat message — the per-message badge
+ * map and the top-of-chat bar's session list, plus the legacy entry_message_id map so older
+ * exit-record messages still render as FocusEntryCard. Assemblies are layered per conversation
+ * (filled on first visit, never wiped
  * on switch — layers accumulate for conversations visited this session, the Discord tradeoff)
  * with an active mirror for the badge/bar readers, chatStore's sessions pattern. Also owns the
  * focus:exited subscription, same "store listens for the event it cares about" precedent as
@@ -98,8 +98,8 @@ export const useFocusSessionsStore = create<FocusSessionsState>((set, get) => ({
   },
 }));
 
-// Focus sessions are session-scoped data, not messages (Leo 2026-08-14 revision to spec 042
-// §5): a session that never grew an answered station leaves nothing behind on exit — no
+// Focus sessions are session-scoped data, not messages: a session that never grew an
+// answered station leaves nothing behind on exit — no
 // message, no badge, no bar row — so it is deleted outright. One that does have an answer
 // refreshes the layer of the conversation the SESSION row belongs to (never the active one),
 // so an exit that lands after switching away still shows its badge when you switch back.

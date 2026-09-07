@@ -1,7 +1,7 @@
 /**
- * Purpose: public entry of the feedback module (headless logic only — the UI graduated
- * into the memory palace's context stack, spec 046). trends/wordSettledSeries stay
- * exported without a UI consumer: the trends surface was held back pending a copy rework.
+ * Purpose: public entry of the feedback module (headless logic only — the UI lives in the
+ * memory palace's context stack). trends/wordSettledSeries stay
+ * exported without a UI consumer: the trends surface is held back pending a copy rework.
  * Main exports: everything from activity, scopedSeries, trends, wordSettledSeries and
  * uiCopy.
  */

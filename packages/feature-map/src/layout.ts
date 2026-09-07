@@ -22,8 +22,7 @@ export function islandRadiusForTier(sizeTier: number): number {
 /**
  * Pure function of island order and radii: appending an island leaves earlier
  * centers unchanged, but any earlier radius change shifts everything after it.
- * Position carries no stability promise (spec 030, reaffirmed by Leo 2026-09-01 — only
- * an island's shape stays put; see terrain.ts).
+ * Position carries no stability promise — only an island's shape stays put (see terrain.ts).
  */
 export function packIslandCenters(radii: readonly number[]): WorldPoint[] {
   const centers: WorldPoint[] = [];

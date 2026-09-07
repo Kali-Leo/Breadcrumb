@@ -1,6 +1,6 @@
 /**
- * Purpose: word trend histories replayed through the exact production FSRS mapping (spec
- * 035 T6) — the "settled" count plus the word memory/intuition layer estimates, mirroring
+ * Purpose: word trend histories replayed through the exact production FSRS mapping —
+ * the "settled" count plus the word memory/intuition layer estimates, mirroring
  * feature-memory's concept layers over woven words instead of approximating them.
  * Main exports: WORD_SETTLED_STABILITY_DAYS, WordLayerTrendPoint, computeWordSettledSeries,
  * computeWordLayerTrendSeries.
@@ -21,12 +21,9 @@ import type { Card } from "ts-fsrs";
 import { dateKeyRange, localDayEndIso } from "./trendDays";
 import type { TrendPoint } from "./trends";
 
-/** Word settle bar (spec 035 #7): FSRS stability at/above 30 days — a month-plus forgetting
+/** Word settle bar: FSRS stability at/above 30 days — a month-plus forgetting
  * half-life. The anchor is the Anki community's "mature = interval >= 21 days" convention,
- * which this repo's own survey (docs/research/2026-08-13-折线指标-纵向学习度量调研.md) took as
- * the honest lower bound for "actually learned"; 30 days sits just past it.
- * (Lived in settled.ts until that module — the retired "已长期掌握" confirmation lists —
- * was deleted on 2026-09-01 with the rest of the concept-side review-invitation corpses.) */
+ * taken as the honest lower bound for "actually learned"; 30 days sits just past it. */
 export const WORD_SETTLED_STABILITY_DAYS = 30;
 
 export interface WordLayerTrendPoint {
@@ -129,8 +126,7 @@ function forEachSampledDay(
 }
 
 /** Count of woven words whose replayed FSRS stability has reached `WORD_SETTLED_STABILITY_DAYS`,
- * at each local day's end — the same bar settled.ts uses for "已长期掌握", read as a history
- * instead of a snapshot. Near-monotonic in practice (stability only drops on a lapse), never
+ * at each local day's end, read as a history instead of a snapshot. Near-monotonic in practice (stability only drops on a lapse), never
  * enforced as strictly increasing. */
 export function computeWordSettledSeries(
   events: readonly DiglotWordEventRow[],

@@ -1,5 +1,5 @@
 /**
- * Purpose: the teach-back experiment (spec 034) — copy, the student-role system prompt,
+ * Purpose: the teach-back experiment — copy, the student-role system prompt,
  * review-candidate picking, and session creation. The opener is composed locally (zero
  * LLM calls); mastery signals free-ride the existing knowledge-tree pipeline.
  * Side effects: DB writes on startTeachSession.
@@ -13,8 +13,8 @@ import { getRepos } from "../platform/db";
 import { newId, nowIso } from "../platform/time";
 
 /** The teach-back wording lives in learning.json under teach.*; "回讲" was ruled unreadable
- * jargon (Leo 2026-08-15) and the user-facing family is "换你讲". The opener is composed
- * locally with no LLM call (spec 034 验收 1) and written into the conversation, so it is
+ * jargon and the user-facing family is "换你讲". The opener is composed
+ * locally with no LLM call and written into the conversation, so it is
  * rendered here rather than at display time. */
 export function teachOpener(topic: string): string {
   return asStoredText(i18next.t("learning:teach.opener", { topic }));
@@ -26,7 +26,7 @@ export function teachConversationTitle(topic: string): string {
   return asStoredText(i18next.t("learning:teach.conversationTitle", { topic }));
 }
 
-/** Student-role system prompt: one positive instruction block (tone contract 2026-08-02). */
+/** Student-role system prompt: one positive instruction block (tone contract). */
 export function buildTeachSystemPrompt(topic: string): string {
   return (
     `你是一位认真的初学者,正在向学习者请教「${topic}」。你确实不熟悉这个主题,` +
@@ -38,8 +38,7 @@ export function buildTeachSystemPrompt(topic: string): string {
 
 /** Highest review worth first — expected FSRS gain of retrieving this concept now, plus
  * rescue for the long overdue (feature-memory/reviewPriority.ts). Not lowest retention first:
- * an almost-forgotten concept has the least to gain and the least chance of being retold
- * (design audit 2026-08-28, D2; Leo 2026-09-01 ruled to change it). */
+ * an almost-forgotten concept has the least to gain and the least chance of being retold. */
 export function pickTeachCandidates(
   nodes: readonly KnowledgeNodeRow[],
   reviewPriorityByNode: ReadonlyMap<string, number>,

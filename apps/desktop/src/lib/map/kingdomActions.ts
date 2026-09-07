@@ -18,8 +18,8 @@ export async function startKingdomMainAction(
   primary: FrontierCandidate | null,
 ): Promise<void> {
   if (node.state === "done") {
-    // 用户主动讲=讲给一位求教的同学听（Leo 铁律，spec 050 §9 的临时求教者形态）；
-    // 对话在弹窗里进行，主界面不被占据。伙伴开关关闭时退回主界面对话形态。
+    // 用户主动讲=讲给一位求教的同学听；对话在弹窗里进行，主界面不被占据。
+    // 伙伴开关关闭时退回主界面对话形态。
     const conversationId = await startTeachSession(node.label);
     await useChatStore.getState().loadFromDatabase();
     if (useSettingsStore.getState().featureSwitches.companionChat) {
@@ -32,7 +32,7 @@ export async function startKingdomMainAction(
     }
     return;
   }
-  // 开始学习/继续都直进专注模式，AI 立刻开讲（spec 050 §2）；退出后落回宫殿。
+  // 开始学习/继续都直进专注模式，AI 立刻开讲；退出后落回宫殿。
   const result = await startLearningForConcept(
     node.label,
     primary?.nodeId === node.id ? primary.reason.litPrerequisiteLabels : [],
@@ -45,9 +45,9 @@ export async function startKingdomMainAction(
 }
 
 /**
- * Back to where this concept was first met (spec 005 §5, backlog "溯源跳转"): open that
- * conversation and scroll to the exchange itself. Silent when there is nothing to go back
- * to — the conversation was deleted, or the concept arrived without a message behind it.
+ * Back to where this concept was first met: open that conversation and scroll to the
+ * exchange itself. Silent when there is nothing to go back to — the conversation was
+ * deleted, or the concept arrived without a message behind it.
  */
 export async function goToKingdomOrigin(nodeId: string): Promise<void> {
   const repos = await getRepos();

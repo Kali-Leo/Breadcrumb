@@ -1,8 +1,7 @@
 /**
- * Purpose: the discrete level model — world → island only (the kingdom and village dive
- * levels were removed 2026-08-11, backed up on branch backup/village-town-scene; an
- * enlarged continent showing its kingdom regions is now the deepest view), exact-fit
- * camera frames per level and pointer hit-tests.
+ * Purpose: the discrete level model — world → island only (an enlarged continent showing
+ * its kingdom regions is the deepest view), exact-fit camera frames per level and pointer
+ * hit-tests.
  * Main exports: MapLevel, CameraFrame, CAMERA_EASE_RATE, CAMERA_SETTLE_MS, frameForLevel,
  * findIsland, hitIsland, hitIslet, hitKingdom.
  */
@@ -30,7 +29,7 @@ export const CAMERA_EASE_RATE = 7;
 /** How long a level change takes to land: the camera closes 99% of the distance to its frame
  * in ln(100) / CAMERA_EASE_RATE seconds. Input cooldowns are derived from this rather than
  * guessed, so "one gesture per camera flight" stays true if the easing is ever retuned
- * (bug hunt 2026-09-03: a 380 ms wheel cooldown let a second notch fire mid-flight). */
+ * (a hand-picked 380 ms wheel cooldown let a second notch fire mid-flight). */
 export const CAMERA_SETTLE_MS = Math.ceil((Math.log(100) / CAMERA_EASE_RATE) * 1000);
 
 export function findIsland(world: WorldModel, islandId: string): IslandModel | undefined {

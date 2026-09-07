@@ -1,7 +1,7 @@
 /**
- * Purpose: small pure vector-math helpers shared by topic discovery. Cosine now comes from
- * @breadcrumb/core-vectors (2026-09-02 — one shared implementation instead of six copies);
- * the centroid stays here because it is topic-clustering's own idea of a group's middle.
+ * Purpose: small pure vector-math helpers shared by topic discovery. Cosine comes from
+ * @breadcrumb/core-vectors; the centroid stays here because it is topic-clustering's own
+ * idea of a group's middle.
  * Main exports: cosineSimilarity, computeCentroid.
  */
 

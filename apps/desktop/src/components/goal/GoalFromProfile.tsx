@@ -1,5 +1,5 @@
 /**
- * Purpose: 一键生成目标 inside the comparison section (spec 025) — the button, its plain
+ * Purpose: 一键生成目标 inside the comparison section — the button, its plain
  * confirm copy (generating a goal rewrites what the palace points at, so it asks first),
  * and the note the store leaves behind.
  * Main exports: GoalFromProfile.

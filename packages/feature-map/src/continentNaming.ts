@@ -1,5 +1,5 @@
 /**
- * Purpose: the headless half of spec 031 §3's continent naming — the cache key derived from
+ * Purpose: the headless half of continent naming — the cache key derived from
  * a cluster's member set, the prompt asking for plain domain names, the Zod schema the reply
  * must satisfy, and the plainness check every name must pass. No DB, no network, no UI: the
  * desktop app owns the call, the cache row and the metering.

@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for the contextual-diversity math — similarity bounds, novelty banding
- * and degrade behavior (spec 033).
+ * and degrade behavior.
  */
 import { describe, expect, it } from "vitest";
 import { cosineSimilarity, hashContext, noveltyFactor } from "./contextNovelty";

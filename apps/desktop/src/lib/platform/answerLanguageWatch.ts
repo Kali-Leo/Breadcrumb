@@ -1,5 +1,5 @@
 /**
- * Purpose: the tripwire behind the answer-language directive (spec 058 §1) — reads back what
+ * Purpose: the tripwire behind the answer-language directive — reads back what
  * the model actually wrote and, when it is not the language we asked for, hardens the
  * instruction for the rest of that conversation and records a silent failure.
  *

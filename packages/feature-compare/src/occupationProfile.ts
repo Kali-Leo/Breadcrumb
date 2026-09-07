@@ -1,6 +1,6 @@
 /**
  * Purpose: pure builder turning one internalized O*NET occupation record into a comparison
- * profile (spec 026/027) — kind-typed branches: 工作任务 (practice leaves, self-attested),
+ * profile — kind-typed branches: 工作任务 (practice leaves, self-attested),
  * 工具与技术 (tool leaves), 知识与技能 (fine-grained ESCO concepts via the official
  * crosswalk; coarse O*NET descriptors remain only as fallback for uncovered occupations).
  * No LLM anywhere: rows are copied verbatim from official datasets.
@@ -16,8 +16,8 @@ import {
 import type { ProfileDefinition, ProfileItemDefinition } from "./profileSchema";
 import type { MountableSubtree } from "./subtreeMount";
 
-/** The occupation's slice of the bundled ESCO dataset (spec 027), plus the canonical
- * subtrees that may mount under matching hubs (spec 028). */
+/** The occupation's slice of the bundled ESCO dataset, plus the canonical
+ * subtrees that may mount under matching hubs. */
 export interface EscoDataForOccupation {
   entry: EscoOccupationEntry;
   concepts: EscoConceptDict;
@@ -35,7 +35,7 @@ export interface OnetOccupation {
   skills: { name: string; importance: number }[];
 }
 
-/** A timeliness-patch entry aggregated from real job postings (spec 026 §4). */
+/** A timeliness-patch entry aggregated from real job postings. */
 export interface TimelinessPatchItem {
   label: string;
   /** How many distinct postings mentioned it. */
@@ -111,13 +111,13 @@ export function buildOccupationProfile(
         aliases: [],
         sourceRef: `${source} · Technology Skills${entry.hot ? " · Hot Technology" : ""}`,
         conceptId: `c:${entry.name.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        // Spec 029: named products are entities — hubs, never scored leaves.
+        // Named products are entities — hubs, never scored leaves.
         kind: "hub",
       });
     });
   }
 
-  // Fine-grained ESCO branch (spec 027); the coarse O*NET descriptors below survive ONLY
+  // Fine-grained ESCO branch; the coarse O*NET descriptors below survive ONLY
   // as fallback for the 76 crosswalk-uncovered occupations (mostly "All Other" aggregates).
   const escoItems =
     esco === null
@@ -151,7 +151,7 @@ export function buildOccupationProfile(
         aliases: [],
         sourceRef: `${source} · 重要度 ${entry.importance.toFixed(2)}/5 · 整域描述符，不做二元计分`,
         conceptId: `c:${entry.name.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        // Spec 028: these O*NET descriptors are domain-sized — hubs, never binary-scored.
+        // These O*NET descriptors are domain-sized — hubs, never binary-scored.
         kind: "hub",
       });
     });
@@ -179,7 +179,7 @@ export function buildOccupationProfile(
           300,
         ),
         conceptId: `c:${entry.label.normalize("NFKC").toLowerCase().replace(/\s+/gu, "")}`,
-        // Spec 029: patch entries name entities (Java/LLM/AWS) — hubs, never scored leaves.
+        // Patch entries name entities (Java/LLM/AWS) — hubs, never scored leaves.
         kind: "hub",
       });
     });

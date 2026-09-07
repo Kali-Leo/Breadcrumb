@@ -146,7 +146,7 @@ describe("browsingAffinityByNode", () => {
       expect(score).toBeGreaterThan(0);
       expect(score).toBeLessThanOrEqual(1);
     }
-    // Leo 裁决 2026-08-30: titles stop inside this computation — the result is numbers only.
+    // Titles stop inside this computation — the result is numbers only.
     expect(JSON.stringify([...result.entries()])).not.toContain("Rust");
   });
 });

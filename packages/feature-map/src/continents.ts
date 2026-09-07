@@ -1,5 +1,5 @@
 /**
- * Purpose: derive the map's continents tree-first (spec 031) — every knowledge root that has
+ * Purpose: derive the map's continents tree-first — every knowledge root that has
  * children becomes a continent named after itself, with its direct children as kingdoms;
  * only childless orphan roots fall back to embedding clustering (continentClusters.ts), and
  * whatever refuses to cluster leaves as an unnamed islet. This file owns the continent types,

@@ -1,5 +1,5 @@
 /**
- * Purpose: FSRS-6 card lifecycle for woven words (spec 033) — one scheduler instance per
+ * Purpose: FSRS-6 card lifecycle for woven words — one scheduler instance per
  * language pair, JSON (de)serialization for the diglot_word_states.fsrs_json column, and
  * the mapping from implicit signal events to FSRS ratings per the spec's signal table.
  * Main exports: newWordCard, cardFromJson, cardToJson, reviewCard, ratingForSignal,
@@ -10,8 +10,8 @@ import { parseJsonColumn } from "@breadcrumb/core-db";
 import { type Card, createEmptyCard, type FSRS, fsrs, type Grade, Rating, State } from "ts-fsrs";
 import { z } from "zod";
 
-/** One scheduler instance per language pair — personally fitted parameters (vision/09 #1)
- * are per-pair, so a shared singleton would cross-contaminate scheduling the moment a
+/** One scheduler instance per language pair — personally fitted parameters are per-pair,
+ * so a shared singleton would cross-contaminate scheduling the moment a
  * second pair exists. Fuzz disabled so scheduling stays deterministic and replayable in
  * tests and simlab. ts-fsrs instances are cheap, so lazy per-pair creation is fine. */
 const schedulersByPair = new Map<DiglotPairId, FSRS>();
@@ -35,15 +35,15 @@ export function configureDiglotScheduler(pairId: DiglotPairId, w?: readonly numb
 
 /** Every 2nd passive exposure without a lookup converts into one Good review — passive
  * exposure works (Broccoli RQ2: retention without any clicking) but should weigh less
- * than explicit retrieval. (3 starved throughput: words never graduated and review debt
- * saturated the whole vocabulary — 30-day journey sim.) */
+ * than explicit retrieval. At 3 the throughput starves: words never graduate and review
+ * debt saturates the whole vocabulary. */
 export const EXPOSURES_PER_GOOD = 2;
 
 /** A word's first few lookups are the teaching moment, not retrieval failure — punishing
- * them with Again traps fresh words in a permanent short-interval loop (journey sim). */
+ * them with Again traps fresh words in a permanent short-interval loop. */
 const HOVER_GRACE_REVIEWS = 3;
 
-/** A guess counted as Easy needs to be exact-grade and faster than this (spec 033). */
+/** A guess counted as Easy needs to be exact-grade and faster than this. */
 const FAST_GUESS_MS = 5000;
 
 /** Fresh card for a word introduced right now. */
@@ -101,7 +101,7 @@ export function retrievabilityOf(pairId: DiglotPairId, card: Card, now: Date): n
   return Math.max(0, Math.min(1, retrievability));
 }
 
-/** The spec's signal table: which FSRS rating (if any) one event applies.
+/** The signal table: which FSRS rating (if any) one event applies.
  * `priorEvents` are the word's events newest-first, BEFORE the current one.
  * - exposure: every EXPOSURES_PER_GOODth consecutive exposure since the last
  *   non-exposure event rates Good, others rate nothing;

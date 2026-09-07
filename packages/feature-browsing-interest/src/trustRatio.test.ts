@@ -1,5 +1,5 @@
 /**
- * Purpose: tests for the hindsight trust ratio (spec 060 §5) — guardrails first: too few
+ * Purpose: tests for the hindsight trust ratio — guardrails first: too few
  * outcomes keep the default, an unskilled interest yardstick keeps the default, the clamp
  * holds at both ends, ties land at chance in the percentile.
  */
@@ -45,7 +45,6 @@ describe("hindsightTrustRatio", () => {
   });
 
   it("caps at the ceiling even when browsing out-predicts conversation", () => {
-    // Product stance: platform-fed signal never outvotes what the learner said.
     expect(hindsightTrustRatio(events(40, 0.6, 0.95))).toBe(BROWSING_TRUST_MAX);
   });
 

@@ -1,5 +1,5 @@
 /**
- * Purpose: Zod boundary for a research_results row's JSON columns (spec 036) — display_json
+ * Purpose: Zod boundary for a research_results row's JSON columns — display_json
  * and results_json are read back from the DB and must be validated before rendering, same as
  * any other external input. Main exports: parseResearchResultDisplay, ParsedStatResult.
  */
@@ -9,7 +9,7 @@ import { type DisplayBlock, displayBlockSchema } from "@breadcrumb/feature-resea
 import { z } from "zod";
 
 /** A bar's label is a catalogue key with its values, never a sentence: the headless package
- * decides which label applies, the app writes it (spec 058 §2). */
+ * decides which label applies, the app writes it. */
 const copyMessageSchema = z.object({
   key: z.string().min(1),
   params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),

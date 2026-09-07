@@ -1,6 +1,6 @@
 /**
  * Purpose: deterministic tripwire for the teaching contract v2's two hard discipline rules —
- * "one question per turn" and "brevity" (spec 038 §2.6, contract text in
+ * "one question per turn" and "brevity" (contract text in
  * packages/core-teaching/src/contract.ts: "一次回复只推进一步，能短则短；一次最多问一个问题").
  * Main exports: countQuestions, checkTeachingDiscipline, TeachingDisciplineResult.
  */
@@ -20,10 +20,8 @@ export interface TeachingDisciplineResult {
  * "？？？" is still one rhetorical question, not three.
  *
  * The class covers every question mark the shipped languages use, not just the ASCII and
- * full-width ones. Arabic writes '؟' (U+061F): until 2026-09-07 an Arabic tutor turn asking
- * four questions counted zero, so the "one question per turn" rule — a hard rule of the
- * teaching contract — was simply not enforced for Arabic readers, and no run could have
- * revealed it because no persona wrote Arabic.
+ * full-width ones — including Arabic's '؟' (U+061F). Omitting it silently undercounts
+ * questions in Arabic tutor turns, and no run reveals the gap unless a persona writes Arabic.
  */
 const QUESTION_MARKS = /[?？؟՞፧⁇⁈⁉]+/g;
 

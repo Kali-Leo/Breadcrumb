@@ -1,6 +1,6 @@
 /**
- * Purpose: the leader line that pins a stray island name back to its island (spec 031 §4) —
- * drawn only when a name could not stay on its own land, as a thin low-alpha ink hairline
+ * Purpose: the leader line that pins a stray island name back to its island — drawn only
+ * when a name could not stay on its own land, as a thin low-alpha ink hairline
  * from the nearest edge of the name's box to that island's coast.
  * Main exports: buildLabelLeader.
  */

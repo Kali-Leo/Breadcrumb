@@ -1,13 +1,12 @@
 /**
  * Purpose: heatmap data (per-day footprint counts, local calendar days) and continuity
- * streak stats for the feedback lab's "学习热力图" module (spec 035 #1).
+ * streak stats for the feedback lab's "学习热力图" module.
  * Main exports: DailyActivityCell, computeDailyActivity, computeContinuity, toLocalDateKey.
  */
 import { dateKeyRange, toLocalDateKey } from "@breadcrumb/core-time";
 
 /** Re-exported so this package's own day-cutting consumers keep one import; the rule itself
- * is @breadcrumb/core-time's, shared with the research lab and the trail (2026-09-02 — the
- * three used to hold byte-identical copies kept in sync by comments). */
+ * is @breadcrumb/core-time's, shared with the research lab and the trail. */
 export { toLocalDateKey };
 
 export interface DailyActivityCell {

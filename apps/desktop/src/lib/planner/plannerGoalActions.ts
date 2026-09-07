@@ -54,15 +54,13 @@ export async function requestGoalMapping(
  * start unlit), writes the prerequisite edges the mapping declared between them, embeds them
  * right away, then saves the goal row over existing + newly-inserted node ids. Persists the
  * LLM mapping's full result — existing and suggested alike — immediately: there is no
- * checkbox calibration step (2026-08-02: a learner who hasn't studied the material can't
- * judge what belongs; domain judgment is the system's job, not a decision request placed on
- * the user).
+ * checkbox calibration step.
  *
  * The edges and the embeddings both land in the same breath as the nodes on purpose: goal
  * nodes never reach the edge judge (it only fires on conversation-extracted nodes) and the
- * embedding backfill only runs at next startup, so a goal decomposed today used to have no
- * structure and no vectors until tomorrow — which is precisely when the learner looks at its
- * route (2026-08-28 audit, planning gap 1).
+ * embedding backfill only runs at next startup, so without this a goal decomposed today would
+ * have no structure and no vectors until tomorrow — precisely when the learner looks at its
+ * route.
  *
  * Idempotent on title: if a goal with the identical trimmed title already exists, its
  * node_ids_json/updated_at are refreshed in place instead of inserting a duplicate card

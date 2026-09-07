@@ -1,5 +1,5 @@
 /**
- * Purpose: the comparison tree's pure layout math (spec 023, ADR-0016) — the d3-hierarchy
+ * Purpose: the comparison tree's pure layout math — the d3-hierarchy
  * tidy layout over the currently expanded nodes (the layout IS the collapse mechanism), the
  * drawing constants every part of the view shares, and the two number-to-ink helpers.
  * No React, no rendering.

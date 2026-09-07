@@ -1,5 +1,5 @@
 /**
- * Purpose: the three-layer knowledge estimate (spec 035 T7a, Leo's decision) — memory /
+ * Purpose: the three-layer knowledge estimate — memory /
  * understanding / intuition, each summed across every sighted node's FSRS checkpoints
  * (retention.ts semantics) and sampled at many instants, all decaying with forgetting.
  * Main exports: KnowledgeLayerPoint, INTUITION_STABILITY_THRESHOLD_DAYS,

@@ -1,8 +1,8 @@
 /**
- * Purpose: SQL statements for the comparison tree module (spec 023) — evidence-backed
+ * Purpose: SQL statements for the comparison tree module — evidence-backed
  * real-world profiles the user's own tree can be measured against, stored and replaced whole.
- * Profiles carry a category and items a kind (spec 026, curriculum vs occupation profiles).
- * The semantic crosswalk itself lives in canonicalRepositories.ts (spec 025).
+ * Profiles carry a category and items a kind (curriculum vs occupation profiles).
+ * The semantic crosswalk itself lives in canonicalRepositories.ts.
  * Main exports: createComparisonRepo factory.
  */
 import type { ComparisonProfileItemRow, ComparisonProfileRow } from "./comparisonTypes";

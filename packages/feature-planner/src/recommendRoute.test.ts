@@ -172,11 +172,11 @@ describe("recommendRoute interestWeight pulls a high-interest node earlier", () 
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P2-1): routeParams is read out of the settings table with a
- * bare `JSON.parse(...) as Value`, and `routeParams ?? DEFAULT_ROUTE_PARAMS` only ever caught a
- * missing row, never a malformed one. A row without `pace` made every step score NaN, the
- * greedy comparator returned NaN at every step, and the "route" came back in gap-enumeration
- * order — silently, with the sliders still showing sensible values.
+ * routeParams is read out of the settings table with a
+ * bare `JSON.parse(...) as Value`, and `routeParams ?? DEFAULT_ROUTE_PARAMS` only ever catches a
+ * missing row, never a malformed one. A row without `pace` would make every step score NaN, the
+ * greedy comparator would return NaN at every step, and the "route" would come back in
+ * gap-enumeration order — silently, with the sliders still showing sensible values.
  */
 describe("sanitizeRouteParams", () => {
   it("keeps a well-formed pair untouched", () => {

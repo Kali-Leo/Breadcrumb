@@ -6,7 +6,7 @@
  * With a finger there is no Enter key, so it is a real button, 44px tall — and it does NOT
  * follow the selection. iOS draws its own copy/look-up bar hugging the selection, above it or
  * below it depending on the room left, so anything placed near the selection is covered about
- * half the time (Leo's iPad, 2026-09-03; placing it below was not enough). It sits instead in
+ * half the time; placing it below was not enough. It sits instead in
  * a bar at the foot of the reading area, above whatever input the surface has, where the
  * system bar never reaches. The surface publishes that input's height as --composer-height.
  * Main exports: SelectionFocusPrompt.

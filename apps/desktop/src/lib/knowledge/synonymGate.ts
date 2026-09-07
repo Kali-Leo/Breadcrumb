@@ -1,5 +1,5 @@
 /**
- * Purpose: desktop-side wiring for spec 015's node-dedup synonym gate — runs strictly
+ * Purpose: desktop-side wiring for the node-dedup synonym gate — runs strictly
  * between planNodeChanges and the store's insert loop: embed the would-be-new nodes, filter
  * by cosine similarity, ask one batched anchored verdict, and turn "same" into a dropped
  * node + redirected sighting + alias. Any failure (no embeddings, LLM error, parse fail)
@@ -59,9 +59,8 @@ export async function runSynonymGate(context: SynonymGateContext): Promise<Synon
     const newNodeVectors = new Map(
       context.plan.newNodes.map((node, index) => [node.id, vectors[index] ?? []]),
     );
-    // Relative gate + top-3 (design audit 2026-08-28 #1/#8): the old absolute 0.85 floor
-    // matched every node in the live database, and top-1 silently lost real synonyms that
-    // happened to rank second in a band only 0.147 wide.
+    // Relative gate + top-3: an absolute 0.85 floor matches every node in the live database,
+    // and top-1 silently loses real synonyms that rank second in a band only 0.147 wide.
     const candidates = findSynonymCandidates(newNodeVectors, existingEmbeddings);
     if (candidates.length === 0) return passthrough(context.plan);
 

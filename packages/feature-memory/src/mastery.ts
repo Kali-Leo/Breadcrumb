@@ -22,7 +22,7 @@ export const DIM_THRESHOLD = 0.5;
 export const CLAIM_WEIGHT: Record<MasteryClaimLevel, number> = {
   learned: 0.6,
   familiar: 0.4,
-  // Teach-back quality judgments (vision/09 #2): explaining well is behavioral evidence,
+  // Teach-back quality judgments: explaining well is behavioral evidence,
   // stronger than any self-report; a surface-level retelling still beats a bare claim.
   taught_principled: 0.85,
   taught_surface: 0.5,
@@ -47,7 +47,7 @@ const RETRIEVAL_CLAIM_LEVELS: ReadonlySet<MasteryClaimLevel> = new Set([
 
 /** True when this node has at least one observed successful retrieval — a graded guess or an
  * accepted teach-back. Exported so downstream consumers can tell "3 real retrievals" apart
- * from "mentioned once", which a bare number cannot (design audit 掌握度评估 G3). */
+ * from "mentioned once", which a bare number cannot. */
 export function hasRetrievalEvidence(
   sightings: readonly NodeSightingRow[],
   claims: readonly MasteryClaimRow[],
@@ -80,13 +80,13 @@ export function computeMastery(
     const retention = retentionByNode.get(nodeId) ?? 0;
     const claimScore = computeClaimScore(nodeClaims, nowIso);
     const mastery = retention + claimScore * (1 - retention);
-    // clampUnit, not min/max: see clampUnit.ts — a NaN here used to survive the clamp, reach
-    // frontier()'s comparator through masteryByNode, and flatten the whole ranking.
+    // clampUnit, not min/max: see clampUnit.ts — a plain min/max leaves NaN unclamped, letting
+    // it reach frontier()'s comparator through masteryByNode and flatten the whole ranking.
     const bounded = clampUnit(mastery);
-    // Design audit 2026-08-28 (掌握度评估 G1): without this, one passing mention by the AI
-    // produced retention 1.0 → mastery 1.0 → "已完成" on a concept the learner was never asked
-    // a single question about. Exposure alone can reach "dim" (the concept is on the map and
-    // recent) but never "lit"; only an observed retrieval lifts the ceiling.
+    // Without this, one passing mention by the AI would produce retention 1.0 → mastery 1.0 →
+    // "已完成" on a concept the learner was never asked a single question about. Exposure alone
+    // can reach "dim" (the concept is on the map and recent) but never "lit"; only an observed
+    // retrieval lifts the ceiling.
     masteryByNode.set(
       nodeId,
       hasRetrievalEvidence(nodeSightings, nodeClaims) ? bounded : Math.min(bounded, DIM_THRESHOLD),

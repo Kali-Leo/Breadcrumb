@@ -1,10 +1,10 @@
 /**
  * Purpose: shared sentence-boundary lookup for hover/guess cards (diglot weave and explore
- * doors alike, spec 033 / spec 039) — guess cards always show real context, and for woven
+ * doors alike) — guess cards always show real context, and for woven
  * text that context must be the WOVEN sentence: taken from the raw message it printed the
- * source word the learner is being asked to recall, i.e. the answer (audit 2026-08-28 #1).
+ * source word the learner is being asked to recall, i.e. the answer.
  * Pure string arithmetic — no DOM, no rendering, no knowledge of either feature that calls
- * it — so it moved out of the desktop app into the text layer (2026-09-02).
+ * it.
  * Main exports: contextSentenceFor, wovenContextSentenceFor.
  */
 

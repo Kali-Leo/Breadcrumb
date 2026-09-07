@@ -7,7 +7,7 @@
  *
  * This exists because matching on meaning alone put `son → ton` in the Spanish→French pack:
  * Spanish `son` really does have a noun sense meaning "sound", French `ton` really does mean
- * "tone", and in running text `son` is almost always "they are" (Leo's review, 2026-09-04).
+ * "tone", and in running text `son` is almost always "they are".
  * Main exports: POS_TAGS, isFunctionPos, isContentPos, isLetterOrAcronym, shortPos.
  */
 

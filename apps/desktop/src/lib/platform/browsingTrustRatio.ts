@@ -1,6 +1,6 @@
 /**
- * Purpose: assembles hindsight events for the adaptive conversation:browsing trust ratio
- * (spec 060 §5). For each recent "first went to study a new node" moment, it reconstructs
+ * Purpose: assembles hindsight events for the adaptive conversation:browsing trust ratio.
+ * For each recent "first went to study a new node" moment, it reconstructs
  * what both interest signals looked like just before that moment and asks which one ranked
  * the node higher among the then-untouched pool; the pure ratio math lives in
  * feature-browsing-interest/trustRatio. Refreshes once per local day (the palace's rhythm).
@@ -33,7 +33,7 @@ const MAX_EVENTS = 40;
 /** A percentile needs a landscape: fewer untouched peers than this and the event is skipped. */
 const MIN_POOL_SIZE = 10;
 /** Reconstruction is O(events × nodes²) through spreadInterest; above this tree size, sit
- * out with the default until the O(n²) → ANN index rework (2026-08-16 审计遗留 #2) lands. */
+ * out with the default until the O(n²) → ANN index rework lands. */
 const MAX_NODES = 300;
 
 let cached: { dayStartIso: string; ratio: number } | null = null;

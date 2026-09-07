@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the companion cast tables (spec 037) — the per-companion memory
+ * Purpose: SQL statements for the companion cast tables — the per-companion memory
  * stream, the proactive teach-back proposal log, and per-conversation knowledge state.
  * Main exports: createCompanionMemoriesRepo, createCompanionProposalsRepo,
  * createCompanionKnowledgeStateRepo factories.
@@ -118,7 +118,7 @@ export function createCompanionProposalsRepo(sql: SqlClient) {
       ]);
     },
     /** Count of proposals created since the given instant, across every companion — the
-     * gate's global "at most one a day" cap (spec 037). */
+     * gate's global "at most one a day" cap. */
     async countCreatedSince(sinceIso: string): Promise<number> {
       const rows = await sql.select<{ total: number }>(
         "SELECT COUNT(*) AS total FROM companion_proposals WHERE created_at >= ?",

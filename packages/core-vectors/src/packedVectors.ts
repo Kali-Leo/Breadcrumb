@@ -1,11 +1,11 @@
 /**
  * Purpose: the all-pairs similarity work that topic clustering and duplicate detection both
- * do, done once and done fast (2026-08-16 audit item "相似度 O(n²)→ANN 索引").
+ * do, done once and done fast.
  *
- * Why not an ANN index, which is what that item proposed: both callers need each node's MEAN
+ * Why not an ANN index: both callers need each node's MEAN
  * similarity to every other node, because their gates are relative — "clears its own baseline
  * by half the gap to its best match" — and that baseline is what made them work at all on
- * e5-family embeddings, whose cosines all sit in a narrow high band (audit 病根三). An
+ * e5-family embeddings, whose cosines all sit in a narrow high band. An
  * approximate index returns a node's nearest few and says nothing about the mean, so it
  * cannot answer the question being asked. What was actually costing the time was the inner
  * loop: vectors stored as boxed JS numbers, and both norms recomputed for every pair.

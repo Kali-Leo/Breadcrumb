@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time bounded Wikidata enrichment for the ESCO dataset (spec 027 T4) — for
+ * Purpose: dev-time bounded Wikidata enrichment for the ESCO dataset — for
  * concepts shared by ≥MIN_OCCUPATIONS occupations, resolve the QID whose enwiki article
  * title equals the concept label (batched 50-per-request, 宁缺勿错: redirects and fuzzy hits
  * simply miss) and merge zh/en aliases + qid into escoDataset.json in place. Resumable via

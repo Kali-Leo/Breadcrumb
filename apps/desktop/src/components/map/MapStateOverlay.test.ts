@@ -1,10 +1,9 @@
 /**
  * Purpose: which screen the palace owes the learner. The rule is trivial; what matters is that
  * it is a rule and not an early `return`, because an early return unmounts the Pixi container
- * and useMapApplication's init effect runs exactly once (bug hunt 2026-09-03 — a new learner's
- * empty sea killed the map for the whole session, first island or not). The container is
- * rendered unconditionally and this decides what covers it, which the headless walkthrough
- * checks on the real page.
+ * and useMapApplication's init effect runs exactly once — a new learner's empty sea would kill
+ * the map for the whole session, first island or not. The container is rendered
+ * unconditionally and this decides what covers it.
  */
 import { describe, expect, it } from "vitest";
 import { mapOverlayState } from "./MapStateOverlay";

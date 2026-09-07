@@ -45,7 +45,7 @@ export interface EvidenceItem {
  * What one provider search produced. `failed` is the whole point of this wrapper: a search
  * that never completed (blocked network, non-OK response, markup drift, not one candidate
  * page openable) says nothing whatsoever about whether public evidence exists, and the
- * pipeline must not report it as "no evidence found" (深度设计审计 2026-08-28, 差距 2).
+ * pipeline must not report it as "no evidence found".
  */
 export interface EvidenceSearchResult {
   items: EvidenceItem[];

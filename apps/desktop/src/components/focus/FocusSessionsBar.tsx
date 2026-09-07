@@ -1,6 +1,6 @@
 /**
- * Purpose: collapsible top-of-chat bar listing the open conversation's focus sessions (Leo
- * 2026-08-14 revision to spec 042 §5) — a folded one-line count, expanding into rows that
+ * Purpose: collapsible top-of-chat bar listing the open conversation's focus sessions
+ * — a folded one-line count, expanding into rows that
  * reopen each session; renders nothing when there are none. Styled after the thin banner rows
  * already used for the continuation/companion banners (border-b, text-xs).
  * Main exports: FocusSessionsBar.

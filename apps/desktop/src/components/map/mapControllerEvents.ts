@@ -1,10 +1,10 @@
 /**
  * Purpose: the map controller's event wiring — the canvas's pointer/wheel/click listeners, the
  * debounced renderer resize, and the single teardown that takes all of it back off again.
- * Split out of mapController so binding and unbinding sit in one another's sight: they used to
- * be a hundred lines apart and had drifted, leaving the resize debounce running past destroy()
- * to rebuild the scene of an Application that useMapApplication had already torn down (bug hunt
- * 2026-09-03). Owns no Pixi objects and no map state.
+ * Split out of mapController so binding and unbinding sit in one another's sight: they drift
+ * apart when they do not, and a resize debounce left running past destroy() rebuilds the scene
+ * of an Application useMapApplication has already torn down. Owns no Pixi objects and no map
+ * state.
  * Main exports: bindMapEvents, MapResizeHandlers.
  */
 import type { Application } from "pixi.js";

@@ -1,6 +1,6 @@
 /**
  * Purpose: ARPABET→IPA conversion, CEDICT gloss normalization, and the per-lemma merge/T1
- * whitelist logic (spec 033) that turns raw CEDICT lines into one language-pack entry.
+ * whitelist logic that turns raw CEDICT lines into one language-pack entry.
  * Main exports: arpabetToIpa, normalizeGloss, buildEntryForLemma, BLACKLIST_SUBSTRINGS.
  */
 
@@ -244,7 +244,7 @@ export function normalizeGloss(rawGloss) {
 }
 
 /** Builds one pack entry for a simplified lemma from its (possibly several, one per
- * pronunciation) raw CEDICT lines. Applies the T1 whitelist rules from spec 033: proper nouns,
+ * pronunciation) raw CEDICT lines. Applies the T1 whitelist rules: proper nouns,
  * over-polysemous lines, blacklisted gloss language, single-character lemmas, conflicting
  * cross-line targets, and non-common-English targets all force `t1Safe: false` but keep the
  * entry — only a lemma with zero usable gloss anywhere is dropped (`entry: null`). */
@@ -253,7 +253,7 @@ export function normalizeGloss(rawGloss) {
  * write synonyms inside one sense separated by "; " — "to learn; to study" is one sense with
  * two perfectly good targets. Reading it as a single string made it match no target at all,
  * and the entry was thrown away: 3,237 words in the Chinese frequency list were missing from
- * the shipped pack for exactly this reason, 学习 and 函数 among them (found 2026-09-01).
+ * the shipped pack for exactly this reason, 学习 and 函数 among them.
  * Order is preserved: the first sub-gloss of the first sense is still the dominant meaning.
  */
 export function glossCandidates(rawGloss) {
@@ -329,8 +329,7 @@ export function buildEntryForLemma(simplified, lines, freqRank, cmuMap, englishF
   // Nothing that could be a single word. The gloss is still a meaning worth keeping — the
   // pack is a dictionary as well as a source of replacements, and a word dropped here cannot
   // even be looked up. Kept with the cleaned multi-word gloss as its target and t1Safe false,
-  // which is what the schema always said such entries were for. (Before 2026-09-01 they were
-  // dropped outright: "查找 /to search for/to look up/" was not in the pack at all.)
+  // which is what the schema always said such entries were for.
   if (!primaryTarget.valid && altCandidates.length === 0) {
     const fallback = multiWordGloss(lines);
     if (fallback === null) {

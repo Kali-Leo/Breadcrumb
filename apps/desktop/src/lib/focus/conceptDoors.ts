@@ -1,10 +1,10 @@
 /**
- * Purpose: assembles door candidates for one assistant message (spec 043 §6-7) — the primary
+ * Purpose: assembles door candidates for one assistant message — the primary
  * source is the LLM term-marking call (ensureTermMarks), located in the display text via
- * locateTermPatches; the old sighted-node label match (spec 039 §2.1) is now secondary: it
+ * locateTermPatches; the old sighted-node label match is now secondary: it
  * only enriches a term-marked span with a nodeId (exact label match) and, for whatever it
  * doesn't cover, contributes its own independent doors — but only for nodes that aren't hub-
- * generic (spec 043 §7). Any failure degrades to no doors (best-effort, never blocks the
+ * generic. Any failure degrades to no doors (best-effort, never blocks the
  * message from showing).
  * Main exports: computeDoorPatches. Dynamic-imports stores/db to avoid import cycles with them.
  */
@@ -52,8 +52,8 @@ export async function computeDoorPatches(
     // and veto its own door.
     const priorSightings = allSightings.filter((sighting) => sighting.message_id !== messageId);
     const now = nowIso();
-    // memoryStore's cached map instead of two more full FSRS replays per rendered message
-    // (design audit 2026-08-28, 记忆与遗忘模型 #8). Its refresh trails each round by 7s, so at
+    // memoryStore's cached map instead of two more full FSRS replays per rendered message.
+    // Its refresh trails each round by 7s, so at
     // door time it still holds the pre-round state — the same thing priorSightings approximates
     // — and door ranking is coarse enough that a few seconds of staleness cannot change which
     // words become doors.
@@ -63,7 +63,7 @@ export async function computeDoorPatches(
     const diglotPatches = useDiglotStore.getState().patchesByMessage.get(messageId) ?? [];
     const reservedSpans = diglotPatches.map((patch) => ({ start: patch.start, end: patch.end }));
 
-    // Primary source (spec 043 §6): the LLM's own pick of what would trip this learner up.
+    // Primary source: the LLM's own pick of what would trip this learner up.
     const terms = await ensureTermMarks("message", messageId, displaySource, conversationId);
     const knowledgeNodes = useKnowledgeStore.getState().nodes;
     const nodeIdByLabel = new Map(knowledgeNodes.map((node) => [node.label, node.id]));
@@ -71,7 +71,7 @@ export async function computeDoorPatches(
       (door) => ({ ...door, nodeId: nodeIdByLabel.get(door.original) ?? null }),
     );
 
-    // Secondary source (spec 043 §7): the old sighted-node match, hub-generic nodes excluded,
+    // Secondary source: the old sighted-node match, hub-generic nodes excluded,
     // never overlapping a term door's span.
     const sightings = await repos.nodeSightings.listByMessage(messageId);
     const childCountByParent = new Map<string, number>();

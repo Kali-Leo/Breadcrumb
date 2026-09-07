@@ -5,8 +5,8 @@
  * diglotWeave.ts (which keeps the per-message patch pipeline) purely to keep both files
  * under the file-size ceiling.
  * Side effects: DB writes (word events, card state); on import, subscribes productive-use
- * detection to chat:messageSent (moved here from stores/diglotStore.ts, 2026-09-04, for the
- * file-size ceiling — the store imports this module, so the subscription still registers).
+ * detection to chat:messageSent (the store imports this module, so the subscription
+ * registers).
  * Main exports: applyDiglotSignal, findProductiveUses, loadCards.
  */
 import type { DiglotEventKind, DiglotPairId } from "@breadcrumb/core-db";
@@ -102,7 +102,7 @@ export async function loadCards(pair: DiglotPairId): Promise<Map<string, Card>> 
   return cards;
 }
 
-// Productive use (spec 033 signal table): when the user's own message contains a target
+// Productive use (signal table): when the user's own message contains a target
 // word they are learning, record the strongest signal — once per lemma per message.
 appEventBus.on("chat:messageSent", ({ conversationId, messageId }) => {
   const { settings, loaded, cardsByLemma, recordSignal } = useDiglotStore.getState();

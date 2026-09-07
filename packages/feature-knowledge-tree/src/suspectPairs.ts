@@ -1,6 +1,6 @@
 /**
  * Purpose: pairs of EXISTING nodes that stand out in each node's own similarity landscape —
- * the candidate list spec 015 #4's auto-merge sweep hands to the synonym-judge LLM tier
+ * the candidate list the auto-merge sweep hands to the synonym-judge LLM tier
  * (mergePlan.ts's planSynonymVerdictMerges turns the "same" verdicts into merge
  * instructions). Pairs already linked via node_aliases, and pairs already judged once
  * (either verdict), never re-enter.
@@ -26,9 +26,9 @@ export interface SuspectSynonymPairInput {
   /** alias label -> node id; a pair whose two labels are already formally linked is skipped —
    * that synonymy is recorded, not merely "suspected". */
   aliasNodeIdByLabel: ReadonlyMap<string, string>;
-  /** Keys of pairs already judged, normalized as `${smallerId}:${largerId}` (migration 0045's
-   * node_pair_verdicts). Both verdicts count: "different" is exactly the answer that used to
-   * be forgotten and re-bought on every startup. */
+  /** Keys of pairs already judged, normalized as `${smallerId}:${largerId}` (node_pair_verdicts).
+   * Both verdicts count — omitting "different" would mean those pairs get re-judged and
+   * re-paid for on every startup. */
   judgedPairKeys: ReadonlySet<string>;
   /** At most this many partners per node survive the relative gate. */
   topK?: number;
@@ -42,9 +42,8 @@ function pairKey(nodeIdA: string, nodeIdB: string): string {
 /**
  * For each node, the partners that clear ITS OWN relative gate (mean + half the gap to its
  * best match), capped at topK, deduplicated across the two directions and returned most
- * similar first. Replaces an absolute 0.85 cutoff that let 59% of all pairs through on the
- * live database — the e5 model's similarities are packed too tightly for any fixed number to
- * mean anything (design audit 2026-08-28 #1).
+ * similar first. A fixed absolute cutoff doesn't work here — the e5 model's similarities are
+ * packed too tightly for any fixed number to mean anything.
  */
 export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): SuspectSynonymPair[] {
   const nodeById = new Map(input.nodes.map((node) => [node.id, node]));
@@ -54,7 +53,7 @@ export function findSuspectSynonymPairs(input: SuspectSynonymPairInput): Suspect
   );
   const entries = [...vectorByNodeId].map(([id, vector]) => ({ id, vector }));
   // Normalized once, compared as dot products (see @breadcrumb/core-vectors): same numbers as
-  // the pairwise cosine this used to call, about eight times less time on a grown tree.
+  // pairwise cosine, about eight times less time on a grown tree.
   const packed = packVectors(entries);
 
   const topK = input.topK ?? SYNONYM_CANDIDATE_TOP_K;

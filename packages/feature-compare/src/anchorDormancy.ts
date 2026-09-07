@@ -1,7 +1,6 @@
 /**
- * Purpose: which knowledge nodes the paid anchor sweep should stop asking about (spec 025's
- * own walkthrough note, backlog "锚定清扫休眠计数"). A node the judge has already told us is
- * unlike several different canonical concepts is almost certainly the learner's own idea —
+ * Purpose: which knowledge nodes the paid anchor sweep should stop asking about. A node the
+ * judge has already told us is unlike several different canonical concepts is almost certainly the learner's own idea —
  * something nobody's curriculum has a name for — and every later sweep would re-ask about it
  * with a fresh top-k, paying again for the same answer.
  *

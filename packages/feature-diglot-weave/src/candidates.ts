@@ -1,5 +1,5 @@
 /**
- * Purpose: candidate extraction (spec 033) — maps word tokens to replaceable dictionary
+ * Purpose: candidate extraction — maps word tokens to replaceable dictionary
  * occurrences, enforcing the runtime side of the T1 whitelist (collocation interiors,
  * capitalized surfaces, first-occurrence-only per lemma).
  * Main exports: extractCandidates, CandidateOccurrence.
@@ -18,8 +18,8 @@ export interface CandidateOccurrence {
 }
 
 /** True when the token together with an adjacent word token forms a longer dictionary
- * word — replacing the interior of a collocation would break its meaning (spec 033
- * "never replace" rule). Concatenation is script-appropriate: direct for CJK-style
+ * word — replacing the interior of a collocation would break its meaning, so it is a
+ * "never replace" case. Concatenation is script-appropriate: direct for CJK-style
  * space-free text, space-joined otherwise. */
 function isCollocationInterior(
   tokens: readonly WordToken[],

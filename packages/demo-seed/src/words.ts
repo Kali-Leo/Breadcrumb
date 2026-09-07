@@ -1,5 +1,5 @@
 /**
- * Purpose: the demo seed's 50-word vocabulary (spec 035 T7b) — real zh:en dictionary entries
+ * Purpose: the demo seed's 50-word vocabulary — real zh:en dictionary entries
  * from the bundled language pack, replayed through real FSRS to produce word states, the
  * signal-event log, and verbatim guesses.
  * Main exports: WORD_COUNT, buildWordSeed.

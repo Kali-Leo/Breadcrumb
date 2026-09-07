@@ -1,5 +1,5 @@
 /**
- * Purpose: DB-touching half of trail auto-naming (spec 041 §1) — loads one conversation's
+ * Purpose: DB-touching half of trail auto-naming — loads one conversation's
  * stations and first message, then writes the recomputed auto_title when the freeze check
  * allows it. Called after every send round and after every knowledge-extraction pass.
  * Main exports: refreshConversationAutoTitle.

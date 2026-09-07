@@ -47,7 +47,7 @@ export function createConversationActions(
   return {
     async loadFromDatabase() {
       const repos = await getRepos();
-      // Sidebar lists only 'chat' kind — practice discussions (spec 026) stay hidden here.
+      // Sidebar lists only 'chat' kind — practice discussions stay hidden here.
       const [conversations, todayCost] = await Promise.all([
         repos.conversations.listByKind("chat"),
         repos.llmCalls.sumCostSince(todayLocalMidnightIso()),

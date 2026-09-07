@@ -1,5 +1,5 @@
 /**
- * Purpose: where an island's name sits (spec 031 §4) — it wants to lie ON its own island,
+ * Purpose: where an island's name sits — it wants to lie ON its own island,
  * dead centre or nudged along its body, and overlapping that terrain is legal since only
  * other names and sea decor are dodged. Going to sea is the last resort, and the returned
  * `outside` flag says so, so the scene can pin the name back with a leader line.

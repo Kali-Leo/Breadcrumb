@@ -1,7 +1,7 @@
 /**
- * Purpose: pronunciation chain for woven words (spec 033 T9) — local Piper (user-configured
+ * Purpose: pronunciation chain for woven words — local Piper (user-configured
  * binary+voice, via the Rust piper_synthesize command) → system speechSynthesis → nothing.
- * The 🔊 button renders ONLY for a verified provider (Leo 2026-08-16): Piper fully
+ * The 🔊 button renders ONLY for a verified provider: Piper fully
  * configured, or a system voice actually matching the target language — an empty voice list
  * means "no", never "might work"; webkit's lazily-loaded list re-evaluates via
  * subscribeVoicesChanged. Side effect: plays audio.

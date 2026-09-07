@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /**
- * Purpose: keep the browser edition's first screen small. It was 6.9 MB in one entry chunk
- * (1.73 MiB gzipped) once, because nothing was watching; this watches. Runs as apps/web's
+ * Purpose: keep the browser edition's first screen small. Runs as apps/web's
  * `postbuild`, so every `pnpm build` in that package checks itself.
  *
- * Two numbers, both gzipped, because gzip is what GitHub Pages actually serves (measured
- * 2026-09-02: it does not send brotli for this site's assets):
+ * Two numbers, both gzipped, because gzip is what GitHub Pages actually serves (it does not
+ * send brotli for this site's assets):
  *
  *   1. the entry chunk on its own — the file the html tag points at;
  *   2. the whole critical path — that chunk plus every chunk and stylesheet the browser is
@@ -99,9 +98,9 @@ for (const row of rows) console.log(`  ${kib(row.gzip).padStart(10)}  ${row.name
 console.log(`  ${kib(total).padStart(10)}  total`);
 
 /** Chunks that must only ever be reached through a dynamic import. A static edge from any
- * other chunk means Rollup merged something into them (2026-09-02: an empty mermaid parser
- * facade was folded into the trend-chart chunk, so opening the map fetched 3 MB of mermaid
- * online and, because the PWA precache deliberately leaves mermaid out, went blank offline). */
+ * other chunk means Rollup merged something into them (an empty mermaid parser facade was
+ * once folded into the trend-chart chunk, so opening the map fetched 3 MB of mermaid online
+ * and, because the PWA precache deliberately leaves mermaid out, went blank offline). */
 const LAZY_ONLY_CHUNKS = ["mermaid"];
 function staticImportsOfLazyChunks() {
   const assetsDir = join(distDir, "assets");

@@ -1,13 +1,12 @@
 /**
- * Purpose: the gold-standard prerequisite baseline (spec 013 T4, `sim gold` subcommand) —
+ * Purpose: the gold-standard prerequisite baseline (`sim gold` subcommand) —
  * feeds every hand-authored pair in data/gold-prerequisites.json through the real edge-judge
  * LLM contract and reports direction accuracy on 'requires' pairs plus the unrelated-rejection
  * rate on 'unrelated' pairs. No pass threshold: this is a baseline measurement, not a gate.
  * Pairs carry the language they are written in, and the one-line summary handed to the judge
  * alongside each label is written in that same language. Feeding a Bengali label to the judge
  * under a Chinese summary measures the judge's tolerance for mixed-language input, not its
- * accuracy — which is what this file did for every pair until 2026-09-07, when Chinese was
- * the only language the set contained.
+ * accuracy.
  * Main exports: loadGoldPairs, runGoldBaseline, GoldBaselineResult, GOLD_PAIRS_PATH,
  * summariseConcept.
  */

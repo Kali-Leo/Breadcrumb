@@ -32,8 +32,8 @@ export interface LlmClientConfig {
   apiKey: string;
   model: string;
   fetchImpl: typeof fetch;
-  /** Appended as a final system message on every request: which language to write in
-   * (spec 058 §1). Undefined leaves the messages exactly as the caller built them. */
+  /** Appended as a final system message on every request: which language to write in.
+   * Undefined leaves the messages exactly as the caller built them. */
   answerLanguageDirective?: string;
 }
 
@@ -61,7 +61,7 @@ export interface ChatStreamResult {
  * the round had already produced: the content streamed so far and, crucially, the usage the
  * provider reported before the stop. The provider bills the prompt and everything it
  * generated whether or not we kept listening, so dropping this usage under-counts a real
- * charge (宪法原则 2).
+ * charge.
  */
 export class ChatStreamAbortedError extends Error {
   readonly content: string;

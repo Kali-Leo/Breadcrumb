@@ -71,8 +71,8 @@ describe("generateTerrain", () => {
   });
 
   it("keeps its shape at any size — growth scales the outline, never redraws it", () => {
-    // The promise Leo made on 2026-09-01: an island you have seen before stays recognizable
-    // however much it grows. Scaling every coast point back down must land on the original.
+    // An island you have seen before stays recognizable however much it grows: scaling every
+    // coast point back down must land on the original.
     const shape = generateTerrain(31337);
     for (const factor of [0.36, 1.72]) {
       const grown = scaleTerrain(shape, factor);

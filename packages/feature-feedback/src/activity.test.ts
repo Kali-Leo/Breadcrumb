@@ -91,8 +91,7 @@ describe("computeContinuity", () => {
 
 /** The heatmap, the research lab's daily buckets and the trail's summary all have to cut the
  * calendar at the same instant, or one study session lands on two different days depending on
- * which surface is looking at it. Before 2026-09-02 that agreement rested on three
- * byte-identical private copies and a comment; this fails the moment one is reintroduced. */
+ * which surface is looking at it. */
 describe("day cutting agrees with @breadcrumb/core-time", () => {
   it("gives the same key as core-time for every hour of a day", () => {
     for (let hour = 0; hour < 24; hour += 1) {

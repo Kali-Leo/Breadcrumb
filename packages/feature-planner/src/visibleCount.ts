@@ -1,18 +1,18 @@
 /**
- * Purpose: which frontier candidates are actually shown, and in what order (spec 060 §1) —
- * cut the ranked list at the largest score cliff between the 3rd and 6th position (bounds are
- * Leo's 2026-08-31 ruling), so one great candidate is never padded with weak ones and five
+ * Purpose: which frontier candidates are actually shown, and in what order —
+ * cut the ranked list at the largest score cliff between the 3rd and 6th position, so one
+ * great candidate is never padded with weak ones and five
  * equal ones are never cut arbitrarily; then hand the third shown position to the candidate
  * with the thinnest evidence behind it. Pure math, no DB, no I/O.
  *
- * Why both steps live here, in this order (bug hunt 2026-09-03, P1-1): the exploration slot
- * used to be spliced into the ranked list back in frontier(), which left a possibly-zero-score
+ * Why both steps live here, in this order: splicing the exploration slot into the ranked list
+ * before the cliff search (back in frontier()) would leave a possibly-zero-score
  * candidate sitting at index 2 of a list the cliff search assumes is descending. The drop at
- * the cut just past it came out negative, `bestDrop = 0` ignored it, the real cliff was hidden
- * inside that negative drop, and the search settled on some meaningless dip near the tail. The
- * observed result: the genuine 4th-place candidate was cut while a 0.000-scoring exploration
- * pick stayed on screen. Measuring the cliff first, and only then reordering inside what
- * survived, means exploration can shuffle the shown set but can never shorten it or push a
+ * the cut just past it would come out negative, `bestDrop = 0` would ignore it, the real cliff
+ * would be hidden inside that negative drop, and the search would settle on some meaningless
+ * dip near the tail — cutting the genuine 4th-place candidate while a 0.000-scoring
+ * exploration pick stays on screen. Measuring the cliff first, and only then reordering inside
+ * what survived, means exploration can shuffle the shown set but can never shorten it or push a
  * higher-scoring candidate off it.
  * Main exports: visibleFrontier, FRONTIER_VISIBLE_MIN, FRONTIER_VISIBLE_MAX,
  * EXPLORATION_SLOT_INDEX.
@@ -67,7 +67,7 @@ function cliffCut(candidates: readonly { score: number }[]): number {
  * Hands the third shown position to the concept candidate with the least evidence behind its
  * interest score, among those below the top two — uncertainty-driven exploration, so the top
  * three can't be the same frozen trio forever. Deterministic: no randomness, no bandit
- * (single-user sparse data cannot train one — 2026-08-28 audit).
+ * (single-user sparse data cannot train one).
  *
  * A pure reordering of what is already shown: nobody is added, nobody is dropped. A no-op when
  * no candidate carries an evidence weight (nothing to be uncertain about), when there is

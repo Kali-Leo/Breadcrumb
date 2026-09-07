@@ -45,9 +45,8 @@ export type ChildrenByParent = Map<string | null, KnowledgeNodeRow[]>;
 /**
  * One id per parent-link cycle — the smallest, so the choice is stable across renders — to be
  * treated as a root, which turns the cycle back into a tree. A cycle can only come from
- * corrupted data (before 2026-09-04 a merge whose duplicate was an ancestor of its canonical
- * built one), and its cost was total: a node on a cycle is in nobody's child bucket AND in no
- * root bucket, so it and its whole subtree vanished from the map with no error anywhere.
+ * corrupted data, and its cost is total: a node on a cycle is in nobody's child bucket AND in
+ * no root bucket, so it and its whole subtree vanish from the map with no error anywhere.
  * Cutting one link keeps every node drawable; migration 0053 repairs the stored rows, this
  * keeps the map honest against whatever writes the next one. O(n) — each node is walked once.
  */

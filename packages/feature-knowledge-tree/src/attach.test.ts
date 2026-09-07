@@ -86,7 +86,7 @@ describe("planNodeChanges", () => {
     expect(plan.newNodes[0]?.parent_id).toBeNull();
   });
 
-  it("an alias-label hit records a sighting on the canonical node, no new node (spec 015)", () => {
+  it("an alias-label hit records a sighting on the canonical node, no new node", () => {
     const plan = planNodeChanges({
       ...testDefaults,
       existingNodes: [existingNode("n1", "if语句为什么要缩进", null)],

@@ -1,5 +1,5 @@
 /**
- * Purpose: tests for tree-first continent derivation (spec 031) — a root with children keeps
+ * Purpose: tests for tree-first continent derivation — a root with children keeps
  * its own name and hands its direct children the kingdoms, flat orphan roots cluster into a
  * continent of member-kingdoms, an unaffiliated orphan leaves as an islet, plus determinism
  * and weights. (Cartographic reshaping is covered by continentShape.test.ts.)
@@ -17,7 +17,7 @@ function node(
   return { id, parent_id: parentId, label, summary: "", kind: "concept", created_at: createdAt };
 }
 
-/** The spec's own acceptance fixture: 烹饪 with four countries, two of which carry points.
+/** Acceptance fixture: 烹饪 with four countries, two of which carry points.
  * Distinct timestamps because siblings are ordered by creation, oldest kingdom first. */
 function cookingNodes(): KnowledgeNodeRow[] {
   return [
@@ -122,9 +122,8 @@ describe("deriveContinents", () => {
   });
 
   it("keeps a cluster's identity on its oldest member as new members join", () => {
-    // The island's shape is seeded from this id (Leo 2026-09-01: shape stays put), so joining
-    // a cluster must not hand it a new identity. The medoid can and does move; the first
-    // member cannot.
+    // The island's shape is seeded from this id, so joining a cluster must not hand it a new
+    // identity. The medoid can and does move; the first member cannot.
     const loners = [node("kite", null, "风筝"), node("opera", null, "歌剧")];
     const lonerEmbeddings: Array<[string, readonly number[]]> = [
       ["kite", [0, 1, 0, 0]],

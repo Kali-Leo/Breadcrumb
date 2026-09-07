@@ -1,5 +1,5 @@
 /**
- * Purpose: the adaptive conversation:browsing trust ratio (spec 060 §5) — hindsight
+ * Purpose: the adaptive conversation:browsing trust ratio — hindsight
  * validation turns "which signal actually predicted what the learner went on to study" into
  * the ratio the frontier uses, replacing the fixed 2:1 stance once real outcomes accumulate.
  * This module is the pure half: percentile ranking and the guarded ratio estimate. The app
@@ -8,11 +8,11 @@
  * BROWSING_TRUST_DEFAULT, BROWSING_TRUST_MIN, BROWSING_TRUST_MAX.
  */
 
-/** Cold-start stance (spec 059): browsing speaks at half the conversational weight. */
+/** Cold-start stance: browsing speaks at half the conversational weight. */
 export const BROWSING_TRUST_DEFAULT = 0.5;
 /** The adaptive floor — browsing never goes fully mute on its own. */
 export const BROWSING_TRUST_MIN = 0.1;
-/** Product stance ceiling (Leo-confirmed 2026-08-31): a platform-fed signal never outvotes
+/** Product stance ceiling: a platform-fed signal never outvotes
  * what the learner said in conversation, however well it predicts. */
 export const BROWSING_TRUST_MAX = 1;
 /** Below this many first-touch outcomes the estimate would be noise — keep the default. */

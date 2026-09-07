@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for companion desktop actions (spec 037) — opening/reusing a companion
+ * Purpose: unit tests for companion desktop actions — opening/reusing a companion
  * conversation, delivering the teach-back invitation as her own chat message, the script
  * seeding's switch-off no-op, and the chat system prompt's card/memory inclusion. The
  * copy-safety gate lives in companionCopyGate.test.ts, split out for the line-count cap.

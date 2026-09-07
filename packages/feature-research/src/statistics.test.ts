@@ -123,8 +123,8 @@ describe("count", () => {
 
 describe("histogram", () => {
   it("keeps every encounters_per_node bucket, so the bars sum to the node count", async () => {
-    // A lone outlier used to be silently dropped, leaving a chart whose bars did not add up
-    // to the "concepts known" number printed beside it (审计统计分报告差距 4).
+    // A lone outlier silently dropped would leave a chart whose bars did not add up
+    // to the "concepts known" number printed beside it.
     const sightings: { node_id: string; created_at: string }[] = [];
     for (let index = 0; index < 5; index += 1) {
       sightings.push({ node_id: `low-${index}`, created_at: localNoonIso("2026-08-01") });
@@ -229,7 +229,7 @@ describe("histogram", () => {
 describe("retention_summary", () => {
   it("reports suppressed — never three 0 bars — below the sample-size floor", async () => {
     // Three bars reading 0 are indistinguishable from three genuine zeros, and a learner
-    // with two concepts would read them as "you remember nothing" (审计统计分报告差距 3).
+    // with two concepts would read them as "you remember nothing".
     const sightings = [
       { node_id: "a", created_at: NOW.toISOString() },
       { node_id: "b", created_at: NOW.toISOString() },
@@ -262,7 +262,7 @@ describe("retention_summary", () => {
 describe("correlation", () => {
   it("reports suppressed — never the sentinel 0 — below the 30-day guard", async () => {
     // 0 is a valid coefficient meaning "these move independently"; printing it for "we do
-    // not know" is a research finding nobody computed (审计统计分报告差距 3).
+    // not know" is a research finding nobody computed.
     const dayKeys = buildDayKeys(30, NOW.toISOString());
     const first = dayKeys[0] ?? "";
     const last = dayKeys[dayKeys.length - 1] ?? "";

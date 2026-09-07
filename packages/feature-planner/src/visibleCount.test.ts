@@ -1,5 +1,5 @@
 /**
- * Purpose: tests for the cliff-cut visible frontier (spec 060 §1) — cut lands on the largest
+ * Purpose: tests for the cliff-cut visible frontier — cut lands on the largest
  * score drop inside [3, 6], flat lists fill to the cap, short lists pass through — and for the
  * exploration slot that reorders what survived the cut.
  */
@@ -96,11 +96,11 @@ describe("the exploration slot inside the visible set", () => {
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P1-1), end to end through the real frontier(): five
+ * End to end through the real frontier(): five
  * candidates whose scores fall off a cliff after the 4th, with the 5th also carrying the
- * thinnest evidence. The exploration slot used to be spliced into position 2 before the cliff
- * search ran; the drop at cut = 3 then came out negative, the real cliff was hidden, and the
- * search cut at the 4th — dropping the genuine 4th place and keeping a 0-scoring candidate.
+ * thinnest evidence. Splicing the exploration slot into position 2 before the cliff
+ * search runs would make the drop at cut = 3 come out negative, hiding the real cliff, and the
+ * search would cut at the 4th — dropping the genuine 4th place and keeping a 0-scoring candidate.
  */
 describe("the score cliff is measured before the exploration slot moves anything", () => {
   const node = (id: string): KnowledgeNodeRow => ({

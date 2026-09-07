@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for the weave scheduler — density budget, dispersion, new-word throttle,
- * review-over-new priority and determinism (spec 033, acceptance 4).
+ * review-over-new priority and determinism.
  */
 import { Rating } from "ts-fsrs";
 import { describe, expect, it } from "vitest";

@@ -1,5 +1,5 @@
 /**
- * Purpose: pins the exact FNV-1a numbers the six private copies produced before 2026-09-02.
+ * Purpose: pins the exact FNV-1a numbers the six private copies produced.
  * These values are load-bearing: map terrain, evidence ordering, companion pseudonyms, stored
  * context ids and the concept-embedding cache key all derive from them, so a change here
  * silently redraws maps and invalidates caches.

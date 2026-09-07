@@ -1,6 +1,6 @@
 /**
  * Purpose: pure merge of diglot-weave and explore-door patches within one markdown text node
- * into ordered same-type runs plus the plain-text gaps between them (spec 039 §2.1) — a door
+ * into ordered same-type runs plus the plain-text gaps between them — a door
  * span overlapping a diglot span is dropped (weave has priority; conceptDoors.ts already
  * reserves diglot spans so this only fires as a render-time backstop).
  * Main exports: mergeTextRuns, TextRun.

@@ -1,7 +1,7 @@
 /**
  * Purpose: formats the per-round learner-context system message — anchored-node memory
  * state, explanation-style preferences, and the confusion downshift — so the contract's
- * "从对方当前的理解出发" has actual data behind it (spec 038 §2.3).
+ * "从对方当前的理解出发" has actual data behind it.
  * Main exports: LearnerContext, formatLearnerContextMessage.
  */
 

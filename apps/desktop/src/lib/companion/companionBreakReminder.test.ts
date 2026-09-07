@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the pure break-reminder state transitions (spec 037) — the banner
+ * Purpose: unit tests for the pure break-reminder state transitions — the banner
  * fires once a continuous 2h span is reached, stays active until dismissed, and only reappears
  * after another full interval of continued activity (not on the very next message).
  */

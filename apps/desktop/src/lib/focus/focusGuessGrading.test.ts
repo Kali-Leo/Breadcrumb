@@ -1,7 +1,7 @@
 /**
  * Purpose: unit tests for gradeFocusGuess's evidence side — a graded guess is the only real
  * retrieval signal the app has, so all three outcomes must land as one sighting carrying the
- * matching FSRS grade, the wrong one included (design audit 2026-08-28, 掌握度评估 G2).
+ * matching FSRS grade, the wrong one included.
  * The learner-facing half is deliberately unaffected: wrong still reads the same as before.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";

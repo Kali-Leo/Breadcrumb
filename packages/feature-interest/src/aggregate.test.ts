@@ -48,7 +48,7 @@ describe("aggregateInterest", () => {
     expect(scores.get("n1")?.curiosity ?? 0).toBeCloseTo(1 / 4.5, 5);
   });
 
-  it("keeps a strong month-old interest alive through the long channel (spec 059)", () => {
+  it("keeps a strong month-old interest alive through the long channel", () => {
     const signals = [
       signal({ node_id: "n1", created_at: daysAgo(40), curiosity: 0.9, confidence: 0.9 }),
     ];
@@ -153,7 +153,7 @@ describe("aggregateStyles", () => {
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P1-3): one interest_signals row whose created_at does not
+ * Regression: one interest_signals row whose created_at does not
  * parse used to make the node's decay weight NaN, and from there all four reported numbers.
  * Those NaNs survived every downstream clamp and reached frontier()'s comparator, where NaN
  * makes every comparison false and V8 leaves the list in database order — the whole

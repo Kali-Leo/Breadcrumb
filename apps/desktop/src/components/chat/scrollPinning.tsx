@@ -46,8 +46,6 @@ export function useScrollPinning(): ScrollPinning {
 /** The floating re-pin affordance — render inside a `relative` wrapper around the scroll
  * container whenever the pane is unpinned and content may still be arriving below. */
 export function BackToBottomPill({ onClick }: { onClick(): void }) {
-  // This sentence was hardcoded Chinese until 2026-09-01 — the one string in the app that
-  // never went through the catalogues, so every other language showed it in Chinese.
   const { t } = useTranslation("chat");
   return (
     <button

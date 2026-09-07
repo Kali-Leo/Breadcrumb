@@ -1,8 +1,8 @@
 /**
  * Purpose: left column — new-chat button, the conversation list (companion chats appear in
  * it by recency like any conversation), and the bottom row (SidebarNav): the companions
- * button, the view switcher and the connectivity dot that replaced the status bar. (Leo
- * 2026-08-15: roster and recents are different things — the roster lives behind 👥, not
+ * button, the view switcher and the connectivity dot that replaced the status bar. (Roster
+ * and recents are different things — the roster lives behind 👥, not
  * inside the list.)
  *
  * Wide screens keep it as a 240px column. Stacked screens (narrow or portrait — an iPad held
@@ -62,8 +62,7 @@ export function Sidebar({
   const stacked = useLayoutMode() === "stacked";
   const hiddenDrawer = stacked && !drawerOpen;
 
-  // Discovery is in both editions. It used to read a separate program running on this machine,
-  // which a web page could not reach; it now reads this app's own database, so there is nothing
+  // Discovery is in both editions: it reads this app's own database, so there is nothing
   // left for one edition to have and the other to lack.
   const navEntries: NavEntry[] = [
     [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
@@ -103,16 +102,16 @@ export function Sidebar({
         ＋ {t("nav.newChat")}
       </button>
       <nav className="flex-1 overflow-y-auto px-2">
-        {/* In the palace the left rail carries goals and continue-from-here (Leo, spec 050
-            §5); everywhere else it is the conversation history. */}
+        {/* In the palace the left rail carries goals and continue-from-here;
+            everywhere else it is the conversation history. */}
         {activeView === "map" ? (
           <PalaceRail />
         ) : (
           <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
         )}
       </nav>
-      {/* Icon order and even spread are Leo's 2026-08-16 layout: 设置 · 词汇 · 地图 · 好友,
-          with 发现 added in front of the map (spec 057).
+      {/* Icon order and even spread: 设置 · 词汇 · 地图 · 好友,
+          with 发现 added in front of the map.
           One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
       {/* Same purpose as shell-topbar-slot, for the wide layout where the sidebar is visible. */}
       <div id="shell-sidebar-slot" className="hidden px-2 pb-2 empty:hidden coarse:block" />

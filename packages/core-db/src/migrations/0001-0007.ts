@@ -146,8 +146,7 @@ export const MIGRATIONS_0001_0007: readonly Migration[] = [
   },
   {
     // Fact-check results per assistant message: one run holds gentle per-claim verdicts
-    // with their verified evidence (spec 009). Renumbered from 0005_factcheck at merge
-    // time; safe because no local database had applied the old id yet.
+    // with their verified evidence.
     id: "0006_factcheck",
     statements: [
       `CREATE TABLE factcheck_runs (
@@ -171,7 +170,7 @@ export const MIGRATIONS_0001_0007: readonly Migration[] = [
     ],
   },
   {
-    // Directed learning-structure edges over the tree (spec 010): 'requires' (hard
+    // Directed learning-structure edges over the tree: 'requires' (hard
     // prerequisite, weight always 1) and 'helps' (weighted aid, weight 0~1). Learning
     // methods become first-class nodes via the new 'kind' column, linked by 'helps' edges.
     id: "0007_knowledge_edges",

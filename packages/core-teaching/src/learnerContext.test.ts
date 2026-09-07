@@ -1,6 +1,6 @@
 /**
  * Purpose: pins the learner-context formatting — retention stance thresholds, style list
- * capping, confusion downshift line, and the no-empty-shell rule (spec 038 §2.3).
+ * capping, confusion downshift line, and the no-empty-shell rule.
  */
 import { describe, expect, it } from "vitest";
 import { formatLearnerContextMessage } from "./learnerContext";

@@ -1,5 +1,5 @@
 /**
- * Purpose: a focus session/station's DB writes plus streamed explanation (spec 042 §1-2) —
+ * Purpose: a focus session/station's DB writes plus streamed explanation —
  * inserts the row up front (so the map always shows the station, even mid-stream), then streams
  * and persists its answer. Shared by focusStore's actions so each stays a short set()-only body.
  * Main exports: insertFocusSession, insertFocusNode, streamFocusNodeAnswer.
@@ -11,10 +11,9 @@ import { getRepos } from "../platform/db";
 import { newId, nowIso } from "../platform/time";
 import { streamFocusAnswer } from "./focusExplain";
 
-/** Creates a session shell — entry_message_id is a retired legacy column (Leo 2026-08-14
- * revision to spec 042 §5) and always stays NULL now; source_message_id anchors the session's
- * in-place badge to the reply it was born from (null for the streaming-preview root, which in
- * practice never reaches this path). */
+/** Creates a session shell — entry_message_id is a retired legacy column and always stays NULL
+ * now; source_message_id anchors the session's in-place badge to the reply it was born from
+ * (null for the streaming-preview root, which in practice never reaches this path). */
 export async function insertFocusSession(
   conversationId: string,
   rootLabel: string,

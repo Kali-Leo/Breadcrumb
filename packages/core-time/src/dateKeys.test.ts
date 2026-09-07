@@ -1,7 +1,7 @@
 /**
  * Purpose: pins the one day-cutting rule the whole product shares. The keys asserted here are
  * the exact strings feature-feedback/activity.ts, feature-research/statisticsSeries.ts and
- * feature-trail/index.ts each produced from their own copy before 2026-09-02 — this file is
+ * feature-trail/index.ts each produced from their own copy — this file is
  * what makes "the same instant is the same day everywhere" a checked fact instead of a
  * comment pointing at another module.
  */

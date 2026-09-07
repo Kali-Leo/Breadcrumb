@@ -66,8 +66,8 @@ export const SOURCE_LANGS_WITH_PACKS: readonly string[] = [
 /**
  * What happens to the pair after the answer language changed. It never moves the learner onto
  * a different language: what someone is learning is their decision, not a consequence of
- * changing how the AI writes (Leo, 2026-09-04). A pair that no longer reads the answer
- * language is simply switched off, and the picker asks for a choice.
+ * changing how the AI writes. A pair that no longer reads the answer language is simply
+ * switched off, and the picker asks for a choice.
  */
 export function correctPairForSourceLang(input: {
   sourceLang: string;

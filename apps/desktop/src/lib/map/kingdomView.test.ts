@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the third level's pure display logic (spec 049) — state
+ * Purpose: unit tests for the third level's pure display logic — state
  * derivation with stable sibling order, honest auto/manual collapsing, focus+context
  * lateral-edge visibility, and recommendation picking with the goal domain filter.
  */

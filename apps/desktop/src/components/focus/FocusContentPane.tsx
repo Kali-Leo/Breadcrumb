@@ -1,5 +1,5 @@
 /**
- * Purpose: the focus overlay's main pane (spec 042 §3) — the current station's answer with
+ * Purpose: the focus overlay's main pane — the current station's answer with
  * door-word marks, select-a-phrase-to-explain, the guess-gate card, streaming/error states,
  * and the bottom ask bar. The selection offer is scoped to this pane's own text, not the whole
  * overlay, but the rule behind it is the shared one in lib/focus/selectionFocus.

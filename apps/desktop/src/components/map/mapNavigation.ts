@@ -9,7 +9,7 @@
  * (hover) and a click goes straight in. With a finger there is no hover, so a tap SELECTS —
  * the same amber wash and rail card the mouse gets for free — and a second tap on the same
  * place enters it; a tap on open sea clears the selection. The selection reuses the hover
- * channel, so the rail never needs to know which hand drove it (touch-audit 2.2).
+ * channel, so the rail never needs to know which hand drove it.
  * Main exports: MapNavigation, createMapNavigation.
  *
  * Directory note: the non-component .ts files in components/map/ are the Pixi rendering
@@ -24,7 +24,7 @@ import { type HoverInfo, type HoverResult, resolveHover } from "./mapHover";
 /** One wheel notch per camera flight. The map has no free zoom: a notch is a whole level
  * change, and until the camera has arrived the picture on screen is not yet the level the
  * next notch would act on. Tied to the settle time rather than a hand-picked number so the
- * two can never drift apart (bug hunt 2026-09-03). */
+ * two can never drift apart. */
 const WHEEL_COOLDOWN_MS = CAMERA_SETTLE_MS;
 
 /** The answer lib/platform/inputMode stamps on <html> — read, never re-derived, so the map
@@ -54,9 +54,8 @@ export function createMapNavigation(deps: {
   /** Where the camera is HEADED. Every hit test converts through this rather than through the
    * live worldRoot transform: a level change moves `getLevel()` at once while the camera eases
    * in over CAMERA_SETTLE_MS, so during that flight the live transform belongs to neither
-   * level and a pinch or wheel read through it landed in the wrong place (bug hunt
-   * 2026-09-03). Reading the target makes a gesture mid-flight mean what it will look like it
-   * meant once the camera lands. */
+   * level and a pinch or wheel read through it lands in the wrong place. Reading the target
+   * makes a gesture mid-flight mean what it will look like it meant once the camera lands. */
   getCameraTarget(): CameraFrame;
   /** Enters the given level and re-frames the camera (animated). */
   goToLevel(level: MapLevel): void;

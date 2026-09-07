@@ -1,5 +1,5 @@
 /**
- * Purpose: comparison-tree actions (spec 023) — idempotent import of the evidence-backed
+ * Purpose: comparison-tree actions — idempotent import of the evidence-backed
  * built-in profiles, pure assembly of one profile's overlap tree from the user's own
  * knowledge state, and row/definition conversion. Standalone module: reads user knowledge
  * data from repos directly, shares no logic with planner/ladder/goals.
@@ -36,7 +36,7 @@ function parseAliases(aliasesJson: string): string[] {
 
 /** Definition items → stable rows: item id = `${profileId}:${key}` so keys stay readable
  * while ids are globally unique. Position preserves authored order; kind defaults to
- * knowledge for pre-026 definitions. */
+ * knowledge for definitions predating item kinds. */
 export function definitionToItemRows(definition: ProfileDefinition): ComparisonProfileItemRow[] {
   return definition.items.map((item, index) => ({
     id: `${definition.id}:${item.key}`,
@@ -112,7 +112,7 @@ async function importBuiltinProfiles(): Promise<void> {
         description: definition.description,
         source_note: definition.sourceNote,
         created_at: nowIso(),
-        // Built-in profiles are all curriculum/skill-tree material (spec 026's occupation
+        // Built-in profiles are all curriculum/skill-tree material (the occupation
         // category is only ever produced by the occupation-profile pipeline).
         category: "curriculum",
       },
@@ -125,7 +125,7 @@ async function importBuiltinProfiles(): Promise<void> {
  * Computes one profile's overlap tree against the user's current knowledge state (nodes,
  * judged-identical aliases, mastery from real footprints + self-report claims), wrapped
  * under ONE visible root carrying the profile's title — the tree reads as a tree, not a
- * list (Leo, 2026-08-09 feedback #3). Returns null when the profile does not exist. Pure
+ * list. Returns null when the profile does not exist. Pure
  * local work — no AI, no network.
  */
 export async function computeComparisonTree(profileId: string): Promise<OverlapNode | null> {
@@ -142,7 +142,7 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
   ]);
   const items = profileRowsToDefinitionItems(itemRows);
   const matches = matchProfileLeaves(items, nodes, aliasRows);
-  // Anchor join (spec 025): a leaf whose concept a user node is confidently anchored to
+  // Anchor join: a leaf whose concept a user node is confidently anchored to
   // counts as matched — pure local lookup, the "一下子看清" path never generates anything.
   const labelByNodeId = new Map(nodes.map((node) => [node.id, node.label]));
   const anchorByConcept = new Map<string, { nodeId: string; reason: string }>();
@@ -169,7 +169,7 @@ export async function computeComparisonTree(profileId: string): Promise<OverlapN
     matches.set(item.key, semanticMatch);
   }
   const masteryByNode = computeMastery(sightings, claims, nowIso());
-  // Pure experience leaves score by the learner's own 0–10 score (spec 029), 分/10.
+  // Pure experience leaves score by the learner's own 0–10 score, 分/10.
   const scores = await repos.practice.listScores();
   const practiceValueByKey = new Map(scores.map((row) => [row.item_id, row.score / 10]));
   const roots = buildOverlapTree(

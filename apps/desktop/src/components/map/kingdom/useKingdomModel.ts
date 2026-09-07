@@ -1,5 +1,5 @@
 /**
- * Purpose: the third zoom level's view model (spec 049) — composes the view's own state
+ * Purpose: the third zoom level's view model — composes the view's own state
  * (useKingdomViewState) with the derived network (useKingdomTree), resolves the card's node
  * and its relations, and wires the two-stage card's actions. Rendering lives in
  * KingdomView/KingdomTreeSvg/KingdomNodeCard; the actions themselves in lib/map.
@@ -92,8 +92,8 @@ export function useKingdomModel(kingdom: KingdomRef) {
     void persistKingdomCollapse(state.collapseKey, collapsed, expanded);
   }
 
-  // Double-click on a station goes straight into it (Leo 2026-08-31 #3) — same action as
-  // the card's main button, so the two entrances never diverge.
+  // Double-click on a station goes straight into it — same action as the card's main
+  // button, so the two entrances never diverge.
   async function enterNode(nodeId: string) {
     const node = tree.nodeById.get(nodeId);
     if (node === undefined) return;

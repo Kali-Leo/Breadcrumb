@@ -2,12 +2,11 @@
  * Purpose: pure planning logic that turns one edge-judge LLM result into concrete
  * knowledge_edges rows (and method/concept knowledge_nodes rows) to persist — resolves pair
  * ids back to node ids, applies the requires-edge cycle guard, resolves method-node
- * helpsLabels against known labels, and (casual mode, spec 016) turns adjacentConcepts
+ * helpsLabels against known labels, and (casual mode) turns adjacentConcepts
  * proposals into sighting-free concept nodes with one helps edge each (those two proposal
  * planners live in planProposals.ts). Every judged edge
  * carries the source message it was inferred from
- * into the row (migration 0048) — parsing that sentence and then discarding it was the
- * cheapest possible audit trail going to waste. No DB, no I/O.
+ * into the row. No DB, no I/O.
  * Main exports: planEdgeJudgeResult, EdgeJudgePlan, JudgedPairContext,
  * ADJACENT_CONCEPT_EDGE_CONFIDENCE.
  */
@@ -50,7 +49,7 @@ export interface RejectedCyclicEdge {
 export interface EdgeJudgePlan {
   edgesToUpsert: KnowledgeEdgeRow[];
   methodNodesToInsert: KnowledgeNodeRow[];
-  /** Casual-mode adjacent-concept proposals (spec 016) turned into concept nodes — the
+  /** Casual-mode adjacent-concept proposals turned into concept nodes — the
    * caller must insert these WITHOUT a node_sightings row, so they stay genuinely unlit and
    * give frontier() a real "ahead". Their helps edges are already included in edgesToUpsert. */
   conceptNodesToInsert: KnowledgeNodeRow[];
@@ -110,8 +109,7 @@ function planRequiresEdge(
     confidence: judged.confidence,
     origin: "llm",
     created_at: input.nowIso(),
-    // The judge is no longer asked for a rationale — nothing ever read one off an edge, and
-    // it was generated after the verdict fields, so it never informed the verdict either.
+    // reasoning is always null here — nothing reads a rationale off this edge type.
     reasoning: null,
     source_message_id: input.sourceMessageId,
   };
@@ -131,8 +129,7 @@ function planHelpsEdge(
     confidence: judged.confidence,
     origin: "llm",
     created_at: input.nowIso(),
-    // The judge is no longer asked for a rationale — nothing ever read one off an edge, and
-    // it was generated after the verdict fields, so it never informed the verdict either.
+    // reasoning is always null here — nothing reads a rationale off this edge type.
     reasoning: null,
     source_message_id: input.sourceMessageId,
   };

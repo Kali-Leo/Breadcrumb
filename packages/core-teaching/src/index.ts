@@ -1,5 +1,5 @@
 /**
- * Purpose: public surface of the teaching-contract package (spec 038, revised 2026-08-14).
+ * Purpose: public surface of the teaching-contract package.
  * Main exports: buildTeachingSystemPrompt, buildFreeChatSystemPrompt, TEACHING_CONTRACT_BASE,
  * FREE_CHAT_BASE, LearnerContext, formatLearnerContextMessage, detectConfusion.
  */

@@ -1,6 +1,6 @@
 /**
- * Purpose: regression tests for the edge pipeline's batching (design audit 2026-08-28 #4) —
- * candidate ranking can hand over up to 40 pairs while edgeJudgeSchema accepts at most 20
+ * Purpose: regression tests for the edge pipeline's batching — candidate ranking can hand
+ * over up to 40 pairs while edgeJudgeSchema accepts at most 20
  * verdicts per reply, so more than 20 pairs MUST become more than one call instead of one
  * oversized call the model silently truncates. Also checks that each judged edge carries the
  * round's source message id into the row, and stores no rationale (the judge is not asked

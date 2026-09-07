@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the canonical-concept crosswalk (spec 025) — a concept-space
+ * Purpose: SQL statements for the canonical-concept crosswalk — a concept-space
  * shared by every comparison profile, the anchors judging user knowledge nodes against it,
  * and the cached local embedding of each concept (migration 0046).
  * Main exports: createCanonicalRepo factory.
@@ -31,8 +31,8 @@ export function createCanonicalRepo(sql: SqlClient) {
      * reference them by id.
      *
      * One transaction, not ~800 separate round trips: each `execute` is an IPC hop plus its
-     * own implicit transaction (fsync), which measured two orders of magnitude slower on the
-     * real inventory (design audit 2026-08-28, 数据层 B8). */
+     * own implicit transaction (fsync), which measures two orders of magnitude slower on the
+     * real inventory. */
     async upsertConcepts(rows: readonly CanonicalConceptRow[]): Promise<void> {
       if (rows.length === 0) return;
       const statements: SqlTransactionStatement[] = rows.map((row) => ({

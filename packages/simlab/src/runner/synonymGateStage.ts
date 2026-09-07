@@ -1,5 +1,5 @@
 /**
- * Purpose: replays apps/desktop/src/lib/knowledge/synonymGate.ts's node-dedup gate (spec 015) inside
+ * Purpose: replays apps/desktop/src/lib/knowledge/synonymGate.ts's node-dedup gate inside
  * the knowledge-tree pipeline stage — synthetic-embedding-filtered candidates against
  * existing nodes, one batched anchored LLM verdict, and plan adjustment. Deliberate
  * divergence from production: computeSyntheticNodeEmbedding is synchronous and can't fail,

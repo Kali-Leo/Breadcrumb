@@ -1,5 +1,5 @@
 /**
- * Purpose: real-SQLite regression tests for the zero-LLM demo seed (spec 035 T7b) — row
+ * Purpose: real-SQLite regression tests for the zero-LLM demo seed — row
  * counts per table, full reversibility (wipe touches only `demo-`/DEMO_PAIR rows), replayed
  * word fsrs_json is parseable with a real settled tail, and "today" carries real activity.
  */
@@ -107,7 +107,7 @@ describe("seedDemo (real sqlite)", () => {
     const events = await temp.repos.diglot.listAllEvents(DEMO_PAIR);
     const todayWordEvents = events.filter((e) => Date.parse(e.created_at) >= todayStartMs);
     expect(todayWordEvents.length).toBeGreaterThanOrEqual(2);
-    // Real-sqlite seeding takes 10s+ on slow CI runners (2026-08-17 CI timeouts).
+    // Real-sqlite seeding takes 10s+ on slow CI runners.
   }, 60_000);
 
   it("is fully reversible: --wipe clears every demo row and leaves real data untouched", async () => {
@@ -159,14 +159,14 @@ describe("seedDemo (real sqlite)", () => {
     await wipeDemoData(temp.sql);
     const secondInsert = await insertDemoData(temp.sql, NOW, WITH_WORDS);
     expect(secondInsert).toEqual(again);
-    // Triple seed+wipe on real sqlite runs 18s+ on slow CI runners (2026-08-17 CI timeouts).
+    // Triple seed+wipe on real sqlite runs 18s+ on slow CI runners.
   }, 120_000);
 
   it("can be seeded twice without colliding on its own ids", async () => {
     // The seed guards only knowledge nodes against duplicates; conversations, messages,
-    // claims and words carry fixed demo- ids. Running it twice used to fail with a raw
-    // UNIQUE constraint error in front of a user who reached the welcome screen again, so
-    // the seed clears its own previous copy first. This is that guarantee.
+    // claims and words carry fixed demo- ids, so running it twice would raise a raw
+    // UNIQUE constraint error unless the seed clears its own previous copy first. This is
+    // that guarantee.
     temp = await createTempDatabase();
     const first = await insertDemoData(temp.sql, NOW, WITH_WORDS);
     const second = await insertDemoData(temp.sql, NOW, WITH_WORDS);

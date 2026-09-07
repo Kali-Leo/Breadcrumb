@@ -1,7 +1,7 @@
 /**
  * Purpose: loads everything deriveContinents needs from local SQLite — embeddings, sighting
  * counts, and average curiosity — and turns it into a ContinentAssignment for the memory
- * palace (spec 031), memoized per nodes array so palace reopens hand cachedWorldModel the
+ * palace, memoized per nodes array so palace reopens hand cachedWorldModel the
  * same object back (identity is the cache key downstream). Best-effort: any failure (DB not
  * ready, malformed embedding rows) degrades to null so the caller falls back to tree-root
  * islands instead of throwing.
@@ -56,7 +56,7 @@ async function computeContinentAssignment(
       repos.nodeSightings.listAll(),
       repos.interestSignals.listAll(),
     ]);
-    // Daily rhythm (Leo 2026-08-31): today's footprints don't reorder the map until tomorrow.
+    // Daily rhythm: today's footprints don't reorder the map until tomorrow.
     const sightingRows = rowsBeforeDay(allSightingRows, dayStartIso);
     const interestSignalRows = rowsBeforeDay(allInterestSignalRows, dayStartIso);
 

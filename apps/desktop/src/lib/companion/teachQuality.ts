@@ -43,7 +43,7 @@ const SIGHTING_GRADE_BY_VERDICT: Record<TeachVerdictGrade, NodeSightingGrade> = 
 /** Judges the learner's latest explanation in a teach-back round and records mastery
  * evidence for the matching node (exact label match; no node → no spend). Covers both
  * dedicated teach conversations and teach-back episodes living inside a companion chat
- * (Leo 2026-08-15) — the latter identified by the conversation's knowledge state. */
+ * — the latter identified by the conversation's knowledge state. */
 export async function judgeTeachRound(conversationId: string): Promise<void> {
   const settings = useSettingsStore.getState();
   if (!settings.featureSwitches.teachQuality || !settings.networkEnabled) return;
@@ -94,7 +94,7 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
       usage,
     });
     // A teach-back is a retrieval attempt, so every verdict — flawed included — lands as one
-    // graded sighting feeding the FSRS estimate (design audit 2026-08-28, 记忆与遗忘模型 #1).
+    // graded sighting feeding the FSRS estimate.
     await repos.nodeSightings.record({
       id: newId(),
       node_id: node.id,
@@ -106,7 +106,7 @@ export async function judgeTeachRound(conversationId: string): Promise<void> {
     });
     // A flawed explanation still writes no claim and still emits nothing: the negative signal
     // belongs to the internal estimate only, and the student persona's follow-up is what probes
-    // the misconception. The 2026-08-28 audit named this boundary as correct — keep it.
+    // the misconception.
     // (memoryStore's post-round refresh picks the sighting up on its own timer.)
     if (parsed.grade === "flawed") return;
     await repos.masteryClaims.insert({

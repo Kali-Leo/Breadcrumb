@@ -1,6 +1,6 @@
 /**
  * Purpose: SQL statements for locally-computed knowledge-node embeddings — the upsert cache,
- * the single-node lookup used by explore-door concept-guess grading (spec 039), and the
+ * the single-node lookup used by explore-door concept-guess grading, and the
  * missing-embedding backfill queue.
  * Main exports: createNodeEmbeddingsRepo.
  */
@@ -21,7 +21,7 @@ export function createNodeEmbeddingsRepo(sql: SqlClient) {
       return sql.select<NodeEmbeddingRow>("SELECT * FROM node_embeddings");
     },
     /** One node's embedding, or null when it has none yet — used to grade a concept guess
-     * against a single door's node (spec 039) without loading the whole table. */
+     * against a single door's node without loading the whole table. */
     async getByNode(nodeId: string): Promise<NodeEmbeddingRow | null> {
       const rows = await sql.select<NodeEmbeddingRow>(
         "SELECT * FROM node_embeddings WHERE node_id = ? LIMIT 1",

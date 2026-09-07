@@ -1,5 +1,5 @@
 /**
- * Purpose: the experimental search-build pipeline (spec 023 §5) — one metered LLM proposal
+ * Purpose: the experimental search-build pipeline — one metered LLM proposal
  * with mandatory per-item citations, a URL verification pass over every unique cited source
  * (unreachable or off-topic pages kill their whole branch, see compareCitationVerify.ts), and
  * a whole-build failure when too little survives (宁缺毋假). Returns the display facts the UI
@@ -55,7 +55,7 @@ export type VerifiedProposal =
   | { ok: false; reason: string; costLine: string | null };
 
 /**
- * Shared proposal pipeline (spec 023 §5 / spec 028 hub decomposition): one metered LLM
+ * Shared proposal pipeline: one metered LLM
  * proposal with mandatory citations, per-URL verification, whole-run failure when too
  * little survives. Callers decide where the surviving items land.
  */
@@ -144,7 +144,7 @@ export async function runExperimentalProfileBuild(
       description,
       source_note: `实验功能：检索构建于 ${nowIso().slice(0, 10)}，每条来源都验证过：网址能打开、内容对得上`,
       created_at: nowIso(),
-      // The search-build pipeline only ever proposes curriculum/skill-tree topics (spec 026's
+      // The search-build pipeline only ever proposes curriculum/skill-tree topics (the
       // occupation category has its own separate build pipeline).
       category: "curriculum",
     },

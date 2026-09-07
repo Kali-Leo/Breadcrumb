@@ -1,5 +1,5 @@
 /**
- * Purpose: implementations of the spec 036 whitelisted statistic functions — read-only
+ * Purpose: implementations of the whitelisted statistic functions — read-only
  * aggregate SQL plus feature-memory's FSRS retention math, with every sample-size floor
  * reported as an explicit `suppressed` result rather than as the number 0. Nothing here ever
  * executes a mutating statement.
@@ -21,7 +21,7 @@ import {
 import { MIN_SAMPLE_SIZE, type StatResult, suppressed } from "./statResults";
 import type { StatCall } from "./taskSchema";
 
-/** The same settle bar feature-feedback's settled.ts uses (spec 035 #7). Kept as a local
+/** The same settle bar feature-feedback's settled.ts uses. Kept as a local
  * literal rather than an import: this package cannot depend on feature-diglot-weave (not in
  * package.json — the module bus keeps research read-only and dependency-minimal), and only
  * the bare `stability` number is needed, not full ts-fsrs Card revival. */
@@ -144,7 +144,7 @@ async function executeRetentionSummary(
  * Fewest local days actually carrying data before a Pearson coefficient is worth reporting.
  * Correlations do not stabilize until n is in the hundreds — n < 150 is rarely defensible and
  * a coefficient over 7 days is noise (Schönbrodt & Perugini 2013, "At what sample size do
- * correlations stabilize?"). 30 is the floor the 2026-08-28 audit set for this panel: still
+ * correlations stabilize?"). 30 is the floor for this panel: still
  * far short of stable, but no longer a number produced from a single week.
  */
 const CORRELATION_MIN_DAYS_WITH_DATA = 30;
@@ -164,13 +164,13 @@ async function executeCorrelation(
     (_, index) => (xs[index] ?? 0) > 0 || (ys[index] ?? 0) > 0,
   ).length;
   // 0 is a valid coefficient meaning "these move independently" — reporting it for "we do
-  // not know" prints a research finding nobody computed (审计统计分报告差距 3).
+  // not know" prints a research finding nobody computed.
   if (daysWithData < CORRELATION_MIN_DAYS_WITH_DATA) return suppressed(daysWithData);
   return { kind: "number", value: roundTo3(pearsonCorrelation(xs, ys)), n: dayKeys.length };
 }
 
 /** Dispatches one whitelisted StatCall to its implementation. Every branch only issues
- * SELECTs — this is the sole entry point statistics execution goes through (spec 036). */
+ * SELECTs — this is the sole entry point statistics execution goes through. */
 export async function executeStatCall(
   call: StatCall,
   sql: SqlClient,

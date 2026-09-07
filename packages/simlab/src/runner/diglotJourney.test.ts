@@ -1,8 +1,8 @@
 /**
- * Purpose: acceptance-6 assertions over the 30-day diglot journey — meetable review debt
+ * Purpose: assertions over the 30-day diglot journey — meetable review debt
  * converges, due words are re-encountered promptly (no starvation), density and new-word
- * throttles hold, intake is not choked by unpayable debt (audit 2026-08-28 #3), and the run
- * is deterministic (spec 033).
+ * throttles hold, intake is not choked by unpayable debt, and the run
+ * is deterministic.
  */
 import { describe, expect, it } from "vitest";
 import { simulateDiglotJourney } from "./diglotJourney";
@@ -47,9 +47,9 @@ describe("simulateDiglotJourney", () => {
   });
 
   it("keeps taking new words in instead of locking up on unpayable debt", () => {
-    // Measured 2026-08-28: 61 words introduced, 20 of them held (FSRS stability ≥ 7 days).
-    // With the debt counted unfiltered — the behaviour before this fix — the same corpus and
-    // seed give 42/17, and by day 90 intake stops entirely (78 words vs 139 here).
+    // This corpus and seed produce 61 words introduced, 20 of them held (FSRS stability ≥ 7 days).
+    // With the debt counted unfiltered, the same corpus and seed give 42/17, and by day 90
+    // intake stops entirely (78 words vs 139 here).
     expect(report.totalWordsLearning).toBeGreaterThanOrEqual(50);
     expect(report.wordsHeld).toBeGreaterThanOrEqual(10);
     // Intake must still be alive at the end of the run, not just during the ramp-up.

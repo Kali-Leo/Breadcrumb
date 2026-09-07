@@ -1,7 +1,7 @@
 /**
- * Purpose: the 🔬 research task platform's settings-page switch row (spec 036 §4). Turning
+ * Purpose: the 🔬 research task platform's settings-page switch row. Turning
  * it on needs no confirmation; turning it off shows RESEARCH_COPY's one-time plain
- * explanation first (Leo's 2026-08-13 ruling: no guilt-trip retention, state the four facts
+ * explanation first (no guilt-trip retention, state the four facts
  * once, then never ask again). Zero token cost, so it carries no spend line.
  * Main exports: ResearchTasksSettingsRow.
  */

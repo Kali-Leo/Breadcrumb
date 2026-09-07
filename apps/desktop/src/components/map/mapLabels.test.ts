@@ -1,8 +1,8 @@
 /**
  * Purpose: the one number a map name hands to Pixi. `alpha` is taken on trust by the renderer:
  * a NaN there draws nothing at all, so an island whose retention average went bad would simply
- * lose its name with no error anywhere (bug hunt 2026-09-03). labelDim is the last place that
- * can refuse a number it cannot use.
+ * lose its name with no error anywhere. labelDim is the last place that can refuse a number
+ * it cannot use.
  */
 import { describe, expect, it } from "vitest";
 import { labelDim } from "./mapLabels";

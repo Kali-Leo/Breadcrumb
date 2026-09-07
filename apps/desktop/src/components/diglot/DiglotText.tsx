@@ -1,5 +1,5 @@
 /**
- * Purpose: renders a woven assistant message (spec 033) — patch segments with highlighted
+ * Purpose: renders a woven assistant message — patch segments with highlighted
  * target words, their cards (guess gate decided at open), abandonment on close, and viewport
  * exposure signals (once per message per session, in useDiglotExposure). The word and its
  * portal card render in DiglotWordSpan; placement math lives in lib/diglot/diglotCardPosition.

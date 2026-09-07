@@ -2,9 +2,7 @@
  * Purpose: the small card that stays after the tour ends, listing the few things worth doing
  * first — and, when the demo is installed, the button that takes it away again.
  *
- * A tour tells someone what exists; it does not get them to do anything. The checklist is
- * what carries a newcomer from "I have seen it" to "I have used it", which is the only
- * transition that matters. Each item ticks itself off from real state, so it is a mirror of
+ * Each item ticks itself off from real state, so it is a mirror of
  * what has happened rather than a set of chores — nothing here counts down, scolds, or shows
  * a percentage.
  *
@@ -49,8 +47,8 @@ export function OnboardingChecklist({
     { done: state.sawMap, label: t("checklist.map"), action: onOpenMap },
   ];
 
-  // On touch the card would sit over the map's hints or the context panel (2026-09-03
-  // walkthrough), so there it starts as a pill and only opens when asked; a mouse layout
+  // On touch the card would sit over the map's hints or the context panel,
+  // so there it starts as a pill and only opens when asked; a mouse layout
   // keeps the open card, unchanged.
   const coarse = useInputMode() === "coarse";
   const stacked = useLayoutMode() === "stacked";

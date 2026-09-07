@@ -1,9 +1,8 @@
 /**
  * Purpose: headless trail logic — day boundaries, and the plain daily-summary contract. The
- * day boundaries come from @breadcrumb/core-time (2026-09-02): the trail's "yesterday" and
- * the feedback heatmap's cells must cut the calendar at the same instant, and until now that
- * agreement was three byte-identical private copies of the same six lines.
- * Tone rule (product principle 1, 2026-08-02): summaries only state what WAS learned, as
+ * day boundaries come from @breadcrumb/core-time: the trail's "yesterday" and
+ * the feedback heatmap's cells must cut the calendar at the same instant.
+ * Tone rule: summaries only state what WAS learned, as
  * fact, without praise or exclamation; they never mention gaps, streaks or "you haven't...".
  * Main exports: localDayRange, localDateString, trailSummarySchema, buildTrailSummaryMessages.
  */

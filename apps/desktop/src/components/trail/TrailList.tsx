@@ -1,10 +1,10 @@
 /**
- * Purpose: sidebar conversation list — a quiet search box on top (Leo-approved 2026-08-16;
- * WeChat/ChatGPT's pattern for histories that grow for months), then plain time order with
+ * Purpose: sidebar conversation list — a quiet search box on top
+ * (WeChat/ChatGPT's pattern for histories that grow for months), then plain time order with
  * trail-card display names (auto "首站 → 末站" unless the user renamed). Each row carries the
  * rename/delete pair every chat history has, kept out of sight until the pointer is on the
- * row. Topic grouping (trailGrouping.ts) was wired in spec 044 and reverted the same day: Leo
- * judged the group headers + preview/group duplication made the list unreadable.
+ * row. Topic grouping (trailGrouping.ts) is unused — the group headers plus preview/group
+ * duplication made the list unreadable.
  * Main exports: TrailList.
  */
 import type { ConversationRow } from "@breadcrumb/core-db";

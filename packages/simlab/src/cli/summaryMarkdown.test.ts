@@ -67,9 +67,9 @@ describe("buildSummaryMarkdown", () => {
   });
 
   it("never reports targetConceptsEcho, under that name or as a recall figure", () => {
-    // It is an echo of the student prompt's own input, so it read 100% on every run ever
-    // made and would be read as evidence the extraction works (design audit 2026-08-28,
-    // simlab与测试策略 #3). It stays in metrics.json; putting it back here needs a reason.
+    // It is an echo of the student prompt's own input, so it reads 100% on every run and
+    // would be read as evidence the extraction works. It stays in metrics.json; putting
+    // it back here needs a reason.
     const markdown = buildSummaryMarkdown(makeMetrics(), []);
     expect(markdown).not.toContain("targetConcepts");
     expect(markdown.toLowerCase()).not.toContain("recall");

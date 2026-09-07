@@ -1,4 +1,4 @@
-// Purpose: local TTS bridge for the diglot weave (spec 033 T9) — runs a user-configured
+// Purpose: local TTS bridge for the diglot weave — runs a user-configured
 // Piper binary and returns the synthesized WAV bytes to the frontend for playback.
 //
 // The paths are checked first, by tts_paths.rs, which is where the reasoning about executing

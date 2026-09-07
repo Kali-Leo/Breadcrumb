@@ -3,8 +3,7 @@
  * LLM, inserting any genuinely-new suggested nodes, and (P6 mirror) updating an existing goal
  * in place instead of inserting a duplicate when the trimmed title already exists. This
  * already persists the full mapping (existing + suggested) with no checkbox calibration step,
- * which is exactly the product flow the desktop lab panel was aligned to on 2026-08-02
- * (spec 012 §2) — no behavior change needed here, this file was already the target shape.
+ * matching the desktop lab panel's flow.
  * Main exports: applyCreateGoal.
  */
 import { randomUUID } from "node:crypto";

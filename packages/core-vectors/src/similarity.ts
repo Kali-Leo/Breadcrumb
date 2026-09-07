@@ -1,13 +1,8 @@
 /**
  * Purpose: the plain-array vector math every relative gate in the product is built on —
- * cosine similarity, the one shared gate fraction, and L2 normalization. Extracted 2026-09-02
- * from six near-identical private copies (feature-knowledge-tree, feature-graph,
- * feature-interest, feature-browsing-interest, feature-map, feature-diglot-weave): the copies
- * were justified as "行为局部性 > DRY", but they had already drifted — five truncated
- * mismatched vectors to the shorter length and one refused them — and the gate fraction lived
- * as four separate 0.5 literals, which is exactly how a threshold sweep goes wrong.
+ * cosine similarity, the one shared gate fraction, and L2 normalization.
  *
- * The strict length check is the one kept: comparing a 384-dimension vector against a
+ * The strict length check matters: comparing a 384-dimension vector against a
  * 64-dimension one by silently ignoring 320 dimensions returns a flatteringly high cosine for
  * two things that were never comparable. Zero is the honest answer.
  * Main exports: cosineSimilarity, l2Normalize, RELATIVE_GATE_FRACTION, similarityBaseline,
@@ -44,8 +39,8 @@ export function l2Normalize(vector: readonly number[]): number[] {
 }
 
 /** A candidate must clear μ + this fraction of (best − μ) of the subject's own similarity
- * landscape. One constant, because the 2026-08-28 audit's "100% of candidates pass, 0.023%
- * useful output" came from thresholds that disagreed across modules. */
+ * landscape. One constant, avoiding the failure mode where thresholds disagree across
+ * modules and let almost everything through with no real screening value. */
 export const RELATIVE_GATE_FRACTION = 0.5;
 
 /** Mean and best of one subject's similarities. Mean is clamped to at most best: mean <= best
@@ -66,8 +61,8 @@ export function similarityBaseline(similarities: readonly number[]): SimilarityB
 
 /** Relative-gate threshold over one subject's own similarity landscape: mean plus a fraction
  * of the gap up to its best match. Why relative and not an absolute cutoff: e5-family
- * embeddings pack every real pair of this product's nodes into a 0.147-wide band (measured on
- * the live database 2026-08-28: min 0.802, median 0.854, max 0.949), so an absolute threshold
+ * embeddings pack every real pair of this product's nodes into a 0.147-wide band (min 0.802,
+ * median 0.854, max 0.949), so an absolute threshold
  * anywhere in that band passes everything or nothing. */
 export function relativeGate(baseline: SimilarityBaseline): number {
   return baseline.mean + RELATIVE_GATE_FRACTION * (baseline.best - baseline.mean);

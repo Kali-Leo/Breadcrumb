@@ -1,8 +1,8 @@
 /**
- * Purpose: golden-sample coordinate assertions for layoutFocusMap (spec 042 §4) — the
- * mind-map/subway-fork layout Leo described as "a 下挂 (b,c)": a fork scenario (one word child,
- * one question child, laid out as peers with the parent centered above them) and a single-chain
- * scenario (every node has exactly one child, so the whole line falls straight down one column).
+ * Purpose: golden-sample coordinate assertions for layoutFocusMap — the mind-map/subway-fork
+ * layout (informally "a 下挂 (b,c)"): a fork scenario (one word child, one question child, laid
+ * out as peers with the parent centered above them) and a single-chain scenario (every node
+ * has exactly one child, so the whole line falls straight down one column).
  */
 import { describe, expect, it } from "vitest";
 import { layoutFocusMap } from "./mapLayout";

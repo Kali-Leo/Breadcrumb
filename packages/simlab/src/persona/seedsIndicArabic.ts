@@ -1,11 +1,11 @@
 /**
- * Purpose: the seed personas whose scripts break the harness's original assumptions
- * (multilingual extension 2026-09-07) — Cyrillic, Devanagari, Arabic (RTL) and Bengali.
+ * Purpose: the seed personas whose scripts break the harness's original assumptions —
+ * Cyrillic, Devanagari, Arabic (RTL) and Bengali.
  * These are the ones worth running: Devanagari and Bengali end sentences with a danda (।)
  * and Arabic with ؟/،, none of which the Chinese-and-Latin punctuation tables knew about, so
  * clause segmentation and question counting were silently wrong for every learner here.
  *
- * Provenance: persona prose drafted with deepseek-v4-flash (2026-09-07) from an archetype
+ * Provenance: persona prose drafted with deepseek-v4-flash from an archetype
  * brief and reviewed by hand. Concept labels cross-checked against the Wiktionary extraction
  * in scripts/language-packs/.cache/interlingua/: hi प्रायिकता → "probability",
  * hi बीजगणित/ज्यामिति/त्रिकोणमिति → algebra/geometry/trigonometry, bn সীমা → "limit",
@@ -58,7 +58,7 @@ export const INDIC_ARABIC_SEED_PERSONAS: readonly Persona[] = [
     },
   },
   // Scenario: the frustrated, self-blaming learner in a right-to-left script. Its replies carry
-  // ؟ and ،, the two characters the discipline tripwire and the tokenizer used to ignore.
+  // ؟ and ،, the two characters the discipline tripwire and the tokenizer must recognize.
   {
     id: "frustrated-self-blaming-ar",
     language: "ar",

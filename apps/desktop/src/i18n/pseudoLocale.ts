@@ -2,7 +2,7 @@
  * Purpose: a development-only pseudolocale — English messages padded and flipped to
  * right-to-left, so layout problems (truncation, hardcoded direction, clipped buttons) show
  * up before a real translation exists. It is not a language and never appears in a build the
- * user sees; that is the point (spec 058 §2: no fake translations in the picker).
+ * user sees; that is the point — no fake translations in the picker.
  * Main exports: PSEUDO_LOCALE_CODE, isPseudoLocale, buildPseudoCatalogue.
  */
 

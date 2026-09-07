@@ -1,7 +1,7 @@
 /**
  * Purpose: deterministic persona variation — given a seed persona and an integer variant
  * number, produces a reproducible jittered behavior axis and a reproducible topic subset,
- * using the shared seeded PRNG (never Math.random, per spec 013's determinism rule).
+ * using the shared seeded PRNG (never Math.random).
  * Main exports: perturbPersona.
  */
 import { mulberry32, seedFromStrings } from "../util/prng";

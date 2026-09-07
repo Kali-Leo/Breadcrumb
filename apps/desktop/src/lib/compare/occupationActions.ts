@@ -1,5 +1,5 @@
 /**
- * Purpose: occupation-profile actions (spec 026) — normalize free input against the
+ * Purpose: occupation-profile actions — normalize free input against the
  * internalized O*NET directory (candidate confirmation, no guessing), and build the chosen
  * occupation's profile fully offline from the bundled dataset (plus its timeliness patch
  * when one exists), registering tool/knowledge leaf concepts so the anchor sweep can judge
@@ -67,7 +67,7 @@ export interface OccupationHit {
 export async function searchOccupations(query: string, limit = 6): Promise<OccupationHit[]> {
   // The directory is Chinese material; in another interface language the search finds
   // nothing and the page falls through to "build a comparison with the AI", which works in
-  // any language (spec 058 §3).
+  // any language.
   if (!bundledContentMatches()) return [];
   const needle = normalizeLabel(query);
   if (needle.length < 2) return [];
@@ -88,7 +88,7 @@ export async function searchOccupations(query: string, limit = 6): Promise<Occup
 }
 
 /**
- * Builds and stores the occupation's profile — entirely offline (spec 026: the whole
+ * Builds and stores the occupation's profile — entirely offline (the whole
  * directory ships with the app). Tool/knowledge leaf concepts are registered so the anchor
  * sweep can judge user nodes against them later. Returns the profile id.
  */
@@ -133,7 +133,7 @@ export async function createOccupationProfile(code: string): Promise<string | nu
     conceptRows.push({
       id: item.conceptId,
       label: item.label,
-      // ESCO altLabels ride along as aliases (spec 027) — they widen the free string/alias
+      // ESCO altLabels ride along as aliases — they widen the free string/alias
       // pass so fewer pairs ever reach the paid semantic judge.
       aliases_json: JSON.stringify(item.aliases),
       source_ref: item.sourceRef,

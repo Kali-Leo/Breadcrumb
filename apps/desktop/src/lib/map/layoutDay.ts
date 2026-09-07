@@ -1,7 +1,7 @@
 /**
- * Purpose: the palace layout's daily rhythm (Leo 2026-08-31) — island size and centrality
+ * Purpose: the palace layout's daily rhythm — island size and centrality
  * refresh once per local day, so browsing never moves the map mid-day. "When did today start"
- * is @breadcrumb/core-time's answer now (2026-09-02), the same one the feedback heatmap and
+ * is @breadcrumb/core-time's answer, the same one the feedback heatmap and
  * the trail's daily summary cut their days by; this module only adds "which rows existed
  * before then", which is the layout's own question.
  * Main exports: startOfLocalDayIso, rowsBeforeDay.

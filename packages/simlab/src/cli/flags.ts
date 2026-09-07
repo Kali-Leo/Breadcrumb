@@ -1,6 +1,6 @@
 /**
  * Purpose: parses the `sim run` CLI flags (--journeys/--workers/--days/--budgetCny),
- * defaulting per spec 013 T3 (2 journeys / 2 workers / 14 virtual days / ¥5 budget).
+ * defaulting to 2 journeys / 2 workers / 14 virtual days / ¥5 budget.
  * Main exports: parseRunFlags, RunFlags.
  */
 export interface RunFlags {

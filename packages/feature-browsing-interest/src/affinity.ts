@@ -1,19 +1,19 @@
 /**
- * Purpose: spec 059's bridge math — turns the learner's watched professional-content titles
+ * Purpose: the bridge math that turns the learner's watched professional-content titles
  * (already embedded by the caller) into a per-knowledge-node browsing-affinity score.
  *
  * Why distribution-relative, not an absolute floor: the local e5 model packs every
- * title-node pair into a narrow high band (measured on the live database 2026-08-29:
- * node-node cosines min 0.802, p10 0.831, median 0.854, p90 0.886, max 0.949 — and titles
+ * title-node pair into a narrow high band (node-node cosines min 0.802, p10 0.831, median
+ * 0.854, p90 0.886, max 0.949 — and titles
  * go through the same "query: " prefix, so they live in the same band). An absolute floor
- * anywhere in that band either passes everything or nothing — the same bug the 2026-08-28
- * audit rooted out of the dedup tier (病根三, see feature-knowledge-tree/similarityGate.ts).
+ * anywhere in that band either passes everything or nothing — the same bug
+ * ruled out of the dedup tier (see feature-knowledge-tree/similarityGate.ts).
  * So a title lends affinity only to nodes that stand out of that title's OWN similarity
  * landscape: sim ≥ mean + fraction×(best − mean), and by at least MIN_AFFINITY_EXCESS over
  * the mean, so a title related to nothing (flat landscape) crowns no node at all.
  *
  * Pure math, no DB, no I/O. Cosine and the gate come from @breadcrumb/core-vectors, shared
- * with feature-interest and feature-knowledge-tree (2026-09-02).
+ * with feature-interest and feature-knowledge-tree.
  * Main exports: browsingAffinityByNode, watchedTitleSignals, watchedTitleWeight,
  * WatchedTitleVector.
  */
@@ -27,8 +27,8 @@ export { RELATIVE_GATE_FRACTION as AFFINITY_RELATIVE_GATE_FRACTION } from "@brea
 /** A node must exceed the title's mean similarity by at least this much, on top of the
  * relative gate. The relative gate alone always passes each title's best node, even when the
  * title resembles nothing the learner studies (a flat landscape still has a max); this floor
- * is calibrated to the measured band: the live database's p10→p90 node-node spread is ≈0.055
- * (2026-08-29), so a genuine match must clear the mean by about one band-width. */
+ * is calibrated to the measured band: the live database's p10→p90 node-node spread is ≈0.055,
+ * so a genuine match must clear the mean by about one band-width. */
 export const MIN_AFFINITY_EXCESS = 0.05;
 
 /** Recency half-life for a watched title's weight. A product choice, not an empirical value
@@ -38,7 +38,7 @@ export const BROWSING_RECENCY_HALF_LIFE_DAYS = 30;
 
 /** How much a finished viewing outweighs an abandoned one. Unfinished is deliberately not
  * zero — starting a video is still a choice — but it half-counts, because abandonment is
- * ambiguous between "not interested" and "too hard right now" (spec 059 决策记录). */
+ * ambiguous between "not interested" and "too hard right now". */
 const UNFINISHED_WEIGHT_FACTOR = 0.5;
 
 export interface WatchedTitleVector {
@@ -51,8 +51,7 @@ export interface WatchedTitleVector {
 // The affinity score per node: weight × (similarity − title's mean similarity), max-pooled
 // over titles — "excess similarity" units, small (≲0.15) but honestly [0,1]-bounded;
 // frontier min-max normalizes inside the candidate set, so only the ordering carries
-// meaning. Titles themselves stop here: Leo 裁决 2026-08-30「完全找不到什么给知识点标注
-// 从什么视频来的理由，请你把这个删掉」— no title ever leaves this computation.
+// meaning. Titles themselves stop here — no title ever leaves this computation.
 
 /** Weight of one watched item: finished counts full, unfinished half, both fading on a
  * 30-day half-life from the viewing time. */
@@ -65,7 +64,7 @@ export interface WatchedTitleSignal {
   title: string;
   weight: number;
   /** Viewing time (unix seconds) and completion of the winning entry — carried so hindsight
-   * validation (spec 060 §5) can recompute this title's weight as of any past moment. */
+   * validation can recompute this title's weight as of any past moment. */
   ts: number;
   finished: boolean;
 }

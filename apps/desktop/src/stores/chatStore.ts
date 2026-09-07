@@ -42,7 +42,7 @@ interface ChatState extends ActiveMirror, ConversationActions {
    * is cleared only once its user message actually persisted. */
   drafts: ReadonlyMap<string | null, string>;
   startNewConversation(): void;
-  /** Non-destructive continuation from any station (spec 040 §2). */
+  /** Non-destructive continuation from any station. */
   resumeFromMessage(messageId: string): void;
   returnToLatest(): void;
   /** Sends into the given conversation (defaults to the active one; null active = a fresh
@@ -57,7 +57,7 @@ interface ChatState extends ActiveMirror, ConversationActions {
    * active mirror, or they read whatever happens to be on screen. */
   messagesFor(conversationId: string): MessageRow[];
   kindFor(conversationId: string): ConversationKind;
-  /** The 学习模式 state the composer shows (spec 052); the null key is the new-conversation
+  /** The 学习模式 state the composer shows; the null key is the new-conversation
    * composer, whose state is sticky and stamps each conversation it births. */
   newConversationStudyMode: boolean;
   studyModeFor(conversationId: string | null): boolean;

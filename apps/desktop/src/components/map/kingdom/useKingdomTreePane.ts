@@ -1,7 +1,7 @@
 /**
  * Purpose: the kingdom tree's scrolling pane — tracks its rendered content-box size (the
  * fit calculation needs real pixels) and, once per mount, opens centered on the primary
- * recommendation, or on the tree's middle when there is none (Leo 2026-08-31 #2).
+ * recommendation, or on the tree's middle when there is none.
  * Main exports: useKingdomTreePane.
  */
 import { type RefObject, useEffect, useRef, useState } from "react";

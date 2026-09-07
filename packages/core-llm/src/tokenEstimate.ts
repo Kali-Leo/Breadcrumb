@@ -3,8 +3,8 @@
  * page's per-feature estimates) and for measuring a prompt's size without spending money.
  *
  * The ratios are DeepSeek's own published ones: "1 English character ≈ 0.3 token,
- * 1 Chinese character ≈ 0.6 token" (https://api-docs.deepseek.com/quick_start/token_usage,
- * read 2026-08-31). Their documentation is explicit that these are approximations and that
+ * 1 Chinese character ≈ 0.6 token" (https://api-docs.deepseek.com/quick_start/token_usage).
+ * Their documentation is explicit that these are approximations and that
  * the usage figures returned by the API are the authoritative count — so this is only ever
  * used for estimates shown as estimates, never to bill anybody.
  *

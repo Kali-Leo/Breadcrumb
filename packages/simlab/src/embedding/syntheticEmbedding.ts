@@ -2,9 +2,9 @@
  * Purpose: deterministic, dependency-free stand-in for the app's local ONNX embedding
  * (multilingual-e5-small via fastembed) — hashes character bigrams of a text into a fixed
  * L2-normalized vector, so rankCandidatePairs' cosine-similarity path is exercisable in the
- * harness without ONNX or network access. Divergence from production is deliberate (spec
- * 013 T1) and documented here rather than in the runner. The hash and the normalization are
- * the shared core primitives (2026-09-02) — core-vectors' l2Normalize keeps this module's
+ * harness without ONNX or network access. Divergence from production is deliberate and
+ * documented here rather than in the runner. The hash and the normalization are
+ * the shared core primitives — core-vectors' l2Normalize keeps this module's
  * "a zero vector comes back as a zero vector" rule, which packVectors deliberately does not.
  * Main exports: computeSyntheticEmbedding, computeSyntheticNodeEmbedding,
  * SYNTHETIC_EMBEDDING_DIMENSIONS, SYNTHETIC_EMBEDDING_MODEL.

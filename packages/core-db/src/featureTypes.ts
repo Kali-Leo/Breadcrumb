@@ -23,7 +23,7 @@ export interface TrailSummaryRow {
   created_at: string;
 }
 
-/** One fact-check pass over one assistant message (spec 009). */
+/** One fact-check pass over one assistant message. */
 export interface FactcheckRunRow {
   id: string;
   message_id: string;
@@ -43,7 +43,7 @@ export interface FactcheckClaimRow {
   created_at: string;
 }
 
-/** One silently-degraded AI pipeline failure (spec 014) — never shown to the user, visible
+/** One silently-degraded AI pipeline failure — never shown to the user, visible
  * only to the developer via the lab panel's "最近的静默失败" section. Writing this row is
  * itself best-effort: a failure to record a failure must never throw. */
 export interface AiFailureRow {

@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for term_marks (spec 043 §5) — one cached term-marking verdict per
+ * Purpose: SQL statements for term_marks — one cached term-marking verdict per
  * (target_kind, target_id), so a message or focus-node answer is ever LLM-marked at most once.
  * Main exports: createTermMarksRepo.
  */
@@ -9,7 +9,7 @@ import type { SqlClient } from "./types";
 export function createTermMarksRepo(sql: SqlClient) {
   return {
     /** Looks up an already-cached verdict for one target — a hit means the caller must not
-     * call the LLM again (spec 043 §5's anti-double-billing rule). */
+     * call the LLM again (the anti-double-billing rule). */
     async getByTarget(
       targetKind: TermMarkTargetKind,
       targetId: string,

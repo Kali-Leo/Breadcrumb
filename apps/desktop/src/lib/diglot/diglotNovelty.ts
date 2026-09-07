@@ -1,12 +1,12 @@
 /**
- * Purpose: context novelty for review candidates (spec 033) — embeds the clause each
- * candidate word appears in and compares it against that word's stored contexts, so
- * re-meeting a word in a new setting scores higher than a repeat.
+ * Purpose: context novelty for review candidates — embeds the clause each candidate word
+ * appears in and compares it against that word's stored contexts, so re-meeting a word in a
+ * new setting scores higher than a repeat.
  *
- * The clause, not the whole message (audit 2026-08-28, 语言织入 #2): with a message-level
- * vector, every word in one long reply had the same context, two different replies about the
- * same topic looked identical, and "has this word been met somewhere new" could not actually
- * be answered. Side effects: one embedding call, one DB read.
+ * The clause, not the whole message: with a message-level vector every word in one long reply
+ * shares the same context, two different replies about the same topic look identical, and
+ * "has this word been met somewhere new" cannot be answered. Side effects: one embedding
+ * call, one DB read.
  * Main exports: contextNoveltyFor, ContextNovelty.
  */
 import type { DiglotPairId } from "@breadcrumb/core-db";
@@ -35,7 +35,7 @@ export async function contextNoveltyFor(input: {
   if (lemmas.length === 0) return { noveltyByLemma, contextByLemma };
 
   // One embedding call for every clause in play: the reveal path cannot afford a round trip
-  // per word (audit 2026-08-28 #11), and identical clauses are embedded once.
+  // per word, and identical clauses are embedded once.
   const uniqueClauses = [...new Set(input.clauseByLemma.values())].filter((text) => text !== "");
   const vectors = uniqueClauses.length === 0 ? null : await embedTexts(uniqueClauses);
   const vectorByClause = new Map<string, number[]>();

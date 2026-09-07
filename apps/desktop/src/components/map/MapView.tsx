@@ -39,7 +39,7 @@ import { useMapSceneSync } from "./useMapSceneSync";
 import { useWorldModel } from "./useWorldModel";
 
 /** The square map box. Wide: as tall as the page, never wider than what leaves the rail its
- * 16rem (floored at 0 — a negative max-width used to erase the canvas on a phone, B1).
+ * 16rem (floored at 0 — a negative max-width erases the canvas on a phone).
  * Stacked: as wide as the page, capped so some rail stays in view under it. */
 const MAP_BOX =
   "relative h-full wide:max-w-[max(0px,calc(100%_-_16rem))] stacked:h-auto stacked:w-[min(100%,70dvh)] stacked:shrink-0";
@@ -64,20 +64,19 @@ export function MapView() {
     void useMemoryStore.getState().refresh();
   }, []);
 
-  // Mirror modules (spec 046): one load per palace visit feeds the whole context stack.
+  // Mirror modules: one load per palace visit feeds the whole context stack.
   const feedbackLabEnabled = useSettingsStore((state) => state.featureSwitches.feedbackLab);
   useEffect(() => {
     if (feedbackLabEnabled) void useFeedbackStore.getState().loadAll();
   }, [feedbackLabEnabled]);
 
-  // The left rail's goal card opens the palace-internal goal view via the bus (spec 050 §5).
+  // The left rail's goal card opens the palace-internal goal view via the bus.
   useEffect(() => {
     return appEventBus.on("palace:openGoalView", () => setGoalViewOpen(true));
   }, []);
 
-  // Planner cold start (spec 047): the palace hosts the frontier/goal surfaces now, so the
-  // one-time recompute that used to live in the lab happens here; event subscriptions keep
-  // it fresh afterwards.
+  // Planner cold start: the palace hosts the frontier/goal surfaces, so the one-time
+  // recompute happens here; event subscriptions keep it fresh afterwards.
   useEffect(() => {
     usePlannerStore
       .getState()
@@ -91,7 +90,7 @@ export function MapView() {
     onLevel: setLevel,
     // Entering a kingdom (click, second tap, pinch, or the rail's button) opens its subway
     // map. The hit is resolved by the controller at event time — never from React's `hover`,
-    // which on a tap was still the previous render's null (touch-audit 1.6).
+    // which on a tap is still the previous render's null.
     onEnterKingdom(nodeId) {
       if (level.kind !== "island") return;
       const kingdom = findIsland(displayWorld, level.islandId)?.kingdoms.find(
@@ -115,8 +114,8 @@ export function MapView() {
   useMapPinch({ ready, coarse, containerRef, controllerRef });
 
   // Neither of these may return early: the Pixi container has to stay mounted or the renderer
-  // never initializes, and useMapApplication's effect runs once (bug hunt 2026-09-03 — an
-  // empty sea on the first visit left the map dead for the whole session). They cover instead.
+  // never initializes, and useMapApplication's effect runs once — an empty sea on the first
+  // visit would leave the map dead for the whole session. They cover instead.
   const overlay = mapOverlayState({ initFailed, islandCount: world.islands.length });
 
   // The overlay's header reads the kingdom's name from the live world, not the click-time
@@ -129,7 +128,7 @@ export function MapView() {
 
   // The goal view and a kingdom's subway map cover the palace as overlays instead of
   // replacing it — the Pixi application initializes once per mount and its canvas would not
-  // survive an unmount/remount of its container (spec 048 walkthrough finding).
+  // survive an unmount/remount of its container.
   return (
     <div className="relative h-full w-full">
       <div className="flex h-full w-full overflow-hidden stacked:flex-col stacked:overflow-y-auto">

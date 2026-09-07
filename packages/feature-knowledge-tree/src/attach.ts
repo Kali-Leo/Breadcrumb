@@ -2,7 +2,7 @@
  * Purpose: pure tree logic — plans changes to the USER's global tree from one round's
  * extraction: brand-new concepts become nodes, already-known concepts become re-sightings.
  * Every touched concept leaves a sighting (footprint) for the conversation. An extracted
- * label that hits the alias table (spec 015 node-dedup gate) behaves exactly like a label
+ * label that hits the alias table behaves exactly like a label
  * match on the canonical node — a sighting, never a duplicate.
  * Main exports: planNodeChanges, NodeChangePlan.
  */
@@ -15,8 +15,8 @@ export interface NodeChangePlanInput {
   /** The user's whole tree (global — the tree belongs to the user, not the conversation). */
   existingNodes: readonly KnowledgeNodeRow[];
   extracted: readonly ExtractedNode[];
-  /** Alias labels the synonym gate previously judged identical to an existing node (spec
-   * 015) — a label found here resolves to its canonical node id exactly like a direct
+  /** Alias labels the synonym gate previously judged identical to an existing node — a label
+   * found here resolves to its canonical node id exactly like a direct
    * label match, before any new-node logic runs. */
   aliasNodeIdByLabel: ReadonlyMap<string, string>;
   newId(): string;
@@ -46,7 +46,7 @@ export function planNodeChanges(input: NodeChangePlanInput): NodeChangePlan {
       message_id: input.sourceMessageId,
       created_at: input.nowIso(),
       // Filled in by the caller (knowledgeStore.ts) with the round's anchored node — this
-      // pure planner has no notion of anchoring (spec 040 §7).
+      // pure planner has no notion of anchoring.
       origin_node_id: null,
     });
   }

@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for patch construction and the diff guard — spans must match the
- * original exactly, tampering rejects the whole set (spec 033, acceptance 1/5).
+ * original exactly, tampering rejects the whole set.
  */
 import { describe, expect, it } from "vitest";
 import { extractCandidates } from "./candidates";

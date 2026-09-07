@@ -1,9 +1,9 @@
 /**
- * Purpose: the woven message's exposure signal (spec 033) — fires once per run per session
+ * Purpose: the woven message's exposure signal — fires once per run per session
  * after the bubble stays ≥50% visible for about a second, one signal per patch. Deliberately
  * not persisted and not pruned; placement no longer trusts this guard, because a restart
  * replays exposures for old messages: the store re-checks the event log before any exposure
- * counts as first-encounter evidence (audit 2026-08-28 #2d).
+ * counts as first-encounter evidence.
  * Main exports: useDiglotExposure.
  */
 import { wovenContextSentenceFor } from "@breadcrumb/core-text";

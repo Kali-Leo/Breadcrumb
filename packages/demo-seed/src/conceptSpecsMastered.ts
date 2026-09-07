@@ -1,5 +1,5 @@
 /**
- * Purpose: bucket 1 of the demo seed's node landscape (spec 035 T7b) — 8 nodes with >= 4
+ * Purpose: bucket 1 of the demo seed's node landscape — 8 nodes with >= 4
  * spaced encounters ending very recently, so computeSettled/systemGauge see real
  * retention >= 0.9 and a healthy reencounter sample.
  * Main exports: MASTERED.

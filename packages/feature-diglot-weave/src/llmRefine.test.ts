@@ -1,5 +1,5 @@
 /**
- * Purpose: tests for the LLM refinement tier (spec 033 T13) — verdict application,
+ * Purpose: tests for the LLM refinement tier — verdict application,
  * defensive handling of malformed output, phrase weaving guards (overlap, clause
  * breakers, not-found), and the whole-set diff-guard fallback.
  */

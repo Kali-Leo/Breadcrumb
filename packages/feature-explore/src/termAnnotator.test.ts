@@ -1,7 +1,7 @@
 /**
- * Purpose: tests for term-marking prompt assembly and pure post-processing (spec 043) —
- * density clipping above/below the evidence threshold, prompt injection of both evidence
- * lists, and locateTermPatches' overlap/case-insensitivity/hallucination handling.
+ * Purpose: tests for term-marking prompt assembly and pure post-processing — density clipping
+ * above/below the evidence threshold, prompt injection of both evidence lists, and
+ * locateTermPatches' overlap/case-insensitivity/hallucination handling.
  */
 import { describe, expect, it } from "vitest";
 import {

@@ -15,7 +15,7 @@ import { CAMERA_SETTLE_MS } from "./levels";
 const OPEN_RATIO = 1.25;
 const CLOSE_RATIO = 0.8;
 /** One level per camera flight, the same rule the wheel follows — a second pinch before the
- * camera has landed is aimed at a picture that is still moving (bug hunt 2026-09-03). */
+ * camera has landed is aimed at a picture that is still moving. */
 const COOLDOWN_MS = CAMERA_SETTLE_MS;
 
 export interface MapPinchActions {

@@ -53,7 +53,7 @@ export async function computePlannerSnapshot(
     ...sightings.map((sighting) => sighting.node_id),
     ...claims.map((claim) => claim.node_id),
   ]);
-  // One-hop reverse propagation (spec 014), mirroring plannerStore.recompute().
+  // One-hop reverse propagation, mirroring plannerStore.recompute().
   const propagated = propagateInterestToPrerequisites(
     edges,
     interestByNode,

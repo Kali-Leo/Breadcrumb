@@ -20,13 +20,12 @@ import { nowIso } from "./time";
  * precision made each row instead of mixing the two under one name. */
 const EMBEDDING_MODEL = isBrowserEdition() ? "multilingual-e5-small-q8" : "multilingual-e5-small";
 /** Mirrors MAX_TEXTS_PER_CALL in src-tauri/src/embeddings.rs. One oversized call is refused
- * whole, and the 2026-09-02 walkthrough found the canonical-concept cache (1,012 texts) had
- * never filled because of it — so the bridge slices here and every caller stays batch-safe. */
+ * whole, so the bridge slices here and every caller stays batch-safe. */
 const MAX_TEXTS_PER_CALL = 512;
 
 /** Embeds a batch of raw texts via the local Rust command. Returns null on any failure
  * (model not downloaded yet, offline first run, etc) instead of throwing — callers decide
- * how to degrade (e.g. spec 015's synonym gate skips itself entirely). */
+ * how to degrade (e.g. the synonym gate skips itself entirely). */
 export async function embedTexts(texts: readonly string[]): Promise<number[][] | null> {
   if (texts.length === 0) return [];
   try {

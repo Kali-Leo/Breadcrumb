@@ -1,6 +1,5 @@
 /**
- * Purpose: the palace rail's "趋势" card (spec 035 T7a; removed in spec 046, restored on
- * Leo's ruling) — the three-layer estimate curve (memory / understanding / intuition, all
+ * Purpose: the palace rail's "趋势" card — the three-layer estimate curve (memory / understanding / intuition, all
  * forgetting-decayed), each line explained on legend hover, measured only against the past
  * self, no target lines.
  * Main exports: FeedbackTrendsSection.

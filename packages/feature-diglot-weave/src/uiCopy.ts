@@ -1,7 +1,7 @@
 /**
- * Purpose: the diglot weave's guess feedback as a catalogue key rather than a sentence
- * (spec 058 §2 — packages carry no wording). The grade decides which of three plain
- * statements applies; apps/desktop writes them in the reader's language.
+ * Purpose: the diglot weave's guess feedback as a catalogue key rather than a sentence —
+ * packages carry no wording. The grade decides which of three plain statements applies;
+ * apps/desktop writes them in the reader's language.
  * Main exports: guessFeedbackMessage.
  */
 

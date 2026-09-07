@@ -1,7 +1,6 @@
 /**
  * Purpose: the very first screen for someone whose machine reads a language this app has no
- * interface in — they pick one instead of the app guessing for them (Leo 2026-09-01:
- * "认不出来先让用户选语言"). Deliberately wordless: every language is written in itself, which
+ * interface in — they pick one instead of the app guessing for them. Deliberately wordless: every language is written in itself, which
  * is the one thing a reader of any of them can recognize, and any sentence here would have to
  * be written in a language we have just admitted we do not know they read.
  * Main exports: LanguageFirstRun.

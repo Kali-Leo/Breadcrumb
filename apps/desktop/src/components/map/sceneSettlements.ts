@@ -1,8 +1,6 @@
 /**
  * Purpose: draws what one island shows at its own level — a seat building per kingdom plus
  * its name, placed by mapKingdomLabels so realm names never land on a seat or each other.
- * Village settlements, village names and knowledge-point labels were removed 2026-08-11
- * (backup: branch backup/village-town-scene).
  * Main exports: drawIslandSettlements, SettlementsInput, stampSprite.
  */
 import { averageRetention, type IslandModel, type WorldPoint } from "@breadcrumb/feature-map";

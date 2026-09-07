@@ -1,8 +1,8 @@
 /**
- * Purpose: companion-cast safety module (spec 037) — the manipulation-lexicon gate applied to
+ * Purpose: companion-cast safety module — the manipulation-lexicon gate applied to
  * all companion copy/cards, local crisis-keyword detection naming the out-of-persona response
  * to show instead, and a pure continuous-session break reminder. The responses themselves are
- * CopyMessages: this package decides *which* sentence applies, apps/desktop renders it (ADR-0031).
+ * CopyMessages: this package decides *which* sentence applies, apps/desktop renders it.
  * Main exports: MANIPULATION_LEXICON, containsManipulation, detectCrisis, CRISIS_RESPONSE,
  * shouldRemindBreak, BREAK_REMINDER_COPY, BREAK_REMINDER_INTERVAL_MS, nextBreakReminderAt,
  * COMPANION_COPY.
@@ -10,8 +10,8 @@
 import type { CopyMessage } from "@breadcrumb/core-i18n";
 import { fnv1a32 } from "@breadcrumb/core-random";
 
-/** Farewell/absence-manipulation phrases banned from all companion copy and cards — the six
- * HBS companion-app audit tactics (guilt appeal, neediness, pressure to respond, FOMO, coercive
+/** Farewell/absence-manipulation phrases banned from all companion copy and cards — six
+ * manipulation tactics (guilt appeal, neediness, pressure to respond, FOMO, coercive
  * restraint, ignoring goodbye) plus absence-guilt ("你去哪了" style). Human-maintained. */
 export const MANIPULATION_LEXICON: readonly string[] = [
   "别走",
@@ -79,8 +79,8 @@ export function detectCrisis(text: string): boolean {
 
 /** The plain, out-of-persona response shown instead of any companion reply once detectCrisis
  * fires — no role-play, states the limitation, points to offline crisis resources. Named
- * here, worded in chat.json under companion.crisisResponse (ADR-0031: packages carry no
- * wording), where locales/copyGate.test.ts scans it in every shipped language. */
+ * here, worded in chat.json under companion.crisisResponse — packages carry no wording —
+ * where locales/copyGate.test.ts scans it in every shipped language. */
 export const CRISIS_RESPONSE: CopyMessage = { key: "chat:companion.crisisResponse" };
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
@@ -117,19 +117,18 @@ export function nextBreakReminderAt(sessionStartMs: number): number {
 /** Shown once shouldRemindBreak fires. Worded in chat.json under companion.breakReminder. */
 export const BREAK_REMINDER_COPY: CopyMessage = { key: "chat:companion.breakReminder" };
 
-/** What is left here after the interface wording moved to the catalogues (ADR-0031): the
- * helper-name pool, which is content rather than copy. Everything the live UI renders is a
- * catalogue key now. */
+/** The helper-name pool — content rather than copy. Everything the live UI renders is a
+ * catalogue key. */
 export const COMPANION_COPY = {
-  /** Daily helper roster (spec 050 §9): each helper is a peer who wants to understand one
-   * concept — never a mentor, never above the learner. Helpers go by person names (Leo
-   * 2026-08-16 — the messenger convention; the topic rides along as secondary text), picked
-   * deterministically from the pool so the same helper always keeps the same name. */
+  /** Daily helper roster: each helper is a peer who wants to understand one
+   * concept — never a mentor, never above the learner. Helpers go by person names — the
+   * topic rides along as secondary text — picked deterministically from the pool so the
+   * same helper always keeps the same name. */
   helperName: (topic: string): string =>
     HELPER_PERSON_NAMES[fnv1a32(topic) % HELPER_PERSON_NAMES.length] as string,
 } as const;
 
-/** Everyday plants, animals and fruits (Leo 2026-08-16) — real, common, instantly
+/** Everyday plants, animals and fruits — real, common, instantly
  * picturable; enough that three concurrent helpers rarely collide.
  * Content, not UI copy; localization deferred — these are the cast's names, and renaming a
  * cast is a content decision, not a translation. */

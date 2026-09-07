@@ -1,6 +1,6 @@
 /**
- * Purpose: shared id/prefix and deterministic local-time helpers for the zero-LLM demo seed
- * (spec 035 T7b) — every row this seed writes is tagged so --wipe can find it precisely.
+ * Purpose: shared id/prefix and deterministic local-time helpers for the zero-LLM demo seed —
+ * every row this seed writes is tagged so --wipe can find it precisely.
  * Main exports: Domain, DEMO_PAIR, demoId, isoAt.
  */
 

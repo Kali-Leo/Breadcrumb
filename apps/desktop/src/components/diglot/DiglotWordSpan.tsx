@@ -1,5 +1,5 @@
 /**
- * Purpose: one woven word inside a rendered assistant message (spec 033) — the highlighted
+ * Purpose: one woven word inside a rendered assistant message — the highlighted
  * button and, while its card is open, the card itself. The card renders through
  * createPortal(document.body): DiglotText lives inside markdown <p> elements, and the card's
  * block content is invalid DOM there (React nesting warnings) besides getting clipped by
@@ -34,7 +34,7 @@ interface DiglotWordSpanProps {
   openCard: OpenCard | null;
   entry: PackEntry | null;
   /** The WOVEN sentence: the raw one would print the source word the card is asking the
-   * learner to recall (audit 2026-08-28 #1). */
+   * learner to recall. */
   context: string;
   messageId: string;
   /** False on a touch screen: no mouseenter/mouseleave/blur handlers are bound at all. */

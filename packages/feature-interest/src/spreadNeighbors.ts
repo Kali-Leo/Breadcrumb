@@ -2,24 +2,17 @@
  * Purpose: "the K most similar other nodes, for every node", computed once over packed
  * vectors — the hot half of interest diffusion, kept away from the policy in spread.ts.
  *
- * Why it exists (bug hunt 2026-09-03, P3 perf): spread.ts used to call cosineSimilarity on
- * boxed JS arrays for all n² ordered pairs, recomputing both vector norms every time, then
- * sort the full neighbour list per node and slice K off the front. SPREAD_NEIGHBOR_TOP_K was
- * documented as capping that sweep and capped nothing — it trimmed the list after every cosine
- * had already been paid for. At 3000 nodes that was 15.3 s on the dev machine and ~97% of a
- * recommendation recompute, i.e. the palace freezing for the length of a held breath.
- *
- * Three changes, no change in what comes out:
+ * Three techniques keep this fast without changing what comes out:
  *   1. Vectors are L2-normalized once into one flat Float32Array (core-vectors' packVectors),
  *      after which a cosine is a dot product over contiguous memory.
  *   2. Each unordered pair is scored once and offered to both endpoints, halving the work.
  *   3. Top-K is a bounded insertion instead of a full sort — and because the insertion uses
- *      the same strict total order the old sort did (similarity desc, then node id), it
+ *      the same strict total order a full sort would (similarity desc, then node id), it
  *      selects exactly the same K neighbours.
  * The remaining loop is still O(n²) dot products, which is the honest cost of "every node's
- * K nearest" without an index; what it is not any more is O(n²) with a fat constant. Four
- * rows are scored per pass over each partner row, because at this size the sweep is bound by
- * how fast partner rows stream out of memory, not by the multiply.
+ * K nearest" without an index. Four rows are scored per pass over each partner row, because at
+ * this size the sweep is bound by how fast partner rows stream out of memory, not by the
+ * multiply.
  * Main exports: NeighborSlots, topNeighbors.
  */
 import { type PackedVectors, packVectors } from "@breadcrumb/core-vectors";
@@ -60,9 +53,8 @@ export function topNeighbors(
   return slots;
 }
 
-/** True when (similarity, id) sorts strictly before (otherSimilarity, otherRow) under the
- * order the pre-2026-09-03 implementation sorted its neighbour list by: closest first, node id
- * as the tie-break so the top-K cut is deterministic. */
+/** True when (similarity, id) sorts strictly before (otherSimilarity, otherRow): closest
+ * first, node id as the tie-break so the top-K cut is deterministic. */
 function beats(
   ids: readonly string[],
   similarity: number,

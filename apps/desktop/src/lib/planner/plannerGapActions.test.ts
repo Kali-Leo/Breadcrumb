@@ -83,7 +83,7 @@ describe("computeGapForGoal / computeRouteForGoal", () => {
   });
 });
 
-describe("goalSatisfiedNodeIds (2026-08-28 audit, planning gap 5)", () => {
+describe("goalSatisfiedNodeIds", () => {
   it("collects exactly the nodes with a 'learned' self-report claim", () => {
     const weakerClaim: MasteryClaimRow = {
       id: "c2",

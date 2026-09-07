@@ -1,8 +1,8 @@
 /**
- * Purpose: pure relative-time label for a focus session row in the top-of-chat bar (Leo
- * 2026-08-14 revision to spec 042 §5) — "今天/昨天 HH:mm" for the last two local days,
+ * Purpose: pure relative-time label for a focus session row in the top-of-chat bar —
+ * "今天/昨天 HH:mm" for the last two local days,
  * otherwise a plain YYYY-MM-DD date. Which day a moment belongs to is @breadcrumb/core-time's
- * call (2026-09-02), so this label and the palace layout's daily refresh cut the calendar at
+ * call, so this label and the palace layout's daily refresh cut the calendar at
  * the same instant.
  * Main exports: formatFocusSessionTimestamp.
  */

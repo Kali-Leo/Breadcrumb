@@ -1,9 +1,8 @@
 /**
  * Purpose: loads the Nortantis hand-drawn art (AGPL-3.0, see THIRD_PARTY_NOTICES.md) —
  * kingdom seat illustrations and the sea decorations (compass rose, creatures, ship),
- * mipmapped so they stay crisp when drawn small. Village settlement icons went away with
- * the village scene (2026-08-11). Also readies the handwriting font before Pixi rasterizes
- * labels.
+ * mipmapped so they stay crisp when drawn small. Also readies the handwriting font before
+ * Pixi rasterizes labels.
  * Main exports: loadMapArt, resetMapArt, MapArt, urlNamed, adoptMapTexture,
  * heldMapArtCacheKeys.
  */
@@ -140,9 +139,9 @@ export async function loadMapArt(): Promise<MapArt> {
  * (a second mount got first-renderer textures that resolved to the new renderer's text atlas —
  * sea decor drew as label glyphs). Call on map unmount.
  *
- * Forgetting `cachedArt` was never enough (bug hunt 2026-09-03): `Texture.from` puts every one
- * of these in that global Cache keyed by its decoded image, so the whole art set survived the
- * unmount — a leak, and a loaded gun for the next mount. Destroying each texture with its
+ * Forgetting `cachedArt` is not enough: `Texture.from` puts every one of these in that global
+ * Cache keyed by its decoded image, so the whole art set survives the unmount — a leak, and a
+ * loaded gun for the next mount. Destroying each texture with its
  * source is what frees the upload, and Pixi drops the Cache entry on the texture's own
  * "destroy" event; the sweep afterwards is belt and braces for anything that missed.
  */

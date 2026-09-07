@@ -1,5 +1,5 @@
 /**
- * Purpose: the mirror modules pick sentences without writing them (spec 058 §2). These check
+ * Purpose: the mirror modules pick sentences without writing them. These check
  * the picking: which catalogue key each situation maps to, and that the values the sentence
  * needs actually travel with it. The wording itself, and the pressure-lexicon gate over it,
  * live with the catalogues in apps/desktop.

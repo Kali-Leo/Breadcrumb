@@ -1,6 +1,6 @@
 /**
  * Purpose: unit tests for createDiglotRepo using an in-memory fake SqlClient — state
- * upsert/due-query semantics, append-only event and guess logs, pack lifecycle (spec 033).
+ * upsert/due-query semantics, append-only event and guess logs, pack lifecycle.
  */
 import { describe, expect, it } from "vitest";
 import { createDiglotRepo } from "./diglotRepositories";

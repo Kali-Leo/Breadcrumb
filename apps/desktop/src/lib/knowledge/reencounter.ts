@@ -46,7 +46,7 @@ export async function recordMessageReencounter(
       message_id: messageId,
       created_at: createdAt,
       // A re-encounter revisits a node already stationed on this message — no new
-      // provenance to record (spec 040 §7).
+      // provenance to record.
       origin_node_id: null,
     });
     resighted += 1;

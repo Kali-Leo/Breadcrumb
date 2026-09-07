@@ -1,7 +1,6 @@
 /**
- * Purpose: the regression test that would have caught the 2026-08-27 production failure —
- * mergeNode running on a REAL SQLite database with foreign keys ON, against a duplicate node
- * that carries rows in every table referencing knowledge_nodes. Plus a schema-drift tripwire:
+ * Purpose: mergeNode running on a REAL SQLite database with foreign keys ON, against a
+ * duplicate node that carries rows in every table referencing knowledge_nodes. Plus a schema-drift tripwire:
  * pragma_foreign_key_list is asked which tables reference knowledge_nodes, and the merge
  * statement batch must mention every one of them. A future migration that adds a referencing
  * table and forgets the merge executor fails here instead of in production.

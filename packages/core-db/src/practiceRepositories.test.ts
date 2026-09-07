@@ -1,6 +1,6 @@
 /**
  * Purpose: unit tests for createPracticeRepo using an in-memory fake SqlClient — score
- * upsert+list round-trip and overwrite-on-same-item_id semantics (spec 029).
+ * upsert+list round-trip and overwrite-on-same-item_id semantics.
  */
 import { describe, expect, it } from "vitest";
 import type { PracticeScoreRow } from "./comparisonTypes";

@@ -1,5 +1,5 @@
 /**
- * Purpose: deterministic 30-day diglot journey simulator (spec 033 acceptance 6) — a
+ * Purpose: deterministic 30-day diglot journey simulator — a
  * synthetic corpus flows through the real weave pipeline with a behavioral user model;
  * collects debt, starvation and constraint metrics. Zero LLM, zero DB, seeded PRNG.
  * Main exports: simulateDiglotJourney, DiglotJourneyReport.

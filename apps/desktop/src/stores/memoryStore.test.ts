@@ -1,8 +1,8 @@
 /**
- * Purpose: regression test for the memory store's failure guard (bug hunt 2026-09-03, P0-1).
- * A clock rolled back far enough used to make ts-fsrs throw inside computeNodeMemoryByNode;
- * refresh() had no catch, MapView calls it as a bare `void refresh()`, and the result was an
- * unhandled rejection plus retention/reviewPriority frozen at their empty launch values —
+ * Purpose: regression test for the memory store's failure guard. A clock rolled back far
+ * enough can make ts-fsrs throw inside computeNodeMemoryByNode; refresh() has no catch, and
+ * MapView calls it as a bare `void refresh()`, so an uncaught throw becomes an unhandled
+ * rejection plus retention/reviewPriority frozen at their empty launch values —
  * a permanently fogged map and no daily helpers. The store must degrade, not stall.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

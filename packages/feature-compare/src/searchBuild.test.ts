@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the search-build contract (spec 023 §5) — proposal schema,
+ * Purpose: unit tests for the search-build contract — proposal schema,
  * evidence-token checks, unverified-branch pruning (whole subtree gone), and the
  * whole-build failure threshold.
  */

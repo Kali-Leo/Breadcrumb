@@ -8,7 +8,7 @@
  * Spanish `casa` is the third-person singular of `casar` AND the ordinary noun for "house";
  * Spanish `aspiradora` is merely the feminine of `aspirador` and is an ordinary noun for
  * "vacuum cleaner". Disqualifying both — which is what "has a form_of" does — throws away the
- * good half of the pack: `aspiradora → aspirateur` is one of the matches Leo checked and liked.
+ * good half of the pack: `aspiradora → aspirateur` is one of the matches this correctly keeps.
  * So only INFLECTION tags disqualify: person, tense, mood, participle, case, number. Gender and
  * derivation (feminine, diminutive) do not, because those forms are words in their own right.
  * Main exports: collectInflections.
@@ -17,9 +17,9 @@
 /**
  * Tags that mean "this is a grammatical form of another word, not a word". Verb morphology is
  * the dangerous half — French `est`/`été` and Spanish `son`/`era` are all finite verb forms
- * that happen to own a noun entry too, and every one of them was woven as its noun sense
- * (Leo's review, 2026-09-04). Case and number are here for the same reason in languages that
- * decline; gender is deliberately absent.
+ * that happen to own a noun entry too, and every one of them was woven as its noun sense.
+ * Case and number are here for the same reason in languages that decline; gender is
+ * deliberately absent.
  */
 const INFLECTION_TAGS = new Set([
   "first-person",

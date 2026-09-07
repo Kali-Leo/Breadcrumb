@@ -1,7 +1,7 @@
 /**
  * Purpose: the small pill switch shared by every feature-switch row on the settings page. It is
  * a switch to a screen reader as well as to the eye (role + aria-checked), following the same
- * judgement as the segmented pills of spec 052: a control whose state is carried entirely by
+ * judgement as the segmented pills: a control whose state is carried entirely by
  * colour and position has to say that state out loud.
  * Main exports: Toggle.
  */

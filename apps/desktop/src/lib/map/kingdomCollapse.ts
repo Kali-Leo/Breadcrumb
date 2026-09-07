@@ -1,5 +1,5 @@
 /**
- * Purpose: the kingdom tree's honest collapsing (spec 049) — automatic collapse of eligible
+ * Purpose: the kingdom tree's honest collapsing — automatic collapse of eligible
  * untouched deep subtrees once the visible-node budget is exceeded, manual collapse/expand
  * always winning over it, and aggregates that report their true size. Pure; no I/O.
  * Main exports: VisibleTreeNode, VISIBLE_NODE_BUDGET, computeVisibleTree.

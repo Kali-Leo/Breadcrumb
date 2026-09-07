@@ -52,7 +52,7 @@ export async function runAssistantRound(
     companionScriptEnabled: boolean;
     companionMemoryEnabled: boolean;
     crisisActive: boolean;
-    /** The session's 学习模式 state (spec 052), threaded through to prompt assembly. */
+    /** The session's 学习模式 state, threaded through to prompt assembly. */
     studyMode: boolean;
     roundAnchoredNodeId: string | null;
   },
@@ -92,7 +92,7 @@ export async function runAssistantRound(
       return;
     }
     const { assistantMessage, cost } = outcome;
-    // Diglot weave timing (Leo 2026-08-16): stream end is the single legitimate swap
+    // Diglot weave timing: stream end is the single legitimate swap
     // moment — the weave (base + refine under its hard internal timeout) must be ready
     // BEFORE streamingText is replaced by the persisted message, so the final text appears
     // woven exactly once. Returns immediately while weaving is disabled, so the swap is

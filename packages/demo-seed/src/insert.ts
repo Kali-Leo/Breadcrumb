@@ -1,5 +1,5 @@
 /**
- * Purpose: orchestrates the zero-LLM demo seed (spec 035 T7b) — wires the conversation,
+ * Purpose: orchestrates the zero-LLM demo seed — wires the conversation,
  * concept, claim and word builders together and writes every row via the real core-db
  * repositories (so schema/constraint correctness is guaranteed, not assumed).
  * Main exports: SeedSummary, insertDemoData.

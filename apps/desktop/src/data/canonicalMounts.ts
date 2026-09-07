@@ -1,6 +1,6 @@
 /**
  * Purpose: hand-curated crosswalk from ESCO hub labels to canonical curriculum subtrees
- * (spec 028) — small, inspectable, no AI: each entry states which evidence-backed subtree
+ * — small, inspectable, no AI: each entry states which evidence-backed subtree
  * may mount under which hub. A subtree mounts at most once per profile (enforced by the
  * branch builder via the subtree id). Main exports: CANONICAL_MOUNTS.
  */

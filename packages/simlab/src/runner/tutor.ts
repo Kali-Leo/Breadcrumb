@@ -1,7 +1,7 @@
 /**
  * Purpose: the tutor half of a simulated round. Mirrors the desktop send pipeline: unshifts
  * the same teaching contract (adaptive mode) the product uses — both sides import it from
- * @breadcrumb/core-teaching, so simlab always tests the shipped prompt (spec 038 T2).
+ * @breadcrumb/core-teaching, so simlab always tests the shipped prompt.
  * Falls back to a non-streaming completion if chatStream's async body iteration fails.
  * Main exports: getTutorReply, TutorReply, STANDING_SYSTEM_PROMPT.
  */

@@ -1,5 +1,5 @@
 /**
- * Purpose: one research result card (spec 036) — institution/purpose/ethics metadata, the
+ * Purpose: one research result card — institution/purpose/ethics metadata, the
  * task's display template rendered against its stored stat results, and the two-step
  * "delete this result" action (physical delete, no edit path exists).
  * Main exports: ResearchResultCard.

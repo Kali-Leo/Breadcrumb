@@ -63,7 +63,7 @@ export async function foldPlacement(input: {
  * effect) keep seeing `undefined` until the FINAL patches land in one set(). */
 const weaveInFlight = new Set<string>();
 
-/** The one weave path (both halves of the timing ruling): base weave always; the metered
+/** The one weave path: base weave always; the metered
  * LLM refine only on the reveal path, raced against its hard timeout — on timeout the base
  * weave lands and, because refine never runs again for a cached message, it is skipped for
  * that message forever. */
@@ -77,8 +77,8 @@ export async function weaveAndStore(
   weaveInFlight.add(messageId);
   try {
     // Loop rather than return: a settings change mid-weave invalidates the result, and
-    // returning empty-handed is what left every message on screen blank (2026-09-04). The
-    // next round reads the new settings; epochs only change when a person changes a setting.
+    // returning empty-handed leaves every message on screen blank. The next round reads the
+    // new settings; epochs only change when a person changes a setting.
     while (!(await weaveOnce(messageId, displaySource, refine))) {
       /* weave again against the settings that superseded the last round */
     }
@@ -106,7 +106,7 @@ async function weaveOnce(
     newWordsIntroducedToday: useDiglotStore.getState().newWordsIntroducedToday,
   });
   let patches = result.patches;
-  // T13 refinement (metered, own switch): in-context disambiguation + phrase weave.
+  // LLM refinement (metered, own switch): in-context disambiguation + phrase weave.
   const { apiConfig, networkEnabled } = useSettingsStore.getState();
   if (refine && settings.llmRefineEnabled && networkEnabled && apiConfig !== null) {
     const basePatches = patches;

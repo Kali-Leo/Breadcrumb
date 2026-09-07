@@ -1,5 +1,5 @@
 /**
- * Purpose: companion memory stream (spec 037) — ported from Stanford Generative Agents
+ * Purpose: companion memory stream — ported from Stanford Generative Agents
  * (TS reference: langchain-ai/langchainjs's generative_agents module, Apache-2.0/MIT):
  * recency x importance x relevance retrieval scoring, the importance-rating contract, and
  * the reflection contract that turns accumulated importance into higher-level insights.

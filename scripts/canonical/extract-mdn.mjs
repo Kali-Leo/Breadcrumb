@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time canonical-pipeline step 1b (spec 025) — fetch each MDN Curriculum module
+ * Purpose: dev-time canonical-pipeline step 1b — fetch each MDN Curriculum module
  * page, extract learning-outcome-level fine concepts via DeepSeek, and mechanically verify
  * (label verbatim inside quote, quote chunks verbatim inside the page text) so invented
  * content cannot pass.

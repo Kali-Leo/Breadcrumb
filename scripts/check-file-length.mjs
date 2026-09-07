@@ -11,9 +11,9 @@
  *   packages/core-i18n/src/languages.ts — 每语言一行的数据表：splitting it breaks the
  *                                   「加语言只加一行」contract that keeps i18n changes trivial.
  *   scripts/language-packs/build-pack.mjs
- *   scripts/language-packs/entry-builder.mjs — 离线管线，暂豁免，标 2026-09-02：offline pack
+ *   scripts/language-packs/entry-builder.mjs — 离线管线，暂豁免：offline pack
  *                                   pipeline, not shipped code; revisit when it is next touched.
- * No .rs file is exempt — as of 2026-09-02 the largest is 200 lines exactly.
+ * No .rs file is exempt — the largest is currently 200 lines exactly.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";

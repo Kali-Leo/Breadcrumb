@@ -1,7 +1,7 @@
 /**
  * Purpose: the API form's shape outside React — the unsaved draft (module-level so
  * switching views, which unmounts the panel, does not silently discard typed text: it comes
- * back on the next visit until saved — Leo-approved 2026-08-16), the three prices as typed,
+ * back on the next visit until saved), the three prices as typed,
  * and the one shared input class.
  * Main exports: PriceFields, EMPTY_PRICES, priceFieldsOf, readPrice, INPUT_CLASS,
  * ApiFormDraft, readApiFormDraft, writeApiFormDraft, clearApiFormDraft.

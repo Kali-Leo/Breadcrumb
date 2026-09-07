@@ -37,12 +37,12 @@ export interface FrontierReason {
    * "brand new" so callers don't present a decayed-back-in node as fresh material. */
   wasLitBefore: boolean;
   /** Set when this candidate's interest score was raised by one-hop reverse propagation
-   * (spec 014, propagate.ts) from a locked-but-interesting dependent — lets the UI explain
+   * (propagate.ts) from a locked-but-interesting dependent — lets the UI explain
    * "this gets you closer to X" instead of a bare interest number. Absent when the caller
    * didn't run propagation, or this candidate's interest wasn't propagated. */
   gatewayTo?: { label: string };
-  /** True when this candidate is inside the caller-supplied goalGapNodeIds set (ranked mode,
-   * spec 016) — lets the UI show a "目标内" tag. Absent when the caller didn't supply one. */
+  /** True when this candidate is inside the caller-supplied goalGapNodeIds set (ranked mode)
+   * — lets the UI show a "目标内" tag. Absent when the caller didn't supply one. */
   inGoalGap?: boolean;
 }
 
@@ -66,7 +66,7 @@ export interface FrontierInput {
   interestByNode: ReadonlyMap<string, number>;
   /** Mastery value at/above which a node counts as lit. Caller-supplied so this package
    * never imports feature-memory's threshold constant (keeps the mastery/planner layers
-   * independent per ADR-0009). */
+   * independent). */
   litThreshold: number;
   /** Node ids with any sighting/claim evidence ever recorded, regardless of current mastery.
    * Two jobs: it drives FrontierReason.wasLitBefore, and it is half of the hard gate — a
@@ -75,24 +75,24 @@ export interface FrontierInput {
    * prerequisites mentioned inside the same short window, which almost never happens.
    * Caller-supplied for the same layering reason as litThreshold. */
   previouslyLitNodeIds: ReadonlySet<string>;
-  /** nodeId -> id of the dependent node whose locked interest propagated into it (spec 014,
-   * propagate.ts's gatewaySourceByNode). Optional — omit when the caller didn't run
+  /** nodeId -> id of the dependent node whose locked interest propagated into it
+   * (propagate.ts's gatewaySourceByNode). Optional — omit when the caller didn't run
    * propagation; interestByNode is then read as-is with no gatewayTo reasons attached. */
   interestGatewayByNode?: ReadonlyMap<string, string>;
   /** nodeId -> interest evidenceWeight, surfaced on the candidate for the "依据尚少" UI tag,
    * and the signal the exploration slot ranks on. */
   evidenceWeightByNode?: ReadonlyMap<string, number>;
-  /** Ranked-mode-only (spec 016): the selected goal's gap node ids. A candidate in this set
+  /** Ranked-mode-only: the selected goal's gap node ids. A candidate in this set
    * scores the goalGap component and gets reason.inGoalGap = true. Omit in casual mode or when
    * no goal is selected. */
   goalGapNodeIds?: ReadonlySet<string>;
-  /** nodeId -> browsing-affinity score in [0,1] from watched professional content (spec
-   * 059). A plain number: which video produced the score deliberately never leaves the
-   * affinity computation (Leo 裁决 2026-08-30 — 知识点不标注来源视频). Omit (or pass empty)
+  /** nodeId -> browsing-affinity score in [0,1] from watched professional content. A plain
+   * number: which video produced the score deliberately never leaves the
+   * affinity computation. Omit (or pass empty)
    * when the interest service is absent — the component then carries no information and
    * cannot move the order. */
   browsingAffinityByNode?: ReadonlyMap<string, number>;
-  /** User-tuned component weights (spec 060 §3, the palace's 推荐偏好 panel). Omit for the
+  /** User-tuned component weights (the palace's 推荐偏好 panel). Omit for the
    * FRONTIER_WEIGHTS defaults — pre-060 behaviour exactly. */
   weights?: FrontierWeights;
 }
@@ -117,7 +117,7 @@ function incomingHelpsEdgesByTarget(
  * deliberate and differs from the gate: a decayed node has to be able to come back as a
  * reunion candidate. Ordered by score desc then label inside each kind bucket, concepts first;
  * the exploration slot is applied later, by visibleFrontier, over the candidates it decided to
- * show — reordering the ranked list here hid the score cliff from it (bug hunt 2026-09-03). */
+ * show — reordering the ranked list here would hide the score cliff from it. */
 export function frontier(input: FrontierInput): FrontierCandidate[] {
   const {
     nodes,

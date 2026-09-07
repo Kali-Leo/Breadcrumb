@@ -1,5 +1,5 @@
 /**
- * Purpose: the companion student's per-session knowledge state (spec 037) — script-first
+ * Purpose: the companion student's per-session knowledge state — script-first
  * teach-back ported from rschmucker/ruffle-and-riley (AIED 2024, MIT) seeds the state with
  * expectations/misconceptions/gaps, and the Reflect-Respond loop from TeachYou/AlgoBo
  * (CHI 2024) merges each round's explanation into it before the student's next reply is
@@ -118,9 +118,9 @@ export function applyReflection(state: KnowledgeState, result: ReflectResult): K
 }
 
 /** Teach-session system prompt for the student companion: identity (name, explicit AI
- * disclosure), the spec-034 student stance (one question at a time, plain tone, no praise or
+ * disclosure), the student stance (one question at a time, plain tone, no praise or
  * judgment), and the hard capability constraint that keeps replies inside the current
- * knowledge state. One positive-instruction block (tone contract 2026-08-02) — mirrors the
+ * knowledge state. One positive-instruction block — mirrors the
  * register of apps/desktop/src/lib/companion/teachActions.ts's buildTeachSystemPrompt.
  *
  * Every interpolated item is folded onto one line and the taught-concepts list is capped, so

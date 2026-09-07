@@ -1,8 +1,7 @@
 /**
  * Purpose: imperative map controller — owns the world scene, the discrete level state
- * (world → island, the deepest view since the kingdom and village dives were removed
- * 2026-08-11, backup: branch backup/village-town-scene), exact-fit camera animation and the
- * hover readout plus its highlight. Band fades live in mapBands, the recommendation pins in
+ * (world → island, the deepest view), exact-fit camera animation and the hover readout
+ * plus its highlight. Band fades live in mapBands, the recommendation pins in
  * mapRecommendPins, pointer input in mapNavigation and the DOM/renderer subscriptions in
  * mapControllerEvents. Goal mode is not handled here:
  * MapView hands in a goal-filtered world model (goalWorldFilter.ts) and the exact-fit
@@ -46,10 +45,9 @@ export interface MapController {
     retentionByNode: ReadonlyMap<string, number>,
     newNodeIds: ReadonlySet<string>,
   ): void;
-  /** Marks where the visible recommendation set lives (spec 048 follow-up + spec 060 §2,
-   * Leo: pins on every zoom level) — the containing islands at the world level, the
-   * containing kingdoms once dived into an island. One pin per place, however many
-   * candidates it holds. */
+  /** Marks where the visible recommendation set lives, on every zoom level — the
+   * containing islands at the world level, the containing kingdoms once dived into an
+   * island. One pin per place, however many candidates it holds. */
   setRecommendTargets(targets: readonly RecommendTarget[]): void;
   devJump(depth: number): void;
   tick(deltaSeconds: number): void;

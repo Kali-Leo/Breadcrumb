@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time internalization of the O*NET database subset (spec 026, CC BY 4.0) — no
+ * Purpose: dev-time internalization of the O*NET database subset (CC BY 4.0) — no
  * LLM anywhere: official structured rows are copied verbatim into a compact bundled JSON
  * (occupation directory with alternate titles, core task statements, technology skills,
  * high-importance knowledge/skills descriptors) so every occupation profile builds offline.

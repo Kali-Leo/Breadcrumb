@@ -1,5 +1,5 @@
 /**
- * Purpose: app side of behavioral placement (spec 033, audit 2026-08-28 #2) — supplies the
+ * Purpose: app side of behavioral placement — supplies the
  * facts the module's placement rules need (is this the word's first encounter ever, its queue
  * rank, how many words have been introduced) and folds one signal into the introduction
  * floor. Side effects: one DB read of the word's event log.

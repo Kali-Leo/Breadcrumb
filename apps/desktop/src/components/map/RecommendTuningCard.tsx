@@ -1,7 +1,7 @@
 /**
- * Purpose: the palace left rail's 推荐偏好 card (spec 060 §3+§5) — life-language sliders
- * over the intent-level recommendation weights, Leo's ruling: all of them user-tunable,
- * phrased in the learner's language, never ours. Interest is ONE slider — conversation and
+ * Purpose: the palace left rail's 推荐偏好 card — life-language sliders over the
+ * intent-level recommendation weights: all of them user-tunable, phrased in the learner's
+ * language, never ours. Interest is ONE slider — conversation and
  * watched-video signals both live under it (their internal split is the system's adaptive
  * trust ratio, not a knob). No numbers, no component names, no algorithm words on screen.
  * Main exports: RecommendTuningCard.

@@ -1,5 +1,5 @@
 /**
- * Purpose: pure display logic for the third zoom level (spec 049) — node state derivation
+ * Purpose: pure display logic for the third zoom level — node state derivation
  * (structure/progress split), lateral-edge visibility (focus + context), and
  * primary/alternate recommendation picking with the goal domain filter. No I/O, no
  * rendering.
@@ -9,7 +9,7 @@
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import type { FrontierCandidate } from "@breadcrumb/feature-planner";
 
-/** 已完成 / 走过（含"进行中"的近似，见 spec 049 数据映射）/ 未接触。 */
+/** 已完成 / 走过（含"进行中"的近似）/ 未接触。 */
 export type KingdomNodeState = "done" | "visited" | "untouched";
 
 export interface KingdomViewNode {

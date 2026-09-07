@@ -1,6 +1,6 @@
 /**
  * Purpose: the fog of forgetting — soft white breath over places whose retention has
- * faded (spec 007). Pure atmosphere: no numbers, and it sits below every label layer
+ * faded. Pure atmosphere: no numbers, and it sits below every label layer
  * so names stay readable.
  * Main exports: buildFogLayer, fadeOf.
  */
@@ -17,10 +17,9 @@ const MINIMUM_VISIBLE_ALPHA = 0.02;
 /**
  * The retention a place is treated as fully faded at. FSRS retrievability does not fall to
  * zero: a concept met a handful of times and then left for a year still reads around 0.46,
- * so `1 − R` never got past ~0.54 and the thickest fog this map could draw was alpha 0.19 —
- * invisible in practice, and spec 007's own acceptance test ("age the footprints, the region
- * fogs over") could not pass (audit 2026-08-28, 记忆与遗忘 #4). Rescaling the range that
- * actually occurs onto the full strength is a display fix; the memory model is untouched.
+ * so `1 − R` never gets past ~0.54: a linear mapping would cap the thickest fog this map can
+ * draw at alpha 0.19, invisible in practice. Rescaling the range that actually occurs onto
+ * the full strength is a display fix; the memory model is untouched.
  */
 const FULLY_FADED_RETENTION = 0.45;
 

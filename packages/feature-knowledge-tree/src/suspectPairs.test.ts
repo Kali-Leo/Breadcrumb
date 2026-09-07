@@ -1,10 +1,10 @@
 /**
  * Purpose: unit tests for findSuspectSynonymPairs — relative-gate filtering on vectors shaped
- * like the REAL local model's output (every pair packed between 0.80 and 0.95, measured on the
- * live database 2026-08-28), alias-link exclusion, the already-judged negative cache, and
- * most-similar-first ordering. Synthetic orthogonal vectors are deliberately avoided: that is
- * exactly what hid the absolute-threshold bug for months, because `similarity: 1` vs
- * `similarity: 0` makes any threshold look like it works.
+ * like the REAL local model's output (every pair packed between 0.80 and 0.95),
+ * alias-link exclusion, the already-judged negative cache, and
+ * most-similar-first ordering. Synthetic orthogonal vectors are deliberately avoided:
+ * `similarity: 1` vs `similarity: 0` makes any threshold look like it works, which would hide
+ * a bug in the gate.
  */
 import type { KnowledgeNodeRow, NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";

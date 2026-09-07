@@ -1,7 +1,7 @@
 /**
  * Purpose: generates one gentle trail summary per virtual day that had new nodes (mirrors the
- * app's daily-summary feature) and scans it against the pressure lexicon — spec 013 T4
- * requires every user-visible text-generation path be scanned, trail summaries included.
+ * app's daily-summary feature) and scans it against the pressure lexicon — every user-visible
+ * text-generation path must be scanned, trail summaries included.
  * Main exports: runTrailSummaryStage.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";

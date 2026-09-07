@@ -25,9 +25,9 @@ import type { TopicHint } from "./student";
 export type { JourneyActionContext, JourneyActionResult, JourneyActionType };
 export { resolvePendingSelfReportTopics };
 
-/** Default weights (tunable, not spec-mandated exact numbers) — follow-frontier gets the
+/** Default weights (tunable, not exact/mandated numbers) — follow-frontier gets the
  * largest share since closing the recommendation loop is the journey model's core realism
- * feature per spec 013 T3. */
+ * feature. */
 const ACTION_WEIGHTS: { item: JourneyActionType; weight: number }[] = [
   { item: "follow-frontier", weight: 0.35 },
   { item: "self-report", weight: 0.15 },

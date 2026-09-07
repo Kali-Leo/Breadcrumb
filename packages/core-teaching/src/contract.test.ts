@@ -40,7 +40,7 @@ describe("buildTeachingSystemPrompt", () => {
   });
 });
 
-describe("buildFreeChatSystemPrompt (spec 052)", () => {
+describe("buildFreeChatSystemPrompt", () => {
   it("is exactly the free-chat base", () => {
     expect(buildFreeChatSystemPrompt()).toBe(FREE_CHAT_BASE);
   });

@@ -1,5 +1,5 @@
 /**
- * Purpose: the daily helper character's own conversation lifecycle (spec 050 §9) — its
+ * Purpose: the daily helper character's own conversation lifecycle — its
  * locally-composed invitation and thanks messages, creating its teach conversation, and
  * appending the goodbye once its concept is confirmed. Split out of companionActions.ts
  * purely to keep that file under the file-size ceiling; the fixed cast's card lookup,
@@ -26,7 +26,7 @@ export function helperThanks(topic: string): string {
   return asStoredText(i18next.t("chat:companion.helperThanks", { topic }));
 }
 
-/** Creates a daily helper's conversation (spec 050 §9): kind 'teach' so the whole proven
+/** Creates a daily helper's conversation: kind 'teach' so the whole proven
  * teach-back pipeline (student prompt from the title's topic, quality judgment, metering)
  * applies untouched; companion_id links it to its roster row. The opener is the helper's
  * plain ask-for-help message. Returns the existing conversation when one already exists. */
@@ -57,7 +57,7 @@ export async function startHelperConversation(helperId: string, topic: string): 
 }
 
 /** The helper's goodbye once its concept is confirmed (or the day's help is done) — after
- * this the roster row resolves and the character leaves (spec 050 §9). */
+ * this the roster row resolves and the character leaves. */
 export async function appendHelperThanks(conversationId: string, topic: string): Promise<void> {
   const repos = await getRepos();
   const allMessages = await repos.messages.listByConversation(conversationId);

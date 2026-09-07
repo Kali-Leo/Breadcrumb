@@ -1,5 +1,5 @@
 /**
- * Purpose: the palace context stack's "从这里继续" card (spec 047) — the frontier's top
+ * Purpose: the palace context stack's "从这里继续" card — the frontier's top
  * candidates as clickable suggestions, each opening a context-seeded chat (zero LLM).
  * Scores and evidence-weight internals drive the ordering but are never displayed; copy is
  * suggest-only. An optional node-id filter scopes the card to the dived island's members.
@@ -24,7 +24,7 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
   const candidates = usePlannerStore((state) => state.frontierCandidates);
   const [openingNodeId, setOpeningNodeId] = useState<string | null>(null);
 
-  // One recommendation set everywhere (spec 060 §1): the cliff-cut visible frontier is what
+  // One recommendation set everywhere: the cliff-cut visible frontier is what
   // the map pins mark; island scoping filters that same set rather than recomputing it.
   const visible = visibleFrontier(candidates);
   const shown =
@@ -36,7 +36,7 @@ export function ContinueCard({ filterNodeIds }: ContinueCardProps) {
   async function open(nodeId: string, label: string, litLabels: readonly string[]) {
     setOpeningNodeId(nodeId);
     try {
-      // Straight into focus mode — the AI starts explaining right away (spec 050 §2).
+      // Straight into focus mode — the AI starts explaining right away.
       const result = await startLearningForConcept(
         label,
         litLabels,

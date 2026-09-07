@@ -1,9 +1,9 @@
 /**
- * Purpose: per-node self-statement actions for the selected goal's gap (re-homed by spec
- * 047) — "我已经会了" writes a direct mastery claim (no LLM call, the learner already knows
+ * Purpose: per-node self-statement actions for the selected goal's gap
+ * — "我已经会了" writes a direct mastery claim (no LLM call, the learner already knows
  * which node this is) and "先跳过" removes the node from the goal's set. Domain judgment
  * stays the system's job; these are only self-statements, so the list is labelled
- * neutrally, never "你还不会" (2026-08-02, spec 012 §2).
+ * neutrally, never "你还不会".
  * Main exports: GoalGapActions.
  */
 

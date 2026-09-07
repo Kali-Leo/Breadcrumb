@@ -30,7 +30,7 @@ export interface CheckedClaim {
   /**
    * The judge's own sentence, in the answer's language — and the empty string whenever the
    * pipeline rather than the judge decided this claim, because a headless package holds no
-   * wording (spec 058 §2). The app writes those sentences from its catalogue; `relationship`
+   * wording. The app writes those sentences from its catalogue; `relationship`
    * plus whether any evidence is in hand tells the three cases apart, so no extra field is
    * needed: `unavailable` = the search never got out; `insufficient` with no evidence = the
    * search completed and found nothing; `insufficient` with evidence = the judging call
@@ -45,7 +45,7 @@ export interface FactCheckReport {
   claims: CheckedClaim[];
   usage: TokenUsage;
   /** Evidence providers that failed at least once during this run. The headless package has
-   * no DB; the host records these in ai_failures (spec 014). */
+   * no DB; the host records these in ai_failures. */
   failedProviders: string[];
 }
 
@@ -129,7 +129,7 @@ async function judgeClaim(
     };
   } catch (error) {
     // The provider billed us for every attempt that reached it, including the ones we then
-    // rejected — dropping that usage would under-state the user's spend (宪法原则 2).
+    // rejected — dropping that usage would under-state the user's spend.
     if (error instanceof ChatJsonError) usages.push(error.usage);
     // Evidence in hand but no reasoning: the app reads that pair as "the judging call did
     // not finish" and writes the sentence itself.

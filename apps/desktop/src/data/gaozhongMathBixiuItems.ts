@@ -1,9 +1,9 @@
 /**
- * Purpose: the 必修 skeleton of the 高中数学 comparison profile (spec 023/025) — themes and
+ * Purpose: the 必修 skeleton of the 高中数学 comparison profile — themes and
  * units transcribed verbatim from 《普通高中数学课程标准（2017年版2020年修订）》表1
  * (pp.13-14). The fine-grained level below the units is pipeline-generated with verbatim
- * verification (see data/generated/fineItems.ts) — hand-authored depth was removed so the
- * fine layer has a single source. Main exports: GAOZHONG_MATH_BIXIU_ITEMS, gaozhongMathItem,
+ * verification (see data/generated/fineItems.ts) — the fine layer has a single source.
+ * Main exports: GAOZHONG_MATH_BIXIU_ITEMS, gaozhongMathItem,
  * GAOZHONG_MATH_STANDARD.
  */
 import type { ProfileItemDefinition } from "@breadcrumb/feature-compare";

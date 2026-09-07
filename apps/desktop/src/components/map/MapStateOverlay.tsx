@@ -2,9 +2,9 @@
  * Purpose: the palace's two "there is nothing to look at" screens — the renderer refused to
  * start, and open sea with no land yet. Both are drawn OVER the live map instead of instead of
  * it: the Pixi container has to stay mounted for the renderer to ever get a chance to
- * initialize (bug hunt 2026-09-03 — returning early on an empty sea meant the very first visit
- * of a new learner mounted no container, useMapApplication's one-shot effect found none, and
- * the map stayed dead for the rest of the session, first island or not).
+ * initialize — returning early on an empty sea means the very first visit of a new learner
+ * mounts no container, useMapApplication's one-shot effect finds none, and the map stays dead
+ * for the rest of the session, first island or not.
  * Main exports: MapStateOverlay, MapOverlayState.
  */
 import { useTranslation } from "react-i18next";

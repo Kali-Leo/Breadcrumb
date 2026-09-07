@@ -1,7 +1,7 @@
 /**
  * Purpose: the fog's display mapping. The memory model is not under test here — what is, is
- * that a place nobody has visited for a year actually looks foggy, which is what the old
- * linear mapping could not do (audit 2026-08-28, 记忆与遗忘 #4).
+ * that a place nobody has visited for a year actually looks foggy, which a linear mapping of
+ * `1 − R` cannot do.
  */
 import { describe, expect, it } from "vitest";
 import { fadeOf } from "./fog";

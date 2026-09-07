@@ -1,5 +1,5 @@
 /**
- * Purpose: language-agnostic message tokenization for the weave pipeline (spec 033) —
+ * Purpose: language-agnostic message tokenization for the weave pipeline —
  * ICU word segmentation via Intl.Segmenter plus clause indexing for the dispersion rule.
  * Main exports: tokenizeMessage, clauseTextOf, WordToken, countWordLikeTokens.
  */
@@ -21,11 +21,11 @@ export interface WordToken {
 /**
  * Punctuation that ends a clause, across every script the app ships an interface in.
  *
- * The list held only Latin and CJK marks until 2026-09-07, which meant a message in Hindi,
- * Bengali or Arabic had exactly ZERO clause boundaries — none of those languages ends a
- * sentence with any character that was in here. The dispersion rule allows at most one
- * replacement per clause, so those readers got one woven word per message however long it
- * was, while a Chinese or English reader of the same message got one per sentence.
+ * Every script belongs here: a list of only Latin and CJK marks leaves a message in Hindi,
+ * Bengali or Arabic with exactly ZERO clause boundaries, since none of those languages ends a
+ * sentence with any of those characters. The dispersion rule allows at most one replacement
+ * per clause, so those readers would get one woven word per message however long it was,
+ * while a Chinese or English reader of the same message gets one per sentence.
  */
 const CLAUSE_BREAKERS = new Set([
   // Latin
@@ -87,10 +87,10 @@ export function tokenizeMessage(message: string, sourceLang: string): WordToken[
 }
 
 /**
- * The text of one clause, as the reader sees it. This is the "context" a word was met in:
- * the whole message was standing in for it, which made two words in the same long reply look
- * like they had met identical contexts and made every novelty score coarser than the design
- * described (audit 2026-08-28, 语言织入 #2).
+ * The text of one clause, as the reader sees it. This is the "context" a word was met in.
+ * It must stay the clause and not the whole message: with the message standing in, two words
+ * in the same long reply look like they met identical contexts, which makes every novelty
+ * score coarser.
  */
 export function clauseTextOf(
   message: string,

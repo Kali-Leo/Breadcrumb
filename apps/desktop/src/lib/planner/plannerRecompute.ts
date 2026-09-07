@@ -44,7 +44,7 @@ export interface PlannerSnapshot {
   route: RecommendedRouteStep[] | null;
   /** Every node id with at least one real conversation footprint, ever — distinct from mastery
    * (which self-report claims can also lift). Used only to approximate "this node arrived via
-   * a goal's own suggestion" for the goal-composition chip list (spec 017 §1), since that
+   * a goal's own suggestion" for the goal-composition chip list, since that
    * provenance isn't persisted at insert time. */
   sightedNodeIds: Set<string>;
 }
@@ -61,15 +61,15 @@ export function computePlannerSnapshot(
   isRanked: boolean,
   routeParams: RecommendRouteParams,
   now: string,
-  /** Per-node browsing affinity from watched professional content (spec 059), or null when
+  /** Per-node browsing affinity from watched professional content, or null when
    * the interest service / embedding model is unavailable — the frontier's browsing
    * component then carries no information. */
   browsingAffinityByNode: ReadonlyMap<string, number> | null = null,
-  /** User-tuned frontier weights (spec 060 §3); omit for the package defaults. */
+  /** User-tuned frontier weights; omit for the package defaults. */
   frontierWeights?: FrontierWeights,
 ): PlannerSnapshot {
   const masteryByNode = computeMastery(sightings, claims, now);
-  // Adaptive shrinkage (spec 060 §4): K comes from this learner's own signal distribution,
+  // Adaptive shrinkage: K comes from this learner's own signal distribution,
   // falling back to the cold-start constant while the data is still thin.
   const interestScoresByNode = aggregateInterest(signals, now, estimatePseudoCount(signals));
   const curiosityByNode = new Map(
@@ -81,7 +81,7 @@ export function computePlannerSnapshot(
     ...sightings.map((sighting) => sighting.node_id),
     ...claims.map((claim) => claim.node_id),
   ]);
-  // One-hop reverse propagation (spec 014): a locked-but-interesting node lends interest to
+  // One-hop reverse propagation: a locked-but-interesting node lends interest to
   // its own unlit prerequisites, so frontier() can surface "gets you closer to X". gapAndPath
   // and recommendRoute intentionally keep using the un-propagated map.
   const propagated = propagateInterestToPrerequisites(
@@ -114,7 +114,7 @@ export function computePlannerSnapshot(
     routeParams,
   );
 
-  // Ranked mode only (spec 016): the selected goal's gap gets a flat frontier boost, so
+  // Ranked mode only: the selected goal's gap gets a flat frontier boost, so
   // "what should I learn next" visibly favors goal progress over free wandering.
   const goalGapNodeIds = isRanked && gap ? new Set(gap.gapNodeIds) : undefined;
 

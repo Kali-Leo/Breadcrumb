@@ -1,12 +1,10 @@
 /**
- * Purpose: pure pixel-layout math for a focus session's subway map (spec 042 §4) — a vertical
- * tidy tree, mind-map style: every node's children are peers, laid out side by side on the
- * next row, with the parent centered above them (Leo: "a 下挂 (b,c)" — a single child falls
- * straight down, no fork). Classic post-order subtree-width tidy tree: a leaf claims one
- * column, a parent's column span is the sum of its children's, so sibling subtrees never
- * overlap. No rendering — pure pixel arithmetic, which is why it moved out of the desktop
- * app into this package (2026-09-02): the focus-session logic it serves already lived here,
- * and it was already walking this module's own groupByParent.
+ * Purpose: pure pixel-layout math for a focus session's subway map — a vertical tidy tree,
+ * mind-map style: every node's children are peers, laid out side by side on the next row,
+ * with the parent centered above them (a single child falls straight down, no fork). Classic
+ * post-order subtree-width tidy tree: a leaf claims one column, a parent's column span is the
+ * sum of its children's, so sibling subtrees never overlap. No rendering — pure pixel
+ * arithmetic.
  * Main exports: layoutFocusMap, FocusMapNode, FocusMapStation, FocusMapLink, FocusMapLayout,
  * STATION_X, COLUMN_WIDTH, ROW_HEIGHT, TOP_MARGIN.
  */
@@ -71,7 +69,7 @@ function ancestorPath(
   return path;
 }
 
-/** The midpoint elbow between a parent and one child (spec 042 §4's "U 形" fork). */
+/** The midpoint elbow between a parent and one child. */
 function buildLink(
   from: { x: number; y: number },
   to: { x: number; y: number },
@@ -89,10 +87,10 @@ function buildLink(
   };
 }
 
-/** Lays out one focus session's whole map (spec 042 §4): every station and connector always
- * present (nothing collapses or hides). Same-parent stations are peers — they lay out side by
- * side on the next row; the parent centers over its children's x-span (one child means the
- * center equals that child's own x, so it falls straight down). */
+/** Lays out one focus session's whole map: every station and connector always present
+ * (nothing collapses or hides). Same-parent stations are peers — they lay out side by side on
+ * the next row; the parent centers over its children's x-span (one child means the center
+ * equals that child's own x, so it falls straight down). */
 export function layoutFocusMap(
   nodes: readonly FocusMapNode[],
   currentId: string | null,

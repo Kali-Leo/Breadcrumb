@@ -1,7 +1,7 @@
 /**
- * Purpose: the full-screen focus (explain-word) overlay (spec 042 §3) — header (back-to-parent,
+ * Purpose: the full-screen focus (explain-word) overlay — header (back-to-parent,
  * root word, exit; Escape exits too unless a lower layer claimed the key), the current station's
- * content pane, and the session's own-sized subway map pane (spec 042 §4). Side by side when
+ * content pane, and the session's own-sized subway map pane. Side by side when
  * there is room; on a narrow or upright screen the map moves to the top and the content sits
  * under it. Renders nothing when no session is open; mounted once at the app shell's top level.
  * Main exports: FocusOverlay.

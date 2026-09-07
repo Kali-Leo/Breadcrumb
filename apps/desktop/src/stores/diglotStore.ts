@@ -1,7 +1,7 @@
 /**
- * Purpose: zustand store for the diglot weave (spec 033) — persisted settings, session
+ * Purpose: zustand store for the diglot weave — persisted settings, session
  * caches (pack, cards, per-message patches), signal ingestion and the guess-card session
- * state. Weave timing (Leo 2026-08-16): history messages weave base-only via ensureWoven
+ * state. Weave timing: history messages weave base-only via ensureWoven
  * (MessageBubble blanks the text until patches land, so the original never paints first);
  * a fresh reply weaves ONCE via ensureWovenBeforeReveal — awaited by chatAssistantRound
  * BEFORE the streamingText→message swap, with the LLM refine raced against a hard timeout —

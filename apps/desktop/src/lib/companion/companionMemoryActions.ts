@@ -1,5 +1,5 @@
 /**
- * Purpose: companion memory-stream orchestration (spec 037) — condenses one finished chat round
+ * Purpose: companion memory-stream orchestration — condenses one finished chat round
  * into an observation, scores its importance (metered), and triggers a reflection once the
  * accumulated importance since the last reflection crosses the threshold. Called from
  * companionStore's chat:responseFinished subscription; never throws (memory must never break

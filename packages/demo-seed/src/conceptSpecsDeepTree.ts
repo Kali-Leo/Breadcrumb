@@ -1,5 +1,5 @@
 /**
- * Purpose: the demo seed's deep-subtree bucket (spec 049 testing needs) — a multi-level
+ * Purpose: the demo seed's deep-subtree bucket — a multi-level
  * branch under the existing higher-order-array-methods kingdom so the third-level network
  * view has a real tree to render: two freshly-met nodes, the rest untouched (empty offsets =
  * no sightings, an honest "never met").

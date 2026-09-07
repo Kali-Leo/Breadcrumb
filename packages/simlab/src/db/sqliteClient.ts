@@ -21,9 +21,8 @@ import { createSimlabRepos, type SimlabRepos } from "./repos";
 export function createSqliteClient(db: Database.Database): SqlClient {
   // Foreign keys ON, deliberately: better-sqlite3 defaults them OFF, node:sqlite (core-db's
   // fixture) defaults them ON, and the real app's sqlx pool sends PRAGMA foreign_keys=ON on
-  // every connection. That split is why the 2026-08-27 merge failure was invisible to the
-  // tests — a DELETE that threw 787 in production "succeeded" here and merely left orphan
-  // rows behind. All three hosts now agree (design audit 2026-08-28, 数据层 B1).
+  // every connection. Leaving it OFF here would let a DELETE that throws 787 in production
+  // "succeed" instead, merely leaving orphan rows behind. All three hosts now agree.
   db.pragma("foreign_keys = ON");
   const runStatement = (statement: SqlTransactionStatement): void => {
     const params = statement.params;

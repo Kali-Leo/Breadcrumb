@@ -1,5 +1,5 @@
 /**
- * Purpose: guess submission for the mandatory guess card (spec 033 T8) — grades the guess
+ * Purpose: guess submission for the mandatory guess card — grades the guess
  * (zero LLM), persists the verbatim row for confusion mining, and maps grade → signal kind.
  * Side effect: DB write (diglot_word_guesses).
  * Main exports: submitDiglotGuess, guessFeedbackMessage (the wording lives in learning.json).

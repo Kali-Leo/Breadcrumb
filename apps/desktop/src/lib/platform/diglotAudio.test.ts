@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the strict speech-provider verification (Leo 2026-08-16) — an
+ * Purpose: unit tests for the strict speech-provider verification — an
  * empty voice list is "no provider", Piper needs BOTH paths, and voice-language matching
  * is case-insensitive prefix over BCP-47 tags. Audio playback itself is not testable here;
  * only the gating logic is verified.

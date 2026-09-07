@@ -1,6 +1,6 @@
 /**
- * Purpose: regression tests for the anchor sweep's cost controls (design audit 2026-08-28 #2)
- * — the hard per-sweep batch budget that replaced an unbounded walk down a 66,000-pair
+ * Purpose: regression tests for the anchor sweep's cost controls — the hard per-sweep batch
+ * budget that replaced an unbounded walk down a 66,000-pair
  * candidate list, the "no unanchored nodes means spend nothing" early exit, and the concept
  * embedding cache that stopped re-embedding the whole canonical inventory every single sweep.
  */

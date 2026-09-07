@@ -2,7 +2,7 @@
  * Purpose: the harness's range helpers over @breadcrumb/core-random's seeded PRNG, used by
  * persona perturbation and the journey runner's action/timing choices. Library code must
  * never call Math.random(); everything traces back to a seed. mulberry32 and seedFromStrings
- * moved to core-random 2026-09-02 (this copy differed from the map module's only in keeping
+ * moved to core-random (this copy differed from the map module's only in keeping
  * the state signed, which yields the identical stream) and are re-exported here so the
  * harness keeps importing its randomness from one place.
  * Main exports: mulberry32, seedFromStrings, randomInt, pickWeighted.

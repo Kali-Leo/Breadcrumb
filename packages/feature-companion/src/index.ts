@@ -1,5 +1,5 @@
 /**
- * Purpose: public entry of the companion-cast module (spec 037) — Character Card V2 subset
+ * Purpose: public entry of the companion-cast module — Character Card V2 subset
  * schema, the three authored cards, the safety module (manipulation gate, crisis detection,
  * break reminders, companion copy), the memory stream, the proactive-initiation gate, and the
  * teach-back knowledge state (script-first + Reflect-Respond).

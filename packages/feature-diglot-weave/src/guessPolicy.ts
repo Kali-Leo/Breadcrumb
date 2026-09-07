@@ -1,5 +1,5 @@
 /**
- * Purpose: when to ask for a guess (spec 033) — an information-gain-driven probability,
+ * Purpose: when to ask for a guess — an information-gain-driven probability,
  * not a variable-reward roll: signal-starved words and retrieval-effort-band words score
  * high, just-looked-up words score zero, repeated abandonment damps globally.
  * Main exports: computeGuessProbability, GuessPolicyInput, GUESS_LEVEL_BASE.
@@ -9,7 +9,7 @@ import type { Card } from "ts-fsrs";
 import { retrievabilityOf } from "./memoryState";
 
 /** Base probability per user-facing level (settings; "off" does not exist by design —
- * the guess gate is part of the mechanism, Leo 2026-08-12). */
+ * the guess gate is part of the mechanism). */
 export const GUESS_LEVEL_BASE = { low: 0.12, standard: 0.25, high: 0.4 } as const;
 export type GuessLevel = keyof typeof GUESS_LEVEL_BASE;
 

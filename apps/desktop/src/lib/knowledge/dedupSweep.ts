@@ -1,5 +1,5 @@
 /**
- * Purpose: startup auto-merge sweep for spec 015 #4 — mechanically merges normalized-label
+ * Purpose: startup auto-merge sweep — mechanically merges normalized-label
  * duplicate nodes (always, zero LLM), then asks the synonym-judge LLM about up to 10
  * never-yet-judged embedding-similar existing-node pairs and merges every "same" verdict
  * (only when knowledge-tree + network + an API config are all on). Every verdict, "different"
@@ -27,13 +27,13 @@ import { recordAiFailure } from "../platform/failureLog";
 import { llmConfigFrom } from "../platform/llmConfig";
 import { newId, nowIso } from "../platform/time";
 
-/** One batched LLM call per sweep, capped at 10 pairs (spec 015 #4). */
+/** One batched LLM call per sweep, capped at 10 pairs. */
 const MAX_LLM_DEDUP_PAIRS_PER_SWEEP = 10;
 
 /** Runs the mechanical tier unconditionally, then the LLM tier when allowed. Refreshes
  * knowledgeStore's tree and fires mastery:updated (so the planner recomputes) once, only if
  * at least one merge actually happened. Every stage is independently best-effort — this
- * promise never rejects, matching spec 015 #4's "静默、失败记 ai_failures". */
+ * promise never rejects, matching "静默、失败记 ai_failures". */
 export async function runDedupSweep(): Promise<void> {
   const mergedNodeIds = new Set<string>();
 
@@ -156,8 +156,8 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
 }
 
 /**
- * Persists the "different" verdicts — the answer this sweep used to forget and re-buy on
- * every startup. Two rules, both learned the hard way:
+ * Persists the "different" verdicts, so the sweep does not re-buy the same answer on every
+ * startup. Two rules:
  *
  * A "same" is never cached. node_pair_verdicts is a PERMANENT filter (planLlmTierMerges drops
  * every pair already in it), so a cached "same" whose merge did not actually happen retires

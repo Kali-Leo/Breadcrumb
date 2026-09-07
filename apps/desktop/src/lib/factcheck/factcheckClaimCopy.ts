@@ -1,7 +1,7 @@
 /**
  * Purpose: the sentence under a checked claim when no judge wrote one. feature-factcheck
  * leaves `reasoning` empty for every outcome it decided by itself, because a headless package
- * holds no wording (spec 058 §2); this turns that empty string back into a catalogue key,
+ * holds no wording; this turns that empty string back into a catalogue key,
  * reading the outcome off the fields already stored.
  * Main exports: claimReasoningKey.
  */

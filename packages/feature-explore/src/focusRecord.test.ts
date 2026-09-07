@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for the focus-session record text — buildFocusRecordText's single-root,
- * multi-layer branching, question-station marking, and preorder ordering (spec 042 §5
- * acceptance), plus buildFocusContextLine's one-line truncated form (Leo 2026-08-14 revision).
+ * multi-layer branching, question-station marking, and preorder ordering, plus
+ * buildFocusContextLine's one-line truncated form.
  */
 import { describe, expect, it } from "vitest";
 import { buildFocusContextLine, buildFocusRecordText, type FocusRecordNode } from "./focusRecord";

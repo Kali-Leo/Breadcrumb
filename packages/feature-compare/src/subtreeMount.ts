@@ -1,5 +1,5 @@
 /**
- * Purpose: pure canonical-subtree mounting (spec 028) — copies an evidence-backed subtree
+ * Purpose: pure canonical-subtree mounting — copies an evidence-backed subtree
  * (e.g. MDN's JavaScript modules) under a hub item so the hub's ratio aggregates from real
  * knowledge points. Keys are prefixed for uniqueness; every sourceRef is kept verbatim.
  * Main exports: MountableSubtree, mountSubtreeUnder.

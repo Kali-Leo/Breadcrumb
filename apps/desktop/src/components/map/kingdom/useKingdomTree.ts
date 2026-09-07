@@ -1,5 +1,5 @@
 /**
- * Purpose: the kingdom's derived network (spec 049) — planner rows filtered to this region
+ * Purpose: the kingdom's derived network — planner rows filtered to this region
  * and turned into view nodes, the recommendation pick under the goal-domain filter, the
  * collapsed visible tree, the lateral edges worth drawing, and the pin set. Memoized on the
  * store data it reads; state lives in useKingdomViewState.
@@ -104,8 +104,8 @@ export function useKingdomTree(
     [edges, visibleNodes, primaryId, state.selectedId, state.hoverId, state.showAllEdges],
   );
 
-  // Pins mark the SAME recommendation set the world map pins mark (spec 060 §1's one set),
-  // plus this region's own primary so the card and the tree never disagree.
+  // Pins mark the SAME recommendation set the world map pins mark, plus this region's own
+  // primary so the card and the tree never disagree.
   const pinnedIds = useMemo(() => {
     const pinned = new Set(
       visibleFrontier(frontierCandidates)
@@ -117,8 +117,7 @@ export function useKingdomTree(
   }, [frontierCandidates, memberSet, primaryId]);
 
   // The relations toggle only exists where it can change anything: this kingdom actually
-  // carries requires/helps edges (Leo 2026-08-31 #4 — a control that does nothing teaches
-  // the user to distrust controls).
+  // carries requires/helps edges.
   const hasLateralEdges = useMemo(
     () =>
       edges.some(

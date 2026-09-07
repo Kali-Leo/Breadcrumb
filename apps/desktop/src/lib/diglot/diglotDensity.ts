@@ -29,10 +29,9 @@ export function wireDailyWordCounterTrigger(): void {
 }
 
 /**
- * One day's density adjustment (spec 033 + audit 2026-08-28 语言织入 #10): how often the
- * learner opened a woven word's meaning over the last week decides whether tomorrow's replies
- * carry a few more of them or a few less. Silent — density has never been on screen, and this
- * does not put it there.
+ * One day's density adjustment: how often the learner opened a woven word's meaning over the
+ * last week decides whether tomorrow's replies carry a few more of them or a few less. Silent
+ * — density is not on screen, and this does not put it there.
  */
 export async function adjustDensityForYesterday(): Promise<void> {
   const { settings } = useDiglotStore.getState();

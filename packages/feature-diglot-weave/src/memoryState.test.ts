@@ -1,6 +1,6 @@
 /**
- * Purpose: tests for FSRS state handling — signal→rating mapping (all six signal classes,
- * acceptance 3), exposure tripling, serialization round-trip, review advancement.
+ * Purpose: tests for FSRS state handling — signal→rating mapping (all six signal classes),
+ * exposure tripling, serialization round-trip, review advancement.
  */
 import { Rating } from "ts-fsrs";
 import { describe, expect, it } from "vitest";

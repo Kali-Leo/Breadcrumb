@@ -1,9 +1,8 @@
 /**
- * Purpose: the selected goal's single recommended route (spec 017 #1; re-homed by spec 047)
- * — each step tagged with plain reason chips. The tuning sliders and the coverage
- * percentage were retired with the lab (mechanism stays internal; pace/interestWeight run
- * on their neutral defaults). The legacy three-route comparison stays deleted from UI per
- * Leo's 2026-08-04 amendment.
+ * Purpose: the selected goal's single recommended route — each step tagged with plain
+ * reason chips. The tuning sliders and the coverage
+ * percentage are not exposed in UI (mechanism stays internal; pace/interestWeight run
+ * on their neutral defaults).
  * Main exports: GoalRoute.
  */
 

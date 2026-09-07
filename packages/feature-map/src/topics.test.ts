@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for embedding-based topic discovery — cluster separation, medoid labeling,
  * no-embedding ancestor attachment, the all-no-embedding tree-root fallback, and the
- * one-member islet split. (The map itself now derives continents tree-first; see
+ * one-member islet split. (The map itself derives continents tree-first; see
  * continents.test.ts.)
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";

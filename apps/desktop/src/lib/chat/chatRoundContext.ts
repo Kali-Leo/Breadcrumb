@@ -1,8 +1,8 @@
 /**
  * Purpose: non-companion send-round helpers split out of chatStore.ts to keep sendMessage
  * under the file-size cap — lazy 'chat' conversation creation, the anchored-node system
- * line, the learner-context injection (spec 038 §2.3), and the silent focus-session context
- * line (Leo 2026-08-14 revision to spec 042 §5). No companion-specific logic here.
+ * line, the learner-context injection, and the silent focus-session context
+ * line. No companion-specific logic here.
  * Main exports: ensureChatConversationId, buildAnchoredNodeSystemMessage,
  * buildLearnerContextSystemMessage, buildFocusContextSystemMessage.
  */
@@ -57,7 +57,7 @@ export async function buildAnchoredNodeSystemMessage(): Promise<ChatMessage | nu
 /** Styles seen only once are noise, not a preference. */
 const MIN_STYLE_COUNT = 2;
 
-/** The learner-context system line for this round (spec 038 §2.3): anchored-node retention
+/** The learner-context system line for this round: anchored-node retention
  * stance + explanation-style preferences + same-round confusion downshift. Returns null when
  * there is nothing worth injecting. Any data-layer hiccup degrades to a partial (or absent)
  * context rather than blocking the send. */
@@ -93,17 +93,16 @@ export async function buildLearnerContextSystemMessage(
   return content === null ? null : { role: "system", content };
 }
 
-/** Most recent focus sessions the silent context line quotes (Leo 2026-08-14 revision to spec
- * 042 §5) — enough to remind the model without dumping the learner's whole exploration history
- * into every round. */
+/** Most recent focus sessions the silent context line quotes — enough to remind the model
+ * without dumping the learner's whole exploration history into every round. */
 const MAX_FOCUS_CONTEXT_SESSIONS = 3;
 /** Stations per session line, matching buildFocusContextLine's own default — named here so the
  * cap is visible next to the session cap it pairs with. */
 const MAX_FOCUS_CONTEXT_STATIONS = 6;
 
-/** The silent focus-session context line for this round (Leo 2026-08-14 revision to spec 042
- * §5: a session's exit no longer writes a message into the conversation, so the model needs
- * another way to know what the learner already explored). Reads this conversation's most
+/** The silent focus-session context line for this round: a session's exit does not write a
+ * message into the conversation, so the model needs another way to know what the learner
+ * already explored. Reads this conversation's most
  * recent ≤3 focus sessions that have at least one answered station, oldest of the three first,
  * one line each via buildFocusContextLine. Returns null when there is nothing to quote. */
 export async function buildFocusContextSystemMessage(

@@ -1,5 +1,5 @@
 /**
- * Purpose: turning a frontier candidate into a real chat (spec 047 "从这里继续") — zero LLM
+ * Purpose: turning a frontier candidate into a real chat ("从这里继续") — zero LLM
  * calls at creation time, seeded with a local opener so both the learner and the model know
  * why this concept came up (same purposeful-entry pattern as reunion/teach/practice).
  * Main exports: startFrontierSession, frontierOpener.

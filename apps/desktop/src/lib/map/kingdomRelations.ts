@@ -1,5 +1,5 @@
 /**
- * Purpose: what the selected concept is connected to (spec 049) — the card's relation list
+ * Purpose: what the selected concept is connected to — the card's relation list
  * (parent, children, prerequisites, helpers, all restricted to concepts visible in this
  * kingdom) and the branch the region mirror reads, which is the concept plus everything
  * under it: a branch is one topic. Pure; no I/O, no rendering.

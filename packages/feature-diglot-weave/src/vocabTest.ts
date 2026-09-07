@@ -1,8 +1,8 @@
 /**
- * Purpose: the two-minute vocabulary check that gives the weave a starting point (Leo
- * 2026-09-01 ruled it in). Without it the introduction floor starts at zero for everyone and
- * can only move once words have been introduced — the self-locking cold start the 2026-08-28
- * audit diagnosed (B3), which left an advanced learner meeting "water" and "book" for weeks.
+ * Purpose: the two-minute vocabulary check that gives the weave a starting point. Without it
+ * the introduction floor starts at zero for everyone and can only move once words have been
+ * introduced — a self-locking cold start that leaves an advanced learner meeting "water" and
+ * "book" for weeks.
  *
  * Form: thirty four-option meaning-recognition items sampled across the frequency-ordered
  * introduction queue, the standard shape of a vocabulary-size test (Nation & Beglar 2007's

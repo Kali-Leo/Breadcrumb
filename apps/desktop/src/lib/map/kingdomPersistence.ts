@@ -1,5 +1,5 @@
 /**
- * Purpose: the kingdom view's stored state (spec 049) — the per-kingdom manual collapse set,
+ * Purpose: the kingdom view's stored state — the per-kingdom manual collapse set,
  * plus the one sightings pass that answers "when was this concept last met" and "is there a
  * conversation to go back to" for every member. I/O only; no display logic.
  * Main exports: KingdomPersistedState, kingdomCollapseKey, loadKingdomPersistedState,

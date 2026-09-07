@@ -261,7 +261,7 @@ describe("frontier", () => {
   });
 });
 
-describe("frontier ranked-mode goal-gap boost (spec 016)", () => {
+describe("frontier ranked-mode goal-gap boost", () => {
   it("weights the normalized goal-gap indicator by GOAL_GAP_SCORE_BOOST and marks inGoalGap", () => {
     const nodes = [node("a", "Alpha"), node("b", "Beta")];
     const result = frontier({
@@ -296,7 +296,7 @@ describe("frontier ranked-mode goal-gap boost (spec 016)", () => {
   });
 });
 
-describe("frontier fed by propagateInterestToPrerequisites (spec 014 acceptance scenario)", () => {
+describe("frontier fed by propagateInterestToPrerequisites", () => {
   it("surfaces a locked interested node's unlit prerequisite, with a reason naming it", () => {
     // root(lit) --requires--> P(unlit, on the frontier once root is lit) --requires-->
     // X(unlit, locked because P isn't lit yet, but highly interesting).
@@ -330,7 +330,7 @@ describe("frontier fed by propagateInterestToPrerequisites (spec 014 acceptance 
   });
 });
 
-describe("frontier scoring: interest can actually move the ranking (2026-08-28 audit)", () => {
+describe("frontier scoring: interest can actually move the ranking", () => {
   // Three candidates fed by one lit root through helps edges of different weight. Difficulty
   // is identical (none of them has anything downstream), so helps is the only thing separating
   // them until interest enters.
@@ -354,9 +354,9 @@ describe("frontier scoring: interest can actually move the ranking (2026-08-28 a
   });
 
   it("flips the top two when the runner-up's interest goes from 0 to 0.25", () => {
-    // The acceptance test the audit asked for: same helps, same difficulty, interest alone.
-    // Under the old raw-sum scoring a 0.25 interest could never overcome anything, because an
-    // integer prerequisite count was the only term with real range.
+    // Same helps, same difficulty, interest alone.
+    // Under a raw-sum scoring (no normalization) a 0.25 interest could never overcome
+    // anything, because an integer prerequisite count would be the only term with real range.
     expect(rank(new Map([["y", 0.25]]))).toEqual(["y", "x", "z"]);
   });
 });
@@ -417,11 +417,11 @@ describe("frontier keeps every bucket strictly score-descending", () => {
     });
   }
 
-  /** Regression (bug hunt 2026-09-03, P1-1): the exploration slot used to be spliced in here,
-   * which handed visibleFrontier a list whose scores went back up in the middle — and its
-   * cliff search, which assumes descending scores, then cut the genuine 4th place while
-   * keeping a 0.000-scoring exploration pick. The slot now runs inside visibleFrontier, after
-   * the cut. What frontier() owes that function is a monotonic list. */
+  /** Splicing the exploration slot in here would hand visibleFrontier a list whose scores go
+   * back up in the middle — and its cliff search, which assumes descending scores, would then
+   * cut the genuine 4th place while keeping a 0.000-scoring exploration pick. The slot runs
+   * inside visibleFrontier, after the cut. What frontier() owes that function is a monotonic
+   * list. */
   it("does not reorder for exploration, whatever the evidence weights say", () => {
     const evidence = new Map([
       ["a", 5],
@@ -445,7 +445,7 @@ describe("frontier keeps every bucket strictly score-descending", () => {
   });
 });
 
-describe("frontier hard gate reads 'ever lit', not 'lit right now' (2026-08-28 audit)", () => {
+describe("frontier hard gate reads 'ever lit', not 'lit right now'", () => {
   const nodes = [node("a", "Alpha"), node("b", "Beta")];
   const edges = [requires("a", "b")];
 
@@ -501,7 +501,7 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now' (2026-08-28 a
     expect(result).toEqual([]);
   });
 
-  it("lets user weights flip the order (spec 060 §3): zeroed interest hands the lead to helps", () => {
+  it("lets user weights flip the order: zeroed interest hands the lead to helps", () => {
     const nodes = [node("lit", "Lit"), node("liked", "Liked"), node("helped", "Helped")];
     const edges = [helps("lit", "helped", 1)];
     const masteryByNode = new Map([["lit", 0.9]]);
@@ -529,13 +529,13 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now' (2026-08-28 a
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P1-2): the difficulty component is subtracted, and it used
- * to measure the chain hanging *below* a node. A foundation concept — the thing with half the
- * tree standing on it — therefore scored maximum difficulty and was pushed down, while an
- * advanced node with nothing after it scored the minimum and went to the top. The slider the
- * learner pulls to get there says 先挑轻松的 / "Prefer lighter steps", so the feature did the
- * opposite of what its own label promises. Difficulty is prerequisite depth now: how many
- * courses you have to make up before this one makes sense.
+ * The difficulty component is subtracted, so measuring it as the chain hanging *below* a node
+ * would penalize exactly the concepts a learner should meet first: a foundation concept — the
+ * thing with half the tree standing on it — would score maximum difficulty and be pushed down,
+ * while an advanced node with nothing after it would score the minimum and go to the top. The
+ * slider the learner pulls to get there says 先挑轻松的 / "Prefer lighter steps", so that would
+ * do the opposite of what its own label promises. Difficulty is prerequisite depth instead: how
+ * many courses you have to make up before this one makes sense.
  */
 describe("frontier difficulty means 'how much to make up first'", () => {
   // 基础 --requires--> 中级 --requires--> 高级, and 预备(lit) --requires--> 边缘叶子.
@@ -584,11 +584,11 @@ describe("frontier difficulty means 'how much to make up first'", () => {
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P1-3): one non-finite component used to make Math.min and
- * Math.max both NaN inside normalizeAndScore, which gave EVERY candidate a NaN score; the
- * comparator then returned NaN for every pair, V8 read that as "already ordered", and the
- * whole recommendation list came out in the order the rows happened to arrive from the
- * database. Nothing threw and nothing looked wrong on screen.
+ * One non-finite component would make Math.min and
+ * Math.max both NaN inside normalizeAndScore, giving EVERY candidate a NaN score; the
+ * comparator would then return NaN for every pair, V8 would read that as "already ordered", and
+ * the whole recommendation list would come out in the order the rows happened to arrive from
+ * the database. Nothing would throw and nothing would look wrong on screen.
  */
 describe("frontier survives one poisoned candidate", () => {
   const nodes = [node("zeta", "Zeta"), node("alpha", "Alpha"), node("mu", "Mu")];
@@ -613,7 +613,7 @@ describe("frontier survives one poisoned candidate", () => {
   it("keeps the other candidates in their true order when one interest score is NaN", () => {
     const poisoned = new Map(CLEAN).set("zeta", Number.NaN);
     // zeta scored 0 anyway, so the honest reading of NaN as "no evidence" leaves the order
-    // exactly as it was — rather than the insertion order alpha, zeta, mu it used to produce.
+    // exactly as it was — rather than falling back to the insertion order alpha, zeta, mu.
     expect(rank(poisoned)).toEqual(rank(CLEAN));
   });
 

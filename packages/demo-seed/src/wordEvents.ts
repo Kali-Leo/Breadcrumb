@@ -1,5 +1,5 @@
 /**
- * Purpose: deterministic per-word signal-event plans for the demo seed (spec 035 T7b) and the
+ * Purpose: deterministic per-word signal-event plans for the demo seed and the
  * replay that turns a plan into real rows — the FSRS state is built exclusively via
  * memoryState's production functions, never hand-written JSON.
  * Main exports: introducedOffsetDays, planWordEvents, replayWord, WordSeedRow.

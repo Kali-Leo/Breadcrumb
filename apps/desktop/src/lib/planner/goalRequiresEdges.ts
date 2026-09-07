@@ -2,7 +2,7 @@
  * Purpose: turns a goal mapping's `suggested[].requires` labels into requires edge rows —
  * the first-write path that gives a freshly decomposed goal any structure at all. Without it
  * a new goal's gap has zero requires edges, so every candidate ties on every scoring term and
- * the "recommended route" collapses into alphabetical order (2026-08-28 audit, planning gap 1).
+ * the "recommended route" collapses into alphabetical order.
  * Pure planning only: no DB, no I/O — the caller upserts what comes back.
  * Main exports: planGoalRequiresEdges, PlannedGoalEdges.
  */

@@ -1,9 +1,9 @@
 /**
  * Purpose: the map controller's teardown. A resize schedules a 200 ms debounce that rebuilds
- * the scene and re-frames the camera; leaving the map inside that window used to fire the
- * callback against a destroyed Pixi application (bug hunt 2026-09-03) — the controller's
- * destroy() unhooked the canvas listeners but never cleared the timer, and useMapApplication
- * destroys the Application immediately afterwards.
+ * the scene and re-frames the camera; leaving the map inside that window must not fire the
+ * callback against a destroyed Pixi application. The controller's destroy() has to clear that
+ * timer as well as unhook the canvas listeners, because useMapApplication destroys the
+ * Application immediately afterwards.
  *
  * Pixi is stubbed down to what createMapController touches before a world is ever set: a stage
  * to hold the world root, a screen size, a canvas that records its listeners, and a renderer

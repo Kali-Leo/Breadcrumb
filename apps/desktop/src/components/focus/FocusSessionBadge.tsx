@@ -1,7 +1,6 @@
 /**
- * Purpose: in-place badges for the focus sessions born from one assistant message (Leo
- * 2026-08-14 revision to spec 042 §5, replacing the old exit-record chat message) — one
- * low-key row per session with at least one answered station, styled after FactcheckBadge's
+ * Purpose: in-place badges for the focus sessions born from one assistant message
+ * — one low-key row per session with at least one answered station, styled after FactcheckBadge's
  * inline bar; clicking a row reopens that session.
  * Main exports: FocusSessionBadge.
  */

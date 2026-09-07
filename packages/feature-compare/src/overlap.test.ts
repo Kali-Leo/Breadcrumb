@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the overlap aggregation (spec 023) — leaf lit/unlit semantics,
+ * Purpose: unit tests for the overlap aggregation — leaf lit/unlit semantics,
  * level-by-level ratio roll-up, and authored-order preservation.
  */
 import { describe, expect, it } from "vitest";

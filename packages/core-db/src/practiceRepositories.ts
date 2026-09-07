@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for practice_scores (spec 029) — the learner's own, never
+ * Purpose: SQL statements for practice_scores — the learner's own, never
  * AI-verified 0–10 score on a pure experience leaf, one row per item, overwritten in place.
  * Main exports: createPracticeRepo factory.
  */

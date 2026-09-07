@@ -60,9 +60,9 @@ export function catalogPackFor(pairId: string): CatalogPack | null {
  *
  * It has to be a plain file in a repository rather than a release asset: an asset redirects to
  * a second host and neither hop sends `access-control-allow-origin`, so a browser's fetch fails
- * before it has even followed the redirect — measured 2026-09-02, and it made every downloadable
- * pair impossible to install in the browser edition. Raw repository files do send it, so the two
- * builds can finally use one address and one code path.
+ * before it has even followed the redirect, making every downloadable pair impossible to install
+ * in the browser edition. Raw repository files do send it, so both builds use one address and
+ * one code path.
  *
  * The packs live in their own repository (github.com/Kali-Leo/breadcrumb-language-packs) because
  * they are CC BY-SA 4.0, which grants one-way compatibility with GPLv3 but not with this

@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time canonical-pipeline step 1 (spec 025) — slice the 课标 plain text by unit
+ * Purpose: dev-time canonical-pipeline step 1 — slice the 课标 plain text by unit
  * headings, ask DeepSeek to extract fine-grained concepts from the ①②③ enumerations, and
  * mechanically verify every extraction (label must appear verbatim inside its quote, quote
  * chunks verbatim inside the source slice) so invented content cannot pass.

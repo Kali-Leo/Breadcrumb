@@ -1,7 +1,6 @@
 /**
  * Purpose: assembles one run's metrics.json in the four-feature-plus-crossCutting shape
- * (spec 013, "docs(specs): reframe simlab goals around the four built features") from data
- * already collected during the run — no I/O here, pure aggregation over what the CLI gathered
+ * from data already collected during the run — no I/O here, pure aggregation over what the CLI gathered
  * via telemetry (ledger, pressure hits) and the onConversationComplete invariants hook.
  * Main exports: buildRunMetrics, RunMetrics, JourneySummary.
  */
@@ -30,7 +29,7 @@ export interface JourneySummary {
   rejectedCyclicEdgeCount: number;
   pipelineFailureCount: number;
   /** Input echo, not extraction evidence — see targetConceptsEcho.ts. Kept in metrics.json,
-   * deliberately absent from `sim summarize` (design audit 2026-08-28). */
+   * deliberately absent from `sim summarize`. */
   targetConceptsEcho: number;
 }
 
@@ -65,7 +64,7 @@ export interface RunMetrics {
     digestReconciliationViolationCount: number;
     frontierStalenessWarnJourneyCount: number;
     duplicateGoalTitleCount: number;
-    /** Teaching contract v2's one-question-per-turn and brevity discipline (spec 038 §2.6),
+    /** Teaching contract v2's one-question-per-turn and brevity discipline,
      * aggregated live from every tutor reply across the run — see teachingDiscipline.ts. */
     teachingDiscipline: TeachingDisciplineResult;
   };
@@ -89,7 +88,7 @@ export interface BuildRunMetricsInput {
   degenerateTurnCount: number;
   usageContractViolationCount: number;
   parentLabelViolationCount: number;
-  /** Accumulated live over the run via RunTelemetry.onTeachingDisciplineCheck (spec 038 §2.6) —
+  /** Accumulated live over the run via RunTelemetry.onTeachingDisciplineCheck —
    * not re-derived from the log, unlike the three counts above. */
   teachingDiscipline: TeachingDisciplineResult;
 }

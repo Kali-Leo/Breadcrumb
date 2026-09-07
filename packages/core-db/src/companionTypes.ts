@@ -1,5 +1,5 @@
 /**
- * Purpose: row types for the companion cast data layer (spec 037) — the memory stream, the
+ * Purpose: row types for the companion cast data layer — the memory stream, the
  * proactive teach-back proposal log, and the per-conversation Reflect-Respond knowledge state.
  * Main exports: CompanionMemoryKind, CompanionMemoryRow, CompanionProposalStatus,
  * CompanionProposalRow, CompanionKnowledgeStateRow.
@@ -11,7 +11,7 @@
  * generative-agents memory stream). */
 export type CompanionMemoryKind = "observation" | "reflection";
 
-/** One entry of a companion's memory stream about the user (spec 037). importance is an
+/** One entry of a companion's memory stream about the user. importance is an
  * LLM-scored 1–10 poignancy rating; retrieval later combines it with recency decay and
  * token-overlap relevance. last_accessed_at starts equal to created_at and advances every
  * time the entry is retrieved into a prompt, feeding the recency factor. */
@@ -31,13 +31,13 @@ export interface CompanionMemoryRow {
  * this row's shape. */
 export type CompanionProposalStatus = "pending" | "accepted" | "declined" | "expired";
 
-/** One proactive teach-back invitation decision (spec 037, thunlp/ProactiveAgent-style gate).
+/** One proactive teach-back invitation decision (thunlp/ProactiveAgent-style gate).
  * node_id is the lowest-retention knowledge node the proposal targets — null is allowed
  * because the gate itself is pure/rule-based and may in principle propose without a node
- * (kept nullable to match the spec's table contract, not currently produced by the gate).
+ * (kept nullable to match the table contract, not currently produced by the gate).
  * resolved_at is null while status is 'pending'. */
 /** Which invitation the proposal carries: teach-back (讲给我听) or reunion (一起回顾) —
- * spec 048 §5 folded reunion invites into the same gate. */
+ * both share the one proposal gate. */
 export type CompanionProposalKind = "teach" | "reunion";
 
 export interface CompanionProposalRow {
@@ -51,7 +51,7 @@ export interface CompanionProposalRow {
   resolved_at: string | null;
 }
 
-/** The Reflect-Respond student model for one teach-back conversation (spec 037) — state_json
+/** The Reflect-Respond student model for one teach-back conversation — state_json
  * is the serialized knowledge state (expectation points, pending misconceptions, blanks); the
  * companion's replies are only ever allowed to draw on what is recorded here. One row per
  * conversation, replaced whole after every round (never appended). */

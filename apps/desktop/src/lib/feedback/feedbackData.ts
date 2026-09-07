@@ -1,5 +1,5 @@
 /**
- * Purpose: one-shot fetch of the tables the surviving mirror cards read (spec 035 → 048)
+ * Purpose: one-shot fetch of the tables the surviving mirror cards read
  * plus assembly of their view models via @breadcrumb/feature-feedback's pure functions.
  * Main exports: FeedbackData, loadFeedbackData.
  */

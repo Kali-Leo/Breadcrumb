@@ -1,11 +1,10 @@
 /**
  * Purpose: unit tests for the weave epoch — the signal that a weave-affecting settings change
- * fires. It exists twice over, and both halves were broken: the cached patches are swept, but
- * nothing told the screen to ask for a weave again, and a weave already in flight threw its
- * result away and never ran a second time. Either one leaves every assistant message on
- * screen permanently blank, because the render gate blanks text until patches land
- * (2026-09-04). Only the world around the weave is mocked; the loop itself is the code under
- * test.
+ * fires. It has two halves: the cached patches are swept AND the screen is told to ask for a
+ * weave again, and a weave already in flight throws its result away and runs a second time.
+ * Either half failing leaves every assistant message on screen permanently blank, because the
+ * render gate blanks text until patches land. Only the world around the weave is mocked; the
+ * loop itself is the code under test.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createStore } from "zustand/vanilla";

@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for spec 015 #4's merge planning — normalizeLabel's cosmetic
+ * Purpose: unit tests for merge planning — normalizeLabel's cosmetic
  * collapsing, planMechanicalMerges' grouping/canonical-picking, and
  * planSynonymVerdictMerges' verdict-to-instruction turn (including the chain guard).
  */
@@ -71,7 +71,7 @@ describe("normalizeLabel", () => {
   });
 
   it("does NOT fold traditional into simplified — a known, documented gap", () => {
-    // No maintained, small, cleanly-licensed mapping table exists on npm as of 2026-08-28;
+    // No maintained, small, cleanly-licensed mapping table exists on npm;
     // the embedding tier is what catches these today. Asserted so the gap stays visible
     // instead of being rediscovered.
     expect(normalizeLabel("財務報表")).not.toBe(normalizeLabel("财务报表"));

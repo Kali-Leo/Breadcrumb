@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the per-word diglot weave tables (spec 033) — FSRS card states,
+ * Purpose: SQL statements for the per-word diglot weave tables — FSRS card states,
  * the append-only signal event log and verbatim guesses. Installed packs and context vectors
  * live in diglotPackRepositories.ts; createDiglotRepo composes the two halves.
  * Main exports: createDiglotWordRepo factory.
@@ -47,7 +47,7 @@ export function createDiglotWordRepo(sql: SqlClient) {
     },
     /** Words due for a re-encounter, oldest due first — the review-debt queue. Without a
      * limit this is the true due set: the debt throttle reads it, and a capped count silently
-     * became "debt is at least N" once the vocabulary grew past the cap (audit 2026-08-28). */
+     * degrades to "debt is at least N" once the vocabulary grows past the cap. */
     async listDueStates(
       pair: DiglotPairId,
       nowIso: string,
@@ -96,7 +96,7 @@ export function createDiglotWordRepo(sql: SqlClient) {
         [pair, lemma, limit],
       );
     },
-    /** One pair's events since an instant — the density loop's window (spec 033), which
+    /** One pair's events since an instant — the density loop's window, which
      * needs a week of signals rather than the whole history. */
     async listEventsSince(pair: DiglotPairId, sinceIso: string): Promise<DiglotWordEventRow[]> {
       return sql.select<DiglotWordEventRow>(
@@ -105,7 +105,7 @@ export function createDiglotWordRepo(sql: SqlClient) {
         [pair, sinceIso],
       );
     },
-    /** Every event of one pair, oldest first — the FSRS fitting corpus (vision/09 #1). */
+    /** Every event of one pair, oldest first — the FSRS fitting corpus. */
     async listAllEvents(pair: DiglotPairId): Promise<DiglotWordEventRow[]> {
       return sql.select<DiglotWordEventRow>(
         "SELECT * FROM diglot_word_events WHERE pair = ? ORDER BY created_at ASC, id ASC",

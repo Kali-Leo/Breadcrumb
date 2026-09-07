@@ -87,11 +87,11 @@ describe("shapeTree", () => {
 });
 
 /**
- * A parent cycle used to be catastrophic here and completely silent: a node on the cycle is
- * in no root bucket, so it and its whole subtree simply stopped being drawn. Until 2026-09-04
- * a merge whose duplicate was an ancestor of its canonical produced exactly this. Migration
- * 0053 repairs the stored rows; these tests are the map's own guard, so a database that
- * carries a loop (or acquires one some other way) loses at most one parent link.
+ * A parent cycle is catastrophic here and completely silent: a node on the cycle is in no root
+ * bucket, so it and its whole subtree simply stop being drawn. A merge whose duplicate is an
+ * ancestor of its canonical produces exactly this. Migration 0053 repairs the stored rows;
+ * these tests are the map's own guard, so a database that carries a loop (or acquires one some
+ * other way) loses at most one parent link.
  */
 describe("parent-link cycles", () => {
   it("still draws a node that is its own parent, and everything under it", () => {
@@ -120,8 +120,8 @@ describe("parent-link cycles", () => {
   });
 
   it("terminates when collectSubtree is handed a children map that still loops", () => {
-    // Not something indexChildren can produce any more; collectSubtree is exported, so this
-    // pins that the failure mode is a smaller picture and never an unbounded loop.
+    // Not something indexChildren can produce; collectSubtree is exported, so this pins that
+    // the failure mode is a smaller picture and never an unbounded loop.
     const a = node("a", "b");
     const b = node("b", "a");
     const looping = new Map([

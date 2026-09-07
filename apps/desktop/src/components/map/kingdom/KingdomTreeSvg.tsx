@@ -1,5 +1,5 @@
 /**
- * Purpose: the subway-map tree rendering (spec 049, 2026-08-31 修订) — deterministic
+ * Purpose: the subway-map tree rendering — deterministic
  * tidy-tree stations with minimal neutral state marks (drawn by KingdomTreeStation),
  * lateral requires/helps edges as arrowed lines (solid/dashed), and shrink-to-fit sizing.
  * Opens centered on the primary recommendation (useKingdomTreePane). Logic lives in
@@ -30,7 +30,7 @@ interface KingdomTreeSvgProps {
   pinnedIds: ReadonlySet<string>;
   selectedId: string | null;
   onSelect(nodeId: string): void;
-  /** Double-click: straight into the station's main action (Leo 2026-08-31 #3). */
+  /** Double-click: straight into the station's main action. */
   onEnter(nodeId: string): void;
   onHover(nodeId: string | null): void;
   onExpandAggregate(nodeId: string): void;
@@ -66,7 +66,7 @@ export function KingdomTreeSvg({
     return <p className="p-4 text-sm text-stone-400">{t("kingdom.treeEmpty")}</p>;
   }
 
-  // Shrink to fit the pane (never grow); past the floor the pane scrolls (spec 050 §1).
+  // Shrink to fit the pane (never grow); past the floor the pane scrolls.
   const fitScale =
     paneSize.width > 0 && paneSize.height > 0
       ? Math.min(
@@ -78,7 +78,7 @@ export function KingdomTreeSvg({
   const scale = Math.max(MIN_SCALE, fitScale);
 
   // shrink-0: as a flex item the svg would otherwise be squeezed below its own width and
-  // the floor silently broken (0.55 became 0.32 on an upright iPad, layout B4); at its true
+  // the floor silently broken (0.55 became 0.32 on an upright iPad); at its true
   // size the pane scrolls as intended.
   return (
     <div ref={paneRef} className="flex h-full w-full overflow-auto p-4">

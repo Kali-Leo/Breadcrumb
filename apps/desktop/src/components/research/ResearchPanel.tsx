@@ -1,6 +1,6 @@
 /**
- * Purpose: the research task platform section (spec 036), embedded as a settings tab since
- * spec 044 — lists every locally computed research result as a card; results stay visible
+ * Purpose: the research task platform section, embedded as a settings tab
+ * — lists every locally computed research result as a card; results stay visible
  * and deletable even after the feature switch is turned off (only new task execution stops).
  * Main exports: ResearchPanel.
  */

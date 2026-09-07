@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the zero-LLM trail-naming pure functions (spec 041 §1) —
+ * Purpose: unit tests for the zero-LLM trail-naming pure functions —
  * "first -> last" auto naming at 0/1/2+ stations with truncation, first-touch station dedup
  * order, the rename-freezes-forever decision, and the display fallback.
  */

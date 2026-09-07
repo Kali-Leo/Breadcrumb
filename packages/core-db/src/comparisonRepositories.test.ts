@@ -1,8 +1,8 @@
 /**
  * Purpose: unit tests for createComparisonRepo using an in-memory fake SqlClient — the
- * comparison tree's whole-replace round-trip, position ordering, profile isolation (spec 023),
- * concept_id round-tripping through replaceProfile (spec 025), and category/item_kind
- * round-tripping (spec 026).
+ * comparison tree's whole-replace round-trip, position ordering, profile isolation,
+ * concept_id round-tripping through replaceProfile, and category/item_kind
+ * round-tripping.
  */
 import { describe, expect, it } from "vitest";
 import { createComparisonRepo } from "./comparisonRepositories";
@@ -141,12 +141,12 @@ describe("createComparisonRepo", () => {
     // concept_id round-trips both the null (coarse/searched item) and string case.
     expect(stored[0]?.concept_id).toBe("concept-data-structures");
     expect(stored[1]?.concept_id).toBeNull();
-    // item_kind round-trips per-item (spec 026).
+    // item_kind round-trips per-item.
     expect(stored[0]?.item_kind).toBe("knowledge");
     expect(stored[2]?.item_kind).toBe("structure");
   });
 
-  it("round-trips an occupation-category profile with practice/tool item kinds (spec 026)", async () => {
+  it("round-trips an occupation-category profile with practice/tool item kinds", async () => {
     const { client } = makeFakeSql();
     const repo = createComparisonRepo(client);
     await repo.replaceProfile(

@@ -1,6 +1,6 @@
 /**
- * Purpose: the "对比树" section inside the goal view (spec 023/025/026; re-homed by spec
- * 047) — the 教材/真人 toggle (occupation default), occupation-directory input with
+ * Purpose: the "对比树" section inside the goal view
+ * — the 教材/真人 toggle (occupation default), occupation-directory input with
  * candidate confirmation (offline, instant), profile chips, the tree, the detail panel,
  * and 一键生成目标 with its plain confirm copy. This module only compares.
  * Main exports: CompareSection.

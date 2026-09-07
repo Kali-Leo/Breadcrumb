@@ -141,7 +141,7 @@ describe("the camera a hit test reads", () => {
   const screen = 1000;
 
   it("resolves a pinch mid-dive against the target camera, not the animating one", () => {
-    // The bug (hunt 2026-09-03): a level change moves `level` at once but the camera eases
+    // The failure guarded here: a level change moves `level` at once but the camera eases
     // into place over ~0.66 s. A second gesture during that window converted its screen point
     // with the frame the camera happened to be passing through, so it entered the wrong
     // kingdom — or nothing at all. Reproduced here by freezing worldRoot at the world frame

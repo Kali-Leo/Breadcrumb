@@ -11,8 +11,7 @@ import type { IslandModel, WorldModel } from "@breadcrumb/feature-map";
 
 /** An island's model id is prefixed (`continent:<root node id>`) so it cannot collide with
  * a kingdom's; map_place_names is keyed by the real knowledge node id, which the foreign key
- * enforces. This is the one place that strips the prefix (2026-09-02 walkthrough: writing
- * the prefixed id failed the foreign key on every island rename). */
+ * enforces. This is the one place that strips the prefix. */
 const ISLAND_ID_PREFIX = "continent:";
 export function placeKeyOf(modelNodeId: string): string {
   return modelNodeId.startsWith(ISLAND_ID_PREFIX)

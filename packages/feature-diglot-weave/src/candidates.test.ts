@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for candidate extraction — lemmatization via forms, the never-replace
  * guards (collocation interior, capitalized surface, t1Safe:false) and first-occurrence
- * deduplication (spec 033, acceptance 5).
+ * deduplication.
  */
 import { describe, expect, it } from "vitest";
 import { extractCandidates } from "./candidates";

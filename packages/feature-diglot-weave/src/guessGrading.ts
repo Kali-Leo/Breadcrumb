@@ -1,9 +1,9 @@
 /**
- * Purpose: zero-LLM guess grading (spec 033) — the user's guess at a woven word's meaning is
- * graded against the original word and its dictionary synonyms (correct), a morphological
- * overlap test (close), and an embedding cosine supplied by the caller (close). Character
- * overlap as a stand-in for meaning was removed: on CJK it graded 父亲→母亲, 敌人→朋友 and
- * 昨天→明天 as "close", because Chinese antonyms share morphemes (audit 2026-08-28 #4).
+ * Purpose: zero-LLM guess grading — the user's guess at a woven word's meaning is graded
+ * against the original word and its dictionary synonyms (correct), a morphological overlap
+ * test (close), and an embedding cosine supplied by the caller (close). Character overlap is
+ * never used as a stand-in for meaning: on CJK it grades 父亲→母亲, 敌人→朋友 and 昨天→明天 as
+ * "close", because Chinese antonyms share morphemes.
  * Pure and deterministic; the embedding I/O lives in the app layer.
  * Main exports: gradeGuess, GuessSemantics, SEMANTIC_CLOSE_THRESHOLD.
  */
@@ -21,7 +21,7 @@ export interface GuessSemantics {
 
 /** Cosine above which a guess counts as semantically close. Deliberately high and TENTATIVE:
  * multilingual-e5 puts unrelated words of one language in the 0.7–0.85 band and places
- * antonyms close to each other, so a low threshold would recreate the very bug this replaces.
+ * antonyms close to each other, so a low threshold would recreate the character-overlap bug.
  * Needs calibration on the real machine against 父亲/母亲, 敌人/朋友, 男孩/女孩, 昨天/明天. */
 export const SEMANTIC_CLOSE_THRESHOLD = 0.92;
 
@@ -91,7 +91,7 @@ function isMorphologicallyClose(guess: string, reference: string): boolean {
  * (dictionary synonyms). A guess that is itself a DIFFERENT dictionary word is wrong, never
  * close — it is a substantive mix-up, and the confusion miner is the place that uses it.
  * (This also grades a near-synonym the pack does not list under the same target as wrong —
- * unchanged from the character-overlap era, and the safe direction to err in.)
+ * the safe direction to err in.)
  * Otherwise close = a morphological variant, or an embedding cosine over the threshold.
  */
 export function gradeGuess(

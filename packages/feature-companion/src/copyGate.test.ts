@@ -1,17 +1,16 @@
 /**
- * Purpose: mechanical safety gate over every string this package still spells out (spec 037
- * acceptance 5) — what remains of COMPANION_COPY, the model-facing prompts, and every text field
- * of all three cards must scan clean against both the manipulation lexicon and the repo's shared
- * pressure lexicon. The interface wording moved to apps/desktop's catalogues (ADR-0031), where
- * locales/copyGate.test.ts runs these same three scans over every shipped language, so no gate
- * was lost; the last test below holds that line by failing if wording reappears here.
+ * Purpose: mechanical safety gate over every string this package still spells out — what
+ * remains of COMPANION_COPY, the model-facing prompts, and every text field of all three cards
+ * must scan clean against both the manipulation lexicon and the repo's shared pressure lexicon.
+ * The interface wording moved to apps/desktop's catalogues, where locales/copyGate.test.ts runs
+ * these same three scans over every shipped language, so no gate was lost; the last test below
+ * holds that line by failing if wording reappears here.
  * The pressure lexicon itself is owned by packages/simlab (dev-only test
  * harness that depends on product packages, never the reverse), so feature-companion cannot take
- * a package dependency on it without inverting that edge. Per spec 037's own instruction ("if it
- * lives in an importable place use it, otherwise replicate its check pattern locally and say
- * so"), this file replicates simlab's `findPressureLexiconHits` substring-scan logic verbatim
- * and reads simlab's data/pressure-lexicon.json directly by relative path (read-only — no edit
- * to the simlab package) rather than duplicating the lexicon's contents by hand.
+ * a package dependency on it without inverting that edge. This file replicates simlab's
+ * `findPressureLexiconHits` substring-scan logic verbatim and reads simlab's
+ * data/pressure-lexicon.json directly by relative path (read-only — no edit to the simlab
+ * package) rather than duplicating the lexicon's contents by hand.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -123,7 +122,7 @@ describe("what the live UI renders", () => {
   // The section title, the AI label, the empty roster line, the helper's invitation and its
   // thanks all left for the catalogues. What is allowed to stay is listed here by name, so
   // adding a hardcoded interface string back to this object fails rather than shipping an
-  // English interface with Chinese in it (真机走查 2026-08-28).
+  // English interface with Chinese in it.
   it("leaves no interface wording in COMPANION_COPY", () => {
     expect(Object.keys(COMPANION_COPY).sort()).toEqual(["helperName"]);
   });

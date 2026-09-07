@@ -2,7 +2,7 @@
  * Purpose: the edge-judge LLM contract — prompt construction and Zod schema for turning a
  * batch of candidate (new node, existing node) pairs into requires/helps relationship
  * judgments (helps weight as an anchored tier), plus optional proposals of new learning-
- * method nodes and, in casual mode only (spec 016), 0~2 adjacent-unlearned-concept
+ * method nodes and, in casual mode only, 0~2 adjacent-unlearned-concept
  * proposals that give frontier() a real, sighting-free "ahead".
  * Main exports: edgeJudgeSchema, buildEdgeJudgeMessages, EdgeJudgeCandidatePair,
  * helpsWeightLevelSchema, HELPS_WEIGHT_SCORES, BuildEdgeJudgeMessagesOptions.
@@ -20,11 +20,11 @@ export interface EdgeJudgeCandidatePair {
 }
 
 /** Anchored helps-strength tier — the model picks a labeled level instead of a bare float,
- * for cross-call consistency (spec 014). requires edges have no tier: their weight is
+ * for cross-call consistency. requires edges have no tier: their weight is
  * always 1, assigned by the system. */
-/** ASCII values (design audit 2026-08-28, 多语言 B6): the tier travels inside a JSON contract
- * the model is separately instructed to answer in the learner's language, so a Chinese
- * literal here fights that directive. The prompt still explains each tier in prose. */
+/** ASCII values: the tier travels inside a JSON contract the model is separately instructed
+ * to answer in the learner's language, so a Chinese literal here fights that directive. The
+ * prompt still explains each tier in prose. */
 export const helpsWeightLevelSchema = z.enum(["weak", "medium", "strong"]);
 export type HelpsWeightLevel = z.infer<typeof helpsWeightLevelSchema>;
 
@@ -67,7 +67,7 @@ export const edgeJudgeSchema = z.object({
       }),
     )
     .max(3),
-  /** Casual-mode-only proposals (spec 016): concepts strongly related to this round's
+  /** Casual-mode-only proposals: concepts strongly related to this round's
    * content, not yet touched by the learner, worth exploring next — inserted with no
    * sighting so they stay genuinely unlit. Ranked mode's prompt omits the section that asks
    * for these, so the model naturally omits the key too; .default([]) keeps the schema total
@@ -101,7 +101,7 @@ const BASE_SYSTEM_PROMPT = `你是一个知识关系判定器。给定若干候�
 - confidence 是你对这个判定的把握程度，宁可判 unrelated 也不要牵强判定
 - methodNodes 是可选的：如果这批知识点让你联想到一个通用学习方法（如"费曼技巧""间隔重复"），可以提议，最多 3 个，宁缺毋滥；否则返回空数组`;
 
-/** Casual-mode-only addition (spec 016): invites 0~2 adjacent-unlearned-concept proposals.
+/** Casual-mode-only addition: invites 0~2 adjacent-unlearned-concept proposals.
  * Ranked mode never includes this section — its prompt doesn't ask, so its edgeJudgeSchema
  * output naturally omits the key (defaulted to [] by the schema). */
 const CASUAL_ADJACENT_CONCEPTS_SECTION = `
@@ -121,7 +121,7 @@ ${CASUAL_ADJACENT_CONCEPTS_SECTION}
 }
 
 export interface BuildEdgeJudgeMessagesOptions {
-  /** True in casual mode: adds the adjacent-unlearned-concept prompt section (spec 016).
+  /** True in casual mode: adds the adjacent-unlearned-concept prompt section.
    * Defaults to false (ranked-mode behavior) so every existing call site — including
    * packages/simlab's edgeJudgeStage.ts — keeps compiling and behaving unchanged. */
   casual?: boolean;

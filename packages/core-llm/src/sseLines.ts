@@ -19,7 +19,7 @@ export const MAX_SSE_LINE_CHARS = 1_000_000;
  *
  * Read through a reader rather than `for await (… of body)`: async iteration over a
  * ReadableStream is still unimplemented in WebKit, so the iterating version threw on every
- * answer in Safari and on iPad while working in every browser we test with (2026-09-03).
+ * answer in Safari and on iPad while working in every browser we test with.
  *
  * `onChunk` fires once per received chunk, before it is parsed — the hook the client uses to
  * re-arm its silence deadline. It has to be per chunk rather than per payload so that a

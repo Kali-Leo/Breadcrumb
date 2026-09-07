@@ -18,7 +18,7 @@ export type VerdictRelationship = (typeof VERDICT_RELATIONSHIPS)[number];
 /**
  * What a checked claim can end up as. `unavailable` never comes from the judge — the pipeline
  * assigns it when evidence retrieval itself failed, so that "我这次没查成" is never rendered
- * as "公开资料里没有" (深度设计审计 2026-08-28, 差距 2).
+ * as "公开资料里没有".
  */
 export type ClaimRelationship = VerdictRelationship | "unavailable";
 

@@ -1,5 +1,5 @@
 /**
- * Purpose: companion-cast chat extras (spec 037) — a slim "which companion, AI-labeled" header
+ * Purpose: companion-cast chat extras — a slim "which companion, AI-labeled" header
  * badge for companion chats and companion-played teach sessions, plus the crisis and break
  * banners. Renders nothing when the active conversation isn't companion-flavored and nothing
  * is active. Main exports: CompanionChatBanners.
@@ -36,7 +36,7 @@ export function CompanionChatBanners() {
   const isCompanionThread =
     (activeKind === "companion" || activeKind === "teach") && activeCompanionId !== null;
   const card = activeCompanionId !== null ? getCompanionCardById(activeCompanionId) : undefined;
-  // Daily helpers have no fixed card — their display name derives from the topic (spec 050 §9).
+  // Daily helpers have no fixed card — their display name derives from the topic.
   const helperName =
     card === undefined && activeTitle !== null
       ? COMPANION_COPY.helperName(teachTopicFromTitle(activeTitle))

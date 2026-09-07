@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the spec 036 research-task tables — run bookkeeping
+ * Purpose: SQL statements for the research-task tables — run bookkeeping
  * (research_task_runs) and user-visible results (research_results, physically deletable).
  * Main exports: createResearchRepo factory (its row types live in researchTypes.ts).
  */
@@ -43,7 +43,7 @@ export function createResearchRepo(sql: SqlClient) {
         "SELECT * FROM research_results ORDER BY computed_at DESC, id DESC",
       );
     },
-    /** Physical delete — the user's withdraw action (spec 036: keep or delete, never edit). */
+    /** Physical delete — the user's withdraw action (keep or delete, never edit). */
     async deleteResult(id: string): Promise<void> {
       await sql.execute("DELETE FROM research_results WHERE id = ?", [id]);
     },

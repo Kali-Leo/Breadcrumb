@@ -1,8 +1,8 @@
 /**
  * Purpose: reshape derived continents (./continents.ts) into the cartographic island
  * hierarchy — one continent becomes one island, sized by its layout-day knowledge count
- * (absolute buckets; engagement decides centrality via assignment order, never size —
- * Leo 2026-08-31). Kingdoms come verbatim from the continent's own kingdom list (tree: the
+ * (absolute buckets; engagement decides centrality via assignment order, never size).
+ * Kingdoms come verbatim from the continent's own kingdom list (tree: the
  * root's direct children; cluster: each member), and villages/points below a kingdom reuse
  * shapeTree's recursion scoped to the continent's members.
  * Main exports: shapeContinents.

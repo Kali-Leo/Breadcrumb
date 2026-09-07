@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the occupation profile builder (spec 026/027) — branch structure
+ * Purpose: unit tests for the occupation profile builder — branch structure
  * and kind typing, core-task preference and cap, verbatim task text in sourceRef, the ESCO
  * knowledge branch (sections, narrower sub-nodes, dedup, descriptor replacement), the
  * timeliness-patch branch, and schema validity of the result.
@@ -109,7 +109,7 @@ function escoData(): EscoDataForOccupation {
   };
 }
 
-describe("ESCO knowledge branch (spec 027/028)", () => {
+describe("ESCO knowledge branch", () => {
   it("types knowledge concepts as unscored hubs and skill phrases as attested practice", () => {
     const profile = buildOccupationProfile(occupation(), [], escoData());
     expect(profileDefinitionSchema.safeParse(profile).success).toBe(true);
@@ -124,7 +124,7 @@ describe("ESCO knowledge branch (spec 027/028)", () => {
     expect(byKey.get("esco-debug")?.parentKey).toBe("esco-opt");
   });
 
-  it("granularity gate (spec 028): no ESCO concept is ever a binary-scored leaf", () => {
+  it("granularity gate: no ESCO concept is ever a binary-scored leaf", () => {
     const profile = buildOccupationProfile(occupation(), [], escoData());
     const offenders = profile.items.filter(
       (item) => item.key.startsWith("esco-") && item.kind === "knowledge",
@@ -190,7 +190,7 @@ describe("ESCO knowledge branch (spec 027/028)", () => {
   });
 });
 
-describe("entity leaves are never scored (spec 029)", () => {
+describe("entity leaves are never scored", () => {
   it("keeps tech and patch entities out of every denominator, match surviving as 线索", () => {
     const profile = buildOccupationProfile(occupation(), [
       {

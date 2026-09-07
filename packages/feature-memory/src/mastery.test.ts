@@ -99,8 +99,8 @@ describe("computeMastery", () => {
   });
 
   it("caps a node the learner was never observed retrieving below the lit tier", () => {
-    // Four fresh passive mentions — the exact shape that used to read 1.0 and print "已完成"
-    // on a concept the learner was never asked a single question about (audit G1).
+    // Four fresh passive mentions — the exact shape that would otherwise read 1.0 and print
+    // "已完成" on a concept the learner was never asked a single question about.
     const merelyMet = [
       sighting("mentioned", daysAgo(3)),
       sighting("mentioned", daysAgo(2)),

@@ -46,10 +46,10 @@ describe("urlNamed", () => {
 
 describe("resetMapArt", () => {
   it("destroys every texture it uploaded and leaves none of its keys in Pixi's global Cache", () => {
-    // The bug (hunt 2026-09-03): resetMapArt only nulled its own `cachedArt`, so every map
-    // texture stayed in the global Cache — uploaded by a renderer that no longer exists, which
-    // is exactly the "sea decor drew as label glyphs" failure the module's own comment warns
-    // about, plus a leak of every mount's art.
+    // The failure guarded here: nulling only `cachedArt` leaves every map texture in the
+    // global Cache — uploaded by a renderer that no longer exists, which is exactly the "sea
+    // decor drew as label glyphs" failure the module's own comment warns about, plus a leak
+    // of every mount's art.
     const resources = [new Uint8Array([255, 0, 0, 255]), new Uint8Array([0, 255, 0, 255])];
     const textures = resources.map((resource) =>
       adoptMapTexture(resource, Texture.from({ resource, width: 1, height: 1 })),

@@ -1,5 +1,5 @@
 /**
- * Purpose: the map rail's goal card (spec 047) — lists the goals and offers one entry,
+ * Purpose: the map rail's goal card — lists the goals and offers one entry,
  * 目标设置, into the goal view (which handles both adding and viewing). No progress
  * fractions, no denominators (ladder rule: assessment is never displayed as a mechanism).
  * Main exports: GoalCard.

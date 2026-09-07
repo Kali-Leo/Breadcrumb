@@ -1,5 +1,5 @@
 /**
- * Purpose: public entry of the diglot weave module (spec 033) — headless: pack loading,
+ * Purpose: public entry of the diglot weave module — headless: pack loading,
  * tokenization, candidate extraction, FSRS scheduling, patching, signals, guess logic.
  * Main exports: everything from the module files below.
  */

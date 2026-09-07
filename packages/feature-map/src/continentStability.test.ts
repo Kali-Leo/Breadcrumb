@@ -2,9 +2,9 @@
  * Purpose: the project's one cartographic iron law — 「同一棵知识树永远画出同一张地图」— under
  * growth. A knowledge tree only ever gains nodes, so a landmass a learner has already seen must
  * only ever grow: its id (which seeds the terrain, so it IS the island's shape) and its member
- * set may gain, never change. The 2026-09-03 bug hunt found the opposite — adding the 15th root
- * moved the 5th root's continent from n05 to n00 — because the clustering re-ran Louvain over
- * the whole room every time and the room's statistics (topicGraph's globalMean) shifted under it.
+ * set may gain, never change. Re-running Louvain over the whole room on every call breaks that:
+ * the room's statistics (topicGraph's globalMean) shift under it, so adding one root can move an
+ * earlier root's continent onto a different id.
  *
  * This file is the regression net: 50 nodes added one at a time, asserting after every single
  * addition that no continent already on the map lost its id or lost a member.

@@ -39,7 +39,7 @@ describe("detectCrisis", () => {
     expect(detectCrisis("I want to KILL MYSELF")).toBe(true);
   });
 
-  it("matches progressive/inflected forms (real-app regression, 2026-08-13)", () => {
+  it("matches progressive/inflected forms", () => {
     expect(detectCrisis("some nights I think about hurting myself")).toBe(true);
     expect(detectCrisis("I've been harming myself")).toBe(true);
     expect(detectCrisis("feeling suicidal lately")).toBe(true);

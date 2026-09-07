@@ -1,8 +1,7 @@
 /**
- * Purpose: SQL statements for a focus (explain-word) session's two tables (spec 042 §1) — the
- * session shell and its subway-map stations, including the LLM short-name overwrite (spec 042
- * §4) that keeps long labels legible on the map, and the outright delete a zero-substance
- * session gets on exit (Leo 2026-08-14 revision to spec 042 §5).
+ * Purpose: SQL statements for a focus (explain-word) session's two tables — the session
+ * shell and its subway-map stations, including the LLM short-name overwrite that keeps long
+ * labels legible on the map, and the outright delete a zero-substance session gets on exit.
  * Main exports: createFocusSessionsRepo, createFocusNodesRepo factories.
  */
 import type { FocusNodeRow, FocusSessionRow } from "./focusTypes";
@@ -33,8 +32,8 @@ export function createFocusSessionsRepo(sql: SqlClient) {
       ]);
       return rows[0] ?? null;
     },
-    /** Looks a legacy session up by its exit-time record message (spec 042 §5, pre-2026-08-14
-     * sessions only — no session created after 0035 ever has one). */
+    /** Looks a legacy session up by its exit-time record message (only sessions predating
+     * 0035 have one). */
     async getByEntryMessage(messageId: string): Promise<FocusSessionRow | null> {
       const rows = await sql.select<FocusSessionRow>(
         "SELECT * FROM focus_sessions WHERE entry_message_id = ?",
@@ -54,8 +53,8 @@ export function createFocusSessionsRepo(sql: SqlClient) {
       await sql.execute("DELETE FROM focus_sessions WHERE id = ?", [id]);
     },
     /** Deletes a session AND every one of its stations in ONE transaction — the
-     * zero-substance-session cleanup on exit (Leo 2026-08-14 revision to spec 042 §5). A
-     * crash can no longer strand orphaned focus_nodes rows between the two deletes. */
+     * zero-substance-session cleanup on exit. A crash cannot strand orphaned focus_nodes rows
+     * between the two deletes. */
     async removeWithNodes(id: string): Promise<void> {
       await sql.executeTransaction([
         { sql: "DELETE FROM focus_nodes WHERE session_id = ?", params: [id] },
@@ -92,9 +91,9 @@ export function createFocusNodesRepo(sql: SqlClient) {
         [sessionId],
       );
     },
-    /** Every distinct 'word' station label ever created, across every session (spec 043 §2's
-     * "查词史": a word became a station because the learner picked it, i.e. didn't already know
-     * it). Order is incidental (GROUP BY, not a ranking) — callers cap and use as-is. */
+    /** Every distinct 'word' station label ever created, across every session — the "查词史":
+     * a word became a station because the learner picked it, i.e. didn't already know it.
+     * Order is incidental (GROUP BY, not a ranking) — callers cap and use as-is. */
     async listDistinctWordLabels(): Promise<string[]> {
       const rows = await sql.select<{ label: string }>(
         "SELECT DISTINCT label FROM focus_nodes WHERE kind = 'word'",
@@ -105,14 +104,14 @@ export function createFocusNodesRepo(sql: SqlClient) {
     async updateAnswer(id: string, answerText: string): Promise<void> {
       await sql.execute("UPDATE focus_nodes SET answer_text = ? WHERE id = ?", [answerText, id]);
     },
-    /** Overwrites a station's label with an LLM-summarized short name once one lands (spec 042
-     * §4 legibility fix) — fire-and-forget from the desktop store, so the map redraws with the
-     * shorter name; nothing else about the row changes. */
+    /** Overwrites a station's label with an LLM-summarized short name once one lands, for
+     * legibility — fire-and-forget from the desktop store, so the map redraws with the shorter
+     * name; nothing else about the row changes. */
     async updateLabel(id: string, label: string): Promise<void> {
       await sql.execute("UPDATE focus_nodes SET label = ? WHERE id = ?", [label, id]);
     },
     /** Deletes every station of one session — paired with focusSessions.remove for the
-     * zero-substance-session cleanup on exit (Leo 2026-08-14 revision to spec 042 §5). */
+     * zero-substance-session cleanup on exit. */
     async removeBySession(sessionId: string): Promise<void> {
       await sql.execute("DELETE FROM focus_nodes WHERE session_id = ?", [sessionId]);
     },

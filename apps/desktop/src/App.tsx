@@ -1,7 +1,6 @@
 /**
  * Purpose: application root — loads persisted state once, lays out the shell around the
- * spaces (chat / memory palace / discovery / settings; specs 044-047 consolidated everything
- * else into them, spec 057 added discovery back as the interest panel).
+ * spaces (chat / memory palace / discovery / settings).
  * Main exports: App (default).
  */
 import { useEffect, useState } from "react";
@@ -39,8 +38,7 @@ import { useResearchStore } from "./stores/researchStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
 /** Idle delay before the research task platform's v1 "idle execution" kicks in — no real
- * OS-level idle detection yet, just a fixed wait after startup (spec 036 §3, noted as a v1
- * simplification). */
+ * OS-level idle detection yet, just a fixed wait after startup. */
 const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
@@ -61,7 +59,7 @@ export default function App() {
     void loadEverythingOnce();
   }, []);
 
-  // Research task platform (spec 036 §3): v1's "idle execution" is a fixed delay after
+  // Research task platform: v1's "idle execution" is a fixed delay after
   // startup rather than real OS idle detection — enough to stay out of the critical path
   // while still running within the session. Re-checks the switch at fire time, not at
   // mount time, so a user who disables it in the first 10s is respected.
@@ -80,8 +78,8 @@ export default function App() {
     void useKnowledgeStore.getState().ensureTrailLoaded(activeConversationId);
   }, [activeConversationId]);
 
-  // Keep the focus-session badge/bar lookups in sync with the open conversation (spec 042 §5,
-  // Leo 2026-08-14 revision) — same fill-on-first-visit shape, no wipe on switch.
+  // Keep the focus-session badge/bar lookups in sync with the open conversation — same
+  // fill-on-first-visit shape, no wipe on switch.
   useEffect(() => {
     void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
@@ -96,12 +94,12 @@ export default function App() {
     if (view === "map") setSawMap(true);
   }, [view]);
 
-  // Helper conversations open in the floating popup, never the main view (spec 050 §8).
+  // Helper conversations open in the floating popup, never the main view.
   useEffect(() => {
     return appEventBus.on("companion:openPopup", (payload) => setHelperPopup(payload));
   }, []);
 
-  // Practice discussions (spec 026) jump from the comparison tree into the chat view.
+  // Practice discussions jump from the comparison tree into the chat view.
   useEffect(() => {
     return appEventBus.on("app:navigateChat", ({ conversationId }) => {
       void useChatStore.getState().openConversation(conversationId);
@@ -110,7 +108,7 @@ export default function App() {
   }, []);
 
   // Nobody has chosen a language and the machine reads one we have no interface in: ask
-  // first, before any of the app's own words appear (Leo 2026-09-01).
+  // first, before any of the app's own words appear.
   if (settingsLoaded && languageUnchosen) return <LanguageFirstRun />;
 
   // The host settles on "done" and renders null once both flags are in, which is every launch
@@ -141,7 +139,7 @@ export default function App() {
             {view === "discovery" && <DiscoveryView />}
           </LazyBoundary>
           {/* The companions roster pops out at the center area's lower-left, sized to its
-              three rows; clicking anywhere else dismisses it (Leo's design). */}
+              three rows; clicking anywhere else dismisses it. */}
           {companionsOpen && (
             <>
               <button

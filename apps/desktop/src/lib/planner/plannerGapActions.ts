@@ -30,14 +30,10 @@ export function goalNodeIds(goal: GoalRow): string[] {
 }
 
 /** Goal views believe the user's own word: a node with a 'learned' self-report claim leaves
- * THIS GOAL's remaining work and counts toward its coverage (vision/07 §4 — the goal trusts
- * you, memory stays honest). It is an id set, not a mastery number: the earlier version wrote
- * a fake LIT-threshold value into a copied mastery map, which both contradicted spec 011's own
- * acceptance criterion (self-report must weigh less than real footprints) and made one click
- * mean two different things on two screens — the goal page dropped the node while the palace's
- * frontier still treated its dependents as locked (2026-08-28 audit, planning gap 5).
- * Exported so every goal readout (coverage, the composition chips) applies the identical
- * belief — they must never silently disagree. */
+ * THIS GOAL's remaining work and counts toward its coverage. It is an id set, not a mastery
+ * number: self-report must weigh less than real footprints, and every goal readout (coverage,
+ * the composition chips, the palace frontier) must apply the identical belief so a node's
+ * status can never silently disagree between screens. */
 export function goalSatisfiedNodeIds(claims: readonly MasteryClaimRow[]): Set<string> {
   return new Set(claims.filter((claim) => claim.level === "learned").map((claim) => claim.node_id));
 }
@@ -67,8 +63,8 @@ export function computeGapForGoal(
   };
 }
 
-/** Same single-goal-view belief as computeGapForGoal, but returns the one recommended route
- * (spec 017 #1) instead of the legacy three. Null when no goal is selected. */
+/** Same single-goal-view belief as computeGapForGoal, but returns the one recommended route.
+ * Null when no goal is selected. */
 export function computeRouteForGoal(
   goal: GoalRow | null,
   nodes: readonly KnowledgeNodeRow[],

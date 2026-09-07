@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Purpose: builds the zh→en T1 language pack (spec 033) from CC-CEDICT, FrequencyWords, and
+ * Purpose: builds the zh→en T1 language pack from CC-CEDICT, FrequencyWords, and
  * CMUdict, then writes it to apps/desktop/src/assets/language-packs/zh-en.json.
  * Main exports: none — this is a CLI entry point (`node build-zh-en.mjs`), zero side effects
  * besides cache downloads and the one output file.

@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the conservative leaf matcher (spec 023) — normalization
+ * Purpose: unit tests for the conservative leaf matcher — normalization
  * symmetry, label/alias equality hits, user-alias hits, and the deliberate absence of any
  * fuzzy matching.
  */

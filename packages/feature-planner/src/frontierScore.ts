@@ -15,24 +15,24 @@
 export const GOAL_GAP_SCORE_BOOST = 2;
 
 /** Weights on the min-max-normalized components. PROVISIONAL — no empirical calibration
- * exists for them and single-user sparse data cannot fit one (2026-08-28 design audit); they
+ * exists for them and single-user sparse data cannot fit one; they
  * encode a product stance, not a measurement: interest weighs as much as accumulated
  * helps-support, structural depth is only a mild penalty, and an explicitly chosen goal
- * outranks both. Before the normalization landed the three components had incomparable units
- * (an unbounded weight sum, a shrunk 0..1 score, an integer count), so only the integer ever
- * decided the order — that, not the numbers below, was the real bug. */
+ * outranks both. Without the normalization, the three components have incomparable units
+ * (an unbounded weight sum, a shrunk 0..1 score, an integer count), so only the integer would
+ * decide the order. */
 export const FRONTIER_WEIGHTS = {
   helps: 1,
   interest: 1,
   difficulty: 0.5,
   goalGap: GOAL_GAP_SCORE_BOOST,
-  /** Browsing affinity (spec 059) at half the conversational-interest weight — a product
+  /** Browsing affinity at half the conversational-interest weight — a product
    * stance, not a measurement: what the learner watches is a passive, platform-polluted
    * environment signal, and it must never outvote what they actively said in conversation. */
   browsing: 0.5,
 } as const;
 
-/** User-tunable copy of the weight table (spec 060 §3) — FRONTIER_WEIGHTS is the default;
+/** User-tunable copy of the weight table — FRONTIER_WEIGHTS is the default;
  * the palace's 推荐偏好 panel persists the learner's own values in this shape. */
 export type FrontierWeights = { -readonly [Component in keyof typeof FRONTIER_WEIGHTS]: number };
 
@@ -45,7 +45,7 @@ export interface FrontierScoreParts {
   difficulty: number;
   /** 1 when inside the selected goal's gap, 0 otherwise. */
   goalGap: number;
-  /** Browsing affinity in [0,1] (spec 059) — 0 when the interest service is absent, which
+  /** Browsing affinity in [0,1] — 0 when the interest service is absent, which
    * min-max normalization then treats as "carries no information", exactly right. */
   browsing: number;
 }
@@ -56,11 +56,11 @@ export interface FrontierScoreParts {
  * then cannot decide the order. */
 function normalizer(values: readonly number[]): (value: number) => number {
   // Only finite values define the range, and a non-finite one normalizes to 0 rather than
-  // travelling on (bug hunt 2026-09-03, P1-3). One NaN used to reach Math.min/Math.max, make
-  // both endpoints NaN, and hand *every* candidate a NaN score; frontier()'s comparator then
-  // returned NaN for every pair, V8 read that as "equal", and the recommendation list came out
-  // in database insertion order with no error anywhere. Infinity did the same via span = ∞.
-  // A reduce, not Math.min(...values): the spread threw RangeError past ~100k candidates.
+  // travelling on. If a NaN reached Math.min/Math.max, both endpoints would become NaN and
+  // hand *every* candidate a NaN score; frontier()'s comparator would then return NaN for
+  // every pair, V8 would read that as "equal", and the recommendation list would come out in
+  // database insertion order with no error anywhere. Infinity would do the same via span = ∞.
+  // A reduce, not Math.min(...values): the spread throws RangeError past ~100k candidates.
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   for (const value of values) {
@@ -108,8 +108,8 @@ interface Bucketable {
  *
  * Both buckets stay strictly score-descending. That is a contract, not an accident:
  * visibleFrontier reads this list for the largest score cliff and can only do that on a list
- * whose scores never go back up. The exploration slot used to be spliced in right here, which
- * broke it — see visibleCount.ts (bug hunt 2026-09-03, P1-1). */
+ * whose scores never go back up. Splicing the exploration slot in right here would break it —
+ * see visibleCount.ts. */
 export function bucketConceptsFirst<T extends Bucketable>(ranked: readonly T[]): T[] {
   return [
     ...ranked.filter((candidate) => candidate.kind !== "method"),

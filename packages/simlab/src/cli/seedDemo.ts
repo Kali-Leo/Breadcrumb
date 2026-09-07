@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 /**
- * Purpose: CLI entry for the zero-LLM feedback-lab demo seed (spec 035 T7b) — opens a
+ * Purpose: CLI entry for the zero-LLM feedback-lab demo seed — opens a
  * caller-specified SQLite file, migrates it, wipes any previous demo rows, and (unless
  * --wipe) writes a fresh deterministic demo landscape anchored at "now".
  * Main exports: none — run via `pnpm --filter @breadcrumb/simlab seed-demo -- <db-path> [--wipe]`.

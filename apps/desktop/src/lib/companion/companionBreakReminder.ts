@@ -1,5 +1,5 @@
 /**
- * Purpose: pure break-reminder state transitions for companion/teach sessions (spec 037) —
+ * Purpose: pure break-reminder state transitions for companion/teach sessions —
  * wraps feature-companion's shouldRemindBreak/nextBreakReminderAt with the "dismiss, then
  * reappear only after another full interval of continued activity" rule the store needs.
  * No I/O, no clock reads except the passed-in `nowMs` — fully unit-testable.

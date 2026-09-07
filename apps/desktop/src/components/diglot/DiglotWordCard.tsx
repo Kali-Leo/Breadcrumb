@@ -1,6 +1,6 @@
 /**
- * Purpose: the hover card of a woven word (spec 033) — guess-first when the policy asks
- * (no skip path, Leo 2026-08-12), otherwise the gloss: original word, reading, audio. The
+ * Purpose: the hover card of a woven word — guess-first when the policy asks
+ * (no skip path), otherwise the gloss: original word, reading, audio. The
  * 🔊 renders only for a VERIFIED audio provider (canSpeak); IPA shows regardless.
  * Main exports: DiglotWordCard.
  */
@@ -42,7 +42,7 @@ export function DiglotWordCard({
   const [guessText, setGuessText] = useState("");
   const openedAt = useRef(Date.now());
   /** One hover signal per card-open — guards against StrictMode double effects and
-   * re-renders (double-counting was caught in the real-app walkthrough). */
+   * re-renders. */
   const hoverSignaled = useRef(false);
   const loaded = useDiglotStore((state) => state.loaded);
   const settings = useDiglotStore((state) => state.settings);
@@ -51,7 +51,7 @@ export function DiglotWordCard({
   const noteGuessOutcome = useDiglotStore((state) => state.noteGuessOutcome);
   const confusion = useDiglotStore((state) => state.confusionByLemma.get(patch.lemma));
   const targetLang = loaded?.pack.targetLang ?? "en";
-  // Strict speaker honesty (Leo 2026-08-16): 🔊 only for a verified provider. The webkit
+  // Strict speaker honesty: 🔊 only for a verified provider. The webkit
   // voice list loads lazily — the voiceschanged subscription re-evaluates once it arrives.
   const speakable = useSyncExternalStore(subscribeVoicesChanged, () =>
     canSpeak(targetLang, settings.piperPath, settings.piperModelPath),
@@ -87,7 +87,7 @@ export function DiglotWordCard({
     setGuessDone(true);
   };
 
-  // Phrase weaves (spec 033 T13) have no dictionary entry and no memory state — a plain
+  // Phrase weaves have no dictionary entry and no memory state — a plain
   // gloss card: expression, original, gloss, audio. The guess gate never applies.
   if (patch.kind === "phrase") {
     return (

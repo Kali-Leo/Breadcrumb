@@ -33,14 +33,14 @@ interface MapInfoPanelProps {
   world: WorldModel;
   /** Non-null while goal mode is cutting the map: the goal's title and full node set. The
    * rail then keeps ONE scope — goal overall when idle, goal region on hover — so the
-   * blank-state numbers can never contradict the hover numbers (2026-08-16 bug: global
-   * charts while idle + empty goal regions on hover read as broken). */
+   * blank-state numbers can never contradict the hover numbers (global charts while idle
+   * plus empty goal regions on hover read as broken). */
   goalScope: { title: string; nodeIds: ReadonlySet<string> } | null;
   /** The card's own way in (an island dives, a kingdom opens its subway map). */
   onEnter(info: HoverInfo): void;
 }
 
-/** Skimming across regions settles before the rail swaps content (owner's ruling: 150ms). */
+/** Skimming across regions settles before the rail swaps content (150ms). */
 const HOVER_SETTLE_MS = 150;
 
 /** The hovered region's member node ids, resolved from the world model: an island clusters
@@ -89,7 +89,7 @@ export function MapInfoPanel({ hover, level, world, goalScope, onEnter }: MapInf
   const region =
     settledHover !== null && feedbackLabEnabled ? regionNodeIds(world, level, settledHover) : null;
   // Inside an island with nothing under the pointer, the island itself is what the map
-  // points at — its card (and the rename action) sits where the rail was blank before.
+  // points at — its card, and the rename action, fill the rail.
   const currentIsland = level.kind === "island" ? findIsland(world, level.islandId) : undefined;
   // Only an island can be entered from the world (the island view is the deepest one); a
   // kingdom's way in is its subway map, offered as a button where a second tap would do it.

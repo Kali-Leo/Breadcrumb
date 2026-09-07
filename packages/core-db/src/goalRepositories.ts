@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the goals table (spec 012) — a learning goal's title and the
+ * Purpose: SQL statements for the goals table — a learning goal's title and the
  * knowledge-node ids it maps to, most-recently-touched first.
  * Main exports: createGoalsRepo factory.
  */

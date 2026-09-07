@@ -2,8 +2,8 @@
  * Purpose: time-decayed, confidence-weighted shrinkage aggregation of raw interest_signals
  * rows into a per-node score plus evidence weight, and a global explanation-style ranking.
  * Two decay channels (short/long half-life) are aggregated independently and the per-dimension
- * max is reported: "recently on my mind OR persistently on my mind" both count (spec 059,
- * closing the 2026-08-28 audit's single-14-day-constant finding). Pure math, no DB, no I/O.
+ * max is reported: "recently on my mind OR persistently on my mind" both count. Pure math,
+ * no DB, no I/O.
  * Main exports: aggregateInterest, aggregateStyles, NodeInterestScore,
  * INTEREST_SHORT_HALF_LIFE_DAYS, INTEREST_LONG_HALF_LIFE_DAYS, K_PSEUDO.
  */
@@ -13,19 +13,17 @@ import { clampUnit, finiteOr } from "@breadcrumb/feature-memory";
 
 /** The short channel: what the learner has been into these couple of weeks.
  *
- * HONESTY NOTE (2026-08-28 audit): 14 days is a product intuition, not an empirical value.
- * Its only source is docs/vision/07 «两周前的兴趣只算一半», which cites nothing. Half-lives in
- * the literature are fitted per dataset, and a single user's signal is far too sparse to fit
- * one here — so this is not a number to defend, just one to state plainly. */
+ * 14 days is a product-chosen value, not an empirical one. Half-lives are normally fitted
+ * per dataset, and a single user's signal is far too sparse to fit one here. */
 export const INTEREST_SHORT_HALF_LIFE_DAYS = 14;
 
 /** The long channel: a course-sized interest should survive a quiet month. 90 days follows
  * the external interest daemon's 7/90 twin-track precedent and the long/short-term
- * disentangling line of recommender work the audit cites; like the 14 above it is a product
+ * disentangling line of recommender work; like the 14 above it is a product
  * choice stated plainly, not a fitted value. */
 export const INTEREST_LONG_HALF_LIFE_DAYS = 90;
 
-/** Shrinkage pseudo-count (spec 014): a node's score is pulled toward a 0 prior until its
+/** Shrinkage pseudo-count: a node's score is pulled toward a 0 prior until its
  * accumulated confidence×decay evidence weight outweighs this many "prior" pseudo-signals.
  * Two or three thin signals can't carry a high score; once real evidence piles up, the pull
  * fades on its own — no separate cutoff or "not enough data" branch needed. */
@@ -64,7 +62,7 @@ function emptyAccumulator(): WeightedAccumulator {
 export function aggregateInterest(
   signals: readonly InterestSignalRow[],
   nowIso: string,
-  /** Shrinkage pseudo-count override (spec 060 §4) — callers pass estimatePseudoCount()'s
+  /** Shrinkage pseudo-count override — callers pass estimatePseudoCount()'s
    * result; the default keeps the cold-start constant and the pre-060 behaviour. */
   pseudoCount: number = K_PSEUDO,
 ): Map<string, NodeInterestScore> {
@@ -75,10 +73,10 @@ export function aggregateInterest(
   for (const signal of signals) {
     // One unreadable created_at costs that signal, never the node — the same rule
     // aggregateStyles applies to an unreadable styles_json two functions down, and the rule
-    // layers.ts already applied to a bad sighting. Before this, the NaN decay weight it
-    // produced poisoned the node's whole accumulator: all four of its reported numbers came
-    // out NaN, survived every clamp, and flattened the frontier's sort (bug hunt 2026-09-03,
-    // P1-3). Nothing writes such a row today; a hand-edited or externally imported one can.
+    // layers.ts already applied to a bad sighting. Skipping it matters: a NaN decay weight
+    // would poison the node's whole accumulator — all four reported numbers would come out
+    // NaN, survive every clamp, and flatten the frontier's sort. Nothing writes such a row
+    // today; a hand-edited or externally imported one can.
     if (!Number.isFinite(Date.parse(signal.created_at))) continue;
     if (!Number.isFinite(signal.confidence)) continue;
     const channels = [

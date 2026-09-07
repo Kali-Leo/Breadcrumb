@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time canonical-pipeline step 3 (spec 025) — convert the verified extraction
+ * Purpose: dev-time canonical-pipeline step 3 — convert the verified extraction
  * outputs (kebiao-fine.json, mdn-fine.json) and the Wikidata-enriched concept list
  * (concepts.json) into the checked-in generated TypeScript data the app imports: fine-grained
  * profile items (grouped under their （ｎ） sub-headings) and the canonical concept inventory.

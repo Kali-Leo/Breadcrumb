@@ -1,5 +1,5 @@
 /**
- * Purpose: SQL statements for the ai_failures table (spec 014) — a developer-visible record
+ * Purpose: SQL statements for the ai_failures table — a developer-visible record
  * of every silently-degraded AI pipeline failure, written best-effort from each store's catch.
  * Main exports: createAiFailuresRepo factory.
  */

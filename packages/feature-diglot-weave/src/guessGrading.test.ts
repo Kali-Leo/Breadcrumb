@@ -1,15 +1,14 @@
 /**
  * Purpose: tests for zero-LLM guess grading — exact and dictionary-synonym correctness,
  * morphological closeness, embedding-based closeness with its offline degradation, and the
- * antonym regression the character-overlap measure used to produce (spec 033, acceptance
- * 2/3; audit 2026-08-28 #4).
+ * antonym regression a character-overlap measure produces.
  */
 import { describe, expect, it } from "vitest";
 import { gradeGuess, SEMANTIC_CLOSE_THRESHOLD } from "./guessGrading";
 import { type LoadedLanguagePack, loadLanguagePack } from "./packSchema";
 import { makeEnFrPack, makeZhEnPack } from "./testFixture";
 
-/** The audit's real-pack counter-examples: Chinese antonyms share a morpheme. */
+/** Real-pack counter-examples: Chinese antonyms share a morpheme. */
 function makeAntonymPack(): LoadedLanguagePack {
   const entry = (target: string, freqRank: number) => ({
     target,

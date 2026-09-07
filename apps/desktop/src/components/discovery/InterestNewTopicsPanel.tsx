@@ -12,8 +12,8 @@ import { InterestPanel, InterestPanelEmptyLine } from "./InterestPanel";
 import { useTopicName } from "./topicNames";
 
 /** With little data behind the shares, a single click can crown a "new interest", so the
- * list gets a softening line (2026-08-28 audit #10). Engaged events (clicks/watches) are the
- * honest yardstick — n_events counts scrolling too and inflates fast (2026-08-30 review);
+ * list gets a softening line. Engaged events (clicks/watches) are the
+ * honest yardstick — n_events counts scrolling too and inflates fast;
  * the raw-count threshold only backstops older service builds without n_engaged. Both
  * numbers are provisional product choices. */
 const THIN_EVIDENCE_ENGAGED_COUNT = 200;

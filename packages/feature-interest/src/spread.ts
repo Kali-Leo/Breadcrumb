@@ -2,8 +2,8 @@
  * Purpose: embedding-similarity neighborhood diffusion — a node with no direct interest
  * signal but close (by cosine similarity) to interested nodes inherits some of that
  * interest. Pure math, no DB, no I/O. The all-pairs sweep behind it lives in
- * spreadNeighbors.ts (2026-09-02: cosine itself came from @breadcrumb/core-vectors, because
- * the private copy this module kept was one of six and they had already drifted).
+ * spreadNeighbors.ts. Cosine itself comes from @breadcrumb/core-vectors, the single source of
+ * truth for it — this module must not keep a private copy.
  * Main exports: spreadInterest, DEFAULT_SPREAD_FACTOR, SPREAD_SIMILARITY_FLOOR,
  * SPREAD_NEIGHBOR_TOP_K.
  */
@@ -33,14 +33,11 @@ export const SPREAD_NEIGHBOR_TOP_K = 8;
  *
  * Every node the caller scored comes back, embedded or not. A node without an embedding row
  * has no neighborhood, so it passes through carrying its own score unchanged — it is not a
- * node with no interest. This is what the comment on this function always claimed and what
- * the dead `vector === undefined` branch under it was reaching for, but the loop ran over the
- * embedding keys, so an unembedded node was simply missing from the result and
- * plannerRecompute read the map as complete: `interestByNode.get(id) ?? 0` (bug hunt
- * 2026-09-03, P0-2). That silently zeroed exactly the wrong nodes — embeddings are backfilled
- * asynchronously, so the ones missing a row are the ones that appeared most recently, i.e.
- * whatever the learner just got curious about — and zeroed the entire tree whenever the local
- * embedding model had not been downloaded, with the interest slider still showing full tilt.
+ * node with no interest. This matters because embeddings are backfilled asynchronously, so
+ * the nodes missing a row are the ones that appeared most recently, i.e. whatever the learner
+ * just got curious about; treating "no embedding" as "no interest" would silently zero exactly
+ * the wrong nodes, and zero the entire tree whenever the local embedding model had not been
+ * downloaded, with the interest slider still showing full tilt.
  */
 export function spreadInterest(
   scoresByNodeId: ReadonlyMap<string, number>,

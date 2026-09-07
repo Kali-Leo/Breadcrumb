@@ -1,6 +1,6 @@
 /**
- * Purpose: renders one focus session's exit record inside the ordinary message list (spec 042
- * §5) — the local record text plus a button that reopens the whole session (map and content
+ * Purpose: renders one focus session's exit record inside the ordinary message list
+ * — the local record text plus a button that reopens the whole session (map and content
  * both restored as they were).
  * Main exports: FocusEntryCard.
  */

@@ -6,8 +6,7 @@
  * knowledge:nodesExtracted — fired only after new nodes AND their embeddings have landed,
  * so no timer race against the tree-extraction pipeline. Candidates are judged in chunks of
  * EDGE_JUDGE_BATCH_SIZE because edgeJudgeSchema caps a reply at 20 verdicts while ranking can
- * hand over 40 pairs — sending them all at once made the model silently truncate (design
- * audit 2026-08-28 #4).
+ * hand over 40 pairs — sending them all at once made the model silently truncate.
  * Main exports: useEdgeStore.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -69,7 +68,7 @@ function attachNodes(
 }
 
 /** Discovers requires/helps edges for this round's newly-learned nodes; failures degrade
- * silently (spec 010) — the chat and knowledge-tree pipelines are never affected. */
+ * silently — the chat and knowledge-tree pipelines are never affected. */
 async function extractEdgesFromFinishedRound(
   conversationId: string,
   newNodeIds: readonly string[],
@@ -145,7 +144,7 @@ async function extractEdgesFromFinishedRound(
         );
       }
       for (const methodNode of [...plan.methodNodesToInsert, ...plan.conceptNodesToInsert]) {
-        // Casual-mode adjacent-concept nodes (spec 016) are inserted WITHOUT a node_sightings
+        // Casual-mode adjacent-concept nodes are inserted WITHOUT a node_sightings
         // row, so they stay genuinely unlit — that's what gives frontier() a real "ahead".
         await repos.knowledgeNodes.insert(methodNode);
         nodeIdByLabel = new Map(nodeIdByLabel).set(methodNode.label, methodNode.id);

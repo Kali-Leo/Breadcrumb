@@ -13,28 +13,28 @@ export interface DiglotSettings {
   pairId: string;
   /** Fraction of word tokens replaced, (0, 0.05]. */
   density: number;
-  /** Guess-card frequency level; "off" intentionally does not exist (Leo 2026-08-12). */
+  /** Guess-card frequency level; "off" intentionally does not exist. */
   guessLevel: GuessLevel;
   /** Base daily new-word cap before the review-debt throttle. */
   newWordDailyBase: number;
   ttsEnabled: boolean;
   piperPath: string;
   piperModelPath: string;
-  /** The LLM refinement tier (spec 033 T13): in-context disambiguation + phrase-level
-   * weaving. Metered separately (purpose "diglot-weave"); on by default — metering exists
-   * so features can run boldly (Leo 2026-08-12), and it only fires while weaving is on. */
+  /** The LLM refinement tier: in-context disambiguation + phrase-level weaving. Metered
+   * separately (purpose "diglot-weave"); on by default, and it only fires while weaving is
+   * on. */
   llmRefineEnabled: boolean;
   /** New-word introduction starts at this introduction-queue rank — maintained by the
    * behavioral placement (clean first reads move it up; no self-report by design). */
   introductionRankFloor: number;
   /** Current placement jump size (see the module's placement.ts). */
   placementStep: number;
-  /** Personally fitted FSRS parameters (vision/09 #1); null = library defaults. */
+  /** Personally fitted FSRS parameters; null = library defaults. */
   fsrsParams: number[] | null;
   /** Review count at the last successful fitting — gates refits. */
   fsrsFittedReviewCount: number;
   /** True once the vocabulary check has been offered and answered or waved off, so it is
-   * never put in front of the same learner twice unasked (2026-09-01). */
+   * never put in front of the same learner twice unasked. */
   placementTestTaken: boolean;
 }
 

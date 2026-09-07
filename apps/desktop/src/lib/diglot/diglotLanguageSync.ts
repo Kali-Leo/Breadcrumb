@@ -18,9 +18,9 @@ function currentSourceLang(): string {
 
 /**
  * Switches language learning off when the pair no longer reads the language the AI answers in.
- * It does not pick a replacement: which language someone learns is their decision, and having
- * it swapped underneath them because they changed how the AI writes would be a decision made
- * for them (Leo, 2026-09-04). The settings page then shows what can be learned instead.
+ * It does not pick a replacement: which language someone learns is their decision, and it is
+ * never swapped underneath them because they changed how the AI writes. The settings page
+ * then shows what can be learned instead.
  */
 export async function syncDiglotPairToAnswerLanguage(): Promise<void> {
   const { settings } = useDiglotStore.getState();

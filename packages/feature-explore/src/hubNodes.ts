@@ -1,20 +1,20 @@
 /**
- * Purpose: hub-generic-node exclusion (spec 043 §7) — once term-marking becomes the primary
- * door source, the old label-matching source is demoted to a secondary supplier of standalone
- * doors, but it must never surface a hub/utility node (e.g. "函数") on its own: those are noise,
- * not vocabulary the learner is missing. A node is a hub if its label is short and it has many
+ * Purpose: hub-generic-node exclusion — once term-marking becomes the primary door source,
+ * the old label-matching source is demoted to a secondary supplier of standalone doors, but
+ * it must never surface a hub/utility node (e.g. "函数") on its own: those are noise, not
+ * vocabulary the learner is missing. A node is a hub if its label is short and it has many
  * knowledge-tree children, OR if it turns up in a large share of the learner's conversations.
  * Main exports: isHubGenericNode, computeNodeConversationCoverage, HUB_LABEL_MAX_LENGTH,
  * HUB_MIN_CHILD_COUNT, HUB_CONVERSATION_COVERAGE_THRESHOLD.
  */
 import type { NodeSightingRow } from "@breadcrumb/core-db";
 
-/** Labels shorter than this many characters are too generic to trust alone (spec 043 §7). */
+/** Labels shorter than this many characters are too generic to trust alone. */
 export const HUB_LABEL_MAX_LENGTH = 3;
 /** ...unless the tree also treats them as a genuine umbrella: this many children or more. */
 export const HUB_MIN_CHILD_COUNT = 5;
 /** A node sighted in more than this share of the learner's conversations is a recurring
- * utility word, not something worth its own door (spec 043 §7). */
+ * utility word, not something worth its own door. */
 export const HUB_CONVERSATION_COVERAGE_THRESHOLD = 0.3;
 
 export interface HubNodeInput {
@@ -25,9 +25,9 @@ export interface HubNodeInput {
   conversationCoverage: number;
 }
 
-/** True when a node must not become an independent door on its own (spec 043 §7) — it may
- * still receive a nodeId as an enrichment of a term-marked span, just never anchor a
- * standalone legacy-matched door. */
+/** True when a node must not become an independent door on its own — it may still receive a
+ * nodeId as an enrichment of a term-marked span, just never anchor a standalone
+ * legacy-matched door. */
 export function isHubGenericNode(input: HubNodeInput): boolean {
   const shortWithManyChildren =
     input.label.length < HUB_LABEL_MAX_LENGTH && input.childCount >= HUB_MIN_CHILD_COUNT;

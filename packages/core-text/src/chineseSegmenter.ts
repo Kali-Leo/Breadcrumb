@@ -1,7 +1,7 @@
 /**
- * Purpose: splitting Chinese text into words (2026-08-16 audit item "伙伴记忆中文分词换开源库").
+ * Purpose: splitting Chinese text into words.
  *
- * The audit named jieba-wasm. Measured, that is a 4 MB WebAssembly blob per build target —
+ * jieba-wasm is the obvious alternative. Measured, that is a 4 MB WebAssembly blob per build target —
  * almost all of it the bundled dictionary — for one relevance score in one feature, and the
  * browser edition would have to download it before anyone could open a chat. So the same job
  * is done with dictionaries this repo already builds: the zh→en language pack's headwords

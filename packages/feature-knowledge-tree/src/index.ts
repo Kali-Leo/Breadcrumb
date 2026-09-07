@@ -1,9 +1,9 @@
 /**
  * Purpose: public entry of the knowledge-tree module (headless logic only — UI lives in
  * the desktop app).
- * Main exports: extraction contract, tree-attachment planning, the spec-015 node-dedup
+ * Main exports: extraction contract, tree-attachment planning, the node-dedup
  * synonym gate, the suspect-pair scan (embedding-similarity candidates for the LLM merge
- * tier), and the mechanical/LLM-verdict merge planners for spec 015 #4's auto-merge sweep.
+ * tier), and the mechanical/LLM-verdict merge planners for the auto-merge sweep.
  */
 export * from "./attach";
 export * from "./extraction";

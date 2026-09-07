@@ -8,7 +8,7 @@
  */
 import { calculateCostMicros, resolveModelRates, type TokenUsage } from "@breadcrumb/core-llm";
 
-/** Approximate, hand-set 2026-08-01 — good enough for a soft budget ceiling. */
+/** Approximate, hand-set — good enough for a soft budget ceiling. */
 export const USD_TO_CNY_RATE = 7.2;
 
 export interface CostGuard {

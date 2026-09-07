@@ -1,5 +1,5 @@
 /**
- * Purpose: pure functions building spec 040's message tree from a conversation's flat message
+ * Purpose: pure functions building the message tree from a conversation's flat message
  * rows — explicit parent_id links plus implicit (NULL) legacy-linear chaining unify into one
  * tree, from which the active path, fork points, and per-leaf paths are derived.
  * Main exports: MessageTreeNode, effectiveParentById, buildMessageTree, newestLeafId,

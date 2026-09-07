@@ -1,13 +1,12 @@
 /**
  * Purpose: the mirror modules' sentences that need a decision made in logic — which one
- * applies, and with what values (spec 058 §2). The wording lives in the app's palace.json;
+ * applies, and with what values. The wording lives in the app's palace.json;
  * nothing here is user-visible text.
  * Main exports: activityMessage, heatmapCellMessage.
  */
 import type { CopyMessage } from "@breadcrumb/core-i18n";
 
-/** Heatmap summary: cumulative active days only — run/streak counts were ruled out (a broken
- * run reads as a whip; the cumulative count keeps investment visible). */
+/** Heatmap summary: cumulative active days only — no run or streak clause. */
 export function activityMessage(activeDays: number): CopyMessage {
   return { key: "palace:mirror.activeDays", params: { count: activeDays } };
 }

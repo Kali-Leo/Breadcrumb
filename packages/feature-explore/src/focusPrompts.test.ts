@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for focus-session prompt assembly — the word-node's parent-answer+word
- * shape, and the question-node's ordered ancestor-chain shape (spec 042 §2).
+ * shape, and the question-node's ordered ancestor-chain shape.
  */
 import { describe, expect, it } from "vitest";
 import {

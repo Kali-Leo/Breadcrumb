@@ -4,10 +4,10 @@
  * legacy 0005_factcheck -> 0006_factcheck migration-id repair, knowledge_edges' upsert
  * "keep higher confidence" ON CONFLICT semantics, the comparison tree's whole-replace
  * profile/item tables
- * (migration 0018, spec 023), the dropped item-scoped alignment table (migration 0019, spec
- * 024, dropped again by migration 0020), and the canonical-concept crosswalk's node<->concept
- * anchor tables (migration 0020, spec 025), and occupation profiles / practice attestations /
- * practice-kind conversations (migration 0021, spec 026) — all against a real database file
+ * (migration 0018), the dropped item-scoped alignment table (migration 0019,
+ * dropped again by migration 0020), and the canonical-concept crosswalk's node<->concept
+ * anchor tables (migration 0020), and occupation profiles / practice attestations /
+ * practice-kind conversations (migration 0021) — all against a real database file
  * instead of the fakes core-db's own tests use.
  */
 import { randomUUID } from "node:crypto";
@@ -204,8 +204,8 @@ describe("ladder teardown (real sqlite, migration 0024)", () => {
   it("leaves no ladder table behind after a full migration run", async () => {
     temp = await createTempDatabase();
 
-    // The ladder module was removed by product decision (2026-08-12). Every table any of its
-    // design generations ever created must be absent from a freshly migrated database.
+    // The ladder module was removed. Every table any of its design generations ever
+    // created must be absent from a freshly migrated database.
     for (const dropped of [
       "goal_ladders",
       "ladder_shown_descriptions",
@@ -463,7 +463,7 @@ describe("occupation profiles + practice scores + practice conversations (real s
     const storedItems = await temp.repos.comparisons.listItems("profile-occ1");
     expect(storedItems[0]?.item_kind).toBe("practice");
 
-    // Score upsert (spec 029): 10, then overwritten to 5 rather than accumulating a row.
+    // Score upsert: 10, then overwritten to 5 rather than accumulating a row.
     expect(await temp.repos.practice.listScores()).toEqual([]);
     await temp.repos.practice.upsertScore({
       item_id: "item-occ1",
@@ -507,7 +507,7 @@ describe("occupation profiles + practice scores + practice conversations (real s
     temp = await createTempDatabase();
     const now = "2026-08-10T10:00:00.000Z";
 
-    // Simulates a pre-migration write: only the columns that existed before spec 026.
+    // Simulates a pre-migration write: only the columns that existed before migration 0021.
     await temp.sql.execute(
       `INSERT INTO comparison_profiles (id, title, origin, description, source_note, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,

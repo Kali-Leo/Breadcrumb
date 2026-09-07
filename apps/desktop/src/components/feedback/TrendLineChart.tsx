@@ -1,5 +1,5 @@
 /**
- * Purpose: the minimal line chart shared by the palace's trend cards (spec 035 T7a) — one
+ * Purpose: the minimal line chart shared by the palace's trend cards — one
  * Y axis, thin lines, sparse date ticks, a plain date+value tooltip, and a legend whose
  * items explain themselves on hover (one sentence per line, no standing captions).
  *

@@ -102,7 +102,7 @@ describe("runMigrations", () => {
     const { client, appliedIds } = makeFakeSql();
     appliedIds.push(...MIGRATIONS.slice(0, 3).map((migration) => migration.id));
     // Retired tombstones (documented in RETIRED_MIGRATION_IDS) are expected on every machine
-    // that ran the deleted feature — they fired a warning on every launch until 2026-08-30.
+    // that ran the deleted feature, so they warn about nothing.
     appliedIds.push("0038_discovery_feed", "0041_external_content_feed");
     // An id from no known list is real drift and must still be said out loud.
     appliedIds.push("9999_from_a_future_build");
@@ -136,12 +136,9 @@ describe("runMigrations", () => {
 });
 
 /**
- * The exact id sequence MIGRATIONS held on 2026-09-02, immediately before the single
- * migrations.ts was split into the numbered segment files this directory now contains
- * (`git show 1535e0a:packages/core-db/src/migrations.ts`). A shipped database records these
- * ids in its _migrations table, so reordering, renaming or dropping any of them would make
- * existing installs re-run or silently skip migrations. Appending is fine — the assertion
- * below only pins the prefix.
+ * The shipped id sequence, pinned. A shipped database records these ids in its _migrations
+ * table, so reordering, renaming or dropping any of them would make existing installs re-run
+ * or silently skip migrations. Appending is fine — the assertion below only pins the prefix.
  */
 const IDS_BEFORE_THE_SPLIT: readonly string[] = [
   "0001_initial",

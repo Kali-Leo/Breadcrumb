@@ -135,7 +135,7 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
   },
 }));
 
-/** A search source going dark is exactly the silent degradation spec 014's debug table exists
+/** A search source going dark is exactly the silent degradation the debug table exists
  * for — the headless module can only report it, the host has the database. */
 function recordProviderFailures(failedProviders: readonly string[]): void {
   for (const provider of failedProviders) {

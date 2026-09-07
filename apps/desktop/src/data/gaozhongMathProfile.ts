@@ -1,5 +1,5 @@
 /**
- * Purpose: built-in comparison profile "高中数学（中国）" (spec 023/025) — the 必修 +
+ * Purpose: built-in comparison profile "高中数学（中国）" — the 必修 +
  * 选择性必修 skeleton transcribed verbatim from 《普通高中数学课程标准（2017年版2020年
  * 修订）》(表1/表2), with the fine-grained concept layer appended from the verbatim-verified
  * canonical pipeline output (data/generated/fineItems.ts).

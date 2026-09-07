@@ -1,5 +1,5 @@
 /**
- * Purpose: signs a research task (spec 036). Dev-only, and deliberately not re-exported from
+ * Purpose: signs a research task. Dev-only, and deliberately not re-exported from
  * index.ts — the app never signs anything, it only verifies. Keeping the signer off the public
  * entry means it is not in the shipped bundle and there is no convenient hook for a future
  * "just sign this one thing at runtime", which is how a private key ends up in a product.

@@ -4,12 +4,9 @@
  * reveal knowledge outside the persona's knownTopics), behavior-axis-driven typos/code-
  * switching/confusion/boredom, and a hard STOP protocol so sessions terminate deterministically.
  *
- * The prompt itself stays authored in Chinese (the repo's convention — Leo reads and edits
- * these, and models follow cross-lingual instructions fine); only the language directive names
- * the language the simulated student must WRITE in. Before 2026-09-07 there was no directive
- * at all and the behaviour axis was described as 「中英混杂」, so every persona answered in
- * Chinese no matter who it was supposed to be — the harness could not have caught a defect
- * that only appears in another language, because it never produced one.
+ * The prompt itself stays authored in Chinese (the repo's convention; models follow
+ * cross-lingual instructions fine); only the language directive names
+ * the language the simulated student must WRITE in.
  * Main exports: buildStudentSystemPrompt, STOP_TOKEN.
  */
 import { buildLanguageDirective, languageOf } from "@breadcrumb/core-i18n";

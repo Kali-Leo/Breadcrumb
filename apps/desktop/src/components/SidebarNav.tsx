@@ -1,6 +1,6 @@
 /**
  * Purpose: the sidebar's bottom row — the connectivity dot, the view switcher and the
- * companions button. With a mouse it is the icon row Leo laid out on 2026-08-16 (设置 · 词汇 ·
+ * companions button. With a mouse it is the icon row (设置 · 词汇 ·
  * 地图 · 好友, names on hover); on a touch screen or in the drawer each icon carries its name
  * underneath and grows to a 44px target, because a finger cannot hover and a tooltip it
  * cannot reach is no name at all.
@@ -20,8 +20,7 @@ const NAV_BUTTON =
   "rounded-lg px-2 py-1.5 transition-colors coarse:flex coarse:min-h-11 coarse:min-w-11 coarse:flex-col coarse:items-center coarse:justify-center coarse:gap-0.5 stacked:flex stacked:min-h-11 stacked:min-w-11 stacked:flex-col stacked:items-center stacked:justify-center stacked:gap-0.5";
 const NAV_LABEL = "hidden text-[11px] leading-none coarse:block stacked:block";
 
-/** Offline indicator (spec 048 follow-up, Leo: an unexplained always-on dot is bad
- * design) — the normal online state shows nothing at all; only being offline earns a
+/** Offline indicator — the normal online state shows nothing at all; only being offline earns a
  * quiet grey dot with its explanation on hover, or written out beside it on touch. */
 function ConnectivityDot() {
   const { t } = useTranslation("common");

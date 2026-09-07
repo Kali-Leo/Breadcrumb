@@ -9,8 +9,7 @@
  * own canonical concept data so the token counts reflect real Chinese terminology rather
  * than invented filler.
  *
- * It stays in Chinese on purpose, and was left alone by the 2026-09-07 pass that moved the
- * rest of the test corpus to many languages. This is a MEASUREMENT fixture, not a
+ * It stays in Chinese on purpose. This is a MEASUREMENT fixture, not a
  * correctness one: no code path branches on the language of this text, so translating it
  * would exercise nothing new while changing every token count and forcing the published
  * catalogue to be re-measured. Prompts are authored in Chinese, so Chinese input is also the

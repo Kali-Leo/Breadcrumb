@@ -1,6 +1,6 @@
 /**
  * Purpose: how a pure-logic package names a sentence it cannot write. Packages carry no
- * wording (spec 058 §2) — they decide *which* sentence applies and with what values, and
+ * wording — they decide *which* sentence applies and with what values, and
  * apps/desktop renders it through t(). Keeps the message catalogue the single place any
  * language is written down.
  * Main exports: CopyMessage.

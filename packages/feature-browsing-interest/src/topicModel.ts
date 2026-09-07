@@ -5,9 +5,9 @@
  * `data/topicModel.json`.
  *
  * Ported from Kali-Leo/feed-mode (`interest-model/lite/interest_lite.js`, lines 8-9 and 32-53 —
- * `CFG`, `BIAS` and the scoring half of `proba`), GPL-3.0, same copyright holder; modified
- * 2026-09-07 (JavaScript → TypeScript; the inline base64 weight blob moved out of the source
- * file into a JSON data file; feature extraction moved to ./hashing).
+ * `CFG`, `BIAS` and the scoring half of `proba`), GPL-3.0, same copyright holder (JavaScript →
+ * TypeScript; the inline base64 weight blob moved out of the source file into a JSON data file;
+ * feature extraction moved to ./hashing).
  *
  * Provenance of the weights, checked rather than assumed: `data/topicModel.json` is the base64
  * from `interest_lite.js:10` verbatim (524288 characters → 48 × 8192 int8), with `scale` and

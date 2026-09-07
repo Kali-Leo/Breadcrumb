@@ -3,8 +3,8 @@
  * mewo2 hydraulic erosion, land mask with smoothed coast loops and flow-accumulation
  * rivers. Island-local coordinates (origin at island center).
  *
- * An island's shape is a function of its seed and nothing else (Leo 2026-09-01: "形状稳定,
- * 剩下的不稳定"). Everything is generated at one canonical radius; growing a size tier
+ * An island's shape is a function of its seed and nothing else. Everything is generated at
+ * one canonical radius; growing a size tier
  * scales that same outline up instead of redrawing the coast, so an island you have seen
  * before stays recognizable however much it grows or wherever it lands. Position and size
  * carry no such promise.
@@ -45,8 +45,8 @@ export interface IslandTerrain {
 /** The radius every island is generated at, whatever size it is drawn at (the middle of
  * layout.ts's RADIUS_BY_TIER, so the typical island is scaled least). */
 export const CANONICAL_RADIUS = 250;
-/** Cell count and land fraction of the canonical island — once tier-dependent, which is
- * exactly what made a growing island redraw its coastline. */
+/** Cell count and land fraction of the canonical island — fixed, never tier-dependent:
+ * tying them to size makes a growing island redraw its coastline. */
 const CANONICAL_CELL_TARGET = 2400;
 const CANONICAL_LAND_FRACTION = 0.33;
 /** Sculpting richness (ridge count, hill count, plate mask) is likewise fixed: it feeds the

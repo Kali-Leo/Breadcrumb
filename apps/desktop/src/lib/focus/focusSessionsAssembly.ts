@@ -1,8 +1,8 @@
 /**
  * Purpose: pure assembly of one conversation's focus sessions into the shapes the two in-place
- * surfaces need (Leo 2026-08-14 revision to spec 042 §5) — the per-message badge list, the
- * top-of-chat bar's session list, and the legacy entry_message_id map for pre-revision exit
- * records. No I/O; focusSessionsStore feeds it repo rows and applies the result via set().
+ * surfaces need — the per-message badge list, the top-of-chat bar's session list, and the
+ * legacy entry_message_id map for older exit records. No I/O; focusSessionsStore feeds it
+ * repo rows and applies the result via set().
  * Main exports: buildFocusSessionAssembly, FocusSessionBadgeEntry, FocusSessionSummary,
  * FocusSessionAssembly.
  */
@@ -27,7 +27,7 @@ export interface FocusSessionAssembly {
 }
 
 /** A session counts as "has substance" once at least one of its stations landed an answer —
- * the same bar the focus:exited zero-substance cleanup uses (spec 042 §5 revision). Sessions
+ * the same bar the focus:exited zero-substance cleanup uses. Sessions
  * with none are excluded from every surface here (they are deleted outright on exit, but a
  * caller might still pass one in transiently). */
 function countAnswered(nodes: readonly FocusNodeRow[]): number {

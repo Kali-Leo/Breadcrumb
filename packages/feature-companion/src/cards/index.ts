@@ -1,5 +1,5 @@
 /**
- * Purpose: loads the three authored companion cards (spec 037 cast — Shichimi/Pepper/Cumin)
+ * Purpose: loads the three authored companion cards (cast — Shichimi/Pepper/Cumin)
  * from bundled JSON, validating each through the Character Card V2 schema at load time.
  * Main export: loadCompanionCards.
  */

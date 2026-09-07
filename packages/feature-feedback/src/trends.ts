@@ -1,8 +1,7 @@
 /**
- * Purpose: longitudinal trend lines for the feedback lab's "趋势" module (spec 035 T7a) —
+ * Purpose: longitudinal trend lines for the feedback lab's "趋势" module —
  * the three-layer knowledge estimate (memory / understanding / intuition), one point per
- * local day; never a daily-accuracy line (Soderstrom & Bjork 2015 — see the trend research
- * doc).
+ * local day; never a daily-accuracy line (Soderstrom & Bjork 2015).
  * Main exports: TrendPoint, TREND_WINDOW_DAYS, LayerTrendPoint, computeLayerTrendSeries.
  */
 import type { MasteryClaimRow, NodeSightingRow } from "@breadcrumb/core-db";

@@ -1,17 +1,15 @@
 /**
- * Purpose: the review-debt measure that throttles new-word intake (spec 033) — counts only
- * due words the conversation can still deliver. Counting every due row made the throttle
- * self-locking: a word whose topic had left the chat could never be re-met, so it sat in the
- * debt forever and pinned intake at ~1 word/day from day 7 (audit 2026-08-28 #3).
+ * Purpose: the review-debt measure that throttles new-word intake — counts only due words
+ * the conversation can still deliver. Counting every due row makes the throttle self-locking:
+ * a word whose topic has left the chat can never be re-met, so it sits in the debt forever and
+ * pins intake at ~1 word/day within a week.
  * Main exports: createMeetableDebtWindow, MEETABLE_WINDOW_MESSAGES.
  */
 
 /** How many recently woven assistant replies count as "the conversation as it stands" —
- * roughly the current sitting at the ~6 replies/day this app sees. Picked with the 30/90-day
- * journey sim (5 seeds): against the unfiltered debt it introduces ~30% more words at 30
- * days and, at 90 days, holds ~37% more of them (stability ≥ 7d), because the unfiltered
- * debt eventually zeroes the daily cap outright. Windows of 5 collapse consolidation (the
- * throttle stops working), windows of 30+ leave most of the lock-up in place. */
+ * roughly the current sitting at the ~6 replies/day this app sees. The window size is a
+ * tuned trade-off: windows of 5 collapse consolidation (the throttle stops working), windows
+ * of 30+ leave most of the intake lock-up in place. */
 export const MEETABLE_WINDOW_MESSAGES = 10;
 
 export interface MeetableDebtWindow {

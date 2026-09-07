@@ -133,14 +133,13 @@ describe("runFactCheck", () => {
 
     expect(report.claims[0]?.relationship).toBe("insufficient");
     expect(report.claims[0]?.evidence).toEqual([]);
-    // No judge spoke, so the package writes no sentence: a headless package holds no
-    // wording, and a hardcoded Chinese one reached English readers verbatim (spec 058 §2).
+    // No judge spoke, so the package writes no sentence: a headless package holds no wording.
     expect(report.claims[0]?.reasoning).toBe("");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("marks a claim unavailable — never insufficient — when every provider failed", async () => {
-    // "我这次没查成" must never be rendered as "公开资料里没有" (审计差距 2).
+    // "我这次没查成" must never be rendered as "公开资料里没有".
     const fetchImpl = createLlmFetch(
       { claims: [{ text: "某条本可核查的声明", queries: ["查询"] }] },
       { reasoning: "不应被调用", relationship: "supported" },
@@ -226,7 +225,7 @@ describe("runFactCheck", () => {
 
   it("still bills the tokens a rejected verdict call already cost", async () => {
     // The provider answered and charged for it; the reply just failed our schema. Dropping
-    // that usage would under-state the user's spend (宪法原则 2).
+    // that usage would under-state the user's spend.
     const fetchImpl = vi.fn<typeof fetch>(async (_input, init) => {
       const body = String(init?.body ?? "");
       if (body.includes("核查前哨")) {

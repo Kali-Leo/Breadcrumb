@@ -1,5 +1,5 @@
 /**
- * Purpose: the daily helper gate behind companionStore (spec 050 §9) — expiring yesterday's
+ * Purpose: the daily helper gate behind companionStore — expiring yesterday's
  * leftovers, turning the concepts a review would help most into today's help-seeking
  * characters, and the day-change / switch-toggle triggers that re-run it. Split out of
  * companionStore.ts purely to keep that file under the file-size ceiling; it takes the

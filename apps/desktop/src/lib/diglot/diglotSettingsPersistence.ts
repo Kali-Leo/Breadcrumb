@@ -115,7 +115,7 @@ export async function loadDiglotFromDatabase(): Promise<void> {
     ),
   });
   void refreshDiglotConfusions();
-  // Personal memory model (vision/09 #1): apply fitted parameters, refit in background.
+  // Personal memory model: apply fitted parameters, refit in background.
   configureDiglotScheduler(settings.pairId, settings.fsrsParams ?? undefined);
   void (async () => {
     const { maybeFitFsrsParameters } = await import("../platform/fsrsFit");
@@ -157,9 +157,8 @@ export async function saveDiglotSettings(partial: Partial<DiglotSettings>): Prom
     useDiglotStore.setState({ settings });
   }
   // A different pair is a different dictionary, different cards, different everything the
-  // weave reads — without this the app kept weaving the old language until the next launch
-  // (caught in the 2026-09-01 walkthrough: the pair line said Swahili while the vocabulary
-  // check was still asking about English).
+  // weave reads — without this the app keeps weaving the old language until the next launch,
+  // with the pair line naming one language while the vocabulary check asks about another.
   const pairChanged = previous.pairId !== settings.pairId;
   if (settings.enabled && (useDiglotStore.getState().loaded === null || pairChanged)) {
     if (pairChanged) {

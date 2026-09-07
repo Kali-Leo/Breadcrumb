@@ -1,5 +1,5 @@
 /**
- * Purpose: the goal view (spec 047) — the palace's drill-in for "我想去哪里？离得还有多
+ * Purpose: the goal view — the palace's drill-in for "我想去哪里？离得还有多
  * 远？": goal creation via free-text mapping, a goal picker, the decomposition chips, the
  * recommended route, per-node self-statement actions, and the comparison tree as the
  * goal's detail module. No progress percentages, no denominators, no mode switch: goals

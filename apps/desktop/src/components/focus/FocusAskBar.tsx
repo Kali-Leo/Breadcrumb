@@ -1,5 +1,5 @@
 /**
- * Purpose: the focus overlay's bottom "ask about the current station" input (spec 042 §3) —
+ * Purpose: the focus overlay's bottom "ask about the current station" input —
  * a dashed diagonal question station on submit. While a stream is in flight, typing stays
  * possible but submit waits (single-buffer guard) and a 停止 button appears instead.
  * Main exports: FocusAskBar.

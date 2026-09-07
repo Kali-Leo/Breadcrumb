@@ -2,8 +2,8 @@
  * Purpose: the level transition's band visibility — the snap path (both bands and the
  * borders jump straight to the level's end state) and the animated path (everything
  * level-bound hides for the ride, and the incoming band shows in full once the camera
- * lands, all at once — Leo 2026-08-15: terrain-only zoom, then everything immediately; no
- * crossfade, no staggered reveal).
+ * lands, all at once — terrain-only zoom, then everything immediately; no crossfade, no
+ * staggered reveal).
  * Main exports: PendingAppear, applyBandsInstant, beginAppearTransition, advancePendingAppear.
  *
  * Directory note: the non-component .ts files in components/map/ are the Pixi rendering

@@ -1,5 +1,5 @@
 /**
- * Purpose: the URL-verification and pruning half of the search-build pipeline (spec 023 §5),
+ * Purpose: the URL-verification and pruning half of the search-build pipeline,
  * split out of compareBuildActions.ts to keep that file under the file-size ceiling — fetches
  * every unique cited source once, gives dead direct links one search rescue, and prunes the
  * branches whose sources never checked out (宁缺毋假). Knows nothing about the LLM call or
@@ -15,8 +15,8 @@ import {
 import { createBingProvider, fetchExternalPage } from "@breadcrumb/feature-factcheck";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 
-/** How long to wait for a cited page. Every other fetch in the app bounds itself; this one
- * used to wait forever, which is a stall the user sits through. */
+/** How long to wait for a cited page. Every other fetch in the app bounds itself; an
+ * unbounded wait here would be a stall the user sits through. */
 const CITATION_FETCH_TIMEOUT_MS = 8000;
 
 /** Fetches one cited URL and checks the page mentions the cited material's title tokens.
@@ -52,8 +52,8 @@ export interface VerifiedCitations {
 /**
  * Verify each unique cited URL once; an item may share a source with its siblings.
  * Dead direct links get one search rescue: the model cites deep links from memory and
- * those rot (all three 2026-08-10 failures were a single hallucinated/rotted URL taking
- * the whole build to 0/N). A search hit proving the cited material exists revives the
+ * those rot, and a single hallucinated/rotted URL can take the whole build to 0/N. A
+ * search hit proving the cited material exists revives the
  * branch and swaps in the reachable URL; no hit still kills it (宁缺毋假).
  */
 export async function verifyCitedSources(

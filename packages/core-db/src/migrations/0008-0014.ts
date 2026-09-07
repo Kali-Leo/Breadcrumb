@@ -9,7 +9,7 @@ import type { Migration } from "./migration";
 
 export const MIGRATIONS_0008_0014: readonly Migration[] = [
   {
-    // Two independent evidence streams for the mastery/interest split (spec 011, ADR-0009):
+    // Two independent evidence streams for the mastery/interest split:
     // interest_signals is per-round LLM-observed psychological signal, mastery_claims is
     // user self-report. Neither table is read by the other's computation.
     id: "0008_interest_and_claims",
@@ -37,7 +37,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     ],
   },
   {
-    // Learning goals set up in the experimental lab panel (spec 012): a title plus the node
+    // Learning goals set up in the experimental lab panel: a title plus the node
     // ids it maps to (LLM-assisted, user-calibrated). gapAndPath() recomputes routes for a
     // goal from its node_ids_json on every read — nothing here is a stored plan.
     id: "0009_goals",
@@ -53,7 +53,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     ],
   },
   {
-    // Developer-visible record of silent AI pipeline degradation (spec 014): every store's
+    // Developer-visible record of silent AI pipeline degradation: every store's
     // extraction/judging catch writes one best-effort row here — never surfaced to the user,
     // only to the lab panel's "最近的静默失败" section.
     id: "0010_ai_failures",
@@ -68,7 +68,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     ],
   },
   {
-    // Per-signal confidence (spec 014): how sure the extraction pass is about its own
+    // Per-signal confidence: how sure the extraction pass is about its own
     // psychological read, feeding aggregateInterest's shrinkage-weighted average. Existing
     // rows default to a mid confidence (0.6) so historical data keeps contributing sanely
     // without a real value to fall back on — old data is never migrated/reinterpreted.
@@ -76,7 +76,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     statements: [`ALTER TABLE interest_signals ADD COLUMN confidence REAL NOT NULL DEFAULT 0.6;`],
   },
   {
-    // Node-dedup synonym gate (spec 015): one row per label the LLM judged identical to an
+    // Node-dedup synonym gate: one row per label the LLM judged identical to an
     // existing node. alias_label is the primary key so a re-judged label keeps its
     // first-recorded target (INSERT OR IGNORE) instead of drifting between nodes over time.
     id: "0012_node_aliases",
@@ -90,7 +90,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     ],
   },
   {
-    // Pseudo-ranked ladder per goal (spec 016): the current generation's 5 reference figures,
+    // Pseudo-ranked ladder per goal: the current generation's 5 reference figures,
     // plus the never-repeat backstop of every figure_desc ever shown for that goal. A figure's
     // row also carries the user's own milestone at the moment it was generated
     // (user_milestone_at_generation) so planLadderRefresh can later decide reuse vs
@@ -112,7 +112,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
         created_at TEXT NOT NULL
       );`,
       `CREATE INDEX idx_goal_ladders_goal ON goal_ladders(goal_id);`,
-      // The never-repeat backstop (spec 016 #3): a plain INSERT (never OR IGNORE) so a real
+      // The never-repeat backstop: a plain INSERT (never OR IGNORE) so a real
       // figure_desc collision for the same goal raises loudly instead of silently reusing it.
       `CREATE TABLE ladder_shown_descriptions (
         goal_id TEXT NOT NULL REFERENCES goals(id),
@@ -122,16 +122,15 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
     ],
   },
   {
-    // Ranked-ladder v3 (spec 018): the board is rebuilt around actual rank numbers and
-    // player-shaped personas (name/age/era/occupation/selfLine/chatProfile) instead of
-    // milestone-tagged one-liners. goal_ladders and ladder_shown_descriptions are DROPPED
-    // rather than migrated — a board is explicitly ephemeral (Leo's semantics: only the
-    // current generation and its never-repeat history matter, never a historical record), and
-    // there is no lossless way to turn a figure_desc one-liner into a structured identity.
-    // This is a one-time reset of the anti-repeat history at this schema break; acceptable
-    // because the backstop's only job is avoiding repeats going forward, not preserving the
-    // past. The new backstop keys on `${name}|${era}` (ladder_shown_identities) instead of the
-    // old free-text figure_desc.
+    // The board is rebuilt around actual rank numbers and player-shaped personas
+    // (name/age/era/occupation/selfLine/chatProfile) instead of milestone-tagged one-liners.
+    // goal_ladders and ladder_shown_descriptions are DROPPED rather than migrated — a board is
+    // ephemeral (only the current generation and its never-repeat history matter, never a
+    // historical record), and there is no lossless way to turn a figure_desc one-liner into a
+    // structured identity. This resets the anti-repeat history once at this schema break; the
+    // backstop's only job is avoiding repeats going forward, not preserving the past. The new
+    // backstop keys on `${name}|${era}` (ladder_shown_identities) instead of the free-text
+    // figure_desc.
     id: "0014_goal_ladders_v2",
     statements: [
       `DROP TABLE IF EXISTS ladder_shown_descriptions;`,
@@ -153,7 +152,7 @@ export const MIGRATIONS_0008_0014: readonly Migration[] = [
         created_at TEXT NOT NULL
       );`,
       `CREATE INDEX idx_goal_ladders_v2_goal ON goal_ladders_v2(goal_id);`,
-      // The never-repeat backstop (spec 018 #3): a plain INSERT (never OR IGNORE) so a real
+      // The never-repeat backstop: a plain INSERT (never OR IGNORE) so a real
       // identity collision for the same goal raises loudly instead of silently reusing it.
       `CREATE TABLE ladder_shown_identities (
         goal_id TEXT NOT NULL REFERENCES goals(id),

@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for runSynonymGate (spec 015 desktop wiring) — candidate filtering,
+ * Purpose: unit tests for runSynonymGate (desktop wiring) — candidate filtering,
  * same/different/degraded verdict branches, and that a gate failure never throws (mocks embedTexts,
  * the DB, metering, failure logging, and chatJson).
  */

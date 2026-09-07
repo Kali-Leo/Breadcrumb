@@ -1,5 +1,5 @@
 /**
- * Purpose: the two-minute vocabulary check (Leo 2026-09-01). Thirty words from the pack, four
+ * Purpose: the two-minute vocabulary check. Thirty words from the pack, four
  * possible meanings each, no timer and no score shown — its only job is to tell the weave
  * where to start introducing words, so an advanced learner is not walked through "water" and
  * "book" for a fortnight. Always skippable, and skipping is the same as starting at zero.

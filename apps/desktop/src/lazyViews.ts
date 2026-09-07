@@ -35,7 +35,7 @@ import type { SettingsPanel as SettingsPanelComponent } from "./components/setti
  * reads the replacement without importing anything again. LazyBoundary supplies the render —
  * it clears on the next view switch — and this supplies something new for it to try.
  *
- * Known limit (2026-09-02 browser walkthrough): the module map also remembers a failed
+ * Known limit: the module map also remembers a failed
  * dynamic import for the life of the document, so within one page load the retry only helps
  * when the failure was transient at the JavaScript level. A chunk that could not be fetched
  * needs a page reload once the network is back; re-importing it under a fresh query string

@@ -1,9 +1,9 @@
 /**
  * Purpose: cluster the user's knowledge nodes into discovered topics (kNN cosine graph +
  * deterministic Louvain community detection) ignoring tree structure entirely, one-member
- * groups leaving as islets. The map itself no longer shapes itself from this — spec 031
- * made it tree-first (./continents.ts) — but TopicSummary is still the islet's shape and
- * this whole-corpus view stays available. Pure: no DB, no UI, seeded randomness only.
+ * groups leaving as islets. The map does not shape itself from this — it is tree-first
+ * (./continents.ts) — but TopicSummary is still the islet's shape and this whole-corpus
+ * view stays available. Pure: no DB, no UI, seeded randomness only.
  * Main exports: discoverTopics, TopicSummary, TopicAssignment.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";

@@ -22,7 +22,7 @@ export interface RunTelemetry {
   ledger: CallLedger;
   pressureLexicon: readonly string[];
   onPressureHit(sample: PressureHitSample): void;
-  /** Fired once per tutor reply with that single reply's discipline check (spec 038 §2.6) —
+  /** Fired once per tutor reply with that single reply's discipline check —
    * the caller accumulates totalReplies/multiQuestionReplies/overlongReplies across the run. */
   onTeachingDisciplineCheck(result: TeachingDisciplineResult): void;
 }

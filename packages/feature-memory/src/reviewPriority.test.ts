@@ -72,9 +72,9 @@ describe("computeNodeMemoryByNode", () => {
   });
 });
 
-/** Regression (bug hunt 2026-09-03, P0-1): a system clock that went backwards used to make
- * ts-fsrs throw FSRSValidationError on the negative delta_t, and memoryStore.refresh() had no
- * catch — so one rolled-back clock stopped the whole memory layer, not one node. */
+/** A system clock that went backwards would make ts-fsrs throw FSRSValidationError on the
+ * negative delta_t, and memoryStore.refresh() has no catch for it — so one rolled-back clock
+ * would stop the whole memory layer, not one node. */
 describe("a clock that went backwards", () => {
   // 31 days BEFORE the newest sighting: delta_t = -31, which is what ts-fsrs threw on.
   const AFTER_ROLLBACK = daysAgo(76);
@@ -106,7 +106,7 @@ describe("a clock that went backwards", () => {
   });
 });
 
-/** Regression (P1-3): one unparsable created_at used to reach the sort comparators as NaN. */
+/** An unparsable created_at must not reach the sort comparators as NaN. */
 describe("an unparsable timestamp", () => {
   it("reports 0 for that node rather than NaN", () => {
     const memory = computeNodeMemoryByNode(

@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for computeDoorPatches (spec 043 §6-7) — the LLM term-marking call is
+ * Purpose: unit tests for computeDoorPatches — the LLM term-marking call is
  * the primary door source (located via locateTermPatches, enriched with a nodeId on exact
  * label match); the old sighted-node label match is secondary, only for nodes that aren't
  * hub-generic, and never overlapping a term door's span. Any failure degrades to [].

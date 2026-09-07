@@ -1,7 +1,7 @@
 /**
  * Purpose: unit tests for the knowledge-tree extraction prompt builder — in particular that
- * the existing-tree rendering no longer uses the "（父：根）" wording the model was echoing
- * back verbatim as a bogus parentLabel value (P7).
+ * the existing-tree rendering avoids the "（父：根）" wording, which the model would otherwise
+ * echo back verbatim as a bogus parentLabel value.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";

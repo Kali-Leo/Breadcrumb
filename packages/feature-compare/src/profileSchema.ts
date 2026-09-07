@@ -1,5 +1,5 @@
 /**
- * Purpose: the comparison profile definition contract (spec 023) — Zod boundary schema for
+ * Purpose: the comparison profile definition contract — Zod boundary schema for
  * bundled/searched profile data plus structural validation (unique keys, existing parents,
  * no cycles, at least one root). Every item carries a non-empty sourceRef: evidence-backed
  * only, AI-invented content is forbidden.
@@ -19,14 +19,14 @@ export const profileItemDefinitionSchema = z.object({
   aliases: z.array(z.string().min(1).max(60)).max(12),
   /** Where this exact item comes from in the cited material — never empty. */
   sourceRef: z.string().min(1).max(300),
-  /** The canonical concept this leaf embodies (spec 025) — the join key the anchor layer
+  /** The canonical concept this leaf embodies — the join key the anchor layer
    * matches user nodes against. null for structural/coarse items. */
   conceptId: z.string().min(1).max(80).nullable(),
-  /** Leaf typing (spec 026/028): knowledge = fine-grained anchor-matched leaf (the only
+  /** Leaf typing: knowledge = fine-grained anchor-matched leaf (the only
    * binary-scored kind); practice = verb items scored by the learner's attestation;
-   * tool = noun tools, also attestation-scored (spec 028 — binary matching on products is
+   * tool = noun tools, also attestation-scored (binary matching on products is
    * meaningless); hub = big named entity (MATLAB-class), never scored while undecomposed;
-   * structure = organizational. Missing = knowledge (pre-026 data). */
+   * structure = organizational. Missing = knowledge (legacy data). */
   kind: z.enum(["knowledge", "practice", "tool", "hub", "structure"]).optional(),
 });
 
@@ -37,8 +37,8 @@ export const profileDefinitionSchema = z.object({
   /** The profile-level statement of what material backs it, with retrieval date. */
   sourceNote: z.string().min(1).max(400),
   items: z.array(profileItemDefinitionSchema).min(1).max(1500),
-  /** Which side of the 教材/真人 toggle this profile belongs to (spec 026). Missing =
-   * curriculum (pre-026 data). */
+  /** Which side of the 教材/真人 toggle this profile belongs to. Missing =
+   * curriculum (legacy data). */
   category: z.enum(["curriculum", "occupation"]).optional(),
 });
 

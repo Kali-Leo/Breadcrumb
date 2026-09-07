@@ -1,5 +1,5 @@
 /**
- * Purpose: bucket 3 of the demo seed's node landscape (spec 035 T7b) — 8 nodes met for the
+ * Purpose: bucket 3 of the demo seed's node landscape — 8 nodes met for the
  * first time within the last two weeks, one of them today, feeding dailyBite/smallWins.
  * Main exports: FRESH.
  */

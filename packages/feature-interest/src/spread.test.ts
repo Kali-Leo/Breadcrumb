@@ -59,7 +59,7 @@ describe("spreadInterest", () => {
   });
 });
 
-describe("spreadInterest neighborhood bounds (2026-08-28 audit)", () => {
+describe("spreadInterest neighborhood bounds", () => {
   it("ignores a node below the similarity floor even though its cosine is positive", () => {
     // cos ≈ 0.243, positive but nowhere near a neighbor. Before the floor, every faintly
     // positive node joined the weighted average and diffusion degenerated into adding a
@@ -93,10 +93,10 @@ describe("spreadInterest neighborhood bounds (2026-08-28 audit)", () => {
 });
 
 /**
- * Regression (bug hunt 2026-09-03, P0-2): the result used to contain only nodes that had an
- * embedding row, and plannerRecompute reads it as the complete interest table. Embeddings are
- * backfilled asynchronously, so the nodes missing one are the nodes that just appeared — the
- * ones the learner most recently got curious about.
+ * Nodes without an embedding row must still appear in the result — plannerRecompute reads it
+ * as the complete interest table. Embeddings are backfilled asynchronously, so the nodes
+ * missing one are the nodes that just appeared — the ones the learner most recently got
+ * curious about.
  */
 describe("nodes the embedding backfill has not reached yet", () => {
   it("keeps the interest of a brand-new node that has no embedding row", () => {
@@ -110,8 +110,8 @@ describe("nodes the embedding backfill has not reached yet", () => {
   });
 
   it("is the identity when the embedding model has never been downloaded", () => {
-    // Not one embedding row in the table: every node's interest used to become 0, silently,
-    // while the 推荐偏好 panel still showed the interest slider at full weight.
+    // Not one embedding row in the table: every node's interest must pass through unchanged,
+    // not become 0, even while the 推荐偏好 panel still shows the interest slider at full weight.
     const scores = new Map([
       ["a", 0.8],
       ["b", 0.2],

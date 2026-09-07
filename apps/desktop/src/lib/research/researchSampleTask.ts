@@ -1,5 +1,5 @@
 /**
- * Purpose: the bundled demo research task (spec 036 #6) — one project-signed task that
+ * Purpose: the bundled demo research task — one project-signed task that
  * exercises the full pipeline end to end (three whitelisted stat calls, a matching display
  * template). Side effect: none, this is a static payload only.
  * Main exports: SIGNED_RESEARCH_TASKS, DEMO_RESEARCH_TASK_TEXT.
@@ -45,7 +45,7 @@ const DEMO_RESEARCH_TASK = {
 
 /** The demo task's own user-visible text. It is *content*, not interface copy: the bytes are
  * covered by the publisher's signature, so it cannot be translated — a real task carries its
- * own wording in its own language (spec 058 §3). Exported so the copy gate can still scan it. */
+ * own wording in its own language. Exported so the copy gate can still scan it. */
 export const DEMO_RESEARCH_TASK_TEXT: readonly string[] = [
   DEMO_RESEARCH_TASK.payload.title,
   DEMO_RESEARCH_TASK.payload.purpose,

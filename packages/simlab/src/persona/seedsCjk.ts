@@ -1,10 +1,10 @@
 /**
- * Purpose: the non-Chinese CJK seed personas (multilingual extension 2026-09-07) — Japanese
+ * Purpose: the non-Chinese CJK seed personas — Japanese
  * and Korean. Both share Chinese's space-free segmentation and full-width punctuation, so
  * they separate "the harness assumed CJK" from "the harness assumed Chinese": anything that
  * passes for 中文 but fails here is a language bug, not a script bug.
  *
- * Provenance: persona prose drafted with deepseek-v4-flash (2026-09-07) from an archetype
+ * Provenance: persona prose drafted with deepseek-v4-flash from an archetype
  * brief and reviewed by hand. Concept labels cross-checked against the Wiktionary extraction
  * in scripts/language-packs/.cache/interlingua/: ja 変数 → "variable", ja 関数 → "function".
  * Main exports: CJK_SEED_PERSONAS.

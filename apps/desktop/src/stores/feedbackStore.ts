@@ -1,6 +1,6 @@
 /**
- * Purpose: zustand store for the mirror cards in the palace rail (spec 035 → 046 → 048) —
- * loads the source tables once and holds the surviving view models: the activity heatmap
+ * Purpose: zustand store for the mirror cards in the palace rail — loads the source tables
+ * once and holds the surviving view models: the activity heatmap
  * and the settled list — plus the daily trail sentences, which the launch-time generator
  * refreshes on its own after it writes one.
  * Main exports: useFeedbackStore.

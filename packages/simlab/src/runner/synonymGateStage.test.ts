@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for runSynonymGateStage (spec 015) — candidate filtering by synthetic
+ * Purpose: unit tests for runSynonymGateStage — candidate filtering by synthetic
  * embedding similarity, and the same/different/degraded verdict branches, against a real temp
  * SQLite database for node_embeddings.
  */

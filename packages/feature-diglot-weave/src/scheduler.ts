@@ -1,5 +1,5 @@
 /**
- * Purpose: the weave scheduler (spec 033) — picks which candidate occurrences to replace
+ * Purpose: the weave scheduler — picks which candidate occurrences to replace
  * in one message under the density budget, maximizing expected memory gain (FSRS-6) with
  * dispersion, new-word throttle and context-novelty factors. Deterministic throughout.
  * Main exports: scheduleReplacements, adaptiveNewWordCap, ScheduleInput,
@@ -12,7 +12,7 @@ import type { CandidateOccurrence } from "./candidates";
 import { retrievabilityOf, reviewCard } from "./memoryState";
 
 /** Ceiling on what the density loop may ask for (densityControl.ts owns the target itself);
- * raised from 5% to 7% with that loop, on the audit's reading of Holley's one-in-fifteen. */
+ * roughly one word in fifteen (Holley). */
 const DENSITY_CEILING = 0.07;
 /** Never weave more than this many words into one message, whatever its length. */
 const MAX_PER_MESSAGE = 4;
@@ -37,8 +37,8 @@ export interface ScheduleInput {
   /** Lemma → introduction rank from the pack's frequency queue (lower = sooner). */
   introductionRank: ReadonlyMap<string, number>;
   /** Lemma → context-novelty factor in [0.5, 1.5]; 1 when unknown. Computed upstream from
-   * embedding similarity between this message and the word's past contexts (spec 033
-   * contextual-diversity research: novel contexts teach more than repeats). */
+   * embedding similarity between this message and the word's past contexts (novel contexts
+   * teach more than repeats). */
   noveltyByLemma?: ReadonlyMap<string, number>;
 }
 
@@ -48,14 +48,13 @@ export interface ScheduledReplacement extends CandidateOccurrence {
 }
 
 /** Daily new-word cap that tightens as review debt grows: base minus one per
- * `debtPerSlot` due-but-unmet words, never below zero. (5, not 10: with 10 the intake
- * only closed after debt had saturated the whole vocabulary — 30-day journey sim.)
+ * `debtPerSlot` due-but-unmet words, never below zero. 5, not 10: at 10 the intake only
+ * closes after debt has saturated the whole vocabulary.
  *
  * `reviewDebtCount` must be MEETABLE debt — due words the conversation can still deliver
  * (callers intersect the due set with the recent messages' candidate lemmas). Counting every
- * due word made the throttle self-locking: words whose topic had left the chat could never
- * be re-met, so they sat in the debt forever and pinned intake at 1 word/day from day 7
- * (audit 2026-08-28 #3). */
+ * due word makes the throttle self-locking: words whose topic has left the chat can never be
+ * re-met, so they sit in the debt forever and pin intake at 1 word/day within a week. */
 export function adaptiveNewWordCap(baseCap: number, reviewDebtCount: number): number {
   const debtPerSlot = 5;
   return Math.max(0, baseCap - Math.floor(reviewDebtCount / debtPerSlot));
@@ -64,12 +63,12 @@ export function adaptiveNewWordCap(baseCap: number, reviewDebtCount: number): nu
 /** Expected-gain score of reviewing a known word right now: relative stability growth of
  * a Good review, weighted by urgency (how far recall has fallen below the target) and by
  * context novelty, plus an overdue-rescue term — deeply forgotten words have LOW expected
- * FSRS gain and would otherwise be starved by mildly due words forever (spec 033
- * acceptance 6: the scheduler raises a word's priority the longer it waits). */
+ * FSRS gain and would otherwise be starved by mildly due words forever, so a word's priority
+ * rises the longer it waits. */
 /** Reviews before this many repetitions are the anchoring phase: the word is still being
  * pinned to one meaning, and varying its context there is what the evidence says hurts
  * (Psychon Bull Rev 2023 on early-stage variability; Cowan 2024 on spacing gains). Novelty
- * is neutralised until the word has been met this many times (audit 2026-08-28, 语言织入 #7). */
+ * is neutralised until the word has been met this many times. */
 const NOVELTY_STAGE_GATE_REPS = 3;
 
 function reviewScore(pairId: DiglotPairId, card: Card, now: Date, rawNovelty: number): number {
@@ -79,7 +78,7 @@ function reviewScore(pairId: DiglotPairId, card: Card, now: Date, rawNovelty: nu
   const nextStability = reviewCard(pairId, card, now, Rating.Good).stability;
   const currentStability = Math.max(card.stability, 0.01);
   // Capped: brand-new cards (stability ≈ 0) would otherwise produce absurd gains and
-  // crowd out genuinely due mature words for days (real-app walkthrough observation).
+  // crowd out genuinely due mature words for days.
   const relativeGain = Math.min(
     3,
     Math.max(0, (nextStability - currentStability) / currentStability),
@@ -120,7 +119,7 @@ export function scheduleReplacements(input: ScheduleInput): ScheduledReplacement
       // New words sit between the review extremes: a meaningfully overdue review still
       // wins the slot, but a freshly consolidated word (urgency ~0, tiny gain) loses to
       // growth — otherwise a Zipf-shaped chat starves the vocabulary at a handful of
-      // head words (found by the 30-day journey sim). Earlier queue rank scores higher.
+      // head words. Earlier queue rank scores higher.
       scored.push({ ...candidate, kind: "new", score: 0.15 / (1 + rank / 100) });
     }
   }
@@ -129,7 +128,7 @@ export function scheduleReplacements(input: ScheduleInput): ScheduledReplacement
 
   // Growth reservation (i+1): with two or more slots, one is reserved for the best new
   // word — otherwise due reviews win every slot forever and vocabulary plateaus on the
-  // Zipf head (found by the 30-day journey sim). Single-slot messages stay review-first.
+  // Zipf head. Single-slot messages stay review-first.
   const hasNewCandidate = scored.some((item) => item.kind === "new");
   const reviewCap = budget >= 2 && hasNewCandidate ? budget - 1 : budget;
 

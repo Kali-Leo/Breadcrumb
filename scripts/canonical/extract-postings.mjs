@@ -1,5 +1,5 @@
 /**
- * Purpose: dev-time timeliness-patch step 2 (spec 026 §4) — extract tool/skill mentions from
+ * Purpose: dev-time timeliness-patch step 2 — extract tool/skill mentions from
  * each real posting via DeepSeek with the verbatim double-check (label inside quote, quote
  * inside that posting's text), then aggregate across postings with a frequency floor so no
  * single posting's noise survives. Emits the bundled patch JSON keyed by SOC code.

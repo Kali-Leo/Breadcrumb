@@ -341,7 +341,7 @@ describe("planEdgeJudgeResult method nodes", () => {
   });
 });
 
-describe("planEdgeJudgeResult adjacent concepts (spec 016 casual mode)", () => {
+describe("planEdgeJudgeResult adjacent concepts in casual mode", () => {
   it("creates a sighting-free concept node with a helps edge from its connectsToLabel node", () => {
     const judged: EdgeJudgeResult = {
       edges: [],

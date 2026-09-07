@@ -1,5 +1,5 @@
 /**
- * Purpose: pure single-route recommendation — greedy walk over a goal's gap (spec 017 #1),
+ * Purpose: pure single-route recommendation — greedy walk over a goal's gap,
  * replacing "three routes, learner picks" with "one route, learner tunes two human params".
  * Step score = (1-pace)*helpsSupport_norm + interestWeight*interest - pace*remainingDepth_norm,
  * deterministic tie-break score then label. No DB, no I/O.
@@ -48,14 +48,13 @@ const RouteParamsSchema = z.object({
  * default. Never throws — bad settings degrade to defaults, exactly like
  * sanitizeRecommendationWeights does for the frontier's weight table.
  *
- * Why this exists (bug hunt 2026-09-03, P2-1): the settings row is read back with a bare
- * `JSON.parse(...) as Value` and the only guard was `routeParams ?? DEFAULT_ROUTE_PARAMS`,
- * which catches a missing row and nothing inside one. A row missing `pace` — an old version's
- * leftovers, a hand-edited dev database, an import — made `(1 - undefined)` NaN, every step
- * score NaN, and the greedy comparator return NaN at every step, so the route came out in
- * whatever order the gap happened to enumerate: the 2026-08-28 audit's planning gap 1, back
- * again. `z.number()` in Zod v4 also rejects NaN and Infinity, so those cannot reach the
- * arithmetic either.
+ * Why this exists: the settings row is read back with a bare
+ * `JSON.parse(...) as Value`, and a bare `routeParams ?? DEFAULT_ROUTE_PARAMS` guard
+ * catches a missing row and nothing inside one. A row missing `pace` — an old version's
+ * leftovers, a hand-edited dev database, an import — would make `(1 - undefined)` NaN, every
+ * step score NaN, and the greedy comparator return NaN at every step, so the route would come
+ * out in whatever order the gap happened to enumerate. `z.number()` in Zod v4 also rejects NaN
+ * and Infinity, so those cannot reach the arithmetic either.
  */
 export function sanitizeRouteParams(stored: unknown): RecommendRouteParams {
   const whole = RouteParamsSchema.safeParse(stored);

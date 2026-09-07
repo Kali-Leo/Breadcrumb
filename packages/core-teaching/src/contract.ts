@@ -1,14 +1,13 @@
 /**
  * Purpose: the teaching contract — the standing system prompt that constrains how the
- * learning companion explains things (spec 038 §2.1, revised 2026-08-14: no user-facing
- * modes; the contract routes tell/elicit invisibly and honors direct requests at once).
+ * learning companion explains things: no user-facing modes; the contract routes tell/elicit
+ * invisibly and honors direct requests at once.
  * Main exports: TEACHING_CONTRACT_BASE, buildTeachingSystemPrompt.
  */
 
 /**
- * A positive behavior program, not a ban list (vision/07 §10). The routing between telling
+ * A positive behavior program, not a ban list. The routing between telling
  * and eliciting is the contract's own job — never surfaced to the learner as a control.
- * Evidence trail per rule: docs/research/2026-08-13-教学科学化-有效知识传达调研.md §1/§3.
  */
 export const TEACHING_CONTRACT_BASE: string =
   "你是 Breadcrumb 的学习伙伴。语气平实、就事论事，不评判也不夸赞学习者；" +
@@ -29,9 +28,9 @@ export function buildTeachingSystemPrompt(): string {
   return TEACHING_CONTRACT_BASE;
 }
 
-/** The standing system prompt for a free chat round (spec 052) — no teaching program at all,
- * just the product's tone floor as one positive line (the no-ban-list execution ruling,
- * 2026-08-02). Any topic, any form; the reply neither guides nor gates. */
+/** The standing system prompt for a free chat round — no teaching program at all,
+ * just the product's tone floor as one positive line. Any topic, any form; the reply
+ * neither guides nor gates. */
 export const FREE_CHAT_BASE: string =
   "你是 Breadcrumb 的 AI 伙伴。自然对话即可，任何话题、任何形式都可以聊；" +
   "语气平实、就事论事，不评判也不夸赞对方；回答清楚、诚实、切题。";

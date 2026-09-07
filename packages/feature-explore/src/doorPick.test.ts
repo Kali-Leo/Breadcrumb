@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for door candidate selection — mastery/opened/short-label filtering, the
  * density cap, priority ordering, overlap rejection (including reserved spans) and case
- * insensitivity (spec 039 acceptance 2).
+ * insensitivity.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -142,7 +142,7 @@ describe("pickDoors", () => {
   });
 });
 
-describe("pickDoors exploration slot (2026-08-28 audit: deterministic, no bandit)", () => {
+describe("pickDoors exploration slot: deterministic, no bandit", () => {
   /** Four candidates, all matchable and non-overlapping, in a fixed text. */
   function fourCandidates(
     curiosityByNode: ReadonlyMap<string, number>,

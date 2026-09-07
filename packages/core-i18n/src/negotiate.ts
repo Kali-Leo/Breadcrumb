@@ -3,7 +3,7 @@
  * the operating system says they read. Region variants fall back to the base language.
  * When the machine reads a language we have no interface in, `matchLanguage` says so rather
  * than guessing — the app then asks the person which language to use instead of opening in
- * a language they may not read (Leo 2026-09-01: "认不出来先让用户选语言").
+ * a language they may not read.
  * Main exports: matchLanguage, negotiateLanguage.
  */
 import { DEFAULT_LANGUAGE_CODE, UI_LANGUAGE_CODES } from "./languages";

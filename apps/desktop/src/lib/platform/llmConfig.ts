@@ -1,7 +1,7 @@
 /**
  * Purpose: the one place an LLM call's config is assembled — the saved service credentials,
- * the Tauri fetch, and the directive naming the language the model must answer in (spec 058
- * §1). Every call site builds its config here so no feature can quietly answer in the wrong
+ * the Tauri fetch, and the directive naming the language the model must answer in. Every
+ * call site builds its config here so no feature can quietly answer in the wrong
  * language.
  * Main exports: llmConfigFrom, llmConfigWithoutLanguageDirective, currentAnswerLanguage,
  * currentPriceCurrency.
@@ -61,10 +61,9 @@ export class NetworkDisabledError extends Error {
  * The fetch every LLM request goes through, with the network switch enforced AT the request
  * rather than at each call site.
  *
- * The switch used to be an `if (networkEnabled)` copied to eighteen places, and three of them
- * had been missed — focus-mode explanations and focus label summaries both streamed the
- * learner's text to the provider with the switch off. Checking here means a call site cannot
- * forget: there is one door, and it is locked.
+ * A switch checked at each call site is fragile: it is easy to add a new call site and forget
+ * to check it, sending the learner's text to the provider with the switch off. Checking here
+ * means a call site cannot forget: there is one door, and it is locked.
  */
 function gatedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (!useSettingsStore.getState().networkEnabled) {

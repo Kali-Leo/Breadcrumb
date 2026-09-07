@@ -2,7 +2,7 @@
  * Purpose: one station of the kingdom's subway map — a minimal neutral state mark (done
  * filled, visited outlined amber, untouched outlined grey, an aggregate as a counted box),
  * the recommendation pin, the goal-domain tick, and the label. Click selects (or expands an
- * aggregate), double-click enters (Leo 2026-08-31 #3). Under a finger the dot is 10px and
+ * aggregate), double-click enters. Under a finger the dot is 10px and
  * there is no double-click to speak of, so a transparent hit disc widens the target and a
  * second tap on the already-selected station enters — the same two-step grammar as the
  * world map's islands; the hover readout stays a mouse thing (a tap's synthetic mouseenter

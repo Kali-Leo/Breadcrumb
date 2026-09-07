@@ -1,5 +1,5 @@
 /**
- * Purpose: real-SQLite regression tests for core-db's createNodeMergeRepo (spec 015 #4) —
+ * Purpose: real-SQLite regression tests for core-db's createNodeMergeRepo —
  * reference reassignment across sightings/edges/interest/mastery/aliases/children, the
  * self-loop drop, the higher-confidence-wins collision rule (reusing knowledge_edges'
  * upsert ON CONFLICT), and the final duplicate-row + embedding deletion — all against a real

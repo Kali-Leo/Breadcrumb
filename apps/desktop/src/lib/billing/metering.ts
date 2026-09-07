@@ -58,7 +58,7 @@ export async function recordMeteredCall(input: {
   });
   // Some providers ignore stream_options usage reporting and report 0/0 tokens on a real,
   // non-empty response — recording that as a free call would silently understate spend, so
-  // instead of trusting it we surface the gap where it's visible (spec 014's debug table).
+  // instead of trusting it we surface the gap where it's visible.
   const meterUndercounted =
     input.usage.inputTokens === 0 &&
     input.usage.outputTokens === 0 &&

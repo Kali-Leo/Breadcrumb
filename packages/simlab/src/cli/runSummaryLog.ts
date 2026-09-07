@@ -44,9 +44,7 @@ export function printRunSummary(
 }
 
 /**
- * The counts that must be zero, stated as sentences a reader can act on. Spec 013 §4 already
- * called the hard gate "must always be 0"; until the 2026-08-28 audit that was a console.log
- * and `sim run` exited 0 no matter what it found (simlab与测试策略 #1). These four are the
+ * The counts that must be zero, stated as sentences a reader can act on. These four are the
  * mechanical ones — a violation is arithmetic or a contract breach, never a judgment call —
  * so they can be trusted to fail a run without a human in the loop. Everything else stays
  * reported-only. Empty array = the run passed.

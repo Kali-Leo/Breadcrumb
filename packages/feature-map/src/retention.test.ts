@@ -1,7 +1,7 @@
 /**
  * Purpose: fog aggregation refuses numbers it cannot use. The mean feeds Pixi alphas directly,
- * and one NaN retrievability in the map used to poison a whole island's average — which draws
- * as a name that is simply not there (bug hunt 2026-09-03).
+ * so one NaN retrievability in the map would poison a whole island's average — which draws as
+ * a name that is simply not there.
  */
 import { describe, expect, it } from "vitest";
 import { averageRetention } from "./retention";

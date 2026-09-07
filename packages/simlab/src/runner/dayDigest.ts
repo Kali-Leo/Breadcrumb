@@ -1,5 +1,5 @@
 /**
- * Purpose: compact per-virtual-day state digest (spec 013 T6) — what a reviewer reads
+ * Purpose: compact per-virtual-day state digest — what a reviewer reads
  * alongside the day's transcripts instead of re-deriving it themselves: node count, new
  * nodes, edge changes, top mastery movers, current frontier, goals + coverage, interest
  * aggregates. Computed from the same PlannerSnapshot the follow-frontier action uses.

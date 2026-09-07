@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the companion cast repositories (spec 037) using an in-memory fake
+ * Purpose: unit tests for the companion cast repositories using an in-memory fake
  * SqlClient — memory-stream round-trip and importance sums, proposal gate bookkeeping and
  * decline streaks, knowledge-state upsert, and conversations.create/findLatestByCompanion.
  */

@@ -3,8 +3,8 @@
  * similarity ranking (gated relative to each new node's own similarity landscape, same
  * pattern as feature-map's topicGraph.ts) when embeddings exist, plus a same-parent/
  * most-recent fallback when they don't. No DB, no I/O. Cosine and the gate itself come from
- * @breadcrumb/core-vectors, so this module and the four others that used to keep private
- * copies can no longer drift apart (2026-09-02).
+ * @breadcrumb/core-vectors, so this module and the others that use them can't drift apart on
+ * those definitions.
  * Main exports: rankCandidatePairs, fallbackCandidatePairs, CandidatePair,
  * DEFAULT_TOP_K_SIMILAR, DEFAULT_FALLBACK_RECENT_N.
  */
@@ -30,9 +30,9 @@ export const DEFAULT_FALLBACK_RECENT_N = 5;
 
 /** Upper bound on the tree siblings the fallback pairs a new node against — the same number
  * as DEFAULT_TOP_K_SIMILAR, so the degraded path can never be more expensive than the
- * embedding path it stands in for. Unbounded before (design audit 2026-08-28 #4): a parent
- * with 40 children produced 40 pairs for ONE new node, and the edge-judge schema only accepts
- * 20 verdicts per call, so the surplus was silently dropped after being paid for. Newest
+ * embedding path it stands in for. Left unbounded, a parent with 40 children would produce 40
+ * pairs for ONE new node, and the edge-judge schema only accepts 20 verdicts per call, so the
+ * surplus would be silently dropped after being paid for. Newest
  * siblings win, matching the recent-N pool's own bias. */
 export const MAX_FALLBACK_SIBLINGS = DEFAULT_TOP_K_SIMILAR;
 

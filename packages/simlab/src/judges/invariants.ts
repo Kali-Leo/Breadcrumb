@@ -1,5 +1,5 @@
 /**
- * Purpose: the mechanical tripwire suite (spec 013 T4) — cheap always-on regression
+ * Purpose: the mechanical tripwire suite — cheap always-on regression
  * assertions run against a live planner snapshot: requires-DAG acyclic, unique labels,
  * mastery/interest in [0,1], every frontier candidate's requires-prereqs really lit (hard
  * gate) with an honest reason, and goal coverage arithmetic. Independently recomputes each

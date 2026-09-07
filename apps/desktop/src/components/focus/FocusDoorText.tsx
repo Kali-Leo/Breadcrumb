@@ -1,6 +1,6 @@
 /**
- * Purpose: renders explore-door spans inside an assistant message (spec 039 §2.1, spec 042
- * §5) — click-only, no popover: an ordinary reply's door click opens a focus session directly
+ * Purpose: renders explore-door spans inside an assistant message
+ * — click-only, no popover: an ordinary reply's door click opens a focus session directly
  * (no guess, no card); the focus overlay's own doors reuse the same click-to-select rendering.
  * Main exports: FocusDoorText, splitDoorSegments, DoorSegment.
  */
@@ -38,8 +38,8 @@ export function FocusDoorText({
   rangeStart?: number;
   rangeEnd?: number;
   /** nodeId is the door's matching knowledge node, or null for a term-marked word with no
-   * known node (spec 043 §6). Ordinary replies use a non-null id to mark the node "opened"
-   * (spec 039 §2.1's alreadyOpenedNodeIds); the focus overlay's own doors ignore it either way. */
+   * known node. Ordinary replies use a non-null id to mark the node "opened"; the focus
+   * overlay's own doors ignore it either way. */
   onSelect: (word: string, nodeId: string | null) => void;
 }) {
   const base = rangeStart ?? 0;

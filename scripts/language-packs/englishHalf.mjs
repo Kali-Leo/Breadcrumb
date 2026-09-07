@@ -6,7 +6,7 @@
  * So the word list comes from the frequency list and the pronunciation from CMUdict, but the
  * grammar comes from the English Wiktionary extract, and it has to: without it `going` and
  * `divorced` are ordinary high-frequency English words, and the packs put `going → ida` and
- * `divorced → señora` in front of learners (Leo's review, 2026-09-04).
+ * `divorced → señora` in front of learners.
  * Main exports: buildEnglishHalf.
  */
 import { arpabetToIpa } from "./entry-builder.mjs";

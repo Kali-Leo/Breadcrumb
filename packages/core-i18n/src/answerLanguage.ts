@@ -1,8 +1,8 @@
 /**
  * Purpose: the line appended to every system prompt that tells the model which language to
  * write in, and the decision of which language that is. Prompts stay authored in Chinese —
- * Leo reads and edits them, and models follow cross-lingual instructions fine — so only the
- * directive names the target language.
+ * models follow cross-lingual instructions fine — so only the directive names the target
+ * language.
  * Main exports: resolveAnswerLanguage, buildLanguageDirective.
  */
 import {

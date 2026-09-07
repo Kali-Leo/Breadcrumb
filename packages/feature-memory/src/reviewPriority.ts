@@ -8,9 +8,8 @@
  * reaching for — a concept still fresh gains little (FSRS's own spacing effect), and one
  * that is nearly gone gains little either, because the likely outcome is a blank stare that
  * resets stability rather than a retrieval that consolidates it.
- * That is the fix for the ordering the 2026-08-28 design audit called reversed (D2, ruled
- * by Leo 2026-09-01): "lowest retention first" put the concepts with the least to gain, and
- * the least chance of being retold, at the head of the queue.
+ * This avoids ordering by "lowest retention first", which puts the concepts with the least to
+ * gain, and the least chance of being retold, at the head of the queue.
  * Main exports: computeNodeReviewPriority, computeNodeMemoryByNode, NodeMemory.
  */
 import type { NodeSightingRow } from "@breadcrumb/core-db";
@@ -32,7 +31,7 @@ const scheduler = fsrs({ enable_short_term: false });
  * a dead RTC battery, of a laptop opened in a westward time zone, or of the hour daylight
  * saving gives back every autumn. ts-fsrs, however, *throws* on a negative delta_t
  * (FSRSValidationError: Invalid delta_t "-1"), and this call sits under memoryStore.refresh(),
- * so the whole memory layer used to stop at the first such node: no retention, no review
+ * so the whole memory layer would stop at the first such node: no retention, no review
  * priority, an all-fog map and no daily helpers, until the clock went forward again.
  * Treating the rollback as delta_t = 0 says the honest thing instead — "no time has passed
  * since the last review that this card knows about" — which is exactly what retrievabilityOf

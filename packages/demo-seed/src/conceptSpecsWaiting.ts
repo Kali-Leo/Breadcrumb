@@ -1,5 +1,5 @@
 /**
- * Purpose: bucket 2 of the demo seed's node landscape (spec 035 T7b) — 8 nodes with a single
+ * Purpose: bucket 2 of the demo seed's node landscape — 8 nodes with a single
  * sighting old enough (~66-80 days) that the stock FSRS scheduler's retrievability has
  * genuinely dropped below the 0.6 reunion-waiting threshold.
  * Main exports: WAITING.

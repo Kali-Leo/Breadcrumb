@@ -1,5 +1,5 @@
 /**
- * Purpose: the declarative research-task contract (spec 036) — Zod schemas for the whitelisted
+ * Purpose: the declarative research-task contract — Zod schemas for the whitelisted
  * statistic calls, the constrained display template, and the signed task envelope.
  * Main exports: researchTaskSchema, signedResearchTaskSchema, parseSignedResearchTask, types.
  */

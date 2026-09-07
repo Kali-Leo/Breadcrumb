@@ -1,5 +1,5 @@
 /**
- * Purpose: combines the demo seed's four node-spec buckets (spec 035 T7b) into the one list
+ * Purpose: combines the demo seed's four node-spec buckets into the one list
  * concepts.ts's builder consumes.
  * Main exports: ConceptSpec, ALL_CONCEPT_SPECS.
  */

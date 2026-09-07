@@ -1,10 +1,9 @@
 /**
- * Purpose: behavioral placement (spec 033, 替代自报式校准) — the weave itself measures
- * vocabulary: a new word read past WHILE the learner was demonstrably reading (they looked
- * another word of the same message up) is evidence it was already known, so the introduction
- * floor moves ahead; a lookup or wrong guess on a fresh word is evidence the boundary is
- * here, so the floor moves BACK. Bidirectional, capped, and never driven by dwell time
- * alone (audit 2026-08-28 #2). No self-report.
+ * Purpose: behavioral placement — the weave itself measures vocabulary: a new word read past
+ * WHILE the learner was demonstrably reading (they looked another word of the same message up)
+ * is evidence it was already known, so the introduction floor moves ahead; a lookup or wrong
+ * guess on a fresh word is evidence the boundary is here, so the floor moves BACK.
+ * Bidirectional, capped, and never driven by dwell time alone. No self-report.
  * Main exports: updatePlacement, createPlacementTracker, PlacementState, PlacementSignal,
  * INITIAL_PLACEMENT_STEP, RANKS_CLAIMED_PER_INTRODUCED_WORD.
  */
@@ -61,9 +60,9 @@ function floorCeiling(limits: PlacementLimits): number {
  * Folds one resolved move into the placement state. The floor is bidirectional: it advances
  * past cleanly read words (stride doubling while the streak lasts) and retreats by the
  * current stride when a fresh word turns out to be unknown — a binary search on the
- * knowledge boundary rather than the one-way ratchet that used to self-lock at the queue
- * tail. The ceiling also pulls an over-claimed floor back down, which repairs states already
- * persisted by the ratchet.
+ * knowledge boundary rather than a one-way ratchet, which would self-lock at the queue tail.
+ * The ceiling also pulls an over-claimed floor back down, which repairs an over-claimed state
+ * that was already persisted.
  */
 export function updatePlacement(
   state: PlacementState,
@@ -134,9 +133,9 @@ export interface PlacementTracker {
 /**
  * Holds first-encounter exposures until the same message produces an explicit interaction on
  * some OTHER word. A viewport exposure on its own means "the bubble was on screen for a
- * second" — the old code let that alone drive the floor, so pure scrolling pushed the floor
- * to the queue tail in ~9 words. Only a message the learner demonstrably worked through
- * turns its unlooked-up words into evidence of knowing them.
+ * second"; letting that alone drive the floor pushes it to the queue tail within about nine
+ * words of pure scrolling. Only a message the learner demonstrably worked through turns its
+ * unlooked-up words into evidence of knowing them.
  */
 export function createPlacementTracker(): PlacementTracker {
   const pendingByMessage = new Map<string, Map<string, number>>();

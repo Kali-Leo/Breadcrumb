@@ -1,5 +1,5 @@
 /**
- * Purpose: spec 015's node-dedup synonym gate — pure logic only. Filters would-be-new nodes
+ * Purpose: the node-dedup synonym gate — pure logic only. Filters would-be-new nodes
  * against existing nodes by embedding cosine similarity (findSynonymCandidates), the
  * anchored same/different LLM contract for the survivors (synonymJudgeSchema,
  * buildSynonymJudgeMessages), and the plan adjustment once verdicts come back
@@ -21,10 +21,9 @@ import { z } from "zod";
 import type { NodeChangePlan } from "./attach";
 import { cosineSimilarity, topByRelativeGate } from "./similarityGate";
 
-/** At most this many existing nodes per would-be-new node reach LLM judgment. Top-1 was the
- * old rule; in a space where every true pair sits between 0.80 and 0.95 a real synonym lands
- * second or third routinely, and that miss was silent and unrecorded (design audit
- * 2026-08-28 #8). Same k the alignment layer already used. */
+/** At most this many existing nodes per would-be-new node reach LLM judgment. In a space
+ * where every true pair sits between 0.80 and 0.95, a real synonym can land second or third
+ * rather than first. Same k the alignment layer already uses. */
 export const SYNONYM_CANDIDATE_TOP_K = 3;
 
 export interface SynonymCandidatePair {
@@ -36,7 +35,7 @@ export interface SynonymCandidatePair {
 /** For each new node's embedding, the existing nodes that stand out in ITS OWN similarity
  * landscape (relativeGate), most similar first, at most SYNONYM_CANDIDATE_TOP_K of them.
  * Pure math, no DB. Every stored vector is parsed exactly once, outside the per-new-node
- * loop — it used to be re-parsed for every (new, existing) combination. */
+ * loop, not re-parsed for every (new, existing) combination. */
 export function findSynonymCandidates(
   newNodeVectors: ReadonlyMap<string, readonly number[]>,
   existingEmbeddings: readonly NodeEmbeddingRow[],
@@ -58,10 +57,10 @@ export function findSynonymCandidates(
   return candidates;
 }
 
-/** Anchored verdict tier (spec 014 style): the model picks one of two labeled outcomes
- * instead of a bare boolean, for cross-call consistency. ASCII values (design audit
- * 2026-08-28, 多语言 B6): the enum travels inside a JSON contract the model is separately
- * told to answer in the learner's language, so Chinese literals here fight that directive. */
+/** Anchored verdict tier: the model picks one of two labeled outcomes
+ * instead of a bare boolean, for cross-call consistency. ASCII values — the enum travels
+ * inside a JSON contract the model is separately told to answer in the learner's language, so
+ * Chinese literals here would fight that directive. */
 export const synonymVerdictSchema = z.enum(["same", "different"]);
 export type SynonymVerdict = z.infer<typeof synonymVerdictSchema>;
 
@@ -89,8 +88,7 @@ export interface SynonymJudgePairText {
 
 // "拿不准就判 different" is not politeness — a "same" verdict here irreversibly deletes a
 // node and folds its history away, while a "different" verdict costs nothing but one extra
-// node. The alignment judge (feature-compare/src/alignment.ts) has always carried this
-// abstention line; the judge that actually destroys data did not (design audit 2026-08-28 #8).
+// node.
 const SYSTEM_PROMPT = `你是一个概念查重器。给定若干候选对，每对是「新概念」与「已有节点」，判断新概念是否只是已有节点的另一种说法，以 JSON 返回：
 {"verdicts":[{"pairId":"候选对编号(原样返回)","verdict":"same|different"}]}
 判定规则：
@@ -179,7 +177,7 @@ export function planSynonymGateResult(input: SynonymGatePlanInput): SynonymGateP
       conversation_id: input.conversationId,
       message_id: input.sourceMessageId,
       created_at: input.nowIso(),
-      // Filled in by the caller (knowledgeStore.ts) with the round's anchored node (spec 040 §7).
+      // Filled in by the caller (knowledgeStore.ts) with the round's anchored node.
       origin_node_id: null,
     });
   }

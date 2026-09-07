@@ -1,8 +1,8 @@
 /**
- * Purpose: door-word candidates for a focus session's current station text (spec 043 §6-7) —
+ * Purpose: door-word candidates for a focus session's current station text —
  * the focus-session twin of conceptDoors.ts. Primary source is the LLM term-marking call
  * (ensureTermMarks, target "focus_node"); the old sighting-free "every known node is a
- * candidate" match (spec 042 §3) is now secondary, hub-generic nodes excluded (spec 043 §7).
+ * candidate" match is now secondary, hub-generic nodes excluded.
  * Any failure degrades to no doors (never blocks the overlay from showing).
  * Main exports: computeFocusDoorPatches.
  */
@@ -36,13 +36,13 @@ export async function computeFocusDoorPatches(
       repos.masteryClaims.listAll(),
     ]);
     // memoryStore's cached retention instead of a second full FSRS replay over the same
-    // sightings (design audit 2026-08-28, 记忆与遗忘模型 #8) — the same substitution
+    // sightings — the same substitution
     // conceptDoors.ts makes. It was replayed from exactly this footprint set (listAll), and
     // door ranking is coarse enough that its few seconds of staleness cannot change the pick.
     const retentionByNode = useMemoryStore.getState().retentionByNode;
     const masteryByNode = computeMastery(sightings, claims, nowIso(), retentionByNode);
 
-    // Primary source (spec 043 §6).
+    // Primary source.
     const terms = await ensureTermMarks("focus_node", focusNodeId, answerText, conversationId);
     const nodes = useKnowledgeStore.getState().nodes;
     const nodeIdByLabel = new Map(nodes.map((node) => [node.label, node.id]));
@@ -53,7 +53,7 @@ export async function computeFocusDoorPatches(
 
     if (nodes.length === 0) return termDoors.sort((a, b) => a.start - b.start);
 
-    // Secondary source (spec 043 §7): every known node is still a candidate, hub-generic ones
+    // Secondary source: every known node is still a candidate, hub-generic ones
     // excluded, never overlapping a term door's span.
     const childCountByParent = new Map<string, number>();
     for (const node of nodes) {

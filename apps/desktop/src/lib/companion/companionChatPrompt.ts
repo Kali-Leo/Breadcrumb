@@ -76,7 +76,7 @@ export async function buildRoundSystemMessages(params: {
   companionScriptEnabled: boolean;
   companionMemoryEnabled: boolean;
   crisisActive: boolean;
-  /** The session's 学习模式 state (spec 052) — passed from runtime rather than re-read from
+  /** The session's 学习模式 state — passed from runtime rather than re-read from
    * the row, so a toggle immediately followed by a send can never race a stale read. */
   studyMode: boolean;
 }): Promise<ChatMessage[]> {
@@ -96,7 +96,7 @@ export async function buildRoundSystemMessages(params: {
     messages.push(...teachMessages);
   } else if (activeKind === "companion") {
     if (row === null) throw new Error("companion conversation missing");
-    // A live teach-back episode inside her own chat (Leo 2026-08-15) takes precedence;
+    // A live teach-back episode inside her own chat takes precedence;
     // otherwise — no fresh state, script switch off — she is simply herself.
     const teachBackMessages = await buildCompanionTeachBackIfActive(
       row,
@@ -110,7 +110,7 @@ export async function buildRoundSystemMessages(params: {
         await buildCompanionChatSystemMessage(row, content, params.companionMemoryEnabled),
       );
   } else {
-    // 学习模式 off (spec 052) means a plain chat round carries no teaching program; practice
+    // 学习模式 off means a plain chat round carries no teaching program; practice
     // rounds keep the contract — they exist to practice.
     const freeChat = activeKind === "chat" && !params.studyMode;
     messages.push({

@@ -1,12 +1,12 @@
 /**
  * Purpose: renders one chat message (user right-aligned amber, assistant left-aligned
  * neutral). Assistant messages render as markdown with KaTeX math; the diglot weave
- * (spec 033) and explore doors (spec 039) both apply to the same normalized display
+ * and explore doors both apply to the same normalized display
  * source, so patch offsets always match the screen. While weaving is enabled, assistant
- * text stays blank until its patches are cached (weave-before-first-paint, Leo 2026-08-16)
+ * text stays blank until its patches are cached (weave-before-first-paint)
  * — the original is never painted and then morphed. A door click or a selection+Enter both
- * open a focus session directly — no guess, no popover (spec 042 §5) — anchored to this
- * message's id so its in-place badge (Leo 2026-08-14) can find its way back. Storage and LLM
+ * open a focus session directly — no guess, no popover — anchored to this
+ * message's id so its in-place badge can find its way back. Storage and LLM
  * context keep the original text untouched.
  * Main exports: MessageBubble.
  */
@@ -41,7 +41,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
   );
   // A weave-affecting settings change sweeps every cached patch; nothing else this effect
   // reads changes with it, so without the epoch the ask-for-a-weave below never re-runs and
-  // the gate blanks every assistant message on screen for good (caught 2026-09-04).
+  // the gate blanks every assistant message on screen for good.
   const weaveEpoch = useDiglotStore((state) => state.weaveEpoch);
 
   // The display source: math delimiters normalized for remark-math. Weaving runs on the
@@ -61,7 +61,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
     }
   }, [shouldWeave, diglotPackLoaded, messageId, displaySource, weaveEpoch]);
 
-  // Weave-before-first-paint gate (Leo 2026-08-16): a persisted assistant message must
+  // Weave-before-first-paint gate: a persisted assistant message must
   // never paint its original and then re-render woven. While weaving is enabled (or its
   // settings are not yet hydrated) and this message's patches are not yet cached, render
   // nothing — the base weave resolves in milliseconds from the local pack, and a freshly
@@ -72,7 +72,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
     messageId !== undefined &&
     (!diglotHydrated || (diglotEnabled && patches === undefined));
 
-  // Explore doors (spec 039 §2.1): zero-LLM, so no settings gate. Waits for the diglot weave
+  // Explore doors: zero-LLM, so no settings gate. Waits for the diglot weave
   // to finish first (when weaving is on) so reservedSpans reflects the truth — `patches`
   // stays undefined until the weave's FINAL patches land in the store, even as [].
   const doorsForMessage = useDoorStore((state) =>
@@ -89,7 +89,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
     void useDoorStore.getState().ensureDoors(messageId, displaySource, conversationId);
   }, [author, messageId, diglotEnabled, patches, displaySource, doorsForMessage, conversationId]);
 
-  // Silent re-encounter (vision/09): an assistant message dwelled on ≥50%-visible for 2s
+  // Silent re-encounter: an assistant message dwelled on ≥50%-visible for 2s
   // re-sights its attributed nodes — rereading old ground is a review, at message grain.
   useEffect(() => {
     const element = bubbleRef.current;
@@ -119,8 +119,8 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
     };
   }, [isUser, messageId, conversationId]);
 
-  // A marked word or a selection both open a focus session directly — no guess, no popover
-  // (spec 042 §5). Silently does nothing while the switch is off or no conversation is open;
+  // A marked word or a selection both open a focus session directly — no guess, no popover.
+  // Silently does nothing while the switch is off or no conversation is open;
   // the marks/selection hint themselves stay visible either way.
   const openFocus = (rootLabel: string) => {
     if (conversationId === null) return;
@@ -131,7 +131,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
   };
   const openFocusFromDoor = (word: string, nodeId: string | null) => {
     // A term-marked word with no matching knowledge node has nothing to mark "opened"
-    // (spec 043 §6) — it still opens a focus session directly, same as any other door.
+    // — it still opens a focus session directly, same as any other door.
     if (nodeId !== null && conversationId !== null)
       useDoorStore.getState().markOpened(conversationId, nodeId);
     openFocus(word);
@@ -172,7 +172,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
 
 /** Streaming writes the store once per delta and ChatView re-maps the whole message list, so
  * without this every settled bubble re-parsed its markdown and re-rendered its KaTeX on every
- * token of the reply being typed (design audit 2026-08-28, 数据层与性能 #3). Every prop is a
+ * token of the reply being typed. Every prop is a
  * primitive (author, content, conversationId, messageId) — the default shallow comparison is
  * exactly the right one, so no custom comparator. */
 export const MessageBubble = memo(MessageBubbleBody);

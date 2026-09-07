@@ -34,7 +34,7 @@ function requiresAdjacency(
 /** Longest chain (in nodes, this node counted) reachable from each given node along one
  * direction of the requires graph, counting only steps that stay inside `scope`. A static
  * structural property — it does not depend on mastery or on scheduling order. The requires
- * graph is guaranteed acyclic (ADR-0008's graph layer rejects cycles at write time), so plain
+ * graph is guaranteed acyclic (the graph layer rejects cycles at write time), so plain
  * memoized recursion terminates; the sentinel write below is a belt-and-braces guard for a
  * corrupted store. */
 function longestChain(
@@ -74,14 +74,13 @@ export function longestRequiresChainBelow(
  * learned before this one makes sense". A foundation concept scores 1 and a node buried under
  * four layers of prerequisites scores 5.
  *
- * This is the frontier's difficulty proxy, and it used to be the other one (bug hunt
- * 2026-09-03, P1-2). Difficulty is *subtracted* from the frontier score, so measuring it as
- * downstream structure penalised exactly the concepts a learner should meet first: 「加法」
- * has half the tree hanging off it and scored maximum difficulty, while an isolated advanced
- * leaf with nothing after it scored the minimum and went to the top. Pulling the 先挑轻松的
- * slider — the words the learner actually reads — therefore recommended orphaned edge nodes
- * and pushed the foundations back. Prerequisite depth is what that slider promises: fewest
- * courses to make up first.
+ * This is the frontier's difficulty proxy. Difficulty is *subtracted* from the frontier score,
+ * so measuring it as downstream structure would penalize exactly the concepts a learner should
+ * meet first: 「加法」has half the tree hanging off it and would score maximum difficulty,
+ * while an isolated advanced leaf with nothing after it would score the minimum and go to the
+ * top. Pulling the 先挑轻松的 slider — the words the learner actually reads — would then
+ * recommend orphaned edge nodes and push the foundations back. Prerequisite depth is what that
+ * slider promises: fewest courses to make up first.
  */
 export function longestRequiresChainAbove(
   nodeIds: readonly string[],

@@ -1,7 +1,6 @@
 /**
- * Purpose: the comparison tree's detail panel (spec 023/026/029; re-homed and de-scored by
- * spec 047) — pure experience leaves carry a done checkbox and an AI helper entry (the 0-10
- * self-score strip was retired per Leo's ruling: no score concept on screen; the binary
+ * Purpose: the comparison tree's detail panel — pure experience leaves carry a done checkbox
+ * and an AI helper entry (no score concept on screen; the binary
  * done still writes through the same practice-score machinery internally); hub leaves
  * (entities) are unscored with a 线索 line and on-demand decomposition; knowledge leaves
  * show their match and evidence; branch nodes report what still awaits a closer look. Also

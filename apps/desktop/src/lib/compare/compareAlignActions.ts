@@ -1,5 +1,5 @@
 /**
- * Purpose: the anchor layer's paid tail (spec 025) — LLM-judges unanchored knowledge nodes
+ * Purpose: the anchor layer's paid tail — LLM-judges unanchored knowledge nodes
  * against embedding-recalled canonical concepts, batched, every pair judged once ever, under
  * a hard per-sweep budget. The free alias path and the inventory import live in
  * canonicalConcepts.ts; the concept-vector cache in canonicalConceptVectors.ts.
@@ -27,13 +27,11 @@ import { anchorNodesByAlias, ensureCanonicalConcepts } from "./canonicalConcepts
 import { loadConceptVectors } from "./canonicalConceptVectors";
 
 /**
- * Hard ceiling on judge calls per sweep. The sweep used to walk the entire candidate list
- * with no round limit, and since judged pairs never re-enter, every visit to the comparison
- * page dug three more concepts deeper — a state that never converges (design audit
- * 2026-08-28 #2: 230 distinct batch timestamps, ~$7.2 to exhaust the list, all of it waste).
- * Two batches is deliberately small: with the relative gate replacing the old 0.72 floor the
- * candidate list is two orders of magnitude shorter, so a real backlog now drains over a few
- * visits instead of never.
+ * Hard ceiling on judge calls per sweep. Since judged pairs never re-enter, an unbounded walk
+ * down the candidate list would mean every visit to the comparison page digs three more
+ * concepts deeper — a state that never converges. Two batches is deliberately small: the
+ * relative gate keeps the candidate list two orders of magnitude shorter than an absolute
+ * floor would, so a real backlog now drains over a few visits instead of never.
  */
 export const ANCHOR_SWEEP_BATCH_BUDGET = 2;
 
@@ -108,8 +106,8 @@ async function judgeCandidates(
   );
   for (const batch of batches) {
     try {
-      // One retry on a malformed verdict batch: a transient bad completion (ai_failures
-      // 2026-08-10) is far cheaper to re-ask than to postpone the pairs a whole sweep.
+      // One retry on a malformed verdict batch: a transient bad completion is far cheaper to
+      // re-ask than to postpone the pairs a whole sweep.
       let verdicts: ReturnType<typeof validateAlignmentVerdicts> = null;
       for (let attempt = 0; attempt < 2 && verdicts === null; attempt += 1) {
         const { parsed, usage } = await chatJson(

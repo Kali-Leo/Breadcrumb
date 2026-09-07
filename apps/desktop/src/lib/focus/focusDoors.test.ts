@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for computeFocusDoorPatches (spec 043 §6-7) — the LLM term-marking call
+ * Purpose: unit tests for computeFocusDoorPatches — the LLM term-marking call
  * is the primary door source; the old "every known node is a candidate" match is secondary,
  * only for non-hub-generic nodes, and never overlaps a term door's span.
  */

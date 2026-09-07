@@ -35,8 +35,8 @@ async function retryOnce<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 interface InterestState {
-  /** Maps free text like "我学过高中数学" onto existing tree nodes and writes claims. UI
-   * lands in spec 012 — this is the wired-up action only. */
+  /** Maps free text like "我学过高中数学" onto existing tree nodes and writes claims. This
+   * is the wired-up action only — no UI surfaces it yet. */
   selfReportMastery(userText: string): Promise<void>;
 }
 
@@ -97,7 +97,7 @@ export const useInterestStore = create<InterestState>(() => ({
 }));
 
 /** Extracts interest signals for every node this round touched; failures degrade silently
- * (spec 011) — chat and the other extraction pipelines are never affected. */
+ * — chat and the other extraction pipelines are never affected. */
 async function extractInterestFromRound(
   conversationId: string,
   touchedNodeIds: readonly string[],

@@ -1,6 +1,6 @@
 /**
  * Purpose: tests for teach-back pure logic — candidate picking by review worth, topic
- * round-trip through the title, and plain copy invariants (spec 034).
+ * round-trip through the title, and plain copy invariants.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";

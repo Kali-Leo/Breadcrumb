@@ -1,7 +1,7 @@
 /**
  * Purpose: unit tests for the targetConcepts echo metric and its documented matching rule —
- * including the looseness that is exactly why the 2026-08-28 audit demoted it from a reported
- * recall figure to a metrics.json-only signal.
+ * including the looseness that is exactly why it is a metrics.json-only signal, not a
+ * reported recall figure.
  */
 import { describe, expect, it } from "vitest";
 import { computeTargetConceptsEcho } from "./targetConceptsEcho";

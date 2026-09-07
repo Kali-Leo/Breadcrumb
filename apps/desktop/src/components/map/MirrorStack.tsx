@@ -1,7 +1,6 @@
 /**
- * Purpose: the palace right rail's remaining mirror cards (spec 048 §1, Leo's selection) —
- * the activity heatmap and the trend curves. Hidden entirely when the feedbackLab switch
- * is off (product principle 3).
+ * Purpose: the palace right rail's remaining mirror cards — the activity heatmap and the
+ * trend curves. Hidden entirely when the feedbackLab switch is off.
  * Main exports: MirrorStack.
  */
 import { useSettingsStore } from "../../stores/settingsStore";

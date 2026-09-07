@@ -1,5 +1,5 @@
 /**
- * Purpose: the occupation-directory input inside the comparison section (spec 023) —
+ * Purpose: the occupation-directory input inside the comparison section —
  * offline, instant candidate lookup with plain "你是指" confirmation; picking a candidate
  * builds that occupation's comparison profile.
  * Main exports: OccupationPicker.

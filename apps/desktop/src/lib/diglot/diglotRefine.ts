@@ -1,5 +1,5 @@
 /**
- * Purpose: the metered LLM refinement call for the diglot weave (spec 033 T13) — one
+ * Purpose: the metered LLM refinement call for the diglot weave — one
  * small chatJson call per woven message: in-context disambiguation + one phrase weave.
  * Fails soft: any error logs to ai_failures and returns the T1 patches unchanged.
  * Side effects: LLM call, metering row (purpose "diglot-weave").

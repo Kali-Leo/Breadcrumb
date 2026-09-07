@@ -1,7 +1,7 @@
 /**
  * Purpose: chat markdown renderer — a small mdast→React walk (remark-parse + remark-gfm +
  * remark-math, KaTeX for formulas) that keeps source offsets, so diglot patches and explore
- * doors (spec 039) can both be woven into exactly the text nodes they belong to (math/code
+ * doors can both be woven into exactly the text nodes they belong to (math/code
  * are never touched); overlapping spans give the diglot weave priority. Span/patch merging
  * itself lives in MarkdownSpans.tsx.
  * Main exports: MarkdownContent.
@@ -153,7 +153,7 @@ export function MarkdownContent({
   doors?: DoorContext;
 }) {
   // remark re-parses the whole message on every render otherwise, and a streaming reply
-  // re-renders its window once per token (design audit 2026-08-28, 数据层与性能 #3).
+  // re-renders its window once per token.
   const tree = useMemo(() => parser.parse(source) as Parent, [source]);
   return (
     <div className="leading-relaxed">

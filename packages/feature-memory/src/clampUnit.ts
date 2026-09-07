@@ -4,23 +4,22 @@
  * retention, mastery, interest diffusion and the frontier's normalized components.
  *
  * Why it exists: `Math.max(0, Math.min(1, NaN))` is NaN. Every hand-written clamp in the
- * product was that expression, so one unparsable `created_at` used to travel through all of
+ * product was that expression, so one unparsable `created_at` could travel through all of
  * them untouched and reach a sort comparator, where every NaN comparison is false and V8
- * leaves the array in its original order — the recommendation list silently collapsed into
- * database insertion order, with nothing visibly wrong (bug hunt 2026-09-03, P1-3).
+ * leaves the array in its original order — the recommendation list silently collapses into
+ * database insertion order, with nothing visibly wrong.
  *
  * The rule, stated once so the two halves of the codebase stop disagreeing: a non-finite value
  * is not a low score, it is *no score*, and it is reported as 0. Not dropped — dropping is a
  * decision only the caller can make (layers.ts skips the bad row; mastery.ts must still return
  * an entry for the node) — and 0 is already what an absent entry means to every consumer
- * downstream, so a poisoned component lands exactly where "no evidence" lands. Before this,
- * the same bad row was skipped in layers.ts and poisoned the whole table in mastery.ts.
+ * downstream, so a poisoned component lands exactly where "no evidence" lands.
  *
  * Home: this is a domain-free numeric helper and its natural home is a shared core package;
  * it lives here because feature-memory is the dependency-leaf of the three feature packages
  * that need it, and because the contract it encodes was first written down in retention.ts.
  * It carries no threshold and no domain constant, so importing it does not couple the mastery
- * and planner layers the way ADR-0009 forbids.
+ * and planner layers, which are meant to stay independent.
  * Main exports: clampUnit, finiteOr, compareDesc.
  */
 

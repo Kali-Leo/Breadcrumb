@@ -1,5 +1,5 @@
 /**
- * Purpose: pure message-tree wiring extracted from chatStore (spec 040 §2) — deriving the
+ * Purpose: pure message-tree wiring extracted from chatStore — deriving the
  * active path from allMessages+currentLeafId, resolving a new message's parent, and folding
  * a freshly-appended row into the next tree state. Keeps chatStore.ts under the file-size cap
  * and gives the tree wiring dedicated unit tests.
@@ -20,14 +20,14 @@ export interface TreeState extends TreeSlice {
 }
 
 /** The active path — root to `currentLeafId`, or to the newest leaf when unset ("reopen lands
- * where you left off", spec 040 §1). This is what renders and what LLM history is built from. */
+ * where you left off"). This is what renders and what LLM history is built from. */
 export function deriveActiveMessages(slice: TreeSlice): MessageRow[] {
   const leafId = slice.currentLeafId ?? newestLeafId(slice.allMessages);
   return leafId === null ? [] : pathToLeaf(slice.allMessages, leafId);
 }
 
 /** Parent id for a new user message: the current leaf, falling back to the newest leaf when no
- * mid-tree continuation is active (spec 040 §2). */
+ * mid-tree continuation is active. */
 export function resolveSendParentId(slice: TreeSlice): string | null {
   return slice.currentLeafId ?? newestLeafId(slice.allMessages);
 }
@@ -45,7 +45,7 @@ export function foldAppendedMessage(slice: TreeSlice, appended: MessageRow): Tre
   };
 }
 
-/** Non-destructive continuation from any station (spec 040 §2): the current leaf moves to
+/** Non-destructive continuation from any station: the current leaf moves to
  * `messageId` and the path re-derives. Everything past the old leaf is untouched — the next
  * send forks from here instead of overwriting it. */
 export function resumeTreeState(slice: TreeSlice, messageId: string): TreeState {

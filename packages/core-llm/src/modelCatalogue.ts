@@ -5,8 +5,8 @@
  * all read from this table.
  *
  * EVERY entry must carry `source` (the provider's own pricing page, never an aggregator or
- * a blog — those were checked against the official pages on 2026-08-31 and most were wrong)
- * and `verifiedAt`. An entry nobody has re-verified is a liability, not data.
+ * a blog — those are frequently wrong) and `verifiedAt`. An entry nobody has re-verified is
+ * a liability, not data.
  *
  * Main exports: Currency, ModelRates, OffPeakSchedule, ModelEntry, MODEL_CATALOGUE.
  */

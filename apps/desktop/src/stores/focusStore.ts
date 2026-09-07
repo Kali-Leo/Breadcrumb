@@ -1,5 +1,5 @@
 /**
- * Purpose: zustand store for one focus (explain-word) session (spec 042 §3) — opens the
+ * Purpose: zustand store for one focus (explain-word) session — opens the
  * full-screen overlay, walks the guess gate before a picked word becomes a new station, and
  * delegates every station's DB write + stream to lib/focus/focusSessionActions so this file stays a
  * thin set()-only orchestrator.

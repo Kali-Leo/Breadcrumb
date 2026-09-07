@@ -1,10 +1,10 @@
 /**
  * Purpose: regression test for the order runDedupSweep writes node_pair_verdicts in. That
- * table is a PERMANENT filter — planLlmTierMerges drops every pair already in it — and the
- * sweep used to write the whole batch of verdicts BEFORE running the merges. A merge that
- * then failed (a concurrent edge insert, a full disk) left the pair marked "judged" forever:
- * never re-merged, never re-judged, the duplicate standing in the tree with nothing but one
- * ai_failures line to show for it.
+ * table is a PERMANENT filter — planLlmTierMerges drops every pair already in it — so a
+ * verdict must only be recorded after its merge succeeds. Writing the verdict first would
+ * mean a merge that then failed (a concurrent edge insert, a full disk) leaves the pair
+ * marked "judged" forever: never re-merged, never re-judged, the duplicate standing in the
+ * tree with nothing but one ai_failures line to show for it.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 

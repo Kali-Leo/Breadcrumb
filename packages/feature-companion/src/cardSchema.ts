@@ -1,12 +1,10 @@
 /**
- * Purpose: Zod schema for the Character Card V2 subset (spec 037) used by the companion
+ * Purpose: Zod schema for the Character Card V2 subset used by the companion
  * cast — we implement the SillyTavern-ecosystem card format, never copy its spec prose.
  * Main exports: CompanionCardSchema, CompanionCard, parseCompanionCard.
  *
- * The cards still carry a knowledgeBoundary array and the schema still validates it, but the
- * lookup that read it (matchKnowledgeBoundary) belonged to the fixed cast and went with the
- * daily-helper redesign (spec 050 §9). Deleted 2026-09-02 rather than left in place looking
- * wired up.
+ * The cards still carry a knowledgeBoundary array and the schema still validates it, though
+ * nothing currently reads it.
  */
 import { z } from "zod";
 

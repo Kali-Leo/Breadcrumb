@@ -1,16 +1,14 @@
 /**
- * Purpose: performance regression guard for interest diffusion (bug hunt 2026-09-03, P3 perf).
- * spreadInterest was the only super-linear step in a recommendation recompute — 15.3 s at
- * 3000 nodes on the dev machine, ~97% of computePlannerSnapshot — because SPREAD_NEIGHBOR_TOP_K
- * trimmed the neighbour list only after every one of the n² cosines had been paid for. It now
- * runs the sweep over packed unit vectors, once per unordered pair: 1.10 s for the same input
- * end to end, 0.87 s of which is the sweep and the rest JSON-parsing 3000 vectors.
+ * Purpose: performance regression guard for interest diffusion. spreadInterest is the only
+ * super-linear step in a recommendation recompute, so this guards against
+ * SPREAD_NEIGHBOR_TOP_K going back to trimming the neighbour list only after every one of the
+ * n² cosines has been paid for — the sweep must run over packed unit vectors, once per
+ * unordered pair.
  *
- * On the tolerance: this asserts a ceiling of 5 s, not the 1.10 s measured here. A wall-clock
- * assertion has to survive a loaded CI box, a laptop on battery, and whatever else shares this
- * machine, so the ceiling is set ~4.5x the measured time and ~3x under the pre-fix time. It is a
- * tripwire for "the quadratic constant came back", not a benchmark; the numbers above are the
- * benchmark, and they belong in a comment where nothing flakes on them.
+ * On the tolerance: this asserts a ceiling of 5 s. A wall-clock assertion has to survive a
+ * loaded CI box, a laptop on battery, and whatever else shares this machine, so the ceiling is
+ * set well above the measured running time. It is a tripwire for "the quadratic constant came
+ * back", not a benchmark.
  * Vectors are shaped like e5's: one shared direction plus small noise, so nearly every pair
  * clears SPREAD_SIMILARITY_FLOOR and no candidate is skipped early — the honest worst case.
  */

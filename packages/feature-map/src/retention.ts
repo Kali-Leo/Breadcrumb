@@ -5,8 +5,8 @@
  *
  * "Unknown" includes unusable: a NaN or an Infinity in the map poisons the whole mean, and the
  * mean drives alphas that Pixi takes on trust — one bad row and an island's name stops drawing
- * (bug hunt 2026-09-03). The answer is the same one a missing row gets, for the same reason:
- * fog is a claim about the learner, and a number nobody can read is not grounds to make it.
+ * at all. The answer is the same one a missing row gets, for the same reason: fog is a claim
+ * about the learner, and a number nobody can read is not grounds to make it.
  */
 
 /** A retrievability in [0, 1], or 1 when there is nothing usable to go on. */

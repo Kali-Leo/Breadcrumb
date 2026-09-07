@@ -1,6 +1,6 @@
 /**
  * Purpose: SQL statements for knowledge_edges — the directed requires/helps structure between
- * knowledge nodes (spec 010). Writes go through knowledgeStatements.ts so the merge executor
+ * knowledge nodes. Writes go through knowledgeStatements.ts so the merge executor
  * issues byte-identical SQL.
  * Main exports: createKnowledgeEdgesRepo factory.
  */

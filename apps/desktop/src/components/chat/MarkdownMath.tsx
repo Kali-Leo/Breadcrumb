@@ -2,7 +2,7 @@
  * Purpose: KaTeX typesetting for chat markdown. KaTeX is the most expensive thing the
  * markdown walk does, and a formula's HTML depends only on (value, displayMode) — both
  * primitives, so a re-render of the surrounding message reuses the previous output instead
- * of re-running renderToString (design audit 2026-08-28, 数据层与性能 #3). A memoized
+ * of re-running renderToString. A memoized
  * component rather than a useMemo because renderNode is a plain recursive function, not a
  * hook context.
  * Main exports: renderMath.

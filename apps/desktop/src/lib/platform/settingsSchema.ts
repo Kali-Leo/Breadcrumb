@@ -43,26 +43,26 @@ export interface FeatureSwitches {
   factcheck: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
-  /** Goal planning (spec 047): mapping a free-text goal into a knowledge-node set — one
+  /** Goal planning: mapping a free-text goal into a knowledge-node set — one
    * LLM call per goal creation. Replaced the retired labPanel switch. */
   goalPlanning: boolean;
-  /** Experimental: search-build a comparison profile on demand (spec 023 §5). */
+  /** Experimental: search-build a comparison profile on demand. */
   compareProfileBuild: boolean;
-  /** Semantic alignment between profile items and the user's own vocabulary (spec 024). */
+  /** Semantic alignment between profile items and the user's own vocabulary. */
   compareAlignment: boolean;
-  /** Experimental: let the model name the map's clustered continents (spec 031 §3). */
+  /** Experimental: let the model name the map's clustered continents. */
   mapTopicNaming: boolean;
-  /** Teach-back explanation quality judgment → mastery evidence (vision/09 #2). */
+  /** Teach-back explanation quality judgment → mastery evidence. */
   teachQuality: boolean;
-  /** The 🪞 feedback-lab full-page view (spec 035): candidate forms for "making learning
+  /** The 🪞 feedback-lab full-page view: candidate forms for "making learning
    * visible", all computed from existing local data. */
   feedbackLab: boolean;
-  /** The 🔬 research task platform (spec 036): runs vetted, project-signed research tasks
-   * locally and shows the aggregate results. Default on, no reminder (Leo 2026-08-13) —
+  /** The 🔬 research task platform: runs vetted, project-signed research tasks
+   * locally and shows the aggregate results. Default on, no reminder —
    * computation stays on-device and the real consent point is the (not-yet-built) upload
    * step; turning it off shows a one-time plain explanation, then never asks again. */
   researchTasks: boolean;
-  /** Companion cast (spec 037): opening/continuing a chat with one of the three companion
+  /** Companion cast: opening/continuing a chat with one of the three companion
    * cards. Off hides the sidebar's 伙伴 section entirely and blocks sending in an open
    * companion conversation. */
   companionChat: boolean;
@@ -70,13 +70,13 @@ export interface FeatureSwitches {
    * periodic reflection). Off means companions still chat, just without long-term memory. */
   companionMemory: boolean;
   /** Companion cast: generates the teach-back script (expectations/misconceptions/gaps) and
-   * runs Reflect-Respond each round. Off falls back to spec-034's generic teach prompt. */
+   * runs Reflect-Respond each round. Off falls back to the generic teach prompt. */
   companionScript: boolean;
-  /** Focus mode (spec 042): a picked word's full-screen explain session — each station's
+  /** Focus mode: a picked word's full-screen explain session — each station's
    * streamed answer. Off leaves the rest of focus mode (entry, subway map, exit record)
    * working, just with no way to generate a new station's content. */
   focusExplain: boolean;
-  /** Term marking (spec 043): one small call after a reply/focus answer lands, picking which
+  /** Term marking: one small call after a reply/focus answer lands, picking which
    * words would trip up this learner — the primary source of explore doors. Off leaves doors
    * to the zero-LLM legacy node-matching source only. */
   termMarking: boolean;
@@ -86,16 +86,15 @@ export interface FeatureSwitches {
   trailSummary: boolean;
 }
 
-/** Which profile family the comparison tree shows (spec 026): real occupations (真人) or
+/** Which profile family the comparison tree shows: real occupations (真人) or
  * curriculum material (教材). A display filter, not a feature switch. */
 export type CompareCategory = "occupation" | "curriculum";
 
 /** 'casual' = wander by curiosity, recommendations grow outward naturally. 'ranked' = push
- * toward a chosen goal (frontier weights the goal's gap; goal surfaces appear). Spec 016,
- * removed by spec 045 and restored by spec 048 (Leo's original design stands). */
+ * toward a chosen goal (frontier weights the goal's gap; goal surfaces appear). */
 export type LearningMode = "ranked" | "casual";
 
-/** The two human-legible sliders behind recommendRoute() (spec 017 #1) — same shape as
+/** The two human-legible sliders behind recommendRoute() — same shape as
  * feature-planner's RecommendRouteParams, re-exported here so components import one name. */
 export type RouteParams = RecommendRouteParams;
 
@@ -120,11 +119,11 @@ export const LANGUAGE_KEY = "language";
 export const ANSWER_LANGUAGE_KEY = "answerLanguage";
 export const RECOMMENDATION_WEIGHTS_KEY = "recommendationWeights";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
- * learner tunes from the middle (spec 017 #1). */
+ * learner tunes from the middle. */
 export const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
 /** Metered features default ON: metering exists so features can run boldly — every
  * switch and its real spend live on the 开关与计价 page, and silent signal collection is
- * a core product value (Leo 2026-08-13). feedbackLab costs zero tokens and only ever
+ * a core product value. feedbackLab costs zero tokens and only ever
  * shows plain facts — exactly the "make learning visible" surface the product is for. */
 export const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
@@ -147,8 +146,7 @@ export const DEFAULT_SWITCHES: FeatureSwitches = {
 };
 
 /** First run: the language the machine is set to, if we have an interface in it. Null when
- * we do not — the app then asks rather than opening in a language nobody chose (Leo
- * 2026-09-01). */
+ * we do not — the app then asks rather than opening in a language nobody chose. */
 export function guessLanguage(): string | null {
   const preferred = typeof navigator === "undefined" ? [] : [...(navigator.languages ?? [])];
   return matchLanguage(preferred.length > 0 ? preferred : [navigator?.language ?? ""]);

@@ -124,7 +124,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
  * The mirror belongs in that chain rather than below the guess. Reading it last would undo,
  * one frame after the first paint, the very switch initI18n had just made from it: someone who
  * chose Chinese got the browser's English for as long as the database took to open, on every
- * reload (2026-09-03 walkthrough). An interface language that was removed (or was never ours)
+ * reload. An interface language that was removed (or was never ours)
  * still falls through to the machine's language, and if that is not one we speak either,
  * `chosen` is null and the app opens the picker.
  */

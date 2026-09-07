@@ -1,5 +1,5 @@
 /**
- * Purpose: pure zero-LLM trail-card naming (spec 041 §1) — the initial-title truncation shared
+ * Purpose: pure zero-LLM trail-card naming — the initial-title truncation shared
  * with chatRoundContext, the "first station -> last station" auto name, first-touch station
  * labels from sightings, the freeze decision that keeps a user rename permanent, and the
  * display-name fallback. No I/O — the DB-touching orchestration lives in trailNamingActions.ts.
@@ -23,7 +23,7 @@ export function computeInitialTitle(firstMessageContent: string): string {
  * share one line ("A → B"). */
 const STATION_LABEL_MAX_CHARS = 8;
 
-/** "First station -> last station" (spec 041 §1). Zero stations -> null (nothing to name yet,
+/** "First station -> last station". Zero stations -> null (nothing to name yet,
  * the initial title stands); one station -> that station alone in brackets; two or more -> an
  * arrow between the first and the last, skipping whatever sits between them. */
 export function computeAutoTitle(stationLabels: readonly string[]): string | null {
@@ -71,7 +71,7 @@ export function shouldWriteAutoTitle(
   return conversation.title === computeInitialTitle(firstMessageContent);
 }
 
-/** What the sidebar shows for one trail card (spec 041 §1): the system name when present,
+/** What the sidebar shows for one trail card: the system name when present,
  * otherwise the conversation's own title (initial or user-renamed alike). */
 export function displayTrailTitle(conversation: {
   title: string;

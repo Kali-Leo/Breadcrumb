@@ -1,10 +1,8 @@
 /**
- * Purpose: the seed persona set (spec 013 T2) — each entry a named test scenario covering a
+ * Purpose: the seed persona set — each entry a named test scenario covering a
  * behavior extreme or a product-principle edge case; perturbPersona() generates reproducible
  * variants from these at run time instead of hand-writing every variant. The set is assembled
- * from per-script files because the script a persona writes in is itself a test axis: until
- * 2026-09-07 every seed was Chinese, so the non-Chinese half of the product shipped without
- * ever having been driven end to end.
+ * from per-script files because the script a persona writes in is itself a test axis.
  * Main exports: SEED_PERSONAS.
  */
 import type { Persona } from "./schema";

@@ -1,5 +1,5 @@
 /**
- * Purpose: the mid-tree continuation banner (spec 040 §2) — shown while the active path
+ * Purpose: the mid-tree continuation banner — shown while the active path
  * ends on a station that is not the newest leaf: the newer branch isn't gone, just off the
  * active path, and "回到最新" jumps back to it.
  * Main exports: ContinuationBanner.

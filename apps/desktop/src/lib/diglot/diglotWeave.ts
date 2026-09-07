@@ -1,5 +1,5 @@
 /**
- * Purpose: app-side orchestration of the diglot weave (spec 033) — the per-message weave
+ * Purpose: app-side orchestration of the diglot weave — the per-message weave
  * pipeline (candidates → schedule → patches, with new-word introduction and context-novelty
  * via local embeddings).
  * Side effects: DB writes (word states, context embeddings).
@@ -67,7 +67,7 @@ export async function weaveAssistantMessage(input: {
     adaptiveNewWordCap(input.newWordDailyBase, reviewDebt) - input.newWordsIntroducedToday,
   );
 
-  // Context novelty (spec 033): only review candidates have stored contexts to compare to,
+  // Context novelty: only review candidates have stored contexts to compare to,
   // and each is judged on the clause it actually appears in rather than on the whole reply.
   const clauseByLemma = new Map<string, string>();
   for (const candidate of candidates) {

@@ -1,8 +1,8 @@
 /**
- * Purpose: the recommendation-weight setting's shape and hygiene (spec 060 §3+§5) — the
+ * Purpose: the recommendation-weight setting's shape and hygiene — the
  * user tunes four intent-level weights; the browsing component is not a knob: it rides the
- * interest weight at the adaptive trust ratio (both signals are "the learner's interest",
- * Leo 2026-08-31 — one concept, one slider).
+ * interest weight at the adaptive trust ratio (both signals are "the learner's interest" —
+ * one concept, one slider).
  * Main exports: UserRecommendationWeights, USER_WEIGHT_DEFAULTS, RECOMMENDATION_WEIGHT_MAX,
  * sanitizeRecommendationWeights.
  */

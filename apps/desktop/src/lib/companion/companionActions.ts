@@ -1,7 +1,7 @@
 /**
- * Purpose: companion cast desktop actions (spec 037) — card lookup, opening or continuing a
+ * Purpose: companion cast desktop actions — card lookup, opening or continuing a
  * companion chat, seeding the teach script for a conversation, and the companion chat system
- * prompt (Leo 2026-08-15: the invitation lives in the chat like any message; replying starts
+ * prompt (the invitation lives in the chat like any message; replying starts
  * the teach-back there). The daily helper's own conversation lifecycle lives in
  * companionHelperConversation.ts and is re-exported here so existing importers keep working.
  * Side effects: DB writes on openCompanionConversation / seedTeachScriptForConversation.
@@ -32,7 +32,7 @@ export {
   startHelperConversation,
 } from "./companionHelperConversation";
 
-/** The cast is fixed (spec 037 — three roles, never interchangeable). */
+/** The cast is fixed — three roles, never interchangeable. */
 export const COMPANION_IDS = ["shichimi", "pepper", "cumin"] as const;
 
 /** Desktop-only companion prompt text. What the user reads (role tags, the switched-off
@@ -88,8 +88,8 @@ export async function openCompanionConversation(companionId: string): Promise<st
   return conversationId;
 }
 
-/** Generates the teach-back script and seeds this conversation's knowledge state (spec 037's
- * script-first machinery, now running inside the companion chat). Silent no-op when the
+/** Generates the teach-back script and seeds this conversation's knowledge state (the
+ * script-first machinery, running inside the companion chat). Silent no-op when the
  * script switch is off / offline / unconfigured; a generation failure is recorded and the
  * teach-back proceeds stateless (plain companion chat). */
 export async function seedTeachScriptForConversation(
@@ -125,8 +125,8 @@ export async function seedTeachScriptForConversation(
 }
 
 /** Companion chat system prompt: identity + explicit AI disclosure, the tone contract, then
- * retrieved memories when there are any. One positive-instruction block (tone contract
- * 2026-08-02) — mirrors buildTeachSystemPrompt/buildStudentSystemPrompt's register. */
+ * retrieved memories when there are any. One positive-instruction block (tone contract)
+ * — mirrors buildTeachSystemPrompt/buildStudentSystemPrompt's register. */
 export function buildCompanionChatSystemPrompt(
   card: CompanionCard,
   retrievedMemories: readonly string[],

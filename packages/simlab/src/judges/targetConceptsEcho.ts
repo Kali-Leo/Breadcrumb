@@ -2,8 +2,8 @@
  * Purpose: the fraction of a persona's targetConcepts that came back out of the pipeline as
  * labels the journey created or sighted.
  *
- * Named "echo", not "recall", since the 2026-08-28 design audit (simlab与测试策略 #3): input
- * echo, not extraction evidence. The same targetConcepts array is written into the student's
+ * Named "echo", not "recall": input echo, not extraction evidence. The same targetConcepts
+ * array is written into the student's
  * system prompt AND handed to pickDomainHint, which puts it in the opening line — so the
  * ground truth here is a copy of the input, and the double-ended substring match below makes
  * it looser still (a one-character label matches almost anything). Both live runs scored a

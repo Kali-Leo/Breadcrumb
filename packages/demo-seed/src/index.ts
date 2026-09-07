@@ -1,5 +1,5 @@
 /**
- * Purpose: public entry of the zero-LLM demo seed (spec 035 T7b).
+ * Purpose: public entry of the zero-LLM demo seed.
  * Main exports: insertDemoData, wipeDemoData, WIPE_DEMO_REFERENCING_TABLES, DEMO_PAIR,
  * SeedSummary, demoTextFor, DEMO_TEXT_BY_LANGUAGE, CONCEPT_IDS.
  */

@@ -3,13 +3,12 @@
  * that has to obey 「同一棵知识树永远画出同一张地图」. Pure: no DB, no UI, seeded randomness only.
  * Main exports: growClusters, GrownCluster.
  *
- * Why this exists instead of one more whole-corpus Louvain pass (bug hunt 2026-09-03, finding
- * 3). Louvain re-partitions the WHOLE room on every call, and the gates it feeds on are global
- * statistics (topicGraph's globalMean is the mean of every node's mean similarity). Adding one
- * node therefore re-cuts communities that had nothing to do with it: the hunt measured the 15th
- * root arriving and moving the 5th root's continent from n05 to n00 — and since a cluster
- * continent's id is its terrain seed, that is an island a learner already knows silently
- * redrawing itself, 134 times in a simulated 180 days.
+ * Why this exists instead of one more whole-corpus Louvain pass. Louvain re-partitions the
+ * WHOLE room on every call, and the gates it feeds on are global statistics (topicGraph's
+ * globalMean is the mean of every node's mean similarity). Adding one node therefore re-cuts
+ * communities that had nothing to do with it: a newly arriving root can move an older root's
+ * continent onto a different id — and since a cluster continent's id is its terrain seed, that
+ * is an island a learner already knows silently redrawing itself.
  *
  * THE INVARIANT. The map's history is replayed, one root at a time, in arrival order —
  * (created_at, id), the order the tree itself hands them out. At each step:
@@ -26,18 +25,18 @@
  * its members. That is the whole guarantee, and it is why the expensive replay is worth it.
  *
  * What is deliberately NOT frozen: a root that belongs to no landmass. It is drawn as an
- * unnamed islet whose id is its own node id, so re-clustering it costs the learner nothing —
- * the bug hunt classified islet→continent as legitimate growth for exactly this reason. That
- * freedom is what keeps quality: two related roots cannot bond the moment the second arrives
- * (a room of two has no contrast to judge "closer than typical" against), and they must stay
- * free until a third, unrelated root gives the gate something to measure them by.
+ * unnamed islet whose id is its own node id, so re-clustering it costs the learner nothing:
+ * islet→continent is legitimate growth, not a redraw. That freedom is also what keeps quality:
+ * two related roots cannot bond the moment the second arrives (a room of two has no contrast to
+ * judge "closer than typical" against), and they must stay free until a third, unrelated root
+ * gives the gate something to measure them by.
  *
  * The boundary, stated honestly: back-dating a root — one whose created_at falls before roots
  * already on the map — inserts it into the middle of the arrival order, and everything after it
  * is re-decided. Nothing in the product does that; a backfill importer would have to.
  *
- * Cost: the one O(n²·dims) cosine sweep the old path already paid, plus O(n) replay steps over
- * the shrinking unattached pool. Only childless roots reach here.
+ * Cost: one O(n²·dims) cosine sweep, plus O(n) replay steps over the shrinking unattached
+ * pool. Only childless roots reach here.
  */
 import type { PackedVectors } from "@breadcrumb/core-vectors";
 import { packVectors } from "@breadcrumb/core-vectors";
@@ -135,7 +134,7 @@ function clusterFree(
 /**
  * Groups ids into growth-only clusters. `arrivalOrderedIds` MUST be sorted by (created_at, id):
  * that order is the whole guarantee. Ids whose vector cannot join the landscape (absent, wrong
- * length, all zeros — packVectors drops them) come back in no cluster at all, exactly as before.
+ * length, all zeros — packVectors drops them) come back in no cluster at all.
  * Only landmasses are returned; a root that is nobody's is the caller's islet.
  */
 export function growClusters(

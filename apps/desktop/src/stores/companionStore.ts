@@ -1,6 +1,6 @@
 /**
- * Purpose: zustand store for the daily helper companions (spec 050 §9, Leo's redesign of
- * spec 037) — each day the gate turns the footprinted concepts a review would help most
+ * Purpose: zustand store for the daily helper companions — each day the gate turns the
+ * footprinted concepts a review would help most
  * (feature-memory's review priority) into up to three help-seeking characters ("想弄懂 X 的同学", the ported teachable-agent
  * paradigm); talking to one drives mastery judgment underneath; once a teach-quality
  * claim lands the helper thanks the learner and leaves the roster. No same-day refills:
@@ -42,7 +42,7 @@ const FALLBACK_REPLY_LIMIT = 3;
 const completingConversationIds = new Set<string>();
 
 interface CompanionState extends BreakReminderState {
-  /** Today's pending helpers — the whole roster (spec 050 §9: like a daily task list). */
+  /** Today's pending helpers — the whole roster (like a daily task list). */
   helpers: CompanionProposalRow[];
   seenHelperIds: ReadonlySet<string>;
   crisisConversationIds: ReadonlySet<string>;

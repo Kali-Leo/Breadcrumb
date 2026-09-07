@@ -1,5 +1,5 @@
 /**
- * Purpose: the demo seed's 6 mastery claims (spec 035 T7b) — a learned/taught_principled/
+ * Purpose: the demo seed's 6 mastery claims — a learned/taught_principled/
  * taught_surface mix spread over the past ~8 weeks, raw material for the understanding curve.
  * Main exports: buildClaimSeed.
  */

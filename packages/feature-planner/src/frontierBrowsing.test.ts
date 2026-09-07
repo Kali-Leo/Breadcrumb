@@ -1,6 +1,6 @@
 /**
- * Purpose: spec 059 assertion tests — the browsing component must be able to flip the
- * frontier order (the 2026-08-28 audit's lesson: a component that can never decide the
+ * Purpose: assertion tests — the browsing component must be able to flip the
+ * frontier order (a component that can never decide the
  * order is decoration), must stay silent when absent, and must surface its source title.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
@@ -29,7 +29,7 @@ const base = {
   previouslyLitNodeIds: new Set<string>(),
 };
 
-describe("frontier browsing component (spec 059)", () => {
+describe("frontier browsing component", () => {
   it("flips the ranking of two otherwise-tied candidates", () => {
     const without = frontier(base);
     expect(without.map((candidate) => candidate.nodeId)).toEqual(["a", "b"]);
@@ -58,7 +58,7 @@ describe("frontier browsing component (spec 059)", () => {
     expect(result).toEqual(frontier(base));
   });
 
-  it("never names any watched title anywhere in the result (Leo 裁决 2026-08-30)", () => {
+  it("never names any watched title anywhere in the result", () => {
     const result = frontier({
       ...base,
       browsingAffinityByNode: new Map([["b", 0.9]]),

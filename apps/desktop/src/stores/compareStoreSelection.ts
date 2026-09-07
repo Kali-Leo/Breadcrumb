@@ -34,7 +34,7 @@ const EMPTY_PROFILE_VIEW_STATE: CompareProfileViewState = {
   detailKey: null,
 };
 
-/** Fire-and-forget anchor sweep (spec 025 — profile-agnostic: anchors are node↔concept, so
+/** Fire-and-forget anchor sweep (profile-agnostic: anchors are node↔concept, so
  * one sweep serves every profile); when new pairs got judged, quietly recompute the tree so
  * semantic matches appear without the user doing anything. */
 async function sweepInBackground(
@@ -60,7 +60,7 @@ function mirrorOf(
 
 export interface CompareSelectionActions {
   selectProfile(profileId: string): Promise<void>;
-  /** Builds the chosen occupation's profile offline and selects it (spec 026). */
+  /** Builds the chosen occupation's profile offline and selects it. */
   createOccupation(code: string): Promise<void>;
   /** Records the learner's own 0–10 score for an experience leaf and rescores the tree. */
   setPracticeScore(itemId: string, score: number): Promise<void>;
@@ -88,7 +88,7 @@ export function createCompareSelectionActions(
       }
       set({ loading: true, viewStateByProfile });
       try {
-        // Immediate path (spec 024 §2): the string-matched tree renders NOW; semantic
+        // Immediate path: the string-matched tree renders NOW; semantic
         // alignment runs behind it and quietly patches the tree when new verdicts land.
         const repos = await getRepos();
         const [tree, scores] = await Promise.all([

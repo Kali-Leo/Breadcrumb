@@ -2,7 +2,7 @@
  * Purpose: the language section of the settings page — which language the app speaks, and
  * which language the AI answers in. They are one choice for almost everyone, and two for the
  * person whose language the model writes poorly: that person keeps their own interface and
- * still gets a good explanation (spec 058 §1).
+ * still gets a good explanation.
  * Main exports: LanguageSettingsSection.
  */
 import {
@@ -46,7 +46,7 @@ export function LanguageSettingsSection() {
               {languageOf(code)?.endonym ?? code}
             </option>
           ))}
-          {/* Layout testing only: never built into what a user installs (spec 058 §2). */}
+          {/* Layout testing only: never built into what a user installs. */}
           {import.meta.env.DEV && <option value={PSEUDO_LOCALE_CODE}>Pseudo (RTL)</option>}
         </select>
       </label>

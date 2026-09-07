@@ -1,9 +1,9 @@
 /**
- * Purpose: the contextual-diversity factor (spec 033) — re-meeting a word in a familiar
- * context teaches less than meeting it somewhere new, so the scheduler discounts by the
- * closest stored context vector. Pure math; embedding I/O lives in the app layer. The cosine
- * and the hash are core primitives now (2026-09-02): this module's strict length check is the
- * one core-vectors adopted, and hashContext is core-random's fnv1aHex8 under its domain name.
+ * Purpose: the contextual-diversity factor — re-meeting a word in a familiar context teaches
+ * less than meeting it somewhere new, so the scheduler discounts by the closest stored context
+ * vector. Pure math; embedding I/O lives in the app layer. The cosine and the hash are core
+ * primitives: this module's strict length check is the one core-vectors adopted, and
+ * hashContext is core-random's fnv1aHex8 under its domain name.
  * Main exports: cosineSimilarity, noveltyFactor, hashContext.
  */
 import { fnv1aHex8 } from "@breadcrumb/core-random";

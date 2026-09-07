@@ -1,5 +1,5 @@
 /**
- * Purpose: display-layer source normalization for chat markdown (spec 001 polish) —
+ * Purpose: display-layer source normalization for chat markdown —
  * converts LaTeX bracket delimiters (\[..\], \(..\)) that models like DeepSeek emit into
  * the dollar delimiters remark-math parses. Stored message content is never touched.
  * Main exports: normalizeMathDelimiters.

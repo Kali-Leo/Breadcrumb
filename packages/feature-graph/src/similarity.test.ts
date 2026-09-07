@@ -144,8 +144,8 @@ describe("fallbackCandidatePairs", () => {
   });
 
   it("caps siblings at MAX_FALLBACK_SIBLINGS, newest first", () => {
-    // A parent with 40 children used to produce 40 pairs for ONE new node, while the edge
-    // judge's schema accepts at most 20 verdicts per call (design audit 2026-08-28 #4).
+    // Uncapped, a parent with 40 children would produce 40 pairs for ONE new node, while the
+    // edge judge's schema accepts at most 20 verdicts per call.
     const nodes = [
       node("parent", null, "2026-01-01T00:00:00Z"),
       ...Array.from({ length: 40 }, (_unused, index) =>

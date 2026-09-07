@@ -1,7 +1,7 @@
 /**
- * Purpose: the second gate on a Wikidata match (spec 025; backlog item "QID 描述域校验").
- * An exact label match is not enough — names are shared across fields, and the spec's own
- * walkthrough caught CSS "Functions" bound to Q190686, the mathematical function. This reads
+ * Purpose: the second gate on a Wikidata match.
+ * An exact label match is not enough — names are shared across fields, and CSS "Functions"
+ * has been found bound to Q190686, the mathematical function. This reads
  * the entity's description and refuses a match that describes a person, a place, a work, an
  * organism, or something from a field the corpus is not about.
  *

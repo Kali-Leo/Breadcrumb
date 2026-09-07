@@ -1,5 +1,5 @@
 /**
- * Purpose: the canonical concept inventory's local side (spec 025) — the once-per-run import
+ * Purpose: the canonical concept inventory's local side — the once-per-run import
  * of the dev-built inventory, the text each concept is embedded/matched as, and the free
  * alias-anchoring path for newborn nodes ("the toll collected at the vocabulary entrance",
  * zero tokens, zero latency). Split out of compareAlignActions.ts to keep both files under
@@ -19,10 +19,10 @@ import { degradeSilently } from "../platform/failureLog";
 import { nowIso } from "../platform/time";
 
 /** Set once the import has SUCCEEDED, and never cleared — the inventory is a build-time
- * constant, so re-importing it in the same run can only ever rewrite identical rows. The old
- * in-flight-only memo cleared itself in `finally`, which meant every caller after the first
- * one paid for the whole ~800-row upsert again (design audit 2026-08-28, B8). A FAILED import
- * still resets, so a transient DB error does not permanently disable anchoring. */
+ * constant, so re-importing it in the same run can only ever rewrite identical rows. Clearing
+ * this memo in `finally` instead would mean every caller after the first one pays for the
+ * whole ~800-row upsert again. A FAILED import still resets, so a transient DB error does not
+ * permanently disable anchoring. */
 let importOnce: Promise<void> | null = null;
 
 /** Imports the dev-built canonical inventory once per run (INSERT OR REPLACE — idempotent). */
