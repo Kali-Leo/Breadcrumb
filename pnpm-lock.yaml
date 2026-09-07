@@ -437,6 +437,9 @@ importers:
 
   packages/feature-browsing-interest:
     dependencies:
+      '@breadcrumb/core-text':
+        specifier: workspace:*
+        version: link:../core-text
       '@breadcrumb/core-vectors':
         specifier: workspace:*
         version: link:../core-vectors

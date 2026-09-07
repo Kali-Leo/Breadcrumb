@@ -45,6 +45,10 @@ coverage/
 *.cer
 packages/simlab/artifacts/
 
+# Python bytecode from the offline pipelines (fonts, language packs, interest model).
+__pycache__/
+*.pyc
+
 # ===== editor / OS =====
 .DS_Store
 .idea/

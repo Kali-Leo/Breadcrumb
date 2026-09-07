@@ -5,6 +5,7 @@
  */
 export * from "./aiFailureRepositories";
 export * from "./aliasesRepository";
+export * from "./browsingEventsRepository";
 export * from "./canonicalRepositories";
 export * from "./chatTypes";
 export * from "./companionRepositories";

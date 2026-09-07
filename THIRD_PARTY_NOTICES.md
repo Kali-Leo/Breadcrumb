@@ -62,3 +62,13 @@ poisson-disk-sampling、graphology 系列、mermaid、katex、react 等，均为
   驱动新词引入顺序与常用词过滤,**CC BY-SA 4.0** 许可。
 - **CMUdict**(Carnegie Mellon University):英语发音词典(ARPABET→IPA 转换后
   作为释义卡读音),**BSD-2-Clause** 许可。
+
+## 浏览兴趣模型的来源
+
+移植自同一作者的另一个项目 **feed-mode**（对外以 GPL-3.0 发布；该仓库 63 个提交的作者均为
+Kali-Leo，为唯一著作权人，已将移植进本项目的部分重新授权为 AGPL-3.0-only，与本项目一致）。
+
+移植内容：画像引擎与四个面板的聚合算法（Python / JavaScript → TypeScript）、48 类主题体系与
+9 档情绪谱、词语情感值表，以及主题分类器的 int8 权重（8192 维字符 n-gram 上的多项逻辑回归）。
+另有一套分类器系数由本项目自带的 multilingual-e5-small 向量重新训练得到。每个移植文件的头
+注释记录了它对应的源文件、行号与改动。**训练语料不随本应用分发。**

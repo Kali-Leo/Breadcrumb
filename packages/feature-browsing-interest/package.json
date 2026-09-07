@@ -2,7 +2,7 @@
   "name": "@breadcrumb/feature-browsing-interest",
   "license": "AGPL-3.0-only",
   "version": "0.0.1",
-  "description": "Headless client for the local browsing-interest service (127.0.0.1): response schemas, read-only fetching, emotion-curve geometry and word-cloud placement.",
+  "description": "The browsing-interest model in-process: hashed n-gram topic classifier, two-timescale interest profile, event store and the four panel aggregations. Ported from Kali-Leo/feed-mode.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@breadcrumb/core-text": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
     "zod": "^4.1.0"
   },
