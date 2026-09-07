@@ -14,7 +14,6 @@
  */
 import { ALargeSmall, Compass, Map as MapIcon, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { isBrowserEdition } from "../lib/platform/edition";
 import { useLayoutMode } from "../lib/platform/layoutMode";
 import { useChatStore } from "../stores/chatStore";
 import { PalaceRail } from "./map/PalaceRail";
@@ -63,22 +62,15 @@ export function Sidebar({
   const stacked = useLayoutMode() === "stacked";
   const hiddenDrawer = stacked && !drawerOpen;
 
+  // Discovery is in both editions. It used to read a separate program running on this machine,
+  // which a web page could not reach; it now reads this app's own database, so there is nothing
+  // left for one edition to have and the other to lack.
   const navEntries: NavEntry[] = [
     [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
     [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
+    [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
     [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
   ];
-  // Discovery reads a program running on this machine, which a web page cannot reach and
-  // should not try to. In the browser edition there is no entry at all, rather than one that
-  // opens a page whose only content would be an apology.
-  if (!isBrowserEdition()) {
-    navEntries.splice(2, 0, [
-      Compass,
-      t("nav.discover"),
-      onOpenDiscovery,
-      activeView === "discovery",
-    ]);
-  }
 
   return (
     <aside

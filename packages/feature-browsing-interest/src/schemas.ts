@@ -1,12 +1,17 @@
 /**
- * Purpose: Zod schemas for every response of the local browsing-interest service
- * (interest-model/daemon, 127.0.0.1:21456). The service is a separate project we only read
- * from, so its JSON is external input and is parsed, never asserted.
- * Main exports: the five response schemas and their inferred types.
+ * Purpose: the five shapes the discovery page is built around — the interest profile and the
+ * four panels. They began as the responses of a separate local service; that service is gone
+ * and the shapes are now produced here (browsingProfile.ts and ./panels), which is why the
+ * page did not have to change when the source did.
+ *
+ * They stay written as Zod schemas rather than plain interfaces so the shape is stated once and
+ * the type follows from it, and so a test can assert an assembled value against the shape
+ * itself (browsingProfile.test.ts) rather than against a hand-copied interface.
+ * Main exports: the five schemas and their inferred types.
  */
 import { z } from "zod";
 
-/** The service stores titles/authors straight from the pages, where either can be missing. */
+/** Titles and authors are taken straight from the pages, where either can be missing. */
 const text = z
   .string()
   .nullish()

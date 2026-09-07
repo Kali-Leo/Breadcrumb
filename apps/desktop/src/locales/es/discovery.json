@@ -1,17 +1,23 @@
 {
   "title": "Descubrir",
-  "intro": "Esta página muestra lo que has estado viendo en Bilibili y YouTube, y qué te interesa. Todo se calcula en este ordenador; no se envía nada a ningún sitio.",
-  "action": "Queda un paso, en el navegador: instala una extensión que ejecute scripts y luego los dos scripts.",
-  "installButton": "Instalar en el navegador",
-  "afterClick": "Se abren tres páginas en tu navegador: instala primero Violentmonkey, luego vuelve a las otras dos y pulsa «Instalar este script» en cada una. Después, navega por Bilibili y YouTube como siempre y esta página empezará a mostrar tus intereses.",
-  "token": "Un paso más: en la página de inicio de Bilibili, pulsa 🔗 en la barra de interruptores de abajo a la izquierda y pega el código de abajo; haz lo mismo en la página de inicio de YouTube.",
-  "projectHomepage": "Abrir la página del proyecto",
-  "service": {
-    "starting": "Iniciando el programa de intereses en este ordenador…",
-    "notFound": "El programa de intereses no está en este ordenador. Viene con el proyecto del modo feed — descárgalo a tu carpeta personal o al escritorio y vuelve a esta página.",
-    "pythonMissing": "En este ordenador no hay Python, y el programa de intereses lo necesita.",
-    "failed": "El programa de intereses no arrancó. Lo más probable es que le falten unos paquetes de Python; ejecuta esto en la carpeta del proyecto y vuelve a esta página:"
+  "setup": {
+    "title": "Descubrir",
+    "intro": "Instala un script de navegador y lo que veas en Bilibili y YouTube aparecerá en esta página. Todo se calcula en tu propio dispositivo y no se envía a ninguna parte.",
+    "step1Title": "Paso 1: añade una extensión que ejecute scripts",
+    "step1Body": "Violentmonkey es gratuita. Instálala y vuelve a esta página.",
+    "step1Button": "Abrir la página de Violentmonkey",
+    "step2Title": "Paso 2: instala los dos scripts de Breadcrumb",
+    "step2Body": "Pulsa uno de los botones de abajo; el navegador te preguntará si quieres instalarlo y la respuesta es sí.",
+    "bilibiliScript": "Instalar el script de Bilibili",
+    "youtubeScript": "Instalar el script de YouTube",
+    "step3Title": "Paso 3: conecta tu navegador con Breadcrumb",
+    "step3Body": "Abre la página de inicio de Bilibili, pulsa 🔗 en la barra de abajo a la izquierda y pega la línea siguiente. Haz lo mismo una vez en la página de inicio de YouTube.",
+    "step3TitleWeb": "Paso 3: deja Breadcrumb abierto",
+    "step3BodyWeb": "El script entrega lo que ha registrado cada vez que abres Breadcrumb. No hay nada más que hacer.",
+    "codeUsed": "Esa línea ya se ha usado. Ya viene otra.",
+    "connected": "Conectado. Usa Bilibili y YouTube como siempre y lo que veas empezará a aparecer aquí."
   },
+  "intro": "Esta página muestra lo que has estado viendo en Bilibili y YouTube, y qué te interesa. Todo se calcula en este ordenador; no se envía nada a ningún sitio.",
   "emotion": {
     "title": "Cómo sentó el contenido",
     "all": "Todo",

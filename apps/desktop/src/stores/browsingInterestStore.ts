@@ -1,56 +1,44 @@
 /**
- * Purpose: zustand store behind the discovery page — starts the local browsing-interest
- * service if it is not already up, probes it, holds what the four panels show, and reads
- * the connection token the setup step needs. Everything here stays on 127.0.0.1, so it
- * keeps working with the network switch off (nothing leaves the machine).
- * Main exports: useBrowsingInterestStore, ServiceStatus.
+ * Purpose: zustand store behind the discovery page. Everything on that page is now computed
+ * from this app's own database (lib/platform/browsingPanels) instead of fetched from a separate
+ * program on a loopback port, so both editions have the page and neither makes a request.
+ *
+ * The store also owns the two delivery channels while the page is open: it drains what the
+ * local listener took in (desktop) and listens for the page hand-off (browser), then refreshes.
+ * And it runs the background re-classification pass, which is why `refresh` is called again
+ * after it: an upgraded row changes what the panels say.
+ * Main exports: useBrowsingInterestStore, WORD_CLOUD_WINDOWS.
  */
-import {
-  type BrowsingProfile,
-  createBrowsingInterestClient,
-  type EmotionCategory,
-  type EmotionSeries,
-  type NewInterests,
-  type ProContent,
-  type WordCloud,
+import type {
+  BrowsingProfile,
+  EmotionCategory,
+  EmotionSeries,
+  NewInterests,
+  ProContent,
+  WordCloud,
 } from "@breadcrumb/feature-browsing-interest";
-import { invoke } from "@tauri-apps/api/core";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { create } from "zustand";
-import { isBrowserEdition } from "../lib/platform/edition";
+import {
+  connectionCode,
+  drainCollectorSpool,
+  listenForPageDeliveries,
+  type PairingInfo,
+  readPairingInfo,
+} from "../lib/platform/browsingChannels";
+import { readDiscoveryData, WORD_CLOUD_WINDOWS } from "../lib/platform/browsingPanels";
+import { upgradeBrowsingClassifications } from "../lib/platform/browsingUpgrade";
+import { degradeSilently } from "../lib/platform/failureLog";
 
-/** The service's read endpoints send no CORS headers, so requests must go through Rust. */
-const client = createBrowsingInterestClient({
-  fetch: (url, init) => tauriFetch(url, init),
-});
+export { WORD_CLOUD_WINDOWS };
 
-/** The emotion curves cover a quarter; the word cloud window is the user's choice. */
-const EMOTION_DAYS = 90;
-const PRO_CONTENT_DAYS = 90;
-export const WORD_CLOUD_WINDOWS = [7, 30, 90, 365] as const;
-
-/** How long the service gets to answer after we start it — loading its model is slow. */
-const STARTUP_GRACE_MS = 60_000;
-
-/** What became of the attempt to have the service running. */
-export type ServiceStatus =
-  | "unknown"
-  | "running"
-  | "starting"
-  | "notFound"
-  | "pythonMissing"
-  | "failed";
-
-interface ServiceStartResult {
-  status: ServiceStatus;
-  path: string;
-  detail: string;
-}
+const nowSeconds = (): number => Date.now() / 1000;
 
 interface BrowsingInterestState {
-  connected: boolean;
-  /** False until the very first probe answers — the page shows nothing rather than flicker. */
-  probed: boolean;
+  /** False until the first read of the database answers — the page shows nothing rather than
+   * flashing the setup card at someone who already has months of history. */
+  ready: boolean;
+  /** Events on record. Zero is the honest "nothing has arrived yet" state. */
+  eventCount: number;
   profile: BrowsingProfile | null;
   emotion: EmotionSeries | null;
   emotionCategory: EmotionCategory;
@@ -58,18 +46,19 @@ interface BrowsingInterestState {
   wordCloudDays: number;
   newInterests: NewInterests | null;
   proContent: ProContent | null;
-  connectionToken: string | null;
-  serviceStatus: ServiceStatus;
+  /** Where a browser connects and the one-time code it connects with. Null in the browser
+   * edition, which has no listener and needs no code. */
+  pairing: PairingInfo | null;
   refresh(): Promise<void>;
-  ensureServiceRunning(): Promise<void>;
+  collect(): Promise<void>;
+  loadPairing(mint: boolean): Promise<void>;
   setEmotionCategory(category: EmotionCategory): Promise<void>;
   setWordCloudDays(days: number): Promise<void>;
-  loadConnectionToken(): Promise<void>;
 }
 
 export const useBrowsingInterestStore = create<BrowsingInterestState>((set, get) => ({
-  connected: false,
-  probed: false,
+  ready: false,
+  eventCount: 0,
   profile: null,
   emotion: null,
   emotionCategory: "all",
@@ -77,90 +66,70 @@ export const useBrowsingInterestStore = create<BrowsingInterestState>((set, get)
   wordCloudDays: 30,
   newInterests: null,
   proContent: null,
-  connectionToken: null,
-  serviceStatus: "unknown",
+  pairing: null,
 
-  /** One round trip per panel; a service that goes away mid-round drops the page back to
-   * the setup steps rather than leaving half-stale panels on screen. */
+  /** One read of the database, four panels out of it. `ready` is set whatever happens: a
+   * database that cannot be read is still an answered question, and the page has an empty
+   * state for it. */
   async refresh() {
-    // The browser edition has no discovery page and no way to reach 127.0.0.1: a page served
-    // over https cannot make plain-http requests, so every probe would be a console error
-    // every few seconds and nothing else. Answering here keeps that off the wire entirely.
-    if (isBrowserEdition()) return;
     try {
-      const profile = await client.profile();
-      const [emotion, wordCloud, newInterests, proContent] = await Promise.all([
-        client.emotionSeries(EMOTION_DAYS, get().emotionCategory),
-        client.wordCloud(get().wordCloudDays),
-        client.newInterests(),
-        client.proContent(PRO_CONTENT_DAYS),
-      ]);
-      set({
-        connected: true,
-        probed: true,
-        serviceStatus: "running",
-        profile,
-        emotion,
-        wordCloud,
-        newInterests,
-        proContent,
+      const data = await readDiscoveryData({
+        emotionCategory: get().emotionCategory,
+        wordCloudDays: get().wordCloudDays,
+        now: nowSeconds(),
       });
-    } catch {
-      set({ connected: false, probed: true });
+      set({
+        ready: true,
+        eventCount: data.eventCount,
+        profile: data.profile,
+        emotion: data.emotion,
+        wordCloud: data.wordCloud,
+        newInterests: data.newInterests,
+        proContent: data.proContent,
+      });
+    } catch (error) {
+      void degradeSilently("browsing-panels", error);
+      set({ ready: true });
     }
   },
 
-  /** Starts the service the first time the page needs it. Nothing to confirm: it is a local
-   * background program the user already installed, and it is the only thing standing between
-   * them and their own data. If it never comes up, the page says so plainly. */
-  async ensureServiceRunning() {
-    if (isBrowserEdition()) return;
-    if (get().connected || get().serviceStatus !== "unknown") return;
-    set({ serviceStatus: "starting" });
-    let result: ServiceStartResult;
-    try {
-      result = await invoke<ServiceStartResult>("start_interest_service");
-    } catch {
-      set({ serviceStatus: "failed" });
-      return;
-    }
-    if (result.status === "running" || result.status === "starting") {
-      // Give it its startup grace, then call it what it is: the panels never appeared.
-      setTimeout(() => {
-        if (!get().connected && get().serviceStatus === "starting")
-          set({ serviceStatus: "failed" });
-      }, STARTUP_GRACE_MS);
-      set({ serviceStatus: "starting" });
-      return;
-    }
-    set({ serviceStatus: result.status });
+  /** Takes in whatever the local listener has been given, then re-classifies a batch of older
+   * rows with the embedding model if it happens to be available. Both are best-effort and
+   * both refresh the page only when they actually changed something. */
+  async collect() {
+    const stored = await drainCollectorSpool();
+    if (stored > 0) await get().refresh();
+    const upgraded = await upgradeBrowsingClassifications();
+    if (upgraded > 0) await get().refresh();
+  },
+
+  async loadPairing(mint) {
+    set({ pairing: await readPairingInfo(mint) });
   },
 
   async setEmotionCategory(category) {
     set({ emotionCategory: category });
-    try {
-      set({ emotion: await client.emotionSeries(EMOTION_DAYS, category) });
-    } catch {
-      set({ connected: false });
-    }
+    await get().refresh();
   },
 
   async setWordCloudDays(days) {
     set({ wordCloudDays: days });
-    try {
-      set({ wordCloud: await client.wordCloud(days) });
-    } catch {
-      set({ connected: false });
-    }
-  },
-
-  async loadConnectionToken() {
-    if (isBrowserEdition()) return;
-    try {
-      const token = await invoke<string | null>("read_interest_service_token");
-      set({ connectionToken: token ?? null });
-    } catch {
-      set({ connectionToken: null });
-    }
+    await get().refresh();
   },
 }));
+
+/** The connection code the setup card displays, or null when there is nothing to connect to
+ * (the browser edition) or the current code has already been used. */
+export function useConnectionCode(): string | null {
+  const pairing = useBrowsingInterestStore((state) => state.pairing);
+  if (pairing === null || pairing.pairingCode === "") return null;
+  return connectionCode(pairing);
+}
+
+/** Opens the browser-edition delivery channel for as long as the discovery page is mounted.
+ * Returns the closer, so the caller can hand it straight to an effect's cleanup. */
+export function openPageChannel(): () => void {
+  return listenForPageDeliveries(() => {
+    void useBrowsingInterestStore.getState().refresh();
+  });
+}

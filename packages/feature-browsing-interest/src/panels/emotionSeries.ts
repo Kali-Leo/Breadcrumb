@@ -14,14 +14,16 @@
  * The `gent` category filters on `valence >= 0.5` and then charts valence. Its curve is
  * therefore a consequence of its own filter and is not evidence about anything; a caller
  * offering that category owes the reader that sentence.
- * Main exports: emotionSeries.
+ * Main exports: emotionSeries, EmotionCategory.
  */
-import type { EmotionCategory } from "../client";
 import type { BrowsingEventRow } from "../events";
 import type { EmotionPoint, EmotionSeries } from "../schemas";
 import { EMOTION_COUNT, EMOTION_NAMES, EMOTION_VALENCES, PRO_TOPIC_INDICES } from "../taxonomy";
 
 const SECONDS_PER_DAY = 86400;
+
+/** Category filter of the emotion curves — the four buttons above the chart. */
+export type EmotionCategory = "all" | "pro" | "ent" | "gent";
 
 /** app.py:293-300. A NULL topic satisfies none of the topic filters, exactly as SQL's
  * three-valued `IN` does — an unclassified row is not silently counted as entertainment. */

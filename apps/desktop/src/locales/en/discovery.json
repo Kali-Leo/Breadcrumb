@@ -1,17 +1,23 @@
 {
   "title": "Discover",
-  "intro": "This page shows what you have been watching on Bilibili and YouTube, and what interests you. All of it is worked out on this computer; nothing is sent anywhere else.",
-  "action": "One step left, in the browser: install an extension that runs scripts, then the two scripts.",
-  "installButton": "Install in the browser",
-  "afterClick": "Three pages open in your browser: install Violentmonkey first, then go back to the other two and press \"Install this script\" on each. After that, just browse Bilibili and YouTube as usual and this page will start showing your interests.",
-  "token": "One more step: on the Bilibili home page, click 🔗 on the switch bar at the bottom left and paste the code below; do the same on the YouTube home page.",
-  "projectHomepage": "Open the project page",
-  "service": {
-    "starting": "Starting the interest program on this computer…",
-    "notFound": "The interest program is not on this computer. It comes with the feed-mode project — download it to your home or desktop folder, then come back to this page.",
-    "pythonMissing": "There is no Python on this computer, and the interest program needs it.",
-    "failed": "The interest program did not start. It is most likely missing a few Python packages; run this in the project folder, then come back to this page:"
+  "setup": {
+    "title": "Discover",
+    "intro": "Install one browser script and what you watch on Bilibili and YouTube shows up on this page. It is all worked out on your own device and never sent anywhere.",
+    "step1Title": "Step 1: add an extension that can run scripts",
+    "step1Body": "Violentmonkey is free. Install it, then come back to this page.",
+    "step1Button": "Open the Violentmonkey page",
+    "step2Title": "Step 2: install Breadcrumb's two scripts",
+    "step2Body": "Press a button below; your browser will ask whether to install it, and yes is the answer.",
+    "bilibiliScript": "Install the Bilibili script",
+    "youtubeScript": "Install the YouTube script",
+    "step3Title": "Step 3: connect your browser to Breadcrumb",
+    "step3Body": "Open the Bilibili home page, click 🔗 on the switch bar at the bottom left, and paste the line below. Do the same once on the YouTube home page.",
+    "step3TitleWeb": "Step 3: keep Breadcrumb open",
+    "step3BodyWeb": "The script hands over what it recorded whenever you open Breadcrumb. There is nothing else to do.",
+    "codeUsed": "That line has been used. A new one is on its way.",
+    "connected": "Connected. Browse Bilibili and YouTube as usual and what you watch will start appearing here."
   },
+  "intro": "This page shows what you have been watching on Bilibili and YouTube, and what interests you. All of it is worked out on this computer; nothing is sent anywhere else.",
   "emotion": {
     "title": "How the content felt",
     "all": "All",

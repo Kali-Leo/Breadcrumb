@@ -5,8 +5,8 @@
  *
  * Refusing matters as much as implementing. Each of these commands already has a degradation
  * path on the desktop side (embeddings return null, TTS falls back to the browser's own voice,
- * the interest service is optional), so a rejected promise lands exactly where a missing
- * feature already lands. What must never happen is a command quietly resolving with a plausible
+ * the browsing collector is replaced by the page hand-off), so a rejected promise lands exactly
+ * where a missing feature already lands. What must never happen is a command quietly resolving with a plausible
  * empty value, which would look like "there is nothing to embed" rather than "this build cannot
  * embed".
  * Main exports: invoke.
@@ -70,11 +70,12 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
     case "piper_synthesize":
       throw new UnavailableInBrowser(command);
 
-    // The browsing-interest service is a separate program listening on localhost. A page
-    // cannot start a process, and reaching a local port from a website is exactly the kind of
-    // thing browsers are right to prevent.
-    case "start_interest_service":
-    case "read_interest_service_token":
+    // The browsing collector is a listener bound to 127.0.0.1, which only the desktop build
+    // can open. This edition receives the same events a different way — a script on this very
+    // page hands them over with postMessage (lib/platform/browsingChannels.ts) — so the
+    // discovery page is complete here without either of these.
+    case "browsing_collector_info":
+    case "take_browsing_events":
       throw new UnavailableInBrowser(command);
 
     default:

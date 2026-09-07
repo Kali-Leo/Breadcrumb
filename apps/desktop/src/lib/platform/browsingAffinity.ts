@@ -1,21 +1,19 @@
 /**
- * Purpose: spec 059 assembly — fetches the learner's watched professional content from the
- * local interest service, embeds the titles with the same local model the knowledge nodes
- * use, and hands plannerStore a per-node browsing-affinity map. Everything is best-effort:
- * an absent service or missing embedding model yields null and the planner runs exactly as
- * it did before spec 059. Titles stay in memory — never persisted, never sent to any LLM.
+ * Purpose: reads the learner's watched professional content out of this app's own browsing
+ * table, embeds the titles with the same local model the knowledge nodes use, and hands
+ * plannerStore a per-node browsing-affinity map. Everything is best-effort: no history yet or
+ * a missing embedding model yields null and the planner runs exactly as it did before the
+ * bridge existed. Titles stay in memory — never persisted, never sent to any LLM.
  * Main exports: loadBrowsingAffinityByNode.
  */
 import type { NodeEmbeddingRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
 import {
   browsingAffinityByNode,
-  createBrowsingInterestClient,
   type WatchedTitleSignal,
   watchedTitleSignals,
 } from "@breadcrumb/feature-browsing-interest";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { isBrowserEdition } from "./edition";
+import { readProContent } from "./browsingPanels";
 import { embedTexts } from "./embeddings";
 
 /** A watched title with everything downstream needs: the affinity path reads title/weight/
@@ -23,23 +21,13 @@ import { embedTexts } from "./embeddings";
  * the weight as of a past moment. */
 export type WatchedTitleRecord = WatchedTitleSignal & { vector: readonly number[] };
 
-/** The service's read endpoints send no CORS headers, so requests must go through Rust. */
-const client = createBrowsingInterestClient({
-  fetch: (url, init) => tauriFetch(url, init),
-});
-
-/** Fetch window for watched content. Three half-lives wide, so the window edge is where
- * weight has already decayed to ~0.125 — a fade, not a cliff. (A window equal to the
- * half-life would drop titles still carrying half their weight — 2026-08-30 review.) */
-const PRO_CONTENT_DAYS = 90;
-
-/** How long fetched-and-embedded title vectors stay fresh. Planner recomputes fire on every
+/** How long read-and-embedded title vectors stay fresh. Planner recomputes fire on every
  * mastery/interest/edge change; viewing history changes on a much slower clock. */
 const TITLE_CACHE_MS = 30 * 60 * 1000;
 
-/** After a failed attempt (service down, model missing), how long to not retry — the
- * client's own timeout is 8s, and paying it on every planner recompute would freeze the
- * pipeline behind a dead daemon. */
+/** After a failed attempt (unreadable table, embedding model missing), how long to not retry.
+ * A planner recompute fires on every mastery/interest/edge change, and re-attempting a read
+ * that just failed on each of them buys nothing. */
 const FAILURE_CACHE_MS = 5 * 60 * 1000;
 
 interface TitleVectorCache {
@@ -49,28 +37,26 @@ interface TitleVectorCache {
 
 let cache: TitleVectorCache | null = null;
 
-/** Watched-title records, through the cache: null means "unavailable right now" (service
- * unreachable, no embedding model, or simply nothing watched). */
+/** Watched-title records, through the cache: null means "unavailable right now" (the table
+ * could not be read, or the embedding model is not there). */
 export async function loadWatchedTitleRecords(): Promise<readonly WatchedTitleRecord[] | null> {
   const now = Date.now();
   if (cache !== null) {
     const ttl = cache.vectors === null ? FAILURE_CACHE_MS : TITLE_CACHE_MS;
     if (now - cache.fetchedAt < ttl) return cache.vectors;
   }
-  cache = { vectors: await fetchAndEmbedTitles(now), fetchedAt: now };
+  cache = { vectors: await readAndEmbedTitles(now), fetchedAt: now };
   return cache.vectors;
 }
 
-async function fetchAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecord[] | null> {
-  // The browser edition has no way to reach the loopback service (CSP and mixed content both
-  // refuse it), and every planner recompute was still trying — found in the 2026-09-02
-  // walkthrough. Answer "no bridge" before touching the network, as the store already does.
-  if (isBrowserEdition()) return null;
+async function readAndEmbedTitles(nowMillis: number): Promise<WatchedTitleRecord[] | null> {
+  // Breadcrumb's own table is the only source: the collector writes browsing straight into it
+  // (lib/platform/browsingIntake), so this works in both editions and makes no request.
   let signals: ReturnType<typeof watchedTitleSignals>;
   try {
-    signals = watchedTitleSignals(await client.proContent(PRO_CONTENT_DAYS), nowMillis);
+    signals = watchedTitleSignals(await readProContent(nowMillis / 1000), nowMillis);
   } catch {
-    return null; // absent service is the normal case for most users — stay silent
+    return null; // an unreadable table is a failure, not an empty history — retry sooner
   }
   // Empty viewing history is a stable answer, not a failure — cache it on the long TTL.
   if (signals.length === 0) return [];

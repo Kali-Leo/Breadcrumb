@@ -12,6 +12,7 @@
       "!**/*.svg",
       "!**/src-tauri/gen",
       "!**/src/data/generated",
+      "!apps/desktop/src/assets/userscripts",
       "!.claude",
       "!specs/**/*.html"
     ]

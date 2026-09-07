@@ -30,8 +30,8 @@ const { invoke } = await import("./tauri-core");
 const REFUSED = [
   "optimize_fsrs_parameters",
   "piper_synthesize",
-  "start_interest_service",
-  "read_interest_service_token",
+  "browsing_collector_info",
+  "take_browsing_events",
   // A command nobody has written a browser answer for must not resolve with a plausible value.
   "some_command_added_to_rust_tomorrow",
 ];

@@ -1,17 +1,23 @@
 {
   "title": "发现",
-  "intro": "这一页显示你在 B 站和 YouTube 上看过什么、对什么感兴趣。整理都在你自己这台电脑上完成，内容不会送到别的地方去。",
-  "action": "还差浏览器那一步：装一个能运行脚本的插件，再装两个脚本。",
-  "installButton": "在浏览器里安装",
-  "afterClick": "浏览器里会打开三个页面：先装 Violentmonkey，再回到另外两页各点一次「安装此脚本」。装好之后照常刷 B 站和 YouTube 就行，这一页会开始显示你的兴趣。",
-  "token": "还有一步：在 B站 首页左下角的开关条上点 🔗，把下面这串字粘贴进去，YouTube 首页上同样做一次。",
-  "projectHomepage": "打开项目主页",
-  "service": {
-    "starting": "正在启动这台电脑上的兴趣程序…",
-    "notFound": "没在这台电脑上找到那个兴趣程序。它在 feed-mode 项目里，下载到主目录或桌面即可，之后回到这一页。",
-    "pythonMissing": "这台电脑上没有 Python，兴趣程序需要它才能运行。",
-    "failed": "兴趣程序没能启动起来。多半是缺几个 Python 包，在项目文件夹里运行这行命令，然后回到这一页："
+  "setup": {
+    "title": "发现",
+    "intro": "装一个浏览器脚本，你在 B 站和 YouTube 上看过什么就会出现在这一页。整理都在你自己的设备上完成，不会送到别的地方去。",
+    "step1Title": "第一步：装一个能运行脚本的浏览器扩展",
+    "step1Body": "Violentmonkey 是免费的，装好之后回到这一页。",
+    "step1Button": "打开 Violentmonkey 的安装页",
+    "step2Title": "第二步：装 Breadcrumb 的两个脚本",
+    "step2Body": "点下面的按钮，浏览器会问你要不要安装，同意就好。",
+    "bilibiliScript": "安装 B 站脚本",
+    "youtubeScript": "安装 YouTube 脚本",
+    "step3Title": "第三步：把浏览器和这里连起来",
+    "step3Body": "打开 B 站首页，点左下角开关条上的 🔗，把下面这串字粘进去。YouTube 首页上再做一次。",
+    "step3TitleWeb": "第三步：把 Breadcrumb 开着",
+    "step3BodyWeb": "你打开 Breadcrumb 的时候，脚本会把看过的东西交过来，不用再做别的。",
+    "codeUsed": "上一串已经用过了，正在给你换一串新的。",
+    "connected": "连上了。照常刷 B 站和 YouTube 就行，看过的东西会陆续出现在这一页。"
   },
+  "intro": "这一页显示你在 B 站和 YouTube 上看过什么、对什么感兴趣。整理都在你自己这台电脑上完成，内容不会送到别的地方去。",
   "emotion": {
     "title": "内容情绪",
     "all": "全部",

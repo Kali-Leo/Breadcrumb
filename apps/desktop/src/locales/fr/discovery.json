@@ -1,17 +1,23 @@
 {
   "title": "Découvrir",
-  "intro": "Cette page montre ce que tu as regardé sur Bilibili et YouTube, et ce qui t'intéresse. Tout est calculé sur cet ordinateur ; rien n'est envoyé ailleurs.",
-  "action": "Il reste une étape, dans le navigateur : installe une extension qui exécute des scripts, puis les deux scripts.",
-  "installButton": "Installer dans le navigateur",
-  "afterClick": "Trois pages s'ouvrent dans ton navigateur : installe d'abord Violentmonkey, puis reviens aux deux autres et appuie sur « Installer ce script » sur chacune. Ensuite, navigue sur Bilibili et YouTube comme d'habitude et cette page commencera à montrer tes centres d'intérêt.",
-  "token": "Encore une étape : sur la page d'accueil de Bilibili, clique sur 🔗 dans la barre d'interrupteurs en bas à gauche et colle le code ci-dessous ; fais de même sur la page d'accueil de YouTube.",
-  "projectHomepage": "Ouvrir la page du projet",
-  "service": {
-    "starting": "Démarrage du programme d'intérêts sur cet ordinateur…",
-    "notFound": "Le programme d'intérêts n'est pas sur cet ordinateur. Il vient avec le projet du mode fil — télécharge-le dans ton dossier personnel ou sur le bureau, puis reviens sur cette page.",
-    "pythonMissing": "Il n'y a pas de Python sur cet ordinateur, et le programme d'intérêts en a besoin.",
-    "failed": "Le programme d'intérêts n'a pas démarré. Il lui manque très probablement quelques paquets Python ; lance ceci dans le dossier du projet, puis reviens sur cette page :"
+  "setup": {
+    "title": "Découvrir",
+    "intro": "Installe un script de navigateur et ce que tu regardes sur Bilibili et YouTube apparaîtra sur cette page. Tout est calculé sur ton appareil et n'est envoyé nulle part.",
+    "step1Title": "Étape 1 : ajoute une extension capable d'exécuter des scripts",
+    "step1Body": "Violentmonkey est gratuite. Installe-la, puis reviens sur cette page.",
+    "step1Button": "Ouvrir la page de Violentmonkey",
+    "step2Title": "Étape 2 : installez les deux scripts de Breadcrumb",
+    "step2Body": "Appuie sur un bouton ci-dessous ; ton navigateur demandera s'il faut l'installer, et la réponse est oui.",
+    "bilibiliScript": "Installer le script Bilibili",
+    "youtubeScript": "Installer le script YouTube",
+    "step3Title": "Étape 3 : relie ton navigateur à Breadcrumb",
+    "step3Body": "Ouvre la page d'accueil de Bilibili, clique sur 🔗 dans la barre en bas à gauche et colle la ligne ci-dessous. Fais de même une fois sur la page d'accueil de YouTube.",
+    "step3TitleWeb": "Étape 3 : laisse Breadcrumb ouvert",
+    "step3BodyWeb": "Le script transmet ce qu'il a enregistré chaque fois que tu ouvres Breadcrumb. Il n'y a rien d'autre à faire.",
+    "codeUsed": "Cette ligne a déjà servi. Une nouvelle arrive.",
+    "connected": "Connecté. Utilise Bilibili et YouTube comme d'habitude : ce que tu regardes apparaîtra ici."
   },
+  "intro": "Cette page montre ce que tu as regardé sur Bilibili et YouTube, et ce qui t'intéresse. Tout est calculé sur cet ordinateur ; rien n'est envoyé ailleurs.",
   "emotion": {
     "title": "Ce que le contenu t'a fait",
     "all": "Tout",

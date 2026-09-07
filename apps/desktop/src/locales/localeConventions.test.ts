@@ -53,7 +53,7 @@ const SIDE_WORDS: Record<string, RegExp> = {
 };
 
 /** Paths that describe another product's screen, where a side is a fact about that screen. */
-const FOREIGN_SCREENS = new Set(["discovery.token"]);
+const FOREIGN_SCREENS = new Set(["discovery.setup.step3Body"]);
 
 const LANGUAGES = Object.keys(SIDE_WORDS);
 

@@ -1,17 +1,23 @@
 {
   "title": "Jelajah",
-  "intro": "Halaman ini menunjukkan apa yang kamu tonton di Bilibili dan YouTube, dan apa yang menarik bagimu. Semuanya dihitung di komputer ini; tidak ada yang dikirim ke mana pun.",
-  "action": "Tinggal satu langkah, di peramban: pasang ekstensi yang menjalankan skrip, lalu kedua skripnya.",
-  "installButton": "Pasang di peramban",
-  "afterClick": "Tiga halaman terbuka di peramban: pasang Violentmonkey dulu, lalu kembali ke dua halaman lain dan tekan «Pasang skrip ini» di masing-masing. Setelah itu, tonton Bilibili dan YouTube seperti biasa dan halaman ini mulai menampilkan minatmu.",
-  "token": "Satu langkah lagi: di halaman depan Bilibili, klik 🔗 pada bilah sakelar di kiri bawah lalu tempel kode di bawah ini; lakukan hal yang sama di halaman depan YouTube.",
-  "projectHomepage": "Buka halaman proyek",
-  "service": {
-    "starting": "Menjalankan program minat di komputer ini…",
-    "notFound": "Program minat tidak ada di komputer ini. Ia datang bersama proyek mode umpan — unduh ke folder rumah atau destop-mu, lalu kembali ke halaman ini.",
-    "pythonMissing": "Tidak ada Python di komputer ini, sedangkan program minat membutuhkannya.",
-    "failed": "Program minat tidak berjalan. Kemungkinan besar beberapa paket Python belum ada; jalankan ini di folder proyek, lalu kembali ke halaman ini:"
+  "setup": {
+    "title": "Jelajah",
+    "intro": "Pasang satu skrip peramban, lalu apa yang Anda tonton di Bilibili dan YouTube akan muncul di halaman ini. Semuanya dihitung di perangkat Anda sendiri dan tidak dikirim ke mana pun.",
+    "step1Title": "Langkah 1: tambahkan ekstensi yang bisa menjalankan skrip",
+    "step1Body": "Violentmonkey gratis. Pasang, lalu kembali ke halaman ini.",
+    "step1Button": "Buka halaman Violentmonkey",
+    "step2Title": "Langkah 2: pasang dua skrip Breadcrumb",
+    "step2Body": "Tekan tombol di bawah; peramban akan bertanya apakah ingin memasangnya, dan jawabannya ya.",
+    "bilibiliScript": "Pasang skrip Bilibili",
+    "youtubeScript": "Pasang skrip YouTube",
+    "step3Title": "Langkah 3: hubungkan peramban dengan Breadcrumb",
+    "step3Body": "Buka halaman depan Bilibili, klik 🔗 pada bilah di kiri bawah, lalu tempel baris di bawah ini. Lakukan sekali lagi di halaman depan YouTube.",
+    "step3TitleWeb": "Langkah 3: biarkan Breadcrumb terbuka",
+    "step3BodyWeb": "Skrip menyerahkan catatannya setiap kali Anda membuka Breadcrumb. Tidak ada lagi yang perlu dilakukan.",
+    "codeUsed": "Baris itu sudah terpakai. Yang baru sedang disiapkan.",
+    "connected": "Sudah terhubung. Gunakan Bilibili dan YouTube seperti biasa; tontonan Anda akan mulai muncul di sini."
   },
+  "intro": "Halaman ini menunjukkan apa yang kamu tonton di Bilibili dan YouTube, dan apa yang menarik bagimu. Semuanya dihitung di komputer ini; tidak ada yang dikirim ke mana pun.",
   "emotion": {
     "title": "Bagaimana isinya terasa",
     "all": "Semua",

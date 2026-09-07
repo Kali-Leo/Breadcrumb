@@ -1,6 +1,7 @@
 /**
- * Purpose: public surface of the browsing-interest module — the service contract and the
- * pure math behind the panels. No UI here; the panels live in apps/desktop.
+ * Purpose: public surface of the browsing-interest module — the event contract, the two
+ * classification layers, the interest profile, the store the app keeps them in, and the pure
+ * math behind the four panels. No UI here; the panels live in apps/desktop.
  */
 export {
   AFFINITY_RELATIVE_GATE_FRACTION,
@@ -20,14 +21,31 @@ export {
   PROFILE_API_VERSION,
 } from "./browsingProfile";
 export {
-  type BrowsingInterestClient,
-  BrowsingInterestServiceError,
-  createBrowsingInterestClient,
-  DEFAULT_SERVICE_URL,
-  type EmotionCategory,
-  type ServiceFailure,
-  type ServiceFetch,
-} from "./client";
+  CLASSIFIER_MODEL,
+  CLASSIFIER_PREFIX,
+  type ClassifierHead,
+  COEFFICIENT_EMOTION_LABELS,
+  COEFFICIENT_TOPIC_LABELS,
+  classifyTexts,
+  classifyVectors,
+  decodeHead,
+  type EmbeddingClassification,
+  type EmbedTexts,
+  emotionClassifierHead,
+  MAX_CLASSIFY_CHARS,
+  type QuantisedHead,
+  scoreVector,
+  topicClassifierHead,
+} from "./classifier";
+export {
+  type ClassificationInput,
+  type ClassifierLayer,
+  isDistribution,
+  type LayerOutput,
+  needsEmbeddingUpgrade,
+  type ResolvedClassification,
+  resolveClassification,
+} from "./classifierLayers";
 export {
   buildEmotionChart,
   EMOTION_CHART_HEIGHT,
@@ -56,7 +74,11 @@ export {
   trustedEventTime,
 } from "./events";
 export { countsL2Norm, hashedNgramCounts, murmurHash3, NGRAM_MAX, NGRAM_MIN } from "./hashing";
-export { type EmotionSeriesOptions, emotionSeries } from "./panels/emotionSeries";
+export {
+  type EmotionCategory,
+  type EmotionSeriesOptions,
+  emotionSeries,
+} from "./panels/emotionSeries";
 export {
   MIN_ENGAGED_FOR_NEW_INTERESTS,
   MIN_NEW_INTEREST_SHARE,
@@ -114,20 +136,15 @@ export {
   topDriverTopics,
   topicAffinity,
 } from "./profileShares";
-export {
-  type BrowsingProfile,
-  browsingProfileSchema,
-  type CloudWord,
-  type EmotionPoint,
-  type EmotionSeries,
-  emotionSeriesSchema,
-  type NewInterests,
-  newInterestsSchema,
-  type ProContent,
-  type ProContentItem,
-  proContentSchema,
-  type WordCloud,
-  wordCloudSchema,
+export type {
+  BrowsingProfile,
+  CloudWord,
+  EmotionPoint,
+  EmotionSeries,
+  NewInterests,
+  ProContent,
+  ProContentItem,
+  WordCloud,
 } from "./schemas";
 export {
   EMOTION_COUNT,

@@ -6,9 +6,9 @@
   "description": "Browser edition: the same app, running with no install. SQLite compiles to WebAssembly and lives in the browser's own storage; the four Tauri modules are aliased to browser implementations, so the application code is shared verbatim with the desktop build.",
   "type": "module",
   "scripts": {
-    "predev": "node src/shims/embedding/copy-ort-assets.mjs",
+    "predev": "node src/shims/embedding/copy-ort-assets.mjs && node src/shims/copy-userscripts.mjs",
     "dev": "vite",
-    "prebuild": "node src/shims/embedding/copy-ort-assets.mjs",
+    "prebuild": "node src/shims/embedding/copy-ort-assets.mjs && node src/shims/copy-userscripts.mjs",
     "build": "vite build",
     "postbuild": "node ../../scripts/check-bundle-size.mjs",
     "preview": "vite preview",

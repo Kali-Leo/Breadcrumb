@@ -13,13 +13,21 @@ export interface RealSqliteDatabase {
   close(): void;
 }
 
-/** Parameter-less statements with no '?' go through exec() (DDL and the multi-statement
- * migrations), everything else through a prepared statement. executeTransaction is a real
- * BEGIN/COMMIT, so a failing batch rolls back exactly like the desktop's Rust command. */
+/** Parameter-less statements go through exec() (DDL and the multi-statement migrations),
+ * everything else through a prepared statement. executeTransaction is a real BEGIN/COMMIT, so
+ * a failing batch rolls back exactly like the desktop's Rust command.
+ *
+ * The branch is decided by the params alone. It used to additionally require that the SQL
+ * contain no '?', which read as a safety net and was in fact a trap: migration 0054 declares
+ * `site TEXT NOT NULL DEFAULT '?'`, a question mark inside a string literal, and that one
+ * character sent a parameter-less CREATE TABLE down the prepared-statement path to be spread
+ * with `undefined`. Every real client here (sqlx, sqlite-wasm, the plugin) decides on the
+ * params too. A statement that genuinely forgot its parameters still fails loudly — SQLite
+ * refuses an unbound placeholder in exec(). */
 export function createNodeSqliteClient(db: DatabaseSync): SqlClient {
   const runStatement = (statement: SqlTransactionStatement): void => {
     const params = statement.params;
-    if ((params === undefined || params.length === 0) && !statement.sql.includes("?")) {
+    if (params === undefined || params.length === 0) {
       db.exec(statement.sql);
       return;
     }

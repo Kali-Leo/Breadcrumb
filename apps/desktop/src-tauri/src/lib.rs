@@ -1,13 +1,16 @@
 // Purpose: Tauri application entry — registers plugins (sql, http, opener) and the local
-// embeddings + piper TTS + atomic SQL transaction + interest-service token + database-open
+// embeddings + piper TTS + atomic SQL transaction + browsing-collector + database-open
 // commands. The Rust shell stays thin: business logic lives in TS packages.
 //
 // The sql plugin is registered without `allow-load` in the capability set: the frontend
 // cannot name a database file, it calls open_app_database and gets the one this app owns.
 
+mod collector;
+mod collector_http;
+#[cfg(test)]
+mod collector_tests;
 mod embeddings;
 mod fsrs_optim;
-mod interest_service;
 mod open_database;
 #[cfg(test)]
 mod open_database_tests;
@@ -74,8 +77,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
             fsrs_optim::optimize_fsrs_parameters,
-            interest_service::read_interest_service_token,
-            interest_service::start_interest_service,
+            collector::browsing_collector_info,
+            collector::take_browsing_events,
             open_database::open_app_database,
             transactions::execute_sql_transaction,
             tts::piper_synthesize
@@ -105,7 +108,7 @@ mod tests {
         // The shape of the attack: a link in a model's answer, opened in a window with no
         // address bar.
         assert!(!is_app_url(&url("https://evil.example/login")));
-        assert!(!is_app_url(&url("http://127.0.0.1:21456/export")));
+        assert!(!is_app_url(&url("http://127.0.0.1:8080/anything")));
         assert!(!is_app_url(&url("file:///etc/passwd")));
         assert!(!is_app_url(&url("https://tauri.localhost.evil.example/")));
     }

@@ -14,7 +14,7 @@ function redirectTo(location: string, status = 302): Response {
 
 describe("isFetchableUrl", () => {
   it("refuses the local machine and private networks, allows public https", () => {
-    expect(isFetchableUrl("http://127.0.0.1:21456/export")).toBe(false);
+    expect(isFetchableUrl("http://127.0.0.1:9000/export")).toBe(false);
     expect(isFetchableUrl("http://localhost:11434/api")).toBe(false);
     expect(isFetchableUrl("http://169.254.169.254/latest/meta-data")).toBe(false);
     expect(isFetchableUrl("file:///etc/passwd")).toBe(false);
@@ -39,7 +39,7 @@ describe("fetchExternalPage", () => {
     // there" — at a service only this machine can reach.
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       if (String(input) === "https://evil.example/a") {
-        return redirectTo("http://127.0.0.1:21456/export");
+        return redirectTo("http://127.0.0.1:9000/export");
       }
       return new Response("local service secrets", { status: 200 });
     });

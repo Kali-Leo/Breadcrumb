@@ -1,2 +1,5 @@
 # Published by src/shims/embedding/copy-ort-assets.mjs before every dev run and build.
 ort/
+# Published by src/shims/copy-userscripts.mjs before every dev run and build; the scripts
+# themselves live in apps/desktop/src/assets/userscripts.
+userscripts/

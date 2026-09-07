@@ -6,6 +6,7 @@
  */
 import {
   createAiFailuresRepo,
+  createBrowsingEventUpgradesRepo,
   createCanonicalRepo,
   createCompanionKnowledgeStateRepo,
   createCompanionMemoriesRepo,
@@ -37,6 +38,7 @@ import {
   runMigrations,
   type SqlClient,
 } from "@breadcrumb/core-db";
+import { createBrowsingEventStore } from "@breadcrumb/feature-browsing-interest";
 import { invoke } from "@tauri-apps/api/core";
 import Database from "@tauri-apps/plugin-sql";
 
@@ -70,6 +72,12 @@ export interface Repos {
   focusSessions: ReturnType<typeof createFocusSessionsRepo>;
   focusNodes: ReturnType<typeof createFocusNodesRepo>;
   termMarks: ReturnType<typeof createTermMarksRepo>;
+  /** Everything the discovery page is built from: the browsing events a collector script
+   * delivered, and the one-row interest-profile snapshot (migration 0054). The store itself
+   * is defined in feature-browsing-interest, next to the schema it reads. */
+  browsingEvents: ReturnType<typeof createBrowsingEventStore>;
+  /** The two rowid-addressed queries the background re-classification pass needs. */
+  browsingEventUpgrades: ReturnType<typeof createBrowsingEventUpgradesRepo>;
 }
 
 let sqlClientPromise: Promise<SqlClient> | null = null;
@@ -136,6 +144,8 @@ async function buildRepos(): Promise<Repos> {
     focusSessions: createFocusSessionsRepo(sqlClient),
     focusNodes: createFocusNodesRepo(sqlClient),
     termMarks: createTermMarksRepo(sqlClient),
+    browsingEvents: createBrowsingEventStore(sqlClient),
+    browsingEventUpgrades: createBrowsingEventUpgradesRepo(sqlClient),
   };
 }
 

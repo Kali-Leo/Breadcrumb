@@ -57,6 +57,10 @@ function mergeBatchText(): string {
  * available is forcing a human to classify each new column, which is what failing here does.
  */
 const NODE_ID_FREE_JSON_COLUMNS: readonly string[] = [
+  "browsing_profile.expose_json", // numbers: one weight per topic in the taxonomy
+  "browsing_profile.long_json", // numbers
+  "browsing_profile.prefs_json", // topic index -> the learner's own preference, no node ids
+  "browsing_profile.short_json", // numbers
   "canonical_concept_embeddings.vector_json", // numbers
   "canonical_concepts.aliases_json", // label strings
   "companion_knowledge_state.state_json", // the teach-back student model, keyed by conversation
