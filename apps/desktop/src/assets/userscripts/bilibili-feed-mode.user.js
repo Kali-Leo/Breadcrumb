@@ -227,7 +227,7 @@
   }
   const imQueue = [];
   let imTimer = null;
-  // 连接状态：off 未连接 / ok 正常 / bad 令牌失效 / offline 本机程序没开
+  // 连接状态：off 未连接 / ok 正常 / bad 令牌失效 / offline Breadcrumb 没开着
   let imState = imOn() ? (IM_TOKEN ? "pending" : "queued") : "off";
   let imSent = 0,
     imFails = 0,
@@ -242,8 +242,8 @@
       imWarned = true;
       alert(
         ZH
-          ? "本地兴趣模型拒绝了连接，浏览记录没有送达。请点开关条上的 🔗 重新连接。"
-          : "The local interest model rejected the connection, so nothing is being recorded. Click 🔗 on the switch bar to reconnect.",
+          ? "Breadcrumb 没有接受这次连接，看过的东西没有送过去。点开关条上的 🔗 重新连接。"
+          : "Breadcrumb did not accept the connection, so nothing is being handed over. Click 🔗 on the switch bar to reconnect.",
       );
     }
   }
@@ -685,22 +685,22 @@
     );
   };
   sw.appendChild(cfgBtn);
-  // 本地兴趣模型入口：连接后才把浏览记录交给本机程序，未连接 = 这个功能完全不存在
+  // 交给 Breadcrumb 的入口：连接之后才交，未连接 = 这个功能完全不存在
   const imBtn = document.createElement("button");
   imBtn.textContent = "🔗";
   const IM_STATE_TEXT = {
     off: [
-      "本地兴趣模型：未连接。点击了解并连接",
-      "Local interest model: not connected. Click to learn more and connect",
+      "Breadcrumb：没有连接。点击了解并连接",
+      "Breadcrumb: not connected. Click to learn more and connect",
     ],
-    pending: ["本地兴趣模型：连接中…", "Local interest model: connecting…"],
+    pending: ["Breadcrumb：正在连接…", "Breadcrumb: connecting…"],
     ok: [
-      "本地兴趣模型：已连接。点击打开仪表盘",
-      "Local interest model: connected. Click to open the dashboard",
+      "Breadcrumb：已连接。点击可以停止记录",
+      "Breadcrumb: connected. Click to stop recording",
     ],
     bad: [
-      "本地兴趣模型：连接被拒绝。点击重新连接",
-      "Local interest model: connection rejected. Click to reconnect",
+      "Breadcrumb：连接被拒绝。点击重新连接",
+      "Breadcrumb: connection rejected. Click to reconnect",
     ],
     offline: [
       "Breadcrumb：没连上，记录先存着",
