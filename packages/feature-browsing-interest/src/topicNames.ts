@@ -1,13 +1,14 @@
 /**
- * Purpose: the interest service names topics in Chinese and may send an English list beside
- * it (`topics_en`, aligned by position with `topics`). This turns that into a lookup the
- * panels can use, and answers every lookup with *some* readable name: a missing translation
- * shows the original topic rather than a blank.
+ * Purpose: the topic names the classifier works in are Chinese, because the taxonomy's order is
+ * the weight matrix's column order and cannot be renamed. This answers "what should the panel
+ * show" for one topic, and answers it with *some* readable name: a topic with no translation
+ * shows its original name rather than a blank.
  * Main exports: englishTopicNames, topicLabel.
  */
 import type { BrowsingProfile } from "./schemas";
+import { TOPIC_GROUP_NAMES_EN, TOPIC_LEAF_NAMES_EN } from "./taxonomy";
 
-/** Chinese topic name → English name, for the pairs the service actually provided. */
+/** Chinese topic name → English name, for whatever pairs a profile carries itself. */
 export function englishTopicNames(profile: BrowsingProfile | null): ReadonlyMap<string, string> {
   const names = new Map<string, string>();
   const english = profile?.topics_en;
@@ -20,8 +21,10 @@ export function englishTopicNames(profile: BrowsingProfile | null): ReadonlyMap<
 }
 
 /**
- * The topic name to show. `ownEnglishName` is the entry's own `topic_en` where the response
- * carries one; the profile-wide map is the fallback, and the original topic the last resort.
+ * The topic name to show, in order of authority: the entry's own English name, then whatever
+ * the profile carried, then the taxonomy's own English tables — leaves and groups both, because
+ * a panel labels items by leaf and chips by group and either can reach here. The original
+ * Chinese name is the last resort, so a topic never renders blank.
  */
 export function topicLabel(
   topic: string,
@@ -34,5 +37,10 @@ export function topicLabel(
   if (!options.preferEnglish) return topic;
   const own = options.ownEnglishName;
   if (own !== undefined && own.trim() !== "") return own;
-  return options.englishNames?.get(topic) ?? topic;
+  return (
+    options.englishNames?.get(topic) ??
+    TOPIC_LEAF_NAMES_EN[topic] ??
+    TOPIC_GROUP_NAMES_EN[topic] ??
+    topic
+  );
 }

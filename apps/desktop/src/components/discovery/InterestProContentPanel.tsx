@@ -83,6 +83,7 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
 
 export function InterestProContentPanel() {
   const { t } = useTranslation("discovery");
+  const topicName = useTopicName();
   const proContent = useBrowsingInterestStore((state) => state.proContent);
   const [tab, setTab] = useState<Tab>("unfinished");
   const [group, setGroup] = useState<string>(ALL_GROUPS);
@@ -92,7 +93,7 @@ export function InterestProContentPanel() {
     { value: ALL_GROUPS, label: t("proContent.allGroups") },
     ...groupCounts(everything).map((entry) => ({
       value: entry.group,
-      label: `${entry.group} ${entry.count}`,
+      label: `${topicName(entry.group)} ${entry.count}`,
     })),
   ];
   const items = (proContent?.[tab] ?? []).filter(

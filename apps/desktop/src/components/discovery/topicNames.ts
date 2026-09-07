@@ -1,8 +1,7 @@
 /**
- * Purpose: the interest service names topics in Chinese. When the interface is in English and
- * the service supplied English names (`topics_en`, or an entry's own `topic_en`), the panels
- * show those instead; anything it has no English name for keeps its original name rather than
- * disappearing. One hook so every interest panel answers this the same way.
+ * Purpose: topics are classified under Chinese names. When the interface is in English the
+ * panels show the English name instead; anything with no English name keeps its original name
+ * rather than disappearing. One hook so every interest panel answers this the same way.
  * Main exports: useTopicName.
  */
 import { englishTopicNames, topicLabel } from "@breadcrumb/feature-browsing-interest";
