@@ -17,7 +17,6 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import catalogJson from "../../assets/language-packs/catalog.json";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { getRepos } from "../platform/db";
-import { isBrowserEdition } from "../platform/edition";
 import { NetworkDisabledError } from "../platform/llmConfig";
 import { nowIso } from "../platform/time";
 
@@ -57,19 +56,22 @@ export function catalogPackFor(pairId: string): CatalogPack | null {
 }
 
 /**
- * Where a pack is fetched from, which is not the same place in the two builds.
+ * Where a pack is fetched from. One address for both builds, pinned to a tag.
  *
- * The desktop build asks GitHub Releases directly. A browser cannot: the release asset
- * redirects to a second host and neither hop sends `access-control-allow-origin`, so the fetch
- * fails before it has even followed the redirect — measured 2026-09-02, and it made every one
- * of the eight downloadable pairs impossible to install in the browser edition. So that build
- * reads the packs from its own site instead, where being same-origin makes the question moot;
- * the deploy workflow copies the very same release assets into the site. The digest check
- * afterwards is unchanged and still the thing that decides whether a pack is trusted.
+ * It has to be a plain file in a repository rather than a release asset: an asset redirects to
+ * a second host and neither hop sends `access-control-allow-origin`, so a browser's fetch fails
+ * before it has even followed the redirect — measured 2026-09-02, and it made every downloadable
+ * pair impossible to install in the browser edition. Raw repository files do send it, so the two
+ * builds can finally use one address and one code path.
+ *
+ * The packs live in their own repository (github.com/Kali-Leo/breadcrumb-language-packs) because
+ * they are CC BY-SA 4.0, which grants one-way compatibility with GPLv3 but not with this
+ * application's AGPLv3: keeping them out of this repository lets each licence apply cleanly.
+ * The digest check afterwards is unchanged and still the thing that decides whether a pack is
+ * trusted — a tag can be moved, a SHA-256 cannot be talked around.
  */
 function downloadUrlFor(pack: CatalogPack): string {
-  if (isBrowserEdition()) return `${import.meta.env.BASE_URL}language-packs/${pack.file}`;
-  return `${catalog.downloadBase}-${pack.version}/${pack.file}`;
+  return `${catalog.downloadBase}/${pack.version}/packs/${pack.file}`;
 }
 
 const packCache = new Map<DiglotPairId, Promise<LoadedLanguagePack>>();

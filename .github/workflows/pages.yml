@@ -61,23 +61,6 @@ jobs:
       - name: Build
         run: pnpm --filter @breadcrumb/web build
 
-      # Language packs, served from this site rather than from GitHub Releases. Release assets
-      # send no CORS headers on either hop of their redirect, so a page can never fetch one —
-      # measured 2026-09-02, and it left all eight downloadable pairs uninstallable here.
-      # The files are byte-for-byte the release assets; installLanguagePack still checks each
-      # one against the digest baked into the catalogue before it is stored.
-      - name: Bundle the language packs into the site
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version=$(node -p "require('./apps/desktop/src/assets/language-packs/catalog.json').packs[0].version")
-          mkdir -p apps/web/dist/language-packs
-          gh release download "language-packs-$version" \
-            --repo "$GITHUB_REPOSITORY" \
-            --dir apps/web/dist/language-packs \
-            --pattern '*.json'
-          ls -l apps/web/dist/language-packs
-
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0

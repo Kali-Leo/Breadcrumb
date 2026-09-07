@@ -15,6 +15,8 @@
  * dictionary as well as a source of replacements.
  * Main exports: buildCrossPack.
  */
+import { HIGH_FREQUENCY_BAND } from "./crossPackLimits.mjs";
+import { isSentenceInitialVariant, usableKey, weavable } from "./crossPackRules.mjs";
 import { ENGLISH_FUNCTION_WORDS } from "./entry-builder.mjs";
 import { MAX_BRIDGE_CANDIDATES, MAX_SOURCE_SENSES } from "./interlinguaGloss.mjs";
 import { isContentPos, isFunctionPos, isLetterOrAcronym, shortPos } from "./wordShape.mjs";
@@ -30,17 +32,6 @@ const MAX_ALT_TARGETS = 6;
  * rare word, not a random slice of every word's.
  */
 const MAX_FORMS = 150_000;
-/**
- * Where the extra-strict rule stops. Inside this band the source and target must be the same
- * part of speech and both must be content words; outside it, a shared dominant gloss is enough.
- *
- * 1000 because that is roughly where a frequency list stops being grammar and starts being
- * vocabulary: the top thousand of an OpenSubtitles list covers the large majority of running
- * text, so a wrong entry there is one the learner meets again and again rather than once, and
- * it is also where the pronouns, auxiliaries and irregular verb forms are concentrated. Below
- * it a wrong entry surfaces rarely and the recall of the looser rule is worth more.
- */
-const HIGH_FREQUENCY_BAND = 1000;
 
 /** key → the target words glossed with it, capped one past the ceiling so "too many" is still
  * distinguishable from "exactly the ceiling". */
@@ -91,60 +82,6 @@ function betterThan(a, b) {
   if (a.inflected !== b.inflected) return b.inflected;
   if (a.word.length !== b.word.length) return a.word.length < b.word.length;
   return a.word < b.word;
-}
-
-/** A key is evidence of meaning only while few enough words on either side claim it — and only
- * while it says something. English is the interlingua, so a key that is an English function
- * word ("the", "not", "him") bridges on grammar rather than on meaning: it matches every
- * language's articles and pronouns to each other, which is how `a → sebuah` and `him → beliau`
- * got woven. Grammar is not vocabulary, so those keys are dropped on both sides at once. */
-function usableKey(key, targetsByKey, sourceClaims) {
-  if (ENGLISH_FUNCTION_WORDS.has(key)) return null;
-  const candidates = targetsByKey.get(key);
-  if (candidates === undefined || candidates.length > MAX_BRIDGE_CANDIDATES) return null;
-  if ((sourceClaims.get(key) ?? 0) > MAX_BRIDGE_CANDIDATES) return null;
-  return candidates;
-}
-
-/**
- * A capitalised spelling of a word that also exists in lower case is the same word at the start
- * of a sentence, not a different one. German makes this urgent because it capitalises its nouns,
- * so the frequency list is full of sentence-initial `Als`, `Hast`, `Denke` and `Alt` that
- * Wiktionary can also read as rare nouns — and de:ja wove `Als → 小川` (a stream) and
- * `vier → だれ` sat next to `Alt → アルト`. A genuine German noun like `Kind` or `Woche` has no
- * lower-case twin and is unaffected.
- */
-function isSentenceInitialVariant(word, half) {
-  const lowered = word.toLowerCase();
-  if (lowered === word) return false;
-  // Either the lower-case spelling is a word in its own right, or it is somebody's conjugation
-  // that never earned an entry — German `hast` (you have) is only ever a form of `haben`, so it
-  // is absent from `words` and present in `forms`, and `Hast` was being taught as 特急.
-  return half.words[lowered] !== undefined || half.forms[lowered] !== undefined;
-}
-
-/** Everything that disqualifies a matched pair from being swapped into a learner's text. The
- * entry is still written; only `t1Safe` turns on it. */
-function weavable({ word, entry, chosen, targetEntry, bridgedOnPrimary, source, target }) {
-  if (!bridgedOnPrimary || entry.k.length > MAX_SOURCE_SENSES) return false;
-  // Somebody else's conjugation, on either side. This is the rule that keeps `son` (they are)
-  // away from `ton` (your) and `est` (is) away from `east`.
-  if (entry.x === 1 || targetEntry.x === 1) return false;
-  if (isFunctionPos(entry.p) || isFunctionPos(targetEntry.p)) return false;
-  if (isLetterOrAcronym(word) || isLetterOrAcronym(chosen)) return false;
-  if (isSentenceInitialVariant(word, source) || isSentenceInitialVariant(chosen, target)) {
-    return false;
-  }
-  if (ENGLISH_FUNCTION_WORDS.has(chosen) || chosen.includes(" ")) return false;
-  if (entry.r <= HIGH_FREQUENCY_BAND) {
-    if (!isContentPos(entry.p) || !isContentPos(targetEntry.p)) return false;
-    if (shortPos(entry.p) !== shortPos(targetEntry.p)) return false;
-    // Gender is inflection for an adjective and a separate word for a noun, and up here the
-    // adjective reading wins: Spanish `buena` is the feminine of `bueno` far more often than
-    // it is the noun sense that had it glossed "inheritance".
-    if (entry.g === 1 || targetEntry.g === 1) return false;
-  }
-  return true;
 }
 
 export function buildCrossPack({ source, target }) {
