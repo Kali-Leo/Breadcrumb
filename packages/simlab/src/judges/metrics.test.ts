@@ -12,6 +12,7 @@ import { type BuildRunMetricsInput, buildRunMetrics } from "./metrics";
 
 const persona: Persona = {
   id: "p1",
+  language: "zh-CN",
   name: "test",
   description: "d",
   knowledge: { knownTopics: [], misconceptions: [], targetConcepts: ["闭包"] },

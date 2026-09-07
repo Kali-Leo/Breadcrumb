@@ -1,47 +1,695 @@
 {
-  "$comment": "Gold-standard prerequisite pairs, hand-authored by Fable 5 (2026-08-01). relation: 'requires' means a is a hard prerequisite of b; 'unrelated' means no direct learning-structure relation. Objective domain facts only — no taste judgments.",
+  "$comment": "Gold-standard prerequisite pairs. relation 'requires' means a is a hard prerequisite of b; 'unrelated' means no direct learning-structure relation. Objective domain facts only — no taste judgements. `lang` is the BCP-47 tag the pair is written in: the edge judge reads a label plus a one-line summary, and both have to be in one language for the judgement to mean anything.\nSources: the zh-CN pairs are hand-authored by Fable 5 (2026-08-01). The nine other language sets are hand-authored (2026-09-07) — direction is a structural claim, so it is not delegated to a model — with every concept label cross-checked, where the extraction covers it, against the Wiktionary-derived term index in scripts/language-packs/.cache/interlingua/*.json (Wiktionary via kaikki.org, CC BY-SA 4.0). Verified this way: hi भिन्न/प्रायिकता/बीजगणित/ज्यामिति/त्रिकोणमिति, bn সীমা/বীজগণিত/সম্ভাবনা, ru функция/уравнение/дробь/вероятность/предел, ar معادلة/نهاية/احتمال, id pecahan/variabel/fungsi, es fracción/probabilidad/límite, ja 変数/関数/確率, ko 확률/분수, en all. Terms the extraction has no row for (mostly the calculus and CS vocabulary, which Wiktionary covers thinly outside English) are the standard school/university terms and were reviewed by hand.\nWhy more than Chinese: goldBaseline is the only judge that measures the edge judge against documented truth, and until 2026-09-07 it could only ever measure it in Chinese.",
   "pairs": [
-    { "a": "加法", "b": "乘法", "relation": "requires" },
-    { "a": "乘法", "b": "指数运算", "relation": "requires" },
-    { "a": "分数", "b": "概率", "relation": "requires" },
-    { "a": "集合", "b": "函数", "relation": "requires" },
-    { "a": "函数", "b": "极限", "relation": "requires" },
-    { "a": "极限", "b": "导数", "relation": "requires" },
-    { "a": "函数", "b": "导数", "relation": "requires" },
-    { "a": "导数", "b": "积分", "relation": "requires" },
-    { "a": "极限", "b": "级数收敛", "relation": "requires" },
-    { "a": "代数方程", "b": "二次方程", "relation": "requires" },
-    { "a": "三角函数", "b": "傅里叶级数", "relation": "requires" },
-    { "a": "向量", "b": "矩阵", "relation": "requires" },
-    { "a": "矩阵", "b": "行列式", "relation": "requires" },
-    { "a": "导数", "b": "梯度", "relation": "requires" },
-    { "a": "概率", "b": "贝叶斯定理", "relation": "requires" },
-    { "a": "概率", "b": "期望值", "relation": "requires" },
-    { "a": "变量", "b": "循环语句", "relation": "requires" },
-    { "a": "布尔逻辑", "b": "条件语句", "relation": "requires" },
-    { "a": "函数（编程）", "b": "递归", "relation": "requires" },
-    { "a": "作用域", "b": "闭包", "relation": "requires" },
-    { "a": "闭包", "b": "柯里化", "relation": "requires" },
-    { "a": "指针", "b": "链表", "relation": "requires" },
-    { "a": "数组", "b": "排序算法", "relation": "requires" },
-    { "a": "二叉树", "b": "二叉搜索树", "relation": "requires" },
-    { "a": "图（数据结构）", "b": "最短路径算法", "relation": "requires" },
-    { "a": "类", "b": "继承", "relation": "requires" },
-    { "a": "HTTP", "b": "REST API", "relation": "requires" },
-    { "a": "递归", "b": "分治算法", "relation": "requires" },
-    { "a": "速度", "b": "加速度", "relation": "requires" },
-    { "a": "加速度", "b": "牛顿第二定律", "relation": "requires" },
-    { "a": "电荷", "b": "电场", "relation": "requires" },
-    { "a": "电场", "b": "电势", "relation": "requires" },
-    { "a": "原子结构", "b": "化学键", "relation": "requires" },
-    { "a": "细胞", "b": "有丝分裂", "relation": "requires" },
-    { "a": "闭包", "b": "光合作用", "relation": "unrelated" },
-    { "a": "导数", "b": "唐诗格律", "relation": "unrelated" },
-    { "a": "矩阵", "b": "面包烘焙", "relation": "unrelated" },
-    { "a": "递归", "b": "印象派绘画", "relation": "unrelated" },
-    { "a": "HTTP", "b": "有丝分裂", "relation": "unrelated" },
-    { "a": "概率", "b": "楷书笔画", "relation": "unrelated" },
-    { "a": "电场", "b": "柯里化", "relation": "unrelated" },
-    { "a": "二叉树", "b": "牛顿第二定律", "relation": "unrelated" }
+    {
+      "lang": "zh-CN",
+      "a": "加法",
+      "b": "乘法",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "乘法",
+      "b": "指数运算",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "分数",
+      "b": "概率",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "集合",
+      "b": "函数",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "函数",
+      "b": "极限",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "极限",
+      "b": "导数",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "函数",
+      "b": "导数",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "导数",
+      "b": "积分",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "极限",
+      "b": "级数收敛",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "代数方程",
+      "b": "二次方程",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "三角函数",
+      "b": "傅里叶级数",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "向量",
+      "b": "矩阵",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "矩阵",
+      "b": "行列式",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "导数",
+      "b": "梯度",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "概率",
+      "b": "贝叶斯定理",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "概率",
+      "b": "期望值",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "变量",
+      "b": "循环语句",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "布尔逻辑",
+      "b": "条件语句",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "函数（编程）",
+      "b": "递归",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "作用域",
+      "b": "闭包",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "闭包",
+      "b": "柯里化",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "指针",
+      "b": "链表",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "数组",
+      "b": "排序算法",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "二叉树",
+      "b": "二叉搜索树",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "图（数据结构）",
+      "b": "最短路径算法",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "类",
+      "b": "继承",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "HTTP",
+      "b": "REST API",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "递归",
+      "b": "分治算法",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "速度",
+      "b": "加速度",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "加速度",
+      "b": "牛顿第二定律",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "电荷",
+      "b": "电场",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "电场",
+      "b": "电势",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "原子结构",
+      "b": "化学键",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "细胞",
+      "b": "有丝分裂",
+      "relation": "requires"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "闭包",
+      "b": "光合作用",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "导数",
+      "b": "唐诗格律",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "矩阵",
+      "b": "面包烘焙",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "递归",
+      "b": "印象派绘画",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "HTTP",
+      "b": "有丝分裂",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "概率",
+      "b": "楷书笔画",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "电场",
+      "b": "柯里化",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "zh-CN",
+      "a": "二叉树",
+      "b": "牛顿第二定律",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "en",
+      "a": "addition",
+      "b": "multiplication",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "fractions",
+      "b": "probability",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "functions",
+      "b": "limits",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "limits",
+      "b": "derivatives",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "scope",
+      "b": "closures",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "arrays",
+      "b": "sorting algorithms",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "phonemes",
+      "b": "minimal pairs",
+      "relation": "requires"
+    },
+    {
+      "lang": "en",
+      "a": "closures",
+      "b": "photosynthesis",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "en",
+      "a": "sorting algorithms",
+      "b": "sonnet form",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "es",
+      "a": "suma",
+      "b": "multiplicación",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "fracciones",
+      "b": "probabilidad",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "ecuaciones lineales",
+      "b": "ecuaciones cuadráticas",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "funciones",
+      "b": "límites",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "límites",
+      "b": "derivadas",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "vectores",
+      "b": "matrices",
+      "relation": "requires"
+    },
+    {
+      "lang": "es",
+      "a": "derivadas",
+      "b": "fotosíntesis",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "es",
+      "a": "matrices",
+      "b": "conjugación verbal",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "id",
+      "a": "penjumlahan",
+      "b": "perkalian",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "variabel",
+      "b": "perulangan",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "logika boolean",
+      "b": "percabangan",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "fungsi",
+      "b": "rekursi",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "array",
+      "b": "algoritma pengurutan",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "pecahan",
+      "b": "peluang",
+      "relation": "requires"
+    },
+    {
+      "lang": "id",
+      "a": "rekursi",
+      "b": "fotosintesis",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "id",
+      "a": "perulangan",
+      "b": "seni lukis",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ru",
+      "a": "сложение",
+      "b": "умножение",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "дроби",
+      "b": "вероятность",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "функция",
+      "b": "предел",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "предел",
+      "b": "производная",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "производная",
+      "b": "интеграл",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "вектор",
+      "b": "матрица",
+      "relation": "requires"
+    },
+    {
+      "lang": "ru",
+      "a": "производная",
+      "b": "фотосинтез",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ru",
+      "a": "матрица",
+      "b": "спряжение глаголов",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "hi",
+      "a": "जोड़",
+      "b": "गुणा",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "भिन्न",
+      "b": "प्रायिकता",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "बीजगणित",
+      "b": "द्विघात समीकरण",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "ज्यामिति",
+      "b": "त्रिकोणमिति",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "फलन",
+      "b": "अवकलज",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "सदिश",
+      "b": "आव्यूह",
+      "relation": "requires"
+    },
+    {
+      "lang": "hi",
+      "a": "अवकलज",
+      "b": "प्रकाश संश्लेषण",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "hi",
+      "a": "आव्यूह",
+      "b": "छंद",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ar",
+      "a": "الجمع",
+      "b": "الضرب",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "الكسور",
+      "b": "الاحتمال",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "المعادلات الخطية",
+      "b": "المعادلات التربيعية",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "الدوال",
+      "b": "النهايات",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "النهايات",
+      "b": "الاشتقاق",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "المتجهات",
+      "b": "المصفوفات",
+      "relation": "requires"
+    },
+    {
+      "lang": "ar",
+      "a": "الاشتقاق",
+      "b": "التمثيل الضوئي",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ar",
+      "a": "المصفوفات",
+      "b": "علم العروض",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "bn",
+      "a": "যোগ",
+      "b": "গুণ",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "ভগ্নাংশ",
+      "b": "সম্ভাবনা",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "বীজগণিত",
+      "b": "দ্বিঘাত সমীকরণ",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "ফাংশন",
+      "b": "সীমা",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "সীমা",
+      "b": "অন্তরকলন",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "ভেক্টর",
+      "b": "ম্যাট্রিক্স",
+      "relation": "requires"
+    },
+    {
+      "lang": "bn",
+      "a": "অন্তরকলন",
+      "b": "সালোকসংশ্লেষণ",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "bn",
+      "a": "ম্যাট্রিক্স",
+      "b": "ছন্দ",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ja",
+      "a": "変数",
+      "b": "ループ",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "関数",
+      "b": "再帰",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "スコープ",
+      "b": "クロージャ",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "配列",
+      "b": "ソートアルゴリズム",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "極限",
+      "b": "微分",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "微分",
+      "b": "積分",
+      "relation": "requires"
+    },
+    {
+      "lang": "ja",
+      "a": "再帰",
+      "b": "光合成",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ja",
+      "a": "行列",
+      "b": "俳句の季語",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ko",
+      "a": "변수",
+      "b": "반복문",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "함수",
+      "b": "재귀",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "배열",
+      "b": "정렬 알고리즘",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "포인터",
+      "b": "연결 리스트",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "극한",
+      "b": "미분",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "미분",
+      "b": "적분",
+      "relation": "requires"
+    },
+    {
+      "lang": "ko",
+      "a": "재귀",
+      "b": "광합성",
+      "relation": "unrelated"
+    },
+    {
+      "lang": "ko",
+      "a": "행렬",
+      "b": "시조 형식",
+      "relation": "unrelated"
+    }
   ]
 }

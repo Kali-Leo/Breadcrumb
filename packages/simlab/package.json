@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-i18n": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-random": "workspace:*",
     "@breadcrumb/core-teaching": "workspace:*",

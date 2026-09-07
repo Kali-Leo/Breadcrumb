@@ -806,6 +806,9 @@ importers:
       '@breadcrumb/core-db':
         specifier: workspace:*
         version: link:../core-db
+      '@breadcrumb/core-i18n':
+        specifier: workspace:*
+        version: link:../core-i18n
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm

@@ -9,6 +9,18 @@
  * own canonical concept data so the token counts reflect real Chinese terminology rather
  * than invented filler.
  *
+ * It stays in Chinese on purpose, and was left alone by the 2026-09-07 pass that moved the
+ * rest of the test corpus to many languages. This is a MEASUREMENT fixture, not a
+ * correctness one: no code path branches on the language of this text, so translating it
+ * would exercise nothing new while changing every token count and forcing the published
+ * catalogue to be re-measured. Prompts are authored in Chinese, so Chinese input is also the
+ * honest measurement of the shipped configuration.
+ *
+ * Known gap, not fixed here: a purpose costs a different number of tokens in a different
+ * language — Hindi and Bengali tokenize far less efficiently than Chinese — so the single
+ * published profile understates cost for those readers. Closing that means a per-language
+ * profile and a re-measurement of the whole catalogue, which is its own change.
+ *
  * Main exports: treeNodes, treeLabels, ROUND, LONG_ANSWER.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";

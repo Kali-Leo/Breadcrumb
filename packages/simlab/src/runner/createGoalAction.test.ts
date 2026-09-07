@@ -18,6 +18,7 @@ afterEach(() => {
 
 const persona: Persona = {
   id: "p1",
+  language: "zh-CN",
   name: "test",
   description: "test persona",
   knowledge: { knownTopics: [], misconceptions: [], targetConcepts: ["闭包"] },

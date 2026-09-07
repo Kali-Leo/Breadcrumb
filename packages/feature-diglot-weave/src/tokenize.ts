@@ -18,22 +18,46 @@ export interface WordToken {
   clauseIndex: number;
 }
 
-/** Punctuation that ends a clause in either CJK or Latin conventions. */
+/**
+ * Punctuation that ends a clause, across every script the app ships an interface in.
+ *
+ * The list held only Latin and CJK marks until 2026-09-07, which meant a message in Hindi,
+ * Bengali or Arabic had exactly ZERO clause boundaries — none of those languages ends a
+ * sentence with any character that was in here. The dispersion rule allows at most one
+ * replacement per clause, so those readers got one woven word per message however long it
+ * was, while a Chinese or English reader of the same message got one per sentence.
+ */
 const CLAUSE_BREAKERS = new Set([
+  // Latin
   ",",
   ".",
   ";",
   ":",
   "!",
   "?",
+  "…",
+  "\n",
+  // CJK full-width
   "，",
   "。",
+  "、",
   "；",
   "：",
   "！",
   "？",
-  "…",
-  "\n",
+  // Arabic / Persian / Urdu
+  "،",
+  "؛",
+  "؟",
+  "۔",
+  // Devanagari and the other Indic scripts that share the danda (Bengali included)
+  "।",
+  "॥",
+  // Ethiopic (Amharic)
+  "፣",
+  "፤",
+  "፥",
+  "።",
 ]);
 
 /** Segments a message into word tokens with clause indexes. `sourceLang` is a BCP-47 tag

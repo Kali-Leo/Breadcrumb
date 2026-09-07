@@ -1,7 +1,10 @@
 /**
  * Purpose: the simulated-student persona contract (spec 013 T2) — a knowledge axis (what the
  * persona actually knows, ground truth for "被看见" recall) kept strictly separate from a
- * behavior axis (how the persona acts), per UserSimCRS.
+ * behavior axis (how the persona acts), per UserSimCRS, plus the language axis: which
+ * language this learner actually writes in. Every persona was Chinese until 2026-09-07, so
+ * the whole non-Chinese path — prompt directive, clause segmentation, question counting —
+ * ran unexercised in the harness that exists to exercise it.
  * Main exports: personaSchema, Persona, PersonaBehavior.
  */
 import { z } from "zod";
@@ -21,7 +24,9 @@ export const personaKnowledgeSchema = z.object({
 export const personaBehaviorSchema = z.object({
   /** 0 = perfect typing, 1 = frequent typos injected into every message. */
   typoRate: unitInterval,
-  /** 0 = pure Chinese, 1 = heavy 中英混杂 (English terms dropped into Chinese sentences). */
+  /** 0 = writes purely in the persona's own language, 1 = drops English technical terms into
+   * almost every sentence. English is the donor language for every persona; a Chinese学习者
+   * saying "closure" and a Korean one saying "variable" are the same behaviour. */
   codeSwitching: unitInterval,
   /** 0 = stays on topic, 1 = frequently drifts to tangents mid-conversation. */
   driftTendency: unitInterval,
@@ -34,9 +39,15 @@ export const personaBehaviorSchema = z.object({
 
 export const personaSchema = z.object({
   id: z.string().min(1),
-  /** Human-readable persona name, e.g. "高困惑新手". */
+  /** BCP-47 tag of the language this learner writes in — a row in core-i18n's LANGUAGES.
+   * Drives the student prompt's language directive, so a persona's own text, its concept
+   * labels and the reply it provokes are all in one language. */
+  language: z.string().min(2),
+  /** Human-readable persona name, in the persona's own language, e.g. "高困惑新手". */
   name: z.string().min(1),
-  /** One sentence: who this persona is and why it exists as a test scenario. */
+  /** One sentence, in the persona's own language: who this learner is and how they behave.
+   * It goes verbatim into the student system prompt, so it stays in character — the reason
+   * the persona exists as a test scenario belongs in a comment above it, not in here. */
   description: z.string().min(1),
   knowledge: personaKnowledgeSchema,
   behavior: personaBehaviorSchema,

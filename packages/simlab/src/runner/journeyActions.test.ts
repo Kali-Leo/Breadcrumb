@@ -26,6 +26,7 @@ function goalMappingFetch(): typeof fetch {
 describe("pickAndApplyJourneyAction jump-new-domain (S3)", () => {
   const domainPersona: Persona = {
     id: "p2",
+    language: "zh-CN",
     name: "test",
     description: "test persona",
     knowledge: { knownTopics: ["A", "B"], misconceptions: [], targetConcepts: ["C"] },

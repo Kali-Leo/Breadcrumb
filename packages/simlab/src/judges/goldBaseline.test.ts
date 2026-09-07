@@ -18,9 +18,9 @@ describe("loadGoldPairs", () => {
 
 describe("runGoldBaseline", () => {
   const pairs: GoldPair[] = [
-    { a: "极限", b: "导数", relation: "requires" },
-    { a: "导数", b: "极限", relation: "requires" }, // deliberately reversed vs pair 0 to test direction scoring
-    { a: "概率", b: "楷书笔画", relation: "unrelated" },
+    { lang: "zh-CN", a: "极限", b: "导数", relation: "requires" },
+    { lang: "zh-CN", a: "导数", b: "极限", relation: "requires" }, // deliberately reversed vs pair 0 to test direction scoring
+    { lang: "zh-CN", a: "概率", b: "楷书笔画", relation: "unrelated" },
   ];
 
   it("scores direction accuracy and unrelated-rejection correctly against a fake judge", async () => {

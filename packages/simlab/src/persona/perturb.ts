@@ -50,7 +50,10 @@ export function perturbPersona(seed: Persona, variantNumber: number): Persona {
   return {
     ...seed,
     id: `${seed.id}-v${variantNumber}`,
-    name: `${seed.name}（变体${variantNumber}）`,
+    // Latin "(v2)" rather than 「（变体2）」: the seed name is in the persona's own
+    // language, and a Chinese parenthetical glued onto a Bengali or Arabic name is the same
+    // mistake this whole set exists to stop.
+    name: `${seed.name} (v${variantNumber})`,
     knowledge: {
       knownTopics: subset(seed.knowledge.knownTopics, random, TOPIC_KEEP_PROBABILITY),
       misconceptions: subset(seed.knowledge.misconceptions, random, TOPIC_KEEP_PROBABILITY),

@@ -18,6 +18,7 @@ afterEach(() => {
 
 const reportingPersona: Persona = {
   id: "p3",
+  language: "zh-CN",
   name: "test",
   description: "test persona",
   knowledge: { knownTopics: ["加法", "乘法"], misconceptions: [], targetConcepts: ["分数"] },

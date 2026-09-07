@@ -3,7 +3,13 @@
  * feeds every hand-authored pair in data/gold-prerequisites.json through the real edge-judge
  * LLM contract and reports direction accuracy on 'requires' pairs plus the unrelated-rejection
  * rate on 'unrelated' pairs. No pass threshold: this is a baseline measurement, not a gate.
- * Main exports: loadGoldPairs, runGoldBaseline, GoldBaselineResult, GOLD_PAIRS_PATH.
+ * Pairs carry the language they are written in, and the one-line summary handed to the judge
+ * alongside each label is written in that same language. Feeding a Bengali label to the judge
+ * under a Chinese summary measures the judge's tolerance for mixed-language input, not its
+ * accuracy — which is what this file did for every pair until 2026-09-07, when Chinese was
+ * the only language the set contained.
+ * Main exports: loadGoldPairs, runGoldBaseline, GoldBaselineResult, GOLD_PAIRS_PATH,
+ * summariseConcept.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -27,9 +33,39 @@ export const GOLD_PAIRS_PATH = join(
 
 const goldFileSchema = z.object({
   pairs: z.array(
-    z.object({ a: z.string(), b: z.string(), relation: z.enum(["requires", "unrelated"]) }),
+    z.object({
+      /** BCP-47 tag both labels are written in. */
+      lang: z.string().min(2),
+      a: z.string(),
+      b: z.string(),
+      relation: z.enum(["requires", "unrelated"]),
+    }),
   ),
 });
+
+/** "<label> is a concept" in each language the gold set covers. The judge only needs enough
+ * of a summary to know the label is a topic and not a stray string, so one sentence per
+ * language is the whole requirement. */
+const SUMMARY_TEMPLATES: Readonly<Record<string, (label: string) => string>> = {
+  "zh-CN": (label) => `${label} 是一个知识点`,
+  en: (label) => `${label} is a concept in this subject`,
+  es: (label) => `${label} es un concepto de esta materia`,
+  id: (label) => `${label} adalah sebuah konsep dalam mata pelajaran ini`,
+  ru: (label) => `${label} — понятие из этого предмета`,
+  hi: (label) => `${label} इस विषय की एक अवधारणा है।`,
+  ar: (label) => `${label} مفهوم في هذه المادة`,
+  bn: (label) => `${label} এই বিষয়ের একটি ধারণা।`,
+  ja: (label) => `${label}はこの分野の概念です`,
+  ko: (label) => `${label}은(는) 이 분야의 개념입니다`,
+};
+
+/** Falls back to English rather than Chinese for a language with no template: an English
+ * sentence around a Bengali label is at least not claiming the label is Chinese. */
+export function summariseConcept(label: string, lang: string): string {
+  const template = SUMMARY_TEMPLATES[lang] ?? SUMMARY_TEMPLATES.en;
+  if (template === undefined) throw new Error("summariseConcept: no English template");
+  return template(label);
+}
 export type GoldPair = z.infer<typeof goldFileSchema>["pairs"][number];
 
 const BATCH_SIZE = 20; // edgeJudgeSchema.edges is capped at 20 per call
@@ -77,9 +113,9 @@ export async function runGoldBaseline(
     const candidates: EdgeJudgeCandidatePair[] = batch.map((pair, index) => ({
       pairId: `g${index}`,
       nodeALabel: pair.a,
-      nodeASummary: `${pair.a} 是一个知识点`,
+      nodeASummary: summariseConcept(pair.a, pair.lang),
       nodeBLabel: pair.b,
-      nodeBSummary: `${pair.b} 是一个知识点`,
+      nodeBSummary: summariseConcept(pair.b, pair.lang),
     }));
     const { parsed } = await chatJson(
       llmConfig,

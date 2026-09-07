@@ -14,11 +14,21 @@ export interface TeachingDisciplineResult {
   overlongReplies: number;
 }
 
-/** Counts question marks in `text`, treating any run of consecutive '？'/'?' characters
- * (e.g. "？？", or the '?' in "?!") as a single question mark rather than one per glyph —
- * a rapid-fire "？？？" is still one rhetorical question, not three. */
+/**
+ * Counts question marks in `text`, treating any run of consecutive question marks (e.g.
+ * "？？", or the '?' in "?!") as a single question rather than one per glyph — a rapid-fire
+ * "？？？" is still one rhetorical question, not three.
+ *
+ * The class covers every question mark the shipped languages use, not just the ASCII and
+ * full-width ones. Arabic writes '؟' (U+061F): until 2026-09-07 an Arabic tutor turn asking
+ * four questions counted zero, so the "one question per turn" rule — a hard rule of the
+ * teaching contract — was simply not enforced for Arabic readers, and no run could have
+ * revealed it because no persona wrote Arabic.
+ */
+const QUESTION_MARKS = /[?？؟՞፧⁇⁈⁉]+/g;
+
 export function countQuestions(text: string): number {
-  return (text.match(/[？?]+/g) ?? []).length;
+  return (text.match(QUESTION_MARKS) ?? []).length;
 }
 
 /** Scans already-produced tutor replies for the two contract-v2 discipline rules: at most
