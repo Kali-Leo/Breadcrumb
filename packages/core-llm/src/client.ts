@@ -16,6 +16,7 @@ import {
 } from "./retry";
 import { readSseDataLines } from "./sseLines";
 import { decodeStreamFrame } from "./streamFrame";
+import { thinkingOffFields } from "./thinkingOff";
 
 /** Ceiling on one answer. Roughly 2M characters is far beyond any model's context, let alone
  * one reply; reaching it means the endpoint is feeding us an endless stream, and the renderer
@@ -114,6 +115,7 @@ export function createLlmClient(config: LlmClientConfig): LlmClient {
             messages: withLanguage,
             stream: true,
             stream_options: { include_usage: true },
+            ...thinkingOffFields(config.model),
           }),
         },
         { signal, timeoutMs: STREAM_FIRST_BYTE_TIMEOUT_MS },

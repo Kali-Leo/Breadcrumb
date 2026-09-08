@@ -5,12 +5,14 @@
  * failures are retried a layer below, in retry.ts.
  * Main exports: chatJson, ChatJsonResult, ChatJsonError.
  */
+
 import { z } from "zod";
 import { type ChatMessage, type LlmClientConfig, withLanguageDirective } from "./client";
 import { completionsUrl } from "./completionsUrl";
 import type { TokenUsage } from "./pricing";
 import { fetchWithRetry, NON_STREAMING_TIMEOUT_MS } from "./retry";
 import { usageFromPayload } from "./streamFrame";
+import { thinkingOffFields } from "./thinkingOff";
 
 export interface ChatJsonResult<Parsed> {
   parsed: Parsed;
@@ -85,6 +87,7 @@ async function requestCompletion(
         stream: false,
         temperature: JUDGEMENT_TEMPERATURE,
         response_format: { type: "json_object" },
+        ...thinkingOffFields(config.model),
       }),
     },
     // Non-streaming, so the deadline covers the whole exchange including reading the body.
