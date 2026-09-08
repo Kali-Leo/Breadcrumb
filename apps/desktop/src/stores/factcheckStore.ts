@@ -19,7 +19,7 @@ import {
   resolveRoundMessages,
 } from "../lib/factcheck/factcheckRecords";
 import { degradeSilently, recordAiFailure } from "../lib/platform/failureLog";
-import { llmConfigWithoutLanguageDirective } from "../lib/platform/llmConfig";
+import { llmConfigFrom } from "../lib/platform/llmConfig";
 import { appEventBus, useChatStore } from "./chatStore";
 import { useSettingsStore } from "./settingsStore";
 
@@ -84,9 +84,10 @@ export const useFactcheckStore = create<FactcheckState>((set, get) => ({
         {
           // Through lib/platform/llmConfig rather than hand-assembled: that module is where the
           // network switch is enforced, and a config built here would be a second door.
-          // Without the answer-language directive on purpose — the verdict prompt states its
-          // own output language, and two instructions about it contradict each other.
-          llmConfig: llmConfigWithoutLanguageDirective(settings.apiConfig),
+          // With the answer-language directive, like every other learner-facing call: the
+          // claim and the verdict's reasoning are rendered under the answer, so they are
+          // written in the language the learner reads.
+          llmConfig: llmConfigFrom(settings.apiConfig),
           providers: createDefaultEvidenceProviders({
             fetchImpl: tauriFetch,
             mainlandChina: settings.mainlandNetwork,

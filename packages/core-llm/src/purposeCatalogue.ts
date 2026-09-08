@@ -47,7 +47,7 @@ export interface PurposeUsage {
   cadence: PurposeCadence;
 }
 
-export const MEASURED_AT = "2026-08-31";
+export const MEASURED_AT = "2026-09-08";
 
 /**
  * Measured token profiles. Purposes absent from this table are ones whose prompts are built
@@ -61,18 +61,18 @@ export const MEASURED_AT = "2026-08-31";
  */
 export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
   chat: { inputTokens: 1331, outputTokens: 324, cadence: "per-round" },
-  "knowledge-tree": { inputTokens: 1335, outputTokens: 64, cadence: "per-round" },
-  interest: { inputTokens: 897, outputTokens: 80, cadence: "per-round" },
-  "knowledge-edges": { inputTokens: 945, outputTokens: 278, cadence: "per-round" },
+  "knowledge-tree": { inputTokens: 1365, outputTokens: 64, cadence: "per-round" },
+  interest: { inputTokens: 902, outputTokens: 80, cadence: "per-round" },
+  "knowledge-edges": { inputTokens: 1009, outputTokens: 278, cadence: "per-round" },
   "self-report-mapping": { inputTokens: 524, outputTokens: 46, cadence: "on-demand" },
-  "goal-planning": { inputTokens: 661, outputTokens: 424, cadence: "on-demand" },
-  factcheck: { inputTokens: 557, outputTokens: 76, cadence: "on-demand" },
-  "compare-align": { inputTokens: 515, outputTokens: 213, cadence: "per-item-once" },
-  "map-naming": { inputTokens: 161, outputTokens: 32, cadence: "per-item-once" },
+  "goal-planning": { inputTokens: 693, outputTokens: 424, cadence: "on-demand" },
+  factcheck: { inputTokens: 575, outputTokens: 76, cadence: "on-demand" },
+  "compare-align": { inputTokens: 528, outputTokens: 213, cadence: "per-item-once" },
+  "map-naming": { inputTokens: 201, outputTokens: 32, cadence: "per-item-once" },
   "term-marking": { inputTokens: 570, outputTokens: 22, cadence: "per-answer" },
-  "diglot-weave": { inputTokens: 398, outputTokens: 86, cadence: "per-message" },
+  "diglot-weave": { inputTokens: 410, outputTokens: 86, cadence: "per-message" },
   "focus-explain": { inputTokens: 395, outputTokens: 223, cadence: "on-demand" },
-  "trail-summary": { inputTokens: 220, outputTokens: 26, cadence: "per-day" },
+  "trail-summary": { inputTokens: 236, outputTokens: 26, cadence: "per-day" },
 };
 
 /**

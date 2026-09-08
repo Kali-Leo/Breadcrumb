@@ -6,8 +6,11 @@
  * Main exports: interestSignalsSchema, buildInterestMessages, InterestExtractionNode,
  * interestLevelSchema, confidenceLevelSchema, INTEREST_LEVEL_SCORES, CONFIDENCE_LEVEL_SCORES.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
+
+/** A style tag is two or three words at most, in whichever language the learner reads. */
+const STYLE_BUDGET: LengthBudget = { cjkChars: 6, words: 3 };
 
 export interface InterestExtractionNode {
   nodeId: string;
@@ -56,8 +59,11 @@ export const interestSignalsSchema = z.object({
         confusion: interestLevelSchema,
         boredom: interestLevelSchema,
         confidence: confidenceLevelSchema,
-        /** e.g. "类比" / "代码示例" / "形式化推导"; empty when nothing was actually shown. */
-        styles: z.array(z.string().min(1).max(20)).max(5),
+        /** e.g. "类比" / "代码示例" / "形式化推导"; empty when nothing was actually shown.
+         * The tag comes back in the learner's language, so the cap is sized for a script
+         * written with words rather than for hanzi: 20 characters fits "形式化推导" and cut
+         * a perfectly ordinary Bengali tag in the 2026-09-08 bench. */
+        styles: z.array(z.string().min(1).max(maxCharsFor(STYLE_BUDGET))).max(5),
       }),
     )
     .max(10),
@@ -78,7 +84,7 @@ const SYSTEM_PROMPT = `你是一个学习心理观察者。给定学习者与 AI
   medium=主动把话题转到别处，或明确要求换一种讲法／换一个方向；
   weak=只有语气上的轻微迹象，没有内容证据；none=没有迹象。
   回复简短本身不是证据，最多算 weak 且 confidence 填 low：简短可能是这个人的表达习惯、可能是已经懂了、
-  也可能只是应答（中文里"知道了""行吧""好的"常常只是接话）。不要因为一句话短就判成厌倦
+  也可能只是应答（各种语言里都有"知道了""行吧""好的"这类只是接话的短回应）。不要因为一句话短就判成厌倦
 - confidence（把握度）分档：high=信号明确、证据充分；medium=有信号但不够典型；low=信号模糊、更多是推测——宁可标 low 也不要装作确定
 - styles：仅当对话里确实用了某种解释方式且学习者对此有正面反应时才填（如"类比""代码示例""形式化推导""生活场景""图示"），宁可留空数组也不要臆测
 - 没有任何明显信号的知识点：curiosity/confusion/boredom 都填 none，confidence 按你的实际把握程度填，styles 填空数组

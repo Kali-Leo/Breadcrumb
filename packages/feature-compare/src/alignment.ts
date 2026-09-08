@@ -7,7 +7,7 @@
  * alignmentJudgeSchema, validateAlignmentVerdicts, alignmentCountsAsOverlap, chunkPairs,
  * alignmentTextOfItem, ALIGNMENT_CANDIDATE_THRESHOLD, ALIGNMENT_TOP_K, ALIGNMENT_JUDGE_BATCH_SIZE.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { cosineSimilarity, topByRelativeGate } from "@breadcrumb/feature-knowledge-tree";
 import { z } from "zod";
 import { leafKeysOf } from "./matching";
@@ -91,6 +91,10 @@ export function chunkPairs<Pair>(pairs: readonly Pair[], size: number): Pair[][]
   return chunks;
 }
 
+/** The one-clause reason, in the learner's language — "不超过60字" counted hanzi against a
+ * 120-character cap, which is the same mismatch that broke naming and the trail summary. */
+const REASON_BUDGET: LengthBudget = { cjkChars: 40, words: 15 };
+
 export const alignmentJudgeSchema = z.object({
   verdicts: z.array(
     z.object({
@@ -100,7 +104,7 @@ export const alignmentJudgeSchema = z.object({
       // separately instructed to answer in the learner's language, so a Chinese literal here
       // fought that directive (design audit 2026-08-28, 多语言 B6).
       confidence: z.enum(["high", "medium", "low"]),
-      reason: z.string().min(1).max(120),
+      reason: z.string().min(1).max(maxCharsFor(REASON_BUDGET)),
     }),
   ),
 });
@@ -109,7 +113,7 @@ export type AlignmentJudgeResult = z.infer<typeof alignmentJudgeSchema>;
 export type AlignmentJudgeVerdict = AlignmentJudgeResult["verdicts"][number];
 
 const JUDGE_SYSTEM_PROMPT = `你是一个概念对齐判官。给定若干对条目——A 来自一份公开资料的知识大纲，B 来自一位学习者自己的知识树——逐对判断 A 和 B 是否指同一个知识概念，以 JSON 返回：
-{"verdicts":[{"pair":1,"verdict":"same","confidence":"high","reason":"一句话理由，不超过60字"}]}
+{"verdicts":[{"pair":1,"verdict":"same","confidence":"high","reason":"一句话理由，${lengthRule(REASON_BUDGET)}"}]}
 判定规则（严格执行）：
 - 只有当 A 与 B 本质上是同一个概念、名称可以互换时才判 same（例：导数 与 一元函数的导数）
 - 仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different（例：函数 与 闭包；作用域 与 作用域链）

@@ -6,23 +6,31 @@
  * system's job, not something to ask of a learner who hasn't studied the material yet).
  * Main exports: goalMappingSchema, buildGoalMappingMessages, GoalMappingResult, SuggestedGoalNode.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
+
+/** Same budgets as a knowledge-tree node, because these labels become knowledge-tree nodes
+ * and the `existing`/`requires` lists echo labels back. The old flat 40-character cap was a
+ * hanzi cap: the 2026-09-08 bench lost es/fr/hi/ru/sw goal mappings to a `label` too_big and
+ * one sw mapping to a `summary` too_big, in every case on a perfectly ordinary name. */
+const LABEL_BUDGET: LengthBudget = { cjkChars: 12, words: 4 };
+const SUMMARY_BUDGET: LengthBudget = { cjkChars: 40, words: 20 };
+const MAX_LABEL_CHARS = maxCharsFor(LABEL_BUDGET);
 
 export const goalMappingSchema = z.object({
   /** Must exactly match a subset of the given existing node labels. */
-  existing: z.array(z.string().min(1).max(40)).max(30),
+  existing: z.array(z.string().min(1).max(MAX_LABEL_CHARS)).max(30),
   suggested: z
     .array(
       z.object({
-        label: z.string().min(1).max(40),
-        summary: z.string().min(1).max(200),
+        label: z.string().min(1).max(MAX_LABEL_CHARS),
+        summary: z.string().min(1).max(maxCharsFor(SUMMARY_BUDGET)),
         /** Hard prerequisites of this node, by label, drawn from this same mapping's
          * existing + suggested set. Unknown labels are dropped
          * by the caller — Zod can't cross-check them against a set it doesn't have. Optional
          * because an older/terser model response is still usable: a goal with no edges
          * degrades to the previous alphabetical route, it doesn't fail. */
-        requires: z.array(z.string().min(1).max(40)).max(10).optional(),
+        requires: z.array(z.string().min(1).max(MAX_LABEL_CHARS)).max(10).optional(),
       }),
     )
     .max(15),
@@ -33,7 +41,7 @@ export type SuggestedGoalNode = GoalMappingResult["suggested"][number];
 
 const SYSTEM_PROMPT = `你是一个学习目标拆解器。学习者会用自然语言描述一个学习目标（如"通过考研数学"），
 你需要判断达成这个目标大致需要哪些知识点，以 JSON 返回：
-{"existing":["已有知识点列表中原样匹配的节点名"],"suggested":[{"label":"目标需要但树里还没有的知识点短名","summary":"这个知识点是什么(一句话)","requires":["必须先学会的知识点名"]}]}
+{"existing":["已有知识点列表中原样匹配的节点名"],"suggested":[{"label":"目标需要但树里还没有的知识点短名(${lengthRule(LABEL_BUDGET)})","summary":"这个知识点是什么(一句话，${lengthRule(SUMMARY_BUDGET)})","requires":["必须先学会的知识点名"]}]}
 规则：
 - existing 的每一项必须完全等于「已有知识点列表」中的一个原名，绝不允许发明不存在的节点名
 - suggested 是目标需要、但已有知识点列表里确实没有的概念，最多 15 个，宁缺毋滥——不确定、可有可无的不要列

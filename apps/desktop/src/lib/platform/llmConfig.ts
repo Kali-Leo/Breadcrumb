@@ -73,11 +73,13 @@ function gatedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respo
 }
 
 /**
- * The config for a call whose own prompt already names the language it must answer in — fact
- * checking is the case: feature-factcheck's verdict prompt asks for 中文 by contract, and a
- * second, contradictory instruction about the output language is how a reply comes back in
- * neither. Assembled here anyway, because gatedFetch is the point of this module: a call site
- * that builds its own config is a call site that can forget the network switch.
+ * The config for a call that must NOT be told which language to answer in — the connection
+ * probe, whose reply nobody reads. Every learner-facing call uses llmConfigFrom instead:
+ * fact checking used to be the exception, because its verdict prompt pinned the output to
+ * 中文 by contract, which is exactly the bug that shipped a Chinese sentence to a learner
+ * reading French. The prompt no longer names a language, so it takes the directive like
+ * everything else. Assembled here anyway, because gatedFetch is the point of this module: a
+ * call site that builds its own config is a call site that can forget the network switch.
  */
 export function llmConfigWithoutLanguageDirective(apiConfig: ApiConfig): LlmClientConfig {
   // Named rather than spread: priceCurrency is billing bookkeeping and has no business

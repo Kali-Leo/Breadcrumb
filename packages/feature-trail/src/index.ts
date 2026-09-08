@@ -7,7 +7,7 @@
  * Main exports: localDayRange, localDateString, trailSummarySchema, buildTrailSummaryMessages.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { shiftLocalDays, startOfLocalDay, toLocalDateKey } from "@breadcrumb/core-time";
 import { z } from "zod";
 
@@ -21,13 +21,20 @@ export function localDayRange(now: Date, dayOffset: number): { fromIso: string; 
   return { fromIso: start.toISOString(), toIso: end.toISOString() };
 }
 
+/** One sentence about a day, in whichever language the reader reads in. The Chinese half of
+ * the budget is what the prompt has always asked for; the word half is the same sentence in
+ * a language that is not written in hanzi, and the ceiling below is derived from it — the
+ * old 120-character cap was a hanzi cap, and it cut two thirds of the English replies. */
+const SUMMARY_BUDGET: LengthBudget = { cjkChars: 40, words: 20 };
+
 export const trailSummarySchema = z.object({
-  /** One plain, factual sentence, <= 60 chars, stating what was learned — no praise. */
-  summary: z.string().min(1).max(120),
+  /** One plain, factual sentence stating what was learned — no praise. */
+  summary: z.string().min(1).max(maxCharsFor(SUMMARY_BUDGET)),
 });
 
-const SYSTEM_PROMPT = `你是一个学习记录者。根据学习者昨天学到的知识点列表，用一句 40 字以内的平实中文陈述昨天学到了什么
-（如"昨天你搞懂了X，理清了Y与Z的关系"）。只陈述事实、不评价；绝对禁止提及未完成、天数、频率或任何施压内容。
+const SYSTEM_PROMPT = `你是一个学习记录者。根据学习者昨天学到的知识点列表，用一句平实的陈述说出昨天学到了什么
+（如"昨天你搞懂了X，理清了Y与Z的关系"）。长度：${lengthRule(SUMMARY_BUDGET)}。
+只陈述事实、不评价；绝对禁止提及未完成、天数、频率或任何施压内容。
 以 JSON 返回：{"summary":"..."}`;
 
 export function buildTrailSummaryMessages(nodes: readonly KnowledgeNodeRow[]): ChatMessage[] {

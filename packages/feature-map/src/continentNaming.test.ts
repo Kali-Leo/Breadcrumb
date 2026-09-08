@@ -27,9 +27,24 @@ describe("continentNamingSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a name longer than the maximum length", () => {
+  it("accepts a plain name in a language written with words", () => {
+    // The bound is code points, so a latin name is measured against a budget that has room
+    // for one: "12 个字" would have been counted in hanzi and rejected this outright.
+    for (const name of ["Observational astronomy", "Astronomie observationnelle"]) {
+      expect(continentNamingSchema.safeParse({ clusters: [{ id: "c0", name }] }).success).toBe(
+        true,
+      );
+    }
+  });
+
+  it("rejects a name that is really a sentence", () => {
     const result = continentNamingSchema.safeParse({
-      clusters: [{ id: "c0", name: "一二三四五六七八九十十一十二十三" }],
+      clusters: [
+        {
+          id: "c0",
+          name: "This cluster is about observational astronomy and how distances to stars are measured",
+        },
+      ],
     });
     expect(result.success).toBe(false);
   });

@@ -5,9 +5,18 @@
  * and metering live in the app layer.
  * Main exports: buildLlmRefineMessages, llmRefineResponseSchema, applyLlmRefinement.
  */
+import { type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import { hashContext } from "./contextNovelty";
 import { type ReplacementPatch, verifyPatches } from "./replace";
+
+/** The phrase weave, sized for both script families. The source message is in whichever
+ * language the learner writes in, so "2-8 字" only ever meant anything to a learner writing
+ * in hanzi; the target-language expression and the gloss run longer in a script written with
+ * words, and a 60-character replacement cap was already cutting real replies. */
+const PHRASE_BUDGET: LengthBudget = { cjkChars: 8, words: 4 };
+const REPLACEMENT_BUDGET: LengthBudget = { cjkChars: 20, words: 8 };
+const GLOSS_BUDGET: LengthBudget = { cjkChars: 30, words: 12 };
 
 /** A single target-language word (letters/apostrophe/hyphen — no spaces). */
 const SINGLE_WORD_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}'-]*$/u;
@@ -32,11 +41,11 @@ export const llmRefineResponseSchema = z.object({
   phrase: z
     .object({
       /** Exact substring of the original message to replace. */
-      original: z.string().min(2).max(40),
+      original: z.string().min(2).max(maxCharsFor(PHRASE_BUDGET)),
       /** The idiomatic target-language expression. */
-      replacement: z.string().min(1).max(60),
+      replacement: z.string().min(1).max(maxCharsFor(REPLACEMENT_BUDGET)),
       /** Short source-language gloss shown on hover. */
-      gloss: z.string().min(1).max(80),
+      gloss: z.string().min(1).max(maxCharsFor(GLOSS_BUDGET)),
     })
     .nullable(),
 });
@@ -63,7 +72,7 @@ export function buildLlmRefineMessages(
       role: "system",
       content: `你是语言学习应用里的替换审校器。消息原文是 ${input.sourceLang},学习目标语言是 ${input.targetLang}。给定若干「原词→目标语言译法」的候选替换,请:
 1. 逐条判断词典译法在这句语境下是否正确:正确回 keep;语境下应换一个更准确的单个目标语言词回 retranslate 并给 target;这个词在语境里不适合被替换(如构成专名、双关、引用)回 drop。
-2. 另外最多提出一个「短语级织入」:从原文里选一个 2-8 字的连续短语(不跨标点),给出目标语言的地道对应表达和一句 ${input.sourceLang} 释义;没有合适的就回 null。
+2. 另外最多提出一个「短语级织入」:从原文里选一个连续短语(不跨标点,${lengthRule(PHRASE_BUDGET)}),给出目标语言的地道对应表达和一句 ${input.sourceLang} 释义;没有合适的就回 null。
 只返回 JSON:{"words":[{"lemma":"…","verdict":"keep|retranslate|drop","target":"…"}],"phrase":{"original":"…","replacement":"…","gloss":"…"}|null}`,
     },
     { role: "user", content: `消息原文:\n${input.content}\n\n候选替换:\n${list}` },

@@ -4,7 +4,7 @@
  * anchoring that says *which* pieces of evidence carried the judgement.
  * Main exports: createVerdictSchema, buildVerdictMessages, ClaimRelationship.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import type { EvidenceItem } from "./evidence/provider";
 
@@ -22,6 +22,10 @@ export type VerdictRelationship = (typeof VERDICT_RELATIONSHIPS)[number];
  */
 export type ClaimRelationship = VerdictRelationship | "unavailable";
 
+/** The reasoning sentence is rendered under the claim in the chat, so it goes to the learner
+ * in the learner's language: the prompt states how long, never which language. */
+const REASONING_BUDGET: LengthBudget = { cjkChars: 40, words: 20 };
+
 /**
  * The verdict schema for a claim judged against exactly `evidenceCount` items. Built per
  * call because `supportingEvidence` is 1-based into *that* list: a citation index outside the
@@ -30,8 +34,9 @@ export type ClaimRelationship = VerdictRelationship | "unavailable";
 export function createVerdictSchema(evidenceCount: number) {
   const highestIndex = Math.max(evidenceCount, 1);
   return z.object({
-    /** One plain, matter-of-fact sentence explaining the judgement, e.g. "资料显示…". */
-    reasoning: z.string().min(1).max(200),
+    /** One plain, matter-of-fact sentence explaining the judgement, e.g. "资料显示…" — and
+     * the learner reads it, so it is written in the learner's language, not in Chinese. */
+    reasoning: z.string().min(1).max(maxCharsFor(REASONING_BUDGET)),
     relationship: z.enum(VERDICT_RELATIONSHIPS),
     /** 1-based indices of the evidence items the judgement rests on. Defaulted rather than
      * required: a missing citation list is a weaker answer, not a reason to discard a
@@ -44,7 +49,7 @@ export function createVerdictSchema(evidenceCount: number) {
 }
 
 const SYSTEM_PROMPT = `你是事实核查判定器。给定一条声明与检索到的资料摘录，判断资料与声明的关系，以 JSON 返回：
-{"reasoning":"一句话说明判断依据（中文、平实客观、只谈资料与声明本身）","relationship":"supported | contradicted | insufficient","supportingEvidence":[被用到的资料编号]}
+{"reasoning":"一句话说明判断依据（平实客观、只谈资料与声明本身，${lengthRule(REASONING_BUDGET)}）","relationship":"supported | contradicted | insufficient","supportingEvidence":[被用到的资料编号]}
 规则：
 - supported：资料实质性支持声明；contradicted：资料与声明存在实质冲突；insufficient：资料不足以判断
 - supportingEvidence 只填真正支撑你这个结论的资料编号（如 [1,3]）；没有任何一条真正相关就填 []

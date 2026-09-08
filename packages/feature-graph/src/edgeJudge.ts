@@ -7,8 +7,18 @@
  * Main exports: edgeJudgeSchema, buildEdgeJudgeMessages, EdgeJudgeCandidatePair,
  * helpsWeightLevelSchema, HELPS_WEIGHT_SCORES, BuildEdgeJudgeMessagesOptions.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
+
+/** A proposed node's short name and one-line summary — the same budgets a knowledge-tree
+ * node carries, since that is what these become. Stated for both script families: the flat
+ * 40-character cap was a hanzi cap, and the 2026-09-08 bench lost hi/bn batches to a
+ * methodNodes label/helpsLabels too_big. helpsLabels and connectsToLabel echo a label back,
+ * so they share the label ceiling. */
+const LABEL_BUDGET: LengthBudget = { cjkChars: 12, words: 4 };
+const SUMMARY_BUDGET: LengthBudget = { cjkChars: 40, words: 20 };
+const MAX_LABEL_CHARS = maxCharsFor(LABEL_BUDGET);
+const MAX_SUMMARY_CHARS = maxCharsFor(SUMMARY_BUDGET);
 
 export interface EdgeJudgeCandidatePair {
   /** Opaque, stable per batch (e.g. "p0") so the model can echo it back unambiguously. */
@@ -58,10 +68,10 @@ export const edgeJudgeSchema = z.object({
     .array(
       z.object({
         /** e.g. "费曼技巧" — a learning technique, not a curriculum concept. */
-        label: z.string().min(1).max(40),
-        summary: z.string().min(1).max(200),
+        label: z.string().min(1).max(MAX_LABEL_CHARS),
+        summary: z.string().min(1).max(MAX_SUMMARY_CHARS),
         /** Labels (existing or among this batch's nodes) this method helps understand. */
-        helpsLabels: z.array(z.string().min(1).max(40)).min(1).max(5),
+        helpsLabels: z.array(z.string().min(1).max(MAX_LABEL_CHARS)).min(1).max(5),
         weight: helpsWeightLevelSchema,
         confidence: z.number().min(0).max(1),
       }),
@@ -75,11 +85,11 @@ export const edgeJudgeSchema = z.object({
   adjacentConcepts: z
     .array(
       z.object({
-        label: z.string().min(1).max(40),
-        summary: z.string().min(1).max(200),
+        label: z.string().min(1).max(MAX_LABEL_CHARS),
+        summary: z.string().min(1).max(MAX_SUMMARY_CHARS),
         /** Must echo a label already known this batch (an existing node or one of the pairs'
          * A/B labels) — the concept it's adjacent to. */
-        connectsToLabel: z.string().min(1).max(40),
+        connectsToLabel: z.string().min(1).max(MAX_LABEL_CHARS),
         /** How much connectsToLabel helps understand this new concept. */
         helpsLevel: helpsWeightLevelSchema,
       }),
@@ -93,7 +103,7 @@ export type PairJudgement = EdgeJudgeResult["edges"][number];
 
 const BASE_SYSTEM_PROMPT = `你是一个知识关系判定器。给定若干候选知识点对（A、B），为每一对判定它们的学习结构关系，以 JSON 返回：
 {"edges":[{"pairId":"候选对编号(原样返回)","relation":"unrelated|requires|helps","direction":"aToB|bToA 或 null","weight":"weak|medium|strong 或 null,"confidence":0~1的数字}],
- "methodNodes":[{"label":"学习方法短名(如 费曼技巧)","summary":"这个方法是什么(一句话)","helpsLabels":["它能帮助理解的已有或候选知识点原名"],"weight":"weak|medium|strong","confidence":0~1}]}
+ "methodNodes":[{"label":"学习方法短名(如 费曼技巧，${lengthRule(LABEL_BUDGET)})","summary":"这个方法是什么(一句话，${lengthRule(SUMMARY_BUDGET)})","helpsLabels":["它能帮助理解的已有或候选知识点原名"],"weight":"weak|medium|strong","confidence":0~1}]}
 判定规则：
 - unrelated：两者没有直接学习结构关系
 - requires：其中一个是另一个的硬前置（不学会 A 就学不懂 B），direction 用 "aToB" 表示 A 是 B 的前置，"bToA" 反之；weight 填 null（requires 恒为 1，由系统赋值）
@@ -107,7 +117,7 @@ const BASE_SYSTEM_PROMPT = `你是一个知识关系判定器。给定若干候�
 const CASUAL_ADJACENT_CONCEPTS_SECTION = `
 你还可以在下面追加 0~2 个"相邻未学概念"：与本批次知识点强相关、学习者显然还没接触过、
 值得作为下一步探索方向的新概念（不是这批知识点本身，也不是纯粹的同义词）：
-{"adjacentConcepts":[{"label":"新概念短名","summary":"这个概念是什么(一句话)","connectsToLabel":"本批次中与它关系最紧密的知识点原名(A、B 之一)","helpsLevel":"weak|medium|strong，即 connectsToLabel 对理解这个新概念的帮助程度"}]}
+{"adjacentConcepts":[{"label":"新概念短名(${lengthRule(LABEL_BUDGET)})","summary":"这个概念是什么(一句话，${lengthRule(SUMMARY_BUDGET)})","connectsToLabel":"本批次中与它关系最紧密的知识点原名(A、B 之一)","helpsLevel":"weak|medium|strong，即 connectsToLabel 对理解这个新概念的帮助程度"}]}
 宁缺毋滥，不确定就不要提议，找不到就返回空数组。`;
 
 function buildSystemPrompt(casual: boolean): string {

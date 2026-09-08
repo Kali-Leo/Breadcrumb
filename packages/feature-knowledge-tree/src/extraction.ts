@@ -4,19 +4,27 @@
  * Main exports: extractionResponseSchema, buildExtractionMessages, ExtractedNode.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
+
+/** A node's short name and its one-line takeaway, sized for both script families: "≤12字"
+ * counts hanzi, and a 40-character cap derived from it cut Hindi and Swahili labels that
+ * were perfectly short (bench 2026-09-08). parentLabel echoes a label back, so it carries
+ * the same ceiling — a label the model cannot repeat is a tree that cannot be attached. */
+const LABEL_BUDGET: LengthBudget = { cjkChars: 12, words: 4 };
+const SUMMARY_BUDGET: LengthBudget = { cjkChars: 40, words: 20 };
+const MAX_LABEL_CHARS = maxCharsFor(LABEL_BUDGET);
 
 export const extractionResponseSchema = z.object({
   nodes: z
     .array(
       z.object({
         /** Short node name, e.g. "闭包" — used as the tree label. */
-        label: z.string().min(1).max(40),
+        label: z.string().min(1).max(MAX_LABEL_CHARS),
         /** One-sentence takeaway of what was learned about it in this round. */
-        summary: z.string().min(1).max(200),
+        summary: z.string().min(1).max(maxCharsFor(SUMMARY_BUDGET)),
         /** Label of an existing node (or of another node in this batch) to attach under; null = root. */
-        parentLabel: z.string().max(40).nullable(),
+        parentLabel: z.string().max(MAX_LABEL_CHARS).nullable(),
       }),
     )
     .max(5),
@@ -26,7 +34,7 @@ export type ExtractedNode = z.infer<typeof extractionResponseSchema>["nodes"][nu
 
 const SYSTEM_PROMPT = `你是一个知识结构提取器。给定学习者与 AI 的一轮问答，以及学习者已有的知识树（跨会话累积），
 提取这一轮触及的知识点（0~3 个，宁缺毋滥），以 JSON 返回：
-{"nodes":[{"label":"知识点短名(≤12字)","summary":"这一轮学到了什么(一句话)","parentLabel":"应挂在哪个已有节点下，没有合适的填 null"}]}
+{"nodes":[{"label":"知识点短名(${lengthRule(LABEL_BUDGET)})","summary":"这一轮学到了什么(一句话，${lengthRule(SUMMARY_BUDGET)})","parentLabel":"应挂在哪个已有节点下，没有合适的填 null"}]}
 规则：
 - 新学到的知识点：正常提取
 - 这一轮实质性重温了已有树上的知识点：也列出（label 精确用树上原名），这是宝贵的复习足迹；只顺带提及则不算

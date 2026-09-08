@@ -6,13 +6,19 @@
  * Main exports: continentNameCacheKey, buildContinentNamingMessages, continentNamingSchema,
  * isPlainContinentName, ContinentNamingRequest.
  */
+import { type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import { hashStringToSeed } from "./random";
 
-/** Long enough to mean something, short enough to sit on an island. Counted in code points,
- * so CJK and latin are measured the same way. */
+/** Long enough to mean something, short enough to sit on an island — stated for both script
+ * families, because "12 个字" counts hanzi and says nothing to a model writing in French.
+ * Asking for hanzi and then measuring code points is what took naming to 0% in fr/ru/bn/sw
+ * (bench 2026-09-08): "Astronomie observationnelle" is a perfectly short island name and 27
+ * code points long. */
+const NAME_BUDGET: LengthBudget = { cjkChars: 12, words: 4 };
+/** Two code points is a name in any script; one is a stray character. */
 const MIN_NAME_LENGTH = 2;
-const MAX_NAME_LENGTH = 12;
+const MAX_NAME_LENGTH = maxCharsFor(NAME_BUDGET);
 
 export interface ContinentNamingRequest {
   /** Opaque per-call handle (e.g. "c0") — node ids never leave the machine in the prompt. */
@@ -62,8 +68,13 @@ export function buildContinentNamingMessages(
   const content = [
     "下面每一行是一堆彼此相关的知识点，行首是这堆的编号。",
     "为每一堆起一个概括它们的领域名。",
-    `要求：平实陈述的领域名，${MIN_NAME_LENGTH}~${MAX_NAME_LENGTH} 个字；`,
+    `要求：一个平实陈述的领域名词短语，${lengthRule(NAME_BUDGET)}；`,
     "不夸赞、不评价、不含数字，不用「大师」「王者」「精通」这类等级词。",
+    // The naming call is a bare user message, so the answer-language directive is the only
+    // thing naming the output language and it sits outside this text. Without this line the
+    // Chinese the requirement is written in wins and a French reader's islands come back
+    // named in Chinese — schema-valid, and unreadable to their owner.
+    "名字用【语言】里指定的那门语言书写；这段要求本身是中文写的，不代表名字要用中文。",
     '只输出 JSON：{"clusters":[{"id":"c0","name":"..."}]}',
     "",
     ...lines,

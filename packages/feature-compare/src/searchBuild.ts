@@ -7,29 +7,37 @@
  * significantTokens, verifyEvidenceText, pruneUnverifiedBranches, survivesThreshold,
  * MIN_SURVIVING_ITEMS, MIN_SURVIVING_SHARE.
  */
-import type { ChatMessage } from "@breadcrumb/core-llm";
+import { type ChatMessage, type LengthBudget, lengthRule, maxCharsFor } from "@breadcrumb/core-llm";
 import { z } from "zod";
 
+/** Every name in a proposal comes back in the language the profile was asked for, so each
+ * bound is stated for both script families rather than counted in hanzi. Keys share the item
+ * ceiling because a model routinely uses the label as the key. */
+const ITEM_NAME_BUDGET: LengthBudget = { cjkChars: 20, words: 6 };
+const TITLE_BUDGET: LengthBudget = { cjkChars: 20, words: 8 };
+const DESCRIPTION_BUDGET: LengthBudget = { cjkChars: 60, words: 25 };
+const MAX_ITEM_NAME_CHARS = maxCharsFor(ITEM_NAME_BUDGET);
+
 export const searchedProposalItemSchema = z.object({
-  key: z.string().min(1).max(60),
-  parentKey: z.string().min(1).max(60).nullable(),
-  label: z.string().min(1).max(60),
-  aliases: z.array(z.string().min(1).max(60)).max(8),
+  key: z.string().min(1).max(MAX_ITEM_NAME_CHARS),
+  parentKey: z.string().min(1).max(MAX_ITEM_NAME_CHARS).nullable(),
+  label: z.string().min(1).max(MAX_ITEM_NAME_CHARS),
+  aliases: z.array(z.string().min(1).max(MAX_ITEM_NAME_CHARS)).max(8),
   /** The real material this item is taken from — name and a directly-openable URL. */
   sourceTitle: z.string().min(4).max(120),
   sourceUrl: z.string().url().max(300),
 });
 
 export const searchedProfileProposalSchema = z.object({
-  title: z.string().min(1).max(40),
-  description: z.string().min(1).max(200),
+  title: z.string().min(1).max(maxCharsFor(TITLE_BUDGET)),
+  description: z.string().min(1).max(maxCharsFor(DESCRIPTION_BUDGET)),
   items: z.array(searchedProposalItemSchema).min(4).max(80),
 });
 
 export type SearchedProposalItem = z.infer<typeof searchedProposalItemSchema>;
 
 const SYSTEM_PROMPT = `你是一个知识范围画像构建器。给定一个真实存在的职业、身份或教育阶段，请依据真实公开资料（官方课程标准、职业技能标准、权威机构发布的课程或认证大纲）把这类人应掌握的知识整理成一棵树，以 JSON 返回：
-{"title":"画像名，不超过40字","description":"一句话说明这是谁、依据什么资料，不超过200字","items":[{"key":"唯一短键","parentKey":"父节点的key，根节点为null","label":"知识条目名，不超过60字","aliases":["同义或子项名称，最多8个，必须同样来自资料"],"sourceTitle":"所依据资料的名称","sourceUrl":"该资料可直接打开的网址"}]}
+{"title":"画像名，${lengthRule(TITLE_BUDGET)}","description":"一句话说明这是谁、依据什么资料，${lengthRule(DESCRIPTION_BUDGET)}","items":[{"key":"唯一短键","parentKey":"父节点的key，根节点为null","label":"知识条目名，${lengthRule(ITEM_NAME_BUDGET)}","aliases":["同义或子项名称，最多8个，必须同样来自资料"],"sourceTitle":"所依据资料的名称","sourceUrl":"该资料可直接打开的网址"}]}
 请遵循：
 - 每一条 item 都必须给出真实存在、可直接访问的资料出处；不同条目可以共用同一份资料的不同部分
 - 禁止编造资料名或网址；对某条内容找不到可靠出处时，宁可不写这一条

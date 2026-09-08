@@ -41,7 +41,7 @@ describe("estimateFeatureCost", () => {
       ledger(average("knowledge-tree", LEDGER_MIN_SAMPLES, 1400, 2000)),
     );
 
-    // 1400 × ¥3/M + 2000 × ¥9/M = ¥0.0222 — the catalogue's 64-token reply would say ¥0.0046.
+    // 1400 × ¥3/M + 2000 × ¥9/M = ¥0.0222 — the catalogue's 64-token reply would say ¥0.0047.
     expect(estimate).toEqual({
       kind: "estimate",
       cost: "¥0.0222",
@@ -60,7 +60,7 @@ describe("estimateFeatureCost", () => {
 
     expect(estimate).toEqual({
       kind: "estimate",
-      cost: "¥0.0046",
+      cost: "¥0.0047",
       cadence: "per-round",
       source: "catalogue",
       samples: 0,
@@ -72,7 +72,7 @@ describe("estimateFeatureCost", () => {
     const withNoLedger = estimateFeatureCost(["knowledge-tree"], PRICING);
 
     expect(withEmptyLedger).toEqual(withNoLedger);
-    expect(withNoLedger).toMatchObject({ cost: "¥0.0046", source: "catalogue" });
+    expect(withNoLedger).toMatchObject({ cost: "¥0.0047", source: "catalogue" });
   });
 
   it("prices the recorded cache hits at the cache rate", () => {
