@@ -15,9 +15,9 @@ describe("compareStable", () => {
 
   it("is antisymmetric for every pair it is given", () => {
     const words = ["", "a", "A", "ab", "基础", "叶子", "zebra", "１"];
+    // Summed rather than negated: -0 and 0 are different values to toBe, and an equal pair
+    // legitimately produces one of each.
     for (const left of words)
-      // Summed rather than negated: -0 and 0 are different values to toBe, and an equal pair
-      // legitimately produces one of each.
       for (const right of words)
         expect(compareStable(left, right) + compareStable(right, left)).toBe(0);
   });
