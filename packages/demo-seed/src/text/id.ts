@@ -109,6 +109,7 @@ export const DEMO_TEXT_ID: DemoText = {
     teach: "Menjelaskan balik · closure dan rantai lingkup",
     vocab: "[Contoh] Menengok kosakata",
   },
+  goalTitle: "Mengubah catatan pengamatan menjadi laporan ringkas",
   astroMessages: [
     "Pagi ini lihat foto gugus galaksi dan cahayanya tampak membengkok. Itu apa?",
     "Itu lensa gravitasi: gravitasi benda bermassa besar membelokkan jalur cahaya yang datang dari belakangnya, jadi galaksi latar terlihat memanjang, atau muncul beberapa kali.",

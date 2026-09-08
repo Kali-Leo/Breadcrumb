@@ -1,7 +1,7 @@
 /**
  * Purpose: removes every row the demo seed ever writes, plus anything the
- * running app derived from demo rows (embeddings, aliases, edges, anchors, signals, place
- * names, focus sessions, factcheck runs) — as ONE transaction, because a wipe that stops
+ * running app derived from demo rows (embeddings, aliases, edges, anchors, signals, goals,
+ * place names, focus sessions, factcheck runs) — as ONE transaction, because a wipe that stops
  * halfway is worse than one that never ran.
  * Main exports: wipeDemoData, WIPE_DEMO_REFERENCING_TABLES.
  */
@@ -20,9 +20,9 @@ import { DEMO_PAIR } from "./shared";
  * insertDemoData starts by calling this, the demo could then never be installed or removed
  * again.
  *
- * `node_pair_verdicts` and `companion_proposals` carry node ids with NO declared foreign key,
- * so the pragma cannot find them; they are listed here anyway because leaving them pointing
- * at a deleted demo node is the same bug, just silent.
+ * `node_pair_verdicts`, `companion_proposals` and `goals` carry node ids with NO declared
+ * foreign key, so the pragma cannot find them; they are listed here anyway because leaving
+ * them pointing at a deleted demo node is the same bug, just silent.
  */
 export const WIPE_DEMO_REFERENCING_TABLES: readonly string[] = [
   // -> knowledge_nodes
@@ -37,6 +37,9 @@ export const WIPE_DEMO_REFERENCING_TABLES: readonly string[] = [
   "node_sightings",
   "node_pair_verdicts",
   "companion_proposals",
+  // node_ids_json holds demo node ids as JSON, so the pragma cannot see it either — and a
+  // goal left pointing at deleted nodes is a goal whose gap silently empties itself.
+  "goals",
   // -> conversations
   "messages",
   "llm_calls",
@@ -70,6 +73,9 @@ export async function wipeDemoData(sql: SqlClient): Promise<void> {
       sql: "DELETE FROM node_pair_verdicts WHERE node_a_id LIKE 'demo-%' OR node_b_id LIKE 'demo-%'",
     },
     { sql: "DELETE FROM companion_proposals WHERE node_id LIKE 'demo-%'" },
+    // The demo learner's own goal. No foreign key to lean on: its node ids live inside a JSON
+    // column, so nothing but this line would ever remove it.
+    { sql: "DELETE FROM goals WHERE id LIKE 'demo-%'" },
     // App-derived dependents of demo conversations/messages.
     {
       sql: "DELETE FROM factcheck_claims WHERE run_id IN (SELECT id FROM factcheck_runs WHERE conversation_id LIKE 'demo-%')",

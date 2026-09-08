@@ -8,8 +8,10 @@
  *
  * The demo is a real learner's three months: 39 concepts across astronomy and JavaScript,
  * with sighting histories checked against the real FSRS curve so the map genuinely has bright
- * regions, faded ones and things waiting to be reviewed. It goes into the same tables real
- * data goes into, because anything else would be a mock-up that drifts.
+ * regions, faded ones and things waiting to be reviewed. It also carries what they are
+ * curious about and the one goal they set, so the palace's 休闲/目标 switch has two different
+ * answers to give instead of the same list twice. It goes into the same tables real data goes
+ * into, because anything else would be a mock-up that drifts.
  *
  * Every row it writes carries a `demo-` id, and removal deletes those plus anything the app
  * derived from them. It never touches a row the learner made.

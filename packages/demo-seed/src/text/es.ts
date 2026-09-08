@@ -103,6 +103,7 @@ export const DEMO_TEXT_ES: DemoText = {
     teach: "Explicar de vuelta · cierres y cadena de ámbitos",
     vocab: "[Ejemplo] Repaso de vocabulario",
   },
+  goalTitle: "Convertir mi registro de observación en un informe resumido",
   astroMessages: [
     "Vi una foto de un cúmulo de galaxias esta mañana y la luz parecía curvada. ¿Qué es eso?",
     "Es una lente gravitacional: la gravedad de un objeto muy masivo curva el camino de la luz que viene de detrás, así que una galaxia de fondo aparece estirada, o varias veces.",

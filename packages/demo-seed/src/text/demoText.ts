@@ -73,6 +73,10 @@ export interface DemoText {
     teach: string;
     vocab: string;
   };
+  /** The one learning goal the example learner has set — the thing the 目标 mode ranks
+   * towards. Its knowledge nodes are chosen by id in goal.ts, so the title can be rewritten
+   * in any language without moving the goal. */
+  goalTitle: string;
   /** Six turns, learner first, alternating. The 2nd, 3rd and 5th are what today's sightings
    * of gravitational lensing, stellar spectra and the astronomy root attach to. */
   astroMessages: readonly [string, string, string, string, string, string];

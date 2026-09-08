@@ -91,6 +91,7 @@ export const DEMO_TEXT_PT: DemoText = {
     teach: "Explicando de volta · fechamentos e cadeia de escopos",
     vocab: "[Exemplo] Retomada de vocabulário",
   },
+  goalTitle: "Transformar meu diário de observação em um relatório resumido",
   astroMessages: [
     "Vi de manhã uma foto de um aglomerado de galáxias e a luz parecia entortada. O que é isso?",
     "É uma lente gravitacional: a gravidade de um objeto bem massivo entorta o caminho da luz que vem de trás, então uma galáxia de fundo aparece esticada, ou várias vezes.",

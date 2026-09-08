@@ -23,6 +23,7 @@ function allStrings(code: string): string[] {
   return [
     ...CONCEPT_IDS.flatMap((id) => [...text.concepts[id]]),
     ...Object.values(text.titles),
+    text.goalTitle,
     ...text.astroMessages,
     ...text.jsMessages,
     ...text.teachMessages,

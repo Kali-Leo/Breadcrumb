@@ -94,6 +94,7 @@ export const DEMO_TEXT_SW: DemoText = {
     teach: "Kueleza tena · closure na mnyororo wa mawanda",
     vocab: "[Mfano] Kupitia msamiati",
   },
+  goalTitle: "Kugeuza kumbukumbu za uchunguzi kuwa ripoti ya muhtasari",
   astroMessages: [
     "Asubuhi niliona picha ya kundi la galaksi na mwanga ulionekana umepinda. Hilo ni nini?",
     "Hiyo ni lenzi ya uvutano: uvutano wa kitu chenye uzito mkubwa hupinda njia ya mwanga unaotoka nyuma yake, hivyo galaksi ya nyuma huonekana imenyooshwa, au huonekana mara kadhaa.",

@@ -76,6 +76,7 @@ export const DEMO_TEXT_EN: DemoText = {
     teach: "Teach-back · closures and the scope chain",
     vocab: "[Example] Vocabulary catch-up",
   },
+  goalTitle: "Turn my observing log into a summary report",
   astroMessages: [
     "Saw a photo of a galaxy cluster this morning and the light looked bent. What is going on there?",
     "That is gravitational lensing: the gravity of a massive object bends the path of light coming from behind it, so a background galaxy shows up stretched, or several times over.",

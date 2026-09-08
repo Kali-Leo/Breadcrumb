@@ -1,9 +1,15 @@
 /**
  * Purpose: public entry of the zero-LLM demo seed.
  * Main exports: insertDemoData, wipeDemoData, WIPE_DEMO_REFERENCING_TABLES, DEMO_PAIR,
- * SeedSummary, demoTextFor, DEMO_TEXT_BY_LANGUAGE, CONCEPT_IDS.
+ * SeedSummary, demoTextFor, DEMO_TEXT_BY_LANGUAGE, CONCEPT_IDS, DEMO_GOAL_ID,
+ * DEMO_GOAL_CONCEPT_IDS, DEMO_GOAL_REQUIRES.
  */
 
+export {
+  DEMO_GOAL_CONCEPT_IDS,
+  DEMO_GOAL_ID,
+  DEMO_GOAL_REQUIRES,
+} from "./goal";
 export { insertDemoData, type SeedSummary } from "./insert";
 export { DEMO_PAIR } from "./shared";
 export { DEMO_TEXT_BY_LANGUAGE, demoTextFor } from "./text";

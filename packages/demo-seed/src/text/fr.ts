@@ -121,6 +121,7 @@ export const DEMO_TEXT_FR: DemoText = {
     teach: "Réexplication · fermetures et chaîne de portées",
     vocab: "[Exemple] Retour sur le vocabulaire",
   },
+  goalTitle: "Transformer mon journal d'observation en rapport de synthèse",
   astroMessages: [
     "J'ai vu ce matin une photo d'amas de galaxies où la lumière avait l'air courbée. C'est quoi ?",
     "C'est une lentille gravitationnelle : la gravité d'un objet très massif courbe le trajet de la lumière qui vient de derrière, donc une galaxie d'arrière-plan apparaît étirée, ou plusieurs fois.",

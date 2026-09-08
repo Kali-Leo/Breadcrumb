@@ -1,12 +1,15 @@
 /**
  * Purpose: orchestrates the zero-LLM demo seed — wires the conversation,
- * concept, claim and word builders together and writes every row via the real core-db
- * repositories (so schema/constraint correctness is guaranteed, not assumed).
+ * concept, claim, interest, goal and word builders together and writes every row via the real
+ * core-db repositories (so schema/constraint correctness is guaranteed, not assumed).
  * Main exports: SeedSummary, insertDemoData.
  */
 import {
   createConversationsRepo,
   createDiglotRepo,
+  createGoalsRepo,
+  createInterestSignalsRepo,
+  createKnowledgeEdgesRepo,
   createKnowledgeNodesRepo,
   createMasteryClaimsRepo,
   createMessagesRepo,
@@ -16,6 +19,8 @@ import {
 import { buildClaimSeed } from "./claims";
 import { buildConceptSeed } from "./concepts";
 import { buildDemoConversations } from "./conversations";
+import { buildGoalSeed } from "./goal";
+import { buildInterestSeed } from "./interest";
 import { demoTextFor } from "./text";
 import { wipeDemoData } from "./wipe";
 import { buildWordSeed } from "./words";
@@ -26,6 +31,11 @@ export interface SeedSummary {
   nodes: number;
   sightings: number;
   claims: number;
+  /** The requires edges the demo goal's decomposition wrote between its own nodes. */
+  edges: number;
+  interestSignals: number;
+  /** 1 normally; 0 only if every one of the goal's concepts was skipped as an existing label. */
+  goals: number;
   wordStates: number;
   wordEvents: number;
   wordGuesses: number;
@@ -68,6 +78,9 @@ export async function insertDemoData(
   const conversationsRepo = createConversationsRepo(sql);
   const messagesRepo = createMessagesRepo(sql);
   const masteryClaims = createMasteryClaimsRepo(sql);
+  const interestSignals = createInterestSignalsRepo(sql);
+  const knowledgeEdges = createKnowledgeEdgesRepo(sql);
+  const goals = createGoalsRepo(sql);
   const diglot = createDiglotRepo(sql);
 
   const existingLabels = new Set((await knowledgeNodes.listAll()).map((node) => node.label));
@@ -93,6 +106,20 @@ export async function insertDemoData(
     await masteryClaims.insert(claim);
   }
 
+  const signals = buildInterestSeed(now, concepts.nodeIdById, conversations);
+  for (const signal of signals) {
+    await interestSignals.insert(signal);
+  }
+
+  // Edges and the goal row after the nodes they point at, or the foreign key rejects them.
+  const goalSeed = buildGoalSeed(now, concepts.nodeIdById, text);
+  for (const edge of goalSeed.edges) {
+    await knowledgeEdges.upsert(edge);
+  }
+  if (goalSeed.goal !== null) {
+    await goals.insert(goalSeed.goal);
+  }
+
   const words =
     options.languagePack === undefined ? null : buildWordSeed(now, options.languagePack, text);
   if (words !== null) {
@@ -114,6 +141,9 @@ export async function insertDemoData(
     nodes: concepts.nodes.length,
     sightings: concepts.sightings.length,
     claims: claims.length,
+    edges: goalSeed.edges.length,
+    interestSignals: signals.length,
+    goals: goalSeed.goal === null ? 0 : 1,
     wordStates: words?.states.length ?? 0,
     wordEvents: words?.events.length ?? 0,
     wordGuesses: words?.guesses.length ?? 0,
