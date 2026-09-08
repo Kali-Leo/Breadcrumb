@@ -9,6 +9,7 @@ import {
   completionsUrl,
   type LlmClientConfig,
   type TokenUsage,
+  thinkingOffFields,
 } from "@breadcrumb/core-llm";
 
 export interface NonStreamingChatResult {
@@ -28,7 +29,15 @@ export async function nonStreamingChat(
   const response = await config.fetchImpl(completionsUrl(config.baseUrl), {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.apiKey}` },
-    body: JSON.stringify({ model: config.model, messages, stream: false }),
+    // Same thinking-off fields the streaming client sends: several providers deliberate by
+    // default, bill it at the output rate, and take minutes over it. A fallback path that
+    // omitted them would cost several times what the path it stands in for costs.
+    body: JSON.stringify({
+      model: config.model,
+      messages,
+      stream: false,
+      ...thinkingOffFields(config.model),
+    }),
   });
   if (!response.ok) {
     throw new Error(`LLM request failed: HTTP ${response.status}`);

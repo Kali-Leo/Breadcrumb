@@ -2,9 +2,16 @@
  * Purpose: public entry of the simlab dev-tooling package — no product package or app may
  * ever depend on this; it exists only for `pnpm --filter @breadcrumb/simlab sim`/`test`.
  * Main exports: the temp-sqlite adapter (db/), synthetic embeddings (embedding/), the persona
- * engine (persona/), the journey runner (runner/), the mechanical judges (judges/), and
- * shared PRNG utilities (util/).
+ * engine (persona/), the journey runner (runner/), the mechanical judges (judges/), the
+ * model-capability bench (bench/), and shared PRNG utilities (util/).
  */
+export * from "./bench/aggregate";
+export * from "./bench/benchCall";
+export * from "./bench/providers";
+export * from "./bench/report";
+export * from "./bench/runBench";
+export * from "./bench/scenarios/index";
+export * from "./bench/scenarioTypes";
 export * from "./db/repos";
 export * from "./db/sqliteClient";
 export * from "./embedding/embedNodes";

@@ -4,9 +4,17 @@
  * Models sold in CNY are billed at their CNY rate directly; anything priced only in another
  * currency goes through a fixed approximate rate — this is a rough dev-tooling cost ceiling,
  * not a financial feature, so a hand-set constant is appropriate (no live-rate dependency).
+ * A model the built-in catalogue has never heard of (every candidate in the model bench but
+ * DeepSeek) can be priced through the optional `fallbackRates` resolver, so a run against
+ * outside providers is still capped rather than silently unbounded.
  * Main exports: createCostGuard, CostGuard, USD_TO_CNY_RATE.
  */
-import { calculateCostMicros, resolveModelRates, type TokenUsage } from "@breadcrumb/core-llm";
+import {
+  calculateCostMicros,
+  type ModelRates,
+  resolveModelRates,
+  type TokenUsage,
+} from "@breadcrumb/core-llm";
 
 /** Approximate, hand-set — good enough for a soft budget ceiling. */
 export const USD_TO_CNY_RATE = 7.2;
@@ -19,13 +27,18 @@ export interface CostGuard {
   isOverBudget(): boolean;
 }
 
-export function createCostGuard(budgetCny: number): CostGuard {
+export function createCostGuard(
+  budgetCny: number,
+  /** Rates for a model the catalogue does not carry. Returning undefined leaves that model
+   * uncounted, exactly as before. */
+  fallbackRates?: (model: string) => ModelRates | undefined,
+): CostGuard {
   let totalMicrosCny = 0;
   return {
     recordCall(model, usage) {
       // The budget is CNY, so ask for the CNY price first — DeepSeek publishes one, which
       // makes the guard exact instead of routed through the approximate rate below.
-      const price = resolveModelRates(model, { currency: "CNY" });
+      const price = resolveModelRates(model, { currency: "CNY" }) ?? fallbackRates?.(model);
       if (price === undefined) return 0;
       const costMicros = calculateCostMicros(usage, price);
       const microsCny = price.currency === "CNY" ? costMicros : costMicros * USD_TO_CNY_RATE;

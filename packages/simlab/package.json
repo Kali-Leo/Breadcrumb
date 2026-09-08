@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "sim": "tsx src/cli/sim.ts",
-    "seed-demo": "tsx src/cli/seedDemo.ts"
+    "seed-demo": "tsx src/cli/seedDemo.ts",
+    "bench": "tsx src/cli/sim.ts bench"
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
@@ -21,11 +22,16 @@
     "@breadcrumb/core-teaching": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
     "@breadcrumb/demo-seed": "workspace:*",
+    "@breadcrumb/feature-companion": "workspace:*",
+    "@breadcrumb/feature-compare": "workspace:*",
     "@breadcrumb/feature-diglot-weave": "workspace:*",
+    "@breadcrumb/feature-explore": "workspace:*",
+    "@breadcrumb/feature-factcheck": "workspace:*",
     "@breadcrumb/feature-feedback": "workspace:*",
     "@breadcrumb/feature-graph": "workspace:*",
     "@breadcrumb/feature-interest": "workspace:*",
     "@breadcrumb/feature-knowledge-tree": "workspace:*",
+    "@breadcrumb/feature-map": "workspace:*",
     "@breadcrumb/feature-memory": "workspace:*",
     "@breadcrumb/feature-planner": "workspace:*",
     "@breadcrumb/feature-trail": "workspace:*",

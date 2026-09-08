@@ -503,6 +503,9 @@ importers:
       '@breadcrumb/core-i18n':
         specifier: workspace:*
         version: link:../core-i18n
+      '@breadcrumb/core-llm':
+        specifier: workspace:*
+        version: link:../core-llm
       '@breadcrumb/core-random':
         specifier: workspace:*
         version: link:../core-random
@@ -678,6 +681,9 @@ importers:
       '@breadcrumb/core-db':
         specifier: workspace:*
         version: link:../core-db
+      '@breadcrumb/core-llm':
+        specifier: workspace:*
+        version: link:../core-llm
       '@breadcrumb/core-random':
         specifier: workspace:*
         version: link:../core-random
@@ -833,9 +839,21 @@ importers:
       '@breadcrumb/demo-seed':
         specifier: workspace:*
         version: link:../demo-seed
+      '@breadcrumb/feature-companion':
+        specifier: workspace:*
+        version: link:../feature-companion
+      '@breadcrumb/feature-compare':
+        specifier: workspace:*
+        version: link:../feature-compare
       '@breadcrumb/feature-diglot-weave':
         specifier: workspace:*
         version: link:../feature-diglot-weave
+      '@breadcrumb/feature-explore':
+        specifier: workspace:*
+        version: link:../feature-explore
+      '@breadcrumb/feature-factcheck':
+        specifier: workspace:*
+        version: link:../feature-factcheck
       '@breadcrumb/feature-feedback':
         specifier: workspace:*
         version: link:../feature-feedback
@@ -848,6 +866,9 @@ importers:
       '@breadcrumb/feature-knowledge-tree':
         specifier: workspace:*
         version: link:../feature-knowledge-tree
+      '@breadcrumb/feature-map':
+        specifier: workspace:*
+        version: link:../feature-map
       '@breadcrumb/feature-memory':
         specifier: workspace:*
         version: link:../feature-memory
