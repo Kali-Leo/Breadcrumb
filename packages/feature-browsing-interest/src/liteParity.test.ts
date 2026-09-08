@@ -64,8 +64,14 @@ const TITLES: ReadonlyArray<readonly [string, string]> = [
   ["今天做了一锅红烧肉", "美食家老王"],
 ];
 
-describe.skipIf(!existsSync(referencePath))("parity with interest_lite.js", () => {
-  const lite = createRequire(import.meta.url)(referencePath) as LiteModule;
+// Loaded out here, not inside the suite: vitest still runs a skipped suite's body during
+// collection, so a require in there throws on every machine that has no checkout.
+const liteOrNull = existsSync(referencePath)
+  ? (createRequire(import.meta.url)(referencePath) as LiteModule)
+  : null;
+
+describe.skipIf(liteOrNull === null)("parity with interest_lite.js", () => {
+  const lite = liteOrNull as LiteModule;
 
   it("keeps the taxonomy in the reference's order — index i IS weight-matrix column i", () => {
     // Read the literal out of the reference source rather than trusting the JSON: taxonomy.json
