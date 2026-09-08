@@ -21,6 +21,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { requestDrawerFor } from "../shell/drawerRequests";
+import { setPageGuidesHeld } from "./pageGuideRequests";
 import {
   type CardSize,
   cardPosition,
@@ -89,6 +90,13 @@ export function SpotlightTour({ steps, onNavigate, onFinish }: SpotlightTourProp
     const observer = new ResizeObserver(measure);
     observer.observe(card);
     return () => observer.disconnect();
+  }, []);
+
+  // The tour drives the views itself, so the per-page notes stay down while it runs; the
+  // pages it walked past are still unread and explain themselves on a real visit.
+  useEffect(() => {
+    setPageGuidesHeld(true);
+    return () => setPageGuidesHeld(false);
   }, []);
 
   // Escape leaves. A tour nobody can get out of is worse than no tour.

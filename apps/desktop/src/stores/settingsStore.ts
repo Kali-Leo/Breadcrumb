@@ -21,6 +21,7 @@ import {
   type FeatureSwitches,
   guessMainlandNetwork,
   type LearningMode,
+  type PageGuidesSeen,
   type RouteParams,
 } from "../lib/platform/settingsSchema";
 import { loadSettingsSnapshot } from "./settingsStoreLoad";
@@ -31,6 +32,8 @@ export type {
   CompareCategory,
   FeatureSwitches,
   LearningMode,
+  PageGuideId,
+  PageGuidesSeen,
   PriceOverride,
   RouteParams,
 } from "../lib/platform/settingsSchema";
@@ -46,6 +49,8 @@ export interface SettingsState extends SettingsWriteActions {
   onboardingSeen: boolean;
   /** True once the first-steps checklist has been dismissed. */
   checklistDismissed: boolean;
+  /** Which pages have already shown their own guide. Empty means none of them have. */
+  pageGuidesSeen: PageGuidesSeen;
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
@@ -76,6 +81,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   networkEnabled: true,
   onboardingSeen: true,
   checklistDismissed: true,
+  pageGuidesSeen: {},
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
   learningMode: "casual",

@@ -3,15 +3,17 @@
   "back": "Kembali",
   "skip": "Lewati, saya cari jalan sendiri",
   "welcome": {
-    "title": "Kamu bicara, ia yang mencatat",
-    "body": "Breadcrumb adalah teman belajar. Kamu bicara tentang apa yang ingin kamu pelajari, dan sambil jalan ia menyusun peta dari yang sudah kamu lewati — tanpa mencatat, tanpa absen.",
-    "point1": "Konsep yang kamu bicarakan muncul sendiri di peta, dan memudar di tempat yang tidak kamu datangi lagi",
-    "point2": "Semuanya tinggal di komputer ini. Tanpa akun, tanpa sinkronisasi awan",
-    "point3": "Tanpa papan peringkat, tanpa rentetan hari, tanpa bilah kemajuan",
-    "tryDemo": "Tunjukkan contohnya dulu (disarankan)",
-    "demoNote": "Memuat tiga bulan belajar milik orang lain dan mengajakmu berkeliling. Satu klik menghapusnya kapan saja.",
-    "installing": "Menyiapkan contoh…",
-    "startClean": "Lewati contohnya, mulai dari kosong"
+    "label": "Perkenalan",
+    "card1Title": "Ini apa",
+    "card1Body": "Breadcrumb adalah teman belajar. Kamu mengobrol dengan AI tentang apa pun yang ingin kamu pahami, dan di samping jawabannya ia menyimpan catatan tentang apa saja yang sudah kamu lewati. Tidak ada catatan yang harus ditulis dan tidak ada absen harian.",
+    "card2Title": "Mengobrol sebentar, sebuah peta tumbuh",
+    "card2Body": "Setiap konsep yang muncul menjadi pulau di peta, ditempatkan dan dikelompokkan dengan sendirinya. Tempat yang sudah lama tidak kamu datangi warnanya memudar — itu menandai bagian mana yang sedang diam, bukan menilai dirimu.",
+    "card3Title": "Apa yang tinggal di sini, dan apa yang berbiaya",
+    "card3Body": "Percakapan, peta, dan kosakata tersimpan di komputer ini. Tanpa akun, tanpa sinkronisasi awan. Yang berbiaya hanyalah layanan AI yang kamu pasang sendiri, dihitung menurut pemakaian; setiap fitur yang mengeluarkan biaya punya sakelarnya sendiri, dengan harganya tertulis di sebelahnya di pengaturan.",
+    "start": "Mulai",
+    "tryDemo": "Lihat contoh dulu",
+    "demoNote": "Tiga bulan belajar milik orang lain; sekali klik untuk membuangnya kapan saja.",
+    "installing": "Menyiapkan contoh…"
   },
   "tour": {
     "label": "Tur berpemandu",
@@ -32,6 +34,53 @@
     "yourTurnTitle": "Giliranmu",
     "yourTurnBody": "Tanyakan sesuatu yang benar-benar ingin kamu pahami. Petanya akan mengikuti sendiri."
   },
+  "pageGuide": {
+    "label": "Tentang halaman ini",
+    "gotIt": "Mengerti",
+    "openButton": "Tentang halaman ini",
+    "chat": {
+      "title": "Di sinilah kamu mengobrol",
+      "body": "Tanyakan apa pun yang benar-benar ingin kamu pahami. Sakelar di atas menentukan bentuk jawabannya: mode belajar balik bertanya dan memintamu menjelaskan sendiri, sedangkan obrolan bebas adalah percakapan biasa.",
+      "point1": "Konsep yang muncul masuk ke peta dengan sendirinya; tidak ada yang perlu dicatat",
+      "point2": "Judul percakapan tersusun sendiri dan berhenti berubah begitu kamu mengganti satu",
+      "limit": "Ia tidak menyusun jadwal mingguanmu dan tidak mengejarmu ketika beberapa hari lewat tanpa kunjungan."
+    },
+    "map": {
+      "title": "Semua yang sudah kamu lewati, terbentang",
+      "body": "Setiap pulau adalah konsep yang pernah kamu bicarakan, ditempatkan dan dikelompokkan otomatis. Turun satu tingkat untuk melihat rinciannya dan percakapan mana saja yang menyinggungnya.",
+      "point1": "Yang gelap baru saja dibicarakan; yang pudar sudah lama diam",
+      "point2": "Semua di halaman ini dihitung di mesinmu sendiri dan tidak berbiaya",
+      "limit": "Ini bukan buku catatan: tidak ada yang bisa ditambahkan dengan tangan, peta hanya tumbuh dari percakapanmu."
+    },
+    "vocab": {
+      "title": "Belajar bahasa sambil mengobrol",
+      "body": "Setelah dinyalakan, sebagian kata dalam jawaban datang dalam bahasa yang sedang kamu pelajari; kamu bisa menebak dulu, lalu melihat artinya. Halaman ini menyimpan kata-kata yang sedang berjalan, dan dari sini pula kamus diunduh dan ditukar.",
+      "point1": "Tes kosakata singkat membuat kata baru dimulai setelah yang sudah kamu kenal",
+      "point2": "Arti dan pelafalan berasal dari kamus terunduh yang tinggal di mesin ini dan bekerja tanpa jaringan",
+      "limit": "Ia tidak mengajarkan tata bahasa dan tidak memberi latihan soal; ia hanya menukar kata di kalimat yang memang akan kamu baca."
+    },
+    "discovery": {
+      "title": "Yang kamu tonton, terkumpul di satu halaman",
+      "body": "Pasang satu skrip kecil di peramban, lalu apa yang kamu tonton di Bilibili dan YouTube dirangkum di sini: kata yang sering muncul, topik yang mulai bermunculan, dan tontonan panjang yang sudah kamu lihat. Semuanya diolah di komputer ini.",
+      "point1": "Halaman ini terbuka sebelum kamu memasang apa pun dan menjelaskan sendiri apa yang dibutuhkannya",
+      "point2": "Catatan tontonan tinggal di mesin ini dan tidak dikirim ke mana pun",
+      "limit": "Ia tidak memilihkan apa yang harus kamu tonton dan tidak menilai tontonanmu."
+    },
+    "companions": {
+      "title": "Beberapa orang yang datang bertanya",
+      "body": "Setiap hari muncul beberapa tokoh yang bertanya tentang sesuatu yang baru kamu pelajari. Menjelaskannya kepada mereka adalah cara mengetahui apakah kamu bisa menjelaskannya. Percakapannya berlangsung di jendela kecil tersendiri, sehingga percakapanmu tetap di tempatnya.",
+      "point1": "Yang mereka tanyakan diambil dari catatanmu sendiri",
+      "point2": "Kalau kamu tidak menginginkannya, seluruh bagian ini bisa dimatikan di pengaturan",
+      "limit": "Mereka bukan orang sungguhan, dan setelah kamu pergi mereka tidak akan menunggu atau memanggilmu kembali."
+    },
+    "settings": {
+      "title": "Kunci, bahasa, dan pengeluaran",
+      "body": "Hal pertama yang diisi adalah alamat dan kunci sebuah layanan AI — tanpa itu, apa pun yang bersandar pada AI tidak jalan. Halaman ini juga mengganti bahasa antarmuka, bahasa jawaban AI, dan sambungan ke jaringan.",
+      "point1": "«Sakelar dan pengeluaran» memuat setiap fitur yang berbiaya, masing-masing dengan sakelarnya dan perkiraan biaya sekali pakai",
+      "point2": "Kunci itu tinggal di komputer ini dan tidak ikut keluar bersama apa pun",
+      "limit": "Layanan AI-nya sendiri tidak disediakan di sini; kuncinya kamu ambil dari penyedia tempat kamu mendaftar."
+    }
+  },
   "checklist": {
     "title": "Mulai dari sini",
     "connect": "Hubungkan layanan AI",
@@ -46,8 +95,10 @@
   },
   "settings": {
     "title": "Tur berpemandu",
-    "hint": "Ulangi perkenalannya, atau hapus data contoh.",
+    "hint": "Melihat perkenalan lagi, mengembalikan catatan tiap halaman, atau membuang data contoh.",
     "replay": "Ikuti turnya lagi",
+    "resetGuides": "Tampilkan lagi catatan semua halaman",
+    "guidesRestored": "Selesai. Tiap halaman akan menampilkan catatannya sekali lagi saat kamu membukanya.",
     "removeDemo": "Hapus data contoh",
     "demoAbsent": "Tidak ada data contoh"
   }

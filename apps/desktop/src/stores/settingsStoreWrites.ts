@@ -30,6 +30,9 @@ import {
   MAINLAND_NETWORK_KEY,
   NETWORK_ENABLED_KEY,
   ONBOARDING_SEEN_KEY,
+  PAGE_GUIDES_SEEN_KEY,
+  type PageGuideId,
+  pageGuidesSeenSchema,
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
@@ -43,6 +46,8 @@ export interface SettingsWriteActions {
   markOnboardingSeen(): Promise<void>;
   resetOnboarding(): Promise<void>;
   dismissChecklist(): Promise<void>;
+  markPageGuideSeen(page: PageGuideId): Promise<void>;
+  resetPageGuides(): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
@@ -86,6 +91,24 @@ export function createSettingsWriteActions(
       const repos = await getRepos();
       await repos.settings.set(CHECKLIST_DISMISSED_KEY, true, nowIso());
       set({ checklistDismissed: true });
+    },
+
+    /** One page's guide has been read. Parsed on the way out as well as on the way in: the
+     * settings table takes whatever it is handed, and this row is read back by name. */
+    async markPageGuideSeen(page) {
+      const pageGuidesSeen = pageGuidesSeenSchema.parse({ ...get().pageGuidesSeen, [page]: true });
+      const repos = await getRepos();
+      await repos.settings.set(PAGE_GUIDES_SEEN_KEY, pageGuidesSeen, nowIso());
+      set({ pageGuidesSeen });
+    },
+
+    /** Every page guide becomes unread again, so each one appears once more the next time
+     * that page is opened. Separate from resetOnboarding: someone who wants the page notes
+     * back is not asking to be walked through the introduction again. */
+    async resetPageGuides() {
+      const repos = await getRepos();
+      await repos.settings.set(PAGE_GUIDES_SEEN_KEY, {}, nowIso());
+      set({ pageGuidesSeen: {} });
     },
 
     async markOnboardingSeen() {

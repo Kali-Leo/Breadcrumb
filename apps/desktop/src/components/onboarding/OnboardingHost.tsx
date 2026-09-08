@@ -1,6 +1,12 @@
 /**
- * Purpose: runs the newcomer experience and owns which phase it is in — welcome, guided tour,
- * then a checklist that outlives both.
+ * Purpose: runs the newcomer experience and owns which phase it is in — the introduction,
+ * then a checklist that outlives it, with the guided tour reachable from the checklist.
+ *
+ * The introduction no longer pulls anyone into the tour. It says what the app is and ends on
+ * the chat page; from there each page explains itself when it is first opened (PageGuideHost).
+ * The tour still exists for people who want to be walked through the running app, but it is
+ * now something you choose — from this checklist or from settings — rather than the road out
+ * of the welcome screen.
  *
  * Kept out of App.tsx so the shell stays a shell: App renders this and hands it the two things
  * only App can do, which are switching views and knowing which one is open.
@@ -76,22 +82,13 @@ export function OnboardingHost({
     await useKnowledgeStore.getState().loadTree();
     await useChatStore.getState().loadFromDatabase();
     setWithDemo(true);
-    setPhase("tour");
-  }, []);
+    finishIntro();
+  }, [finishIntro]);
 
   if (phase === "idle" || phase === "done") return null;
 
   if (phase === "welcome") {
-    return (
-      <WelcomeDialog
-        onTryDemo={tryDemo}
-        onStartClean={() => {
-          setWithDemo(false);
-          setPhase("tour");
-        }}
-        onSkip={finishIntro}
-      />
-    );
+    return <WelcomeDialog onTryDemo={tryDemo} onDone={finishIntro} />;
   }
 
   if (phase === "tour") {
@@ -99,7 +96,10 @@ export function OnboardingHost({
       <SpotlightTour
         steps={withDemo ? DEMO_TOUR_STEPS : TOUR_STEPS}
         onNavigate={onNavigate}
-        onFinish={finishIntro}
+        onFinish={() => {
+          setPhase("checklist");
+          onNavigate("chat");
+        }}
       />
     );
   }
@@ -108,13 +108,13 @@ export function OnboardingHost({
     <OnboardingChecklist
       sawMap={sawMap}
       onReplayTour={() => {
-        // Straight back into the tour when the example is already there — asking again
-        // whether to install what is already installed is a pointless door to walk through.
+        // The tour reads better over the example learner, but it has its own shorter route
+        // for an empty app, so it starts either way rather than sending anyone back to the
+        // introduction to install something first.
         void (async () => {
           const { hasDemoData } = await import("../../lib/platform/demoData");
-          const installed = await hasDemoData();
-          setWithDemo(installed);
-          setPhase(installed ? "tour" : "welcome");
+          setWithDemo(await hasDemoData());
+          setPhase("tour");
         })();
       }}
       onOpenSettings={() => onNavigate("settings")}

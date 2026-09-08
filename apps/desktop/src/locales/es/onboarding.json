@@ -3,15 +3,17 @@
   "back": "Atrás",
   "skip": "Sáltalo, ya me oriento yo",
   "welcome": {
-    "title": "Tú hablas, él toma las notas",
-    "body": "Breadcrumb es un compañero de aprendizaje. Hablas de lo que quieres aprender y, mientras tanto, va construyendo un mapa de lo que has cubierto — sin tomar notas ni fichar.",
-    "point1": "Los conceptos de los que hablas aparecen solos en el mapa, y se difuminan donde no has vuelto",
-    "point2": "Todo se queda en este ordenador. Sin cuenta, sin sincronización en la nube",
-    "point3": "Sin clasificaciones, sin rachas, sin barras de progreso",
-    "tryDemo": "Enséñame primero un ejemplo (recomendado)",
-    "demoNote": "Carga tres meses de aprendizaje de otra persona y te lo enseña. Un clic lo quita cuando quieras.",
-    "installing": "Preparando el ejemplo…",
-    "startClean": "Saltar el ejemplo, empezar vacío"
+    "label": "Presentación",
+    "card1Title": "Qué es esto",
+    "card1Body": "Breadcrumb es un compañero de aprendizaje. Hablas con una IA sobre lo que quieras entender y, junto a las respuestas, va guardando lo que has visto. No hay que tomar apuntes ni pasar cada día.",
+    "card2Title": "Hablas un rato y crece un mapa",
+    "card2Body": "Cada concepto que aparece se convierte en una isla del mapa, colocada y agrupada sola. Los sitios donde no has vuelto en un tiempo se aclaran: eso dice qué partes llevan un rato en reposo, no qué tal lo haces.",
+    "card3Title": "Qué se queda aquí y qué cuesta dinero",
+    "card3Body": "Las conversaciones, el mapa y tu vocabulario viven en este ordenador. Sin cuenta y sin sincronización en la nube. Lo único que cuesta dinero es el servicio de IA que pones tú, cobrado por uso; cada función que gasta tiene su propio interruptor y su precio escrito al lado, en los ajustes.",
+    "start": "Empezar",
+    "tryDemo": "Ver antes un ejemplo",
+    "demoNote": "Tres meses de aprendizaje de otra persona; se quita con un clic cuando quieras.",
+    "installing": "Preparando el ejemplo…"
   },
   "tour": {
     "label": "Recorrido guiado",
@@ -32,6 +34,53 @@
     "yourTurnTitle": "Te toca",
     "yourTurnBody": "Pregunta por algo que de verdad quieras entender. El mapa irá siguiéndote solo."
   },
+  "pageGuide": {
+    "label": "Sobre esta página",
+    "gotIt": "Entendido",
+    "openButton": "Sobre esta página",
+    "chat": {
+      "title": "Aquí es donde hablas",
+      "body": "Pregunta lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio te devuelve preguntas y te pide que lo expliques tú; la charla libre es una conversación normal.",
+      "point1": "Los conceptos que salen se archivan solos en el mapa; no hay nada que apuntar",
+      "point2": "Los títulos de las conversaciones se ponen solos y dejan de cambiar en cuanto renombras uno",
+      "limit": "No te va a planificar la semana ni va a ir a buscarte cuando pasen días sin que aparezcas."
+    },
+    "map": {
+      "title": "Todo lo que has visto, extendido",
+      "body": "Cada isla es un concepto del que has hablado, colocado y agrupado de forma automática. Entra un nivel para ver el detalle y en qué conversaciones apareció.",
+      "point1": "Lo oscuro es reciente; lo pálido lleva un tiempo en reposo",
+      "point2": "Todo lo de esta página se calcula en tu propia máquina y no cuesta nada",
+      "limit": "No es un cuaderno: no puedes añadir nada a mano, solo crece a partir de tus conversaciones."
+    },
+    "vocab": {
+      "title": "Aprende un idioma mientras charlas",
+      "body": "Al activarlo, algunas palabras de las respuestas llegan en el idioma que estás aprendiendo; puedes adivinar primero y después ver qué significan. Esta página guarda las palabras en las que estás y es donde se descargan y se cambian los diccionarios.",
+      "point1": "Una prueba corta de vocabulario permite empezar más allá de lo que ya sabes",
+      "point2": "Significados y pronunciación salen de un diccionario descargado que se queda en esta máquina y funciona sin conexión",
+      "limit": "No enseña gramática ni pone ejercicios; solo cambia palabras en frases que ibas a leer igualmente."
+    },
+    "discovery": {
+      "title": "Lo que ves, reunido en un sitio",
+      "body": "Instala un pequeño script en el navegador y lo que ves en Bilibili y YouTube se resume aquí: las palabras que se repiten, los temas que empiezan a aparecer y los contenidos largos que has visto. Todo se calcula en este ordenador.",
+      "point1": "La página se abre antes de instalar nada y te dice qué hace falta",
+      "point2": "El registro de lo que ves se queda en esta máquina y no se envía a ningún sitio",
+      "limit": "No elige qué deberías ver ni pone nota a lo que has visto."
+    },
+    "companions": {
+      "title": "Unas cuantas personas que vienen con preguntas",
+      "body": "Cada día aparecen unos personajes preguntando por algo que has estado aprendiendo. Explicárselo es una forma de comprobar si sabes hacerlo. Hablan en una ventanita aparte, así que tu conversación se queda donde estaba.",
+      "point1": "Lo que preguntan sale de tu propio registro",
+      "point2": "Si prefieres no tenerlos, todo esto se apaga en los ajustes",
+      "limit": "No son personas reales y, cuando te vayas, no van a esperarte ni a llamarte de vuelta."
+    },
+    "settings": {
+      "title": "Claves, idiomas y gasto",
+      "body": "Lo primero que hay que rellenar es la dirección y la clave de un servicio de IA: sin eso, nada que necesite la IA puede funcionar. Aquí también se cambia el idioma de la interfaz, el idioma en que responde la IA y si la aplicación se conecta o no.",
+      "point1": "«Interruptores y gasto» lista cada función que cuesta dinero, con su interruptor y cuánto cuesta más o menos un uso",
+      "point2": "La clave se queda en este ordenador y no sale acompañando a nada",
+      "limit": "Aquí no se ofrece el servicio de IA en sí; la clave la consigues en el proveedor con el que te des de alta."
+    }
+  },
   "checklist": {
     "title": "Empieza por aquí",
     "connect": "Conectar un servicio de IA",
@@ -46,8 +95,10 @@
   },
   "settings": {
     "title": "Recorrido guiado",
-    "hint": "Repasa la introducción otra vez, o quita los datos de ejemplo.",
+    "hint": "Volver a ver la presentación, recuperar la nota de cada página o quitar los datos de ejemplo.",
     "replay": "Volver a hacer el recorrido",
+    "resetGuides": "Volver a mostrar las notas de todas las páginas",
+    "guidesRestored": "Hecho. Cada página volverá a mostrar su nota la próxima vez que la abras.",
     "removeDemo": "Quitar los datos de ejemplo",
     "demoAbsent": "Sin datos de ejemplo"
   }

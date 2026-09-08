@@ -12,11 +12,12 @@
  * that state). Inert while closed so nothing in it can take focus.
  * Main exports: Sidebar, SidebarProps.
  */
-import { ALargeSmall, Compass, Map as MapIcon, Settings, X } from "lucide-react";
+import { ALargeSmall, CircleHelp, Compass, Map as MapIcon, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLayoutMode } from "../lib/platform/layoutMode";
 import { useChatStore } from "../stores/chatStore";
 import { PalaceRail } from "./map/PalaceRail";
+import { requestPageGuide } from "./onboarding/pageGuideRequests";
 import { type NavEntry, SidebarNav } from "./SidebarNav";
 import { TrailList } from "./trail/TrailList";
 
@@ -57,7 +58,7 @@ export function Sidebar({
   drawerOpen,
   onCloseDrawer,
 }: SidebarDrawerProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common", "onboarding"]);
   const startNewConversation = useChatStore((state) => state.startNewConversation);
   const stacked = useLayoutMode() === "stacked";
   const hiddenDrawer = stacked && !drawerOpen;
@@ -82,11 +83,22 @@ export function Sidebar({
       <div className="flex items-center gap-2 p-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
         <span className="text-xl">🍞</span>
         <span className="font-semibold text-stone-700">Breadcrumb</span>
+        {/* The open page's own note, on demand. It lives up here rather than in the bottom
+            row because it is about whatever is on screen, not a seventh place to go. */}
+        <button
+          type="button"
+          onClick={requestPageGuide}
+          title={t("onboarding:pageGuide.openButton")}
+          aria-label={t("onboarding:pageGuide.openButton")}
+          className="ms-auto flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-600 coarse:h-11 coarse:w-11"
+        >
+          <CircleHelp size={18} strokeWidth={1.8} />
+        </button>
         <button
           type="button"
           onClick={onCloseDrawer}
           aria-label={t("nav.closeMenu")}
-          className="ms-auto hidden h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 stacked:flex"
+          className="hidden h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 stacked:flex"
         >
           <X size={20} strokeWidth={1.8} />
         </button>

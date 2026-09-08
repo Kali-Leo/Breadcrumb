@@ -1,11 +1,12 @@
 /**
- * Purpose: the settings row that lets someone take the guided tour again, and take the
- * example data away.
+ * Purpose: the settings row that lets someone see the introduction again, bring back every
+ * page's own note, take the guided tour, and take the example data away.
  *
- * Both matter for the same reason: an introduction that can only happen once is a trap for
+ * They matter for the same reason: an introduction that can only happen once is a trap for
  * anyone who skipped it in a hurry, and example data you cannot remove is not an example, it
- * is contamination. Removing reloads, because half the app is already holding the demo rows
- * in memory.
+ * is contamination. Restoring the page notes needs no reload — nothing is showing them yet,
+ * and they appear on the next visit to each page. Removing the example data does reload,
+ * because half the app is already holding those rows in memory.
  * Main exports: OnboardingSettingsRow.
  */
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ export function OnboardingSettingsRow() {
   const { t } = useTranslation("onboarding");
   const [demoInstalled, setDemoInstalled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [guidesRestored, setGuidesRestored] = useState(false);
 
   useEffect(() => {
     void hasDemoData().then(setDemoInstalled);
@@ -39,6 +41,18 @@ export function OnboardingSettingsRow() {
         >
           {t("settings.replay")}
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            void useSettingsStore
+              .getState()
+              .resetPageGuides()
+              .then(() => setGuidesRestored(true));
+          }}
+          className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 coarse:min-h-11"
+        >
+          {t("settings.resetGuides")}
+        </button>
         {demoInstalled ? (
           <button
             type="button"
@@ -55,6 +69,7 @@ export function OnboardingSettingsRow() {
           <span className="text-stone-400 text-xs">{t("settings.demoAbsent")}</span>
         )}
       </div>
+      {guidesRestored && <p className="text-stone-500 text-sm">{t("settings.guidesRestored")}</p>}
     </section>
   );
 }

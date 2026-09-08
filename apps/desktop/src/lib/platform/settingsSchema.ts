@@ -5,12 +5,14 @@
  * it holds no state and imports nothing from the stores, so any module can read the schema
  * without pulling zustand in.
  * Main exports: ApiConfig, PriceOverride, FeatureSwitches, CompareCategory, LearningMode,
- * RouteParams, the SETTINGS_KEYS constants, DEFAULT_ROUTE_PARAMS, DEFAULT_SWITCHES,
- * guessLanguage, guessMainlandNetwork.
+ * RouteParams, PageGuideId, PageGuidesSeen, the SETTINGS_KEYS constants,
+ * DEFAULT_ROUTE_PARAMS, DEFAULT_SWITCHES, PAGE_GUIDE_IDS, pageGuidesSeenSchema,
+ * parsePageGuidesSeen, guessLanguage, guessMainlandNetwork.
  */
 import { matchLanguage } from "@breadcrumb/core-i18n";
 import type { Currency } from "@breadcrumb/core-llm";
 import type { RecommendRouteParams } from "@breadcrumb/feature-planner";
+import { z } from "zod";
 
 export interface ApiConfig {
   baseUrl: string;
@@ -110,6 +112,9 @@ export const ONBOARDING_SEEN_KEY = "onboardingSeen";
 /** Separate from ONBOARDING_SEEN_KEY: the checklist is meant to outlive the tour and survive
  * restarts, so "has seen the introduction" and "is done with the checklist" are two answers. */
 export const CHECKLIST_DISMISSED_KEY = "onboardingChecklistDismissed";
+/** Which pages have already shown their own short guide — one object, not one row per page,
+ * because they are read together on every launch and written one at a time. */
+export const PAGE_GUIDES_SEEN_KEY = "onboardingPageGuidesSeen";
 export const FEATURE_SWITCHES_KEY = "featureSwitches";
 export const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 export const LEARNING_MODE_KEY = "learningMode";
@@ -144,6 +149,39 @@ export const DEFAULT_SWITCHES: FeatureSwitches = {
   termMarking: true,
   trailSummary: true,
 };
+
+/** The pages that carry a guide of their own: the four views the sidebar switches between,
+ * plus the settings page and the companions roster that opens over whatever is on screen. */
+export const PAGE_GUIDE_IDS = [
+  "chat",
+  "map",
+  "vocab",
+  "discovery",
+  "companions",
+  "settings",
+] as const;
+
+export type PageGuideId = (typeof PAGE_GUIDE_IDS)[number];
+
+/** A page is present here once its guide has been read; absent means "not yet". Every field
+ * is optional so a page added later starts unseen for everyone, with no migration. */
+export const pageGuidesSeenSchema = z.object({
+  chat: z.boolean().optional(),
+  map: z.boolean().optional(),
+  vocab: z.boolean().optional(),
+  discovery: z.boolean().optional(),
+  companions: z.boolean().optional(),
+  settings: z.boolean().optional(),
+});
+
+export type PageGuidesSeen = z.infer<typeof pageGuidesSeenSchema>;
+
+/** A stored row that cannot be read means nobody can prove a guide was shown, and showing a
+ * short card again is the harmless direction to fail in. */
+export function parsePageGuidesSeen(stored: unknown): PageGuidesSeen {
+  const parsed = pageGuidesSeenSchema.safeParse(stored ?? {});
+  return parsed.success ? parsed.data : {};
+}
 
 /** First run: the language the machine is set to, if we have an interface in it. Null when
  * we do not — the app then asks rather than opening in a language nobody chose. */

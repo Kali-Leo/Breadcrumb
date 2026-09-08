@@ -9,6 +9,7 @@ import "./App.css";
 import "./lib/platform/zodConfig";
 import { LazyBoundary } from "./components/LazyBoundary";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
+import { PageGuideHost } from "./components/onboarding/PageGuideHost";
 import { ShellSidebar } from "./components/shell/ShellSidebar";
 import {
   ChatView,
@@ -84,9 +85,11 @@ export default function App() {
     void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
 
-  // First run: a welcome, then a tour that walks the real app, then a checklist. Driven by
-  // OnboardingHost; App only supplies what it alone knows — how to change view, and whether
-  // the map has been opened yet (a checklist item ticks off that).
+  // First run: an introduction, then a checklist; the tour is chosen from there rather than
+  // started automatically. Driven by OnboardingHost; App only supplies what it alone knows —
+  // how to change view, and whether the map has been opened yet (a checklist item ticks off
+  // that). Each page's own note is separate and lives for the life of the app: see
+  // PageGuideHost below.
   const onboardingSeen = useSettingsStore((state) => state.onboardingSeen);
   const checklistDismissed = useSettingsStore((state) => state.checklistDismissed);
   const [sawMap, setSawMap] = useState(false);
@@ -155,6 +158,9 @@ export default function App() {
               </div>
             </>
           )}
+          {/* Not inside the first-run condition: a page opened for the first time months
+              later still explains itself. */}
+          <PageGuideHost view={view} companionsOpen={companionsOpen} />
           <LazyBoundary resetKey={view}>
             {onboardingRunning && (
               <OnboardingHost

@@ -57,6 +57,11 @@ describe("seedDemo (real sqlite)", () => {
     expect(summary.nodes).toBe(39);
     expect(summary.sightings).toBeGreaterThanOrEqual(50);
     expect(summary.claims).toBe(6);
+    // The one learning goal, its decomposition's requires edges, and the interest signals
+    // that make 休闲 mode rank by curiosity rather than alphabetically.
+    expect(summary.goals).toBe(1);
+    expect(summary.edges).toBeGreaterThanOrEqual(10);
+    expect(summary.interestSignals).toBeGreaterThanOrEqual(15);
     expect(summary.wordStates).toBe(50);
     expect(summary.wordEvents).toBeGreaterThanOrEqual(60);
     expect(summary.wordGuesses).toBeGreaterThanOrEqual(8);
@@ -66,6 +71,9 @@ describe("seedDemo (real sqlite)", () => {
     expect(await countDemoRows(temp, "knowledge_nodes")).toBe(39);
     expect(await countDemoRows(temp, "node_sightings")).toBe(summary.sightings);
     expect(await countDemoRows(temp, "mastery_claims")).toBe(6);
+    expect(await countDemoRows(temp, "goals")).toBe(1);
+    expect(await countDemoRows(temp, "knowledge_edges")).toBe(summary.edges);
+    expect(await countDemoRows(temp, "interest_signals")).toBe(summary.interestSignals);
     expect(await countDemoRows(temp, "diglot_word_states", false)).toBe(50);
     expect(await countDemoRows(temp, "diglot_word_events")).toBe(summary.wordEvents);
     expect(await countDemoRows(temp, "diglot_word_guesses")).toBe(summary.wordGuesses);
@@ -140,6 +148,9 @@ describe("seedDemo (real sqlite)", () => {
       ["knowledge_nodes", true],
       ["node_sightings", true],
       ["mastery_claims", true],
+      ["goals", true],
+      ["knowledge_edges", true],
+      ["interest_signals", true],
       ["diglot_word_events", true],
       ["diglot_word_guesses", true],
       ["diglot_word_states", false],

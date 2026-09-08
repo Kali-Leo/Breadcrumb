@@ -3,15 +3,17 @@
   "back": "Back",
   "skip": "Skip, I'll find my own way",
   "welcome": {
-    "title": "You talk, it keeps the notes",
-    "body": "Breadcrumb is a learning companion. You talk about what you want to learn, and alongside that it builds a map of what you have covered — no note-taking, no checking in.",
-    "point1": "Concepts you talk about appear on the map by themselves, and fade where you have not been",
-    "point2": "Everything stays on this computer. No account, no cloud sync",
-    "point3": "No leaderboards, no streaks, no progress bars",
-    "tryDemo": "Show me an example first (recommended)",
-    "demoNote": "Loads someone else's three months of learning and walks you through it. One click removes it whenever you like.",
-    "installing": "Setting up the example…",
-    "startClean": "Skip the example, start empty"
+    "label": "Introduction",
+    "card1Title": "What this is",
+    "card1Body": "Breadcrumb is a learning companion. You talk to an AI about whatever you are trying to understand, and alongside the answers it keeps a record of what you have covered. There are no notes to take and no daily check-in.",
+    "card2Title": "Talk for a while and a map grows",
+    "card2Body": "Every concept that comes up becomes an island on a map, placed and grouped for you. Places you have not been back to for a while go pale — that says which parts have been sitting untouched, not how well you are doing.",
+    "card3Title": "What stays here, and what costs money",
+    "card3Body": "Conversations, the map and your vocabulary live on this computer. No account, no cloud sync. The only thing that costs money is the AI service you supply yourself, billed by usage; every feature that spends anything has its own switch, with the price written beside it in settings.",
+    "start": "Start using it",
+    "tryDemo": "Load an example first",
+    "demoNote": "Someone else's three months of learning, removable in one click whenever you like.",
+    "installing": "Setting up the example…"
   },
   "tour": {
     "label": "Guided tour",
@@ -32,6 +34,53 @@
     "yourTurnTitle": "Your turn",
     "yourTurnBody": "Ask about something you actually want to understand. The map will keep up on its own."
   },
+  "pageGuide": {
+    "label": "About this page",
+    "gotIt": "Got it",
+    "openButton": "About this page",
+    "chat": {
+      "title": "This is where you talk",
+      "body": "Ask about anything you want to understand. The switch above decides how the replies come back: study mode asks you questions and gets you explaining things yourself, while free chat is an ordinary back-and-forth.",
+      "point1": "Concepts that come up are filed into the map on their own; there is nothing to write down",
+      "point2": "Conversation titles name themselves, and stop changing once you rename one",
+      "limit": "It will not plan your week, and it will not come looking for you when a few days pass without a visit."
+    },
+    "map": {
+      "title": "Everything you have covered, laid out",
+      "body": "Each island is a concept you have talked about, placed and grouped automatically. Go a level in to see the detail, including which conversations touched it.",
+      "point1": "Darker places are recent; pale ones have been sitting for a while",
+      "point2": "Everything on this page is worked out on your own machine and costs nothing",
+      "limit": "It is not a notebook: you cannot file anything by hand, and it only grows out of your conversations."
+    },
+    "vocab": {
+      "title": "Pick up a language while you chat",
+      "body": "Turn this on and some words in the AI's replies arrive in the language you are learning; you can guess first, then see what they mean. This page holds the words you are on and is where dictionaries are downloaded and swapped.",
+      "point1": "A short vocabulary check can start new words past the ones you already know",
+      "point2": "Meanings and pronunciation come from a downloaded dictionary that stays on this machine and works offline",
+      "limit": "It does not teach grammar or set exercises; it only swaps words into sentences you were going to read anyway."
+    },
+    "discovery": {
+      "title": "What you watch, gathered on one page",
+      "body": "Install a small browser script and what you watch on Bilibili and YouTube is summarised here: the words that keep coming up, topics that have started appearing, and the longer things you watched. All of it is worked out on this computer.",
+      "point1": "The page opens before you install anything, and says what it needs",
+      "point2": "The viewing record stays on this machine and is not sent anywhere",
+      "limit": "It does not pick what you should watch, and it does not score what you have watched."
+    },
+    "companions": {
+      "title": "A few people who come to you with questions",
+      "body": "Each day a few characters turn up asking about something you have been learning. Explaining it to them is a way to find out whether you can. They talk in a small window of their own, so your own conversation stays where it was.",
+      "point1": "What they ask about is drawn from your own record",
+      "point2": "If you would rather not have them, the whole thing switches off in settings",
+      "limit": "They are not real people, and once you leave they will not wait for you or call you back."
+    },
+    "settings": {
+      "title": "Keys, languages and spending",
+      "body": "The first thing to fill in is the address and key of an AI service — without one, anything that needs the AI cannot run. This page also changes the interface language, the language the AI answers in, and whether the app goes online at all.",
+      "point1": "Switches and spending lists every feature that costs money, each with its own switch and roughly what one use costs",
+      "point2": "The key stays on this computer and is never carried out with anything else",
+      "limit": "It does not provide the AI service itself; the key comes from a provider you sign up with."
+    }
+  },
   "checklist": {
     "title": "Start here",
     "connect": "Connect an AI service",
@@ -46,8 +95,10 @@
   },
   "settings": {
     "title": "Guided tour",
-    "hint": "Walk through the introduction again, or remove the example data.",
+    "hint": "See the introduction again, bring back each page's note, or remove the example data.",
     "replay": "Take the tour again",
+    "resetGuides": "Show every page note again",
+    "guidesRestored": "Done. Each page will show its note once more the next time you open it.",
     "removeDemo": "Remove example data",
     "demoAbsent": "No example data"
   }

@@ -34,6 +34,8 @@ import {
   MAINLAND_NETWORK_KEY,
   NETWORK_ENABLED_KEY,
   ONBOARDING_SEEN_KEY,
+  PAGE_GUIDES_SEEN_KEY,
+  parsePageGuidesSeen,
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
@@ -51,6 +53,7 @@ export type SettingsSnapshot = Pick<
   | "networkEnabled"
   | "onboardingSeen"
   | "checklistDismissed"
+  | "pageGuidesSeen"
   | "featureSwitches"
   | "mainlandNetwork"
   | "learningMode"
@@ -70,6 +73,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     networkEnabled,
     onboardingSeen,
     checklistDismissed,
+    storedPageGuidesSeen,
     featureSwitches,
     mainlandNetwork,
     learningMode,
@@ -84,6 +88,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
     repos.settings.get<boolean>(ONBOARDING_SEEN_KEY),
     repos.settings.get<boolean>(CHECKLIST_DISMISSED_KEY),
+    repos.settings.get<unknown>(PAGE_GUIDES_SEEN_KEY),
     repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
     repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
     repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
@@ -101,6 +106,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     networkEnabled: networkEnabled ?? true,
     onboardingSeen: onboardingSeen ?? false,
     checklistDismissed: checklistDismissed ?? false,
+    pageGuidesSeen: parsePageGuidesSeen(storedPageGuidesSeen),
     featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
     mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
     learningMode: learningMode ?? "casual",
