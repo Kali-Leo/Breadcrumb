@@ -5,7 +5,9 @@
  * Main exports: gapAndPath, coverage, isSatisfiedBy, GapAndPathInput, GapAndPathResult,
  * GapRoutes.
  */
+
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import { incomingNeighbors, prerequisiteClosure } from "@breadcrumb/feature-graph";
 
 export interface GapAndPathInput {
@@ -140,7 +142,7 @@ export function gapAndPath(input: GapAndPathInput): GapAndPathResult {
   const labelById = new Map(nodes.map((node) => [node.id, node.label]));
   const isLit = isSatisfiedBy(input);
   const byLabel = (a: string, b: string) =>
-    (labelById.get(a) ?? a).localeCompare(labelById.get(b) ?? b);
+    compareStable(labelById.get(a) ?? a, labelById.get(b) ?? b);
 
   const gapNodeIds = computeGap(edges, goalNodeIds, isLit);
 

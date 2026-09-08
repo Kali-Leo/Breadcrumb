@@ -4,6 +4,7 @@
  * Main exports: LanguagePackSchema, loadLanguagePack, resolveLemma, LanguagePack,
  * LoadedLanguagePack, PackEntry.
  */
+import { compareStable } from "@breadcrumb/core-text";
 import { z } from "zod";
 
 /** A pack is a file on disk, but it is a *data* file — bounded so a corrupt or hostile one
@@ -114,7 +115,7 @@ export function loadLanguagePack(rawJson: unknown): LoadedLanguagePack {
   }
   const introductionQueue = Object.entries(pack.entries)
     .filter(([, entry]) => entry.t1Safe)
-    .sort((a, b) => a[1].freqRank - b[1].freqRank || a[0].localeCompare(b[0]))
+    .sort((a, b) => a[1].freqRank - b[1].freqRank || compareStable(a[0], b[0]))
     .map(([lemma]) => lemma);
   const introductionRankByLemma = new Map(introductionQueue.map((lemma, rank) => [lemma, rank]));
   return { pack, lemmasByTarget, introductionQueue, introductionRankByLemma };

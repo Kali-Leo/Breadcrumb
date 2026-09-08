@@ -6,7 +6,9 @@
  * Main exports: teachOpener, teachConversationTitle, buildTeachSystemPrompt,
  * pickTeachCandidates, startTeachSession.
  */
+
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import i18next from "i18next";
 import { asStoredText } from "../../i18n/storedText";
 import { getRepos } from "../platform/db";
@@ -49,7 +51,7 @@ export function pickTeachCandidates(
     .sort(
       (a, b) =>
         (reviewPriorityByNode.get(b.id) ?? 0) - (reviewPriorityByNode.get(a.id) ?? 0) ||
-        a.label.localeCompare(b.label),
+        compareStable(a.label, b.label),
     )
     .slice(0, limit);
 }

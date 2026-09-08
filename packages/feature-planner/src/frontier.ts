@@ -10,7 +10,9 @@
  * Main exports: frontier, FrontierCandidate, FrontierReason, FrontierInput,
  * GOAL_GAP_SCORE_BOOST, FRONTIER_WEIGHTS.
  */
+
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import { incomingNeighbors } from "@breadcrumb/feature-graph";
 import { compareDesc } from "@breadcrumb/feature-memory";
 import {
@@ -192,6 +194,6 @@ export function frontier(input: FrontierInput): FrontierCandidate[] {
   // compareDesc, not `b.score - a.score`: a NaN there makes every comparison false and V8
   // leaves the array untouched, i.e. the ranking silently becomes database insertion order.
   // normalizeAndScore no longer emits one, so this is the belt to that braces.
-  scored.sort((a, b) => compareDesc(a.score, b.score) || a.label.localeCompare(b.label));
+  scored.sort((a, b) => compareDesc(a.score, b.score) || compareStable(a.label, b.label));
   return bucketConceptsFirst(scored);
 }

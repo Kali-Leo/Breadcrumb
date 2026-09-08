@@ -5,7 +5,9 @@
  * Main exports: scheduleReplacements, adaptiveNewWordCap, ScheduleInput,
  * ScheduledReplacement.
  */
+
 import type { DiglotPairId } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import type { Card } from "ts-fsrs";
 import { Rating } from "ts-fsrs";
 import type { CandidateOccurrence } from "./candidates";
@@ -124,7 +126,7 @@ export function scheduleReplacements(input: ScheduleInput): ScheduledReplacement
     }
   }
 
-  scored.sort((a, b) => b.score - a.score || a.lemma.localeCompare(b.lemma));
+  scored.sort((a, b) => b.score - a.score || compareStable(a.lemma, b.lemma));
 
   // Growth reservation (i+1): with two or more slots, one is reserved for the best new
   // word — otherwise due reviews win every slot forever and vocabulary plateaus on the

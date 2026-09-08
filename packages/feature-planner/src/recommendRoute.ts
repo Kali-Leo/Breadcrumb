@@ -6,7 +6,9 @@
  * Main exports: recommendRoute, RecommendRouteParams, RecommendedRouteStep, RouteStepReason,
  * ROUTE_INTEREST_CHIP_THRESHOLD, DEFAULT_ROUTE_PARAMS, sanitizeRouteParams.
  */
+
 import type { KnowledgeEdgeRow } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import { incomingNeighbors, outgoingNeighbors } from "@breadcrumb/feature-graph";
 import { compareDesc } from "@breadcrumb/feature-memory";
 import { z } from "zod";
@@ -106,7 +108,7 @@ export function recommendRoute(
   const goalNodeIdSet = new Set(goalNodeIds);
   const isLit = isSatisfiedBy(input);
   const byLabel = (a: string, b: string) =>
-    (labelById.get(a) ?? a).localeCompare(labelById.get(b) ?? b);
+    compareStable(labelById.get(a) ?? a, labelById.get(b) ?? b);
 
   const gapNodeIds = computeGap(edges, goalNodeIds, isLit);
   const gapSet = new Set(gapNodeIds);

@@ -13,6 +13,7 @@
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
     "@breadcrumb/core-llm": "workspace:*",
+    "@breadcrumb/core-text": "workspace:*",
     "@breadcrumb/feature-graph": "workspace:*",
     "@breadcrumb/feature-memory": "workspace:*",
     "zod": "^4.1.0"

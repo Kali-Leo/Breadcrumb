@@ -506,6 +506,9 @@ importers:
       '@breadcrumb/core-random':
         specifier: workspace:*
         version: link:../core-random
+      '@breadcrumb/core-text':
+        specifier: workspace:*
+        version: link:../core-text
       '@breadcrumb/core-vectors':
         specifier: workspace:*
         version: link:../core-vectors
@@ -734,6 +737,9 @@ importers:
       '@breadcrumb/core-llm':
         specifier: workspace:*
         version: link:../core-llm
+      '@breadcrumb/core-text':
+        specifier: workspace:*
+        version: link:../core-text
       '@breadcrumb/feature-graph':
         specifier: workspace:*
         version: link:../feature-graph
@@ -2727,8 +2733,8 @@ packages:
     resolution: {integrity: sha512-jW6oufeDhXZaiX9Lw5A+oerVClx4iFrI6uDj1zu7SqUAjak9vbJvA0NEcKLNxHiQHb6kYCoFzzXYV0YOauhV3g==}
     engines: {node: '>=22'}
 
-  bidi-js@1.0.3:
-    resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
+  bidi-js@1.1.0:
+    resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -5152,7 +5158,7 @@ snapshots:
 
   '@asamuzakjp/dom-selector@8.3.2':
     dependencies:
-      bidi-js: 1.0.3
+      bidi-js: 1.1.0
       css-tree: 3.2.1
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.2
@@ -6952,7 +6958,7 @@ snapshots:
     dependencies:
       node-addon-api: 8.9.0
 
-  bidi-js@1.0.3:
+  bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
     optional: true

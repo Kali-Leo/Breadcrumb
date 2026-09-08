@@ -5,7 +5,9 @@
  * cards. Pure and deterministic.
  * Main exports: mineConfusionPairs, ConfusionPartner, CONFUSION_THRESHOLD.
  */
+
 import type { DiglotWordGuessRow } from "@breadcrumb/core-db";
+import { compareStable } from "@breadcrumb/core-text";
 import { type LoadedLanguagePack, resolveLemma } from "./packSchema";
 
 /** A pair needs this many occurrences to count as systematic (one slip is noise). */
@@ -43,7 +45,7 @@ export function mineConfusionPairs(
   }
   const partners = new Map<string, ConfusionPartner>();
   for (const [lemma, forWord] of counts) {
-    const best = [...forWord.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    const best = [...forWord.entries()].sort((a, b) => b[1] - a[1] || compareStable(a[0], b[0]))[0];
     if (best === undefined || best[1] < CONFUSION_THRESHOLD) continue;
     const entry = loaded.pack.entries[best[0]];
     if (entry === undefined) continue;

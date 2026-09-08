@@ -538,14 +538,16 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now'", () => {
  * many courses you have to make up before this one makes sense.
  */
 describe("frontier difficulty means 'how much to make up first'", () => {
-  // 基础 --requires--> 中级 --requires--> 高级, and 预备(lit) --requires--> 边缘叶子.
-  // Both 基础 and 边缘叶子 are admissible candidates; only 边缘叶子 stands behind a prerequisite.
+  // 基础 --requires--> 中级 --requires--> 高级, and 预备(lit) --requires--> 叶子.
+  // Both 基础 and 叶子 are admissible candidates; only 叶子 stands behind a prerequisite.
+  // The two labels are chosen so that the tie-break order (叶子 before 基础) is the OPPOSITE
+  // of the order difficulty produces — otherwise the case below could not tell them apart.
   const nodes = [
     node("foundation", "基础"),
     node("middle", "中级"),
     node("advanced", "高级"),
     node("prep", "预备"),
-    node("leaf", "边缘叶子"),
+    node("leaf", "叶子"),
   ];
   const edges = [
     requires("foundation", "middle"),
@@ -576,8 +578,8 @@ describe("frontier difficulty means 'how much to make up first'", () => {
   });
 
   it("is the difficulty component doing it, and the slider governs how hard", () => {
-    // At weight 0 the two are indistinguishable and only the label decides (边缘叶子 sorts
-    // before 基础), so the ordering above came from the difficulty component and nothing else.
+    // At weight 0 the two are indistinguishable and only the label decides (叶子 sorts before
+    // 基础), so the ordering above came from the difficulty component and nothing else.
     expect(rank(0)).toEqual(["leaf", "foundation"]);
     expect(rank(2)).toEqual(["foundation", "leaf"]);
   });

@@ -4,6 +4,7 @@
  * the taxonomy's top-level groups.
  * Main exports: videoUrl, thumbnailUrl, watchedPercent, watchedMinutes, groupCounts.
  */
+import { compareStable } from "@breadcrumb/core-text";
 import type { ProContentItem } from "./schemas";
 
 /** Bilibili ids carry their own prefix, so the id alone tells us where an item lives. */
@@ -62,5 +63,5 @@ export function groupCounts(items: ProContentItem[]): GroupCount[] {
   }
   return [...counts.entries()]
     .map(([group, count]) => ({ group, count }))
-    .sort((left, right) => right.count - left.count || left.group.localeCompare(right.group));
+    .sort((left, right) => right.count - left.count || compareStable(left.group, right.group));
 }
