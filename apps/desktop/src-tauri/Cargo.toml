@@ -30,7 +30,7 @@ serde_json = "1"
 # The collector's pairing code and per-browser keys. std has no random source; this is the
 # one the whole Rust ecosystem uses to ask the operating system for bytes.
 getrandom = "0.3"
-fastembed = "5.17.4"
+fastembed = "6.0.2"
 fsrs = "6.6.1"
 
 # Unix only, and only for getuid(): validated_binary has to know whether the file it is about
