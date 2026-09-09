@@ -42,6 +42,11 @@ export interface ProseBenchScenario {
   messages: ChatMessage[];
   /** Concepts the conversation is about — the input side of targetConceptsEcho. */
   targetConcepts: readonly string[];
+  /** Measurements this scenario alone can make on the reply text, merged on top of the shared
+   * prose judge (see scoring/proseJudge.ts). A purpose that only asks the shared questions
+   * leaves it out; the abstention probes are the ones that need it, because what counts as a
+   * good reply there depends on which group the question came from. */
+  check?: (reply: string) => CheckScores;
 }
 
 export type BenchScenario = JsonBenchScenario | ProseBenchScenario;

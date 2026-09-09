@@ -33,9 +33,46 @@ describe("buildTeachingSystemPrompt", () => {
     expect(TEACHING_CONTRACT_BASE).not.toContain("再次要求");
   });
 
+  it("names the four situations that must be flagged as unsure", () => {
+    for (const trigger of [
+      "记不确切", // a figure, date, name or number the model does not hold precisely
+      "不一致的说法", // sources may disagree
+      "超出你可靠的知识范围",
+      "随时间变化", // time-sensitive facts
+    ]) {
+      expect(TEACHING_CONTRACT_BASE).toContain(trigger);
+    }
+  });
+
+  it("gives a checkable test for low confidence, not an introspection", () => {
+    expect(TEACHING_CONTRACT_BASE).toContain("说不出它出自哪里");
+  });
+
+  it("demands the half that makes a hedge useful", () => {
+    expect(TEACHING_CONTRACT_BASE).toContain("什么能定这件事");
+    expect(TEACHING_CONTRACT_BASE).toContain("宁可说不知道");
+  });
+
+  it("keeps the opposite duty — a settled answer is still given outright", () => {
+    expect(TEACHING_CONTRACT_BASE).toContain("第一句就给出答案");
+    expect(TEACHING_CONTRACT_BASE).toContain("不加免责声明");
+    // Scoped honesty: the uncertain part is marked, the rest is still taught.
+    expect(TEACHING_CONTRACT_BASE).toContain("只标出没把握的那一部分");
+  });
+
   it("contract stays free of pressure and praise wording", () => {
     for (const banned of ["你还差", "落后", "别忘了", "应该早点", "再不", "真棒", "很棒", "太棒"]) {
       expect(TEACHING_CONTRACT_BASE).not.toContain(banned);
+    }
+  });
+});
+
+describe("both contracts", () => {
+  it("name no output language — that is core-i18n's directive, not the contract's", () => {
+    for (const base of [TEACHING_CONTRACT_BASE, FREE_CHAT_BASE]) {
+      for (const named of ["中文", "英文", "English", "用中文", "母语"]) {
+        expect(base).not.toContain(named);
+      }
     }
   });
 });
@@ -50,6 +87,12 @@ describe("buildFreeChatSystemPrompt", () => {
       expect(FREE_CHAT_BASE).not.toContain(teachingWord);
     }
     expect(FREE_CHAT_BASE).toContain("任何话题");
+  });
+
+  it("carries the same uncertainty duty, both halves of it", () => {
+    expect(FREE_CHAT_BASE).toContain("没把握");
+    expect(FREE_CHAT_BASE).toContain("什么能定这件事");
+    expect(FREE_CHAT_BASE).toContain("不加免责声明");
   });
 
   it("keeps the product tone floor", () => {

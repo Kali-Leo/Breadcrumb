@@ -60,7 +60,7 @@ export const MEASURED_AT = "2026-09-08";
  * round — the real bill is typically well under this estimate.
  */
 export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
-  chat: { inputTokens: 1331, outputTokens: 324, cadence: "per-round" },
+  chat: { inputTokens: 1565, outputTokens: 324, cadence: "per-round" },
   "knowledge-tree": { inputTokens: 1365, outputTokens: 64, cadence: "per-round" },
   interest: { inputTokens: 902, outputTokens: 80, cadence: "per-round" },
   "knowledge-edges": { inputTokens: 1009, outputTokens: 278, cadence: "per-round" },

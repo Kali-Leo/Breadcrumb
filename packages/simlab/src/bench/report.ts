@@ -46,6 +46,12 @@ function matrix(
  * rule, rather than a diagnostic that only means something next to its own scenario. */
 const HEADLINE_CHECKS: readonly string[] = [
   "goldAccuracy",
+  "abstainsWhenShould",
+  "overCautionRate",
+  "fabricatesSpecific",
+  "assertsSpecificValue",
+  "namesWhatWouldSettle",
+  "expectedFactHit",
   "verdictAccuracy",
   "falseSupportRate",
   "hardFalseSupportRate",

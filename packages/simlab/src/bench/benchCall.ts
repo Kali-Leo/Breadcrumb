@@ -148,12 +148,15 @@ export async function runScenarioCall(
   try {
     const { content, usage } = await nonStreamingChat(config, proseMessages);
     const timing = finish();
-    const checks = await judgeProseReply({
+    const shared = await judgeProseReply({
       reply: content,
       language: scenario.language,
       targetConcepts: scenario.targetConcepts,
       companion: scenario.purpose === "companion-chat",
     });
+    // A scenario's own checks come last so a purpose-specific measurement wins a name clash
+    // with the shared floor rather than being silently dropped.
+    const checks = { ...shared, ...scenario.check?.(content) };
     return {
       ...base,
       ...timing,

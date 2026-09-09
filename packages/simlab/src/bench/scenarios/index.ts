@@ -14,10 +14,13 @@ import { mapNamingScenarios } from "./mapNaming";
 import { goalPlanningScenarios, selfReportScenarios } from "./planning";
 import { chatScenarios, companionChatScenarios, focusExplainScenarios } from "./prose";
 import { factcheckScenarios, termMarkingScenarios, trailSummaryScenarios } from "./text";
+import { uncertaintyObscureScenarios, uncertaintySettledScenarios } from "./uncertainty";
 import { verdictScenarios } from "./verdict";
 
 /** Report order: the per-round pipeline first, then the on-demand features, then the two
- * conversational purposes that have no right answer. */
+ * conversational purposes that have no right answer, and last the abstention pair, which is
+ * read as one thing: how often the companion says it is unsure when it should, against how
+ * often it says so when it should not. */
 export const BENCH_PURPOSES: readonly string[] = [
   "knowledge-tree",
   "knowledge-edges",
@@ -37,6 +40,8 @@ export const BENCH_PURPOSES: readonly string[] = [
   "focus-explain",
   "chat",
   "companion-chat",
+  "uncertainty-obscure",
+  "uncertainty-settled",
 ];
 
 export function buildBenchScenarios(): BenchScenario[] {
@@ -56,6 +61,8 @@ export function buildBenchScenarios(): BenchScenario[] {
     ...focusExplainScenarios(),
     ...chatScenarios(),
     ...companionChatScenarios(),
+    ...uncertaintyObscureScenarios(),
+    ...uncertaintySettledScenarios(),
   ];
   const order = new Map(BENCH_PURPOSES.map((purpose, index) => [purpose, index]));
   // Stable sort into report order; scenario ids stay unique, so ties keep build order.
