@@ -1,8 +1,8 @@
 /**
- * Purpose: unit tests for frontier() — the ever-lit requires-gate, normalized score
- * composition (interest must be able to outrank helps), concept/method bucketing, the
- * explainable reason payload, and deterministic ordering. The exploration slot moved to
- * visibleCount.test.ts along with the slot itself.
+ * Purpose: unit tests for frontier() — the unmet-prerequisite demotion that replaced the old
+ * hard gate, normalized score composition (interest must be able to outrank helps),
+ * concept/method bucketing, the explainable reason payload, and deterministic ordering. The
+ * exploration slot moved to visibleCount.test.ts along with the slot itself.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { describe, expect, it } from "vitest";
@@ -55,9 +55,17 @@ function helps(source: string, target: string, weight: number): KnowledgeEdgeRow
 const LIT = 0.85;
 
 describe("frontier", () => {
-  it("never includes a node whose requires-prerequisites are not all lit", () => {
+  /** THE CONTRACT THAT CHANGED. There used to be a hard gate here: a node whose
+   * requires-prerequisites were not all satisfied never entered the candidate list, and this
+   * test asserted its absence. It is gone. The requires edges are LLM-drawn, models reproduce
+   * the human prerequisite judgement on a 115-pair gold standard only 28-58% of the time, and
+   * a share of the edges they do draw point the wrong way — so one reversed edge under a gate
+   * deleted a concept from the learner's recommendations permanently, and invisibly to them.
+   * The node is now surfaced, demoted, and made to name what is missing. */
+  it("surfaces a node whose requires-prerequisite is unlit, ranked below a reachable peer", () => {
     // A(lit) --requires--> B(unlit) --requires--> C(unlit): C's prerequisite B isn't lit.
-    const nodes = [node("a", "Alpha"), node("b", "Beta"), node("c", "Charlie")];
+    // D is reachable and ties C on every scored component except the demotion.
+    const nodes = [node("a", "Alpha"), node("b", "Beta"), node("c", "Charlie"), node("d", "Delta")];
     const edges = [requires("a", "b"), requires("b", "c")];
     const masteryByNode = new Map([
       ["a", 0.9],
@@ -72,7 +80,59 @@ describe("frontier", () => {
       litThreshold: LIT,
       previouslyLitNodeIds: new Set(),
     });
-    expect(result.map((c) => c.nodeId)).not.toContain("c");
+    const charlie = result.find((c) => c.nodeId === "c");
+    expect(charlie).toBeDefined();
+    expect(charlie?.reason.unlitPrerequisiteLabels).toEqual(["Beta"]);
+    expect(charlie?.reason.litPrerequisiteLabels).toEqual([]);
+    // Demoted, not dropped: it sits behind the reachable candidate it would otherwise tie.
+    const order = result.map((c) => c.nodeId);
+    expect(order.indexOf("c")).toBeGreaterThan(order.indexOf("d"));
+    expect(charlie?.score ?? 0).toBeLessThan(result.find((c) => c.nodeId === "d")?.score ?? 0);
+  });
+
+  it("costs a candidate more the more prerequisites it is missing", () => {
+    // one(unlit) and two(unlit) are missing prerequisites of both; three is missing both.
+    const nodes = [
+      node("one", "One"),
+      node("two", "Two"),
+      node("blocked1", "BlockedOne"),
+      node("blocked2", "BlockedTwo"),
+    ];
+    const edges = [
+      requires("one", "blocked1"),
+      requires("one", "blocked2"),
+      requires("two", "blocked2"),
+    ];
+    const result = frontier({
+      nodes,
+      edges,
+      masteryByNode: new Map(),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+      // Silence difficulty so the demotion is the only thing separating the two.
+      weights: { helps: 1, interest: 1, difficulty: 0, goalGap: 2, browsing: 0.5 },
+    });
+    const one = result.find((c) => c.nodeId === "blocked1")?.score ?? 0;
+    const two = result.find((c) => c.nodeId === "blocked2")?.score ?? 0;
+    expect(two).toBeLessThan(one);
+    expect(one).toBeLessThan(0); // and both below the unblocked candidates at 0
+  });
+
+  it("lets a strong enough interest signal pull a blocked candidate back to the top", () => {
+    // The whole point of demoting instead of gating: an edge that may well point the wrong
+    // way must not be able to overrule what the learner actually asked about.
+    const nodes = [node("gate", "Gate"), node("wanted", "Wanted"), node("free", "Free")];
+    const edges = [requires("gate", "wanted")];
+    const result = frontier({
+      nodes,
+      edges,
+      masteryByNode: new Map(),
+      interestByNode: new Map([["wanted", 0.9]]),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(),
+    });
+    expect(result[0]?.nodeId).toBe("wanted");
   });
 
   it("admits a node with zero requires-edges", () => {
@@ -126,6 +186,7 @@ describe("frontier", () => {
     // nothing to be better or worse than and scores 0 on all four terms.
     expect(candidate?.score).toBe(0);
     expect(candidate?.reason.litPrerequisiteLabels).toEqual(["Alpha"]);
+    expect(candidate?.reason.unlitPrerequisiteLabels).toEqual([]);
     expect(candidate?.reason.litHelpsSources).toEqual([{ label: "Alpha", weight: 0.7 }]);
     expect(candidate?.reason.wasLitBefore).toBe(false);
   });
@@ -325,8 +386,16 @@ describe("frontier fed by propagateInterestToPrerequisites", () => {
       interestGatewayByNode: propagated.gatewaySourceByNode,
     });
 
-    expect(result.map((c) => c.nodeId)).toEqual(["p"]);
-    expect(result[0]?.reason.gatewayTo).toEqual({ label: "TargetX" });
+    // Both are on the list now. P is the reachable step and carries the gateway reason; X is
+    // the locked target itself, still shown but demoted and naming what it is missing. Which
+    // of the two leads depends on how much stronger X's own interest is than the half it
+    // lends P — a judgement call the learner can now make, instead of one the edge made for
+    // them by hiding X.
+    const byId = new Map(result.map((candidate) => [candidate.nodeId, candidate]));
+    expect([...byId.keys()].sort()).toEqual(["p", "x"]);
+    expect(byId.get("p")?.reason.gatewayTo).toEqual({ label: "TargetX" });
+    expect(byId.get("p")?.reason.unlitPrerequisiteLabels).toEqual([]);
+    expect(byId.get("x")?.reason.unlitPrerequisiteLabels).toEqual(["Prereq"]);
   });
 });
 
@@ -445,11 +514,11 @@ describe("frontier keeps every bucket strictly score-descending", () => {
   });
 });
 
-describe("frontier hard gate reads 'ever lit', not 'lit right now'", () => {
+describe("frontier reads prerequisites as 'ever lit', not 'lit right now'", () => {
   const nodes = [node("a", "Alpha"), node("b", "Beta")];
   const edges = [requires("a", "b")];
 
-  it("admits a node whose prerequisite has decayed back under the threshold", () => {
+  it("counts a prerequisite that has decayed back under the threshold as satisfied", () => {
     const result = frontier({
       nodes,
       edges,
@@ -461,16 +530,27 @@ describe("frontier hard gate reads 'ever lit', not 'lit right now'", () => {
     expect(result.map((candidate) => candidate.nodeId)).toContain("b");
   });
 
-  it("still blocks a node whose prerequisite was never touched at all", () => {
-    const result = frontier({
+  it("still counts a prerequisite that was never touched at all as unsatisfied", () => {
+    const decayed = frontier({
+      nodes,
+      edges,
+      masteryByNode: new Map([["a", 0.4]]),
+      interestByNode: new Map(),
+      litThreshold: LIT,
+      previouslyLitNodeIds: new Set(["a"]),
+    }).find((candidate) => candidate.nodeId === "b");
+    const untouched = frontier({
       nodes,
       edges,
       masteryByNode: new Map([["a", 0.4]]),
       interestByNode: new Map(),
       litThreshold: LIT,
       previouslyLitNodeIds: new Set(),
-    });
-    expect(result.map((candidate) => candidate.nodeId)).not.toContain("b");
+    }).find((candidate) => candidate.nodeId === "b");
+    // Both are candidates now; only the second one carries the demotion and the caveat.
+    expect(decayed?.reason.unlitPrerequisiteLabels).toEqual([]);
+    expect(untouched?.reason.unlitPrerequisiteLabels).toEqual(["Alpha"]);
+    expect(untouched?.score ?? 0).toBeLessThan(decayed?.score ?? 0);
   });
 
   it("keeps the candidate's OWN exclusion on current mastery, so a decayed node can return", () => {
@@ -555,7 +635,14 @@ describe("frontier difficulty means 'how much to make up first'", () => {
     requires("prep", "leaf"),
   ];
 
+  /** Only the two admissible-under-the-old-gate nodes: 中级 and 高级 are on the list too now
+   * (blocked, demoted, at the tail), and this case is about what difficulty does to the two
+   * that were always reachable. */
   function rank(difficultyWeight: number): string[] {
+    return rankAll(difficultyWeight).filter((id) => id === "foundation" || id === "leaf");
+  }
+
+  function rankAll(difficultyWeight: number): string[] {
     return frontier({
       nodes,
       edges,
@@ -582,6 +669,12 @@ describe("frontier difficulty means 'how much to make up first'", () => {
     // 基础), so the ordering above came from the difficulty component and nothing else.
     expect(rank(0)).toEqual(["leaf", "foundation"]);
     expect(rank(2)).toEqual(["foundation", "leaf"]);
+  });
+
+  it("keeps the two nodes standing behind unlit prerequisites at the tail", () => {
+    // 中级 needs 基础, 高级 needs 中级 — neither was ever lit. Both are reachable-in-principle
+    // recommendations now, and both sit behind everything that is reachable today.
+    expect(rankAll(0.5)).toEqual(["foundation", "leaf", "middle", "advanced"]);
   });
 });
 

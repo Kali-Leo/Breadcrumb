@@ -19,7 +19,8 @@ export function printRunSummary(
       `total ¥${totalCostCny.toFixed(4)}`,
   );
   console.log(
-    `  planner tripwires: ${metrics.planner.hardGateViolationCount} hard-gate violations, ` +
+    `  planner tripwires: ${metrics.planner.prerequisiteSplitViolationCount} prerequisite-split ` +
+      "violations, " +
       `${metrics.planner.reasonMismatchCount} reason mismatches`,
   );
   console.log(
@@ -56,10 +57,11 @@ export function hardFailureReasons(metrics: RunMetrics): readonly string[] {
   const pressureHits =
     crossCutting.pressureLexiconHits.tutor + crossCutting.pressureLexiconHits.trailSummary;
   const reasons: string[] = [];
-  if (planner.hardGateViolationCount > 0) {
+  if (planner.prerequisiteSplitViolationCount > 0) {
     reasons.push(
-      `${planner.hardGateViolationCount} frontier hard-gate violation(s): a node was ` +
-        "recommended whose prerequisites are not met",
+      `${planner.prerequisiteSplitViolationCount} frontier prerequisite-split violation(s): a ` +
+        "recommended node filed a prerequisite on the wrong side of the lit/unlit split, so " +
+        "the card can no longer be trusted to name what is still missing",
     );
   }
   if (crossCutting.usageContractViolationCount > 0) {

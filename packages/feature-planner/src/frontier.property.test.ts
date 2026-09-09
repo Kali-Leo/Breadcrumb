@@ -1,9 +1,14 @@
 /**
- * Purpose: fast-check property tests — over arbitrary mastery/interest vectors
- * and cycle-safe edge sets, frontier() never surfaces a candidate with an unsatisfied requires-
- * prerequisite (the hard gate: lit now, or lit at some point before), and gapAndPath()'s three
- * routes are always exact permutations of its own gap set (no node invented, none dropped,
- * none duplicated).
+ * Purpose: fast-check property tests — over arbitrary mastery/interest vectors and cycle-safe
+ * edge sets, frontier() surfaces exactly the not-currently-lit nodes and tells the truth about
+ * each one's prerequisites, and gapAndPath()'s three routes are always exact permutations of
+ * its own gap set (no node invented, none dropped, none duplicated).
+ *
+ * The property this file used to assert — "never surfaces a candidate with an unsatisfied
+ * requires-prerequisite" — is gone with the hard gate it described. Those edges are LLM-drawn
+ * and a measurable share come back with the direction reversed, so the gate turned each
+ * reversal into a permanently invisible concept. The replacement properties are about honesty
+ * and coverage: nothing is silently withheld, and every caveat on a candidate is real.
  */
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { incomingNeighbors, wouldCreateCycle } from "@breadcrumb/feature-graph";
@@ -73,7 +78,7 @@ function toMasteryMap(vector: readonly number[]): Map<string, number> {
 }
 
 describe("frontier (property)", () => {
-  it("never surfaces a candidate with a never-satisfied requires-prerequisite", () => {
+  it("surfaces exactly the unlit nodes, each one honest about its prerequisites", () => {
     fc.assert(
       fc.property(
         fc.array(candidateEdgeArb, { minLength: 0, maxLength: 25 }),
@@ -96,14 +101,26 @@ describe("frontier (property)", () => {
             litThreshold: LIT_THRESHOLD,
             previouslyLitNodeIds,
           });
-          // The gate reads "was ever lit", not "is lit now": mastery is a retention estimate
-          // that expires in days, so gating structure on it locks deep nodes out permanently.
-          // Unbypassability is unchanged — a prerequisite
-          // with no mastery and no history still blocks its dependent, absolutely.
+
+          // Coverage: no unlit node is ever withheld, and no node is listed twice. This is
+          // the property that replaces the gate — a structural edge may reorder the list, it
+          // may never remove something from it.
+          expect([...candidatesOut.map((candidate) => candidate.nodeId)].sort()).toEqual(
+            NODE_IDS.filter((id) => !isLit(id)).sort(),
+          );
+
+          // "Satisfied" reads "was ever lit", not "lit right now": mastery is a retention
+          // estimate that expires in days, so reading structure off it alone would put a
+          // phantom caveat on every deep node a week after it was learned.
           const wasEverLit = (id: string) => isLit(id) || previouslyLitNodeIds.has(id);
           for (const candidate of candidatesOut) {
             const prereqIds = incomingNeighbors(edges, candidate.nodeId, "requires");
-            expect(prereqIds.every(wasEverLit)).toBe(true);
+            expect([...candidate.reason.litPrerequisiteLabels].sort()).toEqual(
+              prereqIds.filter(wasEverLit).sort(),
+            );
+            expect([...candidate.reason.unlitPrerequisiteLabels].sort()).toEqual(
+              prereqIds.filter((id) => !wasEverLit(id)).sort(),
+            );
             expect(candidate.reason.wasLitBefore).toBe(previouslyLitNodeIds.has(candidate.nodeId));
             // The candidate's own exclusion stays on CURRENT mastery, so a decayed node can
             // still come back as a reunion candidate.

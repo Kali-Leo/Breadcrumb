@@ -43,7 +43,7 @@ export interface RunMetrics {
   mastery: ReturnType<typeof checkMasteryTripwires>;
   interest: { note: string };
   planner: {
-    hardGateViolationCount: number;
+    prerequisiteSplitViolationCount: number;
     reasonMismatchCount: number;
     coverageArithmeticViolationCount: number;
     totalInvariantChecks: number;
@@ -115,8 +115,8 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
       ? 1
       : journeys.reduce((sum, j) => sum + j.targetConceptsEcho, 0) / journeys.length;
 
-  const hardGateViolationCount = input.invariantViolations.filter(
-    (v) => v.kind === "frontier-hard-gate",
+  const prerequisiteSplitViolationCount = input.invariantViolations.filter(
+    (v) => v.kind === "frontier-prerequisite-split",
   ).length;
   const reasonMismatchCount = input.invariantViolations.filter(
     (v) => v.kind === "frontier-reason-mismatch",
@@ -149,7 +149,7 @@ export function buildRunMetrics(input: BuildRunMetricsInput): RunMetrics {
       note: "scripted-recovery moved to `sim recovery` (on-demand); see recovery-result.json in that run's artifacts if it was executed",
     },
     planner: {
-      hardGateViolationCount,
+      prerequisiteSplitViolationCount,
       reasonMismatchCount,
       coverageArithmeticViolationCount,
       totalInvariantChecks: input.invariantRunCount,

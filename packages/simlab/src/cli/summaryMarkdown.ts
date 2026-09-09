@@ -71,7 +71,7 @@ function plannerSection(metrics: RunMetrics): string {
   return [
     "## planner",
     "",
-    `- hardGateViolationCount (must be 0): ${metrics.planner.hardGateViolationCount}`,
+    `- prerequisiteSplitViolationCount (must be 0): ${metrics.planner.prerequisiteSplitViolationCount}`,
     `- reasonMismatchCount: ${metrics.planner.reasonMismatchCount}`,
     `- coverageArithmeticViolationCount: ${metrics.planner.coverageArithmeticViolationCount}`,
     `- totalInvariantChecks: ${metrics.planner.totalInvariantChecks}`,

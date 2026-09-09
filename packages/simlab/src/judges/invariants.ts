@@ -1,8 +1,8 @@
 /**
  * Purpose: the mechanical tripwire suite — cheap always-on regression
  * assertions run against a live planner snapshot: requires-DAG acyclic, unique labels,
- * mastery/interest in [0,1], every frontier candidate's requires-prereqs really lit (hard
- * gate) with an honest reason, and goal coverage arithmetic. Independently recomputes each
+ * mastery/interest in [0,1], every frontier candidate's reason naming its requires-prereqs
+ * honestly on the right side of the lit/unlit split, and goal coverage arithmetic. Independently recomputes each
  * property from raw nodes/edges/mastery instead of trusting the producing function, so a
  * regression in frontier()/coverage() itself gets caught, not just echoed back.
  * Main exports: runInvariants, Violation, InvariantInput.
@@ -18,7 +18,7 @@ export type ViolationKind =
   | "duplicate-label"
   | "mastery-out-of-range"
   | "interest-out-of-range"
-  | "frontier-hard-gate"
+  | "frontier-prerequisite-split"
   | "frontier-reason-mismatch"
   | "coverage-arithmetic"
   | "duplicate-goal-title"
@@ -90,10 +90,20 @@ function checkRange(
   return violations;
 }
 
-/** Independently recomputes the requires-prerequisite set and satisfaction status for each
- * frontier candidate — frontier() already only returns candidates whose prereqs have all been
- * lit at some point; this re-derives that from raw edges/mastery/history so a regression there
- * is caught, not assumed away. */
+/** Independently recomputes each frontier candidate's requires-prerequisites and their
+ * satisfaction status from raw edges/mastery/history, and checks the candidate's reason tells
+ * the truth about them: every prerequisite is cited exactly once, on the correct side of the
+ * lit/unlit split.
+ *
+ * This replaced the old hard-gate check, which asserted that no candidate ever had an unlit
+ * prerequisite. That is no longer an invariant — frontier() demotes such a candidate instead
+ * of dropping it, because the requires edges are LLM-drawn and a measurable share of them
+ * come back with the direction reversed, so a gate turns each reversal into a permanently
+ * invisible concept.
+ * What is still an invariant, and what the UI actually leans on, is that the candidate says
+ * out loud which prerequisites are missing. A regression that stopped populating
+ * unlitPrerequisiteLabels would silently turn "recommended, with caveats" into
+ * "recommended, no caveats". */
 function checkFrontier(input: InvariantInput): Violation[] {
   const { edges, masteryByNode, litThreshold, frontierCandidates, nodes } = input;
   const wasEverLit = (nodeId: string) =>
@@ -104,18 +114,28 @@ function checkFrontier(input: InvariantInput): Violation[] {
 
   for (const candidate of frontierCandidates) {
     const truePrereqIds = incomingNeighbors(edges, candidate.nodeId, "requires");
-    const unlit = truePrereqIds.filter((id) => !wasEverLit(id));
-    if (unlit.length > 0) {
+    const label = (id: string) => labelById.get(id) ?? id;
+    const trueLit = new Set(truePrereqIds.filter(wasEverLit).map(label));
+    const trueUnlit = new Set(truePrereqIds.filter((id) => !wasEverLit(id)).map(label));
+    const citedLit = new Set(candidate.reason.litPrerequisiteLabels);
+    const citedUnlit = new Set(candidate.reason.unlitPrerequisiteLabels);
+
+    const misplaced = [
+      ...[...trueUnlit].filter((name) => citedLit.has(name)),
+      ...[...trueLit].filter((name) => citedUnlit.has(name)),
+    ];
+    if (misplaced.length > 0) {
       violations.push({
-        kind: "frontier-hard-gate",
-        detail: `candidate "${candidate.label}" has unlit prerequisites: ${unlit.map((id) => labelById.get(id) ?? id).join("、")}`,
+        kind: "frontier-prerequisite-split",
+        detail: `candidate "${candidate.label}" files [${misplaced.join("、")}] on the wrong side of the lit/unlit split`,
       });
     }
-    const trueLabels = new Set(truePrereqIds.map((id) => labelById.get(id) ?? id));
-    const citedLabels = new Set(candidate.reason.litPrerequisiteLabels);
+
+    const trueLabels = new Set([...trueLit, ...trueUnlit]);
+    const citedLabels = new Set([...citedLit, ...citedUnlit]);
     const mismatch =
       trueLabels.size !== citedLabels.size ||
-      [...trueLabels].some((label) => !citedLabels.has(label));
+      [...trueLabels].some((name) => !citedLabels.has(name));
     if (mismatch) {
       violations.push({
         kind: "frontier-reason-mismatch",

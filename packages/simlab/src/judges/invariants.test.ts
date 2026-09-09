@@ -89,7 +89,7 @@ describe("runInvariants: mastery/interest range", () => {
   });
 });
 
-describe("runInvariants: frontier hard gate and reason honesty", () => {
+describe("runInvariants: frontier reason honesty", () => {
   it("passes a candidate whose cited prerequisite really is lit", () => {
     const nodes = [node("a", "A"), node("b", "B")];
     const edges = [requires("a", "b")];
@@ -98,7 +98,12 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       label: "B",
       kind: "concept",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
+      reason: {
+        litPrerequisiteLabels: ["A"],
+        unlitPrerequisiteLabels: [],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      },
     };
     const violations = runInvariants({
       ...BASE,
@@ -110,7 +115,10 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
     expect(violations).toEqual([]);
   });
 
-  it("catches a candidate surfaced despite an unlit prerequisite (hard-gate violation)", () => {
+  /** A candidate with an unlit prerequisite is legal now — frontier() demotes it instead of
+   * dropping it. What is illegal is filing that prerequisite as lit: the card would then be
+   * recommending an unreachable node while claiming nothing is missing. */
+  it("passes a candidate that honestly declares its unlit prerequisite", () => {
     const nodes = [node("a", "A"), node("b", "B")];
     const edges = [requires("a", "b")];
     const candidate: FrontierCandidate = {
@@ -118,7 +126,12 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       label: "B",
       kind: "concept",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false },
+      reason: {
+        litPrerequisiteLabels: [],
+        unlitPrerequisiteLabels: ["A"],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      },
     };
     const violations = runInvariants({
       ...BASE,
@@ -127,7 +140,57 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       masteryByNode: new Map([["a", 0.1]]), // not lit
       frontierCandidates: [candidate],
     });
-    expect(violations.some((v) => v.kind === "frontier-hard-gate")).toBe(true);
+    expect(violations).toEqual([]);
+  });
+
+  it("catches an unlit prerequisite filed as lit (prerequisite-split violation)", () => {
+    const nodes = [node("a", "A"), node("b", "B")];
+    const edges = [requires("a", "b")];
+    const candidate: FrontierCandidate = {
+      nodeId: "b",
+      label: "B",
+      kind: "concept",
+      score: 1,
+      reason: {
+        litPrerequisiteLabels: ["A"],
+        unlitPrerequisiteLabels: [],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      },
+    };
+    const violations = runInvariants({
+      ...BASE,
+      nodes,
+      edges,
+      masteryByNode: new Map([["a", 0.1]]), // not lit
+      frontierCandidates: [candidate],
+    });
+    expect(violations.some((v) => v.kind === "frontier-prerequisite-split")).toBe(true);
+  });
+
+  it("catches a lit prerequisite filed as unlit — the caveat must be real too", () => {
+    const nodes = [node("a", "A"), node("b", "B")];
+    const edges = [requires("a", "b")];
+    const candidate: FrontierCandidate = {
+      nodeId: "b",
+      label: "B",
+      kind: "concept",
+      score: 1,
+      reason: {
+        litPrerequisiteLabels: [],
+        unlitPrerequisiteLabels: ["A"],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      },
+    };
+    const violations = runInvariants({
+      ...BASE,
+      nodes,
+      edges,
+      masteryByNode: new Map([["a", 0.9]]), // lit
+      frontierCandidates: [candidate],
+    });
+    expect(violations.some((v) => v.kind === "frontier-prerequisite-split")).toBe(true);
   });
 
   it("catches a reason that fabricates a prerequisite not actually required", () => {
@@ -137,7 +200,12 @@ describe("runInvariants: frontier hard gate and reason honesty", () => {
       label: "B",
       kind: "concept",
       score: 1,
-      reason: { litPrerequisiteLabels: ["A"], litHelpsSources: [], wasLitBefore: false }, // no real requires edge exists
+      reason: {
+        litPrerequisiteLabels: ["A"],
+        unlitPrerequisiteLabels: [],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      }, // no real requires edge exists
     };
     const violations = runInvariants({
       ...BASE,

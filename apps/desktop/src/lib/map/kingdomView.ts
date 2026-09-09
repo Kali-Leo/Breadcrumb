@@ -129,7 +129,12 @@ export function pickRecommendation(input: {
       // has touched yet, and entry nodes are always concepts.
       kind: "concept",
       score: 0,
-      reason: { litPrerequisiteLabels: [], litHelpsSources: [], wasLitBefore: false },
+      reason: {
+        litPrerequisiteLabels: [],
+        unlitPrerequisiteLabels: [],
+        litHelpsSources: [],
+        wasLitBefore: false,
+      },
     },
     alternates: [],
     regionDone: false,

@@ -31,7 +31,12 @@ function candidate(nodeId: string, score: number): FrontierCandidate {
     label: nodeId,
     kind: "concept",
     score,
-    reason: { litPrerequisiteLabels: [], litHelpsSources: [], wasLitBefore: false },
+    reason: {
+      litPrerequisiteLabels: [],
+      unlitPrerequisiteLabels: [],
+      litHelpsSources: [],
+      wasLitBefore: false,
+    },
   };
 }
 
