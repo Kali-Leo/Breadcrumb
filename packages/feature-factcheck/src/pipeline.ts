@@ -10,6 +10,7 @@ import {
   type LlmClientConfig,
   type TokenUsage,
 } from "@breadcrumb/core-llm";
+import { gateVerdict } from "./anchorGate";
 import type { EvidenceItem, EvidenceProvider } from "./evidence/provider";
 import { buildClaimExtractionMessages, claimExtractionSchema } from "./extraction";
 import { gatherEvidence } from "./gathering";
@@ -33,8 +34,10 @@ export interface CheckedClaim {
    * wording. The app writes those sentences from its catalogue; `relationship`
    * plus whether any evidence is in hand tells the three cases apart, so no extra field is
    * needed: `unavailable` = the search never got out; `insufficient` with no evidence = the
-   * search completed and found nothing; `insufficient` with evidence = the judging call
-   * itself failed. The judge's own reasoning is never empty (the schema demands min(1)).
+   * search completed and found nothing; `insufficient` with evidence = the verdict did not
+   * come through — either the judging call failed, or the anchor gate refused a verdict whose
+   * quote was not in the evidence. The judge's own reasoning is never empty (the schema
+   * demands min(1)), so an empty one here always means the pipeline decided.
    */
   reasoning: string;
   /** Ordered cited-first — the links the judge actually leaned on come before the rest. */
@@ -121,10 +124,14 @@ async function judgeClaim(
   try {
     const verdict = await chatJson(llmConfig, messages, createVerdictSchema(evidence.length));
     usages.push(verdict.usage);
+    // The mechanical gate, not a second opinion: a decided verdict whose quote is not in the
+    // material is not a verdict. Its reasoning goes with it — that sentence describes a
+    // judgement that no longer stands, so the app writes the neutral one instead.
+    const gated = gateVerdict(verdict.parsed, evidence);
     return {
       text: claimText,
-      relationship: verdict.parsed.relationship,
-      reasoning: verdict.parsed.reasoning,
+      relationship: gated.relationship,
+      reasoning: gated.downgraded ? "" : verdict.parsed.reasoning,
       evidence: citedFirst(evidence, verdict.parsed.supportingEvidence),
     };
   } catch (error) {

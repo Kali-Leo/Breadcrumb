@@ -3,12 +3,17 @@
  * providers: verdicts, evidence-less claims, the unavailable state when retrieval itself
  * failed, the empty reasoning every pipeline-decided outcome carries (the app writes those
  * sentences), citation-first ordering, usage summing (including failed calls), and call
- * counting.
+ * counting — and the anchor gate: a verdict whose quote is not verbatim in the evidence comes
+ * back as insufficient with the judge's own sentence dropped.
  */
 import type { LlmClientConfig } from "@breadcrumb/core-llm";
 import { describe, expect, it, vi } from "vitest";
 import type { EvidenceItem, EvidenceProvider } from "./evidence/provider";
 import { runFactCheck } from "./pipeline";
+
+/** A verbatim slice of EVIDENCE_ITEM.snippet — what the anchor gate demands of a judge that
+ * decides anything. Every fixture below that expects a verdict to survive has to carry one. */
+const GROUNDED_QUOTE = "光速是每秒 299792458 米";
 
 const EVIDENCE_ITEM: EvidenceItem = {
   url: "https://zh.wikipedia.org/wiki/光速",
@@ -52,7 +57,12 @@ describe("runFactCheck", () => {
   it("judges a claim with evidence and sums usage across calls", async () => {
     const fetchImpl = createLlmFetch(
       { claims: [{ text: "光速约为每秒 30 万公里", queries: ["光速"] }] },
-      { reasoning: "资料显示数值一致。", relationship: "supported", supportingEvidence: [1] },
+      {
+        reasoning: "资料显示数值一致。",
+        relationship: "supported",
+        quote: GROUNDED_QUOTE,
+        supportingEvidence: [1],
+      },
     );
     const report = await runFactCheck(
       { llmConfig: makeConfig(fetchImpl), providers: [makeProvider([EVIDENCE_ITEM])] },
@@ -84,6 +94,7 @@ describe("runFactCheck", () => {
       return llmResponse({
         reasoning: `资料显示 ${shownSecond} 相关。`,
         relationship: "supported",
+        quote: GROUNDED_QUOTE,
         supportingEvidence: [2],
       });
     });
@@ -179,7 +190,12 @@ describe("runFactCheck", () => {
   it("leaves reasoning to the judge whenever the judge actually answered", async () => {
     const fetchImpl = createLlmFetch(
       { claims: [{ text: "某条声明", queries: ["查询"] }] },
-      { reasoning: "资料显示数值一致。", relationship: "supported", supportingEvidence: [1] },
+      {
+        reasoning: "资料显示数值一致。",
+        relationship: "supported",
+        quote: GROUNDED_QUOTE,
+        supportingEvidence: [1],
+      },
     );
     const report = await runFactCheck(
       { llmConfig: makeConfig(fetchImpl), providers: [makeProvider([EVIDENCE_ITEM])] },
@@ -188,6 +204,61 @@ describe("runFactCheck", () => {
     );
 
     expect(report.claims[0]?.reasoning).toBe("资料显示数值一致。");
+  });
+
+  it("downgrades a verdict whose quote is not in the evidence, and drops its sentence", async () => {
+    // The failure this gate exists for: the judge writes "资料显示…" about a sentence no source
+    // contains. Nothing about the reply is malformed, so only a substring check can catch it.
+    const fetchImpl = createLlmFetch(
+      { claims: [{ text: "胰岛素分子由 51 个氨基酸组成", queries: ["胰岛素"] }] },
+      {
+        reasoning: "资料显示胰岛素由 51 个氨基酸组成。",
+        relationship: "supported",
+        quote: "胰岛素由 51 个氨基酸组成",
+        supportingEvidence: [1],
+      },
+    );
+    const report = await runFactCheck(
+      { llmConfig: makeConfig(fetchImpl), providers: [makeProvider([EVIDENCE_ITEM])] },
+      "问",
+      "答",
+    );
+
+    expect(report.claims[0]?.relationship).toBe("insufficient");
+    // The sentence described a verdict that no longer stands, so the app writes the neutral one.
+    expect(report.claims[0]?.reasoning).toBe("");
+    expect(report.claims[0]?.evidence).toEqual([EVIDENCE_ITEM]);
+  });
+
+  it("downgrades a decided verdict that copied no quote at all", async () => {
+    const fetchImpl = createLlmFetch(
+      { claims: [{ text: "某条声明", queries: ["查询"] }] },
+      { reasoning: "资料显示一致。", relationship: "contradicted", supportingEvidence: [1] },
+    );
+    const report = await runFactCheck(
+      { llmConfig: makeConfig(fetchImpl), providers: [makeProvider([EVIDENCE_ITEM])] },
+      "问",
+      "答",
+    );
+
+    expect(report.claims[0]?.relationship).toBe("insufficient");
+    expect(report.claims[0]?.reasoning).toBe("");
+  });
+
+  it("keeps an insufficient verdict and its sentence, quote or no quote", async () => {
+    // Nothing to ground: the gate only ever removes a claim of support or conflict.
+    const fetchImpl = createLlmFetch(
+      { claims: [{ text: "某条声明", queries: ["查询"] }] },
+      { reasoning: "资料没有提到这一点。", relationship: "insufficient", supportingEvidence: [] },
+    );
+    const report = await runFactCheck(
+      { llmConfig: makeConfig(fetchImpl), providers: [makeProvider([EVIDENCE_ITEM])] },
+      "问",
+      "答",
+    );
+
+    expect(report.claims[0]?.relationship).toBe("insufficient");
+    expect(report.claims[0]?.reasoning).toBe("资料没有提到这一点。");
   });
 
   it("returns no claims and only the extraction usage for a chit-chat round", async () => {

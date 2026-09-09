@@ -3,6 +3,12 @@
  * Main exports: runFactCheck pipeline, claim/verdict contracts, evidence providers.
  */
 
+export {
+  type GateableVerdict,
+  type GatedVerdict,
+  gateVerdict,
+  quoteIsGrounded,
+} from "./anchorGate";
 export { type BingProviderOptions, createBingProvider } from "./evidence/bing";
 export {
   createDefaultEvidenceProviders,
@@ -41,6 +47,8 @@ export {
   buildVerdictMessages,
   type ClaimRelationship,
   createVerdictSchema,
+  QUOTE_BUDGET,
   VERDICT_RELATIONSHIPS,
+  type VerdictPromptOptions,
   type VerdictRelationship,
 } from "./verdict";

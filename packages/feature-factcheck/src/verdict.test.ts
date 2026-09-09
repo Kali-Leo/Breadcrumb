@@ -1,10 +1,13 @@
 /**
  * Purpose: unit tests for the verdict contract — schema boundaries, citation-index range
- * checking, and evidence formatting in the prompt.
+ * checking, evidence formatting in the prompt, and the two shapes the prompt comes in: with
+ * the verbatim quote the anchor gate checks (what production sends) and without it (what the
+ * bench sends to measure what the gate is worth).
  */
+import { maxCharsFor } from "@breadcrumb/core-llm";
 import { describe, expect, it } from "vitest";
 import type { EvidenceItem } from "./evidence/provider";
-import { buildVerdictMessages, createVerdictSchema } from "./verdict";
+import { buildVerdictMessages, createVerdictSchema, QUOTE_BUDGET } from "./verdict";
 
 const EVIDENCE: EvidenceItem[] = [
   {
@@ -36,6 +39,24 @@ describe("createVerdictSchema", () => {
     expect(parsed.supportingEvidence).toEqual([]);
   });
 
+  it("defaults a missing quote to the empty string, which the gate then refuses", () => {
+    // A verdict without a quote must not cost the call: parse it, then let the gate decide.
+    const parsed = schema.parse({ reasoning: "资料显示一致。", relationship: "supported" });
+    expect(parsed.quote).toBe("");
+  });
+
+  it("rejects a quote long enough to be the whole excerpt", () => {
+    // A quote allowed to be everything would pass the gate by echoing everything.
+    const tooLong = "字".repeat(maxCharsFor(QUOTE_BUDGET) + 1);
+    expect(() =>
+      schema.parse({ reasoning: "x", relationship: "supported", quote: tooLong }),
+    ).toThrow();
+    const longest = "字".repeat(maxCharsFor(QUOTE_BUDGET));
+    expect(
+      schema.parse({ reasoning: "x", relationship: "supported", quote: longest }).quote,
+    ).toHaveLength(longest.length);
+  });
+
   it("rejects a citation index outside the evidence actually given to the judge", () => {
     expect(() =>
       schema.parse({ reasoning: "x", relationship: "supported", supportingEvidence: [3] }),
@@ -54,6 +75,21 @@ describe("buildVerdictMessages", () => {
     expect(userContent).toContain("[1]");
     expect(userContent).toContain("https://zh.wikipedia.org/wiki/光速");
     expect(userContent).toContain("光速是每秒 299792458 米。");
+  });
+
+  it("asks for the verbatim quote first, then the label", () => {
+    const system = buildVerdictMessages("任意声明", EVIDENCE)[0]?.content ?? "";
+    expect(system).toContain("quote");
+    expect(system.indexOf('"quote"')).toBeLessThan(system.indexOf('"relationship"'));
+    expect(system).toContain("逐字子串");
+    // The judge is told the check is mechanical: copying nothing means judging insufficient.
+    expect(system).toContain("改判 insufficient");
+  });
+
+  it("omits the quote entirely when the caller did not ask for one", () => {
+    const system =
+      buildVerdictMessages("任意声明", EVIDENCE, { requireQuote: false })[0]?.content ?? "";
+    expect(system).not.toContain("quote");
   });
 
   it("asks the judge which evidence carried the conclusion", () => {

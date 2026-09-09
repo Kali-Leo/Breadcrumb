@@ -22,7 +22,9 @@ export interface ClaimOutcome {
  * marker column was needed:
  *  - `unavailable`               → the search never got out
  *  - `insufficient`, no evidence → the search completed and turned up nothing
- *  - `insufficient`, evidence    → the judging call itself failed
+ *  - `insufficient`, evidence    → the verdict did not come through: the judging call failed,
+ *                                  or the anchor gate refused a verdict whose quote was not
+ *                                  in the evidence
  */
 export function claimReasoningKey(claim: ClaimOutcome): string | null {
   if (claim.reasoning.length > 0) return null;
