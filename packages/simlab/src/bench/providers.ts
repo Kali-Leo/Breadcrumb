@@ -18,12 +18,15 @@
  * defaulted, read or written anywhere in this package. With BENCH_PROVIDERS unset the roster
  * is empty and every model reports as skipped, which is what keeps `pnpm test` green.
  *
+ * The per-provider quirks and prices live next door in providerQuirks.ts — measured facts
+ * about a provider's behaviour, not roster logic — and are re-exported here so the bench keeps
+ * one import path for "everything about the candidates".
  * Main exports: loadProviderCatalogue, resolveBenchModels, benchRatesFor, BenchModel,
  * ResolvedBenchModel, BenchRoster, BENCH_PROVIDER_IDS, REFERENCE_MODEL_ID,
  * requiresLeadingSystem, concurrencyCapFor.
  */
 import { readFileSync } from "node:fs";
-import type { LlmClientConfig, ModelRates } from "@breadcrumb/core-llm";
+import type { LlmClientConfig } from "@breadcrumb/core-llm";
 import { z } from "zod";
 import { loadEnvValue } from "../runner/config";
 
@@ -172,42 +175,4 @@ export function resolveBenchModels(
   return { available, skipped };
 }
 
-/**
- * Providers whose API refuses a system message anywhere but the front. Measured, not read off
- * a document: SiliconFlow answers `HTTP 400 {"code":20015,"message":"System message must be
- * at the beginning."}` to the exact request core-llm builds, because the answer-language
- * directive is appended last. See bench/messagePrep.ts for what the bench does about it and
- * why that is a finding about Breadcrumb rather than about the model.
- */
-const LEADING_SYSTEM_ONLY: ReadonlySet<string> = new Set(["siliconflow"]);
-
-export function requiresLeadingSystem(providerId: string): boolean {
-  return LEADING_SYSTEM_ONLY.has(providerId);
-}
-
-/**
- * Per-provider ceiling on calls in flight, where the provider's own limit is lower than
- * anything a run would sensibly ask for. Zhipu's free tier publishes no concurrency number
- * and answers 429 to a second call in flight, so one at a time is the only rate that measures
- * the model rather than the rate limiter.
- */
-const CONCURRENCY_CAP: Readonly<Record<string, number>> = { zhipu: 1 };
-
-export function concurrencyCapFor(providerId: string, requested: number): number {
-  return Math.max(1, Math.min(requested, CONCURRENCY_CAP[providerId] ?? requested));
-}
-
-/**
- * What one model's tokens cost, in CNY per million. The catalogue's own price row is used
- * for every provider EXCEPT the ones core-llm already prices: DeepSeek's entry there carries
- * the peak/off-peak schedule and a verification date, which a flat number cannot express.
- */
-export function benchRatesFor(model: BenchModel): ModelRates {
-  const price = model.provider.price;
-  return {
-    currency: "CNY",
-    inputPerMillionTokens: price.in,
-    cachedInputPerMillionTokens: price.cache_hit ?? undefined,
-    outputPerMillionTokens: price.out,
-  };
-}
+export { benchRatesFor, concurrencyCapFor, requiresLeadingSystem } from "./providerQuirks";

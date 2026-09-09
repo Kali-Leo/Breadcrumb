@@ -12,6 +12,7 @@
       "!**/*.svg",
       "!**/src-tauri/gen",
       "!**/src/data/generated",
+      "!packages/simlab/artifacts",
       "!apps/desktop/src/assets/userscripts",
       "!.claude",
       "!specs/**/*.html"

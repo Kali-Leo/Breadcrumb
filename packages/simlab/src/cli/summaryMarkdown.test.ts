@@ -17,7 +17,7 @@ function makeMetrics(overrides: Partial<RunMetrics> = {}): RunMetrics {
     mastery: { reencounterBoostValid: true, idleDecayValid: true, detail: [] },
     interest: { note: "scripted-recovery moved to `sim recovery`" },
     planner: {
-      hardGateViolationCount: 0,
+      prerequisiteSplitViolationCount: 0,
       reasonMismatchCount: 0,
       coverageArithmeticViolationCount: 0,
       totalInvariantChecks: 4,
@@ -75,9 +75,9 @@ describe("buildSummaryMarkdown", () => {
     expect(markdown.toLowerCase()).not.toContain("recall");
   });
 
-  it("reports the planner hard-gate count with its must-be-0 annotation", () => {
+  it("reports the planner prerequisite-split count with its must-be-0 annotation", () => {
     const markdown = buildSummaryMarkdown(makeMetrics(), []);
-    expect(markdown).toContain("hardGateViolationCount (must be 0): 0");
+    expect(markdown).toContain("prerequisiteSplitViolationCount (must be 0): 0");
   });
 
   it("reports the teaching-discipline counts", () => {

@@ -18,7 +18,7 @@ function makeMetrics(overrides: Partial<RunMetrics> = {}): RunMetrics {
     mastery: { reencounterBoostValid: true, idleDecayValid: true, detail: [] },
     interest: { note: "scripted-recovery moved to `sim recovery`" },
     planner: {
-      hardGateViolationCount: 0,
+      prerequisiteSplitViolationCount: 0,
       reasonMismatchCount: 0,
       coverageArithmeticViolationCount: 0,
       totalInvariantChecks: 3,
@@ -49,13 +49,13 @@ describe("hardFailureReasons", () => {
     expect(hardFailureReasons(makeMetrics())).toEqual([]);
   });
 
-  it("fails on a frontier hard-gate violation", () => {
+  it("fails on a frontier prerequisite-split violation", () => {
     const metrics = makeMetrics({
-      planner: { ...makeMetrics().planner, hardGateViolationCount: 2 },
+      planner: { ...makeMetrics().planner, prerequisiteSplitViolationCount: 2 },
     });
     const reasons = hardFailureReasons(metrics);
     expect(reasons).toHaveLength(1);
-    expect(reasons[0]).toContain("2 frontier hard-gate violation");
+    expect(reasons[0]).toContain("2 frontier prerequisite-split violation");
   });
 
   it("fails on a usage-contract violation", () => {
@@ -87,7 +87,7 @@ describe("hardFailureReasons", () => {
     });
     const reasons = hardFailureReasons({
       ...metrics,
-      planner: { ...metrics.planner, hardGateViolationCount: 1 },
+      planner: { ...metrics.planner, prerequisiteSplitViolationCount: 1 },
     });
     expect(reasons).toHaveLength(4);
   });

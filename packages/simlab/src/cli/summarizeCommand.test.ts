@@ -33,7 +33,7 @@ describe("summarizeCommand", () => {
       mastery: { reencounterBoostValid: true, idleDecayValid: true, detail: [] },
       interest: { note: "n/a" },
       planner: {
-        hardGateViolationCount: 0,
+        prerequisiteSplitViolationCount: 0,
         reasonMismatchCount: 0,
         coverageArithmeticViolationCount: 0,
         totalInvariantChecks: 1,

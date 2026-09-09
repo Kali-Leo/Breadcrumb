@@ -4,6 +4,11 @@
  * model and then every candidate a key was found for, and writes results.json / replies.jsonl
  * / report.md into packages/simlab/artifacts/<runId>/.
  *
+ * Each model's replies and outcomes are appended as soon as that model finishes, not at the
+ * end: a free-tier suite runs for an hour and a process that dies mid-run used to take every
+ * finished model with it. What survives (replies.jsonl + outcomes.jsonl) is enough for
+ * `sim ensemble` to read the run back.
+ *
  * Keys and endpoints come from outside this repository; nothing here defaults to a key file
  * path. See src/bench/providers.ts for the two lines that put them in the environment.
  * Main exports: benchCommand.
@@ -21,11 +26,34 @@ import {
   resolveBenchModels,
 } from "../bench/providers";
 import { renderBenchReport } from "../bench/report";
-import { runBench } from "../bench/runBench";
+import { runBench, type ScoredOutcome } from "../bench/runBench";
 import { buildBenchScenarios, filterScenarios } from "../bench/scenarios/index";
 import { createRunArtifacts } from "../runner/artifacts";
 import { resolveRepoRoot } from "../runner/config";
 import { parseBenchFlags } from "./benchFlags";
+
+/** One model's replies and one-line outcomes, appended the moment that model is done. */
+function appendOutcomes(
+  repliesPath: string,
+  outcomesPath: string,
+  outcomes: readonly ScoredOutcome[],
+): void {
+  for (const outcome of outcomes) {
+    if (outcome.reply !== undefined || outcome.parsed !== undefined) {
+      appendFileSync(
+        repliesPath,
+        `${JSON.stringify({
+          scenarioId: outcome.scenarioId,
+          modelId: outcome.modelId,
+          reply: outcome.reply,
+          parsed: outcome.parsed,
+        })}\n`,
+      );
+    }
+    const { parsed: _parsed, reply: _reply, ...rest } = outcome;
+    appendFileSync(outcomesPath, `${JSON.stringify(rest)}\n`);
+  }
+}
 
 function selectModels(
   available: readonly ResolvedBenchModel[],
@@ -91,6 +119,13 @@ export async function benchCommand(argv: readonly string[]): Promise<void> {
   const artifacts = createRunArtifacts(join(repoRoot, "packages/simlab/artifacts"), runId);
   console.log(`simlab bench ${runId}: budget ¥${flags.budgetCny}, ${flags.workers} in flight`);
 
+  // Replies live in their own file: they are the bulk of the bytes and the part a human reads
+  // one at a time, while results.json is the part a tool reads whole.
+  const repliesPath = join(artifacts.dir, "replies.jsonl");
+  const outcomesPath = join(artifacts.dir, "outcomes.jsonl");
+  writeFileSync(repliesPath, "");
+  writeFileSync(outcomesPath, "");
+
   const result = await runBench({
     scenarios,
     reference,
@@ -98,27 +133,15 @@ export async function benchCommand(argv: readonly string[]): Promise<void> {
     concurrency: flags.workers,
     budgetCny: flags.budgetCny,
     onProgress: (line) => console.log(line),
+    onModelOutcomes: (modelId, outcomes) => {
+      appendOutcomes(repliesPath, outcomesPath, outcomes);
+      console.log(`  ${modelId}: ${outcomes.length} outcomes written`);
+    },
   });
 
   const ratesByModelId = new Map(chosen.map((model) => [model.id, ratesForBenchModel(model)]));
   const aggregated = aggregateRun(result.outcomes, ratesByModelId, result.referenceModelId);
 
-  // Replies live in their own file: they are the bulk of the bytes and the part a human reads
-  // one at a time, while results.json is the part a tool reads whole.
-  const repliesPath = join(artifacts.dir, "replies.jsonl");
-  writeFileSync(repliesPath, "");
-  for (const outcome of result.outcomes) {
-    if (outcome.reply === undefined && outcome.parsed === undefined) continue;
-    appendFileSync(
-      repliesPath,
-      `${JSON.stringify({
-        scenarioId: outcome.scenarioId,
-        modelId: outcome.modelId,
-        reply: outcome.reply,
-        parsed: outcome.parsed,
-      })}\n`,
-    );
-  }
   artifacts.writeJson("results.json", {
     runId,
     startedAt: result.startedAt,

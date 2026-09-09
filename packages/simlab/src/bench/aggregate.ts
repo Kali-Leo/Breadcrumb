@@ -9,11 +9,12 @@
  * a 100%), and a failed call still contributes its latency and its tokens, because the
  * provider still charged for it.
  *
- * Main exports: aggregateRun, ModelSummary, PurposeSummary, AggregatedRun.
+ * Main exports: aggregateRun, meanChecks, ModelSummary, PurposeSummary, AggregatedRun.
  */
 import { calculateCostMicros, type ModelRates } from "@breadcrumb/core-llm";
 import type { FailureKind } from "./benchCall";
 import type { ScoredOutcome } from "./runBench";
+import type { CheckScores } from "./scenarioTypes";
 
 export interface PurposeSummary {
   purpose: string;
@@ -61,12 +62,13 @@ function mean(values: readonly number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-/** Averages each check name over the outcomes that reported it — see the header note on why
- * a missing key must not count as anything. */
-function meanChecks(outcomes: readonly ScoredOutcome[]): Record<string, number> {
+/** Averages each check name over the calls that reported it — see the header note on why
+ * a missing key must not count as anything. Exported because the ensemble analysis has to
+ * average the same names by the same rule. */
+export function meanChecks(scores: readonly CheckScores[]): Record<string, number> {
   const sums = new Map<string, { total: number; count: number }>();
-  for (const outcome of outcomes) {
-    for (const [name, value] of Object.entries(outcome.checks)) {
+  for (const entries of scores) {
+    for (const [name, value] of Object.entries(entries)) {
       const entry = sums.get(name) ?? { total: 0, count: 0 };
       entry.total += value;
       entry.count += 1;
@@ -101,7 +103,7 @@ function summarise(
     schemaPass: outcomes.length === 0 ? 0 : outcomes.filter((o) => o.ok).length / outcomes.length,
     firstTryPass:
       outcomes.length === 0 ? 0 : outcomes.filter((o) => o.firstTry).length / outcomes.length,
-    checks: meanChecks(outcomes),
+    checks: meanChecks(outcomes.map((outcome) => outcome.checks)),
     agreement: agreements.length === 0 ? null : mean(agreements),
     latencyP50Ms: Math.round(percentile(latencies, 0.5)),
     latencyP90Ms: Math.round(percentile(latencies, 0.9)),

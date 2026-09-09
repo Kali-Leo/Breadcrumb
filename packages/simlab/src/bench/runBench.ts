@@ -8,6 +8,11 @@
  * agreement column, so a run that cannot reach it still produces every reference-free number
  * (schema pass, gold accuracy, latency, tokens) and simply reports agreement as absent.
  *
+ * Each model's outcomes are handed to `onModelOutcomes` the moment that model finishes, so a
+ * caller can put them on disk before the next one starts. A free-tier suite runs for an hour;
+ * a run that only wrote its results at the very end threw away every finished model when the
+ * process died, which is exactly what happened on 2026-09-09 and why this hook exists.
+ *
  * Main exports: runBench, BenchRunResult, ScoredOutcome, BenchRunOptions.
  */
 import type { TokenUsage } from "@breadcrumb/core-llm";
@@ -35,6 +40,8 @@ export interface BenchRunOptions {
    * calls already in flight always finish. */
   budgetCny: number;
   onProgress?: (line: string) => void;
+  /** Called once per model, with everything that model produced, before the next model starts. */
+  onModelOutcomes?: (modelId: string, outcomes: readonly ScoredOutcome[]) => void;
 }
 
 export interface BenchRunResult {
@@ -124,22 +131,28 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     options.onProgress?.(
       `reference model ${options.reference.id}: ${options.scenarios.length} calls`,
     );
+    const scored: ScoredOutcome[] = [];
     for (const outcome of await runOneModel(options.reference, options.scenarios, shared)) {
       referenceById.set(outcome.scenarioId, outcome);
-      outcomes.push({ ...outcome, agreement: null });
+      scored.push({ ...outcome, agreement: null });
     }
+    outcomes.push(...scored);
+    options.onModelOutcomes?.(options.reference.id, scored);
   }
 
   for (const subject of options.subjects) {
     options.onProgress?.(`model ${subject.id}: ${options.scenarios.length} calls`);
+    const scored: ScoredOutcome[] = [];
     for (const outcome of await runOneModel(subject, options.scenarios, shared)) {
       const scenario = scenarioById.get(outcome.scenarioId);
       const agreement =
         scenario === undefined
           ? null
           : agreementOf(scenario, referenceById.get(outcome.scenarioId), outcome);
-      outcomes.push({ ...outcome, agreement });
+      scored.push({ ...outcome, agreement });
     }
+    outcomes.push(...scored);
+    options.onModelOutcomes?.(subject.id, scored);
   }
 
   return {
