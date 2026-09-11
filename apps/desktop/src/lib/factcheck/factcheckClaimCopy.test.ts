@@ -1,5 +1,5 @@
 /**
- * Purpose: unit tests for the fallback sentence under a checked claim — the three outcomes
+ * Purpose: unit tests for the fallback sentence under a checked claim — the four outcomes
  * the pipeline decides by itself each resolve to their own catalogue key, a judge's own
  * reasoning is left alone, and rows stored before the split keep their original text.
  */
@@ -12,6 +12,17 @@ describe("claimReasoningKey", () => {
     expect(
       claimReasoningKey({ relationship: "unavailable", reasoning: "", evidenceCount: 0 }),
     ).toBe("factcheck.unavailableNextStep");
+  });
+
+  it("tells 'the sources do not say it in so many words' apart from 'the check did not run'", () => {
+    // The anchor gate refusing a verdict is a fact about the sources; a call that never
+    // finished is a fact about us. Saying either one in the other's words misinforms.
+    expect(claimReasoningKey({ relationship: "unanchored", reasoning: "", evidenceCount: 3 })).toBe(
+      "factcheck.unanchoredReasoning",
+    );
+    expect(
+      claimReasoningKey({ relationship: "insufficient", reasoning: "", evidenceCount: 3 }),
+    ).toBe("factcheck.verdictFailedReasoning");
   });
 
   it("distinguishes 'found nothing' from 'the judging call failed' by the evidence in hand", () => {
@@ -50,6 +61,7 @@ describe("claimReasoningKey", () => {
       claimReasoningKey({ relationship: "unavailable", reasoning: "", evidenceCount: 0 }),
       claimReasoningKey({ relationship: "insufficient", reasoning: "", evidenceCount: 0 }),
       claimReasoningKey({ relationship: "insufficient", reasoning: "", evidenceCount: 1 }),
+      claimReasoningKey({ relationship: "unanchored", reasoning: "", evidenceCount: 1 }),
     ];
     for (const language of ["zh-CN", "en"] as const) {
       const chat = resources[language]?.chat as Record<string, Record<string, unknown>>;

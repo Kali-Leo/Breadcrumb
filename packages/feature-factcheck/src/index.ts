@@ -4,6 +4,7 @@
  */
 
 export {
+  anchorKey,
   type GateableVerdict,
   type GatedVerdict,
   gateVerdict,
@@ -14,9 +15,15 @@ export { type BingProviderOptions, createBingProvider } from "./evidence/bing";
 export {
   createDefaultEvidenceProviders,
   type DefaultProvidersOptions,
+  type EvidenceEdition,
 } from "./evidence/defaults";
 export { createDuckDuckGoProvider, type DuckDuckGoProviderOptions } from "./evidence/duckduckgo";
-export { EVIDENCE_WINDOW_LENGTH, extractKeywordWindow } from "./evidence/pageText";
+export {
+  EVIDENCE_WINDOW_LENGTH,
+  extractKeywordWindow,
+  keywordWindowOfText,
+  queryTerms,
+} from "./evidence/pageText";
 export {
   type EvidenceItem,
   type EvidenceProvider,
@@ -30,7 +37,21 @@ export {
   isFetchableUrl,
   MAX_RESPONSE_BYTES,
 } from "./evidence/safeFetch";
+export { createWikidataProvider, type WikidataProviderOptions } from "./evidence/wikidata";
+export {
+  type FactParts,
+  type FactRenderer,
+  neutralFactRenderer,
+} from "./evidence/wikidataRender";
+export { wikidataLanguagesOf, wikiEditionOf } from "./evidence/wikimedia";
 export { createWikipediaProvider, type WikipediaProviderOptions } from "./evidence/wikipedia";
+export {
+  createZhipuSearchProvider,
+  ZHIPU_SEARCH_LANGUAGES,
+  ZHIPU_SEARCH_PRICE_CNY,
+  type ZhipuProviderOptions,
+  zhipuSupportsLanguage,
+} from "./evidence/zhipu";
 export {
   buildClaimExtractionMessages,
   claimExtractionSchema,

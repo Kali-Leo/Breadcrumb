@@ -4,11 +4,13 @@
  * against DeepSeek and writes artifacts/<runId>/; `sim bench` measures every configured
  * provider's model on every AI purpose the product has; `sim ensemble <dir>` re-reads a finished
  * bench run and combines several judges' verdicts by vote; `sim gold`/`sim recovery` run
- * on-demand evals; `sim summarize <runId>` aggregates a run's artifacts into summary.md.
+ * on-demand evals; `sim evidence` measures the fact check's evidence layers against the real
+ * network; `sim summarize <runId>` aggregates a run's artifacts into summary.md.
  * Main exports: none — this is a script entry, run via `pnpm --filter @breadcrumb/simlab sim`.
  */
 import { benchCommand } from "./benchCommand";
 import { ensembleCommand } from "./ensembleCommand";
+import { evidenceCommand } from "./evidenceCommand";
 import { goldCommand } from "./goldCommand";
 import { recoveryCommand } from "./recoveryCommand";
 import { runCommand } from "./runCommand";
@@ -33,6 +35,9 @@ async function main(): Promise<void> {
     case "gold":
       await goldCommand();
       return;
+    case "evidence":
+      await evidenceCommand(rest);
+      return;
     case "recovery":
       await recoveryCommand();
       return;
@@ -41,7 +46,7 @@ async function main(): Promise<void> {
       return;
     default:
       console.error(
-        `simlab: unknown subcommand "${subcommand}" (known: run, bench, ensemble, gold, recovery, summarize)`,
+        `simlab: unknown subcommand "${subcommand}" (known: run, bench, ensemble, gold, evidence, recovery, summarize)`,
       );
       process.exitCode = 1;
   }

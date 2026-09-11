@@ -48,7 +48,7 @@
   },
   "mainland": {
     "title": "Réseau de Chine continentale",
-    "hint": "La vérification des faits n'utilise que des sources accessibles depuis la Chine continentale (Bing) ; éteinte, elle préfère Wikipédia."
+    "hint": "La vérification des faits n'utilise que des sources accessibles depuis la Chine continentale (Bing, plus la recherche Zhipu si elle est activée) ; éteinte, elle préfère Wikidata et Wikipédia."
   },
   "language": {
     "title": "Langue",
@@ -132,7 +132,20 @@
       },
       "factcheck": {
         "name": "🔍 Vérification des faits",
-        "hint": "Touche « Vérifier ceci » sous une réponse et l'IA cherche les affirmations dans des sources publiques."
+        "hint": "Les affirmations factuelles d'une réponse de l'IA sont recherchées dans des sources publiques, et le passage trouvé est affiché juste sous la réponse."
+      },
+      "factcheckAuto": {
+        "name": "Vérifier automatiquement les réponses du Mode étude",
+        "hint": "Quand c'est activé, chaque réponse du Mode étude est vérifiée d'elle-même, sans rien demander. Avec un service d'IA gratuit, cela ne coûte rien de plus ; avec un service facturé à l'usage, chaque tour dépense le montant ci-dessus. Désactivé, la vérification ne se lance que quand tu appuies sur « Vérifier ceci »."
+      },
+      "factcheckWebSearch": {
+        "name": "🌐 Recherche sur le web ouvert pour les preuves (Zhipu)",
+        "price": "environ ¥{{price}} par requête",
+        "hint": "Quand c'est activé, en plus de Wikidata et de Wikipédia, le service de recherche de Zhipu est sollicité pour trouver des sources sur le web ouvert : ce qu'une encyclopédie n'a jamais écrit. Facturé à la requête sur ton compte Zhipu, à part du service d'IA ci-dessus ; dans l'édition navigateur sur un réseau de Chine continentale, c'est la seule source joignable. Chinois, anglais et swahili seulement : les autres langues ont donné des résultats peu fiables aux tests et ne prennent jamais cette voie.",
+        "disclosure": "Une fois activé, les affirmations extraites de ta question sont envoyées à un moteur de recherche. C'est un nouvel endroit où vont tes mots.",
+        "keyLabel": "Clé API du service de recherche Zhipu",
+        "keyPlaceholder": "À obtenir sur open.bigmodel.cn, puis à coller ici",
+        "noKey": "Pas encore de clé : pour l'instant, ceci ne fait rien."
       },
       "knowledgeEdges": {
         "name": "🕸️ Liens entre connaissances",

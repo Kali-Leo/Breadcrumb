@@ -1,38 +1,39 @@
 /**
- * Purpose: Wikipedia evidence provider — key-free REST search + page summary, multi-language
- * (zh first for Chinese learners, then en), every response Zod-validated at the boundary.
- * Main exports: createWikipediaProvider.
+ * Purpose: Wikipedia evidence provider (layer 2, encyclopaedic prose) — key-free, CORS-open
+ * with `origin=*` (measured: the Action API sends no CORS header without it), across the
+ * learner's edition and English. Full-text search (`list=search`, CirrusSearch) rather than
+ * title search: the hit's snippet lands on the sentence that states the figure, where a
+ * title match's 600-character lead paragraph usually does not (measured on 珠峰海拔). The
+ * judging window is then cut from the whole article's plain text (`prop=extracts`) around
+ * that sentence, so the judge reads context and not a search excerpt.
+ * Main exports: createWikipediaProvider, WikipediaProviderOptions.
  */
 import { z } from "zod";
+import { EVIDENCE_WINDOW_LENGTH, keywordWindowOfText } from "./pageText";
 import type { EvidenceItem, EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
-import { DEFAULT_TIMEOUT_MS, SEARCH_MAX_REDIRECTS } from "./provider";
-import { withRequestBudget } from "./requestBudget";
+import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
+import { EDITION_PATTERN, fetchWikimediaJson } from "./wikimedia";
 
 const searchResponseSchema = z.object({
-  pages: z.array(z.object({ key: z.string(), title: z.string() })),
+  query: z.object({
+    search: z.array(z.object({ pageid: z.number().int(), title: z.string(), snippet: z.string() })),
+  }),
 });
 
-const summaryResponseSchema = z.object({
-  title: z.string(),
-  extract: z.string(),
-  content_urls: z.object({ desktop: z.object({ page: z.string() }) }).optional(),
+const extractResponseSchema = z.object({
+  query: z.object({
+    pages: z.array(z.object({ title: z.string(), extract: z.string().optional() })),
+  }),
 });
 
-const USER_AGENT = "Breadcrumb/0.1 (https://github.com/Kali-Leo/Breadcrumb)";
-
-/** The Wikimedia User-Agent policy's Api-User-Agent escape hatch exists for browser JS that
- * *cannot* set User-Agent. Tauri's Rust HTTP client can, so we send both: sending only the
- * substitute header is how a non-browser client gets silently throttled or blocked. */
-const WIKIPEDIA_HEADERS: Readonly<Record<string, string>> = {
-  "Api-User-Agent": USER_AGENT,
-  "User-Agent": USER_AGENT,
-};
-
-const SNIPPET_MAX_LENGTH = 600;
-
-/** Search hits taken per language edition. A specific date or figure is rarely in the top
- * article's lead paragraph, and a second hit is one extra request, not one extra search. */
+/** Search hits taken per language edition. A specific figure is often in the second-ranked
+ * article (a mountain range's page lists every peak's height), and a second hit is one extra
+ * request, not one extra search. */
 const PAGES_PER_LANGUAGE = 2;
+
+/** A search-snippet fragment shorter than this is too common a string to locate in the
+ * article with any confidence. */
+const MIN_LOCATOR_LENGTH = 12;
 
 export interface WikipediaProviderOptions {
   fetchImpl: FetchLike;
@@ -42,16 +43,10 @@ export interface WikipediaProviderOptions {
   timeoutMs?: number;
 }
 
-/** One language edition's outcome: what it produced, and whether it could be reached at all. */
 interface LanguageOutcome {
   items: EvidenceItem[];
   failed: boolean;
 }
-
-/** Wikipedia edition subdomains: `en`, `zh`, `zh-yue`, `simple`… — the only shape that may be
- * spliced into a hostname. Anything else is dropped, so a future caller wiring a user locale in
- * cannot turn `language` into an arbitrary host. */
-const EDITION_PATTERN = /^[a-z]{2,12}(-[a-z0-9]{1,8})*$/;
 
 export function createWikipediaProvider(options: WikipediaProviderOptions): EvidenceProvider {
   const languages = (options.languages ?? ["zh", "en"]).filter((language) =>
@@ -82,32 +77,65 @@ export function createWikipediaProvider(options: WikipediaProviderOptions): Evid
   };
 }
 
-async function fetchSummary(
+function apiUrl(language: string, params: Record<string, string>): string {
+  const search = new URLSearchParams({
+    format: "json",
+    formatversion: "2",
+    origin: "*",
+    ...params,
+  });
+  return `https://${language}.wikipedia.org/w/api.php?${search.toString()}`;
+}
+
+/** The hit's snippet as text. CirrusSearch wraps matched terms in <span> INSIDE words, so the
+ * tags are removed rather than replaced by a space (stripHtml's rule, right for block markup
+ * and wrong here: it would split 珠穆朗玛峰 from the sentence it is in). */
+function snippetText(snippetHtml: string): string {
+  return stripHtml(snippetHtml.replace(/<[^>]+>/g, ""));
+}
+
+/** The longest run of the search snippet that could be looked up verbatim in the article:
+ * CirrusSearch joins fragments with ellipses, and one fragment is enough. */
+function snippetLocator(snippetHtml: string): string | null {
+  const fragments = snippetText(snippetHtml)
+    .split(/…|\.\.\./)
+    .map((fragment) => fragment.trim())
+    .filter((fragment) => fragment.length >= MIN_LOCATOR_LENGTH);
+  return fragments.sort((a, b) => b.length - a.length)[0] ?? null;
+}
+
+/** The judging window: around the search hit's own sentence where it can be found in the
+ * article, around the query terms otherwise, the whole text when it is short. */
+export function windowAround(extract: string, snippetHtml: string, query: string): string | null {
+  const text = extract.replace(/\s+/g, " ").trim();
+  if (text.length === 0) return null;
+  if (text.length <= EVIDENCE_WINDOW_LENGTH) return text;
+  const locator = snippetLocator(snippetHtml);
+  const at = locator === null ? -1 : text.indexOf(locator);
+  if (at >= 0) {
+    const lead = Math.floor(EVIDENCE_WINDOW_LENGTH / 3);
+    const start = Math.max(0, Math.min(at - lead, text.length - EVIDENCE_WINDOW_LENGTH));
+    return text.slice(start, start + EVIDENCE_WINDOW_LENGTH);
+  }
+  return keywordWindowOfText(text, query);
+}
+
+async function fetchExtract(
   fetchImpl: FetchLike,
   timeoutMs: number,
   language: string,
-  pageKey: string,
-): Promise<EvidenceItem | null> {
-  const summaryUrl = `https://${language}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageKey)}`;
-  const summaryPayload = await withRequestBudget(timeoutMs, async (signal) => {
-    const summaryResponse = await fetchImpl(summaryUrl, {
-      headers: WIKIPEDIA_HEADERS,
-      signal,
-      maxRedirections: SEARCH_MAX_REDIRECTS,
-    });
-    return summaryResponse.ok ? ((await summaryResponse.json()) as unknown) : null;
+  pageId: number,
+): Promise<string | null> {
+  const url = apiUrl(language, {
+    action: "query",
+    prop: "extracts",
+    explaintext: "1",
+    redirects: "1",
+    pageids: String(pageId),
   });
-  if (summaryPayload === null) return null;
-  const summary = summaryResponseSchema.parse(summaryPayload);
-  if (summary.extract.length === 0) return null;
-  return {
-    url:
-      summary.content_urls?.desktop.page ??
-      `https://${language}.wikipedia.org/wiki/${encodeURIComponent(pageKey)}`,
-    title: summary.title,
-    snippet: summary.extract.slice(0, SNIPPET_MAX_LENGTH),
-    source: "wikipedia",
-  };
+  const payload = await fetchWikimediaJson(fetchImpl, timeoutMs, url);
+  if (payload === null) return null;
+  return extractResponseSchema.parse(payload).query.pages[0]?.extract ?? null;
 }
 
 async function searchOneLanguage(
@@ -117,33 +145,43 @@ async function searchOneLanguage(
   query: string,
   limit: number,
 ): Promise<LanguageOutcome> {
-  let searchResult: z.infer<typeof searchResponseSchema>;
+  let hits: z.infer<typeof searchResponseSchema>["query"]["search"];
   try {
-    const searchUrl = `https://${language}.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(query)}&limit=${PAGES_PER_LANGUAGE}`;
-    const searchPayload = await withRequestBudget(timeoutMs, async (signal) => {
-      const searchResponse = await fetchImpl(searchUrl, {
-        headers: WIKIPEDIA_HEADERS,
-        signal,
-        maxRedirections: SEARCH_MAX_REDIRECTS,
-      });
-      return searchResponse.ok ? ((await searchResponse.json()) as unknown) : null;
+    const url = apiUrl(language, {
+      action: "query",
+      list: "search",
+      srsearch: query,
+      srlimit: String(PAGES_PER_LANGUAGE),
+      utf8: "1",
     });
-    if (searchPayload === null) return { items: [], failed: true };
-    searchResult = searchResponseSchema.parse(searchPayload);
+    const payload = await fetchWikimediaJson(fetchImpl, timeoutMs, url);
+    if (payload === null) return { items: [], failed: true };
+    hits = searchResponseSchema.parse(payload).query.search;
   } catch {
     return { items: [], failed: true };
   }
 
-  // The search answered, so this edition is reachable: a page whose summary then fails is a
-  // gap in the material, not a failure of the search.
+  // The search answered, so this edition is reachable: an article whose text then fails to
+  // arrive is a gap in the material, not a failure of the search — the hit's own snippet
+  // stands in for it.
   const items: EvidenceItem[] = [];
-  for (const page of searchResult.pages.slice(0, limit)) {
+  for (const hit of hits.slice(0, limit)) {
+    let extract: string | null = null;
     try {
-      const item = await fetchSummary(fetchImpl, timeoutMs, language, page.key);
-      if (item !== null) items.push(item);
+      extract = await fetchExtract(fetchImpl, timeoutMs, language, hit.pageid);
     } catch {
-      // One unreadable summary must not discard the hits around it.
+      extract = null;
     }
+    const snippet =
+      (extract === null ? null : windowAround(extract, hit.snippet, query)) ??
+      snippetText(hit.snippet);
+    if (snippet.length === 0) continue;
+    items.push({
+      url: `https://${language}.wikipedia.org/wiki/${encodeURIComponent(hit.title.replace(/ /g, "_"))}`,
+      title: hit.title,
+      snippet,
+      source: "wikipedia",
+    });
   }
   return { items, failed: false };
 }

@@ -18,17 +18,20 @@ export interface ClaimOutcome {
  * the claim carries a judge's own sentence (including rows written before this split, which
  * still hold their original text and must keep showing it — no migration, no rewriting).
  *
- * The three system outcomes are told apart by fields that were already being stored, so no
- * marker column was needed:
+ * The four system outcomes are told apart by the relationship and by whether any evidence is
+ * in hand, so no marker column was needed:
  *  - `unavailable`               → the search never got out
+ *  - `unanchored`                → the judge decided something the sources do not say in so
+ *                                  many words, so the gate refused it. That is a fact about
+ *                                  the sources, and the reader is told it as one — never as
+ *                                  "这次没查成", which is about us.
  *  - `insufficient`, no evidence → the search completed and turned up nothing
- *  - `insufficient`, evidence    → the verdict did not come through: the judging call failed,
- *                                  or the anchor gate refused a verdict whose quote was not
- *                                  in the evidence
+ *  - `insufficient`, evidence    → the judging call did not come through
  */
 export function claimReasoningKey(claim: ClaimOutcome): string | null {
   if (claim.reasoning.length > 0) return null;
   if (claim.relationship === "unavailable") return "factcheck.unavailableNextStep";
+  if (claim.relationship === "unanchored") return "factcheck.unanchoredReasoning";
   if (claim.relationship === "insufficient") {
     return claim.evidenceCount === 0
       ? "factcheck.noEvidenceReasoning"

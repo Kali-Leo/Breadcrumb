@@ -1,24 +1,27 @@
 /**
- * Purpose: the quiet fact-check companion under an assistant message — a "求证" button,
- * then gentle per-claim verdicts with verified evidence links (zero-pressure wording).
+ * Purpose: the fact-check companion under an assistant message. In 学习模式 the check runs by
+ * itself, so this mostly reports rather than invites: the work is named while it runs, a claim
+ * the sources contradict is shown outside the fold (hiding the one finding worth reading would
+ * be the whole feature failing), and a plain sentence says which part of the answer was checked
+ * at all — without it, readers take everything unmarked as verified (Pennycook et al., 2020).
+ * The 求证 button stays for rounds nothing checked automatically.
  * Main exports: FactcheckBadge.
  */
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
-import { claimReasoningKey } from "../../lib/factcheck/factcheckClaimCopy";
 import { type DisplayClaim, useFactcheckStore } from "../../stores/factcheckStore";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { FactcheckClaimLine } from "./FactcheckClaimLine";
 
-/** The four outcomes, each with its icon and tone; the wording comes from the catalogue.
- * `unavailable` is the one the judge never produces: it means the search itself did not get
- * through, which says nothing about whether sources exist. */
-const RELATIONSHIP_BADGES: Record<string, { icon: string; labelKey: string; tone: string }> = {
-  supported: { icon: "✓", labelKey: "factcheck.supported", tone: "text-emerald-600" },
-  insufficient: { icon: "◌", labelKey: "factcheck.insufficient", tone: "text-stone-500" },
-  contradicted: { icon: "≈", labelKey: "factcheck.contradicted", tone: "text-amber-700" },
-  unavailable: { icon: "…", labelKey: "factcheck.unavailable", tone: "text-stone-400" },
+/** What the line under the answer says while the check is running. Naming the step is the
+ * difference between waiting and watching work happen — and the waiting is not dead time
+ * either: an answer that arrives instantly is judged LESS considered than one that takes a few
+ * seconds (Tan et al., CHI 2026, N=240). */
+const STAGE_KEYS: Record<string, string> = {
+  extracting: "factcheck.checkingExtracting",
+  gathering: "factcheck.checkingGathering",
+  judging: "factcheck.checkingJudging",
 };
 
 interface FactcheckBadgeProps {
@@ -38,6 +41,7 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
       : state.claimsByConversation.get(conversationId)?.get(messageId),
   );
   const checking = useFactcheckStore((state) => state.checkingMessageIds.has(messageId));
+  const stage = useFactcheckStore((state) => state.stageByMessageId[messageId]);
   const notice = useFactcheckStore((state) => state.noticeByMessageId[messageId]);
   const checkMessage = useFactcheckStore((state) => state.checkMessage);
   const [open, setOpen] = useState(false);
@@ -45,8 +49,11 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
   if (!enabled || conversationId === null) return null;
 
   if (checking) {
+    const stageKey = (stage === undefined ? undefined : STAGE_KEYS[stage]) ?? "factcheck.checking";
     return (
-      <p className="animate-pulse ps-1 text-xs text-stone-400">🔍 {t("factcheck.checking")}</p>
+      <p className="ps-1 text-xs text-stone-600">
+        <span className="animate-pulse">🔍</span> {t(stageKey as never)}
+      </p>
     );
   }
 
@@ -69,22 +76,40 @@ export function FactcheckBadge({ conversationId, messageId }: FactcheckBadgeProp
     return <p className="ps-1 text-xs text-stone-400">🔍 {t("factcheck.nothingToCheck")}</p>;
   }
 
+  const conflicts = claims.filter((claim) => claim.relationship === "contradicted");
+  const rest = claims.filter((claim) => claim.relationship !== "contradicted");
   const supportedCount = claims.filter((claim) => claim.relationship === "supported").length;
-  const summary = buildSummary(t, claims, supportedCount);
 
   return (
     <div className="max-w-[76%] space-y-1 ps-1">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="text-xs text-stone-400 transition-colors hover:text-amber-600"
-      >
-        🔍 {summary} {open ? "▾" : "▸"}
-      </button>
+      {conflicts.length > 0 && (
+        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/80 p-3">
+          <p className="text-xs text-amber-800">{t("factcheck.conflictHeading")}</p>
+          <ul className="space-y-2">
+            {conflicts.map((claim) => (
+              <FactcheckClaimLine key={claim.text} claim={claim} />
+            ))}
+          </ul>
+        </div>
+      )}
+      {rest.length === 0 ? (
+        <p className="text-xs text-stone-400">🔍 {buildSummary(t, claims, supportedCount)}</p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="text-xs text-stone-400 transition-colors hover:text-amber-600"
+        >
+          🔍 {buildSummary(t, claims, supportedCount)} {open ? "▾" : "▸"}
+        </button>
+      )}
+      {/* Always visible, folded or not: this sentence is what stops the unchecked parts of the
+          answer from reading as checked. */}
+      <p className="text-xs text-stone-400">{t("factcheck.coverageNote")}</p>
       {open && (
         <ul className="space-y-2 rounded-xl bg-white/70 p-3 shadow-sm">
-          {claims.map((claim) => (
-            <ClaimLine key={claim.text} claim={claim} />
+          {rest.map((claim) => (
+            <FactcheckClaimLine key={claim.text} claim={claim} />
           ))}
         </ul>
       )}
@@ -106,41 +131,4 @@ function buildSummary(
   return supportedCount === claims.length
     ? t("factcheck.allSupported", { count: supportedCount })
     : t("factcheck.someSupported", { supported: supportedCount, total: claims.length });
-}
-
-function ClaimLine({ claim }: { claim: DisplayClaim }) {
-  const { t } = useTranslation("chat");
-  const badge = RELATIONSHIP_BADGES[claim.relationship] ?? RELATIONSHIP_BADGES.insufficient;
-  // Outcomes the pipeline decided by itself carry no reasoning on purpose — the sentence is
-  // written here, in the reader's language, rather than in the headless package.
-  const fallbackKey = claimReasoningKey({
-    relationship: claim.relationship,
-    reasoning: claim.reasoning,
-    evidenceCount: claim.evidence.length,
-  });
-  const reasoning = fallbackKey === null ? claim.reasoning : t(fallbackKey as never);
-  return (
-    <li className="space-y-0.5 text-xs">
-      <p className="text-stone-600">
-        <span className={badge?.tone}>{badge?.icon}</span> {claim.text}
-        <span className={`ms-1 ${badge?.tone}`}>（{badge ? t(badge.labelKey as never) : ""}）</span>
-      </p>
-      <p className="ps-4 text-stone-500">{reasoning}</p>
-      {claim.evidence.map((item) => (
-        <button
-          key={item.url}
-          type="button"
-          onClick={() => {
-            // Evidence addresses come from search results and can be plain http, which the
-            // opener capability no longer allows (nothing else in the app produces one).
-            // Refusing quietly beats raising an error the learner cannot act on.
-            if (item.url.startsWith("https://")) void openUrl(item.url);
-          }}
-          className="block ps-4 text-start text-stone-400 underline decoration-stone-300 hover:text-amber-600"
-        >
-          {item.title}
-        </button>
-      ))}
-    </li>
-  );
 }

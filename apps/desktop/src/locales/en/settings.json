@@ -48,7 +48,7 @@
   },
   "mainland": {
     "title": "Mainland China network",
-    "hint": "Fact-checking uses only sources reachable from mainland China (Bing); turned off, it prefers Wikipedia."
+    "hint": "Fact-checking uses only sources reachable from mainland China (Bing, plus Zhipu search when that is on); turned off, it prefers Wikidata and Wikipedia."
   },
   "language": {
     "title": "Language",
@@ -131,7 +131,20 @@
       },
       "factcheck": {
         "name": "🔍 Fact-checking",
-        "hint": "Tap \"Check this\" under a reply and the AI looks up the claims in public sources."
+        "hint": "Factual claims in an AI answer are looked up in public sources, and the passage that was found sits right under the answer."
+      },
+      "factcheckAuto": {
+        "name": "Check Study mode answers automatically",
+        "hint": "While this is on, every Study mode answer is checked on its own, without being asked. With a free AI service that costs nothing extra; with a metered one, every round spends the amount above. Turn it off and a check only runs when you press “Check this”."
+      },
+      "factcheckWebSearch": {
+        "name": "🌐 Open-web search for evidence (Zhipu)",
+        "price": "about ¥{{price}} per call",
+        "hint": "While this is on, besides Wikidata and Wikipedia, Zhipu's search service is asked to find sources on the open web — things an encyclopaedia never wrote down. Billed per call to your Zhipu account, separately from the AI service above; in the browser edition on a mainland-China network it is the only source that can be reached. Chinese, English and Swahili only: other languages returned unreliable results in testing and never take this route.",
+        "disclosure": "When this is on, the claims extracted from your question are sent to a search engine. That is a new place your words go.",
+        "keyLabel": "Zhipu search service API key",
+        "keyPlaceholder": "Get one at open.bigmodel.cn and paste it here",
+        "noKey": "No key yet, so this does nothing for now."
       },
       "knowledgeEdges": {
         "name": "🕸️ Knowledge links",

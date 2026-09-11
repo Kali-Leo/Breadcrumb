@@ -36,6 +36,7 @@ import {
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
+  WEB_SEARCH_KEY_KEY,
 } from "../lib/platform/settingsSchema";
 import { nowIso } from "../lib/platform/time";
 import type { SettingsState } from "./settingsStore";
@@ -51,6 +52,7 @@ export interface SettingsWriteActions {
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
+  setWebSearchApiKey(key: string): Promise<void>;
   setLearningMode(mode: LearningMode): Promise<void>;
   setRouteParams(params: RouteParams): Promise<void>;
   setCompareCategory(category: CompareCategory): Promise<void>;
@@ -134,6 +136,13 @@ export function createSettingsWriteActions(
       const repos = await getRepos();
       await repos.settings.set(MAINLAND_NETWORK_KEY, enabled, nowIso());
       set({ mainlandNetwork: enabled });
+    },
+
+    async setWebSearchApiKey(key) {
+      const trimmed = key.trim();
+      const repos = await getRepos();
+      await repos.settings.set(WEB_SEARCH_KEY_KEY, trimmed, nowIso());
+      set({ webSearchApiKey: trimmed });
     },
 
     async setLearningMode(mode) {

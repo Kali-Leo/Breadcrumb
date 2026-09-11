@@ -48,7 +48,7 @@
   },
   "mainland": {
     "title": "Jaringan Tiongkok daratan",
-    "hint": "Pemeriksaan fakta hanya memakai sumber yang bisa dibuka dari Tiongkok daratan (Bing); kalau dimatikan, lebih memilih Wikipedia."
+    "hint": "Pemeriksaan fakta hanya memakai sumber yang bisa dibuka dari Tiongkok daratan (Bing, plus pencarian Zhipu jika menyala); kalau dimatikan, lebih memilih Wikidata dan Wikipedia."
   },
   "language": {
     "title": "Bahasa",
@@ -130,7 +130,20 @@
       },
       "factcheck": {
         "name": "🔍 Pemeriksaan fakta",
-        "hint": "Ketuk «Periksa ini» di bawah sebuah jawaban dan AI mencari pernyataannya di sumber publik."
+        "hint": "Pernyataan faktual dalam jawaban AI dicari di sumber publik, dan cuplikan yang ditemukan ditampilkan tepat di bawah jawaban."
+      },
+      "factcheckAuto": {
+        "name": "Periksa jawaban Mode belajar secara otomatis",
+        "hint": "Selama ini menyala, setiap jawaban Mode belajar diperiksa sendiri tanpa diminta. Dengan layanan AI gratis itu tidak menambah biaya; dengan layanan berbayar per pemakaian, setiap putaran menghabiskan jumlah di atas. Kalau dimatikan, pemeriksaan hanya berjalan saat kamu menekan “Periksa ini”."
+      },
+      "factcheckWebSearch": {
+        "name": "🌐 Pencarian bukti di web terbuka (Zhipu)",
+        "price": "sekitar ¥{{price}} per pencarian",
+        "hint": "Saat menyala, selain Wikidata dan Wikipedia, layanan pencarian Zhipu diminta mencari sumber di web terbuka — hal-hal yang tidak pernah ditulis ensiklopedia. Ditagih per pencarian ke akun Zhipu Anda, terpisah dari layanan AI di atas; pada edisi peramban di jaringan Tiongkok daratan, inilah satu-satunya sumber yang bisa dijangkau. Hanya untuk bahasa Mandarin, Inggris, dan Swahili: bahasa lain memberi hasil yang tidak andal saat diuji dan tidak pernah lewat jalur ini.",
+        "disclosure": "Saat ini menyala, klaim yang diambil dari pertanyaan Anda dikirim ke mesin pencari. Itu tempat baru yang dituju kata-kata Anda.",
+        "keyLabel": "Kunci API layanan pencarian Zhipu",
+        "keyPlaceholder": "Dapatkan di open.bigmodel.cn lalu tempel di sini",
+        "noKey": "Belum ada kunci, jadi untuk sekarang ini tidak berbuat apa-apa."
       },
       "knowledgeEdges": {
         "name": "🕸️ Kaitan pengetahuan",

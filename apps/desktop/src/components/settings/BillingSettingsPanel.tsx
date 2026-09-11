@@ -12,6 +12,8 @@ import { todayLocalMidnightIso } from "../../lib/platform/time";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { type FeatureSwitches, useSettingsStore } from "../../stores/settingsStore";
 import { BillingEstimateLine } from "./BillingEstimateLine";
+import { FactcheckAutoRow } from "./FactcheckAutoRow";
+import { FactcheckWebSearchRow } from "./FactcheckWebSearchRow";
 import { ResearchTasksSettingsRow } from "./ResearchTasksSettingsRow";
 import { Toggle } from "./SettingsToggle";
 import { usePurposeAverages } from "./usePurposeAverages";
@@ -134,20 +136,30 @@ export function BillingSettingsPanel() {
         {FEATURE_ROWS.map((row) => {
           const name = t(`billing.features.${row.feature}.name` as const);
           return (
-            <div key={row.feature} className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-stone-700">{name}</p>
-                <p className="text-xs text-stone-500">
-                  {t(`billing.features.${row.feature}.hint` as const)}
-                </p>
-                <BillingEstimateLine purposes={row.purposes} averages={averages} />
-                <p className="text-xs text-stone-400">{spendLine(today, total, row.purposes)}</p>
+            <div key={row.feature} className="space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-stone-700">{name}</p>
+                  <p className="text-xs text-stone-500">
+                    {t(`billing.features.${row.feature}.hint` as const)}
+                  </p>
+                  <BillingEstimateLine purposes={row.purposes} averages={averages} />
+                  <p className="text-xs text-stone-400">{spendLine(today, total, row.purposes)}</p>
+                </div>
+                <Toggle
+                  on={featureSwitches[row.feature]}
+                  onClick={() => void setFeatureSwitch(row.feature, !featureSwitches[row.feature])}
+                  label={name}
+                />
               </div>
-              <Toggle
-                on={featureSwitches[row.feature]}
-                onClick={() => void setFeatureSwitch(row.feature, !featureSwitches[row.feature])}
-                label={name}
-              />
+              {/* The one feature with sub-switches: how often it runs, and whether the paid
+                  open-web layer (and its key) joins the free sources. */}
+              {row.feature === "factcheck" && (
+                <>
+                  <FactcheckAutoRow />
+                  <FactcheckWebSearchRow />
+                </>
+              )}
             </div>
           );
         })}

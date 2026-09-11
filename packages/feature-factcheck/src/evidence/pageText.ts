@@ -3,7 +3,9 @@
  * memory after fetch-and-verify, and judging on body text rather than a search summary is
  * the single biggest free win available here — humans judge truth at 71% accuracy on source
  * text against 40% on summaries, and call the material sufficient 82% vs 46% of the time
- * (Hu et al., EMNLP 2023). Main exports: EVIDENCE_WINDOW_LENGTH, extractKeywordWindow.
+ * (Hu et al., EMNLP 2023). The plain-text half (queryTerms, keywordWindowOfText) is shared
+ * with the Wikipedia provider, whose extracts arrive as text rather than HTML.
+ * Main exports: EVIDENCE_WINDOW_LENGTH, extractKeywordWindow, keywordWindowOfText, queryTerms.
  */
 import { load } from "cheerio";
 
@@ -38,7 +40,7 @@ export function extractPageText(html: string): string | null {
 /** Splits a search query into the terms a window is scored against. Whitespace and CJK
  * punctuation are the only separators — a Chinese query stays one term, which is what we
  * want: unsegmented CJK substrings match verbatim. */
-function queryTerms(query: string): string[] {
+export function queryTerms(query: string): string[] {
   return query
     .toLowerCase()
     .split(/[\s,，.。、;；:：!！?？"'“”‘’()（）[\]【】]+/)
@@ -82,6 +84,21 @@ function bestWindow(
 }
 
 /**
+ * The window of already-plain text around the query terms: the whole text when it fits, the
+ * best-scoring stretch when it does not, null when no term appears at all.
+ */
+export function keywordWindowOfText(
+  text: string,
+  query: string,
+  windowLength: number = EVIDENCE_WINDOW_LENGTH,
+): string | null {
+  if (text.length <= windowLength) return text;
+  const terms = queryTerms(query);
+  if (terms.length === 0) return null;
+  return bestWindow(text, terms, windowLength);
+}
+
+/**
  * Judging material from one fetched page: the window of its body text around the query
  * terms. Null whenever the page yields nothing usable, so every caller keeps a working
  * fallback to the search engine's own summary.
@@ -93,8 +110,5 @@ export function extractKeywordWindow(
 ): string | null {
   const pageText = extractPageText(html);
   if (pageText === null) return null;
-  if (pageText.length <= windowLength) return pageText;
-  const terms = queryTerms(query);
-  if (terms.length === 0) return null;
-  return bestWindow(pageText, terms, windowLength);
+  return keywordWindowOfText(pageText, query, windowLength);
 }

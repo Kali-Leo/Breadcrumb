@@ -54,6 +54,9 @@ export interface SettingsState extends SettingsWriteActions {
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
+  /** The Zhipu search key for the fact check's open-web layer; "" = none. Only ever read by
+   * lib/factcheck/evidenceProviders.ts, and only when the factcheckWebSearch switch is on. */
+  webSearchApiKey: string;
   /** casual by default — a new user wanders before they have a goal to rank against. */
   learningMode: LearningMode;
   /** recommendRoute()'s pace/interestWeight sliders, 0.5/0.5 by default. */
@@ -84,6 +87,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   pageGuidesSeen: {},
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
+  webSearchApiKey: "",
   learningMode: "casual",
   routeParams: DEFAULT_ROUTE_PARAMS,
   compareCategory: "occupation",

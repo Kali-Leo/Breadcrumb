@@ -37,9 +37,9 @@ function rowToDisplayClaim(row: FactcheckClaimRow): DisplayClaim {
     text: row.claim_text,
     relationship: row.relationship,
     reasoning: row.reasoning,
-    // Rows written before the column existed read back as "" — the display simply has no
-    // source sentence to show for them, which is exactly what was stored.
-    quote: row.quote ?? "",
+    // Rows written before this column existed read back as "" (the column's default), which
+    // reads as "no source sentence to show" — exactly right for them.
+    quote: row.quote,
     // A row we cannot read the evidence of still carries a usable verdict; show it without
     // links rather than dropping the claim.
     evidence: parsed ?? [],

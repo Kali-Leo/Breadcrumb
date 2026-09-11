@@ -2,8 +2,9 @@
  * Purpose: unit tests for factcheckStore's per-conversation layering — fill-on-first-visit
  * with a single-flight load (one batched claim query, not one per run), no wipe on switch,
  * checkMessage resolving its round from the message's OWN conversation (never the active
- * mirror) with a DB fallback, failed evidence providers reaching ai_failures, and a failed
- * call's usage still reaching the ledger.
+ * mirror) with a DB fallback, an empty evidence route stopping the check before it spends,
+ * failed evidence providers reaching ai_failures, and a failed call's usage still reaching
+ * the ledger.
  */
 import type { FactcheckClaimRow, FactcheckRunRow, MessageRow } from "@breadcrumb/core-db";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -26,11 +27,11 @@ vi.mock("../lib/platform/db", () => ({
 }));
 
 const runFactCheckMock = vi.fn();
-vi.mock("@breadcrumb/feature-factcheck", () => ({
-  runFactCheck: runFactCheckMock,
-  createDefaultEvidenceProviders: vi.fn(() => []),
+vi.mock("@breadcrumb/feature-factcheck", () => ({ runFactCheck: runFactCheckMock }));
+const providersMock = vi.fn(() => [{ name: "wikipedia" }]);
+vi.mock("../lib/factcheck/evidenceProviders", () => ({
+  currentEvidenceProviders: () => providersMock(),
 }));
-vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 vi.mock("../lib/platform/failureLog", () => ({
   degradeSilently: vi.fn(),
   recordAiFailure: vi.fn(),
@@ -142,6 +143,24 @@ describe("ensureLoaded", () => {
 });
 
 describe("checkMessage", () => {
+  it("says there is no source here, and spends nothing, when the route is empty", async () => {
+    providersMock.mockReturnValueOnce([]);
+    messagesForMock.mockReturnValue([
+      messageRow("q0", "user", "check-0"),
+      messageRow("a0", "assistant", "check-0"),
+    ]);
+
+    await useFactcheckStore.getState().checkMessage("check-0", "a0");
+
+    expect(runFactCheckMock).not.toHaveBeenCalled();
+    expect(useFactcheckStore.getState().noticeByMessageId.a0).toEqual({
+      key: "chat:factcheck.noSourcesNotice",
+    });
+    expect(useFactcheckStore.getState().claimsByConversation.get("check-0")?.has("a0")).not.toBe(
+      true,
+    );
+  });
+
   it("resolves the round from the given conversation's session and lands claims in its layer", async () => {
     messagesForMock.mockReturnValue([
       messageRow("q1", "user", "check-1"),
@@ -225,5 +244,54 @@ describe("checkMessage", () => {
     messagesForMock.mockReturnValue([messageRow("q3", "user", "check-3")]);
     await useFactcheckStore.getState().checkMessage("check-3", "q3");
     expect(runFactCheckMock).not.toHaveBeenCalled();
+  });
+
+  it("runs one check per answer even when the button is pressed during an automatic run", async () => {
+    // The automatic run and the button both land here; a second pass would bill the same
+    // answer twice and race two writes into the same layer entry.
+    messagesForMock.mockReturnValue([
+      messageRow("q6", "user", "check-6"),
+      messageRow("a6", "assistant", "check-6"),
+    ]);
+    runFactCheckMock.mockImplementation(
+      async () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                claims: [],
+                usage: { inputTokens: 1, outputTokens: 1 },
+                failedProviders: [],
+              }),
+            10,
+          ),
+        ),
+    );
+
+    const store = useFactcheckStore.getState();
+    await Promise.all([store.checkMessage("check-6", "a6"), store.checkMessage("check-6", "a6")]);
+
+    expect(runFactCheckMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports the stage it has reached while running, and clears it when it ends", async () => {
+    // The waiting is shown as the work it is; a spinner alone reads as a stall.
+    messagesForMock.mockReturnValue([
+      messageRow("q7", "user", "check-7"),
+      messageRow("a7", "assistant", "check-7"),
+    ]);
+    const seen: string[] = [];
+    runFactCheckMock.mockImplementation(async (deps: { onStage?: (stage: string) => void }) => {
+      for (const stage of ["extracting", "gathering", "judging"]) {
+        deps.onStage?.(stage);
+        seen.push(useFactcheckStore.getState().stageByMessageId.a7 ?? "");
+      }
+      return { claims: [], usage: { inputTokens: 1, outputTokens: 1 }, failedProviders: [] };
+    });
+
+    await useFactcheckStore.getState().checkMessage("check-7", "a7");
+
+    expect(seen).toEqual(["extracting", "gathering", "judging"]);
+    expect(useFactcheckStore.getState().stageByMessageId.a7).toBeUndefined();
   });
 });

@@ -48,7 +48,7 @@
   },
   "mainland": {
     "title": "Rede da China continental",
-    "hint": "A verificação de fatos usa apenas fontes acessíveis da China continental (Bing); desligada, prefere a Wikipédia."
+    "hint": "A verificação de fatos usa apenas fontes acessíveis da China continental (Bing, mais a busca da Zhipu quando ligada); desligada, prefere a Wikidata e a Wikipédia."
   },
   "language": {
     "title": "Idioma",
@@ -132,7 +132,20 @@
       },
       "factcheck": {
         "name": "🔍 Verificação de fatos",
-        "hint": "Toque em «Verificar isto» sob uma resposta e a IA procura as afirmações em fontes públicas."
+        "hint": "As afirmações de fato de uma resposta da IA são procuradas em fontes públicas, e o trecho encontrado fica logo abaixo da resposta."
+      },
+      "factcheckAuto": {
+        "name": "Conferir automaticamente as respostas do Modo estudo",
+        "hint": "Enquanto isto estiver ligado, cada resposta do Modo estudo é conferida sozinha, sem você pedir. Com um serviço de IA gratuito isso não custa nada a mais; com um serviço cobrado por uso, cada rodada gasta o valor acima. Desligando, a conferência só roda quando você toca em “Verificar isto”."
+      },
+      "factcheckWebSearch": {
+        "name": "🌐 Busca na web aberta para evidências (Zhipu)",
+        "price": "cerca de ¥{{price}} por consulta",
+        "hint": "Enquanto está ligado, além da Wikidata e da Wikipédia, o serviço de busca da Zhipu é acionado para encontrar fontes na web aberta: coisas que uma enciclopédia nunca escreveu. Cobrado por consulta na sua conta Zhipu, separado do serviço de IA acima; na edição para navegador em uma rede da China continental é a única fonte alcançável. Só chinês, inglês e suaíli: outros idiomas deram resultados pouco confiáveis nos testes e nunca seguem este caminho.",
+        "disclosure": "Com isto ligado, as afirmações extraídas da sua pergunta são enviadas a um mecanismo de busca. É um lugar novo para onde suas palavras vão.",
+        "keyLabel": "Chave de API do serviço de busca da Zhipu",
+        "keyPlaceholder": "Obtenha em open.bigmodel.cn e cole aqui",
+        "noKey": "Ainda sem chave, então por enquanto isto não faz nada."
       },
       "knowledgeEdges": {
         "name": "🕸️ Ligações do conhecimento",

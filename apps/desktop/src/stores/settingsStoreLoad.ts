@@ -39,6 +39,7 @@ import {
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
+  WEB_SEARCH_KEY_KEY,
 } from "../lib/platform/settingsSchema";
 import { nowIso } from "../lib/platform/time";
 import type { SettingsState } from "./settingsStore";
@@ -56,6 +57,7 @@ export type SettingsSnapshot = Pick<
   | "pageGuidesSeen"
   | "featureSwitches"
   | "mainlandNetwork"
+  | "webSearchApiKey"
   | "learningMode"
   | "routeParams"
   | "compareCategory"
@@ -76,6 +78,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     storedPageGuidesSeen,
     featureSwitches,
     mainlandNetwork,
+    storedWebSearchApiKey,
     learningMode,
     routeParams,
     compareCategory,
@@ -91,6 +94,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     repos.settings.get<unknown>(PAGE_GUIDES_SEEN_KEY),
     repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
     repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
+    repos.settings.get<string>(WEB_SEARCH_KEY_KEY),
     repos.settings.get<LearningMode>(LEARNING_MODE_KEY),
     repos.settings.get<RouteParams>(ROUTE_PARAMS_KEY),
     repos.settings.get<CompareCategory>(COMPARE_CATEGORY_KEY),
@@ -109,6 +113,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     pageGuidesSeen: parsePageGuidesSeen(storedPageGuidesSeen),
     featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
     mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
+    webSearchApiKey: typeof storedWebSearchApiKey === "string" ? storedWebSearchApiKey : "",
     learningMode: learningMode ?? "casual",
     // Sanitised here as well as where it is used: an unreadable row would otherwise reach the
     // sliders and show a value the planner is not actually using.

@@ -43,10 +43,15 @@ export interface PriceOverride {
 export interface FeatureSwitches {
   knowledgeTree: boolean;
   factcheck: boolean;
+  /** Whether a 学习模式 answer is checked unasked: one check per round — free on a free
+   * tier, real money on a metered key. */
+  factcheckAuto: boolean;
+  /** Open-web evidence (Zhipu search): per-call cost + a new outbound, so off by default. */
+  factcheckWebSearch: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
-  /** Goal planning: mapping a free-text goal into a knowledge-node set — one
-   * LLM call per goal creation. Replaced the retired labPanel switch. */
+  /** Goal planning: mapping a free-text goal into a knowledge-node set — one LLM call per
+   * goal creation. Replaced the retired labPanel switch. */
   goalPlanning: boolean;
   /** Experimental: search-build a comparison profile on demand. */
   compareProfileBuild: boolean;
@@ -59,14 +64,12 @@ export interface FeatureSwitches {
   /** The 🪞 feedback-lab full-page view: candidate forms for "making learning
    * visible", all computed from existing local data. */
   feedbackLab: boolean;
-  /** The 🔬 research task platform: runs vetted, project-signed research tasks
-   * locally and shows the aggregate results. Default on, no reminder —
-   * computation stays on-device and the real consent point is the (not-yet-built) upload
-   * step; turning it off shows a one-time plain explanation, then never asks again. */
+  /** The 🔬 research task platform: runs vetted, project-signed research tasks locally and
+   * shows the aggregate results. Default on, no reminder — computation stays on-device and
+   * the real consent point is the (not-yet-built) upload step. */
   researchTasks: boolean;
-  /** Companion cast: opening/continuing a chat with one of the three companion
-   * cards. Off hides the sidebar's 伙伴 section entirely and blocks sending in an open
-   * companion conversation. */
+  /** Companion cast: opening/continuing a chat with one of the three companion cards. Off
+   * hides the sidebar's 伙伴 section and blocks sending in an open companion conversation. */
   companionChat: boolean;
   /** Companion cast: writes/retrieves the per-companion memory stream (importance scoring +
    * periodic reflection). Off means companions still chat, just without long-term memory. */
@@ -74,13 +77,11 @@ export interface FeatureSwitches {
   /** Companion cast: generates the teach-back script (expectations/misconceptions/gaps) and
    * runs Reflect-Respond each round. Off falls back to the generic teach prompt. */
   companionScript: boolean;
-  /** Focus mode: a picked word's full-screen explain session — each station's
-   * streamed answer. Off leaves the rest of focus mode (entry, subway map, exit record)
-   * working, just with no way to generate a new station's content. */
+  /** Focus mode: a picked word's full-screen explain session — each station's streamed
+   * answer. Off leaves the rest of focus mode working, with no way to generate a station. */
   focusExplain: boolean;
-  /** Term marking: one small call after a reply/focus answer lands, picking which
-   * words would trip up this learner — the primary source of explore doors. Off leaves doors
-   * to the zero-LLM legacy node-matching source only. */
+  /** Term marking: one small call after a reply/focus answer lands, picking which words would
+   * trip up this learner — the primary source of explore doors. Off = legacy matching only. */
   termMarking: boolean;
   /** Daily trail summary: on the first launch of a day, one small call turns yesterday's
    * footprints into a single plain sentence for the 「这段时间」 panel. At most one call a
@@ -101,19 +102,19 @@ export type LearningMode = "ranked" | "casual";
 export type RouteParams = RecommendRouteParams;
 
 export const API_CONFIG_KEY = "apiConfig";
-/** Whether the saved credentials have ever answered a real request. Set by the settings
- * page's 测试连接 button and cleared whenever the credentials are saved again, so it can
- * only ever describe the configuration that is currently in the box. A boolean and nothing
- * else — the key itself is never copied out of API_CONFIG_KEY. */
+/** Whether the saved credentials have ever answered a real request. Set by the settings page's
+ * 测试连接 button and cleared whenever the credentials are saved again, so it only ever
+ * describes what is in the box now. A boolean — the key is never copied out of API_CONFIG_KEY. */
 export const API_CONNECTION_OK_KEY = "apiConnectionOk";
 export const NETWORK_ENABLED_KEY = "networkEnabled";
+/** Zhipu search key for the open-web evidence layer — its own row, not part of API_CONFIG_KEY. */
+export const WEB_SEARCH_KEY_KEY = "webSearchApiKey";
 /** Set once the first-run guide has been finished or skipped, so it never reappears. */
 export const ONBOARDING_SEEN_KEY = "onboardingSeen";
 /** Separate from ONBOARDING_SEEN_KEY: the checklist is meant to outlive the tour and survive
  * restarts, so "has seen the introduction" and "is done with the checklist" are two answers. */
 export const CHECKLIST_DISMISSED_KEY = "onboardingChecklistDismissed";
-/** Which pages have already shown their own short guide — one object, not one row per page,
- * because they are read together on every launch and written one at a time. */
+/** Which pages have already shown their own short guide — one object, not one row per page. */
 export const PAGE_GUIDES_SEEN_KEY = "onboardingPageGuidesSeen";
 export const FEATURE_SWITCHES_KEY = "featureSwitches";
 export const MAINLAND_NETWORK_KEY = "mainlandNetwork";
@@ -126,13 +127,16 @@ export const RECOMMENDATION_WEIGHTS_KEY = "recommendationWeights";
 /** Neutral starting point: no lean toward steady or fast, no lean toward interest — the
  * learner tunes from the middle. */
 export const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.5 };
-/** Metered features default ON: metering exists so features can run boldly — every
- * switch and its real spend live on the 开关与计价 page, and silent signal collection is
- * a core product value. feedbackLab costs zero tokens and only ever
- * shows plain facts — exactly the "make learning visible" surface the product is for. */
+/** Metered features default ON: metering exists so features can run boldly — every switch
+ * and its real spend live on the 开关与计价 page, and silent signal collection is a core
+ * product value. feedbackLab costs zero tokens and only ever shows plain facts. */
 export const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
   factcheck: true,
+  // On, like every metered feature: a check nobody asks for is a check nobody gets.
+  factcheckAuto: true,
+  // Off, the one exception: per-call money AND a new outbound — the learner's call to make.
+  factcheckWebSearch: false,
   knowledgeEdges: true,
   interest: true,
   goalPlanning: true,
