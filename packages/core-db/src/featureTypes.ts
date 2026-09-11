@@ -36,9 +36,14 @@ export interface FactcheckClaimRow {
   id: string;
   run_id: string;
   claim_text: string;
-  /** "supported" | "contradicted" | "insufficient" — kept TEXT for forward compatibility. */
+  /** "supported" | "contradicted" | "insufficient" | "unavailable" | "unanchored" — kept TEXT
+   * for forward compatibility. */
   relationship: string;
   reasoning: string;
+  /** The decisive sentence, copied verbatim out of one of the sources; "" when no verdict of
+   * the judge's stands. Shown under the claim so the source's own words are in front of the
+   * reader instead of behind a link. */
+  quote: string;
   evidence_json: string;
   created_at: string;
 }

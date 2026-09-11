@@ -18,10 +18,12 @@ function event(ts: number, vid: string, etype: string, classifier = "ngram"): un
 }
 
 describe("migration 0054_browsing_events", () => {
-  it("is in the list exactly once and is the last entry", () => {
+  it("is in the list exactly once, and the list is still append-only", () => {
     const ids = MIGRATIONS.map((migration) => migration.id);
     expect(ids.filter((id) => id === "0054_browsing_events")).toHaveLength(1);
-    expect(ids.at(-1)).toBe("0054_browsing_events");
+    // Migrations run in list order and are recorded by id, so a new one inserted anywhere but
+    // the end would be skipped on every database that has already migrated past it.
+    expect([...ids].sort()).toEqual(ids);
   });
 
   it("creates both tables and all four indices on a real database", async () => {

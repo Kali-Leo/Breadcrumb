@@ -9,6 +9,7 @@ export {
   gateVerdict,
   quoteIsGrounded,
 } from "./anchorGate";
+export { mapWithConcurrency } from "./concurrency";
 export { type BingProviderOptions, createBingProvider } from "./evidence/bing";
 export {
   createDefaultEvidenceProviders,
@@ -38,8 +39,10 @@ export {
 export { type GatheredEvidence, gatherEvidence } from "./gathering";
 export {
   type CheckedClaim,
+  DEFAULT_JUDGE_CONCURRENCY,
   type FactCheckDeps,
   type FactCheckReport,
+  type FactCheckStage,
   runFactCheck,
 } from "./pipeline";
 export { seededShuffle } from "./shuffle";

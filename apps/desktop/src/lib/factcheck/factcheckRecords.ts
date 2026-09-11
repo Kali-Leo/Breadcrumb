@@ -15,6 +15,9 @@ export interface DisplayClaim {
   text: string;
   relationship: string;
   reasoning: string;
+  /** The source's own decisive sentence, already checked verbatim against the evidence; "" when
+   * no verdict of the judge's stands. */
+  quote: string;
   evidence: EvidenceItem[];
 }
 
@@ -34,6 +37,9 @@ function rowToDisplayClaim(row: FactcheckClaimRow): DisplayClaim {
     text: row.claim_text,
     relationship: row.relationship,
     reasoning: row.reasoning,
+    // Rows written before the column existed read back as "" — the display simply has no
+    // source sentence to show for them, which is exactly what was stored.
+    quote: row.quote ?? "",
     // A row we cannot read the evidence of still carries a usable verdict; show it without
     // links rather than dropping the claim.
     evidence: parsed ?? [],
@@ -99,6 +105,7 @@ export async function persistRun(
     claim_text: claim.text,
     relationship: claim.relationship,
     reasoning: claim.reasoning,
+    quote: claim.quote,
     evidence_json: JSON.stringify(claim.evidence),
     created_at: createdAt,
   }));

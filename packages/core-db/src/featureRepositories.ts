@@ -75,14 +75,15 @@ export function createFactcheckRepo(sql: SqlClient) {
         },
         ...claims.map((claim) => ({
           sql: `INSERT INTO factcheck_claims
-             (id, run_id, claim_text, relationship, reasoning, evidence_json, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             (id, run_id, claim_text, relationship, reasoning, quote, evidence_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           params: [
             claim.id,
             claim.run_id,
             claim.claim_text,
             claim.relationship,
             claim.reasoning,
+            claim.quote,
             claim.evidence_json,
             claim.created_at,
           ],

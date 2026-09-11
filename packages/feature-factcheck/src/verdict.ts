@@ -18,11 +18,14 @@ export const VERDICT_RELATIONSHIPS = ["supported", "contradicted", "insufficient
 export type VerdictRelationship = (typeof VERDICT_RELATIONSHIPS)[number];
 
 /**
- * What a checked claim can end up as. `unavailable` never comes from the judge — the pipeline
- * assigns it when evidence retrieval itself failed, so that "我这次没查成" is never rendered
- * as "公开资料里没有".
+ * What a checked claim can end up as. Two of these never come from the judge, and both exist so
+ * that a failure of ours is never shown as a fact about the world:
+ *  - `unavailable` — evidence retrieval itself failed, so "我这次没查成" is never rendered as
+ *    "公开资料里没有".
+ *  - `unanchored` — the judge decided, but the anchor gate could not find its quote in the
+ *    sources, so "资料里找不到能直接对上的原句" is never rendered as "这次没查成".
  */
-export type ClaimRelationship = VerdictRelationship | "unavailable";
+export type ClaimRelationship = VerdictRelationship | "unavailable" | "unanchored";
 
 /** The reasoning sentence is rendered under the claim in the chat, so it goes to the learner
  * in the learner's language: the prompt states how long, never which language. */

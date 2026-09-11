@@ -18,3 +18,12 @@ overrides:
   "@xmldom/xmldom": ">=0.8.15"   # GHSA-6gmq-8vp8-gcm6
   sharp: ">=0.35.0"              # GHSA-f88m-g3jw-g9cj
   adm-zip: ">=0.6.0"             # GHSA-xcpc-8h2w-3j85
+# One advisory is acknowledged rather than fixed, because it cannot be fixed today and cannot
+# reach anyone. GHSA-vwc7-r8mq-g2x9 is adm-zip <=0.6.0 and names 0.6.1 as the patched release;
+# 0.6.0 is the newest version published, so there is nothing to upgrade to. adm-zip reaches the
+# tree only under onnxruntime-node, which no edition installs or ships: the browser build runs
+# onnxruntime-web and the desktop build embeds in Rust. Nothing in either bundle can call it.
+# Drop this the day 0.6.1 exists — `npm view adm-zip versions` is the whole check.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-vwc7-r8mq-g2x9

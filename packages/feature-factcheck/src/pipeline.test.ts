@@ -204,9 +204,12 @@ describe("runFactCheck", () => {
     );
 
     expect(report.claims[0]?.reasoning).toBe("资料显示数值一致。");
+    // The decisive sentence travels with the verdict — the app puts it in front of the reader
+    // rather than offering a link they would have to leave to follow.
+    expect(report.claims[0]?.quote).toBe(GROUNDED_QUOTE);
   });
 
-  it("downgrades a verdict whose quote is not in the evidence, and drops its sentence", async () => {
+  it("marks a verdict whose quote is not in the evidence unanchored, and drops its sentence", async () => {
     // The failure this gate exists for: the judge writes "资料显示…" about a sentence no source
     // contains. Nothing about the reply is malformed, so only a substring check can catch it.
     const fetchImpl = createLlmFetch(
@@ -224,13 +227,16 @@ describe("runFactCheck", () => {
       "答",
     );
 
-    expect(report.claims[0]?.relationship).toBe("insufficient");
+    // Not plain "insufficient": "资料里找不到能直接对上的原句" is a different thing to be told
+    // than "这次没查成", and the app writes a different sentence for each.
+    expect(report.claims[0]?.relationship).toBe("unanchored");
     // The sentence described a verdict that no longer stands, so the app writes the neutral one.
     expect(report.claims[0]?.reasoning).toBe("");
+    expect(report.claims[0]?.quote).toBe("");
     expect(report.claims[0]?.evidence).toEqual([EVIDENCE_ITEM]);
   });
 
-  it("downgrades a decided verdict that copied no quote at all", async () => {
+  it("marks a decided verdict that copied no quote at all unanchored", async () => {
     const fetchImpl = createLlmFetch(
       { claims: [{ text: "某条声明", queries: ["查询"] }] },
       { reasoning: "资料显示一致。", relationship: "contradicted", supportingEvidence: [1] },
@@ -241,7 +247,7 @@ describe("runFactCheck", () => {
       "答",
     );
 
-    expect(report.claims[0]?.relationship).toBe("insufficient");
+    expect(report.claims[0]?.relationship).toBe("unanchored");
     expect(report.claims[0]?.reasoning).toBe("");
   });
 
