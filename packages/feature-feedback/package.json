@@ -16,7 +16,7 @@
     "@breadcrumb/core-time": "workspace:*",
     "@breadcrumb/feature-diglot-weave": "workspace:*",
     "@breadcrumb/feature-memory": "workspace:*",
-    "ts-fsrs": "^5.2.1"
+    "ts-fsrs": "^5.4.2"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
