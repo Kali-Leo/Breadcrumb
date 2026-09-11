@@ -81,6 +81,7 @@ function claimRow(runId: string, text: string): FactcheckClaimRow {
     claim_text: text,
     relationship: "supported",
     reasoning: "reason",
+    quote: "",
     evidence_json: "[]",
     created_at: "t",
   };
