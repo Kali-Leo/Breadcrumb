@@ -13,7 +13,7 @@
   "dependencies": {
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/feature-knowledge-tree": "workspace:*",
-    "zod": "^4.1.0"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

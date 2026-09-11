@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
-    "ts-fsrs": "^5.2.1"
+    "ts-fsrs": "^5.4.2"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

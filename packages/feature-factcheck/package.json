@@ -14,7 +14,7 @@
     "@breadcrumb/core-llm": "workspace:*",
     "@breadcrumb/core-random": "workspace:*",
     "cheerio": "^1.0.0",
-    "zod": "^4.1.0"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
