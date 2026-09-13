@@ -17,7 +17,7 @@ const insertNodeMock = vi.fn();
 vi.mock("../lib/platform/db", () => ({
   getRepos: vi.fn(async () => ({
     knowledgeNodes: { listAll: listAllNodesMock, insert: insertNodeMock },
-    nodeEmbeddings: { listAll: listAllEmbeddingsMock },
+    nodeEmbeddings: { listAllForModel: listAllEmbeddingsMock },
     knowledgeEdges: { listAll: listAllEdgesMock, upsert: upsertEdgeMock },
   })),
 }));

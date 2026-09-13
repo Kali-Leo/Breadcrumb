@@ -89,6 +89,7 @@ export function ShellSidebar(props: SidebarProps) {
         onOpenMap={closing(props.onOpenMap)}
         onOpenVocab={closing(props.onOpenVocab)}
         onOpenDiscovery={closing(props.onOpenDiscovery)}
+        onOpenLibrary={closing(props.onOpenLibrary)}
         onToggleCompanions={closing(props.onToggleCompanions)}
         drawerOpen={drawerOpen}
         onCloseDrawer={close}

@@ -5,9 +5,11 @@
  * the focus station the guess was asked under, not a sibling sighting.
  * Main exports: gradeFocusGuess, recordMatchedGuess, FocusGuessResult.
  */
+
 import type { FocusNodeRow, NodeSightingGrade } from "@breadcrumb/core-db";
 import { parseVectorColumn } from "@breadcrumb/core-db";
 import type { CopyMessage } from "@breadcrumb/core-i18n";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import {
   type ConceptGuessGrade,
   conceptDirectRevealMessage,
@@ -55,7 +57,7 @@ export async function gradeFocusGuess(input: {
     const repos = await getRepos();
     const [guessVectors, embeddingRow] = await Promise.all([
       embedTexts([input.guess]),
-      repos.nodeEmbeddings.getByNode(input.nodeId),
+      repos.nodeEmbeddings.getByNode(input.nodeId, EMBEDDING_MODEL),
     ]);
     const guessVector = guessVectors?.[0] ?? null;
     if (guessVector === null || embeddingRow === null) {

@@ -1,28 +1,35 @@
 /**
  * Purpose: what the browser edition answers when the app asks for local text embeddings —
- * the same multilingual-e5-small the desktop build runs through Rust, here as its q8 ONNX
- * export running in a Web Worker (embedding/embeddingWorker.ts) on ORT-wasm. This module is the
- * page's end of that worker; the desktop bridge (apps/desktop/src/lib/platform/embeddings.ts)
- * calls it through the aliased `invoke("embed_texts")` and never knows the difference.
+ * the same gte-multilingual-base the desktop build runs through Rust, from the same ONNX
+ * files, running in a Web Worker (embedding/embeddingWorker.ts). This module is the page's end
+ * of that worker; the desktop bridge (apps/desktop/src/lib/platform/embeddings.ts) calls it
+ * through the aliased `invoke("embed_texts")` and never knows the difference.
  *
- * The model is 113 MB, downloaded once on first use (network switch permitting) into the
- * Cache API and loaded from there ever after. There is no prompt and no progress bar — the
- * desktop build has none either — and every failure surfaces as a rejection that lands on
- * the same degradation paths a failed native call already takes.
+ * Unlike the model this replaced, the two editions now run the identical graph at the
+ * identical width, so a library built on one is comparable to a library built on the other and
+ * there is no per-edition model name any more — see @breadcrumb/core-vectors EMBEDDING_MODEL.
  *
- * Main exports: BROWSER_EMBEDDING_MODEL, embedTextsInBrowser, isEmbeddingModelLoaded.
+ * The download is 340 MB on the WebAssembly path, fetched once on first use (network switch
+ * permitting) into the Cache API and loaded from there ever after. Every failure surfaces as a
+ * rejection that lands on the same degradation paths a failed native call already takes.
+ *
+ * Main exports: embedTextsInBrowser, isEmbeddingModelLoaded, embeddingSpeed.
  */
-import { createEmbeddingLink, type EmbeddingLink } from "./embedding/workerLink";
-
-/** What this edition's rows in node_embeddings are stamped with. The desktop build writes
- * "multilingual-e5-small" for its full-precision vectors; the suffix lets an exported library
- * say which precision made each row. Mirrored in the desktop bridge's EMBEDDING_MODEL. */
-export const BROWSER_EMBEDDING_MODEL = "multilingual-e5-small-q8";
+import {
+  createEmbeddingLink,
+  type EmbeddingLink,
+  type EmbeddingSpeed,
+} from "./embedding/workerLink";
 
 let link: EmbeddingLink | null = null;
 
 export function isEmbeddingModelLoaded(): boolean {
   return link?.loaded ?? false;
+}
+
+/** How the last successful batch actually went. Null before one has. */
+export function embeddingSpeed(): EmbeddingSpeed | null {
+  return link?.speed ?? null;
 }
 
 /**

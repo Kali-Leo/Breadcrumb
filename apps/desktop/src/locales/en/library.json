@@ -1,0 +1,27 @@
+{
+  "title": "My material",
+  "intro": "Put the material you already have in here, and the questions you ask later will look for answers here first. Only add what you are allowed to use: e-books you bought, course handouts, library loans, books in the public domain, open textbooks.",
+  "import": "Import a file",
+  "importing": "Reading…",
+  "formats": "PDF, Markdown and plain text",
+  "empty": "Nothing here yet.",
+  "remove": "Remove",
+  "progress": {
+    "building": "Building the semantic index for {{embedded}} / {{total}} passages",
+    "ready": "The index is built",
+    "usable": "Keyword search already works; results get better once the semantic index is finished."
+  },
+  "speed": {
+    "ipad": "Update your system to iPadOS 26 and this step gets much faster.",
+    "linux": "Open this page in Firefox and this step gets much faster.",
+    "desktop": "Open it in a recent Chrome, Edge, Safari or Firefox and this step gets much faster."
+  },
+  "error": {
+    "unreadable": "No text could be read out of this file. If it is a scan, it needs text recognition (OCR) first."
+  },
+  "search": {
+    "placeholder": "Search my material",
+    "action": "Find",
+    "empty": "Nothing found."
+  }
+}

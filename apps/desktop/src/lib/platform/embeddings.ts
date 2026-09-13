@@ -7,18 +7,13 @@
  * Main exports: embedTexts, embedNodes, backfillMissingEmbeddings.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import { invoke } from "@tauri-apps/api/core";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { getRepos } from "./db";
-import { isBrowserEdition } from "./edition";
 import { degradeSilently } from "./failureLog";
 import { nowIso } from "./time";
 
-/** What each row in node_embeddings is stamped with. The browser edition runs the same model
- * quantised to q8 (apps/web/src/shims/embeddings.ts, BROWSER_EMBEDDING_MODEL), whose vectors
- * agree with these only to a cosine of ~0.995; the suffix lets an exported library say which
- * precision made each row instead of mixing the two under one name. */
-const EMBEDDING_MODEL = isBrowserEdition() ? "multilingual-e5-small-q8" : "multilingual-e5-small";
 /** Mirrors MAX_TEXTS_PER_CALL in src-tauri/src/embeddings.rs. One oversized call is refused
  * whole, so the bridge slices here and every caller stays batch-safe. */
 const MAX_TEXTS_PER_CALL = 512;
@@ -70,10 +65,11 @@ export async function embedNodes(nodes: readonly KnowledgeNodeRow[]): Promise<vo
   }
 }
 
-/** Startup catch-up: embeds every node that doesn't have a row in node_embeddings yet
- * (older nodes from before this feature landed, or nodes missed by a prior failure). */
+/** Startup catch-up: embeds every node whose vector this build cannot use — no row at all,
+ * or a row computed by a model we no longer run. The second case is what makes swapping the
+ * embedding model a thing that heals itself in the background rather than a manual purge. */
 export async function backfillMissingEmbeddings(): Promise<void> {
   const repos = await getRepos();
-  const missing = await repos.nodeEmbeddings.listNodesMissingEmbedding();
+  const missing = await repos.nodeEmbeddings.listNodesMissingEmbedding(EMBEDDING_MODEL);
   await embedNodes(missing);
 }

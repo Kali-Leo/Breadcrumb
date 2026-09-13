@@ -1,0 +1,27 @@
+{
+  "title": "Materi saya",
+  "intro": "Taruh di sini materi yang sudah kamu punya; nanti kalau kamu bertanya, jawabannya dicari di sini dulu. Tambahkan hanya yang boleh kamu pakai: e-book yang kamu beli, handout kuliah, pinjaman perpustakaan, buku domain publik, buku teks terbuka.",
+  "import": "Impor berkas",
+  "importing": "Sedang membaca…",
+  "formats": "PDF, Markdown, dan teks biasa",
+  "empty": "Belum ada materi di sini.",
+  "remove": "Hapus",
+  "progress": {
+    "building": "Menyusun indeks makna untuk {{embedded}} / {{total}} bagian",
+    "ready": "Indeks sudah selesai",
+    "usable": "Pencarian kata kunci sudah bisa dipakai; hasilnya makin bagus setelah indeks makna selesai."
+  },
+  "speed": {
+    "ipad": "Perbarui sistem ke iPadOS 26, langkah ini akan memakan waktu jauh lebih singkat.",
+    "linux": "Buka halaman ini di Firefox, langkah ini akan memakan waktu jauh lebih singkat.",
+    "desktop": "Buka di Chrome, Edge, Safari, atau Firefox versi baru, langkah ini akan memakan waktu jauh lebih singkat."
+  },
+  "error": {
+    "unreadable": "Tidak ada teks yang bisa dibaca dari berkas ini. Kalau ini hasil pindaian, teksnya perlu dikenali dulu (OCR)."
+  },
+  "search": {
+    "placeholder": "Cari di materi saya",
+    "action": "Cari",
+    "empty": "Tidak ada yang ditemukan."
+  }
+}

@@ -7,6 +7,7 @@
  * this stage has no mode input yet, it just always asks for adjacent-concept proposals.
  * Main exports: runEdgeJudgeStage, EdgeJudgeStageResult.
  */
+
 import { randomUUID } from "node:crypto";
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
@@ -22,6 +23,7 @@ import {
   type RejectedCyclicEdge,
   rankCandidatePairs,
 } from "@breadcrumb/feature-graph";
+import { SYNTHETIC_EMBEDDING_MODEL } from "../embedding/syntheticEmbedding";
 import { describeError, type PipelineFailure, type RoundPipelineInput } from "./pipelineTypes";
 
 export interface EdgeJudgeStageResult {
@@ -55,7 +57,7 @@ export async function runEdgeJudgeStage(
   try {
     const [allNodes, embeddings, existingEdges] = await Promise.all([
       repos.knowledgeNodes.listAll(),
-      repos.nodeEmbeddings.listAll(),
+      repos.nodeEmbeddings.listAllForModel(SYNTHETIC_EMBEDDING_MODEL),
       repos.knowledgeEdges.listAll(),
     ]);
     const ranked = rankCandidatePairs(embeddings, newNodeIds, DEFAULT_TOP_K_SIMILAR);

@@ -5,7 +5,9 @@
  * upsert ON CONFLICT), and the final duplicate-row + embedding deletion — all against a real
  * better-sqlite3 database instead of the fakes core-db's own tests use.
  */
+
 import { afterEach, describe, expect, it } from "vitest";
+import { SYNTHETIC_EMBEDDING_MODEL } from "../embedding/syntheticEmbedding";
 import { createTempDatabase, type TempDatabase } from "./sqliteClient";
 
 const now = "2026-08-04T10:00:00.000Z";
@@ -106,7 +108,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
     await insertNode(temp, "child", "红富士", "2026-08-01T11:00:00Z", "duplicate");
     await temp.repos.nodeEmbeddings.upsert({
       node_id: "duplicate",
-      model: "test",
+      model: SYNTHETIC_EMBEDDING_MODEL,
       vector_json: "[1,0]",
       created_at: now,
     });
@@ -118,7 +120,7 @@ describe("createNodeMergeRepo.mergeNode (real sqlite)", () => {
     const child = nodes.find((node) => node.id === "child");
     expect(child?.parent_id).toBe("canonical");
 
-    const embeddings = await temp.repos.nodeEmbeddings.listAll();
+    const embeddings = await temp.repos.nodeEmbeddings.listAllForModel(SYNTHETIC_EMBEDDING_MODEL);
     expect(embeddings.find((row) => row.node_id === "duplicate")).toBeUndefined();
   });
 

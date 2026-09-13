@@ -8,7 +8,9 @@
  * ai_failures row and never blocks startup.
  * Main exports: runDedupSweep.
  */
+
 import { chatJson } from "@breadcrumb/core-llm";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import {
   buildSynonymJudgeMessages,
   findSuspectSynonymPairs,
@@ -104,7 +106,7 @@ async function planLlmTierMerges(apiConfig: ApiConfig) {
   const repos = await getRepos();
   const [nodes, embeddings, aliases, cachedVerdicts] = await Promise.all([
     repos.knowledgeNodes.listAll(),
-    repos.nodeEmbeddings.listAll(),
+    repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL),
     repos.nodeAliases.listAll(),
     repos.nodePairVerdicts.listAll(),
   ]);

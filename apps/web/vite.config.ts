@@ -34,8 +34,15 @@ function dropDuplicateOrtWasm(): Plugin {
 /**
  * The browser edition builds the desktop application's source directly. The only difference
  * between the two is which module answers when the app asks for SQLite, a Rust command, an
- * HTTP request or a link — so those four are aliased to browser implementations and nothing
- * else is duplicated. A feature added to the desktop app is in this build the same day.
+ * HTTP request, a link, a file dialog or a file — so those six are aliased to browser
+ * implementations and nothing else is duplicated. A feature added to the desktop app is in
+ * this build the same day.
+ *
+ * The last two are aliased even though the browser edition never calls them: the library
+ * import asks which edition it is on and uses a file input here. A bundler follows a dynamic
+ * import whether or not the branch is taken, so without the alias the real Tauri plugins —
+ * and Tauri's own runtime behind them — are pulled into a build with no Tauri underneath it,
+ * where they fail to link at all.
  */
 export default defineConfig({
   base,
@@ -46,6 +53,8 @@ export default defineConfig({
       { find: "@tauri-apps/api/core", replacement: shim("tauri-core.ts") },
       { find: "@tauri-apps/plugin-http", replacement: shim("tauri-http.ts") },
       { find: "@tauri-apps/plugin-opener", replacement: shim("tauri-opener.ts") },
+      { find: "@tauri-apps/plugin-dialog", replacement: shim("tauri-dialog.ts") },
+      { find: "@tauri-apps/plugin-fs", replacement: shim("tauri-fs.ts") },
       { find: "@desktop", replacement: desktopSrc },
     ],
   },

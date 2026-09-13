@@ -1,0 +1,27 @@
+{
+  "title": "Nyenzo zangu",
+  "intro": "Weka hapa nyenzo ulizo nazo; ukiuliza swali baadaye, jibu litatafutwa hapa kwanza. Ongeza tu vile ulivyo na ruhusa ya kuvitumia: vitabu pepe ulivyonunua, nakala za mihadhara, vitabu ulivyoazima maktaba, vitabu vya milki ya umma, vitabu vya kiada huria.",
+  "import": "Ingiza faili",
+  "importing": "Inasoma…",
+  "formats": "PDF, Markdown na maandishi sahili",
+  "empty": "Bado hakuna nyenzo hapa.",
+  "remove": "Ondoa",
+  "progress": {
+    "building": "Inajenga faharasa ya maana kwa sehemu {{embedded}} / {{total}}",
+    "ready": "Faharasa imekamilika",
+    "usable": "Kutafuta kwa maneno tayari kunafanya kazi; matokeo yataboreka pale faharasa ya maana itakapokamilika."
+  },
+  "speed": {
+    "ipad": "Sasisha mfumo hadi iPadOS 26, hatua hii itakuwa haraka zaidi.",
+    "linux": "Fungua ukurasa huu katika Firefox, hatua hii itakuwa haraka zaidi.",
+    "desktop": "Fungua katika toleo jipya la Chrome, Edge, Safari au Firefox, hatua hii itakuwa haraka zaidi."
+  },
+  "error": {
+    "unreadable": "Hakuna maandishi yaliyopatikana katika faili hili. Ikiwa ni picha iliyochanganuliwa, maandishi yake yanahitaji kutambuliwa kwanza (OCR)."
+  },
+  "search": {
+    "placeholder": "Tafuta katika nyenzo zangu",
+    "action": "Tafuta",
+    "empty": "Hakuna kilichopatikana."
+  }
+}

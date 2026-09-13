@@ -9,8 +9,10 @@
  * hand over 40 pairs — sending them all at once made the model silently truncate.
  * Main exports: useEdgeStore.
  */
+
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import { chunkPairs } from "@breadcrumb/feature-compare";
 import {
   buildEdgeJudgeMessages,
@@ -84,7 +86,7 @@ async function extractEdgesFromFinishedRound(
     const repos = await getRepos();
     const [allNodes, embeddings, existingEdges] = await Promise.all([
       repos.knowledgeNodes.listAll(),
-      repos.nodeEmbeddings.listAll(),
+      repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL),
       repos.knowledgeEdges.listAll(),
     ]);
 

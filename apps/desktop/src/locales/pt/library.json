@@ -1,0 +1,27 @@
+{
+  "title": "Meus materiais",
+  "intro": "Coloque aqui o material que você já tem; quando perguntar alguma coisa, a resposta será procurada primeiro aqui. Adicione só o que você tem permissão de usar: e-books que comprou, apostilas do curso, empréstimos da biblioteca, livros em domínio público, livros didáticos abertos.",
+  "import": "Importar arquivo",
+  "importing": "Lendo…",
+  "formats": "PDF, Markdown e texto simples",
+  "empty": "Ainda não há nada aqui.",
+  "remove": "Remover",
+  "progress": {
+    "building": "Montando o índice semântico de {{embedded}} / {{total}} trechos",
+    "ready": "O índice já está pronto",
+    "usable": "A busca por palavras já funciona; quando o índice semântico terminar, os resultados ficam melhores."
+  },
+  "speed": {
+    "ipad": "Atualize o sistema para o iPadOS 26 e esta etapa fica bem mais rápida.",
+    "linux": "Abra esta página no Firefox e esta etapa fica bem mais rápida.",
+    "desktop": "Abra em uma versão recente do Chrome, Edge, Safari ou Firefox e esta etapa fica bem mais rápida."
+  },
+  "error": {
+    "unreadable": "Não foi possível extrair texto deste arquivo. Se ele for um escaneamento, primeiro é preciso passar um reconhecimento de texto (OCR)."
+  },
+  "search": {
+    "placeholder": "Buscar nos meus materiais",
+    "action": "Buscar",
+    "empty": "Nada encontrado."
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
+  "description": "Capability for the main window. Filesystem access exists for one feature: importing a PDF, .txt or .md the person already owns. Granted: dialog:allow-open (the file picker) and fs:allow-read-file, the latter scoped to $DOCUMENT/**, $DOWNLOAD/** and $DESKTOP/** — where a bought e-book or a lecture handout actually sits. Withheld deliberately: every write, create, copy, rename and remove command; every directory-listing command (read-dir/exists/stat), which would let the renderer enumerate someone's files without them picking any; dialog:allow-save; and $HOME/**, which would put dotfiles, keys and browser profiles in reach of a read this feature never needs.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -19,6 +19,11 @@
         { "url": "http://localhost:*/*" },
         { "url": "http://[\\:\\:1]:*/*" }
       ]
+    },
+    "dialog:allow-open",
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }, { "path": "$DESKTOP/**" }]
     }
   ]
 }

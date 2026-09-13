@@ -41,6 +41,12 @@ function ProContentCard({ item, finished }: { item: ProContentItem; finished: bo
           src={cover}
           alt=""
           referrerPolicy="no-referrer"
+          // Fetched with CORS rather than as an opaque image. The browser edition's service
+          // worker marks the page cross-origin isolated so that WebAssembly can use more than
+          // one thread, and an isolated page refuses any cross-origin subresource that does
+          // not opt in — an opaque cover would simply stop loading. Both CDNs these covers
+          // come from answer with the header that allows it.
+          crossOrigin="anonymous"
           loading="lazy"
           className="h-[82px] w-[132px] shrink-0 rounded-lg bg-stone-200 object-cover"
         />

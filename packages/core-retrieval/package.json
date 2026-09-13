@@ -1,0 +1,20 @@
+{
+  "name": "@breadcrumb/core-retrieval",
+  "license": "AGPL-3.0-only",
+  "version": "0.0.1",
+  "description": "Headless retrieval: reciprocal-rank fusion over a keyword route and a vector route, the candidate pool a reranker sees, and the policy that decides when reranking is worth its seconds.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@breadcrumb/core-text": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

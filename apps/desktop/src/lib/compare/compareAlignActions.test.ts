@@ -24,7 +24,7 @@ vi.mock("../platform/db", () => ({
       upsertConceptEmbeddings: upsertConceptEmbeddingsMock,
     },
     knowledgeNodes: { listAll: listAllNodesMock },
-    nodeEmbeddings: { listAll: listAllEmbeddingsMock },
+    nodeEmbeddings: { listAllForModel: listAllEmbeddingsMock },
   })),
 }));
 

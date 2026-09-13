@@ -32,6 +32,17 @@ serde_json = "1"
 getrandom = "0.3"
 fastembed = "5.17.4"
 fsrs = "6.6.1"
+# Reading a file the user picked, and the picker that lets them pick it. Both are read-only
+# in the capability set (capabilities/default.json says exactly what was granted).
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+# fastembed downloads only its own built-in models and neither of ours is one, so the model
+# files are fetched here. reqwest is already in the build under tauri-plugin-http, at this
+# version with these TLS features — naming it directly makes it usable from our own code
+# without adding anything to the dependency graph.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+# For the digests those downloads are checked against. Already built for sqlx underneath.
+sha2 = "0.10"
 
 # Unix only, and only for getuid(): validated_binary has to know whether the file it is about
 # to execute belongs to the user running the app, and std offers no way to ask.

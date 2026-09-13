@@ -8,11 +8,20 @@
  * degraded results, not the rest of the session.
  * Main exports: EmbeddingLink, createEmbeddingLink.
  */
-import type { EmbedReply, EmbedRequest } from "./protocol";
+import type { BackendId, EmbedReply, EmbedRequest } from "./protocol";
+
+/** What the last successful call cost, as measured rather than guessed. Null until one has
+ * succeeded; the interface reads it to decide whether a word about browsers would help. */
+export interface EmbeddingSpeed {
+  backend: BackendId;
+  msPerText: number;
+}
 
 export interface EmbeddingLink {
   /** Whether the worker has a model in memory right now, as last reported by it. */
   readonly loaded: boolean;
+  /** How the last successful call went, or null if none has. */
+  readonly speed: EmbeddingSpeed | null;
   embed(texts: readonly string[], allowDownload: boolean): Promise<number[][]>;
 }
 
@@ -21,6 +30,7 @@ type Settle = (reply: EmbedReply | Error) => void;
 export function createEmbeddingLink(spawn: () => Worker): EmbeddingLink {
   let worker: Worker | null = null;
   let loaded = false;
+  let speed: EmbeddingSpeed | null = null;
   let nextId = 1;
   const pending = new Map<number, Settle>();
 
@@ -38,6 +48,9 @@ export function createEmbeddingLink(spawn: () => Worker): EmbeddingLink {
     const spawned = spawn();
     spawned.onmessage = (event: MessageEvent<EmbedReply>) => {
       loaded = event.data.loaded;
+      if (event.data.ok) {
+        speed = { backend: event.data.backend, msPerText: event.data.msPerText };
+      }
       const settle = pending.get(event.data.id);
       pending.delete(event.data.id);
       settle?.(event.data);
@@ -55,6 +68,9 @@ export function createEmbeddingLink(spawn: () => Worker): EmbeddingLink {
   return {
     get loaded() {
       return loaded;
+    },
+    get speed() {
+      return speed;
     },
     embed(texts, allowDownload) {
       const target = ensureWorker();

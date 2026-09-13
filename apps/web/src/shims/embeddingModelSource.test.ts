@@ -26,7 +26,7 @@ describe("probeSource", () => {
     await expect(probeSource("https://huggingface.co/", fetchFn)).resolves.toBe(true);
     const [url, init] = fetchFn.mock.calls[0] ?? [];
     expect(url).toBe(
-      "https://huggingface.co/Xenova/multilingual-e5-small/resolve/main/config.json",
+      "https://huggingface.co/Kali-Leo/breadcrumb-language-packs/resolve/main/gte-multilingual-base/config.json",
     );
     expect(url).toBe(probeUrl("https://huggingface.co/"));
     expect(init?.method).toBe("HEAD");

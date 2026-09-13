@@ -1,9 +1,17 @@
-// Purpose: Tauri application entry — registers plugins (sql, http, opener) and the local
-// embeddings + piper TTS + atomic SQL transaction + browsing-collector + database-open
-// commands. The Rust shell stays thin: business logic lives in TS packages.
+// Purpose: Tauri application entry — registers plugins (sql, http, opener, dialog, fs) and
+// the local embeddings + reranking + piper TTS + atomic SQL transaction + browsing-collector
+// + database-open commands. The Rust shell stays thin: business logic lives in TS packages.
 //
 // The sql plugin is registered without `allow-load` in the capability set: the frontend
 // cannot name a database file, it calls open_app_database and gets the one this app owns.
+//
+// dialog and fs are registered for one job: letting someone open a PDF, .txt or .md they
+// already own and import it. What the capability set grants them is the minimum that does
+// that job — `dialog:allow-open` and `fs:allow-read-file`, the latter scoped to the documents,
+// downloads and desktop folders. Withheld deliberately: every write and delete command, the
+// directory-listing commands (which would let the renderer enumerate someone's files without
+// them choosing any), and `$HOME/**`, which would put dotfiles and keys in reach. The
+// capability file repeats this, and the test at the bottom keeps it true.
 
 mod collector;
 mod collector_http;
@@ -11,12 +19,17 @@ mod collector_http;
 mod collector_tests;
 mod embeddings;
 mod fsrs_optim;
+// Fetching a model's files once, checking they are whole, and refusing to fetch them behind
+// a switched-off network. Shared by the embedder and the reranker.
+mod model_download;
+mod model_files;
 mod open_database;
 #[cfg(test)]
 mod open_database_tests;
 // The per-connection settings the pool arms every connection with, and the tests that pin
 // both them and the sqlx defaults underneath them.
 mod pragma_defaults;
+mod reranker;
 mod transactions;
 mod tts;
 // The renderer-supplied path checks tts.rs runs before it executes anything.
@@ -74,8 +87,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
+            reranker::rerank_pairs,
             fsrs_optim::optimize_fsrs_parameters,
             collector::browsing_collector_info,
             collector::take_browsing_events,
@@ -88,58 +104,5 @@ pub fn run() {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::is_app_url;
-    use tauri::Url;
-
-    fn url(value: &str) -> Url {
-        Url::parse(value).expect("test url should parse")
-    }
-
-    #[test]
-    fn allows_the_pages_this_app_serves() {
-        assert!(is_app_url(&url("tauri://localhost/index.html")));
-        assert!(is_app_url(&url("http://tauri.localhost/index.html")));
-        assert!(is_app_url(&url("https://tauri.localhost/index.html")));
-    }
-
-    #[test]
-    fn refuses_anywhere_else() {
-        // The shape of the attack: a link in a model's answer, opened in a window with no
-        // address bar.
-        assert!(!is_app_url(&url("https://evil.example/login")));
-        assert!(!is_app_url(&url("http://127.0.0.1:8080/anything")));
-        assert!(!is_app_url(&url("file:///etc/passwd")));
-        assert!(!is_app_url(&url("https://tauri.localhost.evil.example/")));
-    }
-
-    #[test]
-    fn allows_the_dev_server_only_in_development_builds() {
-        assert_eq!(is_app_url(&url("http://localhost:1420/")), cfg!(dev));
-        // Another port on the same host is never the app.
-        assert!(!is_app_url(&url("http://localhost:3000/")));
-    }
-
-    /// `sql:allow-close` is deliberately absent, and this is the test that keeps it absent.
-    ///
-    /// The plugin's close command closes the pool and leaves the key in its map. Rust rebuilds
-    /// a closed pool now (open_database.rs), so this is no longer the session-ending bug it
-    /// was — but nothing in the frontend has ever called it: `@tauri-apps/plugin-sql` is
-    /// imported in exactly one file, apps/desktop/src/lib/platform/db.ts, which never closes
-    /// anything. A permission with no caller is only a way in.
-    #[test]
-    fn the_capability_set_grants_nothing_the_frontend_does_not_call() {
-        let capabilities = include_str!("../capabilities/default.json");
-        assert!(
-            !capabilities.contains("sql:allow-close"),
-            "nothing in the app closes the database; granting the renderer the ability to is \
-             a way to end a session, not a feature"
-        );
-        // The two that are called, on every screen.
-        assert!(capabilities.contains("sql:allow-execute"));
-        assert!(capabilities.contains("sql:allow-select"));
-        // The reason open_app_database exists at all (see open_database.rs).
-        assert!(!capabilities.contains("sql:allow-load"));
-        assert!(!capabilities.contains("sql:default"));
-    }
-}
+#[path = "lib_tests.rs"]
+mod tests;

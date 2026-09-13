@@ -17,6 +17,10 @@
   },
   "dependencies": {
     "@breadcrumb/core-db": "workspace:*",
+    "@breadcrumb/core-ingest": "workspace:*",
+    "@breadcrumb/core-retrieval": "workspace:*",
+    "@breadcrumb/core-text": "workspace:*",
+    "@breadcrumb/core-vectors": "workspace:*",
     "@huggingface/transformers": "4.2.0",
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
     "d3-hierarchy": "^3.1.2",
@@ -24,6 +28,7 @@
     "katex": "^0.18.4",
     "lucide-react": "^1.31.0",
     "mermaid": "^11.16.1",
+    "pdfjs-dist": "^6.3.289",
     "pixi.js": "^8.19.0",
     "react": "^19.1.0",
     "react-activity-calendar": "^3.2.1",

@@ -7,8 +7,10 @@
  * never block a chat round from finishing its extraction.
  * Main exports: runSynonymGate, SynonymGateContext, SynonymGateOutcome.
  */
+
 import type { KnowledgeNodeRow, NodeAliasRow } from "@breadcrumb/core-db";
 import { chatJson, type LlmClientConfig } from "@breadcrumb/core-llm";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import {
   buildSynonymJudgeMessages,
   findSynonymCandidates,
@@ -55,7 +57,7 @@ export async function runSynonymGate(context: SynonymGateContext): Promise<Synon
     if (vectors === null) return passthrough(context.plan); // Rust embedding unavailable
 
     const repos = await getRepos();
-    const existingEmbeddings = await repos.nodeEmbeddings.listAll();
+    const existingEmbeddings = await repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL);
     const newNodeVectors = new Map(
       context.plan.newNodes.map((node, index) => [node.id, vectors[index] ?? []]),
     );

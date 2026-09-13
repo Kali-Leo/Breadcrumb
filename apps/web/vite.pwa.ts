@@ -33,6 +33,7 @@ const YEAR = 60 * 60 * 24 * 365;
  * runtimeCaching instead. `ort/` and `language-packs/` are directories the build publishes
  * whole (the language packs are added to dist after the build, by the Pages workflow). */
 const NOT_THE_SHELL = [
+  "coi.js",
   "ort/**",
   "language-packs/**",
   "assets/wenkai-*.woff2",
@@ -90,7 +91,16 @@ export function pwaPlugin(base: string): PluginOption {
       // — a new version could not reach an installed app at all.
       skipWaiting: true,
       clientsClaim: true,
+      // The cross-origin isolation headers, added to navigations on the way past so that
+      // WebAssembly can use more than one thread (public/coi.js says why at length). It is
+      // imported INTO this worker rather than registered as a second one: two service workers
+      // on one scope race for every request, and the loser's caching quietly stops happening.
+      // Listed before Workbox's own routes, and it only answers navigations, so everything
+      // below still runs.
+      importScripts: [`${base}coi.js`],
       globPatterns: ["**/*.{js,css,html,png,svg}", "assets/sqlite3-*.wasm"],
+      // coi.js is imported by the worker itself, so precaching it would have the worker
+      // caching its own dependency under a hashed name it never asks for.
       globIgnores: NOT_THE_SHELL,
       // Left at Workbox's 2 MiB default deliberately: it is a second, size-based guard over
       // the list above, so a chunk that grows past it fails loudly instead of quietly turning

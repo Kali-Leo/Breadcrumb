@@ -13,6 +13,7 @@
  * removed or defanged — not merely if "something differs".
  */
 
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import { type ConceptId, insertDemoData } from "@breadcrumb/demo-seed";
 import { DEFAULT_ROUTE_PARAMS } from "@breadcrumb/feature-planner";
 import { createTempDatabase, type TempDatabase } from "@breadcrumb/simlab";
@@ -35,7 +36,7 @@ beforeAll(async () => {
   const sightings = await repos.nodeSightings.listAll();
   const claims = await repos.masteryClaims.listAll();
   const signals = await repos.interestSignals.listAll();
-  const embeddings = await repos.nodeEmbeddings.listAll();
+  const embeddings = await repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL);
   const goals = await repos.goals.listAll();
 
   const snapshot = (isRanked: boolean): PlannerSnapshot =>

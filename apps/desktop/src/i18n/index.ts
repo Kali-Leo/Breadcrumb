@@ -18,6 +18,7 @@ import zhChat from "../locales/zh-CN/chat.json";
 import zhCommon from "../locales/zh-CN/common.json";
 import zhDiscovery from "../locales/zh-CN/discovery.json";
 import zhLearning from "../locales/zh-CN/learning.json";
+import zhLibrary from "../locales/zh-CN/library.json";
 import zhOnboarding from "../locales/zh-CN/onboarding.json";
 import zhPalace from "../locales/zh-CN/palace.json";
 import zhSettings from "../locales/zh-CN/settings.json";
@@ -34,6 +35,7 @@ const SOURCE_CATALOGUE = {
   settings: zhSettings,
   palace: zhPalace,
   learning: zhLearning,
+  library: zhLibrary,
   discovery: zhDiscovery,
   onboarding: zhOnboarding,
 } as const;
@@ -51,6 +53,7 @@ export const NAMESPACES = [
   "settings",
   "palace",
   "learning",
+  "library",
   "discovery",
   "onboarding",
 ] as const;

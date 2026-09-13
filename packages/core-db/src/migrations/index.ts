@@ -17,6 +17,7 @@ import { MIGRATIONS_0029_0044 } from "./0029-0044";
 import { MIGRATIONS_0045_0053 } from "./0045-0053";
 import { MIGRATIONS_0054_0054 } from "./0054-0054";
 import { MIGRATIONS_0055_0055 } from "./0055-0055";
+import { MIGRATIONS_0056_0057 } from "./0056-0057";
 import type { Migration } from "./migration";
 
 export type { Migration } from "./migration";
@@ -30,6 +31,7 @@ export const MIGRATIONS: readonly Migration[] = [
   ...MIGRATIONS_0045_0053,
   ...MIGRATIONS_0054_0054,
   ...MIGRATIONS_0055_0055,
+  ...MIGRATIONS_0056_0057,
 ];
 
 /**

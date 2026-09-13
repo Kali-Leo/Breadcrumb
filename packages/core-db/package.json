@@ -14,6 +14,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@breadcrumb/core-text": "workspace:*",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   }

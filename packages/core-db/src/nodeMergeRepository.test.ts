@@ -70,6 +70,7 @@ const NODE_ID_FREE_JSON_COLUMNS: readonly string[] = [
   "diglot_word_states.fsrs_json", // a serialized FSRS card
   "factcheck_claims.evidence_json", // quoted source text
   "interest_signals.styles_json", // style labels
+  "library_passage_embeddings.vector_json", // numbers
   "node_embeddings.vector_json", // numbers
   "node_merges.duplicate_snapshot_json", // deliberately frozen: the audit record OF a merge,
   // whose whole value is that it still describes the node as it was when it was deleted

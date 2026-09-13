@@ -10,7 +10,7 @@ const listAllMock = vi.fn();
 const insertNodeAliasMock = vi.fn();
 vi.mock("../platform/db", () => ({
   getRepos: vi.fn(async () => ({
-    nodeEmbeddings: { listAll: listAllMock },
+    nodeEmbeddings: { listAllForModel: listAllMock },
     nodeAliases: { insert: insertNodeAliasMock },
   })),
 }));

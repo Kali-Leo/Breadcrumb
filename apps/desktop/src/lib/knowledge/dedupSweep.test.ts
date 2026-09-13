@@ -14,7 +14,7 @@ const listAllNodesMock = vi.fn(async () => []);
 vi.mock("../platform/db", () => ({
   getRepos: vi.fn(async () => ({
     knowledgeNodes: { listAll: listAllNodesMock },
-    nodeEmbeddings: { listAll: vi.fn(async () => []) },
+    nodeEmbeddings: { listAllForModel: vi.fn(async () => []) },
     nodeAliases: { listAll: vi.fn(async () => []) },
     nodePairVerdicts: { listAll: vi.fn(async () => []), record: recordVerdictMock },
     nodeMerge: { mergeNode: mergeNodeMock },

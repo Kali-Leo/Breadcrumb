@@ -6,6 +6,7 @@
  * so this stage never exercises the app's "no local embedding model" degraded branch.
  * Main exports: runSynonymGateStage, GatedNodeChangePlan.
  */
+
 import { randomUUID } from "node:crypto";
 import type { KnowledgeNodeRow, NodeAliasRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
@@ -17,7 +18,10 @@ import {
   type SynonymJudgePairText,
   synonymJudgeSchema,
 } from "@breadcrumb/feature-knowledge-tree";
-import { computeSyntheticNodeEmbedding } from "../embedding/syntheticEmbedding";
+import {
+  computeSyntheticNodeEmbedding,
+  SYNTHETIC_EMBEDDING_MODEL,
+} from "../embedding/syntheticEmbedding";
 import { describeError, type PipelineFailure, type RoundPipelineInput } from "./pipelineTypes";
 
 export interface GatedNodeChangePlan extends NodeChangePlan {
@@ -40,7 +44,8 @@ export async function runSynonymGateStage(
   const { repos, llmConfig } = input;
 
   try {
-    const existingEmbeddings = await repos.nodeEmbeddings.listAll();
+    const existingEmbeddings =
+      await repos.nodeEmbeddings.listAllForModel(SYNTHETIC_EMBEDDING_MODEL);
     const newNodeVectors = new Map(
       plan.newNodes.map((node): [string, number[]] => [
         node.id,

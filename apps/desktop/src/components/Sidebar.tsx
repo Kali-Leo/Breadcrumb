@@ -12,7 +12,15 @@
  * that state). Inert while closed so nothing in it can take focus.
  * Main exports: Sidebar, SidebarProps.
  */
-import { ALargeSmall, CircleHelp, Compass, Map as MapIcon, Settings, X } from "lucide-react";
+import {
+  ALargeSmall,
+  BookOpen,
+  CircleHelp,
+  Compass,
+  Map as MapIcon,
+  Settings,
+  X,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLayoutMode } from "../lib/platform/layoutMode";
 import { useChatStore } from "../stores/chatStore";
@@ -22,13 +30,14 @@ import { type NavEntry, SidebarNav } from "./SidebarNav";
 import { TrailList } from "./trail/TrailList";
 
 export interface SidebarProps {
-  activeView: "chat" | "settings" | "map" | "vocab" | "discovery";
+  activeView: "chat" | "settings" | "map" | "vocab" | "discovery" | "library";
   companionsOpen: boolean;
   onOpenChat(): void;
   onOpenSettings(): void;
   onOpenMap(): void;
   onOpenVocab(): void;
   onOpenDiscovery(): void;
+  onOpenLibrary(): void;
   onToggleCompanions(): void;
 }
 
@@ -54,11 +63,13 @@ export function Sidebar({
   onOpenMap,
   onOpenVocab,
   onOpenDiscovery,
+  onOpenLibrary,
   onToggleCompanions,
   drawerOpen,
   onCloseDrawer,
 }: SidebarDrawerProps) {
   const { t } = useTranslation(["common", "onboarding"]);
+  const { t: tLibrary } = useTranslation("library");
   const startNewConversation = useChatStore((state) => state.startNewConversation);
   const stacked = useLayoutMode() === "stacked";
   const hiddenDrawer = stacked && !drawerOpen;
@@ -69,6 +80,9 @@ export function Sidebar({
     [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
     [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
     [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
+    // The one nav label that does not live in `common`: every string this feature added
+    // is in its own namespace, and one key in two places is how catalogues drift.
+    [BookOpen, tLibrary("title"), onOpenLibrary, activeView === "library"],
     [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
   ];
 

@@ -17,6 +17,7 @@ import {
   CompanionSection,
   DiscoveryView,
   FocusOverlay,
+  LibraryPanel,
   MapView,
   OnboardingHost,
   SettingsPanel,
@@ -46,7 +47,9 @@ const RESEARCH_IDLE_DELAY_MS = 10_000;
 
 export default function App() {
   const { t } = useTranslation("chat");
-  const [view, setView] = useState<"chat" | "settings" | "map" | "vocab" | "discovery">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "map" | "vocab" | "discovery" | "library">(
+    "chat",
+  );
   const [companionsOpen, setCompanionsOpen] = useState(false);
   const [helperPopup, setHelperPopup] = useState<{ conversationId: string; title: string } | null>(
     null,
@@ -133,6 +136,7 @@ export default function App() {
           onOpenMap={() => setView("map")}
           onOpenVocab={() => setView("vocab")}
           onOpenDiscovery={() => setView("discovery")}
+          onOpenLibrary={() => setView("library")}
           onToggleCompanions={() => setCompanionsOpen((open) => !open)}
         />
         <main className="relative min-w-0 flex-1 stacked:min-h-0">
@@ -142,6 +146,7 @@ export default function App() {
             {view === "map" && <MapView />}
             {view === "vocab" && <VocabPanel />}
             {view === "discovery" && <DiscoveryView />}
+            {view === "library" && <LibraryPanel />}
           </LazyBoundary>
           {/* The companions roster pops out at the center area's lower-left, sized to its
               three rows; clicking anywhere else dismisses it. */}
@@ -162,7 +167,10 @@ export default function App() {
           )}
           {/* Not inside the first-run condition: a page opened for the first time months
               later still explains itself. */}
-          <PageGuideHost view={view} companionsOpen={companionsOpen} />
+          {/* Every view but this one gets a card the first time it is opened. The library
+              explains itself in its own first paragraph — what to put in it and what not to —
+              so a card over the top would say the same thing twice and be in the way. */}
+          {view !== "library" && <PageGuideHost view={view} companionsOpen={companionsOpen} />}
           <LazyBoundary resetKey={view}>
             {onboardingRunning && (
               <OnboardingHost

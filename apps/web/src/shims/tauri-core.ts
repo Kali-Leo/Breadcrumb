@@ -11,7 +11,7 @@
  * embed".
  * Main exports: invoke.
  */
-import { embedTextsInBrowser } from "./embeddings";
+import { embeddingSpeed, embedTextsInBrowser } from "./embeddings";
 import { exportDatabaseFile, importDatabaseFile, openBrowserDatabase } from "./sqlite";
 
 /** Thrown for commands this build genuinely cannot provide. The message reaches the same
@@ -58,6 +58,14 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
       const { texts, allowDownload } = args as { texts: string[]; allowDownload: boolean };
       return (await embedTextsInBrowser(texts, allowDownload)) as T;
     }
+
+    // How the last batch actually went. Only this edition can answer, and only this edition
+    // needs to: a browser is the one place where the same work can be four hundred times
+    // slower depending on which browser it is, and the app says so — in terms of browsers,
+    // never in terms of runtimes — when the measurement says the reader would notice.
+    // The desktop build's invoke rejects on this name, which reads as "nothing to say".
+    case "embedding_speed":
+      return embeddingSpeed() as T;
 
     // Fitting FSRS parameters to one learner's own review history needs the fsrs-rs crate.
     // It is an optimisation over library defaults that only fires past 400 reviews, so its

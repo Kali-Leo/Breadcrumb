@@ -1,24 +1,19 @@
 /**
- * Purpose: the two things the worker does to texts before the model sees them, checked
- * without a model — the E5 prefix the desktop build also adds, and the batch split.
+ * Purpose: the batch split, checked without a model — plus the one thing the worker no longer
+ * does to texts. The e5 model needed "query: " on every text; this one takes no prefix, and a
+ * prefix left behind by habit would silently cost accuracy on every vector in the database.
  */
+
+import { EMBEDDING_QUERY_PREFIX } from "@breadcrumb/core-vectors";
 import { describe, expect, it } from "vitest";
-import {
-  MAX_TEXTS_PER_BATCH,
-  prefixForE5,
-  QUERY_PREFIX,
-  splitIntoBatches,
-} from "./embedding/textBatches";
+import { MAX_TEXTS_PER_BATCH, splitIntoBatches } from "./embedding/textBatches";
 
-describe("prefixForE5", () => {
-  it("prepends the same task prefix the desktop build uses", () => {
-    expect(QUERY_PREFIX).toBe("query: ");
-    expect(prefixForE5("导数: 函数在一点的变化率")).toBe("query: 导数: 函数在一点的变化率");
-  });
-
-  it("does not double a prefix the caller already added", () => {
-    // The caller never should; if one did, the vector would still differ from the desktop's.
-    expect(prefixForE5("query: x")).toBe("query: query: x");
+describe("the task prefix", () => {
+  it("is gone, because this model was not trained with one", async () => {
+    const module: Record<string, unknown> = await import("./embedding/textBatches");
+    expect(EMBEDDING_QUERY_PREFIX).toBe("");
+    expect(module.prefixForE5).toBeUndefined();
+    expect(module.QUERY_PREFIX).toBeUndefined();
   });
 });
 

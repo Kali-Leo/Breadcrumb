@@ -7,12 +7,14 @@
  * file-size ceiling.
  * Main exports: createPlannerRecompute, PlannerRecomputeSliceState.
  */
+
 import type {
   GoalRow,
   KnowledgeEdgeRow,
   KnowledgeNodeRow,
   MasteryClaimRow,
 } from "@breadcrumb/core-db";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import { BROWSING_TRUST_DEFAULT } from "@breadcrumb/feature-browsing-interest";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { loadBrowsingAffinityByNode, loadWatchedTitleRecords } from "../platform/browsingAffinity";
@@ -64,7 +66,7 @@ export function createPlannerRecompute(
         repos.nodeSightings.listAll(),
         repos.masteryClaims.listAll(),
         repos.interestSignals.listAll(),
-        repos.nodeEmbeddings.listAll(),
+        repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL),
         repos.goals.listAll(),
       ]);
 

@@ -5,8 +5,10 @@
  * canonicalConcepts.ts; the concept-vector cache in canonicalConceptVectors.ts.
  * Main exports: runAnchorSweep, ANCHOR_SWEEP_BATCH_BUDGET.
  */
+
 import type { NodeConceptAnchorRow } from "@breadcrumb/core-db";
 import { chatJson } from "@breadcrumb/core-llm";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import {
   ALIGNMENT_JUDGE_BATCH_SIZE,
   type AlignmentCandidatePair,
@@ -53,7 +55,7 @@ export async function runAnchorSweep(): Promise<number | null> {
     repos.canonical.listConcepts(),
     repos.canonical.listAnchors(),
     repos.knowledgeNodes.listAll(),
-    repos.nodeEmbeddings.listAll(),
+    repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL),
   ]);
   const anchoredNodeIds = new Set(
     anchors.filter((row) => row.verdict === "same").map((row) => row.node_id),

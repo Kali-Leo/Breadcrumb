@@ -4,6 +4,7 @@
  * Shared by the follow-frontier journey action and the per-day state digest.
  * Main exports: computePlannerSnapshot, PlannerSnapshot.
  */
+
 import type { KnowledgeEdgeRow, KnowledgeNodeRow } from "@breadcrumb/core-db";
 import {
   aggregateInterest,
@@ -17,6 +18,7 @@ import {
   propagateInterestToPrerequisites,
 } from "@breadcrumb/feature-planner";
 import type { SimlabRepos } from "../db/repos";
+import { SYNTHETIC_EMBEDDING_MODEL } from "../embedding/syntheticEmbedding";
 
 export interface PlannerSnapshot {
   nodes: KnowledgeNodeRow[];
@@ -39,7 +41,7 @@ export async function computePlannerSnapshot(
     repos.nodeSightings.listAll(),
     repos.masteryClaims.listAll(),
     repos.interestSignals.listAll(),
-    repos.nodeEmbeddings.listAll(),
+    repos.nodeEmbeddings.listAllForModel(SYNTHETIC_EMBEDDING_MODEL),
   ]);
 
   const masteryByNode = computeMastery(sightings, claims, nowIso);

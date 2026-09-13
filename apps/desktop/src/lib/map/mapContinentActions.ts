@@ -7,8 +7,10 @@
  * islands instead of throwing.
  * Main exports: loadContinentAssignment.
  */
+
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import { parseVectorRows } from "@breadcrumb/core-db";
+import { EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 import { type ContinentAssignment, deriveContinents } from "@breadcrumb/feature-map";
 import { getRepos } from "../platform/db";
 import { degradeSilently } from "../platform/failureLog";
@@ -52,7 +54,7 @@ async function computeContinentAssignment(
   try {
     const repos = await getRepos();
     const [embeddingRows, allSightingRows, allInterestSignalRows] = await Promise.all([
-      repos.nodeEmbeddings.listAll(),
+      repos.nodeEmbeddings.listAllForModel(EMBEDDING_MODEL),
       repos.nodeSightings.listAll(),
       repos.interestSignals.listAll(),
     ]);

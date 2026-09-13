@@ -57,8 +57,22 @@ describe("createEmbeddingLink", () => {
     ]);
 
     // Out of order on purpose: the id, not arrival, decides who gets what.
-    worker().reply({ id: 2, ok: true, vectors: [[0.2], [0.3]], loaded: true });
-    worker().reply({ id: 1, ok: true, vectors: [[0.1]], loaded: true });
+    worker().reply({
+      id: 2,
+      ok: true,
+      vectors: [[0.2], [0.3]],
+      loaded: true,
+      backend: "wasm-single",
+      msPerText: 1,
+    });
+    worker().reply({
+      id: 1,
+      ok: true,
+      vectors: [[0.1]],
+      loaded: true,
+      backend: "wasm-single",
+      msPerText: 1,
+    });
     await expect(first).resolves.toEqual([[0.1]]);
     await expect(second).resolves.toEqual([[0.2], [0.3]]);
     expect(link.loaded).toBe(true);
@@ -77,7 +91,14 @@ describe("createEmbeddingLink", () => {
     const { link, worker } = makeLink();
     const one = link.embed(["a"], true);
     const two = link.embed(["b"], true);
-    worker().reply({ id: 1, ok: true, vectors: [[1]], loaded: true });
+    worker().reply({
+      id: 1,
+      ok: true,
+      vectors: [[1]],
+      loaded: true,
+      backend: "wasm-single",
+      msPerText: 1,
+    });
     await one;
     expect(link.loaded).toBe(true);
 
@@ -90,7 +111,14 @@ describe("createEmbeddingLink", () => {
     expect(FakeWorker.spawned).toHaveLength(2);
     const fresh = FakeWorker.spawned[1] as FakeWorker;
     expect(fresh.requests[0]?.id).toBe(3);
-    fresh.reply({ id: 3, ok: true, vectors: [[3]], loaded: true });
+    fresh.reply({
+      id: 3,
+      ok: true,
+      vectors: [[3]],
+      loaded: true,
+      backend: "wasm-single",
+      msPerText: 1,
+    });
     await expect(three).resolves.toEqual([[3]]);
   });
 });

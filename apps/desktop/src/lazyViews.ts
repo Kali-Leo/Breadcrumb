@@ -10,8 +10,8 @@
  * mounted only when they have something to show, so their code is never fetched otherwise.
  * Each is a named export, hence the unwrap.
  *
- * Main exports: ChatView, SettingsPanel, MapView, VocabPanel, DiscoveryView, CompanionSection,
- * CompanionChatPopup, OnboardingHost, FocusOverlay.
+ * Main exports: ChatView, SettingsPanel, MapView, VocabPanel, DiscoveryView, LibraryPanel,
+ * CompanionSection, CompanionChatPopup, OnboardingHost, FocusOverlay.
  */
 import { type ComponentProps, type ComponentType, type LazyExoticComponent, lazy } from "react";
 import type { ChatView as ChatViewComponent } from "./components/chat/ChatView";
@@ -20,6 +20,7 @@ import type { CompanionSection as CompanionSectionComponent } from "./components
 import type { VocabPanel as VocabPanelComponent } from "./components/diglot/VocabPanel";
 import type { DiscoveryView as DiscoveryViewComponent } from "./components/discovery/DiscoveryView";
 import type { FocusOverlay as FocusOverlayComponent } from "./components/focus/FocusOverlay";
+import type { LibraryPanel as LibraryPanelComponent } from "./components/library/LibraryPanel";
 import type { MapView as MapViewComponent } from "./components/map/MapView";
 import type { OnboardingHost as OnboardingHostComponent } from "./components/onboarding/OnboardingHost";
 import type { SettingsPanel as SettingsPanelComponent } from "./components/settings/SettingsPanel";
@@ -124,5 +125,12 @@ export let FocusOverlay = retryable<ComponentProps<typeof FocusOverlayComponent>
   "FocusOverlay",
   (next) => {
     FocusOverlay = next;
+  },
+);
+export let LibraryPanel = retryable<ComponentProps<typeof LibraryPanelComponent>>(
+  () => import("./components/library/LibraryPanel"),
+  "LibraryPanel",
+  (next) => {
+    LibraryPanel = next;
   },
 );
