@@ -51,12 +51,15 @@ const MAX_TEXTS_PER_CALL: usize = 512;
 /// A node label plus its summary. Anything longer is truncated by the model anyway.
 const MAX_TEXT_CHARS: usize = 2000;
 
-/// The directory this model's files live in, both under the base URL and on disk.
-const REMOTE_DIR: &str = "gte-multilingual-base";
-/// The `onnx/` level is transformers.js's requirement, not ours: the browser edition loads
-/// these same uploaded files and looks for the graph in that subfolder. Flattening it here
-/// would tidy one path and break the other edition, so it stays.
-const ONNX_FILE: &str = "onnx/model_int8.onnx";
+/// The directory this model's files live in on disk.
+const LOCAL_DIR: &str = "gte-multilingual-base";
+/// The GitHub release its files are downloaded from. Mirrored in
+/// packages/core-vectors/src/embeddingModel.ts (EMBEDDING_MODEL_TAG); the browser edition pins
+/// its own downloads to the git tag of the same name, so one string names one set of bytes.
+const RELEASE_TAG: &str = "gte-multilingual-base-int8-v1";
+/// Flat, with no `onnx/` above it: a release holds one namespace of assets and no folders. The
+/// browser edition needs that subfolder and gets it from the repository tree instead.
+const ONNX_FILE: &str = "model_int8.onnx";
 
 /// Measured from the artefacts in `/data/leo/bench-retrieval/gte-int8/out/`.
 const MODEL_FILES: [ModelFile; 5] = [
@@ -159,8 +162,8 @@ pub async fn embed_texts(
     if texts.iter().any(|text| text.chars().count() > MAX_TEXT_CHARS) {
         return Err("text too long to embed".into());
     }
-    let dir = model_files::model_dir(&app, REMOTE_DIR)?;
-    model_files::ensure(&dir, REMOTE_DIR, &MODEL_FILES, allow_download).await?;
+    let dir = model_files::model_dir(&app, LOCAL_DIR)?;
+    model_files::ensure(&dir, RELEASE_TAG, &MODEL_FILES, allow_download).await?;
     // On the blocking pool: loading the graph and running it are both long synchronous calls,
     // and a tokio worker held for the duration of either is a frozen window.
     tauri::async_runtime::spawn_blocking(move || embed_blocking(dir, texts))

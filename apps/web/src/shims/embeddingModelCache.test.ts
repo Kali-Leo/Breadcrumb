@@ -1,20 +1,20 @@
 /**
- * Purpose: the cache that makes one download serve every session — keyed so that origin and
- * mirror share an entry, and never able to fail the embedding that is using it.
+ * Purpose: the cache that makes one download serve every session — keyed so that the CDN and
+ * the fallback share an entry, and never able to fail the embedding that is using it.
  */
 import { describe, expect, it, vi } from "vitest";
 import { canonicalCacheKey, createModelCache } from "./embedding/modelCache";
-import { MODEL_SOURCES } from "./embedding/modelSource";
+import { JSDELIVR_BASE, MODEL_SOURCES, RAW_GITHUB_BASE } from "./embedding/modelSource";
 
-const FILE = "Xenova/multilingual-e5-small/resolve/main/onnx/model_quantized.onnx";
+const FILE = "onnx/model_int8.onnx";
 
 describe("canonicalCacheKey", () => {
   it("rewrites every known source to the first one", () => {
-    expect(canonicalCacheKey(`https://hf-mirror.com/${FILE}`, MODEL_SOURCES)).toBe(
-      `https://huggingface.co/${FILE}`,
+    expect(canonicalCacheKey(`${RAW_GITHUB_BASE}${FILE}`, MODEL_SOURCES)).toBe(
+      `${JSDELIVR_BASE}${FILE}`,
     );
-    expect(canonicalCacheKey(`https://huggingface.co/${FILE}`, MODEL_SOURCES)).toBe(
-      `https://huggingface.co/${FILE}`,
+    expect(canonicalCacheKey(`${JSDELIVR_BASE}${FILE}`, MODEL_SOURCES)).toBe(
+      `${JSDELIVR_BASE}${FILE}`,
     );
   });
 
@@ -39,10 +39,10 @@ describe("createModelCache", () => {
       }),
       MODEL_SOURCES,
     );
-    await cache.put(`https://hf-mirror.com/${FILE}`, new Response("bytes"));
-    const hit = await cache.match(`https://huggingface.co/${FILE}`);
+    await cache.put(`${RAW_GITHUB_BASE}${FILE}`, new Response("bytes"));
+    const hit = await cache.match(`${JSDELIVR_BASE}${FILE}`);
     expect(await hit?.text()).toBe("bytes");
-    expect([...entries.keys()]).toEqual([`https://huggingface.co/${FILE}`]);
+    expect([...entries.keys()]).toEqual([`${JSDELIVR_BASE}${FILE}`]);
   });
 
   it("turns a broken cache into a miss and a swallowed write", async () => {
@@ -51,10 +51,8 @@ describe("createModelCache", () => {
       const cache = createModelCache(async () => {
         throw new DOMException("quota", "QuotaExceededError");
       }, MODEL_SOURCES);
-      await expect(cache.match(`https://huggingface.co/${FILE}`)).resolves.toBeUndefined();
-      await expect(cache.put(`https://huggingface.co/${FILE}`, new Response(""))).resolves.toBe(
-        undefined,
-      );
+      await expect(cache.match(`${JSDELIVR_BASE}${FILE}`)).resolves.toBeUndefined();
+      await expect(cache.put(`${JSDELIVR_BASE}${FILE}`, new Response(""))).resolves.toBe(undefined);
       expect(warn).toHaveBeenCalledTimes(1);
     } finally {
       warn.mockRestore();

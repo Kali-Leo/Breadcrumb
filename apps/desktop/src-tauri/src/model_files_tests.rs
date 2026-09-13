@@ -11,9 +11,9 @@ use super::{
 
 /// Stand-ins for a real table. The size and digest matter only to a download, which none of
 /// these tests performs; what is being asked here is where the files sit and whether they
-/// look finished. The graph is one level down, exactly as it is in both real tables.
+/// look finished. Flat, exactly as both real tables are: release assets have no folders.
 const FILES: [ModelFile; 2] = [
-    ModelFile { name: "onnx/model_int8.onnx", bytes: 7, sha256: "" },
+    ModelFile { name: "model_int8.onnx", bytes: 7, sha256: "" },
     ModelFile { name: "tokenizer.json", bytes: 7, sha256: "" },
 ];
 
@@ -71,8 +71,8 @@ fn every_file_the_model_needs_has_to_be_there() {
 fn a_download_that_was_interrupted_does_not_count_as_cached() {
     let scratch = Scratch::new("half");
     scratch.complete();
-    scratch.write("onnx/model_int8.onnx.part", b"partial");
-    assert!(!is_complete_file(&scratch.0.join("onnx/model_int8.onnx")));
+    scratch.write("model_int8.onnx.part", b"partial");
+    assert!(!is_complete_file(&scratch.0.join("model_int8.onnx")));
     assert!(!is_cached(&scratch.0, &FILES));
 }
 
@@ -94,7 +94,7 @@ fn the_network_switch_is_answered_before_anything_is_fetched() {
     let scratch = Scratch::new("switch");
     let refused = tauri::async_runtime::block_on(super::ensure(
         &scratch.0,
-        "gte-multilingual-base",
+        "gte-multilingual-base-int8-v1",
         &FILES,
         false,
     ));
@@ -102,7 +102,7 @@ fn the_network_switch_is_answered_before_anything_is_fetched() {
     scratch.complete();
     let allowed = tauri::async_runtime::block_on(super::ensure(
         &scratch.0,
-        "gte-multilingual-base",
+        "gte-multilingual-base-int8-v1",
         &FILES,
         false,
     ));

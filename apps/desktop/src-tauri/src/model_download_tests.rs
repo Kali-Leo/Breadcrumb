@@ -8,7 +8,7 @@ use super::{hex, size_complaint, verify, ModelFile};
 const EXPECTED: &str = "1601d9f73a0cc323d4ec6277f77111c528dc6bdaf4da5c4326e74dbaaa02cad6";
 
 fn file() -> ModelFile {
-    ModelFile { name: "onnx/model_int8.onnx", bytes: 310_821_344, sha256: EXPECTED }
+    ModelFile { name: "model_int8.onnx", bytes: 310_821_344, sha256: EXPECTED }
 }
 
 #[test]
@@ -46,7 +46,7 @@ fn the_size_complaint_names_both_numbers() {
     let complaint = size_complaint(&file(), 1024);
     assert!(complaint.contains("310821344"));
     assert!(complaint.contains("1024"));
-    assert!(complaint.contains("onnx/model_int8.onnx"));
+    assert!(complaint.contains("model_int8.onnx"));
 }
 
 #[test]

@@ -18,9 +18,15 @@ use std::path::{Path, PathBuf};
 
 /// Overridable so a build can be pointed at a local file server or a fork's own assets
 /// without a recompile; the default is where the released packs live.
+///
+/// GitHub release assets, not a repository tree: these graphs are 311 MB and 570 MB, and a
+/// file in a git repository may be 100. A release download redirects to a host that sends no
+/// CORS headers, which is why the browser edition reads split copies out of the repository
+/// instead — reqwest has no such rule, so this edition takes the whole file in one request.
+/// Mirrored in packages/core-vectors/src/embeddingModel.ts (DEFAULT_MODEL_FILE_BASE_URL).
 const MODEL_BASE_URL_ENV: &str = "BREADCRUMB_MODEL_BASE_URL";
 pub const DEFAULT_MODEL_BASE_URL: &str =
-    "https://huggingface.co/Kali-Leo/breadcrumb-language-packs/resolve/main/";
+    "https://github.com/Kali-Leo/breadcrumb-language-packs/releases/download/";
 
 /// The four files fastembed's tokenizer loader reads, whichever model it is loading.
 const TOKENIZER_FILE_NAMES: [&str; 4] = [
@@ -32,8 +38,9 @@ const TOKENIZER_FILE_NAMES: [&str; 4] = [
 
 /// One file of a model, with everything needed to decide whether to trust a copy of it.
 ///
-/// `name` is a path relative to the model's directory, not a bare filename: the ONNX graph
-/// sits one level down in `onnx/`.
+/// `name` is both the asset's name in the release and the file's name on disk. Release assets
+/// share one flat namespace per release, so there are no folders here — the release tag is the
+/// only thing separating the embedder's `model_int8.onnx` from the reranker's.
 pub struct ModelFile {
     pub name: &'static str,
     /// Exactly how many bytes this file has. Checked before the digest because it is the
@@ -100,9 +107,12 @@ pub fn is_complete_file(path: &Path) -> bool {
 
 /// Makes sure every file is on disk, downloading only the ones that are not. Returns an error
 /// without touching the network when something is missing and `allow_download` is false.
+///
+/// `release` is the tag the model's assets hang off, which is the whole of the path between
+/// the base URL and the file name.
 pub async fn ensure(
     dir: &Path,
-    remote_dir: &str,
+    release: &str,
     files: &[ModelFile],
     allow_download: bool,
 ) -> Result<(), String> {
@@ -111,7 +121,7 @@ pub async fn ensure(
     }
     if !allow_download {
         return Err(format!(
-            "{remote_dir} is not downloaded and the network switch is off"
+            "{release} is not downloaded and the network switch is off"
         ));
     }
     let missing = files
@@ -122,7 +132,7 @@ pub async fn ensure(
         .build()
         .map_err(|error| error.to_string())?;
     for file in missing {
-        let url = format!("{base}{remote_dir}/{}", file.name);
+        let url = format!("{base}{release}/{}", file.name);
         download(&client, &url, &dir.join(file.name), file).await?;
     }
     Ok(())

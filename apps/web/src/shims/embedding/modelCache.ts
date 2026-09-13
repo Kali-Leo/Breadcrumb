@@ -1,10 +1,10 @@
 /**
  * Purpose: where the downloaded model lives between visits — the browser's Cache API, keyed
- * so that the same file fetched from huggingface.co and from a mirror is one entry.
+ * so that the same file fetched from jsDelivr and from the raw GitHub host is one entry.
  *
- * transformers.js keys its own cache by the full download URL. Left alone, a session that
- * chose the mirror would not see the copy an earlier session downloaded from the origin, and
- * would fetch 113 MB again. This wrapper rewrites any known source host to the first one
+ * transformers.js keys its own cache by the full download URL. Left alone, a session that fell
+ * back to the second host would not see the copy an earlier session downloaded from the first,
+ * and would fetch 311 MB again. This wrapper rewrites any known source base to the first one
  * before touching the cache, and leaves every other URL (the runtime's own wasm, served from
  * this origin) as it is.
  * Main exports: MODEL_CACHE_NAME, canonicalCacheKey, createModelCache.
@@ -21,8 +21,8 @@ export interface ModelCache {
 export function canonicalCacheKey(request: string, sources: readonly string[]): string {
   const canonical = sources[0];
   if (canonical === undefined) return request;
-  for (const host of sources) {
-    if (request.startsWith(host)) return `${canonical}${request.slice(host.length)}`;
+  for (const base of sources) {
+    if (request.startsWith(base)) return `${canonical}${request.slice(base.length)}`;
   }
   return request;
 }

@@ -5,11 +5,11 @@
  * Split out of embeddingWorker.ts because it is a different job: the worker owns the request
  * queue and the vectors, this owns the model. Everything about the network switch lives here
  * too, so there is one place that decides whether a request to a model host may go out.
- * Main exports: loadPipeline, allowNetwork, OFFLINE_MESSAGE, LoadedPipeline.
+ * Main exports: loadPipeline, applyRemoteBase, allowNetwork, OFFLINE_MESSAGE, LoadedPipeline.
  */
 import { env, type FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
 import { availableTiers, type BackendTier, gpuIsUsable } from "./backend";
-import { configuredModelBase, createSourceResolver, MODEL_ID } from "./modelSource";
+import { configuredModelBase, createSourceResolver, MODEL_ID, remotePaths } from "./modelSource";
 import { safariSimdIsBroken } from "./ortAssets";
 
 export const OFFLINE_MESSAGE = "embedding model is not downloaded and the network switch is off";
@@ -27,6 +27,18 @@ const sources = createSourceResolver({ fetch: (input, init) => fetch(input, init
  * several layers down and there is nothing to thread a parameter through. */
 export function allowNetwork(): boolean {
   return networkAllowed;
+}
+
+/**
+ * Points the library at a directory of model files. Called once before any load with the
+ * preferred base, and again with whichever host the probe settled on — the first call matters
+ * even when nothing will be downloaded, because the cache key the library looks a file up
+ * under is built from these two fields, and a lookup against the wrong host misses.
+ */
+export function applyRemoteBase(base: string): void {
+  const { host, template } = remotePaths(base);
+  env.remoteHost = host;
+  env.remotePathTemplate = template;
 }
 
 /**
@@ -85,7 +97,7 @@ export async function loadPipeline(allowDownload: boolean): Promise<LoadedPipeli
     if (!allowDownload) throw cacheMiss;
     const host = configuredModelBase() ?? (await sources.resolve());
     if (host === null) throw new Error("no model source is reachable");
-    env.remoteHost = host;
+    applyRemoteBase(host);
     networkAllowed = true;
     try {
       return await firstWorkingTier(tiers);

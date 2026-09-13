@@ -61,9 +61,9 @@ fn the_pool_this_app_sends_fits_within_the_cap() {
 fn the_model_identity_names_the_quantized_export() {
     assert_eq!(RERANKER_MODEL_ID, "bge-reranker-v2-m3-int8");
     assert_eq!(
-        ONNX_FILE, "onnx/model_int8.onnx",
+        ONNX_FILE, "model_int8.onnx",
         "the built-in entry for this model is a 2.3 GB fp32 graph; that is the whole reason \
-         this file exists. The subfolder is the browser edition's, see embeddings.rs"
+         this file exists. Flat because a release holds no folders, see embeddings.rs"
     );
 }
 

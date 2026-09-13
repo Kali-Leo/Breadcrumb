@@ -1,15 +1,20 @@
 /**
- * Purpose: which host the model is downloaded from. The app is used from places where
- * huggingface.co is unreachable, so reachability is measured at run time rather than assumed:
- * each candidate is asked for one small file with a short timeout, in order of preference,
- * and the first that answers is used for the session.
+ * Purpose: which host the model is downloaded from. The app is used from places where a lot of
+ * the internet is unreachable, so reachability is measured at run time rather than assumed:
+ * each candidate is asked for one small file with a short timeout, in order of preference, and
+ * the first that answers is used for the session.
  *
  * A round in which nothing answered is remembered for a minute rather than for the session,
  * so a laptop that was briefly offline is not stuck until the page is reloaded, while the
  * embedding calls the app makes in the background do not each pay two timeouts.
- * Main exports: MODEL_ID, MODEL_DIR, MODEL_PATH_TEMPLATE, MODEL_SOURCES, configuredModelBase,
- * isModelSourceUrl, probeSource, createSourceResolver.
+ * Main exports: MODEL_ID, MODEL_DIR, MODEL_SOURCES, modelSources, preferredModelBase,
+ * configuredModelBase, remotePaths, isModelSourceUrl, probeSource, createSourceResolver.
  */
+import {
+  EMBEDDING_MODEL_DIR,
+  EMBEDDING_MODEL_TAG,
+  MODEL_PACKS_REPO,
+} from "@breadcrumb/core-vectors";
 
 /**
  * Our own repository, not a third party's conversion. The readily available int8 export of
@@ -17,45 +22,78 @@
  * nDCG@10; the repository it sits in also declares no licence, while the weights it was made
  * from are Apache-2.0. So the files are exported and quantized by us and published here.
  */
-export const MODEL_ID = "Kali-Leo/breadcrumb-language-packs";
+export const MODEL_ID = MODEL_PACKS_REPO;
+export const MODEL_DIR = EMBEDDING_MODEL_DIR;
+
+/** Every download is pinned to the tag the files were published under rather than to a branch:
+ * a moving ref would let a later upload land in a browser holding half of the earlier one. */
+const REPO_PATH = `models/${MODEL_DIR}/`;
 
 /**
- * Where inside that repository this model's files live, as the path template transformers.js
- * appends to the host. The library hardcodes `onnx/` for the graph itself, so the published
- * layout is `<MODEL_DIR>/config.json` beside `<MODEL_DIR>/onnx/model_int8.onnx` — the same
- * five files the desktop build downloads, from the same place, so one upload serves both.
+ * jsDelivr first. The desktop's copies of these files are GitHub release assets, which this
+ * edition cannot touch at all — a release download redirects to a host that answers without
+ * CORS headers, so the fetch fails before a byte arrives. What is left is the repository tree,
+ * and of the ways to read it jsDelivr is the one that is both reachable from the mainland and
+ * unmetered. Its limit is 20 MB per file, which is why the graph is published in pieces
+ * (splitGraph.ts).
+ *
+ * raw.githubusercontent.com serves the identical bytes with the same CORS header and is the
+ * fallback for a network that blocks the CDN; it is second because it is slow from the places
+ * that most need this to work.
  */
-export const MODEL_DIR = "gte-multilingual-base";
-export const MODEL_PATH_TEMPLATE = `{model}/resolve/{revision}/${MODEL_DIR}/`;
+export const JSDELIVR_BASE = `https://cdn.jsdelivr.net/gh/${MODEL_ID}@${EMBEDDING_MODEL_TAG}/${REPO_PATH}`;
+export const RAW_GITHUB_BASE = `https://raw.githubusercontent.com/${MODEL_ID}/${EMBEDDING_MODEL_TAG}/${REPO_PATH}`;
+export const MODEL_SOURCES: readonly string[] = [JSDELIVR_BASE, RAW_GITHUB_BASE];
 
-/** A local or staging host, for working on this before the files are published. Set
+export const PROBE_TIMEOUT_MS = 3_000;
+export const RETRY_FAILED_ROUND_AFTER_MS = 60_000;
+
+/** A local or staging host, for working on this without the published files. Set
  * VITE_MODEL_BASE_URL to a directory that ends in a slash; when it is set it is the only
- * source, because a fallback to a host that does not have the files yet is just a slow
- * failure. */
+ * source, because a fallback to a host that does not have the files is just a slow failure. */
 export function configuredModelBase(): string | null {
   const configured = import.meta.env.VITE_MODEL_BASE_URL;
   return typeof configured === "string" && configured !== "" ? configured : null;
 }
 
-/** In order of preference. hf-mirror.com serves the mainland directly and redirects everyone
- * else to huggingface.co, so a probe that follows redirects measures what a download would
- * actually meet. */
-export const MODEL_SOURCES: readonly string[] = [
-  "https://huggingface.co/",
-  "https://hf-mirror.com/",
-];
-
-export const PROBE_TIMEOUT_MS = 3_000;
-export const RETRY_FAILED_ROUND_AFTER_MS = 60_000;
-
-/** The smallest file of the model: a probe that does not answer within the timeout with it is
- * not going to manage 340 MB. */
-export function probeUrl(host: string): string {
-  return `${host}${MODEL_ID}/resolve/main/${MODEL_DIR}/config.json`;
+/** The candidates this build will actually try, in order of preference. */
+export function modelSources(): readonly string[] {
+  const configured = configuredModelBase();
+  return configured === null ? MODEL_SOURCES : [configured];
 }
 
-export function isModelSourceUrl(url: string, sources: readonly string[] = MODEL_SOURCES): boolean {
-  return sources.some((host) => url.startsWith(host));
+/** The base a cache entry is filed under, and what the library is pointed at before a host has
+ * been chosen — so a model downloaded from the fallback is still found on the next visit. */
+export function preferredModelBase(): string {
+  return configuredModelBase() ?? JSDELIVR_BASE;
+}
+
+/** The smallest file of the model: a host that does not answer within the timeout with it is
+ * not going to manage 311 MB. */
+export function probeUrl(base: string): string {
+  return `${base}config.json`;
+}
+
+export function isModelSourceUrl(
+  url: string,
+  sources: readonly string[] = modelSources(),
+): boolean {
+  return sources.some((base) => url.startsWith(base));
+}
+
+/**
+ * A directory URL split the way transformers.js wants it: the library joins `env.remoteHost`,
+ * then `env.remotePathTemplate`, then the file name, stripping one slash between each. Handing
+ * it the origin and the path separately is the split that survives that stripping — an empty
+ * template would leave a doubled slash, and the candidate hosts have paths of different shapes,
+ * so the template cannot be one constant the way it was when everything came from one hub.
+ */
+export function remotePaths(base: string): { host: string; template: string } {
+  const url = new URL(base);
+  const path = url.pathname.replace(/^\/+/, "");
+  // `.` rather than the empty string for a base that is a bare origin: URL parsing removes it,
+  // where an empty segment would leave a `//` for the server to interpret.
+  return { host: `${url.origin}/`, template: path === "" ? "./" : path };
 }
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
@@ -63,14 +101,14 @@ export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 /** True when the host answered the HEAD probe with a success status inside the timeout.
  * Anything else — a timeout, a network error, a 4xx/5xx — is "not this one". */
 export async function probeSource(
-  host: string,
+  base: string,
   fetchFn: FetchLike,
   timeoutMs: number = PROBE_TIMEOUT_MS,
 ): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchFn(probeUrl(host), {
+    const response = await fetchFn(probeUrl(base), {
       method: "HEAD",
       signal: controller.signal,
       cache: "no-store",
@@ -84,7 +122,7 @@ export async function probeSource(
 }
 
 export interface SourceResolver {
-  /** The chosen host with its trailing slash, or null when no candidate answered. */
+  /** The chosen base with its trailing slash, or null when no candidate answered. */
   resolve(): Promise<string | null>;
 }
 
@@ -97,14 +135,14 @@ export interface SourceResolverDeps {
 
 export function createSourceResolver(deps: SourceResolverDeps): SourceResolver {
   const now = deps.now ?? (() => Date.now());
-  const sources = deps.sources ?? MODEL_SOURCES;
+  const sources = deps.sources ?? modelSources();
   let chosen: string | null = null;
   let failedRoundAt: number | null = null;
   let inFlight: Promise<string | null> | null = null;
 
   async function probeAll(): Promise<string | null> {
-    for (const host of sources) {
-      if (await probeSource(host, deps.fetch, deps.timeoutMs)) return host;
+    for (const base of sources) {
+      if (await probeSource(base, deps.fetch, deps.timeoutMs)) return base;
     }
     return null;
   }
@@ -115,11 +153,11 @@ export function createSourceResolver(deps: SourceResolverDeps): SourceResolver {
       if (failedRoundAt !== null && now() - failedRoundAt < RETRY_FAILED_ROUND_AFTER_MS) {
         return null;
       }
-      inFlight ??= probeAll().then((host) => {
+      inFlight ??= probeAll().then((base) => {
         inFlight = null;
-        if (host === null) failedRoundAt = now();
-        else chosen = host;
-        return host;
+        if (base === null) failedRoundAt = now();
+        else chosen = base;
+        return base;
       });
       return inFlight;
     },

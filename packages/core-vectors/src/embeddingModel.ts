@@ -18,7 +18,8 @@
  * number with no meaning. So `model` is read, not just written: anything that is not
  * EMBEDDING_MODEL is treated as absent everywhere, and nothing mixes.
  * Main exports: EMBEDDING_MODEL, EMBEDDING_MODEL_REPO, EMBEDDING_DIMENSIONS, RERANKER_MODEL,
- * MODEL_FILE_BASE_URL_ENV, isCurrentEmbedding, truncateToStoredWidth.
+ * MODEL_PACKS_REPO, MODEL_FILE_BASE_URL_ENV, EMBEDDING_MODEL_TAG, isCurrentEmbedding,
+ * truncateToStoredWidth.
  */
 import { l2Normalize } from "./similarity";
 
@@ -51,18 +52,42 @@ export const EMBEDDING_QUERY_PREFIX = "";
  * a 2.3 GB fp32 graph, which no one is downloading to reorder fifty passages. */
 export const RERANKER_MODEL = "bge-reranker-v2-m3-int8";
 
+/** The GitHub repository the two editions pull their model files out of. Both the desktop's
+ * release assets and the browser's split graph live here, so the owner/name is stated once. */
+export const MODEL_PACKS_REPO = "Kali-Leo/breadcrumb-language-packs";
+
 /**
- * Where the model files are fetched from. Ours are not published yet, so this is deliberately
- * overridable: the desktop reads the environment variable of this name, the browser reads
- * `VITE_MODEL_BASE_URL`, and both fall back to the constant below.
+ * Where the desktop fetches model files from, and the environment variable that overrides it.
+ * The browser reads `VITE_MODEL_BASE_URL` instead, and neither edition has the same URL shape,
+ * which is why this constant is the desktop's alone — see MODEL_PACKS_REPO for the part they
+ * share.
+ *
+ * GitHub release assets, not the repository tree: the graphs are 311 MB and 570 MB, well past
+ * the 100 MB a file in a git repository may be. The browser cannot use these — release asset
+ * downloads redirect to a host that sends no CORS headers, so a page's fetch of one fails —
+ * but the desktop's HTTP client does not care, and this is the only place a file that size can
+ * sit without Git LFS.
  */
 export const MODEL_FILE_BASE_URL_ENV = "BREADCRUMB_MODEL_BASE_URL";
-export const DEFAULT_MODEL_FILE_BASE_URL =
-  "https://huggingface.co/Kali-Leo/breadcrumb-language-packs/resolve/main/";
+export const DEFAULT_MODEL_FILE_BASE_URL = `https://github.com/${MODEL_PACKS_REPO}/releases/download/`;
 
-/** Directory name under the base url, for both editions. */
+/** Directory name: where a model's files sit on disk, and the folder they are published under
+ * in the repository tree the browser reads. */
 export const EMBEDDING_MODEL_DIR = "gte-multilingual-base";
 export const RERANKER_MODEL_DIR = "bge-reranker-v2-m3";
+
+/**
+ * The release tag each model's files hang off, which is also the git tag the browser pins its
+ * downloads to.
+ *
+ * A release asset has no folder — every asset of one release shares one flat namespace — so
+ * the tag is the only thing keeping one model's `model_int8.onnx` from the other's, and there
+ * is one release per model rather than one per version of the pair. The version suffix moves
+ * when the exported files change, never when the code around them does: a tag that already
+ * exists is one the caches of the world have already answered for.
+ */
+export const EMBEDDING_MODEL_TAG = "gte-multilingual-base-int8-v1";
+export const RERANKER_MODEL_TAG = "bge-reranker-v2-m3-int8-v1";
 
 /** True only for vectors this build can compare against the ones it computes now. Every
  * caller that reads a stored vector goes through this rather than trusting the row. */

@@ -9,9 +9,10 @@
  * identical width, so a library built on one is comparable to a library built on the other and
  * there is no per-edition model name any more — see @breadcrumb/core-vectors EMBEDDING_MODEL.
  *
- * The download is 340 MB on the WebAssembly path, fetched once on first use (network switch
- * permitting) into the Cache API and loaded from there ever after. Every failure surfaces as a
- * rejection that lands on the same degradation paths a failed native call already takes.
+ * The download is 311 MB, fetched once on first use (network switch permitting) into the Cache
+ * API and loaded from there ever after — and fetched in eighteen pieces, because no host this
+ * edition can reach will serve a file that size (embedding/splitGraph.ts). Every failure
+ * surfaces as a rejection that lands on the same degradation paths a failed native call takes.
  *
  * Main exports: embedTextsInBrowser, isEmbeddingModelLoaded, embeddingSpeed.
  */

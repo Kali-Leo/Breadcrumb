@@ -35,10 +35,14 @@ const MAX_QUERY_CHARS: usize = 1000;
 /// about bounding what crosses IPC and what gets tokenized, not about fidelity.
 const MAX_PASSAGE_CHARS: usize = 4000;
 
-/// The directory this model's files live in, both under the base URL and on disk.
-const REMOTE_DIR: &str = "bge-reranker-v2-m3";
-/// The `onnx/` level is transformers.js's requirement, not ours — see embeddings.rs.
-const ONNX_FILE: &str = "onnx/model_int8.onnx";
+/// The directory this model's files live in on disk.
+const LOCAL_DIR: &str = "bge-reranker-v2-m3";
+/// The GitHub release its files are downloaded from. Mirrored in
+/// packages/core-vectors/src/embeddingModel.ts (RERANKER_MODEL_TAG). This model is desktop-only,
+/// so unlike the embedder nothing but the release publishes it.
+const RELEASE_TAG: &str = "bge-reranker-v2-m3-int8-v1";
+/// Flat, with no `onnx/` above it — see embeddings.rs.
+const ONNX_FILE: &str = "model_int8.onnx";
 
 /// Recorded for the same reason the embedder records its own: a stored score is only
 /// comparable with another score from the same model. Read from TypeScript's copy of it, not
@@ -150,8 +154,8 @@ pub async fn rerank_pairs(
     if passages.iter().any(|p| p.chars().count() > MAX_PASSAGE_CHARS) {
         return Err("passage too long to rerank".into());
     }
-    let dir = model_files::model_dir(&app, REMOTE_DIR)?;
-    model_files::ensure(&dir, REMOTE_DIR, &MODEL_FILES, allow_download).await?;
+    let dir = model_files::model_dir(&app, LOCAL_DIR)?;
+    model_files::ensure(&dir, RELEASE_TAG, &MODEL_FILES, allow_download).await?;
     tauri::async_runtime::spawn_blocking(move || rerank_blocking(dir, query, passages))
         .await
         .map_err(|error| error.to_string())?

@@ -113,9 +113,9 @@ fn the_download_table_lists_every_file_the_model_is_loaded_from() {
         ]
     );
     assert_eq!(
-        ONNX_FILE, "onnx/model_int8.onnx",
-        "the fp32 graph is not what this app ships, and the subfolder is what the browser \
-         edition looks in — flattening it breaks the other edition, not this one"
+        ONNX_FILE, "model_int8.onnx",
+        "the fp32 graph is not what this app ships, and the name is flat because a release \
+         holds one namespace of assets — the browser edition gets its onnx/ from the tree"
     );
 }
 

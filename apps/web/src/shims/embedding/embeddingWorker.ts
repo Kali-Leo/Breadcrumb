@@ -21,11 +21,12 @@
 import { EMBEDDING_DIMENSIONS, truncateToStoredWidth } from "@breadcrumb/core-vectors";
 import { env, type FeatureExtractionPipeline } from "@huggingface/transformers";
 import { createModelCache, MODEL_CACHE_NAME } from "./modelCache";
-import { isModelSourceUrl, MODEL_PATH_TEMPLATE, MODEL_SOURCES } from "./modelSource";
+import { isModelSourceUrl, modelSources, preferredModelBase } from "./modelSource";
 import { ortWasmPaths } from "./ortAssets";
 import type { LoadedPipeline } from "./pipelineLoader";
-import { allowNetwork, loadPipeline, OFFLINE_MESSAGE } from "./pipelineLoader";
+import { allowNetwork, applyRemoteBase, loadPipeline, OFFLINE_MESSAGE } from "./pipelineLoader";
 import type { EmbedReply, EmbedRequest } from "./protocol";
+import { fetchSplitGraph, isSplitGraphUrl } from "./splitGraph";
 import { splitIntoBatches } from "./textBatches";
 
 let loading: Promise<LoadedPipeline> | null = null;
@@ -36,8 +37,8 @@ function configure(): void {
   env.allowRemoteModels = true;
   env.useBrowserCache = false;
   env.useCustomCache = true;
-  env.customCache = createModelCache(() => caches.open(MODEL_CACHE_NAME), MODEL_SOURCES);
-  env.remotePathTemplate = MODEL_PATH_TEMPLATE;
+  env.customCache = createModelCache(() => caches.open(MODEL_CACHE_NAME), modelSources());
+  applyRemoteBase(preferredModelBase());
   // The runtime's wasm is an asset of this site like any script; the browser's HTTP cache
   // keeps it fresh across deploys, where a copy in the Cache API would outlive the JS it
   // was built with.
@@ -45,9 +46,15 @@ function configure(): void {
   // Every model-host request goes through here, so the network switch is enforced in one
   // place rather than trusted to a flag the library might not consult for every file.
   env.fetch = (input, init) => {
-    if (!allowNetwork() && isModelSourceUrl(String(input))) {
+    const url = String(input);
+    if (!allowNetwork() && isModelSourceUrl(url)) {
       return Promise.reject(new Error(OFFLINE_MESSAGE));
     }
+    // The graph is published in pieces because no host this edition can read from will serve
+    // 311 MB in one file; splitGraph.ts turns this one request into eighteen and hands back a
+    // whole body, which the library then caches as if it had arrived that way.
+    if (isSplitGraphUrl(url))
+      return fetchSplitGraph(url, (target, options) => fetch(target, options));
     return fetch(input, init);
   };
   const wasm = env.backends.onnx.wasm;
