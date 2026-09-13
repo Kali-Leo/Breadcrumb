@@ -56,6 +56,16 @@
     "failedNotice": "A verificação não terminou (a rede oscilou). Você pode tentar mais tarde.",
     "autoPausedNotice": "Várias verificações seguidas não chegaram ao fim, então parei de conferir as respostas por conta própria. Uma resposta sozinha ainda pode ser conferida pelo botão."
   },
+  "grounding": {
+    "gathering": "Procurando fontes…",
+    "conflictHeading": "As fontes divergem nisto, então estão as duas versões:",
+    "alsoSays": "Outra fonte:",
+    "mark": {
+      "grounded": "Vem das fontes",
+      "own": "Meu próprio entendimento",
+      "conflicting": "As fontes divergem"
+    }
+  },
   "companion": {
     "chatDisabled": "A conversa com os companheiros está desligada. Para continuar, ligue de novo «Conversa com companheiros» nas configurações",
     "credits": "Os companheiros vêm de Pepper&Carrot, de David Revoy (peppercarrot.com), CC-BY 4.0; suas personalidades escritas são uma obra derivada com alterações e não implicam endosso do autor original.",

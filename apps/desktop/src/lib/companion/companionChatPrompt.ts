@@ -79,6 +79,9 @@ export async function buildRoundSystemMessages(params: {
   /** The session's 学习模式 state — passed from runtime rather than re-read from
    * the row, so a toggle immediately followed by a send can never race a stale read. */
   studyMode: boolean;
+  /** True when this round opens with a block of source material, so the teaching contract
+   * picks up the clause that tells the model what to do with it. */
+  grounded: boolean;
 }): Promise<ChatMessage[]> {
   const { repos, activeKind, conversationId, content, apiConfig } = params;
   const row = await repos.conversations.getById(conversationId);
@@ -115,7 +118,9 @@ export async function buildRoundSystemMessages(params: {
     const freeChat = activeKind === "chat" && !params.studyMode;
     messages.push({
       role: "system",
-      content: freeChat ? buildFreeChatSystemPrompt() : buildTeachingSystemPrompt(),
+      content: freeChat
+        ? buildFreeChatSystemPrompt()
+        : buildTeachingSystemPrompt({ grounded: params.grounded }),
     });
   }
   if (params.crisisActive) {

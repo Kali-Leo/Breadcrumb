@@ -1,6 +1,7 @@
 /**
  * Purpose: public surface of the headless fact-check module.
- * Main exports: runFactCheck pipeline, claim/verdict contracts, evidence providers.
+ * Main exports: runFactCheck pipeline, claim/verdict contracts, evidence providers, and the
+ * grounding layer (topic passages, alignment, the three mechanical checks).
  */
 
 export {
@@ -58,6 +59,52 @@ export {
   type ExtractedClaim,
 } from "./extraction";
 export { type GatheredEvidence, gatherEvidence } from "./gathering";
+export {
+  ALIGN_MIN_TOKENS,
+  ALIGN_OVERLAP_THRESHOLD,
+  ALIGN_VECTOR_THRESHOLD,
+  alignSentences,
+  type PassageSentence,
+  passageSentences,
+  type SentenceMatch,
+} from "./grounding/align";
+export {
+  type AnnotateInput,
+  type AnswerGrounding,
+  annotateAnswer,
+  answerSentencesOf,
+  type GroundedSentence,
+  type GroundingLabel,
+} from "./grounding/annotate";
+export { ENTITY_MIN_CHARS, entityTokens, pairingHolds, quoteExistsIn } from "./grounding/checks";
+export { findConflict, type SourceConflict } from "./grounding/conflict";
+export { TOPIC_ENTITY_MIN_CHARS, topicEntities } from "./grounding/entities";
+export {
+  buildTopicPassages,
+  formatPassageBlock,
+  orderForAttention,
+  TOPIC_PASSAGE_COUNT,
+  type TopicPassage,
+} from "./grounding/passages";
+export {
+  maskMarkdown,
+  SENTENCE_MIN_CHARS,
+  type SentenceSpan,
+  splitSentences,
+} from "./grounding/sentences";
+export { contentTokens, isWholeWord, overlapCoefficient, tokenizeText } from "./grounding/tokens";
+export {
+  bestTopicSimilarity,
+  TOPIC_KEEP_THRESHOLD,
+  topicStillCovered,
+} from "./grounding/topicDrift";
+export {
+  gatherTopicEvidence,
+  MAX_TOPIC_QUERIES,
+  TOPIC_QUERY_MAX_CHARS,
+  topicQueries,
+} from "./grounding/topicSearch";
+export { type SpecificValue, specificValues, ungroundedValues } from "./grounding/values";
 export {
   type CheckedClaim,
   DEFAULT_JUDGE_CONCURRENCY,

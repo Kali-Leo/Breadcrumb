@@ -56,6 +56,16 @@
     "failedNotice": "La comprobación no llegó a terminar (falló la red). Puedes intentarlo más tarde.",
     "autoPausedNotice": "Varias comprobaciones seguidas no llegaron a completarse, así que dejé de comprobar las respuestas por mi cuenta. Una respuesta suelta todavía se puede comprobar con el botón."
   },
+  "grounding": {
+    "gathering": "Buscando fuentes…",
+    "conflictHeading": "Las fuentes no coinciden en esto, así que están las dos versiones:",
+    "alsoSays": "Otra fuente:",
+    "mark": {
+      "grounded": "De las fuentes",
+      "own": "Lo que entiendo yo",
+      "conflicting": "Las fuentes difieren"
+    }
+  },
   "companion": {
     "chatDisabled": "El chat con compañeros está apagado. Para seguir, vuelve a activar «Chat con compañeros» en los ajustes",
     "credits": "Los compañeros vienen de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0; sus personalidades escritas son una obra derivada con cambios y no implican respaldo del autor original.",

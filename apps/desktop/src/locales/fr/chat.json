@@ -56,6 +56,16 @@
     "failedNotice": "La vérification n'a pas abouti (le réseau a flanché). Tu peux réessayer plus tard.",
     "autoPausedNotice": "Plusieurs vérifications de suite n'ont pas abouti, alors j'arrête de vérifier les réponses de moi-même. Une réponse isolée peut toujours être vérifiée avec le bouton."
   },
+  "grounding": {
+    "gathering": "Recherche des sources…",
+    "conflictHeading": "Les sources ne disent pas la même chose ici, les deux versions sont là :",
+    "alsoSays": "Une autre source :",
+    "mark": {
+      "grounded": "Vient des sources",
+      "own": "Ma propre compréhension",
+      "conflicting": "Les sources divergent"
+    }
+  },
   "companion": {
     "chatDisabled": "Le chat avec les compagnons est éteint. Pour continuer, rallume « Chat avec les compagnons » dans les réglages",
     "credits": "Les compagnons viennent de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0 ; leurs personnalités écrites sont une œuvre dérivée avec modifications et n'impliquent aucune approbation de l'auteur d'origine.",

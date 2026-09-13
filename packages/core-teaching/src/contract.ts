@@ -22,7 +22,16 @@
  *
  * Nothing here names an output language; the answer-language directive is a separate
  * mechanism (see core-i18n) and this file must stay language-neutral.
- * Main exports: TEACHING_CONTRACT_BASE, buildTeachingSystemPrompt.
+ * The grounding clause is the one addition that is NOT a behaviour rule. When a round carries
+ * source material, three positive sentences say what to do with it. They are three because the
+ * cost of a fourth is measured: this repo's own runs show a small model degrading on every
+ * constraint as the constraint list grows, including constraints it was already satisfying —
+ * so the way to make the material win is to keep the instruction short and let the mechanical
+ * checks (packages/feature-factcheck/src/grounding) catch what the prompt cannot. There is no
+ * ban list here and there must not become one; in particular the model is never asked to write
+ * citation numbers, because the code aligns the answer back onto the passages afterwards and
+ * does it far better than the model does.
+ * Main exports: TEACHING_CONTRACT_BASE, GROUNDED_TEACHING_CLAUSE, buildTeachingSystemPrompt.
  */
 
 /**
@@ -55,9 +64,23 @@ export const TEACHING_CONTRACT_BASE: string =
   "- 其余情况直接回答：有定论的事、你确实掌握的事，照常第一句就给答案，" +
   "不加免责声明，也不用「可能」「大概」去软化一个你有把握的结论。";
 
-/** The standing system prompt for a guided (学习模式) chat round — one regime, no variants. */
-export function buildTeachingSystemPrompt(): string {
-  return TEACHING_CONTRACT_BASE;
+/**
+ * What to add when the round opens with a block of source material. Three sentences, all of
+ * them things to do. The abstention clause above still applies and is not repeated: material
+ * that answers part of a question does not make the rest of it certain.
+ */
+export const GROUNDED_TEACHING_CLAUSE: string =
+  "\n对着资料讲：\n" +
+  "- 前面是这个话题的资料。对着资料讲，讲到具体数字、日期、人名时，用资料里的说法。\n" +
+  "- 资料没有提到的部分照常讲，并说明这是你自己的理解。\n" +
+  "- 一次讲一步。";
+
+/** The standing system prompt for a guided (学习模式) chat round — one regime, and the one
+ * variant is whether this round has source material in front of it. */
+export function buildTeachingSystemPrompt(options?: { grounded?: boolean }): string {
+  return options?.grounded === true
+    ? TEACHING_CONTRACT_BASE + GROUNDED_TEACHING_CLAUSE
+    : TEACHING_CONTRACT_BASE;
 }
 
 /** The standing system prompt for a free chat round — no teaching program at all,

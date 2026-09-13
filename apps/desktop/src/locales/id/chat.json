@@ -54,6 +54,16 @@
     "failedNotice": "Pemeriksaan tidak selesai (jaringan terganggu). Kamu bisa mencoba lagi nanti.",
     "autoPausedNotice": "Beberapa pemeriksaan berturut-turut tidak sampai selesai, jadi aku berhenti memeriksa jawaban sendiri. Satu jawaban masih bisa diperiksa lewat tombolnya."
   },
+  "grounding": {
+    "gathering": "Mencari sumber…",
+    "conflictHeading": "Sumber-sumbernya berbeda soal ini, keduanya ada di sini:",
+    "alsoSays": "Sumber lain:",
+    "mark": {
+      "grounded": "Dari sumber",
+      "own": "Pemahaman saya sendiri",
+      "conflicting": "Sumbernya berbeda"
+    }
+  },
   "companion": {
     "chatDisabled": "Obrolan dengan teman sedang mati. Untuk melanjutkan, nyalakan lagi «Obrolan dengan teman» di pengaturan",
     "credits": "Para teman berasal dari Pepper&Carrot karya David Revoy (peppercarrot.com), CC-BY 4.0; kepribadian tertulis mereka adalah karya turunan dengan perubahan dan tidak berarti didukung oleh penulis aslinya.",

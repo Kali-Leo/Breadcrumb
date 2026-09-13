@@ -55,6 +55,16 @@
     "failedNotice": "Uhakiki haukukamilika (mtandao ulisita). Unaweza kujaribu baadaye.",
     "autoPausedNotice": "Uhakiki kadhaa mfululizo haukufika mwisho, kwa hivyo nimeacha kuhakiki majibu mwenyewe. Jibu moja bado linaweza kuhakikiwa kwa kitufe."
   },
+  "grounding": {
+    "gathering": "Natafuta vyanzo…",
+    "conflictHeading": "Vyanzo vinatofautiana hapa, hivyo pande zote mbili zipo:",
+    "alsoSays": "Chanzo kingine:",
+    "mark": {
+      "grounded": "Kutoka vyanzoni",
+      "own": "Uelewa wangu mwenyewe",
+      "conflicting": "Vyanzo vinatofautiana"
+    }
+  },
   "companion": {
     "chatDisabled": "Mazungumzo na wenzako yamezimwa. Ili kuendelea, washa tena «Mazungumzo na wenzako» kwenye mipangilio",
     "credits": "Wenzako wanatoka Pepper&Carrot ya David Revoy (peppercarrot.com), CC-BY 4.0; tabia zao zilizoandikwa ni kazi tokanayo yenye mabadiliko na haimaanishi kuungwa mkono na mwandishi wa awali.",

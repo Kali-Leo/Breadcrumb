@@ -6,7 +6,8 @@
  * text stays blank until its patches are cached (weave-before-first-paint)
  * — the original is never painted and then morphed. A door click or a selection+Enter both
  * open a focus session directly — no guess, no popover — anchored to this
- * message's id so its in-place badge can find its way back. Storage and LLM
+ * message's id so its in-place badge can find its way back. Grounding marks ride the same
+ * display source as one dot per labelled sentence. Storage and LLM
  * context keep the original text untouched.
  * Main exports: MessageBubble.
  */
@@ -16,6 +17,7 @@ import { recordMessageReencounter } from "../../lib/knowledge/reencounter";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { useDoorStore } from "../../stores/doorStore";
 import { useFocusStore } from "../../stores/focusStore";
+import { useGroundingStore } from "../../stores/groundingStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { SelectionFocusCatcher } from "../focus/SelectionFocusCatcher";
 import { MarkdownContent } from "./MarkdownContent";
@@ -137,6 +139,13 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
     openFocus(word);
   };
 
+  // 对着资料讲: the per-sentence marks, anchored by offset into this same display source.
+  // They arrive a moment after the reply is persisted and upgrade once more if the local
+  // embedder answers, so this is a plain subscription — no gate, nothing to wait for.
+  const grounding = useGroundingStore((state) =>
+    messageId === undefined ? undefined : state.annotationByMessage.get(messageId),
+  );
+
   const woven =
     shouldWeave && messageId !== undefined && patches !== undefined && patches.length > 0;
   return (
@@ -162,6 +171,7 @@ function MessageBubbleBody({ author, content, conversationId, messageId }: Messa
                   ? { patches: doorsForMessage, onSelect: openFocusFromDoor }
                   : undefined
               }
+              marks={grounding === undefined ? undefined : { sentences: grounding.sentences }}
             />
           </SelectionFocusCatcher>
         )}

@@ -1,8 +1,9 @@
 /**
- * Purpose: unit test for runSendRound's system-message assembly — the stable contract leads
- * (so the provider's prefix cache can hit), the per-round steering lines sit immediately
- * before the round's user turn, and a conversation's prefix stays byte-identical round over
- * round. Everything around the assembly (LLM, DB, metering, naming) is mocked away.
+ * Purpose: unit test for runSendRound's system-message assembly — the topic's source block
+ * and then the stable contract lead (so the provider's prefix cache can hit), the per-round
+ * steering lines sit immediately before the round's user turn, and a conversation's prefix
+ * stays byte-identical round over round. Everything around the assembly (LLM, DB, metering,
+ * naming, source retrieval) is mocked away.
  */
 
 import type { MessageRow } from "@breadcrumb/core-db";
@@ -49,6 +50,10 @@ vi.mock("../../stores/knowledgeStore", () => ({
   useKnowledgeStore: { getState: () => ({ nodes: [] }) },
 }));
 
+const roundMaterial = vi.fn<() => Promise<{ passages: unknown[]; messages: ChatMessage[] }>>();
+vi.mock("../grounding/topicRetrieval", () => ({ openRoundMaterial: () => roundMaterial() }));
+vi.mock("../grounding/answerAnnotation", () => ({ annotateFinishedAnswer: vi.fn() }));
+
 const { runSendRound } = await import("./chatSendRound");
 
 const repos = {
@@ -90,6 +95,7 @@ beforeEach(() => {
   learnerContext.mockResolvedValue({ role: "system", content: "LEARNER" });
   focusContext.mockResolvedValue({ role: "system", content: "FOCUS" });
   anchoredNode.mockResolvedValue({ role: "system", content: "ANCHOR" });
+  roundMaterial.mockResolvedValue({ passages: [], messages: [] });
 });
 
 describe("runSendRound system-message assembly", () => {
@@ -150,6 +156,23 @@ describe("runSendRound system-message assembly", () => {
 
     expect(sentMessages[0]?.map((message) => message.content)).toEqual([
       "CONTRACT",
+      "ANCHOR",
+      "问",
+    ]);
+  });
+
+  it("opens with the topic's source block, ahead of the contract", async () => {
+    roundMaterial.mockResolvedValue({
+      passages: [{ index: 1 }],
+      messages: [{ role: "system", content: "MATERIAL" }],
+    });
+    await send([{ role: "user", content: "问" }], "问");
+
+    expect(sentMessages[0]?.map((message) => message.content)).toEqual([
+      "MATERIAL",
+      "CONTRACT",
+      "LEARNER",
+      "FOCUS",
       "ANCHOR",
       "问",
     ]);

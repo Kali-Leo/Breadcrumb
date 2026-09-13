@@ -9,6 +9,8 @@ import type { ConversationKind, MessageRow } from "@breadcrumb/core-db";
 import type { ChatMessage } from "@breadcrumb/core-llm";
 import type { ApiConfig } from "../../stores/settingsStore";
 import { buildRoundSystemMessages } from "../companion/companionChatPrompt";
+import { annotateFinishedAnswer } from "../grounding/answerAnnotation";
+import { openRoundMaterial } from "../grounding/topicRetrieval";
 import { noteReplyLanguage, shouldUseFirmDirective } from "../platform/answerLanguageWatch";
 import type { Repos } from "../platform/db";
 import { llmConfigFrom } from "../platform/llmConfig";
@@ -74,11 +76,21 @@ export async function runSendRound(params: {
   const { repos, activeKind, conversationId, userMessage, apiConfig } = params;
   const purpose = activeKind === "companion" ? "companion-chat" : "chat";
 
+  // 对着资料讲: a 学习模式 round is taught against sources fetched for the learner's own
+  // question, not claims pulled out of an answer that does not exist yet. Reused while the
+  // topic holds, so a follow-up costs nothing.
+  const material = await openRoundMaterial({
+    isChatRound: activeKind === "chat",
+    studyMode: params.studyMode,
+    conversationId,
+    question: userMessage.content,
+  });
+
   // Stable content first, volatile content last — that is what makes provider prefix caching
-  // possible at all. DeepSeek only counts a request as a cache hit when the prefix matches
-  // "starting from the 0th token", and a hit costs ~1/50th of a miss, so the kind prompt(s)
-  // and the teaching contract are pinned at index 0 and the per-round steering lines are kept
-  // out of the way: contract + prior turns stays byte-identical from one round to the next.
+  // possible at all. DeepSeek only counts a hit when the prefix matches "starting from the
+  // 0th token", and a hit costs ~1/50th of a miss, so the source block (stable for the whole
+  // topic) and the kind prompt(s) lead, and the per-round steering lines are kept out of the
+  // way: material + contract + prior turns stays byte-identical from one round to the next.
   const contractMessages = await buildRoundSystemMessages({
     repos,
     activeKind,
@@ -89,6 +101,7 @@ export async function runSendRound(params: {
     companionMemoryEnabled: params.companionMemoryEnabled,
     crisisActive: params.crisisActive,
     studyMode: params.studyMode,
+    grounded: material.passages.length > 0,
   });
 
   // Rebuilt every round and never persisted. These sit immediately
@@ -110,7 +123,13 @@ export async function runSendRound(params: {
   // by the client itself.
   const priorTurns = params.baseMessages.slice(0, -1);
   const userTurn = params.baseMessages.slice(-1);
-  const history = [...contractMessages, ...priorTurns, ...perRoundSteering, ...userTurn];
+  const history = [
+    ...material.messages,
+    ...contractMessages,
+    ...priorTurns,
+    ...perRoundSteering,
+    ...userTurn,
+  ];
 
   const streamed = await streamRoundReply({
     config: llmConfigFrom(apiConfig, { firm: shouldUseFirmDirective(conversationId) }),
@@ -154,6 +173,12 @@ export async function runSendRound(params: {
   };
   await repos.messages.append(assistantMessage);
   await repos.conversations.touch(conversationId, assistantMessage.created_at);
+
+  // The per-sentence labels: local vectors and string comparisons over the passages this round
+  // was shown. Fire-and-forget — the marks appear under the reply rather than holding it back.
+  if (material.passages.length > 0 && !stoppedEarly) {
+    void annotateFinishedAnswer(conversationId, assistantMessage.id, content);
+  }
 
   // Trail-card auto-naming — reads whatever stations already exist; the round's
   // own stations (if any) land a moment later via knowledge:nodesExtracted's own refresh.

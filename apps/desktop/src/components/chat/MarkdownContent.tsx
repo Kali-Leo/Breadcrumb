@@ -2,8 +2,9 @@
  * Purpose: chat markdown renderer — a small mdast→React walk (remark-parse + remark-gfm +
  * remark-math, KaTeX for formulas) that keeps source offsets, so diglot patches and explore
  * doors can both be woven into exactly the text nodes they belong to (math/code
- * are never touched); overlapping spans give the diglot weave priority. Span/patch merging
- * itself lives in MarkdownSpans.tsx.
+ * are never touched); overlapping spans give the diglot weave priority. Grounding marks ride
+ * the same offsets, as points rather than spans. Span/patch merging itself lives in
+ * MarkdownSpans.tsx.
  * Main exports: MarkdownContent.
  */
 import type { Parent } from "mdast";
@@ -18,6 +19,7 @@ import {
   type AnyNode,
   type DiglotContext,
   type DoorContext,
+  type MarkContext,
   offsetsOf,
   renderTextNode,
 } from "./MarkdownSpans";
@@ -30,9 +32,17 @@ function renderChildren(
   source: string,
   diglot: DiglotContext | null,
   doors: DoorContext | null,
+  marks: MarkContext | null,
 ): ReactNode[] {
   return (node.children ?? []).map((child, index) =>
-    renderNode(child, source, diglot, doors, `${child.type}-${index}-${offsetsOf(child).start}`),
+    renderNode(
+      child,
+      source,
+      diglot,
+      doors,
+      marks,
+      `${child.type}-${index}-${offsetsOf(child).start}`,
+    ),
   );
 }
 
@@ -41,12 +51,13 @@ function renderNode(
   source: string,
   diglot: DiglotContext | null,
   doors: DoorContext | null,
+  marks: MarkContext | null,
   key: string,
 ): ReactNode {
-  const children = () => renderChildren(node, source, diglot, doors);
+  const children = () => renderChildren(node, source, diglot, doors, marks);
   switch (node.type) {
     case "text":
-      return renderTextNode(node, source, diglot, doors, key);
+      return renderTextNode(node, source, diglot, doors, marks, key);
     case "paragraph":
       return (
         <p key={key} className="my-1 first:mt-0 last:mb-0">
@@ -142,15 +153,18 @@ function renderNode(
 }
 
 /** Renders one chat message body. `source` must be the normalized display source (see
- * normalizeMathDelimiters); diglot patch and door offsets must reference the same string. */
+ * normalizeMathDelimiters); diglot patch, door and grounding-mark offsets must reference the
+ * same string. */
 export function MarkdownContent({
   source,
   diglot,
   doors,
+  marks,
 }: {
   source: string;
   diglot?: DiglotContext;
   doors?: DoorContext;
+  marks?: MarkContext;
 }) {
   // remark re-parses the whole message on every render otherwise, and a streaming reply
   // re-renders its window once per token.
@@ -158,7 +172,14 @@ export function MarkdownContent({
   return (
     <div className="leading-relaxed">
       {(tree.children as AnyNode[]).map((child, index) =>
-        renderNode(child, source, diglot ?? null, doors ?? null, `${child.type}-${index}`),
+        renderNode(
+          child,
+          source,
+          diglot ?? null,
+          doors ?? null,
+          marks ?? null,
+          `${child.type}-${index}`,
+        ),
       )}
     </div>
   );

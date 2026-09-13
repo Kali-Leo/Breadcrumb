@@ -7,6 +7,7 @@ import {
   buildFreeChatSystemPrompt,
   buildTeachingSystemPrompt,
   FREE_CHAT_BASE,
+  GROUNDED_TEACHING_CLAUSE,
   TEACHING_CONTRACT_BASE,
 } from "./contract";
 
@@ -74,6 +75,41 @@ describe("both contracts", () => {
         expect(base).not.toContain(named);
       }
     }
+  });
+});
+
+describe("the grounding clause", () => {
+  it("is absent from an ordinary round and appended to a grounded one", () => {
+    expect(buildTeachingSystemPrompt()).toBe(TEACHING_CONTRACT_BASE);
+    expect(buildTeachingSystemPrompt({ grounded: false })).toBe(TEACHING_CONTRACT_BASE);
+    expect(buildTeachingSystemPrompt({ grounded: true })).toBe(
+      TEACHING_CONTRACT_BASE + GROUNDED_TEACHING_CLAUSE,
+    );
+  });
+
+  it("says three things, all of them things to do", () => {
+    const bullets = GROUNDED_TEACHING_CLAUSE.split("\n").filter((line) => line.startsWith("- "));
+    expect(bullets).toHaveLength(3);
+    // The measured failure mode is a constraint list: every added prohibition costs the model
+    // accuracy on constraints it was already meeting, so this clause must never grow one.
+    for (const banned of ["不许", "不要", "禁止", "不能", "不得"]) {
+      expect(GROUNDED_TEACHING_CLAUSE).not.toContain(banned);
+    }
+  });
+
+  it("never asks the model to write citation numbers — the code aligns them afterwards", () => {
+    for (const banned of ["编号", "标注", "[1]", "序号", "引用"]) {
+      expect(GROUNDED_TEACHING_CLAUSE).not.toContain(banned);
+    }
+  });
+
+  it("leaves the abstention clause standing rather than restating it", () => {
+    expect(buildTeachingSystemPrompt({ grounded: true })).toContain("宁可说不知道");
+    expect(GROUNDED_TEACHING_CLAUSE).not.toContain("宁可说不知道");
+  });
+
+  it("does not touch the free-chat contract", () => {
+    expect(buildFreeChatSystemPrompt()).not.toContain("对着资料讲");
   });
 });
 

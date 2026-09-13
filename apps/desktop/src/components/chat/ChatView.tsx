@@ -1,5 +1,7 @@
 /**
- * Purpose: center column — message history, streaming reply, gentle error banner, composer.
+ * Purpose: center column — message history, per-message marks, composer. What comes after
+ * the last message (the source-gathering line, the streaming reply, the error/retry banner)
+ * is ChatViewFooter's.
  * Also renders the mid-tree continuation banner and handles station-map "locate" clicks —
  * scroll-into-view plus a brief highlight, resuming onto the target's branch first when it
  * isn't on the active path.
@@ -7,7 +9,6 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { useFactcheckStore } from "../../stores/factcheckStore";
 import { useFocusSessionsStore } from "../../stores/focusSessionsStore";
@@ -15,9 +16,11 @@ import { CompanionChatBanners } from "../companion/CompanionChatBanners";
 import { FocusEntryCard } from "../focus/FocusEntryCard";
 import { FocusSessionBadge } from "../focus/FocusSessionBadge";
 import { FocusSessionsBar } from "../focus/FocusSessionsBar";
+import { ChatViewFooter } from "./ChatViewFooter";
 import { Composer } from "./Composer";
 import { ContinuationBanner } from "./ContinuationBanner";
 import { FactcheckBadge } from "./FactcheckBadge";
+import { GroundingNotes } from "./GroundingNotes";
 import { MessageBubble } from "./MessageBubble";
 import { MessageList, type MessageListHandle } from "./MessageList";
 import { BackToBottomPill } from "./scrollPinning";
@@ -27,7 +30,6 @@ const LOCATE_HIGHLIGHT_MS = 2000;
 
 export function ChatView() {
   const { t } = useTranslation(["chat", "common"]);
-  const copy = useCopyMessage();
 
   const messages = useChatStore((state) => state.messages);
   const streamingText = useChatStore((state) => state.streamingText);
@@ -136,6 +138,7 @@ export function ChatView() {
                       />
                       {message.role === "assistant" && (
                         <>
+                          <GroundingNotes messageId={message.id} />
                           <FactcheckBadge
                             conversationId={activeConversationId}
                             messageId={message.id}
@@ -149,29 +152,13 @@ export function ChatView() {
               );
             }}
             footer={
-              <div className="space-y-3">
-                {isStreaming && (
-                  <MessageBubble
-                    conversationId={activeConversationId}
-                    author="assistant"
-                    content={streamingText || "…"}
-                  />
-                )}
-                {(errorText !== null || canRetry) && (
-                  <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
-                    {errorText === null ? t("noReplyYet") : copy(errorText)}
-                    {canRetry && activeConversationId !== null && (
-                      <button
-                        type="button"
-                        onClick={() => void retryRound(activeConversationId)}
-                        className="ms-2 rounded-lg bg-amber-100 px-2 py-0.5 text-stone-700 hover:bg-amber-200"
-                      >
-                        {t("common:actions.retry")}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              <ChatViewFooter
+                conversationId={activeConversationId}
+                streamingText={streamingText}
+                errorText={errorText}
+                canRetry={canRetry}
+                onRetry={(id) => void retryRound(id)}
+              />
             }
           />
         )}
