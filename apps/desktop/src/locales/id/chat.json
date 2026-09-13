@@ -1,38 +1,38 @@
 {
   "emptyLine": "Belum ada percakapan. Tulis di bawah apa yang ingin kamu pelajari untuk memulai.",
-  "noReplyYet": "Pesan ini belum punya balasan",
-  "resumedFromMiddle": "Melanjutkan dari titik sebelumnya · pesan-pesan berikutnya masih ada",
+  "noReplyYet": "Pesan ini belum memiliki balasan",
+  "resumedFromMiddle": "Melanjutkan dari titik sebelumnya · semua pesan berikutnya tetap tersimpan",
   "backToLatest": "Kembali ke yang terbaru",
   "composer": {
-    "placeholder": "Apa yang ingin kamu pelajari? Katakan saja… (Enter untuk kirim, Shift+Enter untuk baris baru)",
-    "placeholderTouch": "Apa yang ingin kamu pelajari? Katakan saja…",
+    "placeholder": "Tulis apa yang ingin kamu pelajari (Enter untuk kirim, Shift+Enter untuk baris baru)",
+    "placeholderTouch": "Tulis apa yang ingin kamu pelajari",
     "freeLabel": "Ngobrol bebas",
-    "freeHint": "Bicarakan apa saja, dengan cara apa saja.",
+    "freeHint": "Percakapan biasa, tentang topik apa pun dan dalam bentuk apa pun.",
     "studyLabel": "Mode belajar",
-    "studyHint": "Jawaban menuntunmu berpikir dan mencoba sendiri, supaya yang kamu pelajari bertahan."
+    "studyHint": "Jawaban menuntunmu berpikir dan berlatih, sehingga apa yang kamu pelajari lebih bertahan."
   },
   "trail": {
     "search": "Cari percakapan",
     "noMatches": "Tidak ada percakapan yang cocok",
     "rename": "Ganti nama",
-    "more": "Opsi lain untuk «{{name}}»",
+    "more": "Tindakan lain untuk «{{name}}»",
     "delete": "Hapus",
-    "deleteConfirm": "Percakapan ini dan jejak yang ditinggalkannya ikut terhapus; konsep di petamu tetap ada.",
+    "deleteConfirm": "Percakapan ini dan jejak yang ditinggalkannya dihapus bersama-sama; konsep di peta tidak terpengaruh.",
     "deleteAction": "Hapus percakapan ini"
   },
   "popup": {
     "close": "Tutup jendela percakapan ini"
   },
   "grounding": {
-    "gathering": "Mencari sumber…",
-    "conflictHeading": "Sumber-sumbernya berbeda soal ini, keduanya ada di sini:",
+    "gathering": "Mencari sumber",
+    "conflictHeading": "Sumber berbeda mengenai pernyataan berikut. Kedua pembacaan dicantumkan:",
     "alsoSays": "Sumber lain:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",
     "wikidataFactWithReference": "{{subject}} — {{property}}: {{value}} (sumber: {{reference}}).",
     "mark": {
-      "grounded": "Dari sumber",
-      "own": "Pemahaman saya sendiri",
-      "conflicting": "Sumbernya berbeda"
+      "grounded": "Didukung sumber",
+      "own": "Tidak tercakup sumber",
+      "conflicting": "Sumber saling berbeda"
     },
     "sources": {
       "wikipedia": "Wikipedia",
@@ -43,19 +43,19 @@
     }
   },
   "companion": {
-    "chatDisabled": "Obrolan dengan teman sedang mati. Untuk melanjutkan, nyalakan lagi «Obrolan dengan teman» di pengaturan",
+    "chatDisabled": "Obrolan dengan teman dimatikan. Nyalakan kembali «Obrolan dengan teman» di pengaturan untuk melanjutkan.",
     "credits": "Para teman berasal dari Pepper&Carrot karya David Revoy (peppercarrot.com), CC-BY 4.0; kepribadian tertulis mereka adalah karya turunan dengan perubahan dan tidak berarti didukung oleh penulis aslinya.",
     "closeRoster": "Tutup daftar teman",
     "aiLabel": "Teman belajar AI",
-    "rosterEmpty": "Hari ini tidak ada yang mampir minta bantuan.",
-    "breakReminder": "Percakapan ini sudah berjalan dua jam. Kamu boleh berhenti dan istirahat; semuanya tetap di sini.",
-    "crisisResponse": "Kamu menyebut ingin menyakiti diri sendiri. Saya AI dan tidak bisa membantu soal ini — sebaiknya bicara dengan orang sungguhan. Tiongkok daratan: saluran bantuan 12356. Amerika Serikat: 988. Negara lain: findahelpline.com. Percakapan ini akan tetap ada di sini.",
-    "helperInvitation": "Saya masih belum paham «{{topic}}». Kalau sempat, bisa dijelaskan dengan kata-katamu sendiri? Mulai dari apa itu sudah sangat membantu.",
-    "helperThanks": "Terima kasih. Sekarang «{{topic}}» jauh lebih masuk akal buat saya. Saya mau latihan sendiri dulu — sampai jumpa."
+    "rosterEmpty": "Hari ini tidak ada teman yang mampir meminta bantuan.",
+    "breakReminder": "Obrolan dengan teman ini sudah berjalan dua jam. Kamu bisa berhenti dan beristirahat; semuanya tersimpan di sini.",
+    "crisisResponse": "Kamu menyebut ingin menyakiti diri sendiri. Saya AI dan tidak bisa membantu soal ini; sebaiknya bicara dengan orang sungguhan. Tiongkok daratan: saluran bantuan 12356. Amerika Serikat: 988. Negara lain: findahelpline.com. Percakapan ini tetap tersimpan di sini.",
+    "helperInvitation": "Saya belum memahami «{{topic}}». Kalau kamu sempat, bisakah kamu menjelaskannya dengan kata-katamu sendiri? Mulai dari apa itu sudah cukup.",
+    "helperThanks": "Terima kasih. Sekarang «{{topic}}» jauh lebih jelas bagi saya. Saya akan berlatih sendiri dulu."
   },
   "errors": {
-    "offline": "Kamu sedang luring. Untuk melanjutkan, nyalakan lagi sakelar internet di pengaturan",
-    "noApiConfig": "Belum ada layanan AI yang diatur. Tambahkan alamat dan kuncinya di halaman pengaturan",
-    "requestFailed": "Permintaan itu tidak sampai. Coba lagi sebentar lagi, atau periksa layanan AI di pengaturan."
+    "offline": "Kamu sedang luring. Nyalakan kembali sakelar internet di pengaturan untuk melanjutkan.",
+    "noApiConfig": "Belum ada layanan AI yang diatur. Alamat dan kuncinya dapat dimasukkan di halaman pengaturan.",
+    "requestFailed": "Permintaan ini tidak berhasil. Coba lagi nanti, atau periksa pengaturan layanan AI."
   }
 }

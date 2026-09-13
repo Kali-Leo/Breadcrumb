@@ -1,23 +1,23 @@
 {
   "title": "Mis materiales",
-  "intro": "Pon aquí el material que ya tienes y, cuando preguntes algo, la respuesta se buscará primero aquí. Añade solo lo que puedas usar legítimamente: libros electrónicos que hayas comprado, apuntes de tus cursos, préstamos de la biblioteca, libros de dominio público, manuales abiertos.",
+  "intro": "Importa material cuyo uso te esté permitido. Las preguntas posteriores buscan primero en este material.",
   "import": "Importar un archivo",
-  "importing": "Leyendo…",
-  "formats": "PDF, Markdown y texto sin formato",
-  "empty": "Todavía no has puesto nada aquí.",
+  "importing": "Leyendo",
+  "formats": "Se admiten PDF, Markdown y texto sin formato",
+  "empty": "Todavía no se ha importado ningún material.",
   "remove": "Quitar",
   "progress": {
-    "building": "Creando el índice semántico de {{embedded}} / {{total}} fragmentos",
-    "ready": "El índice ya está creado",
-    "usable": "Ya puedes buscar por palabras; cuando termine el índice semántico, los resultados serán mejores."
+    "building": "Procesando el fragmento {{embedded}} / {{total}}",
+    "ready": "El material ya está procesado",
+    "usable": "La búsqueda ya funciona; los resultados serán más precisos cuando termine el procesamiento."
   },
   "speed": {
-    "ipad": "Actualiza el sistema a iPadOS 26 y este paso irá mucho más rápido.",
-    "linux": "Abre esta página en Firefox y este paso irá mucho más rápido.",
-    "desktop": "Ábrela en una versión reciente de Chrome, Edge, Safari o Firefox y este paso irá mucho más rápido."
+    "ipad": "Actualizar el sistema a iPadOS 26 hace este paso mucho más rápido.",
+    "linux": "Abrir esta página en Firefox hace este paso mucho más rápido.",
+    "desktop": "Abrirla en una versión reciente de Chrome, Edge, Safari o Firefox hace este paso mucho más rápido."
   },
   "error": {
-    "unreadable": "De este archivo no se ha podido extraer texto. Si es un escaneo, antes hay que pasarle un reconocimiento de texto (OCR)."
+    "unreadable": "No se pudo extraer texto de este archivo. Un documento escaneado necesita primero un reconocimiento de texto."
   },
   "search": {
     "placeholder": "Buscar en mis materiales",

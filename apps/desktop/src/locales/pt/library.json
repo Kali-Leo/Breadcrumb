@@ -1,23 +1,23 @@
 {
   "title": "Meus materiais",
-  "intro": "Coloque aqui o material que você já tem; quando perguntar alguma coisa, a resposta será procurada primeiro aqui. Adicione só o que você tem permissão de usar: e-books que comprou, apostilas do curso, empréstimos da biblioteca, livros em domínio público, livros didáticos abertos.",
+  "intro": "Importe material que você tem o direito de usar. As perguntas seguintes buscam primeiro neste material.",
   "import": "Importar arquivo",
-  "importing": "Lendo…",
-  "formats": "PDF, Markdown e texto simples",
-  "empty": "Ainda não há nada aqui.",
+  "importing": "Lendo",
+  "formats": "São aceitos PDF, Markdown e texto simples",
+  "empty": "Nenhum material foi importado ainda.",
   "remove": "Remover",
   "progress": {
-    "building": "Montando o índice semântico de {{embedded}} / {{total}} trechos",
-    "ready": "O índice já está pronto",
-    "usable": "A busca por palavras já funciona; quando o índice semântico terminar, os resultados ficam melhores."
+    "building": "Processando o trecho {{embedded}} / {{total}}",
+    "ready": "O material já foi processado",
+    "usable": "A busca já funciona; os resultados ficam mais precisos quando o processamento terminar."
   },
   "speed": {
-    "ipad": "Atualize o sistema para o iPadOS 26 e esta etapa fica bem mais rápida.",
-    "linux": "Abra esta página no Firefox e esta etapa fica bem mais rápida.",
-    "desktop": "Abra em uma versão recente do Chrome, Edge, Safari ou Firefox e esta etapa fica bem mais rápida."
+    "ipad": "Atualizar o sistema para o iPadOS 26 torna esta etapa muito mais rápida.",
+    "linux": "Abrir esta página no Firefox torna esta etapa muito mais rápida.",
+    "desktop": "Abri-la em uma versão recente do Chrome, Edge, Safari ou Firefox torna esta etapa muito mais rápida."
   },
   "error": {
-    "unreadable": "Não foi possível extrair texto deste arquivo. Se ele for um escaneamento, primeiro é preciso passar um reconhecimento de texto (OCR)."
+    "unreadable": "Não foi possível extrair texto deste arquivo. Um documento digitalizado precisa antes de um reconhecimento de texto."
   },
   "search": {
     "placeholder": "Buscar nos meus materiais",

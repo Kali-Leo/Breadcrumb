@@ -1,15 +1,15 @@
 {
   "emptyLine": "Bado hakuna mazungumzo. Andika hapa chini unachotaka kujifunza ili kuanza.",
   "noReplyYet": "Ujumbe huu bado haujajibiwa",
-  "resumedFromMiddle": "Tunaendelea kutoka mahali pa awali · ujumbe wa baadaye bado upo",
+  "resumedFromMiddle": "Kunaendelea kutoka mahali pa awali · ujumbe wote wa baadaye umehifadhiwa",
   "backToLatest": "Rudi kwenye la mwisho",
   "composer": {
-    "placeholder": "Ungependa kujifunza nini? Sema tu… (Enter kutuma, Shift+Enter kwa mstari mpya)",
-    "placeholderTouch": "Ungependa kujifunza nini? Sema tu…",
+    "placeholder": "Andika unachotaka kujifunza (Enter kutuma, Shift+Enter kwa mstari mpya)",
+    "placeholderTouch": "Andika unachotaka kujifunza",
     "freeLabel": "Mazungumzo huru",
-    "freeHint": "Zungumza lolote, kwa namna yoyote unayotaka.",
+    "freeHint": "Mazungumzo ya kawaida, kuhusu mada yoyote na kwa namna yoyote.",
     "studyLabel": "Hali ya kusoma",
-    "studyHint": "Majibu yanakuongoza kufikiri na kujaribu mwenyewe, ili unachojifunza kibaki."
+    "studyHint": "Majibu yanaongoza kufikiri na kufanya mazoezi, jambo linalosaidia unachojifunza kubaki."
   },
   "trail": {
     "search": "Tafuta mazungumzo",
@@ -17,21 +17,21 @@
     "rename": "Badilisha jina",
     "more": "Chaguo zaidi za «{{name}}»",
     "delete": "Futa",
-    "deleteConfirm": "Mazungumzo haya na alama yaliyoacha huondoka pamoja; dhana zilizo kwenye ramani yako hubaki.",
+    "deleteConfirm": "Mazungumzo haya na alama yaliyoacha yanafutwa pamoja; dhana zilizo kwenye ramani hazitaathirika.",
     "deleteAction": "Futa mazungumzo haya"
   },
   "popup": {
     "close": "Funga dirisha hili la mazungumzo"
   },
   "grounding": {
-    "gathering": "Natafuta vyanzo…",
-    "conflictHeading": "Vyanzo vinatofautiana hapa, hivyo pande zote mbili zipo:",
+    "gathering": "Vyanzo vinatafutwa",
+    "conflictHeading": "Vyanzo vinatofautiana kuhusu sentensi zifuatazo. Maelezo yote mawili yameorodheshwa:",
     "alsoSays": "Chanzo kingine:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",
     "wikidataFactWithReference": "{{subject}} — {{property}}: {{value}} (chanzo: {{reference}}).",
     "mark": {
-      "grounded": "Kutoka vyanzoni",
-      "own": "Uelewa wangu mwenyewe",
+      "grounded": "Imethibitishwa na chanzo",
+      "own": "Haipo katika vyanzo",
       "conflicting": "Vyanzo vinatofautiana"
     },
     "sources": {
@@ -43,19 +43,19 @@
     }
   },
   "companion": {
-    "chatDisabled": "Mazungumzo na wenzako yamezimwa. Ili kuendelea, washa tena «Mazungumzo na wenzako» kwenye mipangilio",
+    "chatDisabled": "Mazungumzo na wenzako yamezimwa. Washa tena «Mazungumzo na wenzako» kwenye mipangilio ili kuendelea.",
     "credits": "Wenzako wanatoka Pepper&Carrot ya David Revoy (peppercarrot.com), CC-BY 4.0; tabia zao zilizoandikwa ni kazi tokanayo yenye mabadiliko na haimaanishi kuungwa mkono na mwandishi wa awali.",
     "closeRoster": "Funga orodha ya wenzako",
     "aiLabel": "Mwenzako wa kusoma wa AI",
-    "rosterEmpty": "Leo hakuna aliyepita kuomba msaada.",
-    "breakReminder": "Mazungumzo haya yamechukua saa mbili. Unaweza kusimama na kupumzika; kila kitu kitabaki hapa.",
-    "crisisResponse": "Umetaja kujidhuru. Mimi ni AI na siwezi kusaidia katika hili — ni muhimu kuzungumza na mtu halisi. China bara: simu ya msaada 12356. Marekani: 988. Nchi nyingine: findahelpline.com. Mazungumzo haya yatabaki hapa.",
-    "helperInvitation": "Bado sijaelewa «{{topic}}». Ukipata nafasi, unaweza kunieleza kwa maneno yako? Kuanza na ni nini hasa kutasaidia sana.",
-    "helperThanks": "Asante. Sasa «{{topic}}» inaeleweka zaidi kwangu. Naenda kujizoeza mwenyewe — tutaonana."
+    "rosterEmpty": "Leo hakuna mwenzako aliyekuja kuomba msaada.",
+    "breakReminder": "Mazungumzo haya na mwenzako yamedumu kwa saa mbili. Unaweza kupumzika; kila kitu kinahifadhiwa hapa.",
+    "crisisResponse": "Umetaja kujidhuru. Mimi ni AI na siwezi kusaidia katika hili; ni muhimu kuzungumza na mtu halisi. China bara: simu ya msaada 12356. Marekani: 988. Nchi nyingine: findahelpline.com. Mazungumzo haya yanabaki hapa.",
+    "helperInvitation": "Bado sijaelewa sehemu ya «{{topic}}». Ukipata nafasi, unaweza kunieleza kwa maneno yako mwenyewe? Kuanza na ni nini kunatosha.",
+    "helperThanks": "Asante. Sasa «{{topic}}» iko wazi zaidi kwangu. Naenda kujizoeza mwenyewe kwa muda."
   },
   "errors": {
-    "offline": "Huna mtandao. Ili kuendelea, washa tena swichi ya intaneti kwenye mipangilio",
-    "noApiConfig": "Bado hakuna huduma ya AI iliyowekwa. Ongeza anwani na ufunguo kwenye ukurasa wa mipangilio",
-    "requestFailed": "Ombi hilo halikupita. Jaribu tena baada ya muda kidogo, au angalia huduma ya AI kwenye mipangilio."
+    "offline": "Huna mtandao. Washa tena swichi ya intaneti kwenye mipangilio ili kuendelea.",
+    "noApiConfig": "Bado hakuna huduma ya AI iliyosanidiwa. Anwani na ufunguo vinaweza kuwekwa kwenye ukurasa wa mipangilio.",
+    "requestFailed": "Ombi hili halikukamilika. Jaribu tena baadaye, au angalia mipangilio ya huduma ya AI."
   }
 }

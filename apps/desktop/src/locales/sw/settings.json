@@ -8,34 +8,34 @@
   },
   "api": {
     "title": "Huduma ya AI (inayoendana na OpenAI)",
-    "hint": "Weka hapa akaunti yako ya huduma ya AI; mazungumzo na kila kipengele kingine cha AI hutumia hiyo.",
+    "hint": "Weka hapa akaunti yako ya huduma ya AI. Mazungumzo na kila kipengele kingine cha AI hutumia hiyo.",
     "baseUrl": "Anwani ya msingi",
     "apiKey": "Ufunguo wa API",
     "model": "Jina la modeli",
     "priceCurrency": "Sarafu ya malipo",
-    "priceCurrencyHint": "Modeli hii hulipiwa kwa sarafu tofauti kwenye kila jukwaa. Chagua ile ya ufunguo wako, ili ukurasa wa matumizi ulingane na bili yako.",
+    "priceCurrencyHint": "Modeli hii hulipiwa kwa sarafu tofauti kwenye kila jukwaa. Chagua sarafu ya jukwaa ambalo ufunguo wa API ni wake, ili ukurasa wa matumizi ulingane na bili.",
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
-    "saved": "Imehifadhiwa ✓",
+    "saved": "Imehifadhiwa",
     "unsaved": "Mabadiliko bado hayajahifadhiwa",
     "testConnection": "Jaribu muunganisho",
-    "testing": "Inaunganisha…",
+    "testing": "Inaunganisha",
     "testResult": {
-      "ok": "Imeunganishwa.",
-      "badUrl": "Anwani hiyo ya huduma si anwani ya wavuti inayoweza kutumika. Inapaswa kuanza na https://, kwa mfano https://api.deepseek.com.",
-      "offline": "Kwa sasa hakuna muunganisho wa mtandao. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti, kisha angalia kama swichi ya mtandao iliyo hapa chini imezimwa.",
-      "timeout": "Mtoa huduma hakujibu kabisa. Huenda muunganisho ni wa polepole; jaribu tena baada ya muda mfupi.",
-      "blockedByBrowser": "Kivinjari hakikuweza kufikia huduma hii, na hakisemi kwa nini. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti; kama bado haifanyi kazi, kuna uwezekano mkubwa mtoa huduma huyu haruhusu kurasa za wavuti kuunganishwa moja kwa moja. Jaribu mtoa huduma mwingine, au tumia programu ya kompyuta.",
-      "unreachable": "Huduma hii haikufikika. Angalia kama anwani ya huduma ina kosa la kuandika, au jaribu tena baada ya muda mfupi.",
-      "unauthorized": "Mtoa huduma anasema ufunguo huu hauwezi kutumika. Rudi kwenye tovuti ya mtoa huduma wako na unakili ufunguo wa API tena.",
-      "insufficientBalance": "Akaunti hii haina salio. Ongeza salio kwenye tovuti ya mtoa huduma wako, kisha jaribu tena.",
-      "notFound": "Hakuna huduma ya AI kwenye anwani hiyo. Angalia kama mwisho wa anwani umepungukiwa na sehemu, au una sehemu ya ziada — kwa mfano /v1.",
-      "rateLimited": "Mtoa huduma anasema maombi yanakuja karibu mno kwa sasa. Jaribu tena baada ya dakika moja au mbili.",
-      "badRequest": "Mtoa huduma hakukubali ombi hili. Sababu ya kawaida ni jina la modeli lililoandikwa vibaya; linganisha na nyaraka za mtoa huduma.",
-      "serverError": "Tatizo limetokea upande wa mtoa huduma, si katika mipangilio yako. Jaribu tena baada ya muda."
+      "ok": "Muunganisho umefanikiwa.",
+      "badUrl": "Anwani hiyo ya huduma si anwani halali ya wavuti. Inapaswa kuanza na https://, kwa mfano https://api.deepseek.com.",
+      "offline": "Kwa sasa hakuna muunganisho wa mtandao. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti, kisha angalia kama swichi ya intaneti iliyo hapa chini imezimwa.",
+      "timeout": "Mtoa huduma hakujibu. Huenda muunganisho ni wa polepole; jaribu tena baadaye.",
+      "blockedByBrowser": "Kivinjari hakikuweza kufikia huduma hii na hakikutoa sababu. Hakikisha kifaa hiki kimeunganishwa kwenye intaneti; kama bado inashindikana, kuna uwezekano mkubwa mtoa huduma haruhusu kurasa za wavuti kuunganishwa moja kwa moja, hivyo mtoa huduma mwingine au toleo la kompyuta litafanya kazi.",
+      "unreachable": "Huduma hii haikufikika. Angalia kama anwani ya huduma ina kosa, au jaribu tena baadaye.",
+      "unauthorized": "Mtoa huduma anaripoti kuwa ufunguo huu hauwezi kutumika. Nakili ufunguo wa API tena kutoka tovuti ya mtoa huduma.",
+      "insufficientBalance": "Akaunti hii haina salio. Ongeza salio kwenye tovuti ya mtoa huduma, kisha jaribu tena.",
+      "notFound": "Hakuna huduma ya AI kwenye anwani hiyo. Angalia kama mwisho wa anwani umepungukiwa na sehemu au una sehemu ya ziada, kama vile /v1.",
+      "rateLimited": "Mtoa huduma anaripoti kuwa maombi kwa sasa ni ya mara kwa mara mno. Jaribu tena baada ya dakika moja au mbili.",
+      "badRequest": "Mtoa huduma hakukubali ombi hili. Sababu ya kawaida zaidi ni jina la modeli lililoandikwa vibaya, ambalo linaweza kulinganishwa na nyaraka za mtoa huduma.",
+      "serverError": "Tatizo limetokea upande wa mtoa huduma, si katika mipangilio hii. Jaribu tena baadaye."
     },
-    "priceOverride": "Bei zako mwenyewe (kwa kila tokeni milioni)",
-    "priceOverrideHint": "Zijaze pale orodha ya bei iliyojengwa ndani isipoijua modeli yako, au bei imebadilika. Lazima ingizo na matokeo vijazwe vyote ili zihesabiwe; ziache tupu ili itumike orodha ya ndani.",
+    "priceOverride": "Bei maalum (kwa kila tokeni milioni)",
+    "priceOverrideHint": "Zitumie pale orodha ya bei iliyojengwa ndani isipokuwa na modeli hiyo, au bei yake imebadilika. Ingizo na matokeo lazima vijazwe vyote ili zianze kutumika; kuziacha tupu hutumia orodha ya ndani.",
     "priceInput": "Ingizo",
     "priceOutput": "Matokeo",
     "priceCached": "Ingizo kutoka akiba",
@@ -44,24 +44,24 @@
   },
   "network": {
     "title": "Intaneti",
-    "hint": "Izime na kila kinachohitaji intaneti kitasimama, pamoja na maombi ya API."
+    "hint": "Kuizima husimamisha kila kinachohitaji intaneti, pamoja na maombi ya API."
   },
   "mainland": {
     "title": "Mtandao wa China bara",
-    "hint": "Uhakiki wa taarifa hutumia vyanzo vinavyofikika kutoka China bara pekee (Bing, pamoja na utafutaji wa Zhipu ukiwashwa); ikizimwa, hupendelea Wikidata na Wikipedia."
+    "hint": "Uhakiki wa taarifa hutumia vyanzo vinavyofikika kutoka China bara pekee (Bing, pamoja na Zhipu utafutaji wa wavuti huria ukiwashwa). Ukizimwa, hupendelea Wikidata na Wikipedia."
   },
   "language": {
     "title": "Lugha",
     "interface": "Lugha ya kiolesura",
     "answer": "Lugha ambayo AI hujibu kwayo",
     "sameAsInterface": "Sawa na ya kiolesura",
-    "thinNote": "AI huandika {{language}} chini ya jinsi inavyoandika {{fallback}}. Unaweza kubadilisha lugha ya majibu peke yake na kuacha kiolesura kama kilivyo."
+    "thinNote": "AI hujibu kwa usahihi mdogo katika {{language}} kuliko katika {{fallback}}. Lugha ya majibu inaweza kubadilishwa peke yake, na lugha ya kiolesura ikabaki kama ilivyo."
   },
   "quietIssues": {
     "title": "Kazi za nyuma",
-    "allGood": "Kila kinachoendelea nyuma kiko sawa.",
-    "summary_one": "Hivi karibuni kazi ndogo {{count}} ya nyuma haikukamilika. Kujifunza kwako hakuathiriki — fungua uone ni ipi",
-    "summary_other": "Hivi karibuni kazi ndogo {{count}} za nyuma hazikukamilika. Kujifunza kwako hakuathiriki — fungua uone ni zipi",
+    "allGood": "Kazi za nyuma zinaendelea kama kawaida.",
+    "summary_one": "Hivi karibuni kazi ndogo {{count}} ya nyuma haikukamilika. Kujifunza hakuathiriki. Chagua uone undani",
+    "summary_other": "Hivi karibuni kazi ndogo {{count}} za nyuma hazikukamilika. Kujifunza hakuathiriki. Chagua uone undani",
     "fallbackPurpose": "Kazi ya nyuma"
   },
   "purposes": {
@@ -73,7 +73,7 @@
     "goal-planning": "Kupanga lengo",
     "compare-profile": "Utafiti wa kulinganisha",
     "compare-align": "Kulinganisha maneno",
-    "map-naming": "Majina ya ramani",
+    "map-naming": "Kupa ramani majina",
     "diglot-weave": "Kujifunza lugha · ubadilishaji makini",
     "teach-quality": "Maoni juu ya maelezo yako",
     "companion-memory": "Kumbukumbu za wenzako",
@@ -82,7 +82,7 @@
     "term-marking": "Kuweka alama kwenye maneno",
     "trail-summary": "Nyayo za jana",
     "planner": "Maendeleo ya lengo",
-    "map-place-names": "Majina yako mwenyewe kwenye ramani",
+    "map-place-names": "Majina maalum kwenye ramani",
     "map-continents": "Maeneo ya ramani",
     "concept-doors": "Viungo vya dhana ndani ya jibu",
     "diglot-audio": "Matamshi ya maneno",
@@ -97,17 +97,17 @@
     "companion": "Kupakia wenzako"
   },
   "billing": {
-    "intro": "Kila hatua inayogharimu pesa ina swichi yake hapa, na matumizi yake huhesabiwa peke yake. Ukurasa huu unaonyesha kilichotumika kweli.",
-    "estimateIntro": "Makadirio chini ya kila kipengele yanatumia matumizi yako ya hivi karibuni kwa ulichokitumia, na {{scenario}} kwa ambacho hujakitumia; kando yake kuna ulichotumia kweli.",
-    "measurementScenario": "Mtu anayejifunza kwa takriban miezi mitatu: nodi 80 kwenye ramani ya maarifa, mzunguko mmoja wa swali na jibu katika Hali ya kusoma (swali herufi ~40, jibu herufi ~600)",
+    "intro": "Kila hatua inayogharimu pesa inaweza kuwashwa au kuzimwa peke yake hapa, na matumizi yake huhesabiwa kivyake. Ukurasa huu unaonyesha matumizi halisi.",
+    "estimateIntro": "Makadirio chini ya kila kipengele hutumia matumizi halisi ya hivi karibuni pale kipengele kimetumika, na {{scenario}} pale hakijatumika; kiasi kilichotumika kweli kimeorodheshwa kando yake.",
+    "measurementScenario": "Mtu anayejifunza kwa takriban miezi mitatu: nodi 80 kwenye ramani ya maarifa, mzunguko mmoja wa swali na jibu katika Hali ya kusoma (swali herufi 40 hivi, jibu herufi 600 hivi)",
     "estimate": "takribani {{cost}} {{cadence}}",
-    "estimateUnknownModel": "Modeli yako haipo kwenye orodha ya bei iliyojengwa ndani, hivyo makadirio kwa kila matumizi hayapatikani",
+    "estimateUnknownModel": "Modeli inayotumika haipo kwenye orodha ya bei iliyojengwa ndani, hivyo makadirio kwa kila matumizi hayapatikani",
     "estimateFree": "Haigharimu chochote",
-    "estimateUnmeasured": "Hii bado haijapimwa",
+    "estimateUnmeasured": "Gharama ya matumizi moja bado haijapimwa",
     "cadencePerRound": "kwa kila mzunguko wa mazungumzo",
-    "cadencePerMessage": "kwa kila ujumbe unaotuma",
+    "cadencePerMessage": "kwa kila ujumbe unaotumwa",
     "cadencePerAnswer": "kwa kila jibu",
-    "cadenceOnDemand": "kila unapoitumia",
+    "cadenceOnDemand": "kwa kila matumizi",
     "cadencePerItemOnce": "kwa kila kipengele, mara moja",
     "cadencePerDay": "si zaidi ya mara moja kwa siku",
     "grandTotal": "Leo {{today}} · jumla {{total}}",
@@ -115,97 +115,97 @@
     "neverUsed": "Bado hakuna kilichotumika",
     "spendLine": "Leo {{today}} · jumla {{total}}",
     "diglot": {
-      "name": "🧵 Kujifunza lugha · ubadilishaji makini",
-      "hint": "Toleo imara la kujifunza lugha: AI huchagua tafsiri inayoendana na sentensi na mara kwa mara huweka msemo wa kawaida.",
+      "name": "Kujifunza lugha · ubadilishaji makini",
+      "hint": "Namna imara ya kujifunza lugha: AI huchagua tafsiri inayoendana na sentensi na huweka msemo wa kawaida pale unapofaa.",
       "toggleLabel": "Ubadilishaji makini katika kujifunza lugha"
     },
     "chat": {
-      "name": "💬 Mazungumzo",
-      "hint": "Mazungumzo yako ya kila siku na AI. Hiki ndicho kipengele kikuu na hubaki kimewashwa; gharama yake pia imeorodheshwa hapa."
+      "name": "Mazungumzo",
+      "hint": "Mazungumzo ya kila siku na AI. Hiki ndicho kipengele kikuu na hubaki kimewashwa; gharama yake pia imeorodheshwa hapa."
     },
     "features": {
       "knowledgeTree": {
-        "name": "🌳 Ramani ya maarifa",
-        "hint": "Baada ya kila mzunguko wa mazungumzo, AI huweka mliyoyazungumza kwenye ramani yako."
+        "name": "Ramani ya maarifa",
+        "hint": "Baada ya kila mzunguko wa mazungumzo, AI huweka yaliyojadiliwa kwenye ramani."
       },
       "webSearchEvidence": {
-        "name": "🌐 Utafutaji wa ushahidi kwenye wavuti huria (Zhipu)",
+        "name": "Utafutaji wa ushahidi kwenye wavuti huria (Zhipu)",
         "price": "takriban ¥{{price}} kwa utafutaji",
-        "hint": "Ikiwa imewashwa, mbali na Wikidata na Wikipedia, huduma ya utafutaji ya Zhipu huombwa kutafuta vyanzo kwenye wavuti huria — mambo ambayo ensaiklopidia haijawahi kuandika. Hutozwa kwa kila utafutaji kwenye akaunti yako ya Zhipu, tofauti na huduma ya AI hapo juu; kwenye toleo la kivinjari katika mtandao wa China bara ndicho chanzo pekee kinachofikika. Kichina, Kiingereza na Kiswahili pekee: lugha nyingine zilitoa matokeo yasiyoaminika kwenye majaribio na hazipiti njia hii kamwe.",
-        "disclosure": "Ikiwa imewashwa, maneno ya utafutaji yaliyotolewa kutoka swali lako hutumwa kwa injini ya utafutaji. Hapo ni mahali papya ambapo maneno yako huenda.",
+        "hint": "Ikiwa imewashwa, huduma ya utafutaji ya Zhipu huombwa kutafuta vyanzo kwenye wavuti huria zaidi ya Wikidata na Wikipedia, jambo linalofikia mambo ambayo ensaiklopidia haijawahi kuandika. Hutozwa kwa kila ombi kwenye akaunti ya Zhipu, tofauti na huduma ya AI hapo juu; kwenye toleo la kivinjari katika mtandao wa China bara ndicho chanzo pekee kinachopatikana. Kichina, Kiingereza na Kiswahili pekee: matokeo katika lugha nyingine yalionekana kutoaminika kwenye majaribio, hivyo njia hii haitumiki kwazo.",
+        "disclosure": "Ikiwa imewashwa, maneno ya utafutaji yaliyotolewa kutoka swali hutumwa kwa injini ya utafutaji. Hii ni njia mpya ya kutoka nje.",
         "keyLabel": "Ufunguo wa API wa huduma ya utafutaji ya Zhipu",
-        "keyPlaceholder": "Upate kwenye open.bigmodel.cn na ubandike hapa",
-        "noKey": "Hakuna ufunguo bado, kwa hivyo kwa sasa hii haifanyi chochote."
+        "keyPlaceholder": "Upate kwenye open.bigmodel.cn na uuweke hapa",
+        "noKey": "Hakuna ufunguo uliowekwa, kwa hivyo kwa sasa hii haina athari."
       },
       "knowledgeEdges": {
-        "name": "🕸️ Viungo vya maarifa",
-        "hint": "Kitu kipya kinapowekwa, AI huangalia jinsi kinavyounganika na unayoyajua tayari."
+        "name": "Viungo vya maarifa",
+        "hint": "Baada ya dhana mpya kurekodiwa, AI hubaini jinsi inavyounganika na yaliyokwisha jifunzwa."
       },
       "interest": {
-        "name": "💡 Mapendekezo kwa ajili yako",
-        "hint": "AI huona kinachokuvutia na mahali unapokwama, na hurekebisha mapendekezo yake kutokana na hayo; pia ndiyo hutambua mada unayomaanisha unaposema «hili nalijua»."
+        "name": "Mapendekezo binafsi",
+        "hint": "AI huona mada zinazovutia na mahali ambapo kunatokea utata, na hurekebisha mapendekezo yake kutokana na hayo; pia hutambua dhana ambayo kauli kama «hili nalijua» inaimaanisha."
       },
       "goalPlanning": {
-        "name": "🎯 Kupanga lengo",
-        "hint": "Unapoweka lengo, AI hulibadilisha kuwa orodha ya mambo ya kujifunza."
+        "name": "Kupanga lengo",
+        "hint": "Lengo likiwekwa, AI hulibadilisha kuwa orodha ya mambo ya kujifunza."
       },
       "compareProfileBuild": {
-        "name": "🌲 Utafiti wa kulinganisha (majaribio)",
-        "hint": "Kwa ulinganisho ulio nje ya orodha ya kazi iliyojengwa ndani, AI hutafuta kwenye vyanzo vya wazi, hujenga orodha na huhakiki kila chanzo. Huchukua dakika chache."
+        "name": "Utafiti wa kulinganisha (majaribio)",
+        "hint": "Kwa mada zilizo nje ya orodha ya kazi, AI hutafuta kwenye vyanzo vya wazi, hukusanya orodha ya kulinganisha na huhakiki kila chanzo. Hii huchukua dakika chache."
       },
       "compareAlignment": {
-        "name": "🌉 Kulinganisha maneno",
-        "hint": "Wakati wa kulinganisha, AI huamua kama maneno yako na ya chanzo yanamaanisha kitu kilekile."
+        "name": "Kulinganisha maneno",
+        "hint": "Wakati wa kulinganisha, AI huamua kama maneno yako na ya chanzo yanarejelea dhana ile ile."
       },
       "teachQuality": {
-        "name": "🎓 Maoni juu ya maelezo yako",
-        "hint": "Baada ya kumweleza mwenzako jambo fulani, AI husoma jinsi ilivyokwenda; sehemu ulizoeleza kwa uwazi huhifadhiwa."
+        "name": "Maoni juu ya maelezo yako",
+        "hint": "Baada ya maelezo kutolewa kwa mwenzako, AI hutathmini jinsi yalivyokwenda; sehemu zilizoelezwa kwa uwazi huhifadhiwa."
       },
       "mapTopicNaming": {
-        "name": "🗺️ Majina ya ramani (majaribio)",
+        "name": "Kupa ramani majina (majaribio)",
         "hint": "Kwenye ramani, AI hupa jina kila eneo lililojiunda lenyewe."
       },
       "feedbackLab": {
-        "name": "🪞 Hivi karibuni",
-        "hint": "Kidirisha cha kupitia kando ya ramani: huhesabiwa kabisa kwa data ya kompyuta hii, hakigharimu chochote."
+        "name": "Hivi karibuni",
+        "hint": "Kidirisha cha kupitia kando ya ramani, kinachohesabiwa kabisa kwa data ya hapa hapa na kisichogharimu chochote."
       },
       "trailSummary": {
-        "name": "🐾 Nyayo za jana",
-        "hint": "Unapofungua programu kwa mara ya kwanza kila siku, AI huandika sentensi moja kuhusu ulichojifunza siku iliyopita; huonekana juu kabisa ya kidirisha cha «Hivi karibuni» kando ya ramani."
+        "name": "Nyayo za jana",
+        "hint": "Programu inapofunguliwa kwa mara ya kwanza kila siku, AI hurekodi kujifunza kwa siku iliyopita katika sentensi moja, inayoonekana juu kabisa ya kidirisha cha «Hivi karibuni» kando ya ramani."
       },
       "companionChat": {
-        "name": "🎭 Mazungumzo na wenzako",
-        "hint": "Kila siku wenzako wachache hupita kukuuliza kuhusu jambo ulilojifunza na hujaligusa kwa muda. Fungua mmoja na umweleze."
+        "name": "Mazungumzo na wenzako",
+        "hint": "Kila siku wenzako wachache hufika na maswali kuhusu mambo yaliyojifunzwa lakini hayajaguswa kwa muda."
       },
       "companionMemory": {
-        "name": "🧠 Kumbukumbu za wenzako",
-        "hint": "Wenzako hukumbuka mliyoyazungumza, na mara kwa mara hupanga kumbukumbu hizo ili zibaki zikieleweka."
+        "name": "Kumbukumbu za wenzako",
+        "hint": "Wenzako hukumbuka yaliyojadiliwa, na hupanga kumbukumbu hizo mara kwa mara ili zibaki zikieleweka."
       },
       "companionScript": {
-        "name": "📜 Maandalizi ya mwenzako",
-        "hint": "Kabla hujaanza kueleza, mwenzako atakayekusikiliza husoma kidogo kuhusu mada ili aweze kukufuata."
+        "name": "Maandalizi ya mwenzako",
+        "hint": "Kabla maelezo hayajaanza, mwenzako atakayesikiliza husoma kuhusu mada ili aweze kufuatilia."
       },
       "focusExplain": {
-        "name": "🔎 Maelezo ya hali ya umakini",
-        "hint": "Katika hali ya umakini, kuchagua neno au kuuliza swali hukuletea maelezo."
+        "name": "Maelezo ya hali ya umakini",
+        "hint": "Katika hali ya umakini, kuchagua neno au kuuliza swali hutokeza maelezo."
       },
       "termMarking": {
-        "name": "🖊️ Kuweka alama kwenye maneno",
-        "hint": "AI huweka alama kwenye maneno ya jibu ambayo huenda bado huyajui; gusa moja uone maana yake."
+        "name": "Kuweka alama kwenye maneno",
+        "hint": "AI huweka alama kwenye maneno ya kila jibu ambayo huenda hayajulikani; kuchagua moja huonyesha maana yake."
       }
     }
   },
   "research": {
-    "panelIntro": "Kila namba hapa imehesabiwa na kompyuta hii. Kazi zimepitiwa na vyanzo vyake vinaweza kukaguliwa; data haitoki yenyewe kwenye kifaa hiki, na hakuna chochote kati ya haya kinachogharimu pesa.",
-    "offNotice": "Kazi za utafiti zimezimwa: hakuna kazi mpya itakayoendeshwa. Matokeo uliyonayo yatabaki, na unaweza kuyasoma au kuyafuta moja baada ya jingine.",
-    "loading": "Inapakia…",
-    "emptyTitle": "Bado hakuna matokeo",
-    "emptyHint": "Programu ikiwa haifanyi kazi nyingine, huhesabu kazi za utafiti zilizosainiwa hapa hapa; matokeo huonekana hapa yanapokamilika.",
+    "panelIntro": "Kila namba kwenye ukurasa huu imehesabiwa na mashine hii. Kazi za utafiti zimepitiwa na vyanzo vyake vinaweza kukaguliwa; data haitoki yenyewe kwenye kifaa hiki, na hakuna kinachogharimu chochote.",
+    "offNotice": "Kazi za utafiti zimezimwa: hakuna kazi mpya itakayoendeshwa. Matokeo yaliyopo yanahifadhiwa na yanaweza kusomwa au kufutwa moja baada ya jingine.",
+    "loading": "Inapakia",
+    "emptyTitle": "Bado hakuna matokeo ya utafiti",
+    "emptyHint": "Programu ikiwa haifanyi kazi nyingine, huhesabu kazi za utafiti zilizosainiwa hapa hapa, na matokeo huonekana hapa yanapokamilika.",
     "cardInstitutionLabel": "Taasisi",
     "cardPurposeLabel": "Lengo",
     "cardEthicsLabel": "Dokezo la maadili",
     "cardComputedAtLabel": "Ilihesabiwa",
-    "notEnoughData": "Data bado haitoshi",
+    "notEnoughData": "Data bado haitoshi kutoa hitimisho",
     "barRange": "{{low}}–{{high}}",
     "retentionMean": "Wastani",
     "retentionMedian": "Kati",
@@ -218,27 +218,27 @@
     "weekdayFriday": "Ijumaa",
     "weekdaySaturday": "Jumamosi",
     "deleteAction": "Futa matokeo haya",
-    "deleteConfirmPrompt": "Kufuta matokeo haya hakuwezi kutenduliwa. Yafutwe?",
+    "deleteConfirmPrompt": "Matokeo yaliyofutwa hayawezi kurudishwa.",
     "deleteConfirmAction": "Futa",
-    "settingsRowTitle": "🔬 Utafiti",
-    "settingsRowHint": "Huendesha kazi za utafiti zilizopitiwa hapa hapa na huonyesha matokeo; data haitoki yenyewe kwenye kifaa hiki na haigharimu chochote",
-    "closeConfirmTitle": "Kuzima kazi za utafiti",
-    "closeConfirmWhatItDoes": "Jukwaa la utafiti huendesha hapa hapa kazi zilizopitiwa na kusainiwa na mradi, huhesabu takwimu na kukuonyesha.",
-    "closeConfirmDataStaysLocal": "Yote huhesabiwa hapa; data haitoki yenyewe kwenye kifaa hiki.",
-    "closeConfirmResearchValue": "Takwimu za jumla za hapa hapa kama hizi huwezesha kusoma jinsi watu wanavyojifunza bila kukusanya data binafsi ya mtu yeyote.",
-    "closeConfirmWhatChanges": "Baada ya kuzima hakuna kazi itakayoendeshwa na hutaulizwa tena. Matokeo uliyonayo hayataguswa na yatabaki kwenye kidirisha.",
+    "settingsRowTitle": "Utafiti",
+    "settingsRowHint": "Huendesha kazi za utafiti zilizopitiwa hapa hapa na huonyesha matokeo; data haitoki yenyewe kwenye kifaa hiki na haigharimu chochote.",
+    "closeConfirmTitle": "Kuzima jukwaa la utafiti",
+    "closeConfirmWhatItDoes": "Jukwaa la utafiti huendesha hapa hapa kazi zilizopitiwa na kusainiwa na mradi, huhesabu takwimu na kuzionyesha.",
+    "closeConfirmDataStaysLocal": "Hesabu zote hufanyika hapa hapa, na data haitoki yenyewe kwenye kifaa hiki.",
+    "closeConfirmResearchValue": "Takwimu za jumla za hapa hapa za aina hii huwezesha watafiti kusoma jinsi watu wanavyojifunza bila kukusanya data binafsi.",
+    "closeConfirmWhatChanges": "Baada ya kuzima hakuna kazi ya utafiti itakayoendeshwa na swali hili halitaulizwa tena. Matokeo yaliyopo hayaathiriki na yanabaki kwenye kidirisha.",
     "closeConfirmAction": "Izime"
   },
   "backup": {
     "title": "Nakala rudufu na kurejesha",
-    "hint": "Katika toleo la kivinjari, data yako ipo katika kivinjari hiki pekee. Hamisha nakala rudufu, kisha unaweza kuendelea kutoka kifaa kingine au kivinjari kingine.",
+    "hint": "Katika toleo la kivinjari, data huhifadhiwa katika kivinjari hiki pekee. Kuhamisha nakala rudufu huruhusu kazi kuendelea kwenye kifaa kingine au kivinjari kingine.",
     "export": "Hamisha nakala rudufu",
     "import": "Rejesha kutoka nakala rudufu",
-    "replaceWarning": "Kurejesha kunabadilisha data yako yote ya sasa na iliyo ndani ya nakala rudufu, na iliyobadilishwa haiwezi kurudishwa. Unaweza kwanza kuhamisha nakala rudufu ya data ya sasa.",
+    "replaceWarning": "Kurejesha hubadilisha data yote ya sasa na yaliyomo kwenye nakala rudufu, na yaliyobadilishwa hayawezi kurudishwa. Nakala rudufu ya data ya sasa inaweza kuhamishwa kwanza.",
     "confirmImport": "Rejesha",
-    "exporting": "Inahamisha…",
-    "importing": "Inarejesha…",
-    "exportFailed": "Kipindi hiki hakina faili la kuhamisha — kivinjari hakikuruhusu ukurasa huu kuhifadhi data.",
-    "importFailed": "Faili hilo si nakala rudufu ya Breadcrumb, na data yako ya sasa haijabadilika. Jaribu faili lingine."
+    "exporting": "Inahamisha",
+    "importing": "Inarejesha",
+    "exportFailed": "Kipindi hiki hakina faili la kuhamisha: kivinjari hakikuruhusu ukurasa huu kuhifadhi data.",
+    "importFailed": "Faili hilo si nakala rudufu ya Breadcrumb, na data ya sasa haijabadilika. Faili lingine linaweza kujaribiwa."
   }
 }

@@ -8,34 +8,34 @@
   },
   "api": {
     "title": "Layanan AI (kompatibel dengan OpenAI)",
-    "hint": "Masukkan akun layanan AI-mu di sini; percakapan dan semua fitur AI lain berjalan di atasnya.",
+    "hint": "Masukkan akun layanan AI di sini. Percakapan dan semua fitur AI lain berjalan di atasnya.",
     "baseUrl": "URL dasar",
     "apiKey": "Kunci API",
     "model": "Nama model",
     "priceCurrency": "Mata uang penagihan",
-    "priceCurrencyHint": "Model ini ditagih dengan mata uang berbeda di tiap platform. Pilih yang sesuai dengan kuncimu supaya halaman pengeluaran cocok dengan tagihanmu.",
+    "priceCurrencyHint": "Model ini ditagih dengan mata uang berbeda di tiap platform. Pilih mata uang platform tempat kunci API berada supaya halaman pengeluaran cocok dengan tagihan.",
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
-    "saved": "Tersimpan ✓",
+    "saved": "Tersimpan",
     "unsaved": "Perubahan belum tersimpan",
     "testConnection": "Uji koneksi",
-    "testing": "Menghubungkan…",
+    "testing": "Menghubungkan",
     "testResult": {
       "ok": "Terhubung.",
-      "badUrl": "Alamat layanan itu bukan alamat web yang bisa dipakai. Alamat harus diawali https://, misalnya https://api.deepseek.com.",
-      "offline": "Saat ini tidak ada koneksi jaringan. Pastikan perangkat ini terhubung ke internet, lalu periksa apakah sakelar jaringan di bawah dalam keadaan mati.",
-      "timeout": "Penyedia layanan tidak pernah menjawab. Koneksi mungkin lambat; coba lagi sebentar lagi.",
-      "blockedByBrowser": "Peramban tidak bisa menjangkau layanan ini, dan tidak menjelaskan alasannya. Pastikan perangkat ini terhubung ke internet; kalau tetap gagal, kemungkinan besar penyedia ini tidak mengizinkan halaman web terhubung langsung. Coba penyedia lain, atau pakai aplikasi desktop.",
-      "unreachable": "Layanan ini tidak bisa dijangkau. Periksa apakah alamat layanan salah ketik, atau coba lagi sebentar lagi.",
-      "unauthorized": "Penyedia layanan bilang kunci ini tidak bisa dipakai. Kembali ke situs penyedia layananmu dan salin ulang kunci API-nya.",
-      "insufficientBalance": "Saldo akun ini habis. Isi ulang di situs penyedia layananmu, lalu coba lagi.",
-      "notFound": "Tidak ada layanan AI di alamat itu. Periksa apakah bagian di ujung alamat kurang satu, atau justru kelebihan satu — misalnya /v1.",
-      "rateLimited": "Penyedia layanan bilang permintaan datang terlalu rapat saat ini. Coba lagi satu atau dua menit lagi.",
-      "badRequest": "Penyedia layanan tidak menerima permintaan ini. Penyebab paling umum adalah nama model yang salah ketik; cocokkan dengan dokumentasi penyedia.",
-      "serverError": "Ada masalah di sisi penyedia layanan, bukan di pengaturanmu. Coba lagi beberapa saat lagi."
+      "badUrl": "Alamat layanan bukan alamat web yang sah. Alamat harus diawali https://, misalnya https://api.deepseek.com.",
+      "offline": "Saat ini tidak ada koneksi jaringan. Pastikan perangkat ini terhubung ke internet, lalu periksa apakah sakelar internet di bawah dalam keadaan mati.",
+      "timeout": "Penyedia layanan tidak menjawab. Koneksi mungkin lambat; coba lagi nanti.",
+      "blockedByBrowser": "Peramban tidak dapat menjangkau layanan ini dan tidak memberi alasan. Pastikan perangkat ini terhubung ke internet; kalau tetap gagal, kemungkinan besar penyedia tidak mengizinkan halaman web terhubung langsung, sehingga penyedia lain atau edisi desktop akan berfungsi.",
+      "unreachable": "Layanan ini tidak dapat dijangkau. Periksa apakah ada kesalahan pada alamat layanan, atau coba lagi nanti.",
+      "unauthorized": "Penyedia layanan menyatakan kunci ini tidak dapat dipakai. Salin ulang kunci API dari situs penyedia.",
+      "insufficientBalance": "Saldo akun ini habis. Isi ulang di situs penyedia, lalu coba lagi.",
+      "notFound": "Tidak ada layanan AI di alamat itu. Periksa apakah ujung alamat kurang satu ruas atau justru kelebihan satu, misalnya /v1.",
+      "rateLimited": "Penyedia layanan menyatakan permintaan saat ini terlalu sering. Coba lagi satu atau dua menit lagi.",
+      "badRequest": "Penyedia layanan tidak menerima permintaan ini. Penyebab paling umum adalah nama model yang salah ketik, yang dapat dicocokkan dengan dokumentasi penyedia.",
+      "serverError": "Ada masalah di sisi penyedia layanan, bukan di pengaturan ini. Coba lagi nanti."
     },
-    "priceOverride": "Harga kamu sendiri (per juta token)",
-    "priceOverrideHint": "Isi kalau daftar harga bawaan tidak mengenal modelmu, atau harganya berubah. Masukan dan keluaran harus sama-sama diisi agar berlaku; kosongkan untuk memakai daftar bawaan.",
+    "priceOverride": "Harga khusus (per juta token)",
+    "priceOverrideHint": "Gunakan ini bila daftar harga bawaan tidak memuat modelnya, atau harganya berubah. Masukan dan keluaran harus sama-sama diisi agar berlaku; mengosongkannya berarti memakai daftar bawaan.",
     "priceInput": "Masukan",
     "priceOutput": "Keluaran",
     "priceCached": "Masukan dari singgahan",
@@ -44,23 +44,23 @@
   },
   "network": {
     "title": "Internet",
-    "hint": "Matikan, maka semua yang butuh internet berhenti, termasuk panggilan API."
+    "hint": "Mematikannya menghentikan semua yang memerlukan internet, termasuk panggilan API."
   },
   "mainland": {
     "title": "Jaringan Tiongkok daratan",
-    "hint": "Pemeriksaan fakta hanya memakai sumber yang bisa dibuka dari Tiongkok daratan (Bing, plus pencarian Zhipu jika menyala); kalau dimatikan, lebih memilih Wikidata dan Wikipedia."
+    "hint": "Pemeriksaan fakta hanya memakai sumber yang dapat dijangkau dari Tiongkok daratan (Bing, ditambah Zhipu bila pencarian web terbuka menyala). Bila dimatikan, Wikidata dan Wikipedia lebih diutamakan."
   },
   "language": {
     "title": "Bahasa",
     "interface": "Bahasa antarmuka",
     "answer": "Bahasa jawaban AI",
     "sameAsInterface": "Sama dengan antarmuka",
-    "thinNote": "AI menulis {{language}} tidak sebaik {{fallback}}. Kamu bisa mengubah bahasa jawaban saja dan membiarkan antarmuka tetap seperti sekarang."
+    "thinNote": "AI menjawab dalam {{language}} dengan ketepatan yang lebih rendah daripada dalam {{fallback}}. Bahasa jawaban dapat diubah tersendiri tanpa mengubah antarmuka."
   },
   "quietIssues": {
     "title": "Pekerjaan di latar",
-    "allGood": "Semua yang berjalan di latar baik-baik saja.",
-    "summary_other": "Belakangan ada {{count}} pekerjaan latar kecil yang tidak selesai. Belajarmu tidak terpengaruh — buka untuk melihat yang mana",
+    "allGood": "Pekerjaan di latar berjalan normal.",
+    "summary_other": "Belakangan ada {{count}} pekerjaan latar kecil yang tidak selesai. Pembelajaran tidak terpengaruh. Pilih untuk melihat rinciannya",
     "fallbackPurpose": "Pekerjaan latar"
   },
   "purposes": {
@@ -81,7 +81,7 @@
     "term-marking": "Penandaan kata",
     "trail-summary": "Jejak kemarin",
     "planner": "Kemajuan tujuan",
-    "map-place-names": "Namamu sendiri di peta",
+    "map-place-names": "Nama khusus di peta",
     "map-continents": "Wilayah peta",
     "concept-doors": "Tautan konsep di dalam jawaban",
     "diglot-audio": "Pelafalan kata",
@@ -97,16 +97,16 @@
   },
   "billing": {
     "intro": "Setiap langkah yang memakan biaya punya sakelarnya sendiri di sini, dan pengeluarannya dicatat terpisah. Halaman ini menunjukkan yang benar-benar terpakai.",
-    "estimateIntro": "Perkiraan di bawah tiap item memakai pemakaianmu sendiri yang terakhir untuk yang sudah kamu pakai, dan {{scenario}} untuk yang belum; di sebelahnya adalah yang benar-benar kamu keluarkan.",
-    "measurementScenario": "Seseorang yang sudah belajar sekitar tiga bulan: 80 simpul di peta pengetahuan, satu tanya-jawab dalam Mode belajar (pertanyaan ~40 karakter, jawaban ~600 karakter)",
+    "estimateIntro": "Perkiraan di bawah tiap item memakai pemakaian nyata terakhir untuk fitur yang sudah dipakai, dan {{scenario}} untuk yang belum; jumlah yang benar-benar dikeluarkan tercantum di sebelahnya.",
+    "measurementScenario": "Seseorang yang sudah belajar sekitar tiga bulan: 80 simpul di peta pengetahuan, satu tanya-jawab dalam Mode belajar (pertanyaan sekitar 40 karakter, jawaban sekitar 600 karakter)",
     "estimate": "sekitar {{cost}} {{cadence}}",
-    "estimateUnknownModel": "Modelmu tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
+    "estimateUnknownModel": "Model yang dipakai tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
     "estimateFree": "Tidak memakan biaya",
-    "estimateUnmeasured": "Yang ini belum diukur",
+    "estimateUnmeasured": "Biaya satu kali pakai belum diukur",
     "cadencePerRound": "per pertukaran pesan",
-    "cadencePerMessage": "per pesan yang kamu kirim",
+    "cadencePerMessage": "per pesan terkirim",
     "cadencePerAnswer": "per jawaban",
-    "cadenceOnDemand": "setiap kali dipakai",
+    "cadenceOnDemand": "per pemakaian",
     "cadencePerItemOnce": "per item, sekali saja",
     "cadencePerDay": "paling banyak sekali sehari",
     "grandTotal": "Hari ini {{today}} · total {{total}}",
@@ -114,97 +114,97 @@
     "neverUsed": "Belum ada pengeluaran",
     "spendLine": "Hari ini {{today}} · total {{total}}",
     "diglot": {
-      "name": "🧵 Belajar bahasa · penggantian cerdas",
-      "hint": "Versi kuat dari belajar bahasa: AI memilih terjemahan yang pas untuk kalimatnya dan sesekali menyelipkan ungkapan yang alami.",
+      "name": "Belajar bahasa · penggantian cerdas",
+      "hint": "Bentuk yang lebih kuat dari belajar bahasa: AI memilih terjemahan yang sesuai dengan kalimatnya dan menyelipkan ungkapan alami bila ada yang cocok.",
       "toggleLabel": "Penggantian cerdas saat belajar bahasa"
     },
     "chat": {
-      "name": "💬 Percakapan",
-      "hint": "Obrolan sehari-harimu dengan AI. Ini fitur intinya dan tetap menyala; biayanya juga tercantum di sini."
+      "name": "Percakapan",
+      "hint": "Percakapan sehari-hari dengan AI. Ini fitur intinya dan tetap menyala; biayanya juga tercantum di sini."
     },
     "features": {
       "knowledgeTree": {
-        "name": "🌳 Peta pengetahuan",
-        "hint": "Setelah tiap pertukaran pesan, AI menaruh apa yang kalian bicarakan ke dalam petamu."
+        "name": "Peta pengetahuan",
+        "hint": "Setelah tiap pertukaran pesan, AI menaruh apa yang dibicarakan ke dalam peta."
       },
       "webSearchEvidence": {
-        "name": "🌐 Pencarian bukti di web terbuka (Zhipu)",
+        "name": "Pencarian bukti di web terbuka (Zhipu)",
         "price": "sekitar ¥{{price}} per pencarian",
-        "hint": "Saat menyala, selain Wikidata dan Wikipedia, layanan pencarian Zhipu diminta mencari sumber di web terbuka — hal-hal yang tidak pernah ditulis ensiklopedia. Ditagih per pencarian ke akun Zhipu Anda, terpisah dari layanan AI di atas; pada edisi peramban di jaringan Tiongkok daratan, inilah satu-satunya sumber yang bisa dijangkau. Hanya untuk bahasa Mandarin, Inggris, dan Swahili: bahasa lain memberi hasil yang tidak andal saat diuji dan tidak pernah lewat jalur ini.",
-        "disclosure": "Saat ini menyala, kata kunci pencarian yang diambil dari pertanyaan Anda dikirim ke mesin pencari. Itu tempat baru yang dituju kata-kata Anda.",
+        "hint": "Saat menyala, layanan pencarian Zhipu diminta mencari sumber di web terbuka sebagai tambahan atas Wikidata dan Wikipedia, sehingga menjangkau materi yang tidak pernah dicatat ensiklopedia. Penagihannya per panggilan ke akun Zhipu, terpisah dari layanan AI di atas; pada edisi peramban di jaringan Tiongkok daratan, inilah satu-satunya sumber yang tersedia. Hanya untuk bahasa Mandarin, Inggris, dan Swahili: hasil dalam bahasa lain terbukti tidak andal saat diuji, dan jalur ini tidak dipakai untuk bahasa tersebut.",
+        "disclosure": "Saat menyala, kata pencarian yang diambil dari pertanyaan dikirim ke mesin pencari. Ini saluran keluar yang baru.",
         "keyLabel": "Kunci API layanan pencarian Zhipu",
-        "keyPlaceholder": "Dapatkan di open.bigmodel.cn lalu tempel di sini",
-        "noKey": "Belum ada kunci, jadi untuk sekarang ini tidak berbuat apa-apa."
+        "keyPlaceholder": "Dapatkan di open.bigmodel.cn lalu masukkan di sini",
+        "noKey": "Belum ada kunci yang dimasukkan, jadi untuk sekarang ini tidak berpengaruh."
       },
       "knowledgeEdges": {
-        "name": "🕸️ Kaitan pengetahuan",
-        "hint": "Saat sesuatu yang baru dicatat, AI melihat bagaimana ia terhubung dengan yang sudah kamu tahu."
+        "name": "Kaitan pengetahuan",
+        "hint": "Setelah konsep baru dicatat, AI menelusuri bagaimana konsep itu terhubung dengan yang sudah dipelajari."
       },
       "interest": {
-        "name": "💡 Rekomendasi untukmu",
-        "hint": "AI memperhatikan apa yang menarik bagimu dan di mana kamu tersendat, lalu menyesuaikan sarannya; ia juga yang mengenali topik mana yang kamu maksud saat kamu bilang «ini sudah saya tahu»."
+        "name": "Rekomendasi untukmu",
+        "hint": "AI mencatat topik mana yang menarik dan di mana kebingungan muncul, lalu menyesuaikan sarannya; ia juga mengenali konsep yang dimaksud oleh pernyataan seperti «ini sudah saya tahu»."
       },
       "goalPlanning": {
-        "name": "🎯 Perencanaan tujuan",
-        "hint": "Saat kamu menetapkan tujuan, AI mengubahnya menjadi daftar hal yang perlu dipelajari."
+        "name": "Perencanaan tujuan",
+        "hint": "Setelah sebuah tujuan ditetapkan, AI mengubahnya menjadi daftar hal yang perlu dipelajari."
       },
       "compareProfileBuild": {
-        "name": "🌲 Riset pembanding (eksperimen)",
-        "hint": "Untuk perbandingan di luar daftar profesi bawaan, AI mencari di sumber publik, menyusun daftarnya, dan memeriksa tiap sumber. Butuh beberapa menit."
+        "name": "Riset pembanding (eksperimen)",
+        "hint": "Untuk topik di luar direktori profesi, AI mencari di sumber publik, menyusun daftar pembanding, dan memeriksa tiap sumber. Ini butuh beberapa menit."
       },
       "compareAlignment": {
-        "name": "🌉 Pencocokan pembanding",
-        "hint": "Saat membandingkan, AI memutuskan apakah kata-katamu dan kata-kata sumbernya berarti sama."
+        "name": "Pencocokan pembanding",
+        "hint": "Saat membandingkan, AI memutuskan apakah kata-katamu dan kata-kata sumbernya merujuk pada konsep yang sama."
       },
       "teachQuality": {
-        "name": "🎓 Masukan atas penjelasanmu",
-        "hint": "Setelah kamu menjelaskan sesuatu kepada seorang teman, AI membaca bagaimana jalannya; bagian yang kamu jelaskan dengan jernih dicatat."
+        "name": "Masukan atas penjelasan",
+        "hint": "Setelah sebuah penjelasan diberikan kepada teman, AI menilai bagaimana jalannya; bagian yang dijelaskan dengan jernih dicatat."
       },
       "mapTopicNaming": {
-        "name": "🗺️ Penamaan di peta (eksperimen)",
+        "name": "Penamaan di peta (eksperimen)",
         "hint": "Di peta, AI memberi nama tiap wilayah yang terbentuk sendiri."
       },
       "feedbackLab": {
-        "name": "🪞 Belakangan ini",
-        "hint": "Panel tinjauan di samping peta: dihitung sepenuhnya dari data di komputer ini, tidak memakan biaya."
+        "name": "Belakangan ini",
+        "hint": "Panel tinjauan di samping peta, dihitung sepenuhnya dari data lokal dan tanpa biaya."
       },
       "trailSummary": {
-        "name": "🐾 Jejak kemarin",
-        "hint": "Saat aplikasi pertama kali dibuka setiap hari, AI menulis satu kalimat tentang apa yang kamu pelajari sehari sebelumnya; kalimat itu tampil paling atas di panel «Belakangan ini» di samping peta."
+        "name": "Jejak kemarin",
+        "hint": "Saat aplikasi pertama kali dibuka setiap hari, AI mencatat pembelajaran hari sebelumnya dalam satu kalimat, yang tampil di bagian atas panel «Belakangan ini» di samping peta."
       },
       "companionChat": {
-        "name": "🎭 Obrolan dengan teman",
-        "hint": "Tiap hari beberapa teman sekelas mampir menanyakan sesuatu yang pernah kamu pelajari dan sudah lama tidak kamu sentuh. Buka salah satu dan jelaskan kepadanya."
+        "name": "Obrolan dengan teman",
+        "hint": "Tiap hari beberapa teman sekelas mampir dengan pertanyaan tentang materi yang pernah dipelajari tetapi sudah lama tidak disentuh."
       },
       "companionMemory": {
-        "name": "🧠 Ingatan teman",
-        "hint": "Para teman mengingat apa yang kalian bicarakan, dan sesekali merapikan ingatan itu supaya tetap nyambung."
+        "name": "Ingatan teman",
+        "hint": "Para teman mengingat apa yang dibicarakan, dan merapikan ingatan itu secara berkala supaya tetap runtut."
       },
       "companionScript": {
-        "name": "📜 Persiapan teman",
-        "hint": "Sebelum kamu mulai menjelaskan, teman yang akan mendengarkan membaca dulu topiknya supaya bisa mengikuti."
+        "name": "Persiapan teman",
+        "hint": "Sebelum penjelasan dimulai, teman yang akan mendengarkan membaca topiknya lebih dulu supaya dapat mengikuti."
       },
       "focusExplain": {
-        "name": "🔎 Penjelasan mode fokus",
-        "hint": "Dalam mode fokus, memilih sebuah kata atau mengajukan pertanyaan akan memberimu penjelasan."
+        "name": "Penjelasan mode fokus",
+        "hint": "Dalam mode fokus, memilih sebuah kata atau mengajukan pertanyaan menghasilkan sebuah penjelasan."
       },
       "termMarking": {
-        "name": "🖊️ Penandaan kata",
-        "hint": "AI menandai kata-kata dalam jawaban yang mungkin belum kamu kenal; ketuk salah satu untuk melihat artinya."
+        "name": "Penandaan kata",
+        "hint": "AI menandai kata pada tiap jawaban yang mungkin belum dikenal; memilih salah satunya menampilkan artinya."
       }
     }
   },
   "research": {
-    "panelIntro": "Semua angka di sini dihitung oleh komputer ini. Tugasnya sudah ditelaah dan sumbernya bisa diperiksa; datanya tidak keluar sendiri dari perangkat ini, dan semua ini tidak memakan biaya.",
-    "offNotice": "Tugas riset sedang mati: tidak ada tugas baru yang dijalankan. Hasil yang sudah ada tetap tersimpan, dan bisa kamu baca atau hapus satu per satu.",
-    "loading": "Memuat…",
-    "emptyTitle": "Belum ada hasil",
-    "emptyHint": "Saat aplikasi menganggur, ia menghitung tugas riset bertanda tangan secara lokal; hasilnya muncul di sini setelah selesai.",
+    "panelIntro": "Semua angka di halaman ini dihitung oleh mesin ini. Tugas risetnya sudah ditelaah dan sumbernya dapat diperiksa; datanya tidak keluar sendiri dari perangkat ini, dan tidak ada yang memakan biaya.",
+    "offNotice": "Tugas riset dimatikan: tidak ada tugas baru yang dijalankan. Hasil yang ada tetap tersimpan dan dapat dibaca atau dihapus satu per satu.",
+    "loading": "Memuat",
+    "emptyTitle": "Belum ada hasil riset",
+    "emptyHint": "Saat aplikasi menganggur, ia menghitung tugas riset bertanda tangan secara lokal, dan hasilnya muncul di sini setelah selesai.",
     "cardInstitutionLabel": "Lembaga",
     "cardPurposeLabel": "Tujuan",
     "cardEthicsLabel": "Catatan etika",
     "cardComputedAtLabel": "Dihitung",
-    "notEnoughData": "Datanya belum cukup",
+    "notEnoughData": "Data belum cukup untuk sebuah kesimpulan",
     "barRange": "{{low}}–{{high}}",
     "retentionMean": "Rata-rata",
     "retentionMedian": "Median",
@@ -217,27 +217,27 @@
     "weekdayFriday": "Jumat",
     "weekdaySaturday": "Sabtu",
     "deleteAction": "Hapus hasil ini",
-    "deleteConfirmPrompt": "Menghapus hasil ini tidak bisa dibatalkan. Hapus?",
+    "deleteConfirmPrompt": "Hasil yang dihapus tidak dapat dipulihkan.",
     "deleteConfirmAction": "Hapus",
-    "settingsRowTitle": "🔬 Riset",
-    "settingsRowHint": "Menjalankan tugas riset yang sudah ditelaah di komputer ini dan menampilkan hasilnya; datanya tidak keluar sendiri dari perangkat ini dan tidak memakan biaya",
-    "closeConfirmTitle": "Mematikan tugas riset",
-    "closeConfirmWhatItDoes": "Platform riset menjalankan tugas yang sudah ditelaah dan ditandatangani proyek di komputer ini, menghitung statistiknya, dan menunjukkannya kepadamu.",
-    "closeConfirmDataStaysLocal": "Semuanya dihitung di sini; datanya tidak keluar sendiri dari perangkat ini.",
-    "closeConfirmResearchValue": "Statistik agregat lokal seperti ini memungkinkan orang mempelajari cara manusia belajar tanpa mengumpulkan data pribadi siapa pun.",
-    "closeConfirmWhatChanges": "Setelah dimatikan, tidak ada tugas yang berjalan dan kamu tidak akan ditanya lagi. Hasil yang sudah ada tidak tersentuh dan tetap di panel.",
+    "settingsRowTitle": "Riset",
+    "settingsRowHint": "Menjalankan tugas riset yang sudah ditelaah di mesin ini dan menampilkan hasilnya; datanya tidak keluar sendiri dari perangkat ini dan tidak memakan biaya.",
+    "closeConfirmTitle": "Mematikan platform riset",
+    "closeConfirmWhatItDoes": "Platform riset menjalankan tugas yang sudah ditelaah dan ditandatangani proyek secara lokal, menghitung statistiknya, dan menampilkannya.",
+    "closeConfirmDataStaysLocal": "Seluruh penghitungan berlangsung secara lokal, dan datanya tidak keluar sendiri dari perangkat ini.",
+    "closeConfirmResearchValue": "Statistik agregat lokal semacam ini memungkinkan peneliti mempelajari cara orang belajar tanpa mengumpulkan data pribadi.",
+    "closeConfirmWhatChanges": "Setelah dimatikan, tidak ada tugas riset yang berjalan dan pertanyaan ini tidak diajukan lagi. Hasil yang ada tidak terpengaruh dan tetap berada di panel.",
     "closeConfirmAction": "Matikan"
   },
   "backup": {
     "title": "Cadangan dan pemulihan",
-    "hint": "Di versi peramban, data Anda hanya ada di peramban ini. Ekspor satu cadangan, lalu Anda bisa melanjutkan dari perangkat lain atau peramban lain.",
+    "hint": "Di edisi peramban, data tersimpan di peramban ini saja. Mengekspor cadangan memungkinkan pekerjaan dilanjutkan di perangkat lain atau di peramban lain.",
     "export": "Ekspor cadangan",
     "import": "Pulihkan dari cadangan",
-    "replaceWarning": "Pemulihan mengganti seluruh data Anda sekarang dengan isi cadangan, dan yang diganti tidak bisa dikembalikan. Anda boleh mengekspor cadangan data saat ini lebih dulu.",
+    "replaceWarning": "Pemulihan mengganti seluruh data saat ini dengan isi cadangan, dan yang diganti tidak dapat dikembalikan. Cadangan data saat ini dapat diekspor lebih dulu.",
     "confirmImport": "Pulihkan",
-    "exporting": "Mengekspor…",
-    "importing": "Memulihkan…",
-    "exportFailed": "Sesi ini tidak punya berkas untuk diekspor — peramban tidak mengizinkan halaman ini menyimpan data.",
-    "importFailed": "Berkas itu bukan cadangan Breadcrumb, dan data Anda sekarang tidak berubah. Coba berkas lain."
+    "exporting": "Mengekspor",
+    "importing": "Memulihkan",
+    "exportFailed": "Sesi ini tidak punya berkas untuk diekspor: peramban tidak mengizinkan halaman ini menyimpan data.",
+    "importFailed": "Berkas itu bukan cadangan Breadcrumb, dan data saat ini tidak berubah. Berkas lain dapat dicoba."
   }
 }

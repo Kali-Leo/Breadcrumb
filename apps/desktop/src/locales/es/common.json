@@ -3,7 +3,7 @@
     "retry": "Reintentar",
     "stop": "Detener",
     "send": "Enviar",
-    "gotIt": "Entendido",
+    "gotIt": "Aceptar",
     "copy": "Copiar",
     "copied": "Copiado",
     "cancel": "Cancelar",
@@ -18,12 +18,12 @@
     "discover": "Descubrir",
     "map": "Mapa",
     "friends": "Amigos",
-    "offline": "Sin conexión. Todo lo que necesita internet está en pausa; el resto sigue funcionando."
+    "offline": "Sin conexión. Las funciones que necesitan internet están en pausa; las demás no se ven afectadas."
   },
   "state": {
-    "loading": "Cargando…",
-    "storageUnsupported": "Este navegador no puede guardar los datos de la página, así que no quedará nada de esta sesión al cerrar la pestaña. Ábrela en una versión reciente de Chrome, Edge, Firefox o Safari y se guardará.",
-    "storageBlocked": "Esta ventana no permite que la página guarde datos, así que no quedará nada de esta sesión al cerrar la pestaña. Ábrela en una ventana normal, no de incógnito, y se guardará.",
+    "loading": "Cargando",
+    "storageUnsupported": "Este navegador no puede guardar los datos de la página, por lo que no se conserva nada de esta sesión al cerrar la pestaña. Abrirla en una versión reciente de Chrome, Edge, Firefox o Safari permite guardarlos.",
+    "storageBlocked": "Esta ventana no permite que la página guarde datos, por lo que no se conserva nada de esta sesión al cerrar la pestaña. Abrirla en una ventana normal en lugar de una de incógnito permite guardarlos.",
     "storageOtherTab": "Breadcrumb ya está abierto en otra pestaña y aquí no se guardará nada. Vuelve a esa pestaña para continuar, o ciérrala y recarga esta página."
   },
   "list": {

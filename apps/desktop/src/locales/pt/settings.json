@@ -8,34 +8,34 @@
   },
   "api": {
     "title": "Serviço de IA (compatível com OpenAI)",
-    "hint": "Coloque aqui sua conta do serviço de IA; a conversa e todos os outros recursos com IA funcionam com ela.",
+    "hint": "Insira aqui sua conta do serviço de IA. A conversa e todos os outros recursos com IA funcionam com ela.",
     "baseUrl": "URL base",
     "apiKey": "Chave de API",
     "model": "Nome do modelo",
     "priceCurrency": "Moeda de cobrança",
-    "priceCurrencyHint": "Este modelo é cobrado em uma moeda diferente em cada plataforma. Escolha a da sua chave para que a página de gastos bata com sua fatura.",
+    "priceCurrencyHint": "Este modelo é cobrado em uma moeda diferente em cada plataforma. Selecione a moeda da plataforma à qual a chave de API pertence, para que a página de gastos corresponda à fatura.",
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
-    "saved": "Salvo ✓",
+    "saved": "Salvo",
     "unsaved": "Alterações ainda não salvas",
     "testConnection": "Testar a conexão",
-    "testing": "Conectando…",
+    "testing": "Conectando",
     "testResult": {
       "ok": "Conectado.",
-      "badUrl": "Esse endereço de serviço não é um endereço web utilizável. Ele precisa começar com https://, por exemplo https://api.deepseek.com.",
-      "offline": "Não há conexão de rede agora. Verifique se este dispositivo está conectado à internet e depois veja se o interruptor de rede abaixo está desligado.",
-      "timeout": "O provedor nunca respondeu. A conexão pode estar lenta; tente de novo daqui a pouco.",
-      "blockedByBrowser": "O navegador não conseguiu alcançar este serviço e não diz o motivo. Verifique se este dispositivo está conectado à internet; se ainda assim falhar, é provável que este provedor não permita que páginas web se conectem diretamente. Experimente outro provedor ou use o aplicativo para computador.",
-      "unreachable": "Não foi possível alcançar este serviço. Confira se há algum erro no endereço do serviço, ou tente de novo daqui a pouco.",
-      "unauthorized": "O provedor diz que esta chave não pode ser usada. Volte ao site do seu provedor e copie a chave de API novamente.",
-      "insufficientBalance": "Esta conta ficou sem saldo. Adicione créditos no site do seu provedor e tente de novo.",
-      "notFound": "Não há nenhum serviço de IA nesse endereço. Veja se falta uma parte no fim do endereço, ou se há uma a mais — /v1, por exemplo.",
-      "rateLimited": "O provedor diz que as solicitações estão chegando muito próximas umas das outras agora. Tente de novo em um ou dois minutos.",
-      "badRequest": "O provedor não aceitou esta solicitação. A causa mais comum é um nome de modelo digitado errado; confira na documentação do provedor.",
-      "serverError": "Algo deu errado do lado do provedor, não nas suas configurações. Tente de novo daqui a pouco."
+      "badUrl": "O endereço do serviço não é um endereço web válido. Ele precisa começar com https://, por exemplo https://api.deepseek.com.",
+      "offline": "Não há conexão de rede no momento. Verifique se este dispositivo está conectado à internet e depois verifique se o interruptor de internet abaixo está desligado.",
+      "timeout": "O provedor não respondeu. A conexão pode estar lenta; tente de novo mais tarde.",
+      "blockedByBrowser": "O navegador não conseguiu alcançar este serviço e não informou o motivo. Verifique se este dispositivo está conectado à internet; se ainda assim falhar, o provedor provavelmente não permite que páginas web se conectem diretamente, e outro provedor ou a edição para computador resolverá.",
+      "unreachable": "Não foi possível alcançar este serviço. Verifique se há algum erro no endereço do serviço, ou tente de novo mais tarde.",
+      "unauthorized": "O provedor informa que esta chave não pode ser usada. Copie a chave de API novamente no site do provedor.",
+      "insufficientBalance": "Esta conta está sem saldo. Adicione créditos no site do provedor e tente de novo.",
+      "notFound": "Não há nenhum serviço de IA nesse endereço. Verifique se falta um segmento no fim do endereço ou se há um a mais, por exemplo /v1.",
+      "rateLimited": "O provedor informa que as solicitações estão muito frequentes no momento. Tente de novo em um ou dois minutos.",
+      "badRequest": "O provedor não aceitou esta solicitação. A causa mais comum é um nome de modelo escrito errado, que pode ser verificado na documentação do provedor.",
+      "serverError": "Algo deu errado do lado do provedor, não nestas configurações. Tente de novo mais tarde."
     },
-    "priceOverride": "Seus próprios preços (por milhão de tokens)",
-    "priceOverrideHint": "Preencha quando a lista embutida não conhecer seu modelo, ou o preço tiver mudado. Entrada e saída precisam estar preenchidas para valer; deixe em branco para usar a lista embutida.",
+    "priceOverride": "Preços personalizados (por milhão de tokens)",
+    "priceOverrideHint": "Use quando a lista de preços embutida não contiver o modelo, ou o preço tiver mudado. Tanto a entrada quanto a saída precisam ser preenchidas para ter efeito; deixá-las em branco usa a lista embutida.",
     "priceInput": "Entrada",
     "priceOutput": "Saída",
     "priceCached": "Entrada em cache",
@@ -44,25 +44,25 @@
   },
   "network": {
     "title": "Internet",
-    "hint": "Desligue e tudo o que precisa de internet para, inclusive as chamadas à API."
+    "hint": "Desligar isto para tudo o que precisa de internet, inclusive as chamadas à API."
   },
   "mainland": {
     "title": "Rede da China continental",
-    "hint": "A verificação de fatos usa apenas fontes acessíveis da China continental (Bing, mais a busca da Zhipu quando ligada); desligada, prefere a Wikidata e a Wikipédia."
+    "hint": "A verificação de fatos usa apenas fontes acessíveis da China continental (Bing, mais a Zhipu quando a busca na web aberta está ligada). Desligada, prefere a Wikidata e a Wikipédia."
   },
   "language": {
     "title": "Idioma",
     "interface": "Idioma da interface",
     "answer": "Idioma em que a IA responde",
     "sameAsInterface": "O mesmo da interface",
-    "thinNote": "A IA escreve {{language}} menos bem do que escreve {{fallback}}. Você pode mudar só o idioma das respostas e deixar a interface como está."
+    "thinNote": "A IA responde com menos precisão em {{language}} do que em {{fallback}}. O idioma das respostas pode ser alterado separadamente, deixando a interface inalterada."
   },
   "quietIssues": {
     "title": "Trabalho em segundo plano",
-    "allGood": "Tudo em segundo plano está bem.",
-    "summary_one": "{{count}} pequena tarefa de fundo não terminou recentemente. Seu aprendizado não é afetado — abra para ver qual",
-    "summary_many": "{{count}} pequenas tarefas de fundo não terminaram recentemente. Seu aprendizado não é afetado — abra para ver quais",
-    "summary_other": "{{count}} pequenas tarefas de fundo não terminaram recentemente. Seu aprendizado não é afetado — abra para ver quais",
+    "allGood": "O trabalho em segundo plano está funcionando normalmente.",
+    "summary_one": "{{count}} pequena tarefa de fundo não terminou recentemente. O aprendizado não é afetado. Selecione para ver o detalhe",
+    "summary_many": "{{count}} pequenas tarefas de fundo não terminaram recentemente. O aprendizado não é afetado. Selecione para ver o detalhe",
+    "summary_other": "{{count}} pequenas tarefas de fundo não terminaram recentemente. O aprendizado não é afetado. Selecione para ver o detalhe",
     "fallbackPurpose": "Tarefa de fundo"
   },
   "purposes": {
@@ -83,7 +83,7 @@
     "term-marking": "Marcação de palavras",
     "trail-summary": "O rastro de ontem",
     "planner": "Progresso da meta",
-    "map-place-names": "Seus próprios nomes no mapa",
+    "map-place-names": "Nomes personalizados no mapa",
     "map-continents": "Regiões do mapa",
     "concept-doors": "Ligações para conceitos dentro de uma resposta",
     "diglot-audio": "Pronúncia das palavras",
@@ -99,16 +99,16 @@
   },
   "billing": {
     "intro": "Cada passo que custa dinheiro tem sua própria chave aqui, e seu gasto é registrado à parte. Esta página mostra o que foi realmente gasto.",
-    "estimateIntro": "A estimativa sob cada item usa o seu consumo recente no que você já usou, e {{scenario}} no que ainda não; o que você gastou de verdade está ao lado.",
-    "measurementScenario": "Alguém que aprende há cerca de três meses: 80 nós no mapa do conhecimento, uma troca no Modo estudo (pergunta ~40 caracteres, resposta ~600 caracteres)",
+    "estimateIntro": "A estimativa sob cada item usa o consumo real recente quando o recurso já foi usado, e {{scenario}} quando não; o valor realmente gasto é indicado ao lado.",
+    "measurementScenario": "Alguém que aprende há cerca de três meses: 80 nós no mapa do conhecimento, uma troca no Modo estudo (pergunta de cerca de 40 caracteres, resposta de cerca de 600 caracteres)",
     "estimate": "cerca de {{cost}} {{cadence}}",
-    "estimateUnknownModel": "Seu modelo não está na lista de preços embutida, então não há estimativa por uso",
+    "estimateUnknownModel": "O modelo em uso não está na lista de preços embutida, portanto não há estimativa por uso",
     "estimateFree": "Não custa nada",
-    "estimateUnmeasured": "Este ainda não foi medido",
+    "estimateUnmeasured": "O custo de um uso ainda não foi medido",
     "cadencePerRound": "por troca de mensagens",
-    "cadencePerMessage": "por mensagem que você envia",
+    "cadencePerMessage": "por mensagem enviada",
     "cadencePerAnswer": "por resposta",
-    "cadenceOnDemand": "cada vez que você usa",
+    "cadenceOnDemand": "por uso",
     "cadencePerItemOnce": "por item, cobrado uma vez",
     "cadencePerDay": "no máximo uma vez por dia",
     "grandTotal": "Hoje {{today}} · no total {{total}}",
@@ -116,97 +116,97 @@
     "neverUsed": "Ainda sem gastos",
     "spendLine": "Hoje {{today}} · no total {{total}}",
     "diglot": {
-      "name": "🧵 Aprender idiomas · trocas inteligentes",
-      "hint": "A versão reforçada de aprender idiomas: a IA escolhe a tradução que cabe na frase e de vez em quando entra com uma expressão natural.",
+      "name": "Aprender idiomas · trocas inteligentes",
+      "hint": "A forma reforçada do aprendizado de idiomas: a IA escolhe a tradução que cabe na frase e insere uma expressão natural quando cabe.",
       "toggleLabel": "Trocas inteligentes ao aprender idiomas"
     },
     "chat": {
-      "name": "💬 Conversa",
-      "hint": "Sua conversa do dia a dia com a IA. É o recurso central e fica ligado; o que ele custa também aparece aqui."
+      "name": "Conversa",
+      "hint": "A conversa do dia a dia com a IA. É o recurso central e permanece ligado; o custo também é indicado aqui."
     },
     "features": {
       "knowledgeTree": {
-        "name": "🌳 Mapa do conhecimento",
-        "hint": "Depois de cada troca, a IA arquiva no seu mapa o que vocês conversaram."
+        "name": "Mapa do conhecimento",
+        "hint": "Depois de cada troca, a IA arquiva no mapa o que foi discutido."
       },
       "webSearchEvidence": {
-        "name": "🌐 Busca na web aberta para evidências (Zhipu)",
+        "name": "Busca na web aberta para evidências (Zhipu)",
         "price": "cerca de ¥{{price}} por consulta",
-        "hint": "Enquanto está ligado, além da Wikidata e da Wikipédia, o serviço de busca da Zhipu é acionado para encontrar fontes na web aberta: coisas que uma enciclopédia nunca escreveu. Cobrado por consulta na sua conta Zhipu, separado do serviço de IA acima; na edição para navegador em uma rede da China continental é a única fonte alcançável. Só chinês, inglês e suaíli: outros idiomas deram resultados pouco confiáveis nos testes e nunca seguem este caminho.",
-        "disclosure": "Com isto ligado, as palavras de busca tiradas da sua pergunta são enviadas a um mecanismo de busca. É um lugar novo para onde suas palavras vão.",
+        "hint": "Enquanto está ligado, o serviço de busca da Zhipu é acionado para encontrar fontes na web aberta, além da Wikidata e da Wikipédia, o que alcança material que uma enciclopédia nunca registrou. É cobrado por consulta na conta Zhipu, separado do serviço de IA acima; na edição para navegador em uma rede da China continental é a única fonte disponível. Apenas chinês, inglês e suaíli: nos outros idiomas os resultados se mostraram pouco confiáveis nos testes e este caminho não é usado para eles.",
+        "disclosure": "Enquanto está ligado, os termos de busca extraídos da pergunta são enviados a um mecanismo de busca. É um novo canal de saída.",
         "keyLabel": "Chave de API do serviço de busca da Zhipu",
-        "keyPlaceholder": "Obtenha em open.bigmodel.cn e cole aqui",
-        "noKey": "Ainda sem chave, então por enquanto isto não faz nada."
+        "keyPlaceholder": "Obtenha em open.bigmodel.cn e insira aqui",
+        "noKey": "Nenhuma chave foi inserida, portanto por enquanto isto não tem efeito."
       },
       "knowledgeEdges": {
-        "name": "🕸️ Ligações do conhecimento",
-        "hint": "Quando algo novo é arquivado, a IA olha como aquilo se conecta ao que você já sabe."
+        "name": "Ligações do conhecimento",
+        "hint": "Depois que um novo conceito é registrado, a IA determina como ele se conecta ao que já foi aprendido."
       },
       "interest": {
-        "name": "💡 Recomendações pessoais",
-        "hint": "A IA percebe o que interessa a você e onde você trava, e usa isso para ajustar o que sugere; é também o que reconhece de qual tema você fala quando diz «isso eu já sei»."
+        "name": "Recomendações pessoais",
+        "hint": "A IA observa quais temas são de interesse e onde surge a confusão, e usa isso para ajustar suas sugestões; também identifica a qual conceito se refere uma frase como «isso eu já sei»."
       },
       "goalPlanning": {
-        "name": "🎯 Planejamento de metas",
-        "hint": "Quando você define uma meta, a IA a transforma numa lista de coisas para aprender."
+        "name": "Planejamento de metas",
+        "hint": "Depois que uma meta é definida, a IA a transforma numa lista de coisas para aprender."
       },
       "compareProfileBuild": {
-        "name": "🌲 Pesquisa de comparação (experimental)",
-        "hint": "Para comparações fora da lista de profissões embutida, a IA busca em fontes públicas, monta a lista e confere cada fonte. Leva alguns minutos."
+        "name": "Pesquisa de comparação (experimental)",
+        "hint": "Para temas fora do diretório de profissões, a IA busca em fontes públicas, monta a lista de comparação e confere cada fonte. Isso leva alguns minutos."
       },
       "compareAlignment": {
-        "name": "🌉 Correspondência da comparação",
-        "hint": "Durante uma comparação, a IA decide se as suas palavras e as da fonte querem dizer o mesmo."
+        "name": "Correspondência da comparação",
+        "hint": "Durante uma comparação, a IA decide se as suas palavras e as da fonte se referem ao mesmo conceito."
       },
       "teachQuality": {
-        "name": "🎓 Retorno ao explicar",
-        "hint": "Depois de você explicar algo a um companheiro, a IA lê como foi; as partes que você explicou com clareza ficam registradas."
+        "name": "Retorno ao explicar",
+        "hint": "Depois de uma explicação dada a um companheiro, a IA avalia como foi; as partes explicadas com clareza ficam registradas."
       },
       "mapTopicNaming": {
-        "name": "🗺️ Nomes do mapa (experimental)",
+        "name": "Nomes do mapa (experimental)",
         "hint": "No mapa, a IA dá nome a cada área que se formou sozinha."
       },
       "feedbackLab": {
-        "name": "🪞 Recentemente",
-        "hint": "O painel de revisão ao lado do mapa: calculado inteiramente com dados locais, não custa nada."
+        "name": "Recentemente",
+        "hint": "O painel de revisão ao lado do mapa, calculado inteiramente com dados locais e sem custo."
       },
       "trailSummary": {
-        "name": "🐾 O rastro de ontem",
-        "hint": "Na primeira vez que você abre o app em cada dia, a IA escreve uma frase sobre o que você aprendeu no dia anterior; ela aparece no topo do painel «Recentemente», ao lado do mapa."
+        "name": "O rastro de ontem",
+        "hint": "Na primeira vez que o aplicativo é aberto a cada dia, a IA registra em uma frase o aprendizado do dia anterior, mostrada no topo do painel «Recentemente», ao lado do mapa."
       },
       "companionChat": {
-        "name": "🎭 Conversa com companheiros",
-        "hint": "Todo dia alguns colegas passam para perguntar sobre algo que você aprendeu e faz tempo que não toca. Abra um e explique para ele."
+        "name": "Conversa com companheiros",
+        "hint": "Todo dia alguns colegas passam com perguntas sobre material aprendido mas sem contato há um tempo."
       },
       "companionMemory": {
-        "name": "🧠 Memória dos companheiros",
-        "hint": "Os companheiros lembram do que vocês conversaram e organizam essas lembranças de vez em quando para que continuem fazendo sentido."
+        "name": "Memória dos companheiros",
+        "hint": "Os companheiros lembram do que foi conversado e organizam essas lembranças periodicamente para que continuem coerentes."
       },
       "companionScript": {
-        "name": "📜 Preparo do companheiro",
-        "hint": "Antes de você começar a explicar, o companheiro que vai ouvir estuda o tema para conseguir acompanhar."
+        "name": "Preparo do companheiro",
+        "hint": "Antes de uma explicação começar, o companheiro que vai ouvir estuda o tema para conseguir acompanhar."
       },
       "focusExplain": {
-        "name": "🔎 Explicações no modo foco",
-        "hint": "No modo foco, escolher uma palavra ou fazer uma pergunta traz uma explicação."
+        "name": "Explicações no modo foco",
+        "hint": "No modo foco, selecionar uma palavra ou fazer uma pergunta produz uma explicação."
       },
       "termMarking": {
-        "name": "🖊️ Marcação de palavras",
-        "hint": "A IA marca numa resposta as palavras que você talvez ainda não conheça; toque numa para ver o que significa."
+        "name": "Marcação de palavras",
+        "hint": "A IA marca em cada resposta as palavras que podem ser desconhecidas; ao selecionar uma, seu significado é exibido."
       }
     }
   },
   "research": {
-    "panelIntro": "Todos os números aqui foram calculados por este computador. As tarefas são revisadas e suas fontes podem ser conferidas; os dados não saem sozinhos deste aparelho, e nada disso custa dinheiro.",
-    "offNotice": "As tarefas de pesquisa estão desligadas: nenhuma nova será executada. Os resultados que você já tem são mantidos, e você pode lê-los ou apagá-los um a um.",
-    "loading": "Carregando…",
-    "emptyTitle": "Ainda não há resultados",
-    "emptyHint": "Enquanto o aplicativo está ocioso, ele calcula localmente tarefas de pesquisa assinadas; os resultados aparecem aqui quando terminam.",
+    "panelIntro": "Todos os números desta página foram calculados por esta máquina. As tarefas de pesquisa são revisadas e suas fontes podem ser conferidas; os dados não saem sozinhos deste aparelho e nada disso tem custo.",
+    "offNotice": "As tarefas de pesquisa estão desligadas: nenhuma nova será executada. Os resultados existentes são mantidos e podem ser lidos ou apagados um a um.",
+    "loading": "Carregando",
+    "emptyTitle": "Ainda não há resultados de pesquisa",
+    "emptyHint": "Enquanto o aplicativo está ocioso, ele calcula localmente tarefas de pesquisa assinadas, e os resultados aparecem aqui quando terminam.",
     "cardInstitutionLabel": "Instituição",
     "cardPurposeLabel": "Finalidade",
     "cardEthicsLabel": "Nota ética",
     "cardComputedAtLabel": "Calculado",
-    "notEnoughData": "Ainda não há dados suficientes",
+    "notEnoughData": "Ainda não há dados suficientes para uma conclusão",
     "barRange": "{{low}}–{{high}}",
     "retentionMean": "Média",
     "retentionMedian": "Mediana",
@@ -219,27 +219,27 @@
     "weekdayFriday": "Sexta-feira",
     "weekdaySaturday": "Sábado",
     "deleteAction": "Apagar este resultado",
-    "deleteConfirmPrompt": "Apagar este resultado não pode ser desfeito. Apagar?",
+    "deleteConfirmPrompt": "Um resultado apagado não pode ser restaurado.",
     "deleteConfirmAction": "Apagar",
-    "settingsRowTitle": "🔬 Pesquisa",
-    "settingsRowHint": "Executa localmente tarefas de pesquisa revisadas e mostra os resultados; os dados não saem sozinhos deste aparelho e não custa nada",
-    "closeConfirmTitle": "Desligar as tarefas de pesquisa",
-    "closeConfirmWhatItDoes": "A plataforma de pesquisa executa localmente tarefas revisadas e assinadas pelo projeto, calcula as estatísticas e mostra a você.",
-    "closeConfirmDataStaysLocal": "Tudo é calculado aqui; os dados não saem sozinhos deste aparelho.",
-    "closeConfirmResearchValue": "Estatísticas agregadas locais como estas permitem estudar como as pessoas aprendem sem recolher dados pessoais de ninguém.",
-    "closeConfirmWhatChanges": "Uma vez desligado, nenhuma tarefa será executada e você não será perguntado de novo. Os resultados que já tem ficam intactos no painel.",
+    "settingsRowTitle": "Pesquisa",
+    "settingsRowHint": "Executa localmente tarefas de pesquisa revisadas e mostra os resultados; os dados não saem sozinhos deste aparelho e não custa nada.",
+    "closeConfirmTitle": "Desligar a plataforma de pesquisa",
+    "closeConfirmWhatItDoes": "A plataforma de pesquisa executa localmente tarefas revisadas e assinadas pelo projeto, calcula as estatísticas e as exibe.",
+    "closeConfirmDataStaysLocal": "Todo o cálculo acontece localmente, e os dados não saem sozinhos deste aparelho.",
+    "closeConfirmResearchValue": "Estatísticas agregadas locais deste tipo permitem que pesquisadores estudem como as pessoas aprendem sem recolher dados pessoais.",
+    "closeConfirmWhatChanges": "Uma vez desligado, nenhuma tarefa de pesquisa será executada e esta pergunta não será feita de novo. Os resultados existentes não são afetados e permanecem no painel.",
     "closeConfirmAction": "Desligar"
   },
   "backup": {
     "title": "Backup e restauração",
-    "hint": "Na versão de navegador, seus dados ficam só neste navegador. Exporte um backup e você poderá continuar em outro aparelho ou em outro navegador.",
+    "hint": "Na edição para navegador, os dados são guardados apenas neste navegador. Exportar um backup permite continuar em outro aparelho ou em outro navegador.",
     "export": "Exportar um backup",
     "import": "Restaurar de um backup",
-    "replaceWarning": "Restaurar substitui todos os seus dados atuais pelo conteúdo do backup, e o que for substituído não volta. Você pode exportar antes um backup dos dados atuais.",
+    "replaceWarning": "Restaurar substitui todos os dados atuais pelo conteúdo do backup, e o que for substituído não pode ser recuperado. Um backup dos dados atuais pode ser exportado antes.",
     "confirmImport": "Restaurar",
-    "exporting": "Exportando…",
-    "importing": "Restaurando…",
-    "exportFailed": "Esta sessão não tem arquivo para exportar — o navegador não deixou esta página guardar dados.",
-    "importFailed": "Esse arquivo não é um backup do Breadcrumb, e seus dados atuais continuam iguais. Tente outro arquivo."
+    "exporting": "Exportando",
+    "importing": "Restaurando",
+    "exportFailed": "Esta sessão não tem arquivo para exportar: o navegador não permitiu que esta página guardasse dados.",
+    "importFailed": "Esse arquivo não é um backup do Breadcrumb, e os dados atuais permanecem inalterados. Outro arquivo pode ser tentado."
   }
 }

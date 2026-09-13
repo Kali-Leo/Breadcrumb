@@ -2,38 +2,38 @@
   "title": "Gundua",
   "setup": {
     "title": "Gundua",
-    "intro": "Sakinisha skripti moja ya kivinjari, kisha unachotazama kwenye Bilibili na YouTube kitaonekana kwenye ukurasa huu. Yote huhesabiwa kwenye kifaa chako mwenyewe na hakitumwi popote.",
-    "step1Title": "Hatua ya 1: ongeza kiendelezi kinachoendesha skripti",
+    "intro": "Baada ya skripti moja ya kivinjari kusakinishwa, unachotazama kwenye Bilibili na YouTube huonekana kwenye ukurasa huu. Kila kitu huchakatwa kwenye kifaa chako mwenyewe na hakitumwi popote.",
+    "step1Title": "Hatua ya 1: sakinisha kiendelezi cha kivinjari kinachoweza kuendesha skripti",
     "step1Body": "Violentmonkey ni bure. Kisakinishe, kisha urudi kwenye ukurasa huu.",
-    "step1Button": "Fungua ukurasa wa Violentmonkey",
+    "step1Button": "Fungua ukurasa wa usakinishaji wa Violentmonkey",
     "step2Title": "Hatua ya 2: sakinisha skripti mbili za Breadcrumb",
-    "step2Body": "Bonyeza kitufe kilicho hapa chini; kivinjari kitakuuliza kama ukisakinishe, na jibu ni ndiyo.",
+    "step2Body": "Bonyeza kitufe kilicho hapa chini na uthibitishe kwenye kidokezo cha usakinishaji cha kivinjari.",
     "bilibiliScript": "Sakinisha skripti ya Bilibili",
     "youtubeScript": "Sakinisha skripti ya YouTube",
-    "step3Title": "Hatua ya 3: unganisha kivinjari na Breadcrumb",
-    "step3Body": "Fungua ukurasa wa mwanzo wa Bilibili, bofya 🔗 kwenye upau wa chini kushoto, na ubandike mstari ulio hapa chini. Fanya vivyo hivyo mara moja kwenye ukurasa wa mwanzo wa YouTube.",
+    "step3Title": "Hatua ya 3: unganisha kivinjari",
+    "step3Body": "Fungua ukurasa wa mwanzo wa Bilibili, bofya aikoni ya kiungo iliyo chini kushoto ya upau wa swichi, na ubandike msimbo ulio hapa chini. Rudia mara moja kwenye ukurasa wa mwanzo wa YouTube.",
     "step3TitleWeb": "Hatua ya 3: acha Breadcrumb ikiwa wazi",
-    "step3BodyWeb": "Skripti hukabidhi ilichorekodi kila unapofungua Breadcrumb. Hakuna jingine la kufanya.",
-    "codeUsed": "Mstari ule umeshatumika. Mwingine unakuja.",
-    "connected": "Imeunganishwa. Tumia Bilibili na YouTube kama kawaida; unachotazama kitaanza kuonekana hapa."
+    "step3BodyWeb": "Skripti hukabidhi ilichorekodi wakati wowote Breadcrumb ikiwa wazi. Hakuna kingine kinachohitajika.",
+    "codeUsed": "Msimbo uliopita umetumika. Msimbo mpya unatengenezwa.",
+    "connected": "Imeunganishwa. Tumia Bilibili na YouTube kama kawaida; unachotazama kitaonekana kwenye ukurasa huu."
   },
-  "intro": "Ukurasa huu unaonyesha uliyokuwa ukiangalia kwenye Bilibili na YouTube, na kinachokuvutia. Yote huhesabiwa kwenye kompyuta hii; hakuna kinachotumwa mahali pengine.",
+  "intro": "Ukurasa huu unaonyesha yaliyotazamwa kwenye Bilibili na YouTube, na mada zinazovutia. Kila kitu huchakatwa kwenye kompyuta hii na hakitumwi mahali pengine.",
   "emotion": {
     "title": "Jinsi maudhui yalivyokugusa",
     "all": "Yote",
     "pro": "Kujifunza",
     "ent": "Burudani",
-    "gent": "Kutuliza",
-    "expose": "Uliletewa",
+    "gent": "Burudani teule",
+    "expose": "Kuletewa",
     "engage": "Ulichagua",
-    "chartAria": "Jinsi maudhui uliyoletewa na uliyochagua yalivyokugusa kadri muda ulivyopita",
+    "chartAria": "Mkondo wa hisia za maudhui uliyoletewa na uliyochagua",
     "tooltip_one": "{{date}} {{line}} {{value}} (kipengele {{count}})",
     "tooltip_other": "{{date}} {{line}} {{value}} (vipengele {{count}})",
-    "empty": "Hakuna kilichorekodiwa katika kipindi hiki"
+    "empty": "Hakuna maudhui yaliyorekodiwa katika kipindi hiki"
   },
   "wordCloud": {
     "title": "Wingu la maneno",
-    "empty": "Hakuna kilichofunguliwa katika kipindi hiki",
+    "empty": "Hakuna maudhui yaliyofunguliwa katika kipindi hiki",
     "window7": "Siku 7",
     "window30": "Siku 30",
     "window90": "Siku 90",
@@ -41,8 +41,8 @@
   },
   "newTopics": {
     "title": "Mapendeleo mapya",
-    "thinEvidence": "Kumbukumbu bado ni chache — chukulia mabadiliko haya kama viashiria vya awali.",
-    "empty": "Hakuna kipya kilichojitokeza hivi karibuni"
+    "thinEvidence": "Kumbukumbu bado ni chache, hivyo mabadiliko haya ni viashiria tu.",
+    "empty": "Hakuna mada mpya iliyojitokeza hivi karibuni"
   },
   "proContent": {
     "title": "Maudhui ya kujifunza",

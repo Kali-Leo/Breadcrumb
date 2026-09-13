@@ -1,37 +1,37 @@
 {
-  "emptyLine": "Pas encore de conversation. Dis en dessous ce que tu veux apprendre pour en commencer une.",
+  "emptyLine": "Pas encore de conversation. Saisis en dessous ce que tu veux apprendre pour en commencer une.",
   "noReplyYet": "Ce message n'a pas encore de réponse",
-  "resumedFromMiddle": "On reprend à un point antérieur · les messages suivants sont toujours là",
+  "resumedFromMiddle": "Reprise à un point antérieur · tous les messages suivants sont toujours là",
   "backToLatest": "Revenir au plus récent",
   "composer": {
-    "placeholder": "Qu'aimerais-tu apprendre ? Dis-le simplement… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)",
-    "placeholderTouch": "Qu'aimerais-tu apprendre ? Dis-le simplement…",
+    "placeholder": "Saisis ce que tu veux apprendre (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)",
+    "placeholderTouch": "Saisis ce que tu veux apprendre",
     "freeLabel": "Discussion libre",
-    "freeHint": "Parle de ce que tu veux, comme tu veux.",
+    "freeHint": "Une conversation ordinaire, sur n'importe quel sujet et sous n'importe quelle forme.",
     "studyLabel": "Mode étude",
-    "studyHint": "Les réponses t'amènent à réfléchir et à t'exercer, pour que ce que tu apprends reste."
+    "studyHint": "Les réponses guident vers la réflexion et l'exercice, ce qui aide à retenir ce qui est appris."
   },
   "trail": {
     "search": "Rechercher dans les conversations",
-    "noMatches": "Aucune conversation ne correspond",
+    "noMatches": "Aucune conversation correspondante",
     "rename": "Renommer",
-    "more": "Plus d'options pour « {{name}} »",
+    "more": "Plus d'actions pour « {{name}} »",
     "delete": "Supprimer",
-    "deleteConfirm": "Cette conversation et les traces qu'elle a laissées partent ensemble ; les notions de ta carte restent.",
+    "deleteConfirm": "Cette conversation et les traces qu'elle a laissées sont supprimées ensemble ; les notions de la carte ne sont pas affectées.",
     "deleteAction": "Supprimer cette conversation"
   },
   "popup": {
     "close": "Fermer cette fenêtre de conversation"
   },
   "grounding": {
-    "gathering": "Recherche des sources…",
-    "conflictHeading": "Les sources ne disent pas la même chose ici, les deux versions sont là :",
+    "gathering": "Recherche des sources",
+    "conflictHeading": "Les sources divergent sur les phrases suivantes. Les deux versions sont indiquées :",
     "alsoSays": "Une autre source :",
     "wikidataFact": "{{subject}} — {{property}} : {{value}}.",
     "wikidataFactWithReference": "{{subject}} — {{property}} : {{value}} (source : {{reference}}).",
     "mark": {
-      "grounded": "Vient des sources",
-      "own": "Ma propre compréhension",
+      "grounded": "Appuyé par une source",
+      "own": "Non couvert par les sources",
       "conflicting": "Les sources divergent"
     },
     "sources": {
@@ -43,19 +43,19 @@
     }
   },
   "companion": {
-    "chatDisabled": "Le chat avec les compagnons est éteint. Pour continuer, rallume « Chat avec les compagnons » dans les réglages",
+    "chatDisabled": "La conversation avec les compagnons est désactivée. Réactive « Conversation avec les compagnons » dans les réglages pour continuer.",
     "credits": "Les compagnons viennent de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0 ; leurs personnalités écrites sont une œuvre dérivée avec modifications et n'impliquent aucune approbation de l'auteur d'origine.",
     "closeRoster": "Fermer la liste des compagnons",
     "aiLabel": "Partenaire d'étude IA",
-    "rosterEmpty": "Personne n'est passé demander de l'aide aujourd'hui.",
-    "breakReminder": "Cette conversation dure depuis deux heures. Tu peux t'arrêter et te reposer ; tout reste ici.",
-    "crisisResponse": "Tu as parlé de te faire du mal. Je suis une IA et je ne peux pas t'aider là-dessus — cela vaut la peine d'en parler à une personne. Chine continentale : ligne d'écoute 12356. États-Unis : 988. Ailleurs : findahelpline.com. Cette conversation restera ici.",
-    "helperInvitation": "Je n'arrive toujours pas à comprendre « {{topic}} ». Quand tu auras un moment, tu peux me l'expliquer avec tes mots ? Commencer par ce que c'est serait parfait.",
-    "helperThanks": "Merci. « {{topic}} » est bien plus clair pour moi maintenant. Je vais m'exercer de mon côté — à bientôt."
+    "rosterEmpty": "Aucun compagnon n'est passé demander de l'aide aujourd'hui.",
+    "breakReminder": "Cette conversation avec les compagnons dure depuis deux heures. Tu peux t'arrêter et te reposer ; tout est conservé ici.",
+    "crisisResponse": "Tu as parlé de te faire du mal. Je suis une IA et je ne peux pas t'aider là-dessus ; cela vaut la peine d'en parler à une personne réelle. Chine continentale : ligne d'écoute 12356. États-Unis : 988. Ailleurs : findahelpline.com. Cette conversation reste ici.",
+    "helperInvitation": "Je n'ai pas encore compris « {{topic}} ». Quand tu auras un moment, peux-tu me l'expliquer avec tes mots ? Commencer par ce que c'est suffirait.",
+    "helperThanks": "Merci. « {{topic}} » est bien plus clair pour moi maintenant. Je vais m'exercer de mon côté un moment."
   },
   "errors": {
-    "offline": "Tu es hors ligne. Pour continuer, rallume l'interrupteur internet dans les réglages",
-    "noApiConfig": "Aucun service d'IA n'est encore configuré. Ajoute l'adresse et la clé sur la page des réglages",
-    "requestFailed": "Cette requête n'est pas passée. Réessaie dans un instant, ou vérifie le service d'IA dans les réglages."
+    "offline": "Tu es hors ligne. Réactive l'interrupteur internet dans les réglages pour continuer.",
+    "noApiConfig": "Aucun service d'IA n'est encore configuré. L'adresse et la clé se saisissent sur la page des réglages.",
+    "requestFailed": "Cette requête n'a pas abouti. Réessaie plus tard, ou vérifie le service d'IA dans les réglages."
   }
 }

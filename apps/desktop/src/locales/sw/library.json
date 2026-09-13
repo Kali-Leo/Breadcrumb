@@ -1,23 +1,23 @@
 {
   "title": "Nyenzo zangu",
-  "intro": "Weka hapa nyenzo ulizo nazo; ukiuliza swali baadaye, jibu litatafutwa hapa kwanza. Ongeza tu vile ulivyo na ruhusa ya kuvitumia: vitabu pepe ulivyonunua, nakala za mihadhara, vitabu ulivyoazima maktaba, vitabu vya milki ya umma, vitabu vya kiada huria.",
+  "intro": "Ingiza nyenzo ambazo una haki ya kuzitumia. Maswali ya baadaye hutafuta katika nyenzo hizi kwanza.",
   "import": "Ingiza faili",
-  "importing": "Inasoma…",
-  "formats": "PDF, Markdown na maandishi sahili",
-  "empty": "Bado hakuna nyenzo hapa.",
+  "importing": "Inasoma",
+  "formats": "PDF, Markdown na maandishi sahili zinatumika",
+  "empty": "Bado hakuna nyenzo iliyoingizwa.",
   "remove": "Ondoa",
   "progress": {
-    "building": "Inajenga faharasa ya maana kwa sehemu {{embedded}} / {{total}}",
-    "ready": "Faharasa imekamilika",
-    "usable": "Kutafuta kwa maneno tayari kunafanya kazi; matokeo yataboreka pale faharasa ya maana itakapokamilika."
+    "building": "Inachakata sehemu {{embedded}} / {{total}}",
+    "ready": "Nyenzo zimechakatwa",
+    "usable": "Utafutaji tayari unafanya kazi; matokeo huwa sahihi zaidi pale uchakataji utakapokamilika."
   },
   "speed": {
-    "ipad": "Sasisha mfumo hadi iPadOS 26, hatua hii itakuwa haraka zaidi.",
-    "linux": "Fungua ukurasa huu katika Firefox, hatua hii itakuwa haraka zaidi.",
-    "desktop": "Fungua katika toleo jipya la Chrome, Edge, Safari au Firefox, hatua hii itakuwa haraka zaidi."
+    "ipad": "Kusasisha mfumo hadi iPadOS 26 hufanya hatua hii kuwa haraka zaidi.",
+    "linux": "Kufungua ukurasa huu katika Firefox hufanya hatua hii kuwa haraka zaidi.",
+    "desktop": "Kuifungua katika toleo jipya la Chrome, Edge, Safari au Firefox hufanya hatua hii kuwa haraka zaidi."
   },
   "error": {
-    "unreadable": "Hakuna maandishi yaliyopatikana katika faili hili. Ikiwa ni picha iliyochanganuliwa, maandishi yake yanahitaji kutambuliwa kwanza (OCR)."
+    "unreadable": "Hakuna maandishi yaliyopatikana katika faili hili. Hati iliyochanganuliwa inahitaji utambuzi wa maandishi kwanza."
   },
   "search": {
     "placeholder": "Tafuta katika nyenzo zangu",

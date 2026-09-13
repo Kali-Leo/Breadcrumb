@@ -1,104 +1,104 @@
 {
   "next": "Siguiente",
   "back": "Atrás",
-  "skip": "Sáltalo, ya me oriento yo",
+  "skip": "Omitir la introducción",
   "welcome": {
     "label": "Presentación",
     "card1Title": "Qué es esto",
-    "card1Body": "Breadcrumb es un compañero de aprendizaje. Hablas con una IA sobre lo que quieras entender y, junto a las respuestas, va guardando lo que has visto. No hay que tomar apuntes ni pasar cada día.",
-    "card2Title": "Hablas un rato y crece un mapa",
-    "card2Body": "Cada concepto que aparece se convierte en una isla del mapa, colocada y agrupada sola. Los sitios donde no has vuelto en un tiempo se aclaran: eso dice qué partes llevan un rato en reposo, no qué tal lo haces.",
-    "card3Title": "Qué se queda aquí y qué cuesta dinero",
-    "card3Body": "Las conversaciones, el mapa y tu vocabulario viven en este ordenador. Sin cuenta y sin sincronización en la nube. Lo único que cuesta dinero es el servicio de IA que pones tú, cobrado por uso; cada función que gasta tiene su propio interruptor y su precio escrito al lado, en los ajustes.",
+    "card1Body": "Breadcrumb es un compañero de aprendizaje. Cualquier cosa que quieras entender se puede tratar aquí con una IA; junto a las respuestas, lo que la conversación cubrió queda registrado automáticamente. No hay apuntes que tomar ni visita diaria que hacer.",
+    "card2Title": "Las conversaciones hacen crecer un mapa",
+    "card2Body": "Cada concepto que aparece se convierte en una isla del mapa, colocada y agrupada automáticamente. Las zonas sin tocar durante un tiempo se aclaran, lo que indica qué partes se han dejado de lado, no qué tal lo haces.",
+    "card3Title": "Dónde se quedan los datos y qué cuesta dinero",
+    "card3Body": "Las conversaciones, el mapa y el vocabulario se guardan todos en este ordenador. No hay cuenta ni sincronización en la nube. Lo único que cuesta dinero es el servicio de IA que aportas tú, cobrado por uso; cada función que gasta algo se puede apagar por separado, con el precio escrito al lado en los ajustes.",
     "start": "Empezar",
-    "tryDemo": "Ver antes un ejemplo",
-    "demoNote": "Tres meses de aprendizaje de otra persona; se quita con un clic cuando quieras.",
-    "installing": "Preparando el ejemplo…"
+    "tryDemo": "Cargar primero los datos de ejemplo",
+    "demoNote": "El ejemplo es un registro de tres meses de aprendizaje y se puede quitar en un solo paso.",
+    "installing": "Preparando los datos de ejemplo"
   },
   "tour": {
     "label": "Recorrido guiado",
     "finish": "Empezar a usarlo",
     "exit": "Salir del recorrido",
     "chatTitle": "Todo empieza aquí",
-    "chatBody": "Lo único que tienes que hacer es hablar. El interruptor de arriba: en modo estudio las respuestas te llevan a pensar y practicar; en charla libre es una conversación normal.",
-    "trailTitle": "Tus conversaciones viven en la barra lateral",
-    "trailBody": "Los títulos se ponen solos — del primer concepto al último. En cuanto renombras uno tú, ya no se vuelve a renombrar.",
-    "mapTitle": "Habla un rato y esto crece",
-    "mapBody": "Estas islas salieron solas de las conversaciones; aquí no se archivó nada a mano. Rueda arriba para entrar en una.",
-    "mapEmptyTitle": "Mar abierto, de momento",
-    "mapEmptyBody": "Cada intercambio que tienes convierte solo lo hablado en islas de aquí. No hay nada que tengas que archivar.",
-    "mirrorTitle": "Que se difumine es lo que tiene que pasar",
-    "mirrorBody": "Estos dos muestran cuánto has cubierto y cuánto recordarías todavía. Los sitios que no has visitado se difuminan — es un recordatorio, no una nota en tu contra. Todo se calcula aquí y no cuesta nada.",
-    "spendingTitle": "Lo que cuesta, antes de encenderlo",
-    "spendingBody": "Todas las funciones que cuestan dinero están en esta página con su propio interruptor, y cada una dice aproximadamente lo que cuesta un uso antes de que la actives. Esa cifra está medida, no supuesta.",
-    "yourTurnTitle": "Te toca",
-    "yourTurnBody": "Pregunta por algo que de verdad quieras entender. El mapa irá siguiéndote solo."
+    "chatBody": "Basta con escribir aquí. En el interruptor de arriba, las respuestas del modo estudio guían hacia la reflexión y la práctica, y la charla libre es una conversación normal.",
+    "trailTitle": "Las conversaciones se listan en la barra lateral",
+    "trailBody": "Los títulos se generan automáticamente, con la forma «del primer concepto al último». Una vez que un título se renombra a mano, ya no vuelve a cambiar.",
+    "mapTitle": "Las conversaciones hacen crecer el mapa",
+    "mapBody": "Estas islas se han montado automáticamente a partir de las conversaciones; nada se registró a mano. Rodar hacia arriba entra un nivel.",
+    "mapEmptyTitle": "Esto es mar abierto por ahora",
+    "mapEmptyBody": "Los conceptos tratados en cada intercambio se convierten aquí en islas de forma automática. No hay que registrar nada a mano.",
+    "mirrorTitle": "Que el color se atenúe es normal",
+    "mirrorBody": "Estos dos paneles muestran cuánto se ha aprendido y cuánto se recuerda todavía. Las partes sin tocar durante mucho tiempo se atenúan solas; esto es un aviso, no una penalización. Todo lo de esta página se calcula en esta máquina y no cuesta nada.",
+    "spendingTitle": "Los costes se indican de antemano",
+    "spendingBody": "Todas las funciones que cuestan dinero están en esta página y se pueden apagar por separado. El coste aproximado de un uso aparece aquí antes de activarla, y esa cifra está medida, no estimada.",
+    "yourTurnTitle": "Hacer una pregunta",
+    "yourTurnBody": "Pregunta por algo que de verdad quieras entender. El mapa sigue solo."
   },
   "pageGuide": {
     "label": "Sobre esta página",
-    "gotIt": "Entendido",
+    "gotIt": "Aceptar",
     "openButton": "Sobre esta página",
     "chat": {
-      "title": "Aquí es donde hablas",
-      "body": "Pregunta lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio te devuelve preguntas y te pide que lo expliques tú; la charla libre es una conversación normal.",
-      "point1": "Los conceptos que salen se archivan solos en el mapa; no hay nada que apuntar",
-      "point2": "Los títulos de las conversaciones se ponen solos y dejan de cambiar en cuanto renombras uno",
-      "limit": "No te va a planificar la semana ni va a ir a buscarte cuando pasen días sin que aparezcas."
+      "title": "Conversación con la IA",
+      "body": "Pregunta sobre lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio devuelve preguntas e invita a explicarlo con tus propias palabras, mientras que la charla libre es un intercambio normal.",
+      "point1": "Los conceptos que salen se archivan en el mapa automáticamente, sin nada que anotar a mano",
+      "point2": "Los títulos de las conversaciones se generan automáticamente y dejan de cambiar una vez renombrados a mano",
+      "limit": "No planifica un horario ni envía recordatorios tras unos días de ausencia."
     },
     "map": {
-      "title": "Todo lo que has visto, extendido",
-      "body": "Cada isla es un concepto del que has hablado, colocado y agrupado de forma automática. Entra un nivel para ver el detalle y en qué conversaciones apareció.",
-      "point1": "Lo oscuro es reciente; lo pálido lleva un tiempo en reposo",
-      "point2": "Todo lo de esta página se calcula en tu propia máquina y no cuesta nada",
-      "limit": "No es un cuaderno: no puedes añadir nada a mano, solo crece a partir de tus conversaciones."
+      "title": "Un mapa de lo aprendido",
+      "body": "Cada isla es un concepto que se ha tratado, colocado y agrupado automáticamente. Entrar un nivel muestra el detalle, incluidas las conversaciones que lo tocaron.",
+      "point1": "Los lugares oscuros se tocaron hace poco; los pálidos llevan un tiempo apartados",
+      "point2": "Todo lo de esta página se calcula en esta máquina y no cuesta nada",
+      "limit": "No es un cuaderno: no se pueden añadir entradas a mano, y el mapa solo crece a partir de las conversaciones."
     },
     "vocab": {
-      "title": "Aprende un idioma mientras charlas",
-      "body": "Al activarlo, algunas palabras de las respuestas llegan en el idioma que estás aprendiendo; puedes adivinar primero y después ver qué significan. Esta página guarda las palabras en las que estás y es donde se descargan y se cambian los diccionarios.",
-      "point1": "Una prueba corta de vocabulario permite empezar más allá de lo que ya sabes",
-      "point2": "Significados y pronunciación salen de un diccionario descargado que se queda en esta máquina y funciona sin conexión",
-      "limit": "No enseña gramática ni pone ejercicios; solo cambia palabras en frases que ibas a leer igualmente."
+      "title": "Aprender un idioma mientras se conversa",
+      "body": "Con esto activado, algunas palabras de las respuestas de la IA llegan en el idioma que se está aprendiendo, y se pueden adivinar antes de mostrar la definición. Esta página lista las palabras en curso y es donde se descargan y se cambian los diccionarios.",
+      "point1": "Se puede hacer antes una comprobación de vocabulario, para que las palabras nuevas empiecen en el nivel ya alcanzado",
+      "point2": "La pronunciación y las definiciones salen de un diccionario descargado que se queda en esta máquina y funciona sin conexión",
+      "limit": "No enseña gramática ni ofrece series de ejercicios; solo cambia palabras en frases que ibas a leer de todos modos."
     },
     "discovery": {
-      "title": "Lo que ves, reunido en un sitio",
-      "body": "Instala un pequeño script en el navegador y lo que ves en Bilibili y YouTube se resume aquí: las palabras que se repiten, los temas que empiezan a aparecer y los contenidos largos que has visto. Todo se calcula en este ordenador.",
-      "point1": "La página se abre antes de instalar nada y te dice qué hace falta",
-      "point2": "El registro de lo que ves se queda en esta máquina y no se envía a ningún sitio",
-      "limit": "No elige qué deberías ver ni pone nota a lo que has visto."
+      "title": "Lo que se ve a diario, reunido en una página",
+      "body": "Una vez instalado un script de navegador, lo que ves en Bilibili y YouTube se reúne aquí: las palabras que se repiten, los temas que han aparecido hace poco y los contenidos largos que has visto. Todo se procesa en este ordenador.",
+      "point1": "Esta página se abre antes de instalar cualquier script y enumera los pasos necesarios",
+      "point2": "El registro de visionado se queda en esta máquina y nunca se envía a otro lugar",
+      "limit": "No decide qué ver ni puntúa lo que se ha visto."
     },
     "companions": {
-      "title": "Unas cuantas personas que vienen con preguntas",
-      "body": "Cada día aparecen unos personajes preguntando por algo que has estado aprendiendo. Explicárselo es una forma de comprobar si sabes hacerlo. Hablan en una ventanita aparte, así que tu conversación se queda donde estaba.",
-      "point1": "Lo que preguntan sale de tu propio registro",
-      "point2": "Si prefieres no tenerlos, todo esto se apaga en los ajustes",
-      "limit": "No son personas reales y, cuando te vayas, no van a esperarte ni a llamarte de vuelta."
+      "title": "Compañeros que vienen con preguntas",
+      "body": "Cada día vienen unos personajes con preguntas sacadas de material aprendido hace poco. Explicarles algo es una forma de comprobar si se puede explicar con claridad. Estas conversaciones ocurren en una ventana pequeña aparte y no afectan a la conversación existente.",
+      "point1": "Lo que preguntan sale de tu propio registro de aprendizaje",
+      "point2": "Toda la función se puede apagar en los ajustes",
+      "limit": "No son personas reales; cuando te vas, no esperan ni te llaman de vuelta."
     },
     "settings": {
       "title": "Claves, idiomas y gasto",
-      "body": "Lo primero que hay que rellenar es la dirección y la clave de un servicio de IA: sin eso, nada que necesite la IA puede funcionar. Aquí también se cambia el idioma de la interfaz, el idioma en que responde la IA y si la aplicación se conecta o no.",
-      "point1": "«Interruptores y gasto» lista cada función que cuesta dinero, con su interruptor y cuánto cuesta más o menos un uso",
-      "point2": "La clave se queda en este ordenador y no sale acompañando a nada",
-      "limit": "Aquí no se ofrece el servicio de IA en sí; la clave la consigues en el proveedor con el que te des de alta."
+      "body": "El primer paso es introducir la dirección y la clave de un servicio de IA, sin lo cual las funciones que dependen de la IA no pueden ejecutarse. Esta página también cambia el idioma de la interfaz, el idioma en que responde la IA y si la aplicación se conecta a la red.",
+      "point1": "«Interruptores y gasto» enumera cada función que cuesta dinero, con su propio interruptor y el coste aproximado de un uso",
+      "point2": "La clave se guarda solo en este ordenador y nunca se envía junto con nada",
+      "limit": "El servicio de IA en sí no se ofrece aquí; la clave hay que obtenerla de un proveedor."
     }
   },
   "checklist": {
     "title": "Empieza por aquí",
     "connect": "Conectar un servicio de IA",
-    "ask": "Hacer tu primera pregunta",
+    "ask": "Hacer la primera pregunta",
     "map": "Abrir el mapa",
     "dismiss": "Ocultar esta lista",
-    "demoNote": "Ahora mismo el mapa muestra datos de ejemplo.",
+    "demoNote": "El mapa muestra actualmente datos de ejemplo.",
     "removeDemo": "Quitar los datos de ejemplo",
-    "removingDemo": "Quitando…",
-    "takeTour": "Enséñamelo paso a paso",
-    "tourNote": "Dos minutos, señalando la pantalla real. Escape sale en cualquier momento."
+    "removingDemo": "Quitando",
+    "takeTour": "Empezar el recorrido",
+    "tourNote": "Unos dos minutos, señalando la pantalla real. Escape sale del recorrido."
   },
   "settings": {
     "title": "Recorrido guiado",
-    "hint": "Volver a ver la presentación, recuperar la nota de cada página o quitar los datos de ejemplo.",
-    "replay": "Volver a hacer el recorrido",
-    "resetGuides": "Volver a mostrar las notas de todas las páginas",
-    "guidesRestored": "Hecho. Cada página volverá a mostrar su nota la próxima vez que la abras.",
+    "hint": "La presentación se puede volver a ver, las notas de página se pueden restaurar y los datos de ejemplo se pueden quitar.",
+    "replay": "Volver a ver la presentación",
+    "resetGuides": "Restaurar todas las notas de página",
+    "guidesRestored": "Restauradas. Cada página muestra su nota una vez más la próxima vez que se abra.",
     "removeDemo": "Quitar los datos de ejemplo",
     "demoAbsent": "Sin datos de ejemplo"
   }

@@ -3,7 +3,7 @@
     "retry": "Jaribu tena",
     "stop": "Simamisha",
     "send": "Tuma",
-    "gotIt": "Nimeelewa",
+    "gotIt": "Sawa",
     "copy": "Nakili",
     "copied": "Imenakiliwa",
     "cancel": "Ghairi",
@@ -18,12 +18,12 @@
     "discover": "Gundua",
     "map": "Ramani",
     "friends": "Marafiki",
-    "offline": "Huna mtandao. Kila kinachohitaji intaneti kimesimama kwa muda; mengine yanaendelea."
+    "offline": "Huna mtandao. Vipengele vinavyohitaji intaneti vimesimama; vingine haviathiriki."
   },
   "state": {
-    "loading": "Inapakia…",
-    "storageUnsupported": "Kivinjari hiki hakiwezi kuhifadhi data ya ukurasa huu, kwa hivyo hakuna kitakachobaki cha kipindi hiki baada ya kufunga kichupo. Kifungue katika toleo jipya la Chrome, Edge, Firefox au Safari, na kila kitu kitahifadhiwa.",
-    "storageBlocked": "Dirisha hili haliruhusu ukurasa kuhifadhi data, kwa hivyo hakuna kitakachobaki cha kipindi hiki baada ya kufunga kichupo. Kifungue katika dirisha la kawaida badala ya la faragha, na kila kitu kitahifadhiwa.",
+    "loading": "Inapakia",
+    "storageUnsupported": "Kivinjari hiki hakiwezi kuhifadhi data ya ukurasa huu, kwa hivyo hakuna kinachobaki cha kipindi hiki baada ya kichupo kufungwa. Kukifungua katika toleo jipya la Chrome, Edge, Firefox au Safari huruhusu data kuhifadhiwa.",
+    "storageBlocked": "Dirisha hili haliruhusu ukurasa kuhifadhi data, kwa hivyo hakuna kinachobaki cha kipindi hiki baada ya kichupo kufungwa. Kukifungua katika dirisha la kawaida badala ya la faragha huruhusu data kuhifadhiwa.",
     "storageOtherTab": "Breadcrumb tayari imefunguliwa katika kichupo kingine, na hakuna kitakachohifadhiwa hapa. Rudi kwenye kichupo hicho ili kuendelea, au kifunge kisha upakie ukurasa huu upya."
   },
   "list": {

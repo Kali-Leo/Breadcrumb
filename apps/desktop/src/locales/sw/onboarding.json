@@ -1,104 +1,104 @@
 {
   "next": "Endelea",
   "back": "Rudi",
-  "skip": "Ruka, nitajitafutia njia",
+  "skip": "Ruka utangulizi",
   "welcome": {
     "label": "Utangulizi",
-    "card1Title": "Hii ni nini",
-    "card1Body": "Breadcrumb ni mwenzako wa kujifunza. Unazungumza na AI kuhusu unachotaka kuelewa, na kando ya majibu inaweka kumbukumbu ya uliyopitia. Hakuna madokezo ya kuandika wala kuripoti kila siku.",
-    "card2Title": "Unazungumza, na ramani inakua",
-    "card2Body": "Kila dhana inayojitokeza inakuwa kisiwa kwenye ramani, ikiwekwa na kupangwa yenyewe. Sehemu ambazo hujarudi kwa muda zinafifia — hiyo inaeleza sehemu gani zimetulia, si wewe ni nani.",
-    "card3Title": "Kinachobaki hapa, na kinachogharimu",
-    "card3Body": "Mazungumzo, ramani na msamiati vinakaa kwenye kompyuta hii. Hakuna akaunti wala usawazishaji wa wingu. Kinachogharimu ni huduma ya AI unayoiweka mwenyewe, ikilipiwa kwa matumizi; kila kipengele kinachotumia fedha kina swichi yake, na bei yake imeandikwa kando yake katika mipangilio.",
+    "card1Title": "Utangulizi",
+    "card1Body": "Breadcrumb ni mwenzako wa kujifunza. Chochote unachotaka kuelewa kinaweza kujadiliwa hapa na AI; kando ya majibu, yaliyozungumzwa yanarekodiwa yenyewe. Hakuna madokezo ya kuandika wala kuripoti kila siku.",
+    "card2Title": "Mazungumzo hukuza ramani",
+    "card2Body": "Kila dhana inayojitokeza inakuwa kisiwa kwenye ramani, ikiwekwa na kupangwa yenyewe. Maeneo yasiyoguswa kwa muda hufifia, jambo linaloonyesha sehemu zilizowekwa kando, si ubora wa matokeo yako.",
+    "card3Title": "Data inakaa wapi, na kinachogharimu",
+    "card3Body": "Mazungumzo, ramani na msamiati vyote vinahifadhiwa kwenye kompyuta hii. Hakuna akaunti wala usawazishaji wa wingu. Kinachogharimu ni huduma ya AI unayoiweka mwenyewe, ikilipiwa kwa matumizi; kila kipengele kinachotumia fedha kinaweza kuzimwa peke yake, na bei yake imeandikwa kando yake katika mipangilio.",
     "start": "Anza",
-    "tryDemo": "Ona mfano kwanza",
-    "demoNote": "Miezi mitatu ya kujifunza kwa mtu mwingine; mbofyo mmoja unauondoa wakati wowote.",
-    "installing": "Kuandaa mfano…"
+    "tryDemo": "Pakia data ya mfano kwanza",
+    "demoNote": "Mfano ni kumbukumbu ya kujifunza ya miezi mitatu na inaweza kuondolewa kwa hatua moja.",
+    "installing": "Inaandaa data ya mfano"
   },
   "tour": {
     "label": "Ziara ya kuongozwa",
     "finish": "Anza kuitumia",
     "exit": "Toka kwenye ziara",
-    "chatTitle": "Kila kitu huanzia hapa",
-    "chatBody": "Unachotakiwa ni kuzungumza tu. Swichi iliyo juu: katika hali ya kusoma majibu hukuongoza kufikiri na kujaribu; katika mazungumzo huru ni maongezi ya kawaida.",
-    "trailTitle": "Mazungumzo yako hukaa kwenye upau wa kando",
-    "trailBody": "Vichwa hujipa majina vyenyewe — kutoka dhana ya kwanza hadi ya mwisho. Ukishakipa jina wewe mwenyewe, hakibadilishwi tena kamwe.",
-    "mapTitle": "Zungumza kwa muda na hii itakua",
-    "mapBody": "Visiwa hivi vilitolewa kwenye mazungumzo vyenyewe; hakuna kilichopangwa hapa kwa mkono. Sogeza juu ili kuingia ndani ya kimoja.",
-    "mapEmptyTitle": "Kwa sasa, bahari wazi",
-    "mapEmptyBody": "Kila mzunguko wa mazungumzo hubadilisha wenyewe mliyoyazungumza kuwa visiwa hapa. Hakuna cha wewe kupanga.",
-    "mirrorTitle": "Kufifia ndilo linalopaswa kutokea",
-    "mirrorBody": "Hivi viwili vinaonyesha umepitia kiasi gani na ungekumbuka kiasi gani bado. Maeneo usiyoyarudia hufifia — hilo ni ukumbusho, si alama dhidi yako. Yote huhesabiwa hapa na hayagharimu chochote.",
-    "spendingTitle": "Gharama yake, kabla hujaiwasha",
-    "spendingBody": "Kila kipengele kinachogharimu pesa kiko kwenye ukurasa huu na swichi yake, na kila kimoja hueleza takribani gharama ya matumizi moja kabla hujakiwasha. Namba hiyo imepimwa, haikubuniwa.",
-    "yourTurnTitle": "Zamu yako",
-    "yourTurnBody": "Uliza kuhusu jambo unalotaka kweli kulielewa. Ramani itaendelea kufuatana nawe yenyewe."
+    "chatTitle": "Kuanzia hapa",
+    "chatBody": "Kuandika maandishi hapa ndilo linalohitajika. Katika swichi iliyo juu, majibu ya hali ya kusoma huongoza kufikiri na kufanya mazoezi, na mazungumzo huru ni maongezi ya kawaida.",
+    "trailTitle": "Mazungumzo yameorodheshwa kwenye upau wa kando",
+    "trailBody": "Vichwa hutengenezwa vyenyewe, katika umbo la «dhana ya kwanza hadi dhana ya mwisho». Kichwa kikishabadilishwa jina kwa mkono, hakibadilishwi tena kamwe.",
+    "mapTitle": "Mazungumzo hukuza ramani",
+    "mapBody": "Visiwa hivi vilikusanywa kutoka kwenye mazungumzo vyenyewe; hakuna kilichorekodiwa kwa mkono. Kusogeza juu huingia ngazi moja ndani.",
+    "mapEmptyTitle": "Kwa sasa hii ni bahari wazi",
+    "mapEmptyBody": "Dhana zinazoguswa katika kila mzunguko wa mazungumzo huwa visiwa hapa zenyewe. Hakuna kinachohitaji kurekodiwa kwa mkono.",
+    "mirrorTitle": "Kufifia kwa rangi ni jambo la kawaida",
+    "mirrorBody": "Paneli hizi mbili zinaonyesha kiasi gani kimejifunzwa na kiasi gani bado kinakumbukwa. Sehemu zisizoguswa kwa muda mrefu hufifia zenyewe; hilo ni dokezo, si adhabu. Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii na hakigharimu chochote.",
+    "spendingTitle": "Gharama hutajwa mapema",
+    "spendingBody": "Kila kipengele kinachogharimu fedha kiko kwenye ukurasa huu na kinaweza kuzimwa peke yake. Gharama ya takribani ya matumizi moja imeandikwa hapa kabla hakijawashwa, na namba hiyo imepimwa badala ya kukadiriwa.",
+    "yourTurnTitle": "Uliza swali",
+    "yourTurnBody": "Uliza kuhusu jambo unalotaka kweli kulielewa. Ramani hufuata yenyewe."
   },
   "pageGuide": {
-    "label": "Kuhusu ukurasa huu",
-    "gotIt": "Nimeelewa",
-    "openButton": "Kuhusu ukurasa huu",
+    "label": "Maelezo ya ukurasa huu",
+    "gotIt": "Sawa",
+    "openButton": "Maelezo ya ukurasa huu",
     "chat": {
-      "title": "Hapa ndipo unapozungumza",
-      "body": "Uliza kile unachotaka kuelewa kikweli. Swichi ya juu inaamua majibu yanavyokuja: hali ya kujifunza inakurudishia maswali na kukuomba ueleze mwenyewe, na mazungumzo huru ni maongezi ya kawaida.",
-      "point1": "Dhana zinazojitokeza zinajipanga zenyewe kwenye ramani; hakuna cha kuandika",
-      "point2": "Vichwa vya mazungumzo vinajiandika vyenyewe na vinasimama mara tu unapobadilisha kimoja",
-      "limit": "Haikupangii wiki yako, na haiji kukufuata siku chache zikipita bila kuingia."
+      "title": "Kuzungumza na AI",
+      "body": "Uliza chochote unachotaka kuelewa. Swichi iliyo juu huamua majibu yanavyokuja: hali ya kusoma hurudisha maswali na kukualika ueleze mwenyewe, na mazungumzo huru ni maongezi ya kawaida.",
+      "point1": "Dhana zinazojitokeza hupangwa kwenye ramani zenyewe, bila kitu cha kurekodiwa kwa mkono",
+      "point2": "Vichwa vya mazungumzo hutengenezwa vyenyewe na huacha kubadilika baada ya kubadilishwa jina kwa mkono",
+      "limit": "Haitengenezi ratiba, wala haitumi vikumbusho baada ya siku chache za kutokuwepo."
     },
     "map": {
-      "title": "Yote uliyopitia, yametandazwa",
-      "body": "Kila kisiwa ni dhana uliyoizungumzia, iliyowekwa na kupangwa yenyewe. Ingia ngazi moja ndani ili kuona kwa undani na mazungumzo yaliyoigusa.",
-      "point1": "Sehemu nyeusi ni za hivi karibuni; zilizofifia zimetulia kwa muda",
-      "point2": "Kila kitu kwenye ukurasa huu kinahesabiwa kwenye mashine yako na hakigharimu chochote",
-      "limit": "Si daftari: huwezi kuongeza kitu kwa mkono, ramani inakua kutokana na mazungumzo yako pekee."
+      "title": "Ramani ya yaliyojifunzwa",
+      "body": "Kila kisiwa ni dhana iliyojadiliwa, iliyowekwa na kupangwa yenyewe. Kuingia ngazi moja ndani huonyesha undani, pamoja na mazungumzo yaliyoigusa.",
+      "point1": "Sehemu nyeusi ziliguswa hivi karibuni; zilizofifia zimewekwa kando kwa muda",
+      "point2": "Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii na hakigharimu chochote",
+      "limit": "Si daftari: maingizo hayawezi kuongezwa kwa mkono, na ramani hukua kutokana na mazungumzo pekee."
     },
     "vocab": {
-      "title": "Jifunze lugha ukiwa unazungumza",
-      "body": "Ukiwasha hii, baadhi ya maneno katika majibu yanakuja kwa lugha unayojifunza; unaweza kubahatisha kwanza, kisha kuona maana. Ukurasa huu unashikilia maneno unayoendelea nayo, na hapa ndipo kamusi zinapopakuliwa na kubadilishwa.",
-      "point1": "Jaribio fupi la msamiati linakuwezesha kuanza baada ya maneno unayoyajua tayari",
-      "point2": "Maana na matamshi yanatoka kwenye kamusi iliyopakuliwa, inayokaa kwenye mashine hii na kufanya kazi bila mtandao",
-      "limit": "Haifundishi sarufi wala haitoi mazoezi; inabadilisha maneno tu ndani ya sentensi ambazo ungezisoma vivyo hivyo."
+      "title": "Kujifunza lugha wakati wa mazungumzo",
+      "body": "Hii ikiwashwa, baadhi ya maneno katika majibu ya AI huja kwa lugha inayojifunzwa, na yanaweza kukisiwa kabla maana kuonyeshwa. Ukurasa huu unaorodhesha maneno yanayoendelea, na hapa ndipo kamusi zinapopakuliwa na kubadilishwa.",
+      "point1": "Jaribio la msamiati linaweza kufanywa kwanza, ili maneno mapya yaanzie kiwango kilichofikiwa tayari",
+      "point2": "Matamshi na maana yanatoka kwenye kamusi iliyopakuliwa, inayokaa kwenye mashine hii na kufanya kazi bila mtandao",
+      "limit": "Haifundishi sarufi wala haitoi seti za mazoezi; inabadilisha maneno tu ndani ya sentensi ambazo zingesomwa vivyo hivyo."
     },
     "discovery": {
-      "title": "Unachotazama, kimekusanywa hapa",
-      "body": "Weka hati ndogo kwenye kivinjari, kisha unachotazama kwenye Bilibili na YouTube kinafupishwa hapa: maneno yanayojirudia, mada zinazoanza kujitokeza, na maudhui marefu uliyoyatazama. Yote yanatayarishwa kwenye kompyuta hii.",
-      "point1": "Ukurasa unafunguka hata kabla ya kuweka chochote, na unaeleza wenyewe unachohitaji",
-      "point2": "Kumbukumbu ya unachotazama inabaki kwenye mashine hii, haipelekwi popote",
-      "limit": "Hauchagui unachopaswa kutazama wala hauwekei alama uliyoyatazama."
+      "title": "Yanayotazamwa kila siku, yamekusanywa katika ukurasa mmoja",
+      "body": "Baada ya skripti ya kivinjari kusakinishwa, unachotazama kwenye Bilibili na YouTube hukusanywa hapa: maneno yanayojirudia, mada zilizojitokeza hivi karibuni, na maudhui marefu yaliyotazamwa. Yote huchakatwa kwenye kompyuta hii.",
+      "point1": "Ukurasa huu hufunguka kabla skripti yoyote kusakinishwa, na huorodhesha hatua zinazohitajika",
+      "point2": "Kumbukumbu ya utazamaji inabaki kwenye mashine hii na haitumwi popote",
+      "limit": "Hauamui kitakachotazamwa wala hauwekei alama yaliyotazamwa."
     },
     "companions": {
-      "title": "Watu wachache wanaokujia na maswali",
-      "body": "Kila siku wanajitokeza wahusika wachache wakiuliza kuhusu kitu ulichojifunza hivi karibuni. Kuwaeleza ni njia ya kujua kama unaweza kukieleza. Mazungumzo yanafanyika kwenye dirisha dogo la pekee, na mazungumzo yako yanabaki yalipo.",
-      "point1": "Wanachouliza kinatoka kwenye kumbukumbu zako mwenyewe",
-      "point2": "Usipovitaka, sehemu hii yote inazimwa katika mipangilio",
-      "limit": "Si watu halisi, na ukiondoka hawatakusubiri wala kukuita urudi."
+      "title": "Wenzako wanaokuja na maswali",
+      "body": "Kila siku wahusika wachache hufika na maswali yanayotokana na yaliyojifunzwa hivi karibuni. Kuwaeleza jambo ni njia ya kuangalia kama linaweza kuelezwa kwa uwazi. Mazungumzo haya hufanyika kwenye dirisha dogo la pekee na hayaathiri mazungumzo yaliyopo.",
+      "point1": "Wanachouliza kinatoka kwenye kumbukumbu yako mwenyewe ya kujifunza",
+      "point2": "Kipengele kizima kinaweza kuzimwa katika mipangilio",
+      "limit": "Si watu halisi; ukiondoka hawasubiri wala hawakuiti urudi."
     },
     "settings": {
       "title": "Ufunguo, lugha na matumizi",
-      "body": "Kitu cha kwanza kujaza ni anwani na ufunguo wa huduma ya AI — bila huo, chochote kinachotegemea AI hakifanyi kazi. Ukurasa huu pia hubadilisha lugha ya kiolesura, lugha ya majibu, na muunganisho wa mtandao.",
-      "point1": "«Swichi na matumizi» inaorodhesha kila kipengele kinachogharimu fedha, kila kimoja na swichi yake na kadirio la gharama ya matumizi moja",
-      "point2": "Ufunguo unabaki kwenye kompyuta hii na hautoki nje pamoja na kitu chochote",
-      "limit": "Huduma ya AI yenyewe haitolewi hapa; ufunguo unautoa kwa mtoa huduma unapojiandikisha."
+      "body": "Hatua ya kwanza ni kuweka anwani na ufunguo wa huduma ya AI, bila ambayo vipengele vinavyotegemea AI haviwezi kufanya kazi. Ukurasa huu pia hubadilisha lugha ya kiolesura, lugha ambayo AI hujibu kwayo, na kama programu inaunganishwa na mtandao.",
+      "point1": "«Swichi na matumizi» huorodhesha kila kipengele kinachogharimu fedha, kila kimoja na swichi yake na gharama ya takribani ya matumizi moja",
+      "point2": "Ufunguo huhifadhiwa kwenye kompyuta hii pekee na hautumwi nje pamoja na kitu chochote",
+      "limit": "Huduma ya AI yenyewe haitolewi hapa; ufunguo unapaswa kupatikana kutoka kwa mtoa huduma."
     }
   },
   "checklist": {
     "title": "Anzia hapa",
     "connect": "Unganisha huduma ya AI",
-    "ask": "Uliza swali lako la kwanza",
+    "ask": "Uliza swali la kwanza",
     "map": "Fungua ramani",
-    "dismiss": "Ondoa orodha hii",
+    "dismiss": "Funga orodha hii",
     "demoNote": "Kwa sasa ramani inaonyesha data ya mfano.",
     "removeDemo": "Ondoa data ya mfano",
-    "removingDemo": "Inaondoa…",
-    "takeTour": "Nitembeze ndani yake",
-    "tourNote": "Dakika mbili, tukionyesha skrini halisi. Escape hutoka wakati wowote."
+    "removingDemo": "Inaondoa",
+    "takeTour": "Anza utangulizi",
+    "tourNote": "Kama dakika mbili, tukionyesha skrini halisi. Escape hutoka kwenye utangulizi."
   },
   "settings": {
     "title": "Ziara ya kuongozwa",
-    "hint": "Ona utangulizi tena, rudisha dokezo la kila ukurasa, au ondoa data ya mfano.",
-    "replay": "Rudia ziara",
-    "resetGuides": "Onyesha tena madokezo ya kurasa zote",
-    "guidesRestored": "Imekamilika. Kila ukurasa utaonyesha dokezo lake mara moja tena utakapoufungua.",
+    "hint": "Utangulizi unaweza kuonwa tena, maelezo ya kurasa yakarudishwa, na data ya mfano ikaondolewa.",
+    "replay": "Ona utangulizi tena",
+    "resetGuides": "Rudisha maelezo ya kurasa zote",
+    "guidesRestored": "Imerudishwa. Kila ukurasa utaonyesha maelezo yake mara moja tena utakapofunguliwa.",
     "removeDemo": "Ondoa data ya mfano",
     "demoAbsent": "Hakuna data ya mfano"
   }

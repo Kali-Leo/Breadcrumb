@@ -3,7 +3,7 @@
     "retry": "Réessayer",
     "stop": "Arrêter",
     "send": "Envoyer",
-    "gotIt": "Compris",
+    "gotIt": "OK",
     "copy": "Copier",
     "copied": "Copié",
     "cancel": "Annuler",
@@ -18,12 +18,12 @@
     "discover": "Découvrir",
     "map": "Carte",
     "friends": "Amis",
-    "offline": "Hors ligne. Tout ce qui a besoin d'internet est en pause ; le reste fonctionne toujours."
+    "offline": "Hors ligne. Les fonctionnalités qui nécessitent internet sont en pause ; les autres ne sont pas affectées."
   },
   "state": {
-    "loading": "Chargement…",
-    "storageUnsupported": "Ce navigateur ne peut pas enregistrer les données de la page : rien de cette session ne sera conservé une fois l'onglet fermé. Ouvre-la dans une version récente de Chrome, Edge, Firefox ou Safari et tout sera enregistré.",
-    "storageBlocked": "Cette fenêtre n'autorise pas la page à enregistrer des données : rien de cette session ne sera conservé une fois l'onglet fermé. Ouvre-la dans une fenêtre normale plutôt qu'en navigation privée et tout sera enregistré.",
+    "loading": "Chargement",
+    "storageUnsupported": "Ce navigateur ne peut pas enregistrer les données de la page ; rien de cette session n'est conservé une fois l'onglet fermé. L'ouvrir dans une version récente de Chrome, Edge, Firefox ou Safari permet de les enregistrer.",
+    "storageBlocked": "Cette fenêtre n'autorise pas la page à enregistrer des données ; rien de cette session n'est conservé une fois l'onglet fermé. L'ouvrir dans une fenêtre ordinaire plutôt qu'en navigation privée permet de les enregistrer.",
     "storageOtherTab": "Breadcrumb est déjà ouvert dans un autre onglet, et rien ne sera enregistré ici. Reviens à cet onglet pour continuer, ou ferme-le puis recharge cette page."
   },
   "list": {

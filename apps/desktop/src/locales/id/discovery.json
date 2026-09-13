@@ -2,31 +2,31 @@
   "title": "Jelajah",
   "setup": {
     "title": "Jelajah",
-    "intro": "Pasang satu skrip peramban, lalu apa yang Anda tonton di Bilibili dan YouTube akan muncul di halaman ini. Semuanya dihitung di perangkat Anda sendiri dan tidak dikirim ke mana pun.",
-    "step1Title": "Langkah 1: tambahkan ekstensi yang bisa menjalankan skrip",
+    "intro": "Setelah satu skrip peramban dipasang, tontonan di Bilibili dan YouTube muncul di halaman ini. Pengolahan dilakukan di perangkat ini dan tidak dikirim ke mana pun.",
+    "step1Title": "Langkah 1: pasang ekstensi peramban yang dapat menjalankan skrip",
     "step1Body": "Violentmonkey gratis. Pasang, lalu kembali ke halaman ini.",
-    "step1Button": "Buka halaman Violentmonkey",
+    "step1Button": "Buka halaman pemasangan Violentmonkey",
     "step2Title": "Langkah 2: pasang dua skrip Breadcrumb",
-    "step2Body": "Tekan tombol di bawah; peramban akan bertanya apakah ingin memasangnya, dan jawabannya ya.",
+    "step2Body": "Tekan salah satu tombol di bawah dan konfirmasi pada permintaan pemasangan dari peramban.",
     "bilibiliScript": "Pasang skrip Bilibili",
     "youtubeScript": "Pasang skrip YouTube",
-    "step3Title": "Langkah 3: hubungkan peramban dengan Breadcrumb",
-    "step3Body": "Buka halaman depan Bilibili, klik 🔗 pada bilah di kiri bawah, lalu tempel baris di bawah ini. Lakukan sekali lagi di halaman depan YouTube.",
+    "step3Title": "Langkah 3: hubungkan peramban",
+    "step3Body": "Buka halaman depan Bilibili, tekan ikon tautan di kiri bawah bilah sakelar, lalu tempel kode di bawah ini. Ulangi sekali di halaman depan YouTube.",
     "step3TitleWeb": "Langkah 3: biarkan Breadcrumb terbuka",
-    "step3BodyWeb": "Skrip menyerahkan catatannya setiap kali Anda membuka Breadcrumb. Tidak ada lagi yang perlu dilakukan.",
-    "codeUsed": "Baris itu sudah terpakai. Yang baru sedang disiapkan.",
-    "connected": "Sudah terhubung. Gunakan Bilibili dan YouTube seperti biasa; tontonan Anda akan mulai muncul di sini."
+    "step3BodyWeb": "Skrip mengirimkan catatannya setiap kali Breadcrumb terbuka. Tidak ada langkah lain yang diperlukan.",
+    "codeUsed": "Kode sebelumnya sudah terpakai. Kode baru sedang dibuat.",
+    "connected": "Terhubung. Gunakan Bilibili dan YouTube seperti biasa, dan tontonanmu akan muncul di halaman ini."
   },
-  "intro": "Halaman ini menunjukkan apa yang kamu tonton di Bilibili dan YouTube, dan apa yang menarik bagimu. Semuanya dihitung di komputer ini; tidak ada yang dikirim ke mana pun.",
+  "intro": "Halaman ini menampilkan apa yang ditonton di Bilibili dan YouTube serta topik yang menarik minat. Pengolahan dilakukan di komputer ini dan tidak dikirim ke mana pun.",
   "emotion": {
     "title": "Bagaimana isinya terasa",
     "all": "Semua",
     "pro": "Belajar",
     "ent": "Hiburan",
-    "gent": "Menenangkan",
+    "gent": "Hiburan pilihan",
     "expose": "Disodorkan",
     "engage": "Dipilih sendiri",
-    "chartAria": "Bagaimana isi yang disodorkan dan yang dipilih terasa dari waktu ke waktu",
+    "chartAria": "Kurva suasana isi yang disodorkan dan yang dipilih",
     "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} butir)",
     "empty": "Tidak ada yang tercatat pada periode ini"
   },
@@ -40,8 +40,8 @@
   },
   "newTopics": {
     "title": "Minat baru",
-    "thinEvidence": "Catatannya masih sedikit — anggap perubahan ini sebagai petunjuk awal.",
-    "empty": "Belakangan tidak ada yang baru muncul"
+    "thinEvidence": "Catatan masih sedikit, sehingga perubahan ini hanya bersifat indikatif.",
+    "empty": "Belakangan tidak ada topik baru yang jelas muncul"
   },
   "proContent": {
     "title": "Isi untuk belajar",
