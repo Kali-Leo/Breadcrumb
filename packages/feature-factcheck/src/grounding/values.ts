@@ -17,7 +17,7 @@
  * reply that invents 「大约三十万人」 in Chinese numerals is not caught by this check.
  * Main exports: SpecificValue, specificValues, ungroundedValues.
  */
-import { anchorKey } from "../anchorGate";
+import { anchorKey } from "./anchorText";
 
 export interface SpecificValue {
   /** The numeral as written, e.g. "8848.86" or "1953". */

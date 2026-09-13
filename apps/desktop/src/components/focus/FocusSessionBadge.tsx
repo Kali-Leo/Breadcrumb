@@ -1,7 +1,7 @@
 /**
  * Purpose: in-place badges for the focus sessions born from one assistant message
- * — one low-key row per session with at least one answered station, styled after FactcheckBadge's
- * inline bar; clicking a row reopens that session.
+ * — one low-key row per session with at least one answered station, a plain inline bar;
+ * clicking a row reopens that session.
  * Main exports: FocusSessionBadge.
  */
 import { focusBadgeMessage } from "@breadcrumb/feature-explore";

@@ -1,10 +1,9 @@
 /**
  * Purpose: row types for the standalone feature side-tables — map place-name overrides, the
- * daily trail summary, the fact-check runs and their claims, and the silent AI-failure log.
+ * daily trail summary, and the silent AI-failure log.
  * These share a file for the same reason featureRepositories.ts does: each is one small table
  * belonging to one feature, with nothing in common but their size.
- * Main exports: MapPlaceNameRow, TrailSummaryRow, FactcheckRunRow, FactcheckClaimRow,
- * AiFailureRow.
+ * Main exports: MapPlaceNameRow, TrailSummaryRow, AiFailureRow.
  */
 
 /** Memory-palace place-name override — decoupled from the knowledge concept itself. */
@@ -20,31 +19,6 @@ export interface TrailSummaryRow {
   /** Local calendar date, e.g. "2026-07-29". One gentle summary per day. */
   date: string;
   content: string;
-  created_at: string;
-}
-
-/** One fact-check pass over one assistant message. */
-export interface FactcheckRunRow {
-  id: string;
-  message_id: string;
-  conversation_id: string;
-  created_at: string;
-}
-
-/** One checked claim inside a run; evidence_json holds the verified EvidenceItem array. */
-export interface FactcheckClaimRow {
-  id: string;
-  run_id: string;
-  claim_text: string;
-  /** "supported" | "contradicted" | "insufficient" | "unavailable" | "unanchored" — kept TEXT
-   * for forward compatibility. */
-  relationship: string;
-  reasoning: string;
-  /** The decisive sentence, copied verbatim out of one of the sources; "" when no verdict of
-   * the judge's stands. Shown under the claim so the source's own words are in front of the
-   * reader instead of behind a link. */
-  quote: string;
-  evidence_json: string;
   created_at: string;
 }
 

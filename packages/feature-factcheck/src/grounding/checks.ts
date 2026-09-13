@@ -14,8 +14,9 @@
  * fact-check path — including its one deliberate leniency, whitespace.
  * Main exports: ENTITY_MIN_CHARS, entityTokens, pairingHolds, quoteExistsIn.
  */
-import { anchorKey, quoteIsGrounded } from "../anchorGate";
+
 import type { EvidenceItem } from "../evidence/provider";
+import { anchorKey, quoteIsGrounded } from "./anchorText";
 import type { TopicPassage } from "./passages";
 import { tokenizeText } from "./tokens";
 import { specificValues, valueOccursIn } from "./values";

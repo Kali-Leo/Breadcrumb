@@ -2,7 +2,7 @@
   "name": "@breadcrumb/feature-factcheck",
   "license": "AGPL-3.0-only",
   "version": "0.0.1",
-  "description": "Headless fact-check module: extracts check-worthy claims from a chat round, gathers web evidence, and returns gentle per-claim verdicts.",
+  "description": "Headless grounding module: gathers a topic's source material from public evidence providers and labels an answer's sentences against it, mechanically.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -11,8 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@breadcrumb/core-llm": "workspace:*",
-    "@breadcrumb/core-random": "workspace:*",
     "@breadcrumb/core-retrieval": "workspace:*",
     "@breadcrumb/core-text": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",

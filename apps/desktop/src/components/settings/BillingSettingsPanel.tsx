@@ -12,17 +12,15 @@ import { todayLocalMidnightIso } from "../../lib/platform/time";
 import { useDiglotStore } from "../../stores/diglotStore";
 import { type FeatureSwitches, useSettingsStore } from "../../stores/settingsStore";
 import { BillingEstimateLine } from "./BillingEstimateLine";
-import { FactcheckAutoRow } from "./FactcheckAutoRow";
-import { FactcheckWebSearchRow } from "./FactcheckWebSearchRow";
 import { ResearchTasksSettingsRow } from "./ResearchTasksSettingsRow";
 import { Toggle } from "./SettingsToggle";
 import { usePurposeAverages } from "./usePurposeAverages";
+import { WebSearchEvidenceRow } from "./WebSearchEvidenceRow";
 
 /** Switchable metered features: switch key → metering purposes. Names and explanations
  * live in settings.json under billing.features.<switch key>. */
 const FEATURE_ROWS = [
   { feature: "knowledgeTree", purposes: ["knowledge-tree"] },
-  { feature: "factcheck", purposes: ["factcheck"] },
   { feature: "knowledgeEdges", purposes: ["knowledge-edges"] },
   { feature: "interest", purposes: ["interest", "self-report-mapping"] },
   { feature: "goalPlanning", purposes: ["goal-planning"] },
@@ -152,17 +150,10 @@ export function BillingSettingsPanel() {
                   label={name}
                 />
               </div>
-              {/* The one feature with sub-switches: how often it runs, and whether the paid
-                  open-web layer (and its key) joins the free sources. */}
-              {row.feature === "factcheck" && (
-                <>
-                  <FactcheckAutoRow />
-                  <FactcheckWebSearchRow />
-                </>
-              )}
             </div>
           );
         })}
+        <WebSearchEvidenceRow />
         <ResearchTasksSettingsRow />
         <div className="flex items-center justify-between gap-4">
           <div>

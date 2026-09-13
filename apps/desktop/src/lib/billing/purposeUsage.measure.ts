@@ -19,21 +19,13 @@ import { buildTeachingSystemPrompt } from "@breadcrumb/core-teaching";
 import { buildAlignmentJudgeMessages } from "@breadcrumb/feature-compare";
 import { buildLlmRefineMessages } from "@breadcrumb/feature-diglot-weave";
 import { buildTermMarkingMessages, buildWordExplainMessages } from "@breadcrumb/feature-explore";
-import { buildClaimExtractionMessages, buildVerdictMessages } from "@breadcrumb/feature-factcheck";
 import { buildEdgeJudgeMessages } from "@breadcrumb/feature-graph";
 import { buildInterestMessages, buildSelfReportMessages } from "@breadcrumb/feature-interest";
 import { buildExtractionMessages } from "@breadcrumb/feature-knowledge-tree";
 import { buildContinentNamingMessages } from "@breadcrumb/feature-map";
 import { buildGoalMappingMessages } from "@breadcrumb/feature-planner";
 import { buildTrailSummaryMessages } from "@breadcrumb/feature-trail";
-import {
-  FACTCHECK_CLAIMS,
-  FACTCHECK_EVIDENCE,
-  LONG_ANSWER,
-  ROUND,
-  treeLabels,
-  treeNodes,
-} from "./purposeUsage.fixtures";
+import { LONG_ANSWER, ROUND, treeLabels, treeNodes } from "./purposeUsage.fixtures";
 
 export interface MeasuredPurpose {
   purpose: string;
@@ -58,8 +50,6 @@ const REPLIES = {
     (_, i) =>
       `{"label":"目标所需知识点${i}","summary":"这个知识点是什么的一句话说明，写得像真的说明一样长。","requires":["导数"]}`,
   ).join(",")}]}`,
-  factcheckClaims: `{"claims":[{"text":"导数定义为平均变化率在自变量增量趋于零时的极限","queries":["导数 定义 极限","derivative definition limit"]},{"text":"绝对值函数在原点不可导","queries":["绝对值函数 原点 不可导","absolute value function not differentiable at zero"]}]}`,
-  factcheckVerdict: `{"quote":"导数是平均变化率在自变量增量趋于零时的极限","reasoning":"资料对这一条的说法与声明一致。","relationship":"supported","supportingEvidence":[1]}`,
   compareAlign: `{"verdicts":[${Array.from(
     { length: 8 },
     (_, i) =>
@@ -141,18 +131,6 @@ export function measurePurposeUsage(): MeasuredPurpose[] {
       REPLIES.selfReport,
     ],
     ["goal-planning", buildGoalMappingMessages("通过考研数学一", treeLabels), REPLIES.goalPlanning],
-    [
-      // A whole check, not just its first call: one extraction plus one verdict call per claim
-      // the extraction returned, each of those carrying three page excerpts. Measuring only the
-      // extraction understated this feature severalfold, and the spending page is read by
-      // people deciding whether they can afford to leave it on.
-      "factcheck",
-      [
-        ...buildClaimExtractionMessages(ROUND.question, ROUND.answer),
-        ...FACTCHECK_CLAIMS.flatMap((claim) => buildVerdictMessages(claim, FACTCHECK_EVIDENCE)),
-      ],
-      REPLIES.factcheckClaims + REPLIES.factcheckVerdict.repeat(FACTCHECK_CLAIMS.length),
-    ],
     ["compare-align", buildAlignmentJudgeMessages(alignPairs), REPLIES.compareAlign],
     [
       "map-naming",

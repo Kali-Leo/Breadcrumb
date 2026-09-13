@@ -14,7 +14,6 @@ import {
   createComparisonRepo,
   createConversationsRepo,
   createDiglotRepo,
-  createFactcheckRepo,
   createFocusNodesRepo,
   createFocusSessionsRepo,
   createGoalsRepo,
@@ -59,7 +58,6 @@ export interface Repos {
   knowledgeEdges: ReturnType<typeof createKnowledgeEdgesRepo>;
   trailSummaries: ReturnType<typeof createTrailSummariesRepo>;
   mapPlaceNames: ReturnType<typeof createMapPlaceNamesRepo>;
-  factcheck: ReturnType<typeof createFactcheckRepo>;
   interestSignals: ReturnType<typeof createInterestSignalsRepo>;
   masteryClaims: ReturnType<typeof createMasteryClaimsRepo>;
   goals: ReturnType<typeof createGoalsRepo>;
@@ -132,7 +130,6 @@ async function buildRepos(): Promise<Repos> {
     knowledgeEdges: createKnowledgeEdgesRepo(sqlClient),
     trailSummaries: createTrailSummariesRepo(sqlClient),
     mapPlaceNames: createMapPlaceNamesRepo(sqlClient),
-    factcheck: createFactcheckRepo(sqlClient),
     interestSignals: createInterestSignalsRepo(sqlClient),
     masteryClaims: createMasteryClaimsRepo(sqlClient),
     goals: createGoalsRepo(sqlClient),

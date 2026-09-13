@@ -2,7 +2,7 @@
  * Purpose: the markdown link node's rendering. The webview must never navigate to an
  * address the model chose: this window has no address bar, so a page loaded in it is
  * indistinguishable from the app itself. Hand it to the system browser, as every other
- * outbound link does (FactcheckBadge) — https only, which is the whole of the opener
+ * outbound link does — https only, which is the whole of the opener
  * capability's allow list, so an http:// or mailto: link looks the same and quietly does
  * nothing. The scheme check stays: React refuses javascript: URLs, but one framework
  * behaviour is a thin only-check.

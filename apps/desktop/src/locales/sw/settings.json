@@ -67,7 +67,6 @@
   "purposes": {
     "chat": "Mazungumzo",
     "knowledge-tree": "Ramani ya maarifa",
-    "factcheck": "Uhakiki wa taarifa",
     "knowledge-edges": "Viungo vya maarifa",
     "interest": "Wasifu wa mapendeleo",
     "self-report-mapping": "Kulinganisha «hili nalijua»",
@@ -129,19 +128,11 @@
         "name": "🌳 Ramani ya maarifa",
         "hint": "Baada ya kila mzunguko wa mazungumzo, AI huweka mliyoyazungumza kwenye ramani yako."
       },
-      "factcheck": {
-        "name": "🔍 Uhakiki wa taarifa",
-        "hint": "Madai ya kiuhakika katika jibu la AI hutafutwa katika vyanzo vya umma, na kifungu kilichopatikana huonyeshwa chini kabisa ya jibu."
-      },
-      "factcheckAuto": {
-        "name": "Hakiki majibu ya Hali ya kusoma kiotomatiki",
-        "hint": "Ikiwa hii imewashwa, kila jibu la Hali ya kusoma huhakikiwa lenyewe bila kuombwa. Kwa huduma ya AI ya bure hilo haligharimu chochote zaidi; kwa huduma inayolipiwa kwa matumizi, kila raundi hutumia kiasi kilichotajwa hapo juu. Ukiizima, uhakiki hufanyika tu unapobonyeza “Hakiki hili”."
-      },
-      "factcheckWebSearch": {
+      "webSearchEvidence": {
         "name": "🌐 Utafutaji wa ushahidi kwenye wavuti huria (Zhipu)",
         "price": "takriban ¥{{price}} kwa utafutaji",
         "hint": "Ikiwa imewashwa, mbali na Wikidata na Wikipedia, huduma ya utafutaji ya Zhipu huombwa kutafuta vyanzo kwenye wavuti huria — mambo ambayo ensaiklopidia haijawahi kuandika. Hutozwa kwa kila utafutaji kwenye akaunti yako ya Zhipu, tofauti na huduma ya AI hapo juu; kwenye toleo la kivinjari katika mtandao wa China bara ndicho chanzo pekee kinachofikika. Kichina, Kiingereza na Kiswahili pekee: lugha nyingine zilitoa matokeo yasiyoaminika kwenye majaribio na hazipiti njia hii kamwe.",
-        "disclosure": "Ikiwa imewashwa, madai yaliyotolewa kutoka swali lako hutumwa kwa injini ya utafutaji. Hapo ni mahali papya ambapo maneno yako huenda.",
+        "disclosure": "Ikiwa imewashwa, maneno ya utafutaji yaliyotolewa kutoka swali lako hutumwa kwa injini ya utafutaji. Hapo ni mahali papya ambapo maneno yako huenda.",
         "keyLabel": "Ufunguo wa API wa huduma ya utafutaji ya Zhipu",
         "keyPlaceholder": "Upate kwenye open.bigmodel.cn na ubandike hapa",
         "noKey": "Hakuna ufunguo bado, kwa hivyo kwa sasa hii haifanyi chochote."

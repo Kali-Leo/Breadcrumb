@@ -66,12 +66,6 @@ export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
   "knowledge-edges": { inputTokens: 1009, outputTokens: 278, cadence: "per-round" },
   "self-report-mapping": { inputTokens: 524, outputTokens: 46, cadence: "on-demand" },
   "goal-planning": { inputTokens: 693, outputTokens: 424, cadence: "on-demand" },
-  // A whole check: the extraction call plus one verdict call per claim it found, and a verdict
-  // call carries three page excerpts of up to 1500 characters each. That evidence is where
-  // nearly all of these tokens are. The cadence is per-round because a 学习模式 answer is now
-  // checked without being asked to — the switch that stops that is on the same page as this
-  // number (settings:billing.features.factcheckAuto).
-  factcheck: { inputTokens: 6390, outputTokens: 167, cadence: "per-round" },
   "compare-align": { inputTokens: 528, outputTokens: 213, cadence: "per-item-once" },
   "map-naming": { inputTokens: 201, outputTokens: 32, cadence: "per-item-once" },
   "term-marking": { inputTokens: 570, outputTokens: 22, cadence: "per-answer" },

@@ -616,12 +616,6 @@ importers:
 
   packages/feature-factcheck:
     dependencies:
-      '@breadcrumb/core-llm':
-        specifier: workspace:*
-        version: link:../core-llm
-      '@breadcrumb/core-random':
-        specifier: workspace:*
-        version: link:../core-random
       '@breadcrumb/core-retrieval':
         specifier: workspace:*
         version: link:../core-retrieval
@@ -926,9 +920,6 @@ importers:
       '@breadcrumb/feature-explore':
         specifier: workspace:*
         version: link:../feature-explore
-      '@breadcrumb/feature-factcheck':
-        specifier: workspace:*
-        version: link:../feature-factcheck
       '@breadcrumb/feature-feedback':
         specifier: workspace:*
         version: link:../feature-feedback

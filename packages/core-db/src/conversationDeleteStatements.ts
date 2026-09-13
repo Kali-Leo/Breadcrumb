@@ -18,18 +18,16 @@ import type { SqlTransactionStatement } from "./types";
  * buildConversationDeleteStatements — otherwise deleting a chat leaves rows behind pointing
  * at a conversation that no longer exists.
  *
- * factcheck_claims, focus_nodes, term_marks and knowledge_edges declare no foreign key to
- * conversations or messages (they hang off factcheck_runs / focus_sessions, or carry a bare
- * target/message id), so the pragma cannot find them; they are listed by hand because leaving
- * them behind is the same bug, just silent.
+ * focus_nodes, term_marks and knowledge_edges declare no foreign key to conversations or
+ * messages (they hang off focus_sessions, or carry a bare target/message id), so the pragma
+ * cannot find them; they are listed by hand because leaving them behind is the same bug,
+ * just silent.
  *
  * Deliberately absent: diglot_word_events carries a message_id for provenance but is the
  * learner's own vocabulary history, which outlives any one chat — the same reason
  * knowledge_nodes and llm_calls rows survive. It has no foreign key, so nothing dangles.
  */
 export const CONVERSATION_SCOPED_TABLES: readonly string[] = [
-  "factcheck_claims", // via factcheck_runs
-  "factcheck_runs",
   "focus_nodes", // via focus_sessions
   "focus_sessions",
   "node_sightings",
@@ -48,12 +46,6 @@ export const CONVERSATION_SCOPED_TABLES: readonly string[] = [
  */
 export function buildConversationDeleteStatements(id: string): SqlTransactionStatement[] {
   return [
-    {
-      sql: `DELETE FROM factcheck_claims WHERE run_id IN
-                  (SELECT id FROM factcheck_runs WHERE conversation_id = ?)`,
-      params: [id],
-    },
-    { sql: "DELETE FROM factcheck_runs WHERE conversation_id = ?", params: [id] },
     {
       sql: `DELETE FROM focus_nodes WHERE session_id IN
                   (SELECT id FROM focus_sessions WHERE conversation_id = ?)`,

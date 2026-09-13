@@ -1,14 +1,13 @@
 /**
- * Purpose: bench scenarios for the three purposes that read a finished answer — `term-marking`
- * (which words would trip this learner up), `factcheck` (what in this answer is worth
- * verifying) and `trail-summary` (one plain sentence about yesterday).
+ * Purpose: bench scenarios for the two purposes that read a finished answer — `term-marking`
+ * (which words would trip this learner up) and `trail-summary` (one plain sentence about
+ * yesterday).
  *
  * Each gets a reference-free check drawn from what the product does with the reply next:
  * a marked term that does not appear verbatim in the answer is dropped by locateTermPatches,
- * a claim whose words are not in the answer was invented rather than extracted, and a summary
- * carrying pressure language violates the trail's stated tone rule outright.
+ * and a summary carrying pressure language violates the trail's stated tone rule outright.
  *
- * Main exports: termMarkingScenarios, factcheckScenarios, trailSummaryScenarios.
+ * Main exports: termMarkingScenarios, trailSummaryScenarios.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
 import {
@@ -16,19 +15,11 @@ import {
   locateTermPatches,
   termMarkResponseSchema,
 } from "@breadcrumb/feature-explore";
-import { buildClaimExtractionMessages, claimExtractionSchema } from "@breadcrumb/feature-factcheck";
 import { buildTrailSummaryMessages, trailSummarySchema } from "@breadcrumb/feature-trail";
 import { findPressureLexiconHits, loadPressureLexicons } from "../../judges/pressureLexicon";
 import { BENCH_LANGUAGES, demoConcepts, demoLongAnswer, demoRounds } from "../demoPool";
 import { type BenchScenario, jsonScenario } from "../scenarioTypes";
-import {
-  bigramCoverage,
-  diceBigram,
-  fuzzySetF1,
-  meanScore,
-  normaliseLabel,
-  ratioScore,
-} from "../scoring/textSimilarity";
+import { diceBigram, fuzzySetF1, normaliseLabel, ratioScore } from "../scoring/textSimilarity";
 
 /** How many labels the learner has already lit, and how many they have looked up — the two
  * evidence lists the real call passes. Sized off the demo tree so both are non-empty. */
@@ -79,50 +70,6 @@ export function termMarkingScenarios(): BenchScenario[] {
               reference.terms.map((entry) => entry.term),
               candidate.terms.map((entry) => entry.term),
               0.8,
-            ),
-        }),
-      );
-    });
-  }
-  return scenarios;
-}
-
-/** The rounds fact-checking runs over: the same three exchanges the extraction purposes use,
- * so a model's behaviour on one can be read next to its behaviour on the others. */
-const FACTCHECK_ROUNDS = [0, 2, 3] as const;
-
-export function factcheckScenarios(): BenchScenario[] {
-  const scenarios: BenchScenario[] = [];
-  for (const language of BENCH_LANGUAGES) {
-    const rounds = demoRounds(language);
-    FACTCHECK_ROUNDS.forEach((roundIndex, slot) => {
-      const round = rounds[roundIndex];
-      if (round === undefined) return;
-      scenarios.push(
-        jsonScenario({
-          purpose: "factcheck",
-          id: `factcheck/${language}/${slot}`,
-          language,
-          messages: buildClaimExtractionMessages(round.question, round.answer),
-          schema: claimExtractionSchema,
-          check: (parsed) => ({
-            // A claim is supposed to be EXTRACTED from the answer, so its words should be in
-            // it. Measured by character bigrams, which works the same in every script.
-            claimGrounding: meanScore(
-              parsed.claims.map((claim) => bigramCoverage(claim.text, round.answer)),
-            ),
-            // Queries must carry the claim's own distinctive terms, not restate the topic.
-            queryAnchoring: meanScore(
-              parsed.claims.map((claim) =>
-                Math.max(...claim.queries.map((query) => bigramCoverage(query, claim.text)), 0),
-              ),
-            ),
-          }),
-          agree: (reference, candidate) =>
-            fuzzySetF1(
-              reference.claims.map((claim) => claim.text),
-              candidate.claims.map((claim) => claim.text),
-              0.4,
             ),
         }),
       );

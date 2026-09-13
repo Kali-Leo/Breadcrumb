@@ -13,9 +13,8 @@ import { interestScenarios, knowledgeTreeScenarios } from "./knowledgeTree";
 import { mapNamingScenarios } from "./mapNaming";
 import { goalPlanningScenarios, selfReportScenarios } from "./planning";
 import { chatScenarios, companionChatScenarios, focusExplainScenarios } from "./prose";
-import { factcheckScenarios, termMarkingScenarios, trailSummaryScenarios } from "./text";
+import { termMarkingScenarios, trailSummaryScenarios } from "./text";
 import { uncertaintyObscureScenarios, uncertaintySettledScenarios } from "./uncertainty";
-import { verdictScenarios } from "./verdict";
 
 /** Report order: the per-round pipeline first, then the on-demand features, then the two
  * conversational purposes that have no right answer, and last the abstention pair, which is
@@ -28,11 +27,6 @@ export const BENCH_PURPOSES: readonly string[] = [
   "term-marking",
   "diglot-weave",
   "map-naming",
-  "factcheck",
-  "factcheck-verdict",
-  "factcheck-verdict-quote",
-  "factcheck-verdict-quote3",
-  "factcheck-verdict-quote6",
   "goal-planning",
   "self-report-mapping",
   "compare-align",
@@ -52,8 +46,6 @@ export function buildBenchScenarios(): BenchScenario[] {
     ...termMarkingScenarios(),
     ...diglotScenarios(),
     ...mapNamingScenarios(),
-    ...factcheckScenarios(),
-    ...verdictScenarios(),
     ...goalPlanningScenarios(),
     ...selfReportScenarios(),
     ...compareAlignScenarios(),

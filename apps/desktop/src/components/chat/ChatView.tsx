@@ -10,7 +10,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
-import { useFactcheckStore } from "../../stores/factcheckStore";
 import { useFocusSessionsStore } from "../../stores/focusSessionsStore";
 import { CompanionChatBanners } from "../companion/CompanionChatBanners";
 import { FocusEntryCard } from "../focus/FocusEntryCard";
@@ -19,7 +18,6 @@ import { FocusSessionsBar } from "../focus/FocusSessionsBar";
 import { ChatViewFooter } from "./ChatViewFooter";
 import { Composer } from "./Composer";
 import { ContinuationBanner } from "./ContinuationBanner";
-import { FactcheckBadge } from "./FactcheckBadge";
 import { GroundingNotes } from "./GroundingNotes";
 import { MessageBubble } from "./MessageBubble";
 import { MessageList, type MessageListHandle } from "./MessageList";
@@ -43,17 +41,11 @@ export function ChatView() {
   const activeKind = useChatStore((state) => state.activeKind);
   const studyMode = useChatStore((state) => state.studyModeFor(state.activeConversationId));
   const setStudyMode = useChatStore((state) => state.setStudyMode);
-  const ensureFactchecksLoaded = useFactcheckStore((state) => state.ensureLoaded);
   const entrySessionByMessageId = useFocusSessionsStore((state) => state.entrySessionByMessageId);
   const listRef = useRef<MessageListHandle>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(true);
   const [locatedMessageId, setLocatedMessageId] = useState<string | null>(null);
-
-  // Fill-on-first-visit: a revisited conversation shows its cached marks instantly.
-  useEffect(() => {
-    void ensureFactchecksLoaded(activeConversationId);
-  }, [activeConversationId, ensureFactchecksLoaded]);
 
   // Station map click -> locate this round. A branch click resumes onto that
   // leaf first (making it part of the active path) before scrolling to it.
@@ -139,10 +131,6 @@ export function ChatView() {
                       {message.role === "assistant" && (
                         <>
                           <GroundingNotes messageId={message.id} />
-                          <FactcheckBadge
-                            conversationId={activeConversationId}
-                            messageId={message.id}
-                          />
                           <FocusSessionBadge messageId={message.id} />
                         </>
                       )}

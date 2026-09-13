@@ -26,7 +26,6 @@
     "@breadcrumb/feature-compare": "workspace:*",
     "@breadcrumb/feature-diglot-weave": "workspace:*",
     "@breadcrumb/feature-explore": "workspace:*",
-    "@breadcrumb/feature-factcheck": "workspace:*",
     "@breadcrumb/feature-feedback": "workspace:*",
     "@breadcrumb/feature-graph": "workspace:*",
     "@breadcrumb/feature-interest": "workspace:*",

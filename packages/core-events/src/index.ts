@@ -20,7 +20,6 @@ export interface BreadcrumbEventMap {
      * reading the store minutes later races against anchor changes. */
     anchoredNodeId: string | null;
   };
-  "factcheck:finished": { conversationId: string; messageId: string; runId: string };
   /** Fired after knowledge-tree extraction lands new nodes (and their embeddings); the
    * edge pipeline keys off this instead of racing a fixed timer.
    * touchedNodeIds = every node sighted this round (new or re-sighted); freshNodeIds is

@@ -1,7 +1,7 @@
 /**
- * Purpose: evidence gathering for one claim — walk the provider chain per query under a fair
+ * Purpose: evidence gathering for one topic — walk the provider chain per query under a fair
  * per-query quota, de-duplicate by URL, and keep an honest record of which providers failed
- * so the pipeline can tell "查不到" apart from "查不了".
+ * so the caller can tell "查不到" apart from "查不了".
  * Main exports: gatherEvidence, GatheredEvidence.
  */
 import type { EvidenceItem, EvidenceProvider } from "./evidence/provider";
@@ -10,7 +10,7 @@ export interface GatheredEvidence {
   items: EvidenceItem[];
   /** True when every search we issued failed. Nothing was learned about the world. */
   searchFailed: boolean;
-  /** Names of providers that failed at least once this claim — the host logs these. */
+  /** Names of providers that failed at least once here — the host logs these. */
   failedProviders: string[];
 }
 

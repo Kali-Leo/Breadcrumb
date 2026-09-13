@@ -1,17 +1,11 @@
 /**
- * Purpose: public surface of the headless fact-check module.
- * Main exports: runFactCheck pipeline, claim/verdict contracts, evidence providers, and the
- * grounding layer (topic passages, alignment, the three mechanical checks).
+ * Purpose: public surface of the headless grounding module — the evidence layer that fetches
+ * a topic's source material, and the grounding layer that labels an answer's sentences
+ * against it. No model call lives in here: every judgement this package makes is mechanical.
+ * Main exports: evidence providers, topic retrieval and passages, sentence alignment, and the
+ * per-sentence grounding annotation.
  */
 
-export {
-  anchorKey,
-  type GateableVerdict,
-  type GatedVerdict,
-  gateVerdict,
-  quoteIsGrounded,
-} from "./anchorGate";
-export { mapWithConcurrency } from "./concurrency";
 export { type BingProviderOptions, createBingProvider } from "./evidence/bing";
 export {
   createDefaultEvidenceProviders,
@@ -53,11 +47,6 @@ export {
   type ZhipuProviderOptions,
   zhipuSupportsLanguage,
 } from "./evidence/zhipu";
-export {
-  buildClaimExtractionMessages,
-  claimExtractionSchema,
-  type ExtractedClaim,
-} from "./extraction";
 export { type GatheredEvidence, gatherEvidence } from "./gathering";
 export {
   ALIGN_MIN_TOKENS,
@@ -105,21 +94,3 @@ export {
   topicQueries,
 } from "./grounding/topicSearch";
 export { type SpecificValue, specificValues, ungroundedValues } from "./grounding/values";
-export {
-  type CheckedClaim,
-  DEFAULT_JUDGE_CONCURRENCY,
-  type FactCheckDeps,
-  type FactCheckReport,
-  type FactCheckStage,
-  runFactCheck,
-} from "./pipeline";
-export { seededShuffle } from "./shuffle";
-export {
-  buildVerdictMessages,
-  type ClaimRelationship,
-  createVerdictSchema,
-  QUOTE_BUDGET,
-  VERDICT_RELATIONSHIPS,
-  type VerdictPromptOptions,
-  type VerdictRelationship,
-} from "./verdict";

@@ -1,7 +1,7 @@
 /**
  * Purpose: tests for the evidence route as the app assembles it — the Wikidata sentence is
- * written from the catalogue in the answer language and carries no bidi isolates (the anchor
- * gate compares characters), and the paid layer is only ever handed a key behind its switch.
+ * written from the catalogue in the answer language and carries no bidi isolates (the grounding
+ * checks compare characters), and the paid layer is only ever handed a key behind its switch.
  */
 import i18next from "i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -51,7 +51,7 @@ describe("wikidataFactRenderer", () => {
 });
 
 describe("currentEvidenceProviders", () => {
-  const switches = { factcheckWebSearch: false } as never;
+  const switches = { webSearchEvidence: false } as never;
 
   it("is empty in the browser edition on a mainland network without the paid layer", () => {
     expect(
@@ -65,7 +65,7 @@ describe("currentEvidenceProviders", () => {
 
   it("hands the key to the paid layer only behind its switch", async () => {
     await changeLanguage("zh-CN");
-    const on = { factcheckWebSearch: true } as never;
+    const on = { webSearchEvidence: true } as never;
     const names = (providers: { name: string }[]) => providers.map((provider) => provider.name);
     expect(
       names(

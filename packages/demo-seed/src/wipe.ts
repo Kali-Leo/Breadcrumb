@@ -1,7 +1,7 @@
 /**
  * Purpose: removes every row the demo seed ever writes, plus anything the
  * running app derived from demo rows (embeddings, aliases, edges, anchors, signals, goals,
- * place names, focus sessions, factcheck runs) — as ONE transaction, because a wipe that stops
+ * place names, focus sessions) — as ONE transaction, because a wipe that stops
  * halfway is worse than one that never ran.
  * Main exports: wipeDemoData, WIPE_DEMO_REFERENCING_TABLES.
  */
@@ -43,7 +43,6 @@ export const WIPE_DEMO_REFERENCING_TABLES: readonly string[] = [
   // -> conversations
   "messages",
   "llm_calls",
-  "factcheck_runs",
   "focus_sessions",
   "companion_knowledge_state",
 ];
@@ -77,10 +76,6 @@ export async function wipeDemoData(sql: SqlClient): Promise<void> {
     // column, so nothing but this line would ever remove it.
     { sql: "DELETE FROM goals WHERE id LIKE 'demo-%'" },
     // App-derived dependents of demo conversations/messages.
-    {
-      sql: "DELETE FROM factcheck_claims WHERE run_id IN (SELECT id FROM factcheck_runs WHERE conversation_id LIKE 'demo-%')",
-    },
-    { sql: "DELETE FROM factcheck_runs WHERE conversation_id LIKE 'demo-%'" },
     { sql: "DELETE FROM llm_calls WHERE conversation_id LIKE 'demo-%'" },
     // A focus session started from a demo conversation, and its sites.
     {

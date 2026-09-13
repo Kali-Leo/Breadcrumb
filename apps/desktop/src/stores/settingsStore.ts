@@ -55,7 +55,7 @@ export interface SettingsState extends SettingsWriteActions {
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
   /** The Zhipu search key for the fact check's open-web layer; "" = none. Only ever read by
-   * lib/factcheck/evidenceProviders.ts, and only when the factcheckWebSearch switch is on. */
+   * lib/grounding/evidenceProviders.ts, and only when the webSearchEvidence switch is on. */
   webSearchApiKey: string;
   /** casual by default — a new user wanders before they have a goal to rank against. */
   learningMode: LearningMode;

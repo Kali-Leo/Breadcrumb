@@ -32,7 +32,6 @@ import "./stores/interestStore";
 // Side-effect only: teach-back quality judgment on finished teach rounds (vision/09 #2).
 import "./lib/companion/teachQuality";
 // Side-effect only: checks every 学习模式 answer without being asked to.
-import "./lib/factcheck/autoFactcheck";
 // Side-effect only: yesterday's trail sentence, written once per launch on app:launched.
 import "./lib/trail/trailSummaryActions";
 import { useFocusSessionsStore } from "./stores/focusSessionsStore";

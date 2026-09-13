@@ -42,12 +42,9 @@ export interface PriceOverride {
 /** Every optional AI-consuming feature has its own switch (product principle 3). */
 export interface FeatureSwitches {
   knowledgeTree: boolean;
-  factcheck: boolean;
-  /** Whether a 学习模式 answer is checked unasked: one check per round — free on a free
-   * tier, real money on a metered key. */
-  factcheckAuto: boolean;
-  /** Open-web evidence (Zhipu search): per-call cost + a new outbound, so off by default. */
-  factcheckWebSearch: boolean;
+  /** Open-web evidence (Zhipu search) for the source material 学习模式 teaches against:
+   * per-call cost + a new outbound, so off by default. */
+  webSearchEvidence: boolean;
   knowledgeEdges: boolean;
   interest: boolean;
   /** Goal planning: mapping a free-text goal into a knowledge-node set — one LLM call per
@@ -132,11 +129,8 @@ export const DEFAULT_ROUTE_PARAMS: RouteParams = { pace: 0.5, interestWeight: 0.
  * product value. feedbackLab costs zero tokens and only ever shows plain facts. */
 export const DEFAULT_SWITCHES: FeatureSwitches = {
   knowledgeTree: true,
-  factcheck: true,
-  // On, like every metered feature: a check nobody asks for is a check nobody gets.
-  factcheckAuto: true,
   // Off, the one exception: per-call money AND a new outbound — the learner's call to make.
-  factcheckWebSearch: false,
+  webSearchEvidence: false,
   knowledgeEdges: true,
   interest: true,
   goalPlanning: true,

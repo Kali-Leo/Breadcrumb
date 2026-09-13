@@ -68,7 +68,6 @@
   "purposes": {
     "chat": "Conversation",
     "knowledge-tree": "Carte des connaissances",
-    "factcheck": "Vérification des faits",
     "knowledge-edges": "Liens entre connaissances",
     "interest": "Profil d'intérêts",
     "self-report-mapping": "Reconnaissance de « je sais déjà »",
@@ -130,19 +129,11 @@
         "name": "🌳 Carte des connaissances",
         "hint": "Après chaque échange, l'IA range sur ta carte ce dont tu as parlé."
       },
-      "factcheck": {
-        "name": "🔍 Vérification des faits",
-        "hint": "Les affirmations factuelles d'une réponse de l'IA sont recherchées dans des sources publiques, et le passage trouvé est affiché juste sous la réponse."
-      },
-      "factcheckAuto": {
-        "name": "Vérifier automatiquement les réponses du Mode étude",
-        "hint": "Quand c'est activé, chaque réponse du Mode étude est vérifiée d'elle-même, sans rien demander. Avec un service d'IA gratuit, cela ne coûte rien de plus ; avec un service facturé à l'usage, chaque tour dépense le montant ci-dessus. Désactivé, la vérification ne se lance que quand tu appuies sur « Vérifier ceci »."
-      },
-      "factcheckWebSearch": {
+      "webSearchEvidence": {
         "name": "🌐 Recherche sur le web ouvert pour les preuves (Zhipu)",
         "price": "environ ¥{{price}} par requête",
         "hint": "Quand c'est activé, en plus de Wikidata et de Wikipédia, le service de recherche de Zhipu est sollicité pour trouver des sources sur le web ouvert : ce qu'une encyclopédie n'a jamais écrit. Facturé à la requête sur ton compte Zhipu, à part du service d'IA ci-dessus ; dans l'édition navigateur sur un réseau de Chine continentale, c'est la seule source joignable. Chinois, anglais et swahili seulement : les autres langues ont donné des résultats peu fiables aux tests et ne prennent jamais cette voie.",
-        "disclosure": "Une fois activé, les affirmations extraites de ta question sont envoyées à un moteur de recherche. C'est un nouvel endroit où vont tes mots.",
+        "disclosure": "Une fois activé, les mots-clés tirés de ta question sont envoyés à un moteur de recherche. C'est un nouvel endroit où vont tes mots.",
         "keyLabel": "Clé API du service de recherche Zhipu",
         "keyPlaceholder": "À obtenir sur open.bigmodel.cn, puis à coller ici",
         "noKey": "Pas encore de clé : pour l'instant, ceci ne fait rien."

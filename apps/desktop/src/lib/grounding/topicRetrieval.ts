@@ -29,9 +29,9 @@ import {
 } from "@breadcrumb/feature-factcheck";
 import { type TopicMaterial, useGroundingStore } from "../../stores/groundingStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { currentEvidenceProviders } from "../factcheck/evidenceProviders";
 import { embedTexts } from "../platform/embeddings";
 import { degradeSilently } from "../platform/failureLog";
+import { currentEvidenceProviders } from "./evidenceProviders";
 
 /** The material this round should be taught against, or null when there is none to be had. */
 export async function prepareRoundMaterial(

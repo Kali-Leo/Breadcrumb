@@ -12,7 +12,7 @@ vi.mock("../../stores/settingsStore", () => ({
 }));
 
 let providers: { name: string }[] = [{ name: "wikipedia" }];
-vi.mock("../factcheck/evidenceProviders", () => ({
+vi.mock("./evidenceProviders", () => ({
   currentEvidenceProviders: () => providers,
 }));
 

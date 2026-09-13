@@ -1,6 +1,6 @@
 /**
  * Purpose: the single writer for llm_calls rows — every metered call site (companion
- * memory, diglot refine, factcheck, edge/interest extraction, the chat round via
+ * memory, diglot refine, term marking, edge/interest extraction, the chat round via
  * chatRoundMetering, ...) goes through this one row-construction path so pricing and
  * currency logic can't drift between call sites the way it already had (this file defaulted
  * unknown models to USD; chatRoundMetering.ts's hand-rolled copy defaulted to CNY — a real

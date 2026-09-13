@@ -20,11 +20,9 @@
  * published profile understates cost for those readers. Closing that means a per-language
  * profile and a re-measurement of the whole catalogue, which is its own change.
  *
- * Main exports: treeNodes, treeLabels, ROUND, LONG_ANSWER, FACTCHECK_CLAIMS,
- * FACTCHECK_EVIDENCE.
+ * Main exports: treeNodes, treeLabels, ROUND, LONG_ANSWER.
  */
 import type { KnowledgeNodeRow } from "@breadcrumb/core-db";
-import { EVIDENCE_WINDOW_LENGTH } from "@breadcrumb/feature-factcheck";
 import { CANONICAL_CONCEPTS } from "../../data/generated/canonicalConcepts";
 
 /** Nodes in the tree at measurement time. 80 is past the point where the tree stops being a
@@ -67,21 +65,3 @@ export const ROUND = {
 /** A single long answer, for purposes that only see the model's output (term marking, focus
  * stations) rather than a whole round. */
 export const LONG_ANSWER = ROUND.answer;
-
-/** The claims the fact-check extraction returns for this round — each one costs its own
- * verdict call, which is where nearly all of that feature's tokens are. */
-export const FACTCHECK_CLAIMS = [
-  "导数定义为平均变化率在自变量增量趋于零时的极限",
-  "绝对值函数在原点不可导",
-] as const;
-
-/** Three excerpts per claim, each a full evidence window — what the judge is really handed. */
-export const FACTCHECK_EVIDENCE = Array.from({ length: 3 }, (_, index) => ({
-  url: `https://zh.wikipedia.org/wiki/资料${index}`,
-  title: `导数 - 资料${index}`,
-  snippet: LONG_ANSWER.repeat(Math.ceil(EVIDENCE_WINDOW_LENGTH / LONG_ANSWER.length)).slice(
-    0,
-    EVIDENCE_WINDOW_LENGTH,
-  ),
-  source: "wikipedia",
-}));

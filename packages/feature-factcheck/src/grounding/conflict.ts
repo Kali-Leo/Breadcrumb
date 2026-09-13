@@ -13,8 +13,8 @@
  * Main exports: SourceConflict, findConflict.
  */
 
-import { anchorKey } from "../anchorGate";
 import type { PassageSentence } from "./align";
+import { anchorKey } from "./anchorText";
 import { entityTokens } from "./checks";
 import { type SpecificValue, specificValues } from "./values";
 
