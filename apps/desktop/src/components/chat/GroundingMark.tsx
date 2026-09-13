@@ -18,6 +18,7 @@
 import type { GroundedSentence } from "@breadcrumb/feature-factcheck";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { groundingSourceLabel } from "../../lib/grounding/sourceLabel";
 
 const DOT_CLASS: Record<GroundedSentence["label"], string> = {
   grounded: "bg-emerald-400",
@@ -35,7 +36,7 @@ export function GroundingMark({ sentence }: GroundingMarkProps) {
   const quote = sentence.quote;
   const label = t(`grounding.mark.${sentence.label}` as never);
   const hover =
-    quote === null ? label : `${label} — [${quote.passageIndex}] ${quote.source} · ${quote.text}`;
+    quote === null ? label : `${label} — ${groundingSourceLabel(t, quote.source)} · ${quote.text}`;
 
   return (
     <>
@@ -54,9 +55,7 @@ export function GroundingMark({ sentence }: GroundingMarkProps) {
             label
           ) : (
             <>
-              <span className="text-stone-400">
-                [{quote.passageIndex}] {quote.source} ·{" "}
-              </span>
+              <span className="text-stone-400">{groundingSourceLabel(t, quote.source)} · </span>
               {quote.text}
             </>
           )}

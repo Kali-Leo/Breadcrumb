@@ -71,7 +71,8 @@
     "timeYesterday": "Ayer {{time}}",
     "errorNoResponse": "no llegó nada",
     "errorTimedOut": "la respuesta tardó demasiado",
-    "mapAria": "Mapa de paradas del enfoque"
+    "mapAria": "Mapa de paradas del enfoque",
+    "stationJump": "Ir a «{{label}}»"
   },
   "teach": {
     "opener": "Estoy aprendiendo «{{topic}}» y todavía no lo tengo claro. ¿Me lo explicas con tus palabras? Empezar por qué es estaría muy bien.",

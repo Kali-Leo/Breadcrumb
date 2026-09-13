@@ -2,31 +2,31 @@
   "title": "Discover",
   "setup": {
     "title": "Discover",
-    "intro": "Install one browser script and what you watch on Bilibili and YouTube shows up on this page. It is all worked out on your own device and never sent anywhere.",
-    "step1Title": "Step 1: add an extension that can run scripts",
-    "step1Body": "Violentmonkey is free. Install it, then come back to this page.",
-    "step1Button": "Open the Violentmonkey page",
+    "intro": "Once a browser script is installed, what you watch on Bilibili and YouTube appears on this page. Everything is processed on your own device and is never sent elsewhere.",
+    "step1Title": "Step 1: install a browser extension that can run scripts",
+    "step1Body": "Violentmonkey is free. Install it, then return to this page.",
+    "step1Button": "Open the Violentmonkey installation page",
     "step2Title": "Step 2: install Breadcrumb's two scripts",
-    "step2Body": "Press a button below; your browser will ask whether to install it, and yes is the answer.",
+    "step2Body": "Select a button below and confirm in the browser's installation prompt.",
     "bilibiliScript": "Install the Bilibili script",
     "youtubeScript": "Install the YouTube script",
-    "step3Title": "Step 3: connect your browser to Breadcrumb",
-    "step3Body": "Open the Bilibili home page, click 🔗 on the switch bar at the bottom left, and paste the line below. Do the same once on the YouTube home page.",
+    "step3Title": "Step 3: connect the browser",
+    "step3Body": "Open the Bilibili home page, select the link icon at the bottom left of the switch bar, and paste the code below. Repeat once on the YouTube home page.",
     "step3TitleWeb": "Step 3: keep Breadcrumb open",
-    "step3BodyWeb": "The script hands over what it recorded whenever you open Breadcrumb. There is nothing else to do.",
-    "codeUsed": "That line has been used. A new one is on its way.",
-    "connected": "Connected. Browse Bilibili and YouTube as usual and what you watch will start appearing here."
+    "step3BodyWeb": "The script submits what it recorded whenever Breadcrumb is open. Nothing else is required.",
+    "codeUsed": "The previous code has been used. A new one is being generated.",
+    "connected": "Connected. Browse Bilibili and YouTube as usual, and what you watch will appear on this page."
   },
-  "intro": "This page shows what you have been watching on Bilibili and YouTube, and what interests you. All of it is worked out on this computer; nothing is sent anywhere else.",
+  "intro": "This page shows what has been watched on Bilibili and YouTube, and which topics are of interest. Everything is processed on this computer and is never sent elsewhere.",
   "emotion": {
     "title": "How the content felt",
     "all": "All",
-    "pro": "Learn",
-    "ent": "Fun",
-    "gent": "Feel-good",
-    "expose": "Fed to you",
+    "pro": "Learning",
+    "ent": "Entertainment",
+    "gent": "Selected entertainment",
+    "expose": "Fed",
     "engage": "Chosen",
-    "chartAria": "How fed and chosen content felt over time",
+    "chartAria": "Content mood curve for fed and chosen content",
     "tooltip_one": "{{date}} {{line}} {{value}} ({{count}} item)",
     "tooltip_other": "{{date}} {{line}} {{value}} ({{count}} items)",
     "empty": "Nothing was recorded in this period"
@@ -41,8 +41,8 @@
   },
   "newTopics": {
     "title": "New interests",
-    "thinEvidence": "Records are still few — treat these changes as early hints.",
-    "empty": "Nothing new has come up lately"
+    "thinEvidence": "Records are still few, so these changes are indicative only.",
+    "empty": "No clearly new topic has appeared recently"
   },
   "proContent": {
     "title": "Learning content",

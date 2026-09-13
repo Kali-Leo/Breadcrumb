@@ -5,7 +5,7 @@
  * already used for the continuation/companion banners (border-b, text-xs).
  * Main exports: FocusSessionsBar.
  */
-import { focusBarTitleMessage } from "@breadcrumb/feature-explore";
+import { focusBadgeMessage, focusBarTitleMessage } from "@breadcrumb/feature-explore";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { formatFocusSessionTimestamp } from "../../lib/focus/focusSessionTime";
 import { useFocusSessionsStore } from "../../stores/focusSessionsStore";
@@ -31,7 +31,7 @@ export function FocusSessionsBar() {
               onClick={() => void reopen(session.sessionId)}
               className="text-stone-500 hover:text-amber-600"
             >
-              「{session.rootLabel}」· {session.answeredCount} 站 ·{" "}
+              {copy(focusBadgeMessage(session.rootLabel, session.answeredCount))} ·{" "}
               {formatFocusSessionTimestamp(session.createdAt)}
             </button>
           </li>

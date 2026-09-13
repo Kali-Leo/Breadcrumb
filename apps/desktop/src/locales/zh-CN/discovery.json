@@ -2,22 +2,22 @@
   "title": "发现",
   "setup": {
     "title": "发现",
-    "intro": "装一个浏览器脚本，你在 B 站和 YouTube 上看过什么就会出现在这一页。整理都在你自己的设备上完成，不会送到别的地方去。",
-    "step1Title": "第一步：装一个能运行脚本的浏览器扩展",
-    "step1Body": "Violentmonkey 是免费的，装好之后回到这一页。",
-    "step1Button": "打开 Violentmonkey 的安装页",
-    "step2Title": "第二步：装 Breadcrumb 的两个脚本",
-    "step2Body": "点下面的按钮，浏览器会问你要不要安装，同意就好。",
+    "intro": "安装一个浏览器脚本后，在 B 站和 YouTube 上看过的内容会出现在这一页。整理在本机完成，不会发送到别处。",
+    "step1Title": "第一步：安装可运行脚本的浏览器扩展",
+    "step1Body": "Violentmonkey 免费，安装后返回本页。",
+    "step1Button": "打开 Violentmonkey 安装页",
+    "step2Title": "第二步：安装 Breadcrumb 的两个脚本",
+    "step2Body": "点击下方按钮，并在浏览器的安装提示中确认。",
     "bilibiliScript": "安装 B 站脚本",
     "youtubeScript": "安装 YouTube 脚本",
-    "step3Title": "第三步：把浏览器和这里连起来",
-    "step3Body": "打开 B 站首页，点左下角开关条上的 🔗，把下面这串字粘进去。YouTube 首页上再做一次。",
-    "step3TitleWeb": "第三步：把 Breadcrumb 开着",
-    "step3BodyWeb": "你打开 Breadcrumb 的时候，脚本会把看过的东西交过来，不用再做别的。",
-    "codeUsed": "上一串已经用过了，正在给你换一串新的。",
-    "connected": "连上了。照常刷 B 站和 YouTube 就行，看过的东西会陆续出现在这一页。"
+    "step3Title": "第三步：连接浏览器",
+    "step3Body": "打开 B 站首页，点击开关条左下角的链接图标，粘贴下方的连接码。在 YouTube 首页重复一次。",
+    "step3TitleWeb": "第三步：保持 Breadcrumb 打开",
+    "step3BodyWeb": "打开 Breadcrumb 时，脚本会自动提交记录的内容，无需其他操作。",
+    "codeUsed": "上一个连接码已使用，正在生成新的连接码。",
+    "connected": "已连接。照常浏览 B 站和 YouTube，看过的内容会陆续出现在这一页。"
   },
-  "intro": "这一页显示你在 B 站和 YouTube 上看过什么、对什么感兴趣。整理都在你自己这台电脑上完成，内容不会送到别的地方去。",
+  "intro": "本页显示在 B 站和 YouTube 上看过的内容与兴趣分布。整理在本机完成，内容不会发送到别处。",
   "emotion": {
     "title": "内容情绪",
     "all": "全部",
@@ -28,11 +28,11 @@
     "engage": "选择",
     "chartAria": "投喂与选择的内容情绪曲线",
     "tooltip": "{{date}} {{line}} {{value}}（{{count}} 条）",
-    "empty": "这段时间还没有记下内容"
+    "empty": "这段时间没有内容记录"
   },
   "wordCloud": {
     "title": "词云",
-    "empty": "这段时间还没有点开过内容",
+    "empty": "这段时间没有打开过内容",
     "window7": "7天",
     "window30": "30天",
     "window90": "90天",
@@ -40,15 +40,15 @@
   },
   "newTopics": {
     "title": "新的兴趣",
-    "thinEvidence": "记录还不多，这些变化先当参考。",
-    "empty": "最近没有明显冒头的主题"
+    "thinEvidence": "记录较少，这些变化仅供参考。",
+    "empty": "最近没有明显出现的新主题"
   },
   "proContent": {
     "title": "专业内容",
-    "unfinished": "没看完",
-    "finished": "看完",
+    "unfinished": "未看完",
+    "finished": "已看完",
     "allGroups": "全部",
     "minutes": "{{watched}}/{{total}} 分钟",
-    "empty": "这段时间没有看过的专业内容"
+    "empty": "这段时间没有观看专业内容"
   }
 }

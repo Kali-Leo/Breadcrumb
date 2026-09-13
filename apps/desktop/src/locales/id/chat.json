@@ -33,6 +33,13 @@
       "grounded": "Dari sumber",
       "own": "Pemahaman saya sendiri",
       "conflicting": "Sumbernya berbeda"
+    },
+    "sources": {
+      "wikipedia": "Wikipedia",
+      "wikidata": "Wikidata",
+      "bing": "Bing",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

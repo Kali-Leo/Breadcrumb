@@ -33,6 +33,13 @@
       "grounded": "উৎস থেকে",
       "own": "আমার নিজের বোঝা",
       "conflicting": "উৎসগুলো আলাদা বলে"
+    },
+    "sources": {
+      "wikipedia": "উইকিপিডিয়া",
+      "wikidata": "উইকিডেটা",
+      "bing": "বিং",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

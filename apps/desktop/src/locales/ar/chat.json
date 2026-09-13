@@ -33,6 +33,13 @@
       "grounded": "من المصادر",
       "own": "فهمي أنا",
       "conflicting": "المصادر تختلف"
+    },
+    "sources": {
+      "wikipedia": "ويكيبيديا",
+      "wikidata": "ويكي بيانات",
+      "bing": "بينغ",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

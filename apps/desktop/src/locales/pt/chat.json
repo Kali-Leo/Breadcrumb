@@ -33,6 +33,13 @@
       "grounded": "Vem das fontes",
       "own": "Meu próprio entendimento",
       "conflicting": "As fontes divergem"
+    },
+    "sources": {
+      "wikipedia": "Wikipédia",
+      "wikidata": "Wikidata",
+      "bing": "Bing",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

@@ -69,7 +69,8 @@
     "timeYesterday": "Jana {{time}}",
     "errorNoResponse": "hakuna kilichorudi",
     "errorTimedOut": "muda wa jibu uliisha",
-    "mapAria": "Ramani ya vituo vya umakini"
+    "mapAria": "Ramani ya vituo vya umakini",
+    "stationJump": "Nenda kwa \"{{label}}\""
   },
   "teach": {
     "opener": "Ninajifunza «{{topic}}» na bado sijalielewa vizuri. Unaweza kunieleza kwa maneno yako? Kuanza na ni nini hasa kutasaidia sana.",

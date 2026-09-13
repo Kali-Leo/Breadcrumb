@@ -8,39 +8,39 @@
   },
   "api": {
     "title": "AI 服务（OpenAI 兼容）",
-    "hint": "在这里填入你的 AI 服务账号；对话和其他 AI 功能都靠它工作。",
+    "hint": "在此填写 AI 服务账号。对话和其他 AI 功能都依赖它运行。",
     "baseUrl": "服务地址 Base URL",
     "apiKey": "API Key",
     "model": "模型名",
     "priceCurrency": "计费币种",
-    "priceCurrencyHint": "这个模型在不同平台按不同货币计费。选你的 API Key 所属的那个，账单页的金额才对得上。",
+    "priceCurrencyHint": "该模型在不同平台按不同货币计费。选择 API Key 所属平台的货币，账单页的金额才能对应。",
     "currencyCNY": "¥ 人民币",
     "currencyUSD": "$ 美元",
-    "saved": "已保存 ✓",
-    "unsaved": "有修改还没保存",
+    "saved": "已保存",
+    "unsaved": "有修改尚未保存",
     "testConnection": "测试连接",
-    "testing": "正在连接…",
+    "testing": "正在连接",
     "testResult": {
-      "ok": "连上了。",
-      "badUrl": "服务地址不是一个能用的网址。它要以 https:// 开头，例如 https://api.deepseek.com。",
-      "offline": "现在连不上网络。先确认这台设备能上网，再看看下面的「网络总开关」是不是关着。",
-      "timeout": "服务商一直没有回应。可能是网络太慢，过一会儿再试一次。",
-      "blockedByBrowser": "浏览器没能连上这个服务，而且它不会说明原因。先确认这台设备能正常上网；如果还是连不上，多半是这家服务商不允许网页直接连接，可以换一家服务商，或者用桌面版。",
-      "unreachable": "没能连上这个服务。检查一下服务地址有没有写错，或者过一会儿再试。",
-      "unauthorized": "服务商说这个密钥用不了。回到你的服务商网站，重新复制一遍 API Key。",
-      "insufficientBalance": "这个账号的余额不够了。到服务商网站充值之后再试一次。",
-      "notFound": "这个地址上没有找到 AI 服务。检查一下地址是不是少了或多了结尾的一段，比如 /v1。",
-      "rateLimited": "服务商说这会儿请求太密集了。过一两分钟再试一次。",
-      "badRequest": "服务商没有接受这次请求。最常见的原因是模型名写错了，对着服务商的文档核对一下。",
-      "serverError": "服务商那边出了问题，不是你这边的设置。过一会儿再试一次。"
+      "ok": "连接成功。",
+      "badUrl": "服务地址不是有效的网址，应以 https:// 开头，例如 https://api.deepseek.com。",
+      "offline": "当前无法连接网络。先确认本设备已联网，再检查下方的「网络总开关」是否处于关闭状态。",
+      "timeout": "服务商未响应。可能是网络较慢，可以稍后重试。",
+      "blockedByBrowser": "浏览器未能连接该服务，且未说明原因。先确认本设备可以正常联网；若仍无法连接，多为该服务商不允许网页直接连接，可以更换服务商或使用桌面版。",
+      "unreachable": "未能连接该服务。检查服务地址是否有误，或稍后重试。",
+      "unauthorized": "服务商提示该密钥不可用。返回服务商网站重新复制 API Key。",
+      "insufficientBalance": "该账号余额不足。在服务商网站充值后重试。",
+      "notFound": "该地址上没有找到 AI 服务。检查地址结尾是否缺少或多出一段，例如 /v1。",
+      "rateLimited": "服务商提示当前请求过于密集。一两分钟后重试。",
+      "badRequest": "服务商未接受本次请求。最常见的原因是模型名有误，可以对照服务商文档核对。",
+      "serverError": "服务商一侧出现问题，与本地设置无关。可以稍后重试。"
     },
-    "priceOverride": "自己填单价（每百万 token）",
-    "priceOverrideHint": "内置价目表里没有你的模型、或者价格变了，就在这里填。输入和输出都填上才生效；留空就用内置的。",
+    "priceOverride": "自定义单价（每百万 token）",
+    "priceOverrideHint": "内置价目表中没有该模型，或价格已变动时，可以在此填写。输入与输出均填写后生效；留空则使用内置价目表。",
     "priceInput": "输入",
     "priceOutput": "输出",
     "priceCached": "缓存命中的输入",
     "priceUnknown": "未知",
-    "priceNone": "没有"
+    "priceNone": "无"
   },
   "network": {
     "title": "网络总开关",
@@ -48,19 +48,19 @@
   },
   "mainland": {
     "title": "大陆网络模式",
-    "hint": "事实核查只使用大陆可访问的资料源（必应；开了联网搜索取证的话也用它）；关闭后优先维基数据和维基百科。"
+    "hint": "事实核查仅使用大陆可访问的来源（必应；开启联网搜索取证时同时使用智谱）；关闭后优先使用维基数据和维基百科。"
   },
   "language": {
     "title": "语言",
     "interface": "界面语言",
     "answer": "AI 回答的语言",
-    "sameAsInterface": "跟界面一样",
-    "thinNote": "AI 用{{language}}回答，不如用{{fallback}}准。你可以把回答的语言单独改掉，界面保持不变。"
+    "sameAsInterface": "与界面一致",
+    "thinNote": "AI 以{{language}}回答的准确度低于{{fallback}}。可以单独更改回答的语言，界面语言保持不变。"
   },
   "quietIssues": {
     "title": "后台任务",
-    "allGood": "后台一切正常。",
-    "summary": "最近有 {{count}} 件后台小事没做成，不影响你的学习。点开看看是哪些",
+    "allGood": "后台任务运行正常。",
+    "summary": "最近有 {{count}} 件后台小事未完成，不影响学习。点击查看详情",
     "fallbackPurpose": "后台任务"
   },
   "purposes": {
@@ -72,7 +72,7 @@
     "goal-planning": "目标规划",
     "compare-profile": "对比资料构建",
     "compare-align": "对比匹配",
-    "map-naming": "地图起名",
+    "map-naming": "地图命名",
     "diglot-weave": "语言学习·智能替换",
     "teach-quality": "讲解反馈",
     "companion-memory": "伙伴记忆",
@@ -81,9 +81,9 @@
     "term-marking": "生词标注",
     "trail-summary": "昨天的足迹",
     "planner": "目标进度",
-    "map-place-names": "地图上你起的名字",
+    "map-place-names": "地图上的自定名称",
     "map-continents": "地图分区",
-    "concept-doors": "回答里的知识点入口",
+    "concept-doors": "回答中的知识点入口",
     "diglot-audio": "单词朗读",
     "focus-guess": "专注模式的答案比对",
     "metering": "花费记账",
@@ -96,115 +96,115 @@
     "companion": "伙伴加载"
   },
   "billing": {
-    "intro": "每个会花钱的环节都能在这里单独开关，花费也分开记。这一页显示实际花费。",
-    "estimateIntro": "每项下面的估价，你用过的按你最近的实际用量算，没用过的按{{scenario}}算；你自己的实际花费就写在旁边。",
-    "measurementScenario": "学了约三个月的学习者：知识树 80 个节点，一轮学习模式问答（提问 ~40 字，回答 ~600 字）",
+    "intro": "每项收费环节都可以在此单独开关，费用分别记录。本页显示实际花费。",
+    "estimateIntro": "每项下方的估价：已使用过的按最近的实际用量计算，未使用过的按{{scenario}}计算；实际花费列在旁边。",
+    "measurementScenario": "学习约三个月的学习者：知识树 80 个节点，一轮学习模式问答（提问约 40 字，回答约 600 字）",
     "estimate": "约 {{cost}} {{cadence}}",
-    "estimateUnknownModel": "你用的模型不在内置价目表里，估不出单次花费",
-    "estimateFree": "不花钱",
-    "estimateUnmeasured": "这一项还没量过单次花费",
+    "estimateUnknownModel": "所用模型不在内置价目表中，无法估算单次花费",
+    "estimateFree": "不产生费用",
+    "estimateUnmeasured": "该项尚未测量单次花费",
     "cadencePerRound": "每轮对话",
     "cadencePerMessage": "每条消息",
     "cadencePerAnswer": "每条回答",
     "cadenceOnDemand": "每次使用",
-    "cadencePerItemOnce": "每个，且只算一次",
+    "cadencePerItemOnce": "每个，且只计一次",
     "cadencePerDay": "每天最多一次",
     "grandTotal": "今日合计 {{today}} · 累计 {{total}}",
-    "nothingSpent": "还没花钱",
+    "nothingSpent": "尚未产生费用",
     "neverUsed": "尚未产生费用",
     "spendLine": "今日 {{today}} · 累计 {{total}}",
     "diglot": {
-      "name": "🧵 语言学习·智能替换",
-      "hint": "语言学习的加强版：AI 按上下文挑更准确的译法，偶尔换上一句地道短语。",
+      "name": "语言学习·智能替换",
+      "hint": "语言学习的增强模式：AI 按上下文选择更准确的译法，并适时替换为地道表达。",
       "toggleLabel": "语言学习智能替换"
     },
     "chat": {
-      "name": "💬 聊天",
-      "hint": "和 AI 的日常对话。这是核心功能，一直开启；花费同样记在这里。"
+      "name": "对话",
+      "hint": "与 AI 的日常对话。这是核心功能，始终开启；费用同样记录在此。"
     },
     "features": {
       "knowledgeTree": {
-        "name": "🌳 知识整理",
-        "hint": "每次对话结束后，AI 会把这次聊到的知识点整理进你的地图。"
+        "name": "知识整理",
+        "hint": "每次对话结束后，AI 会把本次涉及的知识点整理进地图。"
       },
       "webSearchEvidence": {
-        "name": "🌐 联网搜索取证（智谱）",
+        "name": "联网搜索取证（智谱）",
         "price": "约 ¥{{price}}/次",
-        "hint": "开着的时候，除了维基数据和维基百科，还会用智谱的搜索接口去公开网络上找资料，能查到百科里没写的事。按次计费，从智谱账号扣，不算在上面 AI 服务的账单里；大陆网络下的网页版只有它能查到资料。只对中文、英文、斯瓦希里语开放，其他语言实测结果不可靠，不会走这条路。",
-        "disclosure": "开启后，从你的问题里提取出来的检索词会被发给一个搜索引擎去查。这是一个新的外发渠道。",
+        "hint": "开启后，除维基数据和维基百科外，还会通过智谱的搜索接口在公开网络上搜索资料，可以查到百科未收录的内容。按次计费，从智谱账号扣除，不计入上述 AI 服务的账单；在大陆网络下的网页版中，它是唯一可用的来源。仅对中文、英文、斯瓦希里语开放，其他语言的实测结果不可靠，不会启用。",
+        "disclosure": "开启后，从问题中提取的检索词会发送给搜索引擎。这是一条新的外发渠道。",
         "keyLabel": "智谱搜索服务 API Key",
-        "keyPlaceholder": "在 open.bigmodel.cn 申请，填在这里",
-        "noKey": "还没填 key，这一项暂时不会生效。"
+        "keyPlaceholder": "在 open.bigmodel.cn 申请后填写",
+        "noKey": "尚未填写密钥，该项暂不生效。"
       },
       "knowledgeEdges": {
-        "name": "🕸️ 知识关联",
-        "hint": "记下新知识点后，AI 会看看它和你学过的内容有什么联系。"
+        "name": "知识关联",
+        "hint": "记录新知识点后，AI 会分析它与已学内容的联系。"
       },
       "interest": {
-        "name": "💡 个性化推荐",
-        "hint": "AI 会留意你对哪些内容感兴趣、哪里有困惑，用来调整推荐；你说「我学过…」时也靠它来识别对应的知识点。"
+        "name": "个性化推荐",
+        "hint": "AI 会留意感兴趣的内容与困惑之处，用于调整推荐；「我学过」这类表述也由它识别对应的知识点。"
       },
       "goalPlanning": {
-        "name": "🎯 目标规划",
-        "hint": "你定下一个目标后，AI 会把它变成一份要学的清单。"
+        "name": "目标规划",
+        "hint": "设定目标后，AI 会把它转换为一份学习清单。"
       },
       "compareProfileBuild": {
-        "name": "🌲 对比资料构建（实验）",
-        "hint": "想对比职业名录之外的主题时，AI 会检索公开资料整理出一份对照清单，并逐条核对来源；需要几分钟。"
+        "name": "对比资料构建（实验）",
+        "hint": "对比职业名录之外的主题时，AI 会检索公开资料整理出对照清单，并逐条核对来源，需要几分钟。"
       },
       "compareAlignment": {
-        "name": "🌉 对比匹配",
-        "hint": "对比时，AI 会判断你的说法和资料里的说法是不是同一个概念。"
+        "name": "对比匹配",
+        "hint": "对比时，AI 会判断你的表述与资料中的表述是否为同一概念。"
       },
       "teachQuality": {
-        "name": "🎓 讲解反馈",
-        "hint": "你讲给伙伴听之后，AI 会看一遍你讲得怎么样；讲得清楚的部分会被记下来。"
+        "name": "讲解反馈",
+        "hint": "向伙伴讲解后，AI 会评估讲解情况；讲清楚的部分会被记录下来。"
       },
       "mapTopicNaming": {
-        "name": "🗺️ 地图起名（实验）",
-        "hint": "在地图里，AI 会给自动聚在一起的一片内容起名字。"
+        "name": "地图命名（实验）",
+        "hint": "在地图中，AI 会为自动聚合的区域命名。"
       },
       "feedbackLab": {
-        "name": "🪞 这段时间",
-        "hint": "地图右栏的回顾内容：全部由本地数据算出，不花钱。"
+        "name": "这段时间",
+        "hint": "地图侧栏的回顾内容，全部由本地数据计算，不产生费用。"
       },
       "trailSummary": {
-        "name": "🐾 昨天的足迹",
-        "hint": "每天第一次打开时，AI 会用一句话记下你前一天学了什么，显示在地图右栏「这段时间」的最上面。"
+        "name": "昨天的足迹",
+        "hint": "每天首次打开时，AI 会用一句话记录前一天的学习内容，显示在地图侧栏「这段时间」的顶部。"
       },
       "companionChat": {
-        "name": "🎭 伙伴聊天",
-        "hint": "每天会有几位同学来请教你，问的是你学过、有阵子没碰的内容。点开就能讲给他们听。"
+        "name": "伙伴对话",
+        "hint": "每天会有几位同学前来请教，问题取自学过但有一段时间未接触的内容。"
       },
       "companionMemory": {
-        "name": "🧠 伙伴记忆",
-        "hint": "伙伴会记住和你聊过的内容；偶尔整理一次，让记忆更连贯。"
+        "name": "伙伴记忆",
+        "hint": "伙伴会记住对话中的内容，并定期整理，使记忆更连贯。"
       },
       "companionScript": {
-        "name": "📜 伙伴预习",
-        "hint": "你开讲之前，要听你讲的伙伴会先预习一下这个主题，听的时候更能接上话。"
+        "name": "伙伴预习",
+        "hint": "讲解开始前，负责听讲的伙伴会先预习该主题，听讲时更容易接上话。"
       },
       "focusExplain": {
-        "name": "🔎 专注解释",
-        "hint": "在专注模式里选中词语或提问时，AI 会生成一段讲解。"
+        "name": "专注解释",
+        "hint": "在专注模式中选中词语或提问时，AI 会生成一段讲解。"
       },
       "termMarking": {
-        "name": "🖊️ 生词标注",
-        "hint": "AI 会在每条回答里标出你可能还不认识的词，点一下就能看解释。"
+        "name": "生词标注",
+        "hint": "AI 会在每条回答中标出可能不认识的词，点击即可查看解释。"
       }
     }
   },
   "research": {
-    "panelIntro": "这里的统计结果都是这台电脑自己算出来的；研究任务经过审查、来源可查，数据不会自动离开这台设备，也不产生任何费用。",
-    "offNotice": "研究任务已关闭：不会再运行新的任务。已有结果仍然保留，可以逐条查看或删除。",
-    "loading": "加载中…",
+    "panelIntro": "本页的统计结果均由本机计算；研究任务经过审查、来源可查，数据不会自动离开本设备，也不产生任何费用。",
+    "offNotice": "研究课题已关闭：不再运行新的任务。已有结果仍然保留，可以逐条查看或删除。",
+    "loading": "正在加载",
     "emptyTitle": "还没有研究结果",
-    "emptyHint": "应用空闲时会本地计算已验签的研究任务，算完会出现在这里。",
+    "emptyHint": "应用空闲时会在本地计算已验签的研究任务，完成后结果会出现在这里。",
     "cardInstitutionLabel": "机构",
     "cardPurposeLabel": "研究目的",
     "cardEthicsLabel": "伦理备注",
     "cardComputedAtLabel": "计算时间",
-    "notEnoughData": "数据还不够，先不下结论",
+    "notEnoughData": "数据不足，暂不给出结论",
     "barRange": "{{low}}–{{high}}",
     "retentionMean": "平均",
     "retentionMedian": "中位数",
@@ -217,27 +217,27 @@
     "weekdayFriday": "周五",
     "weekdaySaturday": "周六",
     "deleteAction": "删除此结果",
-    "deleteConfirmPrompt": "删除后这条结果不可恢复，确认删除？",
+    "deleteConfirmPrompt": "删除后该结果无法恢复。",
     "deleteConfirmAction": "确认删除",
-    "settingsRowTitle": "🔬 研究课题",
-    "settingsRowHint": "在本地运行经审查的研究任务并展示结果；数据不会自动离开设备，也不产生费用",
+    "settingsRowTitle": "研究课题",
+    "settingsRowHint": "在本地运行经审查的研究任务并展示结果；数据不会自动离开本设备，也不产生费用。",
     "closeConfirmTitle": "关闭研究课题平台",
-    "closeConfirmWhatItDoes": "研究课题平台在本地运行经审查、经项目方签名的研究任务，把统计结果算出来并展示给你。",
-    "closeConfirmDataStaysLocal": "全部计算在本地完成，数据不会自动离开这台设备。",
-    "closeConfirmResearchValue": "这类本地聚合统计，让研究者不必收集个人数据也能了解学习规律。",
-    "closeConfirmWhatChanges": "关闭后不会再运行任何研究任务，也不会再询问是否关闭。已有结果不受影响，仍可在面板中查看或删除。",
+    "closeConfirmWhatItDoes": "研究课题平台在本地运行经审查、经项目方签名的研究任务，计算统计结果并展示。",
+    "closeConfirmDataStaysLocal": "全部计算在本地完成，数据不会自动离开本设备。",
+    "closeConfirmResearchValue": "这类本地聚合统计，使研究者无需收集个人数据也能了解学习规律。",
+    "closeConfirmWhatChanges": "关闭后不再运行任何研究任务，也不再询问是否关闭。已有结果不受影响，仍可在面板中查看或删除。",
     "closeConfirmAction": "确认关闭"
   },
   "backup": {
     "title": "备份与恢复",
-    "hint": "浏览器版的数据只存在这一个浏览器里。导出一份备份，就能换台设备或换个浏览器接着用。",
-    "export": "导出一份备份",
+    "hint": "浏览器版的数据只保存在当前这个浏览器中。导出一份备份后，可以在其他设备或其他浏览器继续使用。",
+    "export": "导出备份",
     "import": "从备份恢复",
-    "replaceWarning": "恢复会用备份里的内容替换现在的全部数据，被换掉的内容找不回来。可以先导出一份现在的备份。",
+    "replaceWarning": "恢复会用备份中的内容替换现有的全部数据，被替换的内容无法找回。可以先导出一份当前数据的备份。",
     "confirmImport": "确认恢复",
-    "exporting": "正在导出…",
-    "importing": "正在恢复…",
-    "exportFailed": "这个会话没有可以导出的文件——浏览器没让这一页保存数据。",
-    "importFailed": "这个文件不是 Breadcrumb 的备份，现在的数据没有变动。换一个文件试试。"
+    "exporting": "正在导出",
+    "importing": "正在恢复",
+    "exportFailed": "本次会话没有可导出的文件：浏览器未允许本页保存数据。",
+    "importFailed": "该文件不是 Breadcrumb 的备份，现有数据未发生变动。可以更换文件重试。"
   }
 }

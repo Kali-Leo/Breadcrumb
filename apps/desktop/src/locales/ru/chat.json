@@ -33,6 +33,13 @@
       "grounded": "Из источников",
       "own": "Моё собственное понимание",
       "conflicting": "Источники расходятся"
+    },
+    "sources": {
+      "wikipedia": "Википедия",
+      "wikidata": "Викиданные",
+      "bing": "Bing",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

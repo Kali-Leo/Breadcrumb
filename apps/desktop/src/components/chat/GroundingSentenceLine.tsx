@@ -12,6 +12,7 @@
  */
 import type { GroundedSentence } from "@breadcrumb/feature-factcheck";
 import { useTranslation } from "react-i18next";
+import { groundingSourceLabel, joinLeadIn } from "../../lib/grounding/sourceLabel";
 
 const MARK_CLASS: Record<GroundedSentence["label"], string> = {
   grounded: "border-emerald-400",
@@ -31,7 +32,7 @@ export function GroundingSentenceLine({ sentence }: GroundingSentenceLineProps) 
       {sentence.quote !== null && (
         <p className="mt-0.5 text-xs text-stone-500">
           <span className="text-stone-400">
-            [{sentence.quote.passageIndex}] {sentence.quote.source} ·{" "}
+            {groundingSourceLabel(t, sentence.quote.source)} ·{" "}
           </span>
           {sentence.quote.text}
         </p>
@@ -39,7 +40,7 @@ export function GroundingSentenceLine({ sentence }: GroundingSentenceLineProps) 
       {sentence.rival !== null && (
         <p className="mt-0.5 text-xs text-stone-500">
           <span className="text-stone-400">
-            {t("grounding.alsoSays")} [{sentence.rival.passageIndex}] {sentence.rival.source} ·{" "}
+            {joinLeadIn(t("grounding.alsoSays"), groundingSourceLabel(t, sentence.rival.source))} ·{" "}
           </span>
           {sentence.rival.text}
         </p>

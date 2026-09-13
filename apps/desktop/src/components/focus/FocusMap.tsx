@@ -152,7 +152,7 @@ export function FocusMap() {
                 <g
                   role="button"
                   tabIndex={0}
-                  aria-label={`跳转到「${station.label}」`}
+                  aria-label={t("focus.stationJump", { label: station.label })}
                   data-current-station={station.isCurrent ? "true" : undefined}
                   style={{ cursor: "pointer" }}
                   onClick={activate}

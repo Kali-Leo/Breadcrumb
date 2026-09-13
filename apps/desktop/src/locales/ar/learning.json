@@ -77,7 +77,8 @@
     "timeYesterday": "أمس {{time}}",
     "errorNoResponse": "لم يصل شيء",
     "errorTimedOut": "انتهت مهلة الرد",
-    "mapAria": "خريطة محطات التركيز"
+    "mapAria": "خريطة محطات التركيز",
+    "stationJump": "الانتقال إلى \"{{label}}\""
   },
   "teach": {
     "opener": "أتعلّم «{{topic}}» ولم أستوعبه بعد. هل تشرحه بكلماتك؟ البدء بما هو عليه سيكون رائعًا.",

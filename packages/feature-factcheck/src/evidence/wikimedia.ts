@@ -2,7 +2,8 @@
  * Purpose: what the Wikipedia and Wikidata providers share — the Wikimedia-policy identity
  * headers, one JSON GET under a request budget, and the language-code shaping both need
  * (a UI language code → the Wikipedia edition and the Wikidata label chain it maps to).
- * Main exports: WIKIMEDIA_HEADERS, fetchWikimediaJson, wikiEditionOf, wikidataLanguagesOf.
+ * Main exports: WIKIMEDIA_HEADERS, fetchWikimediaJson, wikiEditionOf, wikiVariantOf,
+ * wikidataLanguagesOf.
  */
 import type { FetchLike } from "./provider";
 import { SEARCH_MAX_REDIRECTS } from "./provider";
@@ -53,6 +54,21 @@ export const EDITION_PATTERN = /^[a-z]{2,12}(-[a-z0-9]{1,8})*$/;
 export function wikiEditionOf(languageCode: string): string | null {
   const primary = languageCode.toLowerCase().split("-")[0] ?? "";
   return EDITION_PATTERN.test(primary) ? primary : null;
+}
+
+/**
+ * The MediaWiki `variant` parameter for a UI language, or null when the language has no
+ * script/region variants. Chinese editions store one article and convert it on the way out:
+ * without this the zh edition answers in whichever variant the article was written in, so a
+ * simplified-script reader got 公尺 in the quoted evidence next to 米 in the answer above it.
+ * Measured 2026-09-13 on zh.wikipedia (珠穆朗瑪峰, `prop=extracts`): 57 occurrences of 公尺
+ * without the parameter, 0 with `variant=zh-cn`. Editions without variant conversion ignore
+ * it, so it costs nothing to send to the English fallback edition in the same route.
+ */
+export function wikiVariantOf(languageCode: string): string | null {
+  const code = languageCode.toLowerCase();
+  if (!EDITION_PATTERN.test(code)) return null;
+  return code === "zh" || code.startsWith("zh-") ? "zh-cn" : null;
 }
 
 /**

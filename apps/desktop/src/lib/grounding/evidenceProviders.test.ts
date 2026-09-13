@@ -31,7 +31,7 @@ describe("wikidataFactRenderer", () => {
       value: "8848.86 米",
       reference: null,
     });
-    expect(sentence).toBe("珠穆朗玛峰的海拔为 8848.86 米。");
+    expect(sentence).toBe("珠穆朗玛峰，海拔：8848.86 米。");
     expect(sentence).not.toMatch(ANY_ISOLATE);
   });
 

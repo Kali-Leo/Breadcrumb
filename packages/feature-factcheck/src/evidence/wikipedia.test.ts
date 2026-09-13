@@ -6,7 +6,8 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { EVIDENCE_WINDOW_LENGTH } from "./pageText";
-import { createWikipediaProvider, windowAround } from "./wikipedia";
+import { createWikipediaProvider } from "./wikipedia";
+import { windowAround } from "./wikipediaWindow";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
@@ -110,6 +111,30 @@ describe("createWikipediaProvider", () => {
     const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
     const provider = createWikipediaProvider({ fetchImpl, languages: ["zh", "en"] });
     expect(await provider.search("anything", 3)).toEqual({ items: [], failed: true });
+  });
+
+  it("asks the zh edition for the reader's script variant on every request", async () => {
+    // Without it the zh edition answers in whichever variant the article was written in, and
+    // the quoted evidence says 公尺 under an answer that says 米.
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(searchResponse([{ pageid: 1, title: "t", snippet: "s" }]))
+      .mockResolvedValueOnce(extractResponse("t", "珠穆朗玛峰海拔 8848.86 米。"));
+    const provider = createWikipediaProvider({ fetchImpl, languages: ["zh"], variant: "zh-cn" });
+
+    await provider.search("珠穆朗玛峰 海拔", 1);
+
+    for (const call of fetchImpl.mock.calls) {
+      expect(new URL(String(call[0])).searchParams.get("variant")).toBe("zh-cn");
+    }
+  });
+
+  it("sends no variant when the language has none", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => searchResponse([]));
+    const provider = createWikipediaProvider({ fetchImpl, languages: ["en"] });
+    await provider.search("x", 1);
+    const url = new URL(String(fetchImpl.mock.calls[0]?.[0]));
+    expect(url.searchParams.has("variant")).toBe(false);
   });
 
   it("drops an edition code that could not be a hostname", async () => {

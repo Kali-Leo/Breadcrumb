@@ -1,27 +1,27 @@
 {
   "title": "我的资料",
-  "intro": "把你手上的材料放进来，之后提问时会先在这里找答案。只放你有权使用的：自己买的电子书、课程讲义、图书馆借阅的电子书、进入公有领域的书、开放教材。",
+  "intro": "导入自己有权使用的资料。提问时优先在这些资料中搜索答案。",
   "import": "导入文件",
-  "importing": "正在读取…",
-  "formats": "支持 PDF、Markdown、纯文本",
-  "empty": "还没有放进任何资料。",
+  "importing": "正在读取",
+  "formats": "支持 PDF、Markdown 与纯文本",
+  "empty": "尚未导入任何资料。",
   "remove": "移除",
   "progress": {
-    "building": "正在为「{{embedded}} / {{total}}」段建立语义索引",
-    "ready": "索引已经建好",
-    "usable": "现在就能按关键词找；语义索引补完之后会更准。"
+    "building": "正在处理第 {{embedded}} / {{total}} 段",
+    "ready": "资料已处理完成",
+    "usable": "当前已可搜索，处理完成后结果更准确。"
   },
   "speed": {
-    "ipad": "把系统更新到 iPadOS 26，这一步会快很多。",
-    "linux": "用 Firefox 打开这个页面，这一步会快很多。",
-    "desktop": "用新版本的 Chrome、Edge、Safari 或 Firefox 打开，这一步会快很多。"
+    "ipad": "将系统更新至 iPadOS 26 可显著加快这一步。",
+    "linux": "使用 Firefox 打开本页可显著加快这一步。",
+    "desktop": "使用较新版本的 Chrome、Edge、Safari 或 Firefox 打开可显著加快这一步。"
   },
   "error": {
-    "unreadable": "这个文件里没读出文字。如果它是扫描件，需要先做一次文字识别。"
+    "unreadable": "未能从该文件中读出文字。若为扫描件，需先进行文字识别。"
   },
   "search": {
-    "placeholder": "在我的资料里找",
-    "action": "查找",
+    "placeholder": "在我的资料中搜索",
+    "action": "搜索",
     "empty": "没有找到相关内容。"
   }
 }

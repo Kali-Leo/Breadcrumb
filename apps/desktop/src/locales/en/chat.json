@@ -1,54 +1,61 @@
 {
-  "emptyLine": "No chats yet. Say what you want to learn below to start one.",
+  "emptyLine": "No chats yet. Enter what you want to learn below to start one.",
   "noReplyYet": "This message has no reply yet",
-  "resumedFromMiddle": "Continuing from an earlier point · the later messages are all still here",
+  "resumedFromMiddle": "Continuing from an earlier point · all later messages are still here",
   "backToLatest": "Back to the latest",
   "composer": {
-    "placeholder": "What would you like to learn? Just say it… (Enter to send, Shift+Enter for a new line)",
-    "placeholderTouch": "What would you like to learn? Just say it…",
+    "placeholder": "Enter what you want to learn (Enter to send, Shift+Enter for a new line)",
+    "placeholderTouch": "Enter what you want to learn",
     "freeLabel": "Free chat",
-    "freeHint": "Talk about anything, in any way you like.",
+    "freeHint": "An ordinary conversation, on any topic and in any form.",
     "studyLabel": "Study mode",
-    "studyHint": "Replies guide you to think and practise, so what you learn stays with you."
+    "studyHint": "Replies guide you to think and practise, which helps what you learn stay with you."
   },
   "trail": {
     "search": "Search chats",
-    "noMatches": "No chats match that",
+    "noMatches": "No matching chats",
     "rename": "Rename",
-    "more": "More for “{{name}}”",
+    "more": "More actions for “{{name}}”",
     "delete": "Delete",
-    "deleteConfirm": "This chat and the footprints it left go together; the concepts on your map stay.",
+    "deleteConfirm": "This chat and the footprints it left are deleted together; the concepts on the map are unaffected.",
     "deleteAction": "Delete this chat"
   },
   "popup": {
     "close": "Close this chat window"
   },
   "grounding": {
-    "gathering": "Looking up sources…",
-    "conflictHeading": "The sources disagree about these, so both readings are here:",
+    "gathering": "Searching sources",
+    "conflictHeading": "The sources disagree about the following statements. Both readings are listed:",
     "alsoSays": "Another source:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",
     "wikidataFactWithReference": "{{subject}} — {{property}}: {{value}} (source: {{reference}}).",
     "mark": {
-      "grounded": "From the sources",
-      "own": "My own understanding",
-      "conflicting": "The sources differ"
+      "grounded": "Supported by a source",
+      "own": "Not covered by sources",
+      "conflicting": "Sources disagree"
+    },
+    "sources": {
+      "wikipedia": "Wikipedia",
+      "wikidata": "Wikidata",
+      "bing": "Bing",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {
-    "chatDisabled": "Companion chat is off. To carry on, turn \"Companion chat\" back on in settings",
+    "chatDisabled": "Companion chat is off. Turn \"Companion chat\" back on in settings to continue.",
     "credits": "The companions come from David Revoy's Pepper&Carrot (peppercarrot.com), CC-BY 4.0; their written personalities are a derivative work with changes, and imply no endorsement by the original author.",
     "closeRoster": "Close the companion list",
     "aiLabel": "AI study partner",
-    "rosterEmpty": "Nobody came by for help today.",
-    "breakReminder": "This companion chat has been going for two hours. You can step away and rest; everything stays here.",
-    "crisisResponse": "You mentioned hurting yourself. I am an AI and cannot help with this — it is worth talking to a real person. Mainland China: helpline 12356. United States: 988. Elsewhere: findahelpline.com. This conversation will still be here.",
-    "helperInvitation": "I have not worked out \"{{topic}}\" yet. When you have a moment, could you explain it to me in your own words? Starting from what it is would be great.",
-    "helperThanks": "Thank you. \"{{topic}}\" makes a lot more sense to me now. I am going to go practise on my own — see you around."
+    "rosterEmpty": "No companion came by for help today.",
+    "breakReminder": "This companion chat has been going for two hours. You can step away and rest; everything is kept here.",
+    "crisisResponse": "You mentioned hurting yourself. I am an AI and cannot help with this; it is worth talking to a real person. Mainland China: helpline 12356. United States: 988. Elsewhere: findahelpline.com. This conversation stays here.",
+    "helperInvitation": "I have not understood \"{{topic}}\" yet. When you have a moment, could you explain it to me in your own words? Starting from what it is would be enough.",
+    "helperThanks": "Thank you. \"{{topic}}\" is much clearer to me now. I am going to practise on my own for a while."
   },
   "errors": {
-    "offline": "You are offline. To carry on, turn the internet switch back on in settings",
-    "noApiConfig": "No AI service is set up yet. Add the address and key on the settings page",
-    "requestFailed": "That request did not go through. Try again in a moment, or check the AI service in settings."
+    "offline": "You are offline. Turn the internet switch back on in settings to continue.",
+    "noApiConfig": "No AI service is configured yet. The address and key can be entered on the settings page.",
+    "requestFailed": "This request did not go through. Try again later, or check the AI service settings."
   }
 }

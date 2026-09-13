@@ -8,34 +8,34 @@
   },
   "api": {
     "title": "AI service (OpenAI-compatible)",
-    "hint": "Put your AI service account here; the chat and every other AI feature runs on it.",
+    "hint": "Enter your AI service account here. The chat and every other AI feature runs on it.",
     "baseUrl": "Base URL",
     "apiKey": "API key",
     "model": "Model name",
     "priceCurrency": "Billing currency",
-    "priceCurrencyHint": "This model is billed in a different currency on each platform. Pick the one your API key belongs to, so the spending page matches your bill.",
+    "priceCurrencyHint": "This model is billed in a different currency on each platform. Select the currency of the platform the API key belongs to, so the spending page matches the bill.",
     "currencyCNY": "¥ CNY",
     "currencyUSD": "$ USD",
-    "saved": "Saved ✓",
+    "saved": "Saved",
     "unsaved": "Changes not saved yet",
     "testConnection": "Test connection",
-    "testing": "Connecting…",
+    "testing": "Connecting",
     "testResult": {
       "ok": "Connected.",
-      "badUrl": "That service address is not a usable web address. It has to start with https://, for example https://api.deepseek.com.",
-      "offline": "There is no network connection right now. Check that this device is online, then check whether the network switch below is turned off.",
-      "timeout": "The provider never answered. The connection may be slow — try again in a moment.",
-      "blockedByBrowser": "The browser could not reach this service, and it will not say why. Check that this device is online; if it still fails, this provider most likely does not allow web pages to connect to it directly. Try a different provider, or use the desktop app.",
-      "unreachable": "Could not reach this service. Check the service address for a typo, or try again in a moment.",
-      "unauthorized": "The provider says this key cannot be used. Go back to your provider's website and copy the API key again.",
-      "insufficientBalance": "This account has no credit left. Add funds on your provider's website, then try again.",
-      "notFound": "There is no AI service at that address. Check whether the end of the address is missing a part, or has one too many — /v1, for example.",
-      "rateLimited": "The provider says the requests are coming too close together right now. Try again in a minute or two.",
-      "badRequest": "The provider did not accept this request. The usual cause is a mistyped model name; check it against the provider's documentation.",
-      "serverError": "Something went wrong on the provider's side, not in your settings. Try again in a little while."
+      "badUrl": "The service address is not a valid web address. It has to start with https://, for example https://api.deepseek.com.",
+      "offline": "There is no network connection right now. Check that this device is online, then check whether the internet switch below is turned off.",
+      "timeout": "The provider did not respond. The connection may be slow; try again later.",
+      "blockedByBrowser": "The browser could not reach this service and gave no reason. Check that this device is online; if it still fails, the provider most likely does not allow web pages to connect directly, so a different provider or the desktop edition will work.",
+      "unreachable": "Could not reach this service. Check the service address for a mistake, or try again later.",
+      "unauthorized": "The provider reports that this key cannot be used. Copy the API key again from the provider's website.",
+      "insufficientBalance": "This account has no credit left. Add funds on the provider's website, then try again.",
+      "notFound": "There is no AI service at that address. Check whether the end of the address is missing a segment or has one too many, such as /v1.",
+      "rateLimited": "The provider reports that requests are currently too frequent. Try again in a minute or two.",
+      "badRequest": "The provider did not accept this request. The most common cause is a mistyped model name, which can be checked against the provider's documentation.",
+      "serverError": "Something went wrong on the provider's side, not in these settings. Try again later."
     },
-    "priceOverride": "Your own prices (per million tokens)",
-    "priceOverrideHint": "Fill these in when the built-in list has never heard of your model, or its price has moved. Input and output both have to be filled for them to count; leave them empty to use the built-in list.",
+    "priceOverride": "Custom prices (per million tokens)",
+    "priceOverrideHint": "Use these when the built-in price list does not contain the model, or its price has changed. Both input and output have to be filled in to take effect; leaving them empty uses the built-in list.",
     "priceInput": "Input",
     "priceOutput": "Output",
     "priceCached": "Cached input",
@@ -44,24 +44,24 @@
   },
   "network": {
     "title": "Internet",
-    "hint": "Turn this off and everything that needs the internet, API calls included, stops."
+    "hint": "Turning this off stops everything that needs the internet, API calls included."
   },
   "mainland": {
     "title": "Mainland China network",
-    "hint": "Fact-checking uses only sources reachable from mainland China (Bing, plus Zhipu search when that is on); turned off, it prefers Wikidata and Wikipedia."
+    "hint": "Fact-checking uses only sources reachable from mainland China (Bing, plus Zhipu when open-web search is on). Turned off, it prefers Wikidata and Wikipedia."
   },
   "language": {
     "title": "Language",
     "interface": "Interface language",
     "answer": "Language the AI answers in",
     "sameAsInterface": "Same as the interface",
-    "thinNote": "The AI writes {{language}} less well than it writes {{fallback}}. You can change the answer language on its own and leave the interface as it is."
+    "thinNote": "The AI answers less accurately in {{language}} than in {{fallback}}. The answer language can be changed on its own, leaving the interface unchanged."
   },
   "quietIssues": {
     "title": "Background work",
-    "allGood": "Everything in the background is fine.",
-    "summary_one": "{{count}} small background job did not finish recently. Your learning is unaffected — open to see which one",
-    "summary_other": "{{count}} small background jobs did not finish recently. Your learning is unaffected — open to see which ones",
+    "allGood": "Background work is running normally.",
+    "summary_one": "{{count}} small background job did not finish recently. Learning is unaffected. Select to see the detail",
+    "summary_other": "{{count}} small background jobs did not finish recently. Learning is unaffected. Select to see the detail",
     "fallbackPurpose": "Background job"
   },
   "purposes": {
@@ -82,7 +82,7 @@
     "term-marking": "Word marking",
     "trail-summary": "Yesterday's trail",
     "planner": "Goal progress",
-    "map-place-names": "Your own names on the map",
+    "map-place-names": "Custom names on the map",
     "map-continents": "Map regions",
     "concept-doors": "Concept links inside an answer",
     "diglot-audio": "Word pronunciation",
@@ -98,16 +98,16 @@
   },
   "billing": {
     "intro": "Every step that costs money has its own switch here, and its spending is tracked separately. This page shows what was actually spent.",
-    "estimateIntro": "The estimate under each item uses your own recent usage where you have used it, and {{scenario}} where you have not; what you have actually spent is beside it.",
-    "measurementScenario": "A learner about three months in: 80 nodes on the knowledge map, one Study mode exchange (question ~40 characters, answer ~600 characters)",
+    "estimateIntro": "The estimate under each item uses recent actual usage where the feature has been used, and {{scenario}} where it has not; the amount actually spent is listed beside it.",
+    "measurementScenario": "A learner about three months in: 80 nodes on the knowledge map, one Study mode exchange (question about 40 characters, answer about 600 characters)",
     "estimate": "about {{cost}} {{cadence}}",
-    "estimateUnknownModel": "Your model is not in the built-in price list, so a per-use estimate is not available",
+    "estimateUnknownModel": "The model in use is not in the built-in price list, so a per-use estimate is not available",
     "estimateFree": "Costs nothing",
-    "estimateUnmeasured": "This one has not been measured yet",
+    "estimateUnmeasured": "The cost of one use has not been measured yet",
     "cadencePerRound": "per exchange",
-    "cadencePerMessage": "per message you send",
+    "cadencePerMessage": "per message sent",
     "cadencePerAnswer": "per answer",
-    "cadenceOnDemand": "each time you use it",
+    "cadenceOnDemand": "per use",
     "cadencePerItemOnce": "per item, charged once",
     "cadencePerDay": "at most once a day",
     "grandTotal": "Today {{today}} · all time {{total}}",
@@ -115,97 +115,97 @@
     "neverUsed": "Nothing spent yet",
     "spendLine": "Today {{today}} · all time {{total}}",
     "diglot": {
-      "name": "🧵 Language learning · smart swaps",
-      "hint": "The stronger version of language learning: the AI picks the translation that fits the sentence and occasionally swaps in a natural phrase.",
+      "name": "Language learning · smart swaps",
+      "hint": "The stronger form of language learning: the AI picks the translation that fits the sentence and swaps in a natural phrase where one applies.",
       "toggleLabel": "Language learning smart swaps"
     },
     "chat": {
-      "name": "💬 Chat",
-      "hint": "Your everyday conversation with the AI. This is the core feature and stays on; what it costs is listed here too."
+      "name": "Chat",
+      "hint": "The everyday conversation with the AI. This is the core feature and stays on; its cost is listed here as well."
     },
     "features": {
       "knowledgeTree": {
-        "name": "🌳 Knowledge map",
-        "hint": "After each exchange, the AI files what you talked about into your map."
+        "name": "Knowledge map",
+        "hint": "After each exchange, the AI files what was discussed into the map."
       },
       "webSearchEvidence": {
-        "name": "🌐 Open-web search for evidence (Zhipu)",
+        "name": "Open-web search for evidence (Zhipu)",
         "price": "about ¥{{price}} per call",
-        "hint": "While this is on, besides Wikidata and Wikipedia, Zhipu's search service is asked to find sources on the open web — things an encyclopaedia never wrote down. Billed per call to your Zhipu account, separately from the AI service above; in the browser edition on a mainland-China network it is the only source that can be reached. Chinese, English and Swahili only: other languages returned unreliable results in testing and never take this route.",
-        "disclosure": "When this is on, search keywords taken from your question are sent to a search engine. That is a new place your words go.",
+        "hint": "While this is on, Zhipu's search service is asked to find sources on the open web in addition to Wikidata and Wikipedia, which reaches material an encyclopaedia never recorded. It is billed per call to the Zhipu account, separately from the AI service above; in the browser edition on a mainland-China network it is the only source available. Chinese, English and Swahili only: results in other languages proved unreliable in testing and this route is not used for them.",
+        "disclosure": "While this is on, search terms extracted from the question are sent to a search engine. This is a new outbound channel.",
         "keyLabel": "Zhipu search service API key",
-        "keyPlaceholder": "Get one at open.bigmodel.cn and paste it here",
-        "noKey": "No key yet, so this does nothing for now."
+        "keyPlaceholder": "Obtain one at open.bigmodel.cn and enter it here",
+        "noKey": "No key has been entered, so this has no effect for now."
       },
       "knowledgeEdges": {
-        "name": "🕸️ Knowledge links",
-        "hint": "When something new is filed, the AI looks at how it connects to what you already know."
+        "name": "Knowledge links",
+        "hint": "After a new concept is recorded, the AI works out how it connects to what has already been learned."
       },
       "interest": {
-        "name": "💡 Personal recommendations",
-        "hint": "The AI notices what interests you and where you get stuck, and uses that to adjust what it suggests; it is also what recognises which topic you mean when you say \"I already know this\"."
+        "name": "Personal recommendations",
+        "hint": "The AI notes which topics are of interest and where confusion arises, and uses that to adjust its suggestions; it also identifies which concept a statement such as \"I already know this\" refers to."
       },
       "goalPlanning": {
-        "name": "🎯 Goal planning",
-        "hint": "When you set a goal, the AI turns it into a list of things to learn."
+        "name": "Goal planning",
+        "hint": "Once a goal is set, the AI turns it into a list of things to learn."
       },
       "compareProfileBuild": {
-        "name": "🌲 Comparison research (experimental)",
-        "hint": "For comparisons outside the built-in occupation list, the AI searches public sources, builds the list and checks each source. Takes a few minutes."
+        "name": "Comparison research (experimental)",
+        "hint": "For topics outside the occupation directory, the AI searches public sources, assembles the comparison list and checks each source. This takes a few minutes."
       },
       "compareAlignment": {
-        "name": "🌉 Comparison matching",
-        "hint": "During a comparison, the AI decides whether your wording and the source's wording mean the same thing."
+        "name": "Comparison matching",
+        "hint": "During a comparison, the AI decides whether your wording and the source's wording refer to the same concept."
       },
       "teachQuality": {
-        "name": "🎓 Teach-back feedback",
-        "hint": "After you explain something to a companion, the AI reads how it went; the parts you explained clearly are recorded."
+        "name": "Teach-back feedback",
+        "hint": "After an explanation is given to a companion, the AI assesses how it went; the parts explained clearly are recorded."
       },
       "mapTopicNaming": {
-        "name": "🗺️ Map naming (experimental)",
+        "name": "Map naming (experimental)",
         "hint": "On the map, the AI names each area that formed on its own."
       },
       "feedbackLab": {
-        "name": "🪞 Recently",
-        "hint": "The review panel beside the map: computed entirely from local data, costs nothing."
+        "name": "Recently",
+        "hint": "The review panel beside the map, computed entirely from local data and costing nothing."
       },
       "trailSummary": {
-        "name": "🐾 Yesterday's trail",
-        "hint": "The first time you open the app each day, the AI writes one sentence about what you learned the day before; it shows at the top of the \"Recently\" panel beside the map."
+        "name": "Yesterday's trail",
+        "hint": "The first time the app is opened each day, the AI records the previous day's learning in one sentence, shown at the top of the \"Recently\" panel beside the map."
       },
       "companionChat": {
-        "name": "🎭 Companion chat",
-        "hint": "A few classmates come by each day to ask about something you learned but have not touched in a while. Open one and explain it to them."
+        "name": "Companion chat",
+        "hint": "A few classmates come by each day with questions about material learned but untouched for a while."
       },
       "companionMemory": {
-        "name": "🧠 Companion memory",
-        "hint": "Companions remember what you talked about, and tidy those memories now and then so they stay coherent."
+        "name": "Companion memory",
+        "hint": "Companions remember what was discussed, and tidy those memories periodically so they stay coherent."
       },
       "companionScript": {
-        "name": "📜 Companion prep",
-        "hint": "Before you start explaining, the companion who will listen reads up on the topic so it can follow you."
+        "name": "Companion prep",
+        "hint": "Before an explanation begins, the companion who will listen reads up on the topic so it can follow along."
       },
       "focusExplain": {
-        "name": "🔎 Focus explanations",
-        "hint": "In focus mode, picking a word or asking a question gets you an explanation."
+        "name": "Focus explanations",
+        "hint": "In focus mode, selecting a word or asking a question produces an explanation."
       },
       "termMarking": {
-        "name": "🖊️ Word marking",
-        "hint": "The AI marks the words in a reply you may not know yet; tap one to see what it means."
+        "name": "Word marking",
+        "hint": "The AI marks the words in each reply that may be unfamiliar; selecting one shows its meaning."
       }
     }
   },
   "research": {
-    "panelIntro": "Every number here was computed by this computer. The tasks are reviewed and their sources can be checked; the data does not leave this device on its own, and none of this costs anything.",
-    "offNotice": "Research tasks are off: no new task will run. Results you already have are kept, and you can read or delete them one by one.",
-    "loading": "Loading…",
-    "emptyTitle": "No results yet",
-    "emptyHint": "While the app is idle it computes signed research tasks locally; results appear here when they are done.",
+    "panelIntro": "Every number on this page was computed by this machine. The research tasks are reviewed and their sources can be checked; the data does not leave this device on its own, and none of it costs anything.",
+    "offNotice": "Research tasks are off: no new task will run. Existing results are kept and can be read or deleted one by one.",
+    "loading": "Loading",
+    "emptyTitle": "No research results yet",
+    "emptyHint": "While the app is idle it computes signed research tasks locally, and the results appear here once they are done.",
     "cardInstitutionLabel": "Institution",
     "cardPurposeLabel": "Purpose",
     "cardEthicsLabel": "Ethics note",
     "cardComputedAtLabel": "Computed",
-    "notEnoughData": "Not enough data yet",
+    "notEnoughData": "Not enough data for a conclusion yet",
     "barRange": "{{low}}–{{high}}",
     "retentionMean": "Average",
     "retentionMedian": "Median",
@@ -218,27 +218,27 @@
     "weekdayFriday": "Friday",
     "weekdaySaturday": "Saturday",
     "deleteAction": "Delete this result",
-    "deleteConfirmPrompt": "Deleting this result cannot be undone. Delete it?",
+    "deleteConfirmPrompt": "A deleted result cannot be restored.",
     "deleteConfirmAction": "Delete",
-    "settingsRowTitle": "🔬 Research",
-    "settingsRowHint": "Runs reviewed research tasks locally and shows the results; the data does not leave this device on its own and it costs nothing",
-    "closeConfirmTitle": "Turning off research tasks",
-    "closeConfirmWhatItDoes": "The research platform runs reviewed, project-signed tasks locally, computes the statistics and shows them to you.",
-    "closeConfirmDataStaysLocal": "All of it is computed here; the data does not leave this device on its own.",
-    "closeConfirmResearchValue": "Local aggregate statistics like these let researchers study how people learn without collecting anyone's personal data.",
-    "closeConfirmWhatChanges": "Once off, no task will run and you will not be asked about this again. Results you already have are untouched and stay in the panel.",
+    "settingsRowTitle": "Research",
+    "settingsRowHint": "Runs reviewed research tasks locally and shows the results; the data does not leave this device on its own and it costs nothing.",
+    "closeConfirmTitle": "Turning off the research platform",
+    "closeConfirmWhatItDoes": "The research platform runs reviewed, project-signed tasks locally, computes the statistics and displays them.",
+    "closeConfirmDataStaysLocal": "All computation happens locally, and the data does not leave this device on its own.",
+    "closeConfirmResearchValue": "Local aggregate statistics of this kind let researchers study how people learn without collecting personal data.",
+    "closeConfirmWhatChanges": "Once off, no research task will run and this question will not be asked again. Existing results are unaffected and remain in the panel.",
     "closeConfirmAction": "Turn it off"
   },
   "backup": {
     "title": "Backup and restore",
-    "hint": "In the browser edition your data lives in this one browser. Export a backup and you can carry on from another device or another browser.",
+    "hint": "In the browser edition the data is stored in this one browser. Exporting a backup allows the work to continue on another device or in another browser.",
     "export": "Export a backup",
     "import": "Restore from a backup",
-    "replaceWarning": "Restoring replaces all of your current data with what is in the backup, and what is replaced cannot be brought back. You can export a backup of the current data first.",
+    "replaceWarning": "Restoring replaces all current data with the contents of the backup, and what is replaced cannot be recovered. A backup of the current data can be exported first.",
     "confirmImport": "Restore",
-    "exporting": "Exporting…",
-    "importing": "Restoring…",
-    "exportFailed": "This session has no file to export — the browser did not let this page store data.",
-    "importFailed": "That file is not a Breadcrumb backup, and your current data is unchanged. Try another file."
+    "exporting": "Exporting",
+    "importing": "Restoring",
+    "exportFailed": "This session has no file to export: the browser did not allow this page to store data.",
+    "importFailed": "That file is not a Breadcrumb backup, and the current data is unchanged. Another file can be tried."
   }
 }

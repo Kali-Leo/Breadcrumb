@@ -3,7 +3,7 @@
     "retry": "Try again",
     "stop": "Stop",
     "send": "Send",
-    "gotIt": "Got it",
+    "gotIt": "OK",
     "copy": "Copy",
     "copied": "Copied",
     "cancel": "Cancel",
@@ -18,13 +18,13 @@
     "discover": "Discover",
     "map": "Map",
     "friends": "Friends",
-    "offline": "Offline. Anything that needs the internet is paused; the rest still works."
+    "offline": "Offline. Features that need the internet are paused; the rest are unaffected."
   },
   "state": {
-    "loading": "Loading…",
-    "storageUnsupported": "This browser cannot store the page's data, so nothing from this session will be kept once the tab closes. Open it in a recent Chrome, Edge, Firefox or Safari and it will be saved.",
-    "storageBlocked": "This window will not let the page store data, so nothing from this session will be kept once the tab closes. Open it in a normal window rather than a private one and it will be saved.",
-    "storageOtherTab": "Breadcrumb is already open in another tab, and nothing here will be saved. Go back to that tab to carry on, or close it and reload this page."
+    "loading": "Loading",
+    "storageUnsupported": "This browser cannot store the page's data, so nothing from this session is kept once the tab closes. Opening it in a recent version of Chrome, Edge, Firefox or Safari allows it to be saved.",
+    "storageBlocked": "This window does not allow the page to store data, so nothing from this session is kept once the tab closes. Opening it in an ordinary window rather than a private one allows it to be saved.",
+    "storageOtherTab": "Breadcrumb is already open in another tab, and nothing here will be saved. Return to that tab to continue, or close it and reload this page."
   },
   "list": {
     "separator": ", "

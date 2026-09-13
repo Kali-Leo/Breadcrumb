@@ -5,14 +5,14 @@
  * title search: the hit's snippet lands on the sentence that states the figure, where a
  * title match's 600-character lead paragraph usually does not (measured on 珠峰海拔). The
  * judging window is then cut from the whole article's plain text (`prop=extracts`) around
- * that sentence, so the judge reads context and not a search excerpt.
+ * that sentence, so the judge reads context and not a search excerpt (wikipediaWindow.ts).
  * Main exports: createWikipediaProvider, WikipediaProviderOptions.
  */
 import { z } from "zod";
-import { EVIDENCE_WINDOW_LENGTH, keywordWindowOfText } from "./pageText";
 import type { EvidenceItem, EvidenceProvider, EvidenceSearchResult, FetchLike } from "./provider";
-import { DEFAULT_TIMEOUT_MS, stripHtml } from "./provider";
+import { DEFAULT_TIMEOUT_MS } from "./provider";
 import { EDITION_PATTERN, fetchWikimediaJson } from "./wikimedia";
+import { snippetText, windowAround } from "./wikipediaWindow";
 
 const searchResponseSchema = z.object({
   query: z.object({
@@ -31,14 +31,13 @@ const extractResponseSchema = z.object({
  * request, not one extra search. */
 const PAGES_PER_LANGUAGE = 2;
 
-/** A search-snippet fragment shorter than this is too common a string to locate in the
- * article with any confidence. */
-const MIN_LOCATOR_LENGTH = 12;
-
 export interface WikipediaProviderOptions {
   fetchImpl: FetchLike;
   /** Wikipedia language editions to query, in priority order. */
   languages?: readonly string[];
+  /** MediaWiki script/region variant (`zh-cn`) the article text is converted to, so the
+   * quoted evidence uses the same words as the interface around it. Null asks for none. */
+  variant?: string | null;
   /** Per-request timeout; blocked networks hang instead of failing, so keep this tight. */
   timeoutMs?: number;
 }
@@ -53,6 +52,7 @@ export function createWikipediaProvider(options: WikipediaProviderOptions): Evid
     EDITION_PATTERN.test(language),
   );
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const variant = options.variant ?? null;
   return {
     name: "wikipedia",
     async search(query: string, limit: number): Promise<EvidenceSearchResult> {
@@ -66,6 +66,7 @@ export function createWikipediaProvider(options: WikipediaProviderOptions): Evid
           language,
           query,
           Math.min(limit - items.length, PAGES_PER_LANGUAGE),
+          variant,
         );
         if (!outcome.failed) anyLanguageAnswered = true;
         items.push(...outcome.items);
@@ -77,47 +78,15 @@ export function createWikipediaProvider(options: WikipediaProviderOptions): Evid
   };
 }
 
-function apiUrl(language: string, params: Record<string, string>): string {
+function apiUrl(language: string, params: Record<string, string>, variant: string | null): string {
   const search = new URLSearchParams({
     format: "json",
     formatversion: "2",
     origin: "*",
+    ...(variant === null ? {} : { variant }),
     ...params,
   });
   return `https://${language}.wikipedia.org/w/api.php?${search.toString()}`;
-}
-
-/** The hit's snippet as text. CirrusSearch wraps matched terms in <span> INSIDE words, so the
- * tags are removed rather than replaced by a space (stripHtml's rule, right for block markup
- * and wrong here: it would split 珠穆朗玛峰 from the sentence it is in). */
-function snippetText(snippetHtml: string): string {
-  return stripHtml(snippetHtml.replace(/<[^>]+>/g, ""));
-}
-
-/** The longest run of the search snippet that could be looked up verbatim in the article:
- * CirrusSearch joins fragments with ellipses, and one fragment is enough. */
-function snippetLocator(snippetHtml: string): string | null {
-  const fragments = snippetText(snippetHtml)
-    .split(/…|\.\.\./)
-    .map((fragment) => fragment.trim())
-    .filter((fragment) => fragment.length >= MIN_LOCATOR_LENGTH);
-  return fragments.sort((a, b) => b.length - a.length)[0] ?? null;
-}
-
-/** The judging window: around the search hit's own sentence where it can be found in the
- * article, around the query terms otherwise, the whole text when it is short. */
-export function windowAround(extract: string, snippetHtml: string, query: string): string | null {
-  const text = extract.replace(/\s+/g, " ").trim();
-  if (text.length === 0) return null;
-  if (text.length <= EVIDENCE_WINDOW_LENGTH) return text;
-  const locator = snippetLocator(snippetHtml);
-  const at = locator === null ? -1 : text.indexOf(locator);
-  if (at >= 0) {
-    const lead = Math.floor(EVIDENCE_WINDOW_LENGTH / 3);
-    const start = Math.max(0, Math.min(at - lead, text.length - EVIDENCE_WINDOW_LENGTH));
-    return text.slice(start, start + EVIDENCE_WINDOW_LENGTH);
-  }
-  return keywordWindowOfText(text, query);
 }
 
 async function fetchExtract(
@@ -125,14 +94,19 @@ async function fetchExtract(
   timeoutMs: number,
   language: string,
   pageId: number,
+  variant: string | null,
 ): Promise<string | null> {
-  const url = apiUrl(language, {
-    action: "query",
-    prop: "extracts",
-    explaintext: "1",
-    redirects: "1",
-    pageids: String(pageId),
-  });
+  const url = apiUrl(
+    language,
+    {
+      action: "query",
+      prop: "extracts",
+      explaintext: "1",
+      redirects: "1",
+      pageids: String(pageId),
+    },
+    variant,
+  );
   const payload = await fetchWikimediaJson(fetchImpl, timeoutMs, url);
   if (payload === null) return null;
   return extractResponseSchema.parse(payload).query.pages[0]?.extract ?? null;
@@ -144,16 +118,21 @@ async function searchOneLanguage(
   language: string,
   query: string,
   limit: number,
+  variant: string | null,
 ): Promise<LanguageOutcome> {
   let hits: z.infer<typeof searchResponseSchema>["query"]["search"];
   try {
-    const url = apiUrl(language, {
-      action: "query",
-      list: "search",
-      srsearch: query,
-      srlimit: String(PAGES_PER_LANGUAGE),
-      utf8: "1",
-    });
+    const url = apiUrl(
+      language,
+      {
+        action: "query",
+        list: "search",
+        srsearch: query,
+        srlimit: String(PAGES_PER_LANGUAGE),
+        utf8: "1",
+      },
+      variant,
+    );
     const payload = await fetchWikimediaJson(fetchImpl, timeoutMs, url);
     if (payload === null) return { items: [], failed: true };
     hits = searchResponseSchema.parse(payload).query.search;
@@ -168,7 +147,7 @@ async function searchOneLanguage(
   for (const hit of hits.slice(0, limit)) {
     let extract: string | null = null;
     try {
-      extract = await fetchExtract(fetchImpl, timeoutMs, language, hit.pageid);
+      extract = await fetchExtract(fetchImpl, timeoutMs, language, hit.pageid, variant);
     } catch {
       extract = null;
     }

@@ -33,6 +33,13 @@
       "grounded": "स्रोतों से",
       "own": "मेरी अपनी समझ",
       "conflicting": "स्रोत अलग-अलग कहते हैं"
+    },
+    "sources": {
+      "wikipedia": "विकिपीडिया",
+      "wikidata": "विकिडेटा",
+      "bing": "बिंग",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "Zhipu"
     }
   },
   "companion": {

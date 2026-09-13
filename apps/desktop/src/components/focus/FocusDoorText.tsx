@@ -61,7 +61,7 @@ export function FocusDoorText({
             key={`w${segment.patch.start}`}
             type="button"
             onClick={() => onSelect(segment.patch.original, segment.patch.nodeId)}
-            className="cursor-pointer rounded px-0.5 text-stone-700 underline decoration-stone-300 decoration-dotted underline-offset-2 hover:decoration-stone-500"
+            className="cursor-pointer text-stone-700 underline decoration-stone-300 decoration-dotted underline-offset-2 hover:decoration-stone-500"
           >
             {segment.patch.original}
           </button>

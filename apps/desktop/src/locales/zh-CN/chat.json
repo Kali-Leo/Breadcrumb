@@ -1,54 +1,61 @@
 {
-  "emptyLine": "还没有对话。在下面说说你想学什么，就可以开始。",
-  "noReplyYet": "这条消息还没有得到回复",
-  "resumedFromMiddle": "正在从中途继续 · 后来的消息都还在",
+  "emptyLine": "还没有对话。在下方输入想学习的内容即可开始。",
+  "noReplyYet": "这条消息尚未收到回复",
+  "resumedFromMiddle": "正在从中途继续 · 后续消息均已保留",
   "backToLatest": "回到最新",
   "composer": {
-    "placeholder": "想学点什么？说说看…（Enter 发送，Shift+Enter 换行）",
-    "placeholderTouch": "想学点什么？说说看…",
+    "placeholder": "输入想学习的内容（Enter 发送，Shift+Enter 换行）",
+    "placeholderTouch": "输入想学习的内容",
     "freeLabel": "自由对话",
-    "freeHint": "自由聊天，任何话题、任何形式都可以。",
+    "freeHint": "不限话题与形式的普通对话。",
     "studyLabel": "学习模式",
-    "studyHint": "回复会引导你思考和练习，帮你把学到的记牢。"
+    "studyHint": "回复会引导思考与练习，帮助巩固所学内容。"
   },
   "trail": {
     "search": "搜索对话",
-    "noMatches": "没有找到相关对话",
+    "noMatches": "没有匹配的对话",
     "rename": "重命名",
     "more": "「{{name}}」的更多操作",
     "delete": "删除",
-    "deleteConfirm": "这段对话和它留下的足迹会一起删掉；地图上的知识点不会消失。",
+    "deleteConfirm": "这段对话及其留下的足迹将一并删除；地图上的知识点不受影响。",
     "deleteAction": "删除这段对话"
   },
   "popup": {
     "close": "关闭对话窗口"
   },
   "grounding": {
-    "gathering": "正在查资料…",
-    "conflictHeading": "这几句，资料之间说得不一样，两边都放在这里：",
-    "alsoSays": "另一份资料：",
-    "wikidataFact": "{{subject}}的{{property}}为 {{value}}。",
-    "wikidataFactWithReference": "{{subject}}的{{property}}为 {{value}}（来源：{{reference}}）。",
+    "gathering": "正在搜索来源",
+    "conflictHeading": "以下语句的来源之间存在分歧，两种说法一并列出：",
+    "alsoSays": "另一来源：",
+    "wikidataFact": "{{subject}}，{{property}}：{{value}}。",
+    "wikidataFactWithReference": "{{subject}}，{{property}}：{{value}}（来源：{{reference}}）。",
     "mark": {
-      "grounded": "来自资料",
-      "own": "我自己的理解",
-      "conflicting": "资料之间说法不一"
+      "grounded": "来源佐证",
+      "own": "来源未涉及",
+      "conflicting": "来源有分歧"
+    },
+    "sources": {
+      "wikipedia": "维基百科",
+      "wikidata": "维基数据",
+      "bing": "必应",
+      "duckduckgo": "DuckDuckGo",
+      "zhipu": "智谱"
     }
   },
   "companion": {
-    "chatDisabled": "伙伴聊天已关闭。想继续，去设置里打开「伙伴聊天」",
+    "chatDisabled": "伙伴对话已关闭。在设置中开启「伙伴对话」后可继续。",
     "credits": "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com)，CC-BY 4.0；文字人设为衍生创作，有改动；不代表原作者对本产品的背书。",
     "closeRoster": "关闭伙伴列表",
     "aiLabel": "AI 学习伙伴",
-    "rosterEmpty": "今天没有来请教的伙伴了。",
-    "breakReminder": "伙伴对话已经持续两小时。可以先离开休息，内容都会留在这里。",
-    "crisisResponse": "看到你提到了伤害自己。我是 AI，帮不上这样的忙——这件事值得找真的人聊聊。中国大陆：心理援助热线 12356；美国：988；其他地区可访问 findahelpline.com。这个对话随时都在。",
-    "helperInvitation": "「{{topic}}」这部分我还没弄懂。你有空的时候，能用你自己的话给我讲讲吗？从它是什么讲起就好。",
-    "helperThanks": "谢谢你！「{{topic}}」这块我明白多了。我先去自己练练，回头见。"
+    "rosterEmpty": "今天没有前来请教的伙伴。",
+    "breakReminder": "伙伴对话已持续两小时。可以离开休息，内容都会保留。",
+    "crisisResponse": "你提到了伤害自己。我是 AI，无法在这件事上提供帮助，它值得与真实的人交谈。中国大陆：心理援助热线 12356；美国：988；其他地区可访问 findahelpline.com。这个对话会一直保留在这里。",
+    "helperInvitation": "「{{topic}}」这部分我还没有理解。你方便的时候，能用自己的话为我讲解吗？从它是什么开始即可。",
+    "helperThanks": "谢谢你。「{{topic}}」这部分我清楚多了。我先去自己练习，回头再见。"
   },
   "errors": {
-    "offline": "当前处于离线模式。想继续对话，去设置里打开网络开关",
-    "noApiConfig": "还没有配置 AI 服务。去设置页填写服务地址和密钥",
-    "requestFailed": "这次请求没有成功。稍后再试，或检查设置里的 AI 服务配置。"
+    "offline": "当前处于离线状态。在设置中开启网络后可继续对话。",
+    "noApiConfig": "尚未配置 AI 服务。可在设置页填写服务地址与密钥。",
+    "requestFailed": "本次请求未成功。可稍后重试，或检查设置中的 AI 服务配置。"
   }
 }

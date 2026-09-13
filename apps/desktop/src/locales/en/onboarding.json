@@ -1,104 +1,104 @@
 {
   "next": "Next",
   "back": "Back",
-  "skip": "Skip, I'll find my own way",
+  "skip": "Skip the introduction",
   "welcome": {
     "label": "Introduction",
     "card1Title": "What this is",
-    "card1Body": "Breadcrumb is a learning companion. You talk to an AI about whatever you are trying to understand, and alongside the answers it keeps a record of what you have covered. There are no notes to take and no daily check-in.",
-    "card2Title": "Talk for a while and a map grows",
-    "card2Body": "Every concept that comes up becomes an island on a map, placed and grouped for you. Places you have not been back to for a while go pale — that says which parts have been sitting untouched, not how well you are doing.",
-    "card3Title": "What stays here, and what costs money",
-    "card3Body": "Conversations, the map and your vocabulary live on this computer. No account, no cloud sync. The only thing that costs money is the AI service you supply yourself, billed by usage; every feature that spends anything has its own switch, with the price written beside it in settings.",
+    "card1Body": "Breadcrumb is a learning companion. Anything you are trying to understand can be discussed here with an AI; alongside the answers, what the conversation covered is recorded automatically. There are no notes to take and no daily check-in.",
+    "card2Title": "Conversations grow a map",
+    "card2Body": "Every concept that comes up becomes an island on a map, placed and grouped automatically. Areas untouched for a while go pale, which shows which parts have been set aside, not how well you are doing.",
+    "card3Title": "Where the data stays, and what costs money",
+    "card3Body": "Conversations, the map and the vocabulary are all stored on this computer. There is no account and no cloud sync. The only thing that costs money is the AI service you supply yourself, billed by usage; every feature that spends anything can be switched off on its own, with the price written beside it in settings.",
     "start": "Start using it",
-    "tryDemo": "Load an example first",
-    "demoNote": "Someone else's three months of learning, removable in one click whenever you like.",
-    "installing": "Setting up the example…"
+    "tryDemo": "Load the example data first",
+    "demoNote": "The example is a three-month learning record and can be removed in one step.",
+    "installing": "Preparing the example data"
   },
   "tour": {
     "label": "Guided tour",
     "finish": "Start using it",
     "exit": "Leave the tour",
     "chatTitle": "Everything starts here",
-    "chatBody": "All you have to do is talk. The switch above: Study mode replies guide you to think and practise; Free chat is an ordinary conversation.",
-    "trailTitle": "Your conversations live in the sidebar",
-    "trailBody": "Titles name themselves — first concept to last. Once you rename one yourself, it is never renamed again.",
-    "mapTitle": "Talk for a while and this grows",
-    "mapBody": "These islands were pulled out of the conversations automatically; nothing here was filed by hand. Scroll up to go into one.",
-    "mapEmptyTitle": "Open sea, for now",
-    "mapEmptyBody": "Every exchange you have turns what you talked about into islands here, on its own. There is nothing for you to file.",
-    "mirrorTitle": "Fading is what is supposed to happen",
-    "mirrorBody": "These two show how much you have covered and how much you would still recall. Places you have not visited fade — that is a reminder, not a mark against you. All of it is computed here and costs nothing.",
-    "spendingTitle": "What it costs, before you turn it on",
-    "spendingBody": "Every feature that costs money is on this page with its own switch, and each says roughly what one use costs before you enable it. That figure is measured, not guessed.",
-    "yourTurnTitle": "Your turn",
-    "yourTurnBody": "Ask about something you actually want to understand. The map will keep up on its own."
+    "chatBody": "Entering text here is all that is required. In the switch above, Study mode replies guide you to think and practise, and Free chat is an ordinary conversation.",
+    "trailTitle": "Chats are listed in the sidebar",
+    "trailBody": "Titles are generated automatically, in the form \"first concept to last concept\". Once a title is renamed by hand, it is never changed again.",
+    "mapTitle": "Conversations grow the map",
+    "mapBody": "These islands were assembled from the conversations automatically; nothing was recorded by hand. Scrolling up goes one level in.",
+    "mapEmptyTitle": "This is open sea for now",
+    "mapEmptyBody": "The concepts covered in each exchange become islands here automatically. Nothing has to be recorded by hand.",
+    "mirrorTitle": "Colour fading is normal",
+    "mirrorBody": "These two panels show how much has been learned and how much is still remembered. Parts untouched for a long time fade on their own; this is a note, not a penalty. Everything on this page is computed on this machine and costs nothing.",
+    "spendingTitle": "Costs are stated in advance",
+    "spendingBody": "Every feature that costs money is on this page and can be switched off on its own. The approximate cost of one use is written here before it is turned on, and that figure is measured rather than estimated.",
+    "yourTurnTitle": "Ask a question",
+    "yourTurnBody": "Ask about something you genuinely want to understand. The map follows on its own."
   },
   "pageGuide": {
     "label": "About this page",
-    "gotIt": "Got it",
+    "gotIt": "OK",
     "openButton": "About this page",
     "chat": {
-      "title": "This is where you talk",
-      "body": "Ask about anything you want to understand. The switch above decides how the replies come back: study mode asks you questions and gets you explaining things yourself, while free chat is an ordinary back-and-forth.",
-      "point1": "Concepts that come up are filed into the map on their own; there is nothing to write down",
-      "point2": "Conversation titles name themselves, and stop changing once you rename one",
-      "limit": "It will not plan your week, and it will not come looking for you when a few days pass without a visit."
+      "title": "Talking to the AI",
+      "body": "Ask about anything you want to understand. The switch above decides how replies come back: study mode asks questions in return and invites you to explain things yourself, while free chat is an ordinary back-and-forth.",
+      "point1": "Concepts that come up are filed into the map automatically, with nothing to record by hand",
+      "point2": "Chat titles are generated automatically and stop changing once renamed by hand",
+      "limit": "It does not plan a timetable, and it does not send reminders after a few days away."
     },
     "map": {
-      "title": "Everything you have covered, laid out",
-      "body": "Each island is a concept you have talked about, placed and grouped automatically. Go a level in to see the detail, including which conversations touched it.",
-      "point1": "Darker places are recent; pale ones have been sitting for a while",
-      "point2": "Everything on this page is worked out on your own machine and costs nothing",
-      "limit": "It is not a notebook: you cannot file anything by hand, and it only grows out of your conversations."
+      "title": "A map of what has been learned",
+      "body": "Each island is a concept that has been discussed, placed and grouped automatically. Going one level in shows the detail, including which conversations touched it.",
+      "point1": "Darker places were touched recently; pale ones have been set aside for a while",
+      "point2": "Everything on this page is computed on this machine and costs nothing",
+      "limit": "It is not a notebook: entries cannot be added by hand, and the map only grows out of conversations."
     },
     "vocab": {
-      "title": "Pick up a language while you chat",
-      "body": "Turn this on and some words in the AI's replies arrive in the language you are learning; you can guess first, then see what they mean. This page holds the words you are on and is where dictionaries are downloaded and swapped.",
-      "point1": "A short vocabulary check can start new words past the ones you already know",
-      "point2": "Meanings and pronunciation come from a downloaded dictionary that stays on this machine and works offline",
-      "limit": "It does not teach grammar or set exercises; it only swaps words into sentences you were going to read anyway."
+      "title": "Learning a language while chatting",
+      "body": "Once this is on, some words in the AI's replies arrive in the language being learned, and can be guessed at before the definition is shown. This page lists the words in progress and is where dictionaries are downloaded and switched.",
+      "point1": "A vocabulary check can be taken first, so new words start from the level already reached",
+      "point2": "Pronunciation and definitions come from a downloaded dictionary that stays on this machine and works offline",
+      "limit": "It does not teach grammar or provide sets of exercises; it only swaps words into sentences you were going to read anyway."
     },
     "discovery": {
-      "title": "What you watch, gathered on one page",
-      "body": "Install a small browser script and what you watch on Bilibili and YouTube is summarised here: the words that keep coming up, topics that have started appearing, and the longer things you watched. All of it is worked out on this computer.",
-      "point1": "The page opens before you install anything, and says what it needs",
-      "point2": "The viewing record stays on this machine and is not sent anywhere",
-      "limit": "It does not pick what you should watch, and it does not score what you have watched."
+      "title": "Everyday viewing, gathered on one page",
+      "body": "Once a browser script is installed, what you watch on Bilibili and YouTube is gathered here: the words that keep appearing, topics that have come up recently, and the longer content watched. All of it is processed on this computer.",
+      "point1": "This page opens before any script is installed, and lists the steps required",
+      "point2": "The viewing record stays on this machine and is never sent elsewhere",
+      "limit": "It does not decide what to watch, and it does not score what has been watched."
     },
     "companions": {
-      "title": "A few people who come to you with questions",
-      "body": "Each day a few characters turn up asking about something you have been learning. Explaining it to them is a way to find out whether you can. They talk in a small window of their own, so your own conversation stays where it was.",
-      "point1": "What they ask about is drawn from your own record",
-      "point2": "If you would rather not have them, the whole thing switches off in settings",
-      "limit": "They are not real people, and once you leave they will not wait for you or call you back."
+      "title": "Companions who come with questions",
+      "body": "A few characters come by each day with questions drawn from recently learned material. Explaining something to them is a way to check whether it can be explained clearly. These conversations run in a separate small window and do not affect the existing chat.",
+      "point1": "What they ask about is drawn from your own learning record",
+      "point2": "The whole feature can be switched off in settings",
+      "limit": "They are not real people; once you leave they do not wait and do not call you back."
     },
     "settings": {
       "title": "Keys, languages and spending",
-      "body": "The first thing to fill in is the address and key of an AI service — without one, anything that needs the AI cannot run. This page also changes the interface language, the language the AI answers in, and whether the app goes online at all.",
-      "point1": "Switches and spending lists every feature that costs money, each with its own switch and roughly what one use costs",
-      "point2": "The key stays on this computer and is never carried out with anything else",
-      "limit": "It does not provide the AI service itself; the key comes from a provider you sign up with."
+      "body": "The first step is entering the address and key of an AI service, without which the features that depend on the AI cannot run. This page also changes the interface language, the language the AI answers in, and whether the app goes online at all.",
+      "point1": "Switches and spending lists every feature that costs money, each with its own switch and the approximate cost of one use",
+      "point2": "The key is stored on this computer only and is never sent out with anything",
+      "limit": "The AI service itself is not provided here; the key has to be obtained from a provider."
     }
   },
   "checklist": {
     "title": "Start here",
     "connect": "Connect an AI service",
-    "ask": "Ask your first question",
+    "ask": "Ask the first question",
     "map": "Open the map",
     "dismiss": "Dismiss this list",
-    "demoNote": "The map is showing example data right now.",
+    "demoNote": "The map is currently showing example data.",
     "removeDemo": "Remove the example data",
-    "removingDemo": "Removing…",
-    "takeTour": "Walk me through it",
-    "tourNote": "Two minutes, pointing at the actual screen. Escape leaves at any time."
+    "removingDemo": "Removing",
+    "takeTour": "Start the tour",
+    "tourNote": "About two minutes, pointing at the actual screen. Escape leaves the tour."
   },
   "settings": {
     "title": "Guided tour",
-    "hint": "See the introduction again, bring back each page's note, or remove the example data.",
-    "replay": "Take the tour again",
-    "resetGuides": "Show every page note again",
-    "guidesRestored": "Done. Each page will show its note once more the next time you open it.",
+    "hint": "The introduction can be viewed again, the page notes restored, and the example data removed.",
+    "replay": "View the introduction again",
+    "resetGuides": "Restore all page notes",
+    "guidesRestored": "Restored. Each page shows its note once more the next time it is opened.",
     "removeDemo": "Remove example data",
     "demoAbsent": "No example data"
   }

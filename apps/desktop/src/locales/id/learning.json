@@ -67,7 +67,8 @@
     "timeYesterday": "Kemarin {{time}}",
     "errorNoResponse": "tidak ada yang kembali",
     "errorTimedOut": "jawabannya kehabisan waktu",
-    "mapAria": "Peta perhentian fokus"
+    "mapAria": "Peta perhentian fokus",
+    "stationJump": "Buka \"{{label}}\""
   },
   "teach": {
     "opener": "Saya sedang belajar «{{topic}}» dan belum benar-benar paham. Bisa dijelaskan dengan kata-katamu sendiri? Mulai dari apa itu sudah sangat membantu.",

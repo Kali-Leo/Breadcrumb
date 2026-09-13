@@ -43,7 +43,7 @@ describe("the catalogues once i18next holds them", () => {
   it("leaves sentences without interpolation exactly as written", async () => {
     await changeLanguage("en");
     const line = i18next.t("common:state.loading");
-    expect(line).toBe("Loading…");
+    expect(line).toBe("Loading");
     await changeLanguage("zh-CN");
   });
 });

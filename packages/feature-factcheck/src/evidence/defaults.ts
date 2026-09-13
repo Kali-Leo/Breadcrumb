@@ -20,7 +20,7 @@ import { createDuckDuckGoProvider } from "./duckduckgo";
 import type { EvidenceProvider, FetchLike } from "./provider";
 import { createWikidataProvider } from "./wikidata";
 import type { FactRenderer } from "./wikidataRender";
-import { wikiEditionOf } from "./wikimedia";
+import { wikiEditionOf, wikiVariantOf } from "./wikimedia";
 import { createWikipediaProvider } from "./wikipedia";
 import { createZhipuSearchProvider, zhipuSupportsLanguage } from "./zhipu";
 
@@ -63,7 +63,11 @@ export function createDefaultEvidenceProviders(
         language: options.language,
         renderFact: options.renderFact,
       }),
-      createWikipediaProvider({ ...shared, languages: wikipediaEditions(options.language) }),
+      createWikipediaProvider({
+        ...shared,
+        languages: wikipediaEditions(options.language),
+        variant: wikiVariantOf(options.language),
+      }),
     );
   }
 

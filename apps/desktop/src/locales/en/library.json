@@ -1,27 +1,27 @@
 {
   "title": "My material",
-  "intro": "Put the material you already have in here, and the questions you ask later will look for answers here first. Only add what you are allowed to use: e-books you bought, course handouts, library loans, books in the public domain, open textbooks.",
+  "intro": "Import material you have the right to use. Later questions search this material first.",
   "import": "Import a file",
-  "importing": "Reading…",
-  "formats": "PDF, Markdown and plain text",
-  "empty": "Nothing here yet.",
+  "importing": "Reading",
+  "formats": "PDF, Markdown and plain text are supported",
+  "empty": "No material has been imported yet.",
   "remove": "Remove",
   "progress": {
-    "building": "Building the semantic index for {{embedded}} / {{total}} passages",
-    "ready": "The index is built",
-    "usable": "Keyword search already works; results get better once the semantic index is finished."
+    "building": "Processing passage {{embedded}} / {{total}}",
+    "ready": "The material has been processed",
+    "usable": "Searching already works; results become more accurate once processing finishes."
   },
   "speed": {
-    "ipad": "Update your system to iPadOS 26 and this step gets much faster.",
-    "linux": "Open this page in Firefox and this step gets much faster.",
-    "desktop": "Open it in a recent Chrome, Edge, Safari or Firefox and this step gets much faster."
+    "ipad": "Updating the system to iPadOS 26 makes this step much faster.",
+    "linux": "Opening this page in Firefox makes this step much faster.",
+    "desktop": "Opening it in a recent version of Chrome, Edge, Safari or Firefox makes this step much faster."
   },
   "error": {
-    "unreadable": "No text could be read out of this file. If it is a scan, it needs text recognition (OCR) first."
+    "unreadable": "No text could be read out of this file. A scanned document needs text recognition first."
   },
   "search": {
     "placeholder": "Search my material",
-    "action": "Find",
+    "action": "Search",
     "empty": "Nothing found."
   }
 }

@@ -71,7 +71,8 @@
     "timeYesterday": "Hier {{time}}",
     "errorNoResponse": "rien n'est revenu",
     "errorTimedOut": "la réponse a expiré",
-    "mapAria": "Carte des étapes du focus"
+    "mapAria": "Carte des étapes du focus",
+    "stationJump": "Aller à « {{label}} »"
   },
   "teach": {
     "opener": "J'apprends « {{topic}} » et je n'ai pas encore vraiment saisi. Tu peux me l'expliquer avec tes mots ? Commencer par ce que c'est serait parfait.",
