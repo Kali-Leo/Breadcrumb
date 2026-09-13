@@ -17,7 +17,7 @@
     "@breadcrumb/core-text": "workspace:*",
     "@breadcrumb/core-vectors": "workspace:*",
     "cheerio": "^1.0.0",
-    "zod": "^4.1.0"
+    "zod": "^4.6.1"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
