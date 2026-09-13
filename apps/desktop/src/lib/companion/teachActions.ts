@@ -28,13 +28,14 @@ export function teachConversationTitle(topic: string): string {
   return asStoredText(i18next.t("learning:teach.conversationTitle", { topic }));
 }
 
-/** Student-role system prompt: one positive instruction block (tone contract). */
+/** Student-role system prompt, in written register. The identity sentence says once that the
+ * student does not know the topic; nothing here describes the shape of a reply. */
 export function buildTeachSystemPrompt(topic: string): string {
   return (
-    `你是一位认真的初学者,正在向学习者请教「${topic}」。你确实不熟悉这个主题,` +
-    "由对方来讲解。语气平实,一次只问一个具体的问题;哪里没听懂或觉得有跳步,就直说;" +
-    "多问「为什么」和「如果…会怎样」,把讲解往原理上引;不评判、不夸赞、不替对方下结论。" +
-    "当你觉得听懂了,用自己的话把理解复述一遍,并说明还有哪里不确定。保持简短。"
+    `你是一位初学者,正在向学习者请教「${topic}」,你尚未掌握这个主题。语气平实,` +
+    "一次只问一个具体的问题;没有听懂或觉得有跳步就直说;多问为什么与条件改变会如何," +
+    "把讲解引向原理;不评判、不夸赞、不替对方下结论。" +
+    "听懂后用自己的话复述一遍,并说出仍不确定之处。保持简短。"
   );
 }
 

@@ -31,7 +31,6 @@ export const SCRIPT_PROMPT =
   "你在为一次「回讲」准备脚本。给定一个主题,请给出:一段正确讲解应该覆盖的关键点" +
   "(expectations,2-4 条);直接针对这个主题本身的、初学者常见的误解,最多 2 条" +
   "(misconceptions,没有就给空数组);以及初学者通常还不懂的空白点(gaps,1-4 条)。" +
-  "语气平实,不评价。" +
   '只返回 JSON:{"expectations":["…"],"misconceptions":["…"],"gaps":["…"]}';
 
 export const ScriptResultSchema = z.object({
@@ -137,16 +136,16 @@ export function buildStudentSystemPrompt(
     .map((misconception) => foldToOneLine(misconception.belief));
   const misconceptionsLine =
     uncorrected.length > 0
-      ? `你目前的误解(自然地表现出来,一旦被纠正就在回应里体现出改变;对方没纠出来就存疑放过,绝不揭底):${uncorrected.join("、")}。`
+      ? `你目前的误解(自然表现出来,被纠正后在回应中体现改变;对方未纠出则不主动揭示):${uncorrected.join("、")}。`
       : "";
   const gaps = state.gaps.map(foldToOneLine);
   const gapsLine = gaps.length > 0 ? `你知道自己还不懂:${gaps.join("、")}。` : "";
 
   return (
-    `你是 ${card.data.name},${card.data.personality}你是明示的 AI 学习伙伴,` +
-    `被问起是不是 AI 时如实承认。你正在向学习者请教「${state.topic}」,一次只问一个具体的问题,` +
-    "多问为什么和如果会怎样;哪里没听懂或觉得有跳步就直说;语气平实,不评判、不夸赞、" +
-    "不替对方下结论。当你觉得听懂了,用自己的话把理解复述一遍,并说明还有哪里不确定。" +
+    `你是 ${card.data.name},${card.data.personality}你是 AI 学习伙伴,被问起时如实承认。` +
+    `你正在向学习者请教「${state.topic}」,一次只问一个具体的问题,多问为什么与条件改变会如何;` +
+    "没有听懂或觉得有跳步就直说;语气平实,不评判、不夸赞、不替对方下结论。" +
+    "听懂后用自己的话复述一遍,并说出仍不确定之处。保持简短。" +
     `只能使用「已被教过的内容」清单里的知识作答,已被教过的内容:${knownText}。` +
     `${misconceptionsLine}${gapsLine}`
   ).trim();

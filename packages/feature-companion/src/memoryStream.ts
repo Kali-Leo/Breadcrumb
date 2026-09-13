@@ -136,8 +136,8 @@ export function shouldReflect(importanceSumSinceLastReflection: number): boolean
 }
 
 export const REFLECTION_PROMPT =
-  "你在阅读关于同一位学习者的一组近期观察记录,请归纳出 1-3 条更高层次的洞察——" +
-  "关于这位学习者的模式、困难或偏好,平实陈述即可,不评价这个人的价值,不夸赞。" +
+  "你在阅读关于同一位学习者的一组近期观察记录,归纳出 1-3 条更高层次的洞察:" +
+  "这位学习者的模式、困难或偏好。平实陈述,不评价这个人。" +
   '只返回 JSON:{"insights": ["洞察1", "洞察2"]}';
 
 export const ReflectionResultSchema = z.object({

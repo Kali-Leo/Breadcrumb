@@ -74,21 +74,18 @@ export type InterestSignalsResult = z.infer<typeof interestSignalsSchema>;
 const SYSTEM_PROMPT = `你是一个学习心理观察者。给定学习者与 AI 的一轮问答，以及这一轮踩过的知识点列表，
 为每个知识点判断学习者流露出的心理信号，以 JSON 返回：
 {"signals":[{"label":"知识点原名(与给定列表完全一致)","curiosity":"none|weak|medium|strong","confusion":"none|weak|medium|strong","boredom":"none|weak|medium|strong","confidence":"low|medium|high","styles":["偏好的解释方式标签"]}]}
-档位值必须原样使用上面这些 ASCII 英文词，不要翻译成中文或其他语言。
+档位值必须原样使用上面这些 ASCII 英文词，不要翻译。
 规则：
-- label 必须精确等于给定列表中的原名，用于回填对应节点；给定列表里的每个节点都要出现在结果里，不要遗漏
-- curiosity（好奇）分档：strong=主动追问、举一反三、明确说想深入了解；medium=有一定探索表现；weak=偶尔流露兴趣、一带而过；none=没有表现
-- confusion（困惑）分档：strong=反复问同一点、逻辑卡住、明确说"没懂"／"还是不太明白"；medium=有疑惑但基本能跟上；weak=轻微迟疑；none=顺畅理解
-- boredom（厌倦）分档：只有内容层面的证据才够得上 medium/strong——
-  strong=明确说要跳过这个知识点／明确说不想继续这个话题，或在同一轮里反复表达不耐烦；
+- label 必须精确等于给定列表中的原名；列表里的每个知识点都要出现在结果里，没有明显信号的三项都填 none
+- curiosity（好奇）：strong=主动追问、举一反三、明确说想深入了解；medium=有一定探索表现；weak=偶尔流露兴趣、一带而过；none=没有表现
+- confusion（困惑）：strong=反复问同一点、逻辑卡住、明确说"没懂"；medium=有疑惑但基本能跟上；weak=轻微迟疑；none=顺畅理解
+- boredom（厌倦）：只有内容层面的证据才够得上 medium/strong——
+  strong=明确说要跳过这个知识点或不想继续这个话题，或在同一轮里反复表达不耐烦；
   medium=主动把话题转到别处，或明确要求换一种讲法／换一个方向；
   weak=只有语气上的轻微迹象，没有内容证据；none=没有迹象。
-  回复简短本身不是证据，最多算 weak 且 confidence 填 low：简短可能是这个人的表达习惯、可能是已经懂了、
-  也可能只是应答（各种语言里都有"知道了""行吧""好的"这类只是接话的短回应）。不要因为一句话短就判成厌倦
-- confidence（把握度）分档：high=信号明确、证据充分；medium=有信号但不够典型；low=信号模糊、更多是推测——宁可标 low 也不要装作确定
-- styles：仅当对话里确实用了某种解释方式且学习者对此有正面反应时才填（如"类比""代码示例""形式化推导""生活场景""图示"），宁可留空数组也不要臆测
-- 没有任何明显信号的知识点：curiosity/confusion/boredom 都填 none，confidence 按你的实际把握程度填，styles 填空数组
-- 若这一轮完全没有心理信号可辨（如纯寒暄），返回 {"signals":[]}`;
+  回复简短本身不是证据，最多算 weak 且 confidence 填 low
+- confidence（把握度）：high=信号明确、证据充分；medium=有信号但不够典型；low=信号模糊、更多是推测
+- styles：仅当对话里确实用了某种解释方式且学习者对此有正面反应时才填（如"类比""代码示例""形式化推导""生活场景""图示"），否则留空数组`;
 
 export function buildInterestMessages(
   nodes: readonly InterestExtractionNode[],

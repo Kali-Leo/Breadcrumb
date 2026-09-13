@@ -50,7 +50,7 @@ export async function buildAnchoredNodeSystemMessage(): Promise<ChatMessage | nu
   if (!anchoredNode) return null;
   return {
     role: "system",
-    content: `学习者当前锚定的知识点：「${anchoredNode.label}」（${anchoredNode.summary}）。请围绕这个知识点展开回答。`,
+    content: `学习者当前锚定的知识点：「${anchoredNode.label}」（${anchoredNode.summary}）。回答围绕这个知识点。`,
   };
 }
 

@@ -43,13 +43,12 @@ const SYSTEM_PROMPT = `你是一个学习目标拆解器。学习者会用自然
 你需要判断达成这个目标大致需要哪些知识点，以 JSON 返回：
 {"existing":["已有知识点列表中原样匹配的节点名"],"suggested":[{"label":"目标需要但树里还没有的知识点短名(${lengthRule(LABEL_BUDGET)})","summary":"这个知识点是什么(一句话，${lengthRule(SUMMARY_BUDGET)})","requires":["必须先学会的知识点名"]}]}
 规则：
-- existing 的每一项必须完全等于「已有知识点列表」中的一个原名，绝不允许发明不存在的节点名
-- suggested 是目标需要、但已有知识点列表里确实没有的概念，最多 15 个，宁缺毋滥——不确定、可有可无的不要列
+- existing 的每一项必须完全等于「已有知识点列表」中的一个原名，不得发明节点名
+- suggested 是目标需要、但已有知识点列表里确实没有的概念，最多 15 个；不确定、可有可无的不要列
 - existing 与 suggested 合起来应当大致覆盖达成这个目标所需的知识范围，但不必穷尽细节
-- requires 是硬前置：不先学会它就根本没法开始学这个知识点（例如「多元函数微分」的 requires 是「导数」）。
-  只是"学了有帮助""顺序上通常在前面"不算硬前置，不要写
-- requires 里的每一项必须是本次 existing 或 suggested 里出现过的名字，不许引用集合外的东西；
-  宁缺毋滥，拿不准就留空或不写这个字段。不要形成循环依赖
+- requires 是硬前置：不先学会它就没法开始学这个知识点（例如「多元函数微分」的 requires 是「导数」）；
+  "学了有帮助""顺序上通常在前面"不算
+- requires 里的每一项必须是本次 existing 或 suggested 里出现过的名字，拿不准就留空；不要形成循环依赖
 - 若已有知识点已完全覆盖目标，suggested 返回空数组；若完全是全新领域，existing 可以为空数组`;
 
 export function buildGoalMappingMessages(

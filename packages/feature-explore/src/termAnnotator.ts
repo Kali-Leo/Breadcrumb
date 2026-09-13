@@ -22,12 +22,12 @@ export const termMarkResponseSchema = z.object({
   terms: z.array(z.object({ term: z.string().min(1).max(60) })).max(50),
 });
 
-/** Three rules folded into one instruction: prefer marking too few over too many, never mark
- * a word any beginner already knows, never mark a word already on the lit list — plus the
+/** Three rules folded into one instruction: mark nothing you are unsure of, never mark a
+ * word any beginner already knows, never mark a word already on the lit list — plus the
  * ordering requirement. */
 const TERM_MARKING_SYSTEM_PROMPT =
-  "你在给刚生成的一段回答做生词标注：挑出会让这个学习者读起来卡壳的词或短语，可以是知识树里没有的新词，也可以是多字短语。" +
-  "规则：宁少勿多，拿不准就不标；排除任何初学者必然认识的基础词；排除已点亮清单里的词（已经掌握，不需要再标）。" +
+  "你在给刚生成的一段回答做生词标注：挑出会让这个学习者读起来卡壳的词或短语，可以是知识树里没有的新词。" +
+  "规则：拿不准就不标；排除初学者必然认识的基础词；排除已点亮清单里的词。" +
   '按造成理解阻碍的程度从高到低排序。只返回 JSON：{"terms":[{"term":"…"}]}，没有需要标注的词就返回空数组。';
 
 /** Assembles the term-marking call's two messages — the answer plus the learner's two-list
@@ -46,7 +46,7 @@ export function buildTermMarkingMessages(
       content:
         `回答原文：\n${answerText}\n\n` +
         `已点亮清单（他已经掌握，不要标）：${litList}\n\n` +
-        `查词史（他查过这些词——当时不懂，看过解释后有初识，标注时按此判断阻碍程度，不代表要排除）：${lookedUpList}`,
+        `查词史（他查过这些词，已有初识；据此判断阻碍程度，不必排除）：${lookedUpList}`,
     },
   ];
 }

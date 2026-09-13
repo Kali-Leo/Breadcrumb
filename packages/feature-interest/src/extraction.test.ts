@@ -50,7 +50,7 @@ describe("buildInterestMessages", () => {
       buildInterestMessages([{ nodeId: "n1", label: "闭包" }], "问", "答")[0]?.content ?? "";
     expect(systemContent).toContain("none|weak|medium|strong");
     expect(systemContent).toContain("low|medium|high");
-    expect(systemContent).toContain("不要翻译成中文或其他语言");
+    expect(systemContent).toContain("不要翻译");
     // No tier value in the contract line may be a non-ASCII literal.
     const contractLine = systemContent.split("\n").find((line) => line.includes('"signals"')) ?? "";
     for (const tier of ["无", "弱", "中", "强", "低", "高"]) {

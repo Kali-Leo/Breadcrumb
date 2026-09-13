@@ -33,8 +33,8 @@ export const trailSummarySchema = z.object({
 });
 
 const SYSTEM_PROMPT = `你是一个学习记录者。根据学习者昨天学到的知识点列表，用一句平实的陈述说出昨天学到了什么
-（如"昨天你搞懂了X，理清了Y与Z的关系"）。长度：${lengthRule(SUMMARY_BUDGET)}。
-只陈述事实、不评价；绝对禁止提及未完成、天数、频率或任何施压内容。
+（如"昨天你理解了X，理清了Y与Z的关系"）。长度：${lengthRule(SUMMARY_BUDGET)}。
+只陈述事实，不评价，不施压，不提未完成、天数或频率。
 以 JSON 返回：{"summary":"..."}`;
 
 export function buildTrailSummaryMessages(nodes: readonly KnowledgeNodeRow[]): ChatMessage[] {

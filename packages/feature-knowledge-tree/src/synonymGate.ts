@@ -93,8 +93,7 @@ const SYSTEM_PROMPT = `你是一个概念查重器。给定若干候选对，每
 {"verdicts":[{"pairId":"候选对编号(原样返回)","verdict":"same|different"}]}
 判定规则：
 - same：新概念和已有节点讲的是同一件事，只是措辞、角度或详略不同
-- different：新概念虽然相关但确实是独立的知识点，值得单独成节点
-- 仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different
+- different：新概念虽然相关但确实是独立的知识点；仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different
 - 拿不准就判 different`;
 
 export function buildSynonymJudgeMessages(pairs: readonly SynonymJudgePairText[]): ChatMessage[] {

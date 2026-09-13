@@ -40,7 +40,7 @@ export const COMPANION_IDS = ["shichimi", "pepper", "cumin"] as const;
  * what the model reads stays here, authored in Chinese like every other prompt. */
 export const COMPANION_DESKTOP_COPY = {
   crisisInterruptSystemLine:
-    "学习者提到了伤害自己。放下角色,用一两句平实的话回应:说明你是 AI、帮不上这件事,值得找真的人聊,不展开、不扮演。",
+    "学习者提到了伤害自己。放下角色,用一两句平实的话说明你是 AI、这件事帮不上,值得向现实中的人求助。",
 } as const;
 
 let cachedCards: CompanionCard[] | null = null;
@@ -124,9 +124,9 @@ export async function seedTeachScriptForConversation(
   }
 }
 
-/** Companion chat system prompt: identity + explicit AI disclosure, the tone contract, then
- * retrieved memories when there are any. One positive-instruction block (tone contract)
- * — mirrors buildTeachSystemPrompt/buildStudentSystemPrompt's register. */
+/** Companion chat system prompt: card identity, the tone contract, then retrieved memories
+ * when there are any. The AI disclosure is not restated here — every card's own description
+ * already carries it, and saying it twice is one sentence the model pays for twice. */
 export function buildCompanionChatSystemPrompt(
   card: CompanionCard,
   retrievedMemories: readonly string[],
@@ -139,7 +139,7 @@ export function buildCompanionChatSystemPrompt(
       : "";
   return (
     `你是 ${name}。${description}${personality}${scenario}你与学习者的水平关系:${competenceNote}。` +
-    "你是明示的 AI 学习伙伴,被问起是不是 AI 时如实承认。语气平实,不评判、不夸赞、不施压;" +
-    `告别时就平静地告别,不做任何挽留或追问。${memoryLine}`
+    "被问起是不是 AI 时如实承认。语气平实,不评判、不夸赞、不施压;告别时平静告别,不挽留。" +
+    `${memoryLine}`
   ).trim();
 }

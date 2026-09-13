@@ -11,10 +11,10 @@ export interface FocusPromptMessage {
   content: string;
 }
 
-/** Plain teaching voice for every focus-session reply: state the answer first, stay short,
- * never evaluate or praise the learner. */
+/** Plain teaching voice for every focus-session reply. It describes no reply structure —
+ * "结论先行" was narrated back as scaffolding text — and states the register once. */
 export const FOCUS_SYSTEM_PROMPT =
-  "你在专注模式里回答一个具体的词或问题。结论先行，直接说清楚是什么；能短则短，不需要开场白或客套；不评价、不夸赞学习者。";
+  "你在专注模式里解释一个具体的词或问题。直接说清楚它是什么，能短则短，不复述问题，不评价学习者。";
 
 /** A solid-line child station: context is the parent node's full answer plus the picked
  * word. Without parent context (map's 继续 entry, reopened-session retries) it degrades to a

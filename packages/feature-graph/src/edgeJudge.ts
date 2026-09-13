@@ -118,16 +118,10 @@ const CASUAL_ADJACENT_CONCEPTS_SECTION = `
 你还可以在下面追加 0~2 个"相邻未学概念"：与本批次知识点强相关、学习者显然还没接触过、
 值得作为下一步探索方向的新概念（不是这批知识点本身，也不是纯粹的同义词）：
 {"adjacentConcepts":[{"label":"新概念短名(${lengthRule(LABEL_BUDGET)})","summary":"这个概念是什么(一句话，${lengthRule(SUMMARY_BUDGET)})","connectsToLabel":"本批次中与它关系最紧密的知识点原名(A、B 之一)","helpsLevel":"weak|medium|strong，即 connectsToLabel 对理解这个新概念的帮助程度"}]}
-宁缺毋滥，不确定就不要提议，找不到就返回空数组。`;
+不确定就不要提议，找不到就返回空数组。`;
 
 function buildSystemPrompt(casual: boolean): string {
-  if (!casual) {
-    return `${BASE_SYSTEM_PROMPT}
-- 若没有任何一对存在关系，也没有值得提议的学习方法，返回 {"edges":[],"methodNodes":[]}`;
-  }
-  return `${BASE_SYSTEM_PROMPT}
-${CASUAL_ADJACENT_CONCEPTS_SECTION}
-- 若没有任何一对存在关系、没有值得提议的学习方法、也没有值得提议的相邻概念，返回 {"edges":[],"methodNodes":[],"adjacentConcepts":[]}`;
+  return casual ? `${BASE_SYSTEM_PROMPT}\n${CASUAL_ADJACENT_CONCEPTS_SECTION}` : BASE_SYSTEM_PROMPT;
 }
 
 export interface BuildEdgeJudgeMessagesOptions {

@@ -82,9 +82,7 @@ export function formatLearnerContextMessage(context: LearnerContext): string | n
     if (styles.length > 0) lines.push(`- 对方更容易吸收的讲解方式：${styles.join("、")}。`);
   }
   if (context.confusionDetected) {
-    lines.push(
-      "- 本轮对方表示没有听懂：换一种讲法重来，放低一个台阶，把困难归因于材料本身；不要重复原来的说法。",
-    );
+    lines.push("- 本轮对方表示没有听懂：换一种讲法重来，放低一个台阶，把困难归因于材料本身。");
   }
   if (lines.length === 0) return null;
   return `学情参考（只用于调整讲法，不要向对方复述这些数字）：\n${lines.join("\n")}`;

@@ -30,7 +30,7 @@ describe("buildTermMarkingMessages", () => {
 
   it("system prompt states all three exclusion/ordering rules", () => {
     const [system] = buildTermMarkingMessages("x", [], []);
-    expect(system?.content).toContain("宁少勿多");
+    expect(system?.content).toContain("拿不准就不标");
     expect(system?.content).toContain("基础词");
     expect(system?.content).toContain("已点亮清单");
   });

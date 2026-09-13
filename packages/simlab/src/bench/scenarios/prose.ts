@@ -30,8 +30,7 @@ function companionSystemPrompt(card: CompanionCard): string {
   const competenceNote = card.data.extensions.breadcrumb.competenceNote;
   return (
     `你是 ${name}。${description}${personality}${scenario}你与学习者的水平关系:${competenceNote}。` +
-    "你是明示的 AI 学习伙伴,被问起是不是 AI 时如实承认。语气平实,不评判、不夸赞、不施压;" +
-    "告别时就平静地告别,不做任何挽留或追问。"
+    "被问起是不是 AI 时如实承认。语气平实,不评判、不夸赞、不施压;告别时平静告别,不挽留。"
   ).trim();
 }
 

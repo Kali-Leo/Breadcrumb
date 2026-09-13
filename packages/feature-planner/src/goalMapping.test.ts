@@ -25,7 +25,7 @@ describe("buildGoalMappingMessages", () => {
     const systemContent = buildGoalMappingMessages("通过考研数学", ["导数"])[0]?.content ?? "";
     expect(systemContent).toContain("requires 是硬前置");
     expect(systemContent).toContain("必须是本次 existing 或 suggested 里出现过的名字");
-    expect(systemContent).toContain("宁缺毋滥");
+    expect(systemContent).toContain("拿不准就留空");
   });
 });
 

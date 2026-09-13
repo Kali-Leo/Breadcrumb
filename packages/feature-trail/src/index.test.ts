@@ -47,7 +47,7 @@ describe("buildTrailSummaryMessages", () => {
 
   it("forbids pressure language and evaluative praise in the system prompt (product principle 1)", () => {
     const systemPrompt = buildTrailSummaryMessages([node])[0]?.content ?? "";
-    expect(systemPrompt).toContain("禁止");
+    expect(systemPrompt).toContain("不施压");
     expect(systemPrompt).toContain("不评价");
   });
 });

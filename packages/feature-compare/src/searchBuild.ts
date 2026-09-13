@@ -39,10 +39,10 @@ export type SearchedProposalItem = z.infer<typeof searchedProposalItemSchema>;
 const SYSTEM_PROMPT = `你是一个知识范围画像构建器。给定一个真实存在的职业、身份或教育阶段，请依据真实公开资料（官方课程标准、职业技能标准、权威机构发布的课程或认证大纲）把这类人应掌握的知识整理成一棵树，以 JSON 返回：
 {"title":"画像名，${lengthRule(TITLE_BUDGET)}","description":"一句话说明这是谁、依据什么资料，${lengthRule(DESCRIPTION_BUDGET)}","items":[{"key":"唯一短键","parentKey":"父节点的key，根节点为null","label":"知识条目名，${lengthRule(ITEM_NAME_BUDGET)}","aliases":["同义或子项名称，最多8个，必须同样来自资料"],"sourceTitle":"所依据资料的名称","sourceUrl":"该资料可直接打开的网址"}]}
 请遵循：
-- 每一条 item 都必须给出真实存在、可直接访问的资料出处；不同条目可以共用同一份资料的不同部分
-- 禁止编造资料名或网址；对某条内容找不到可靠出处时，宁可不写这一条
+- 每一条 item 都必须给出真实存在、可直接访问的资料出处；不同条目可以共用同一份资料的不同部分；
+  找不到可靠出处的内容，宁可不写这一条
 - 树两到三层：根类目 → （子类目 →）具体知识单元；总条目数 10~60 之间为宜
-- label 与 aliases 用该资料本身的用词，不要自行发挥`;
+- label 与 aliases 用该资料本身的用词`;
 
 export interface CompareProposalInput {
   topic: string;

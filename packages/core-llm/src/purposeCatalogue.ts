@@ -61,17 +61,17 @@ export const MEASURED_AT = "2026-09-08";
  */
 export const PURPOSE_USAGE: Readonly<Record<string, PurposeUsage>> = {
   chat: { inputTokens: 1353, outputTokens: 324, cadence: "per-round" },
-  "knowledge-tree": { inputTokens: 1365, outputTokens: 64, cadence: "per-round" },
-  interest: { inputTokens: 902, outputTokens: 80, cadence: "per-round" },
-  "knowledge-edges": { inputTokens: 1009, outputTokens: 278, cadence: "per-round" },
-  "self-report-mapping": { inputTokens: 524, outputTokens: 46, cadence: "on-demand" },
-  "goal-planning": { inputTokens: 693, outputTokens: 424, cadence: "on-demand" },
-  "compare-align": { inputTokens: 528, outputTokens: 213, cadence: "per-item-once" },
+  "knowledge-tree": { inputTokens: 1331, outputTokens: 64, cadence: "per-round" },
+  interest: { inputTokens: 775, outputTokens: 80, cadence: "per-round" },
+  "knowledge-edges": { inputTokens: 966, outputTokens: 278, cadence: "per-round" },
+  "self-report-mapping": { inputTokens: 507, outputTokens: 46, cadence: "on-demand" },
+  "goal-planning": { inputTokens: 665, outputTokens: 424, cadence: "on-demand" },
+  "compare-align": { inputTokens: 524, outputTokens: 213, cadence: "per-item-once" },
   "map-naming": { inputTokens: 201, outputTokens: 32, cadence: "per-item-once" },
-  "term-marking": { inputTokens: 570, outputTokens: 22, cadence: "per-answer" },
+  "term-marking": { inputTokens: 545, outputTokens: 22, cadence: "per-answer" },
   "diglot-weave": { inputTokens: 410, outputTokens: 86, cadence: "per-message" },
-  "focus-explain": { inputTokens: 395, outputTokens: 223, cadence: "on-demand" },
-  "trail-summary": { inputTokens: 236, outputTokens: 26, cadence: "per-day" },
+  "focus-explain": { inputTokens: 388, outputTokens: 223, cadence: "on-demand" },
+  "trail-summary": { inputTokens: 231, outputTokens: 26, cadence: "per-day" },
 };
 
 /**

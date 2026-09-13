@@ -114,7 +114,7 @@ export type AlignmentJudgeVerdict = AlignmentJudgeResult["verdicts"][number];
 
 const JUDGE_SYSTEM_PROMPT = `你是一个概念对齐判官。给定若干对条目——A 来自一份公开资料的知识大纲，B 来自一位学习者自己的知识树——逐对判断 A 和 B 是否指同一个知识概念，以 JSON 返回：
 {"verdicts":[{"pair":1,"verdict":"same","confidence":"high","reason":"一句话理由，${lengthRule(REASON_BUDGET)}"}]}
-判定规则（严格执行）：
+判定规则：
 - 只有当 A 与 B 本质上是同一个概念、名称可以互换时才判 same（例：导数 与 一元函数的导数）
 - 仅仅相关、一个是另一个的组成部分、上位或下位概念，都判 different（例：函数 与 闭包；作用域 与 作用域链）
 - confidence 三档：high=非常确定，medium=比较确定，low=只是倾向

@@ -61,7 +61,7 @@ export function resolveAnswerLanguage(
 export function buildLanguageDirective(language: Language, options?: { firm?: boolean }): string {
   const name = `${language.endonym}（${language.code}）`;
   if (options?.firm) {
-    return `【语言】上一次回答用错了语言。这一次必须全程使用 ${name} 书写，包括标题、列表、代码注释之外的一切文字。不要混入其他语言的句子。`;
+    return `【语言】上一次回答用错了语言。这一次全程使用 ${name} 作答；专有名词、代码与公式保持原样。`;
   }
-  return `【语言】全程使用 ${name} 书写你的回答；专有名词、代码与公式保持原样。`;
+  return `【语言】全程使用 ${name} 作答；专有名词、代码与公式保持原样。`;
 }
