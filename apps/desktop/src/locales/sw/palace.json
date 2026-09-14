@@ -188,12 +188,20 @@
   },
   "tuning": {
     "title": "Mapendeleo ya mapendekezo",
-    "intro": "Uzito unaopewa kila kigezo wakati wa kupendekeza cha kujifunza kinachofuata unaweza kurekebishwa.",
-    "interest": "Mada zinazovutia",
-    "helps": "Pale ujuzi uliopo unaposaidia",
-    "difficulty": "Hatua nyepesi",
+    "intro": "Pendekezo linalofuata linaelekea upande gani.",
+    "default": "Chaguo-msingi",
     "reset": "Rudisha chaguo-msingi",
-    "endIgnore": "Haizingatiwi",
-    "endPrefer": "Kipaumbele"
+    "interest": {
+      "low": "Nje ya mapendezi ya hivi karibuni",
+      "high": "Kufuata mapendezi ya hivi karibuni"
+    },
+    "helps": {
+      "low": "Eneo jipya kabisa",
+      "high": "Mwendelezo wa yaliyokwishajifunzwa"
+    },
+    "difficulty": {
+      "low": "Chenye changamoto zaidi",
+      "high": "Rahisi zaidi"
+    }
   }
 }

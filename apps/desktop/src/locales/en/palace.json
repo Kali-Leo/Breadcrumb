@@ -188,12 +188,20 @@
   },
   "tuning": {
     "title": "Recommendation preferences",
-    "intro": "The weight given to each factor when suggesting what to learn next can be adjusted.",
-    "interest": "Topics of interest",
-    "helps": "Where existing knowledge helps",
-    "difficulty": "Lighter steps",
+    "intro": "Which way the next suggestion leans.",
+    "default": "Default",
     "reset": "Restore defaults",
-    "endIgnore": "Ignored",
-    "endPrefer": "Preferred"
+    "interest": {
+      "low": "Outside recent interests",
+      "high": "Along recent interests"
+    },
+    "helps": {
+      "low": "Entirely new ground",
+      "high": "Building on what is known"
+    },
+    "difficulty": {
+      "low": "More challenging",
+      "high": "Easier"
+    }
   }
 }

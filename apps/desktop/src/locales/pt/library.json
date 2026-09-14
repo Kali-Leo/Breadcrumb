@@ -1,6 +1,6 @@
 {
   "title": "Meus materiais",
-  "intro": "Importe seu próprio material. As perguntas seguintes buscam primeiro neste material.",
+  "intro": "Importe seu próprio material: livros didáticos, apostilas, anotações. As respostas seguintes se apoiam nele: a IA explica a partir do material e cada frase indica se o material a sustenta. Quanto mais próximo o material estiver do que você estuda, mais precisas serão as respostas.",
   "import": "Importar arquivo",
   "importing": "Lendo",
   "formats": "São aceitos PDF, Markdown e texto simples",

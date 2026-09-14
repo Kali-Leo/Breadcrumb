@@ -196,12 +196,20 @@
   },
   "tuning": {
     "title": "Préférences de recommandation",
-    "intro": "Le poids donné à chaque facteur pour suggérer la suite peut être réglé.",
-    "interest": "Sujets d'intérêt",
-    "helps": "Là où les acquis aident",
-    "difficulty": "Pas plus légers",
+    "intro": "Vers quoi penche la prochaine suggestion.",
+    "default": "Par défaut",
     "reset": "Rétablir les valeurs par défaut",
-    "endIgnore": "Ignoré",
-    "endPrefer": "Prioritaire"
+    "interest": {
+      "low": "En dehors des intérêts récents",
+      "high": "Dans la ligne des intérêts récents"
+    },
+    "helps": {
+      "low": "Terrain entièrement nouveau",
+      "high": "Prolongement des acquis"
+    },
+    "difficulty": {
+      "low": "Plus exigeant",
+      "high": "Plus facile"
+    }
   }
 }

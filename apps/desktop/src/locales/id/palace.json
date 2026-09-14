@@ -180,12 +180,20 @@
   },
   "tuning": {
     "title": "Preferensi rekomendasi",
-    "intro": "Bobot tiap faktor saat menyarankan apa yang dipelajari berikutnya dapat diatur.",
-    "interest": "Topik yang menarik",
-    "helps": "Tempat pengetahuan yang ada membantu",
-    "difficulty": "Langkah yang lebih ringan",
+    "intro": "Ke arah mana saran berikutnya condong.",
+    "default": "Bawaan",
     "reset": "Pulihkan pengaturan bawaan",
-    "endIgnore": "Diabaikan",
-    "endPrefer": "Diutamakan"
+    "interest": {
+      "low": "Di luar minat terkini",
+      "high": "Mengikuti minat terkini"
+    },
+    "helps": {
+      "low": "Bidang yang benar-benar baru",
+      "high": "Kelanjutan dari yang sudah dipelajari"
+    },
+    "difficulty": {
+      "low": "Lebih menantang",
+      "high": "Lebih ringan"
+    }
   }
 }

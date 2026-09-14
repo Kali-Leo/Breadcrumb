@@ -196,12 +196,20 @@
   },
   "tuning": {
     "title": "Preferências de recomendação",
-    "intro": "O peso dado a cada fator ao sugerir o que aprender em seguida pode ser ajustado.",
-    "interest": "Temas de interesse",
-    "helps": "Onde o já aprendido ajuda",
-    "difficulty": "Passos mais leves",
+    "intro": "Para que lado pende a próxima sugestão.",
+    "default": "Padrão",
     "reset": "Restaurar o padrão",
-    "endIgnore": "Ignorado",
-    "endPrefer": "Prioritário"
+    "interest": {
+      "low": "Fora dos interesses recentes",
+      "high": "Seguindo os interesses recentes"
+    },
+    "helps": {
+      "low": "Terreno totalmente novo",
+      "high": "Continuação do já aprendido"
+    },
+    "difficulty": {
+      "low": "Mais desafiador",
+      "high": "Mais fácil"
+    }
   }
 }

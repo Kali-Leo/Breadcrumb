@@ -1,6 +1,6 @@
 {
   "title": "Mis materiales",
-  "intro": "Importa tu propio material. Las preguntas posteriores buscan primero en este material.",
+  "intro": "Importa tu propio material: libros de texto, apuntes, notas. Las respuestas posteriores se apoyan en él: la IA explica a partir del material y cada frase indica si el material la respalda. Cuanto más cerca esté el material de lo que estudias, más precisas serán las respuestas.",
   "import": "Importar un archivo",
   "importing": "Leyendo",
   "formats": "Se admiten PDF, Markdown y texto sin formato",

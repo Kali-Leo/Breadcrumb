@@ -180,12 +180,20 @@
   },
   "tuning": {
     "title": "推荐偏好",
-    "intro": "推荐下一步学习内容时，可以调整各项的权重。",
-    "interest": "感兴趣的内容",
-    "helps": "已学内容能帮上忙的",
-    "difficulty": "难度较低的",
+    "intro": "推荐的下一步偏向哪一种。",
+    "default": "默认",
     "reset": "恢复默认",
-    "endIgnore": "不考虑",
-    "endPrefer": "优先"
+    "interest": {
+      "low": "近期兴趣之外的",
+      "high": "顺着近期兴趣"
+    },
+    "helps": {
+      "low": "全新的领域",
+      "high": "已学内容的延伸"
+    },
+    "difficulty": {
+      "low": "更有挑战",
+      "high": "更轻松"
+    }
   }
 }

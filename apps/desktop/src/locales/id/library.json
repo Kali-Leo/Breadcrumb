@@ -1,6 +1,6 @@
 {
   "title": "Materi saya",
-  "intro": "Impor materimu sendiri. Pertanyaan berikutnya mencari jawaban di materi ini terlebih dahulu.",
+  "intro": "Impor materimu sendiri: buku pelajaran, bahan kuliah, catatan. Jawaban berikutnya berpegang pada materi ini: AI menjelaskan dari materi, dan setiap kalimat ditandai apakah materi mendukungnya. Makin dekat materi dengan yang sedang kamu pelajari, makin akurat jawabannya.",
   "import": "Impor berkas",
   "importing": "Sedang membaca",
   "formats": "PDF, Markdown, dan teks biasa didukung",

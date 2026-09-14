@@ -1,6 +1,6 @@
 {
   "title": "My material",
-  "intro": "Import your own material. Later questions search this material first.",
+  "intro": "Import your own material: textbooks, lecture notes, your notes. Later answers are taught against it: the AI explains from the material, and each sentence is marked by whether the material supports it. The closer the material is to what you are studying, the more accurate the answers.",
   "import": "Import a file",
   "importing": "Reading",
   "formats": "PDF, Markdown and plain text are supported",

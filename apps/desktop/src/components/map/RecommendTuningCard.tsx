@@ -1,16 +1,19 @@
 /**
- * Purpose: the palace left rail's 推荐偏好 card — life-language sliders over the
- * intent-level recommendation weights: all of them user-tunable, phrased in the learner's
- * language, never ours. Interest is ONE slider — conversation and
- * watched-video signals both live under it (their internal split is the system's adaptive
- * trust ratio, not a knob). No numbers, no component names, no algorithm words on screen.
+ * Purpose: the palace left rail's 推荐偏好 card — three sliders over the intent-level
+ * recommendation weights, each shown as a lean between two RESULTS the learner can picture
+ * ("more challenging" … "easier"), never as a parameter ("ignored" … "preferred"). The
+ * middle of every slider is the shipped default and says so. Interest is ONE slider —
+ * conversation and watched-video signals both live under it (their internal split is the
+ * system's adaptive trust ratio, not a knob). No numbers, no component names, no algorithm
+ * words on screen.
  * Main exports: RecommendTuningCard.
  */
 import { useTranslation } from "react-i18next";
 import {
-  RECOMMENDATION_WEIGHT_MAX,
+  leanToWeight,
   USER_WEIGHT_DEFAULTS,
   type UserRecommendationWeights,
+  weightToLean,
 } from "../../lib/planner/recommendationWeights";
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -22,6 +25,13 @@ const SLIDER_ORDER = [
   "helps",
   "difficulty",
 ] as const satisfies readonly (keyof UserRecommendationWeights)[];
+
+/** Five stops: both ends, both halves, and the default in the middle — few enough that every
+ * stop is a distinct list, and the middle is easy to land on again. */
+const LEAN_STEP = 0.5;
+
+const END_LABEL = "min-w-0 flex-1 basis-0";
+const CURRENT = "font-medium text-stone-700";
 
 export function RecommendTuningCard() {
   const { t } = useTranslation("palace");
@@ -40,29 +50,44 @@ export function RecommendTuningCard() {
     <section className="rounded-xl bg-white p-3 text-xs shadow-sm">
       <h3 className="font-semibold text-stone-600">{t("tuning.title")}</h3>
       <p className="mt-1 text-stone-400">{t("tuning.intro")}</p>
-      <ul className="mt-2 space-y-2">
-        {SLIDER_ORDER.map((component) => (
-          <li key={component}>
-            <label className="block text-stone-600">
-              {t(`tuning.${component}`)}
+      <ul className="mt-2 space-y-3">
+        {SLIDER_ORDER.map((component) => {
+          const lean = weightToLean(component, weights[component]);
+          const low = t(`tuning.${component}.low`);
+          const high = t(`tuning.${component}.high`);
+          const current = lean < 0 ? low : lean > 0 ? high : t("tuning.default");
+          return (
+            <li key={component}>
               <input
                 type="range"
-                min={0}
-                max={RECOMMENDATION_WEIGHT_MAX}
-                step={0.05}
-                value={weights[component]}
+                min={-1}
+                max={1}
+                step={LEAN_STEP}
+                value={lean}
+                aria-label={`${low} / ${high}`}
+                aria-valuetext={current}
+                list={`tuning-${component}-stops`}
                 onChange={(event) =>
-                  void apply({ ...weights, [component]: Number(event.target.value) })
+                  void apply({
+                    ...weights,
+                    [component]: leanToWeight(component, Number(event.target.value)),
+                  })
                 }
-                className="mt-0.5 block w-full accent-amber-500"
+                className="block w-full accent-amber-500"
               />
-            </label>
-            <div className="flex justify-between text-[10px] text-stone-400" aria-hidden="true">
-              <span>{t("tuning.endIgnore")}</span>
-              <span>{t("tuning.endPrefer")}</span>
-            </div>
-          </li>
-        ))}
+              <datalist id={`tuning-${component}-stops`}>
+                <option value="0" />
+              </datalist>
+              <div className="flex gap-1 text-[10px] text-stone-400" aria-hidden="true">
+                <span className={`${END_LABEL} text-start ${lean < 0 ? CURRENT : ""}`}>{low}</span>
+                <span className={`shrink-0 ${lean === 0 ? CURRENT : ""}`}>
+                  {t("tuning.default")}
+                </span>
+                <span className={`${END_LABEL} text-end ${lean > 0 ? CURRENT : ""}`}>{high}</span>
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {!isDefault && (
         <button
