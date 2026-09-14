@@ -13,17 +13,21 @@ import i18next from "i18next";
 import { create } from "zustand";
 import { runEmbeddingBackfill } from "../lib/library/libraryEmbedding";
 import { pickLibraryFile } from "../lib/library/libraryFiles";
-import { importFile } from "../lib/library/libraryImport";
+import { type ImportProgress, importFile } from "../lib/library/libraryImport";
 import { type SpeedAdvice, speedAdviceFor } from "../lib/library/librarySpeedHint";
 import { getRepos } from "../lib/platform/db";
 import { degradeSilently } from "../lib/platform/failureLog";
+import { RecognitionUnavailableError } from "../lib/platform/ocr";
 
 interface LibraryState {
   documents: LibraryDocumentRow[];
   /** True from the moment a file is chosen until its passages are written. */
   importing: boolean;
+  /** Which scanned page is being read, of how many, while an import is recognizing text;
+   * null the rest of the time — a file with a text layer never sets it. */
+  recognizing: ImportProgress | null;
   /** A message key inside the `library` namespace, or null. Cleared by the next attempt. */
-  errorKey: "error.unreadable" | null;
+  errorKey: "error.unreadable" | "error.recognitionUnavailable" | null;
   embedded: number;
   total: number;
   /** Which sentence about browsers to show beside the progress, if any. */
@@ -39,6 +43,7 @@ interface LibraryState {
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   documents: [],
   importing: false,
+  recognizing: null,
   errorKey: null,
   embedded: 0,
   total: 0,
@@ -63,13 +68,23 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     if (picked === null) return;
     set({ importing: true });
     try {
-      await importFile({ ...picked, language: i18next.language });
+      await importFile({
+        ...picked,
+        language: i18next.language,
+        onProgress: (recognizing) => set({ recognizing }),
+      });
       await get().load();
     } catch (error) {
       void degradeSilently("libraryImport", error);
-      set({ errorKey: "error.unreadable" });
+      // Two different sentences: a file nothing could be read from, and a recognizer that
+      // could not be had — the second is fixed by a network, the first is not.
+      const errorKey =
+        error instanceof RecognitionUnavailableError
+          ? "error.recognitionUnavailable"
+          : "error.unreadable";
+      set({ errorKey });
     } finally {
-      set({ importing: false });
+      set({ importing: false, recognizing: null });
     }
   },
 

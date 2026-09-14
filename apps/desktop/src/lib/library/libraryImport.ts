@@ -7,31 +7,44 @@
  * vectors are not: they are queued and filled in behind the reader's back (libraryEmbedding),
  * and until they arrive search runs on one route instead of two. That is a worse search, not a
  * broken one, and it gets better on its own while the reader is reading.
- * Main exports: importFile, LIBRARY_MEDIA_TYPES, mediaTypeOf.
+ *
+ * A scanned PDF, or a photograph of a page, has no text to index until something reads it.
+ * That happens here, page by page, through the recognizer the platform provides
+ * (lib/platform/ocr.ts), and the caller is told which page is being read so the screen can
+ * say so — a book takes a second or two a page, which is minutes, and minutes need a line.
+ * Main exports: importFile, LIBRARY_MEDIA_TYPES, mediaTypeOf, ImportProgress.
  */
 import type { LibraryDocumentRow, LibraryMediaType, PassageInsert } from "@breadcrumb/core-db";
 import {
   type ChunkPair,
   chunkBlocks,
   type DocumentBlock,
+  type PageImage,
   parseMarkdown,
   parsePdf,
   titleFromMarkdown,
   withHeadingPath,
 } from "@breadcrumb/core-ingest";
 import { analyze, analyzedFields, loadStemmer } from "@breadcrumb/core-text";
+import i18next from "i18next";
+import { asStoredText } from "../../i18n/storedText";
 import { getRepos } from "../platform/db";
+import { recognizePage } from "../platform/ocr";
 import { nowIso } from "../platform/time";
+import { decodeImageFile } from "./imageFiles";
 import { ensurePdfWorker } from "./pdfWorker";
 
-/** What the file picker offers and what the parser knows. Deliberately three formats: they are
- * the ones a bought e-book, a course handout and one's own notes actually arrive as. */
+/** What the file picker offers and what the parser knows. Four kinds: the ones a bought
+ * e-book, a course handout, one's own notes, and a photographed page actually arrive as. */
 export const LIBRARY_MEDIA_TYPES: Readonly<Record<string, LibraryMediaType>> = {
   pdf: "pdf",
   md: "markdown",
   markdown: "markdown",
   txt: "text",
   text: "text",
+  png: "image",
+  jpg: "image",
+  jpeg: "image",
 };
 
 export function mediaTypeOf(fileName: string): LibraryMediaType | null {
@@ -42,8 +55,16 @@ export function mediaTypeOf(fileName: string): LibraryMediaType | null {
 export interface ImportInput {
   fileName: string;
   bytes: Uint8Array;
-  /** The reader's interface language, used only to pick a stemmer for Latin script. */
+  /** The reader's interface language: picks a stemmer for Latin script, and the recognizer
+   * for a scanned page. */
   language: string;
+  /** Called before each scanned page is read: which one, of how many. */
+  onProgress?: (progress: ImportProgress) => void;
+}
+
+export interface ImportProgress {
+  page: number;
+  pageCount: number;
 }
 
 export interface ImportResult {
@@ -55,17 +76,40 @@ function documentId(): string {
   return `lib_${crypto.randomUUID()}`;
 }
 
+/** The recognizer, with the progress line wired in. */
+function recognizer(input: ImportInput) {
+  return async (image: PageImage, page: { number: number; count: number }) => {
+    input.onProgress?.({ page: page.number, pageCount: page.count });
+    return recognizePage(image, input.language);
+  };
+}
+
 async function blocksOf(input: ImportInput, title: string): Promise<DocumentBlock[]> {
-  if (mediaTypeOf(input.fileName) !== "pdf") {
+  const mediaType = mediaTypeOf(input.fileName);
+  if (mediaType === "image") {
+    const lines = await recognizer(input)(await decodeImageFile(input.bytes), {
+      number: 1,
+      count: 1,
+    });
+    return [{ headings: [title], text: lines.join("\n") }];
+  }
+  if (mediaType !== "pdf") {
     return parseMarkdown(new TextDecoder().decode(input.bytes), title);
   }
   await ensurePdfWorker();
-  return parsePdf(input.bytes, title);
+  return parsePdf(input.bytes, title, {
+    recognize: recognizer(input),
+    // The heading a recognized page goes under, in the reader's language: "第 12 页". It is
+    // written into the heading path and indexed, so the isolates t() draws with come off.
+    pageLabel: (pageNumber) => asStoredText(i18next.t("library:page", { page: pageNumber })),
+  });
 }
 
 function titleOf(input: ImportInput): string {
   const base = input.fileName.replace(/\.[^.]+$/, "");
-  if (mediaTypeOf(input.fileName) === "pdf") return base;
+  if (mediaTypeOf(input.fileName) !== "markdown" && mediaTypeOf(input.fileName) !== "text") {
+    return base;
+  }
   return titleFromMarkdown(new TextDecoder().decode(input.bytes), base);
 }
 

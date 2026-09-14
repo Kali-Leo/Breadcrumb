@@ -3,13 +3,15 @@
   "intro": "Importe tes propres documents : manuels, polycopiés, notes. Les réponses suivantes s'appuient dessus : l'IA explique à partir des documents, et chaque phrase indique si les documents la confirment. Plus les documents sont proches de ce que tu étudies, plus les réponses sont précises.",
   "import": "Importer un fichier",
   "importing": "Lecture en cours",
-  "formats": "Les formats PDF, Markdown et texte brut sont pris en charge",
+  "formats": "Les formats PDF, image (PNG, JPG), Markdown et texte brut sont pris en charge",
   "empty": "Aucun document n'a encore été importé.",
   "remove": "Retirer",
+  "page": "Page {{page}}",
   "progress": {
     "building": "Traitement du passage {{embedded}} / {{total}}",
     "ready": "Les documents sont traités",
-    "usable": "La recherche fonctionne déjà ; les résultats deviennent plus précis une fois le traitement terminé."
+    "usable": "La recherche fonctionne déjà ; les résultats deviennent plus précis une fois le traitement terminé.",
+    "recognizing": "Reconnaissance de la page {{page}} / {{total}}"
   },
   "speed": {
     "ipad": "Mettre le système à jour vers iPadOS 26 rend cette étape beaucoup plus rapide.",
@@ -17,7 +19,8 @@
     "desktop": "L'ouvrir dans une version récente de Chrome, Edge, Safari ou Firefox rend cette étape beaucoup plus rapide."
   },
   "error": {
-    "unreadable": "Aucun texte n'a pu être extrait de ce fichier. Un document numérisé nécessite d'abord une reconnaissance de texte."
+    "unreadable": "Aucun texte n'a pu être reconnu dans ce fichier.",
+    "recognitionUnavailable": "Les fichiers nécessaires à la reconnaissance n'ont pas pu être téléchargés pour le moment. Vérifie que cet appareil est connecté à internet et que l'interrupteur internet des Réglages est allumé, puis importe à nouveau."
   },
   "search": {
     "placeholder": "Rechercher dans mes documents",

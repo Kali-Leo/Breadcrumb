@@ -69,10 +69,12 @@ export function preferredModelBase(): string {
   return configuredModelBase() ?? JSDELIVR_BASE;
 }
 
-/** The smallest file of the model: a host that does not answer within the timeout with it is
- * not going to manage 311 MB. */
-export function probeUrl(base: string): string {
-  return `${base}config.json`;
+/** The embedding model's smallest file: a host that does not answer within the timeout with
+ * it is not going to manage 311 MB. Other models name their own (SourceResolverDeps.probeFile). */
+export const DEFAULT_PROBE_FILE = "config.json";
+
+export function probeUrl(base: string, probeFile: string = DEFAULT_PROBE_FILE): string {
+  return `${base}${probeFile}`;
 }
 
 export function isModelSourceUrl(
@@ -105,11 +107,12 @@ export async function probeSource(
   base: string,
   fetchFn: FetchLike,
   timeoutMs: number = PROBE_TIMEOUT_MS,
+  probeFile: string = DEFAULT_PROBE_FILE,
 ): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchFn(probeUrl(base), {
+    const response = await fetchFn(probeUrl(base, probeFile), {
       method: "HEAD",
       signal: controller.signal,
       cache: "no-store",
@@ -132,6 +135,8 @@ export interface SourceResolverDeps {
   now?: () => number;
   sources?: readonly string[];
   timeoutMs?: number;
+  /** The file the probe asks each source for; the model's smallest. */
+  probeFile?: string;
 }
 
 export function createSourceResolver(deps: SourceResolverDeps): SourceResolver {
@@ -143,7 +148,7 @@ export function createSourceResolver(deps: SourceResolverDeps): SourceResolver {
 
   async function probeAll(): Promise<string | null> {
     for (const base of sources) {
-      if (await probeSource(base, deps.fetch, deps.timeoutMs)) return base;
+      if (await probeSource(base, deps.fetch, deps.timeoutMs, deps.probeFile)) return base;
     }
     return null;
   }

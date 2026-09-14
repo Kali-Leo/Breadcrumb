@@ -3,13 +3,15 @@
   "intro": "Import your own material: textbooks, lecture notes, your notes. Later answers are taught against it: the AI explains from the material, and each sentence is marked by whether the material supports it. The closer the material is to what you are studying, the more accurate the answers.",
   "import": "Import a file",
   "importing": "Reading",
-  "formats": "PDF, Markdown and plain text are supported",
+  "formats": "PDF, images (PNG, JPG), Markdown and plain text are supported",
   "empty": "No material has been imported yet.",
   "remove": "Remove",
+  "page": "Page {{page}}",
   "progress": {
     "building": "Processing passage {{embedded}} / {{total}}",
     "ready": "The material has been processed",
-    "usable": "Searching already works; results become more accurate once processing finishes."
+    "usable": "Searching already works; results become more accurate once processing finishes.",
+    "recognizing": "Recognizing page {{page}} / {{total}}"
   },
   "speed": {
     "ipad": "Updating the system to iPadOS 26 makes this step much faster.",
@@ -17,7 +19,8 @@
     "desktop": "Opening it in a recent version of Chrome, Edge, Safari or Firefox makes this step much faster."
   },
   "error": {
-    "unreadable": "No text could be read out of this file. A scanned document needs text recognition first."
+    "unreadable": "No text could be recognized in this file.",
+    "recognitionUnavailable": "The files recognition needs could not be downloaded right now. Check that this device is online and that the internet switch in Settings is on, then import again."
   },
   "search": {
     "placeholder": "Search my material",

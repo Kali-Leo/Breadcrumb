@@ -9,7 +9,7 @@
  * product; nothing writes it yet, and retrieval deliberately does not read it. */
 export type LibraryOrigin = "upload" | "bundled";
 
-export type LibraryMediaType = "pdf" | "markdown" | "text";
+export type LibraryMediaType = "pdf" | "markdown" | "text" | "image";
 
 export interface LibraryDocumentRow {
   id: string;

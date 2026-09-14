@@ -28,6 +28,7 @@
     "katex": "^0.18.4",
     "lucide-react": "^1.31.0",
     "mermaid": "^11.16.1",
+    "onnxruntime-web": "1.26.0-dev.20260416-b7804b056c",
     "pdfjs-dist": "^6.3.289",
     "pixi.js": "^8.19.0",
     "react": "^19.1.0",

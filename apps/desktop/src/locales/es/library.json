@@ -3,13 +3,15 @@
   "intro": "Importa tu propio material: libros de texto, apuntes, notas. Las respuestas posteriores se apoyan en él: la IA explica a partir del material y cada frase indica si el material la respalda. Cuanto más cerca esté el material de lo que estudias, más precisas serán las respuestas.",
   "import": "Importar un archivo",
   "importing": "Leyendo",
-  "formats": "Se admiten PDF, Markdown y texto sin formato",
+  "formats": "Se admiten PDF, imágenes (PNG, JPG), Markdown y texto sin formato",
   "empty": "Todavía no se ha importado ningún material.",
   "remove": "Quitar",
+  "page": "Página {{page}}",
   "progress": {
     "building": "Procesando el fragmento {{embedded}} / {{total}}",
     "ready": "El material ya está procesado",
-    "usable": "La búsqueda ya funciona; los resultados serán más precisos cuando termine el procesamiento."
+    "usable": "La búsqueda ya funciona; los resultados serán más precisos cuando termine el procesamiento.",
+    "recognizing": "Reconociendo la página {{page}} / {{total}}"
   },
   "speed": {
     "ipad": "Actualizar el sistema a iPadOS 26 hace este paso mucho más rápido.",
@@ -17,7 +19,8 @@
     "desktop": "Abrirla en una versión reciente de Chrome, Edge, Safari o Firefox hace este paso mucho más rápido."
   },
   "error": {
-    "unreadable": "No se pudo extraer texto de este archivo. Un documento escaneado necesita primero un reconocimiento de texto."
+    "unreadable": "No se pudo reconocer texto en este archivo.",
+    "recognitionUnavailable": "Ahora mismo no se pudieron descargar los archivos que necesita el reconocimiento. Comprueba que este dispositivo esté conectado a internet y que el interruptor de internet de Ajustes esté encendido, y vuelve a importar."
   },
   "search": {
     "placeholder": "Buscar en mis materiales",

@@ -16,7 +16,8 @@
  * graph assembled in the wrong order from a valid one — it will refuse to parse it, or worse,
  * parse it and produce numbers — and a truncated piece is exactly the failure a CDN edge is
  * most likely to produce.
- * Main exports: GRAPH_FILE, MANIFEST_FILE, isSplitGraphUrl, parseManifest, fetchSplitGraph.
+ * Main exports: GRAPH_FILE, MANIFEST_FILE, isSplitGraphUrl, parseManifest, fetchSplitGraph,
+ * sha256Hex.
  */
 import { type FetchLike, isModelSourceUrl } from "./modelSource";
 
@@ -71,7 +72,7 @@ export function parseManifest(value: unknown): ShardManifest {
   return { bytes, sha256: sha256.toLowerCase(), shards };
 }
 
-async function sha256Hex(bytes: Uint8Array): Promise<string> {
+export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes as unknown as BufferSource);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }

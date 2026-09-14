@@ -15,7 +15,8 @@
  * things — how far the second pass has got, and that searching already works. And where the
  * measurement says this browser is the slow part, one line of advice sits beside it: which
  * browser, or which update. Never a dialog, never in the way, and never in the vocabulary of
- * runtimes — see librarySpeedHint.ts.
+ * runtimes — see librarySpeedHint.ts. A scanned book adds a step before either: its pages have
+ * to be read, a second or two each, and the same line says which page it is on.
  * Main exports: LibraryPanel.
  */
 import { Trash2, Upload } from "lucide-react";
@@ -24,11 +25,31 @@ import { useTranslation } from "react-i18next";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { LibrarySearch } from "./LibrarySearch";
 
+/** The same line, in one of three states: a scan being read (page N of M), the vector pass
+ * (passage N of M), or done. Reading comes first because it happens first, and while it is
+ * happening the vector count is about the previous book. */
 function ImportProgress() {
   const { t } = useTranslation("library");
   const embedded = useLibraryStore((state) => state.embedded);
   const total = useLibraryStore((state) => state.total);
+  const recognizing = useLibraryStore((state) => state.recognizing);
   const speedAdvice = useLibraryStore((state) => state.speedAdvice);
+  if (recognizing !== null) {
+    const percent = Math.round(((recognizing.page - 1) / recognizing.pageCount) * 100);
+    return (
+      <div className="rounded-xl bg-stone-50 p-3 text-sm" data-progress="recognizing">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-stone-600">
+            {t("progress.recognizing", { page: recognizing.page, total: recognizing.pageCount })}
+          </span>
+          <span className="text-stone-400 text-xs tabular-nums">{percent}%</span>
+        </div>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-stone-200">
+          <div className="h-full bg-amber-400 transition-all" style={{ width: `${percent}%` }} />
+        </div>
+      </div>
+    );
+  }
   if (total === 0) return null;
   const done = embedded >= total;
   const percent = Math.round((embedded / total) * 100);

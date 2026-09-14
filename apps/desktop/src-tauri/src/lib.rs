@@ -25,6 +25,11 @@ mod model_download;
 mod model_files;
 mod model_shards;
 mod model_sources;
+// Reading the text off scanned pages: the pixel conversion it starts with, the models, and
+// the order the lines come back in.
+mod ocr;
+mod ocr_image;
+mod ocr_order;
 mod open_database;
 #[cfg(test)]
 mod open_database_tests;
@@ -94,6 +99,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
             reranker::rerank_pairs,
+            ocr::ocr_page,
             fsrs_optim::optimize_fsrs_parameters,
             collector::browsing_collector_info,
             collector::take_browsing_events,

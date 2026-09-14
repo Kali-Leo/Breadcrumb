@@ -64,6 +64,8 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
+    "tesseract.js": "7.0.0",
+    "tesseract.js-core": "7.0.0",
     "ts-fsrs": "^5.2.1",
     "unified": "^11.0.5",
     "zod": "^4.4.3",

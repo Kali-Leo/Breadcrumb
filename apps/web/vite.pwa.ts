@@ -38,6 +38,11 @@ const NOT_THE_SHELL = [
   "language-packs/**",
   "assets/wenkai-*.woff2",
   "assets/embeddingWorker-*.js",
+  // The text-recognition worker and tesseract's worker and engine: fetched the first time a
+  // scanned page is imported, never before.
+  "assets/ocrWorker-*.js",
+  "assets/worker.min-*.js",
+  "assets/tesseract-core-*.js",
   "assets/escoDataset-*.js",
   "assets/onetDataset-*.js",
   "assets/mermaid-*.js",
@@ -145,15 +150,16 @@ export function pwaPlugin(base: string): PluginOption {
         },
         {
           // The chunks kept out of the shell. Cached the moment they are first used, so the
-          // second visit has them offline: the embedding worker (useless without its model,
-          // which has its own cache), the two occupation datasets, mermaid, and the bundled
-          // Chinese-English pack the demo learner is seeded from.
+          // second visit has them offline: the embedding and recognition workers (useless
+          // without their models, which have their own caches), tesseract's worker and
+          // engine, the two occupation datasets, mermaid, and the bundled Chinese-English
+          // pack the demo learner is seeded from.
           urlPattern:
-            /\/assets\/(?:embeddingWorker|escoDataset|onetDataset|mermaid|zh-en)-[^/]+\.js$/,
+            /\/assets\/(?:embeddingWorker|ocrWorker|worker\.min|tesseract-core-[^/]*|escoDataset|onetDataset|mermaid|zh-en)-[^/]+\.js$/,
           handler: "CacheFirst",
           options: {
             cacheName: "heavy-chunks",
-            expiration: { maxEntries: 12, maxAgeSeconds: YEAR },
+            expiration: { maxEntries: 16, maxAgeSeconds: YEAR },
             cacheableResponse: { statuses: [0, 200] },
           },
         },

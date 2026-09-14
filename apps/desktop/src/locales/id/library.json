@@ -3,13 +3,15 @@
   "intro": "Impor materimu sendiri: buku pelajaran, bahan kuliah, catatan. Jawaban berikutnya berpegang pada materi ini: AI menjelaskan dari materi, dan setiap kalimat ditandai apakah materi mendukungnya. Makin dekat materi dengan yang sedang kamu pelajari, makin akurat jawabannya.",
   "import": "Impor berkas",
   "importing": "Sedang membaca",
-  "formats": "PDF, Markdown, dan teks biasa didukung",
+  "formats": "PDF, gambar (PNG, JPG), Markdown, dan teks biasa didukung",
   "empty": "Belum ada materi yang diimpor.",
   "remove": "Hapus",
+  "page": "Halaman {{page}}",
   "progress": {
     "building": "Memproses bagian {{embedded}} / {{total}}",
     "ready": "Materi selesai diproses",
-    "usable": "Pencarian sudah berfungsi; hasilnya menjadi lebih akurat setelah pemrosesan selesai."
+    "usable": "Pencarian sudah berfungsi; hasilnya menjadi lebih akurat setelah pemrosesan selesai.",
+    "recognizing": "Mengenali halaman {{page}} / {{total}}"
   },
   "speed": {
     "ipad": "Memperbarui sistem ke iPadOS 26 membuat langkah ini jauh lebih singkat.",
@@ -17,7 +19,8 @@
     "desktop": "Membukanya di Chrome, Edge, Safari, atau Firefox versi baru membuat langkah ini jauh lebih singkat."
   },
   "error": {
-    "unreadable": "Tidak ada teks yang bisa dibaca dari berkas ini. Dokumen hasil pindaian perlu pengenalan teks terlebih dahulu."
+    "unreadable": "Tidak ada teks yang bisa dikenali dari berkas ini.",
+    "recognitionUnavailable": "Berkas yang diperlukan untuk pengenalan teks belum bisa diunduh saat ini. Pastikan perangkat ini terhubung ke internet dan sakelar internet di Pengaturan menyala, lalu impor lagi."
   },
   "search": {
     "placeholder": "Cari di materi saya",

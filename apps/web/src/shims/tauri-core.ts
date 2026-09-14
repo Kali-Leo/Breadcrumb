@@ -12,6 +12,7 @@
  * Main exports: invoke.
  */
 import { embeddingSpeed, embedTextsInBrowser } from "./embeddings";
+import { recognizePageInBrowser } from "./ocr";
 import { exportDatabaseFile, importDatabaseFile, openBrowserDatabase } from "./sqlite";
 
 /** Thrown for commands this build genuinely cannot provide. The message reaches the same
@@ -27,7 +28,24 @@ interface TransactionArgs {
   statements: { sql: string; params: unknown[] }[];
 }
 
-export async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+/** Tauri's own signature: a JSON object, or raw bytes with the rest of the call in headers.
+ * The desktop reads the headers on the Rust side; here they are read the same way. */
+type InvokeArgs = Record<string, unknown> | number[] | ArrayBuffer | Uint8Array;
+interface InvokeOptions {
+  headers: HeadersInit;
+}
+
+function header(options: InvokeOptions | undefined, name: string): string {
+  const value = new Headers(options?.headers).get(name);
+  if (value === null) throw new Error(`${name} header is missing`);
+  return value;
+}
+
+export async function invoke<T>(
+  command: string,
+  args?: InvokeArgs,
+  options?: InvokeOptions,
+): Promise<T> {
   switch (command) {
     case "open_app_database": {
       await openBrowserDatabase();
@@ -66,6 +84,16 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
     // The desktop build's invoke rejects on this name, which reads as "nothing to say".
     case "embedding_speed":
       return embeddingSpeed() as T;
+
+    // Reading a scanned page. The pixels arrive as the raw body, the way the Rust command
+    // takes them, and the size and the network switch ride in the headers.
+    case "ocr_page": {
+      if (!(args instanceof Uint8Array)) throw new Error("ocr_page takes raw RGBA bytes");
+      const width = Number(header(options, "x-width"));
+      const height = Number(header(options, "x-height"));
+      const allowDownload = header(options, "x-allow-download") === "1";
+      return (await recognizePageInBrowser(args, width, height, allowDownload)) as T;
+    }
 
     // Fitting FSRS parameters to one learner's own review history needs the fsrs-rs crate.
     // It is an optimisation over library defaults that only fires past 400 reviews, so its

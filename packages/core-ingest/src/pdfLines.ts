@@ -15,7 +15,11 @@
  *
  * All of this is separated from pdf.js on purpose: it is the part that can be wrong, so it is
  * the part that has tests.
- * Main exports: PdfLine, groupIntoLines, inferHeadingLevels, linesToBlocks.
+ * A page that had no text layer and was read by OCR instead carries no heights at all, so
+ * nothing on it can be a heading. Such a page becomes one block named after the page —
+ * "书名 → 第 12 页" — under whatever heading the text-layer pages before it had reached.
+ * Main exports: PdfLine, PdfPageContent, groupIntoLines, inferHeadingLevels, linesToBlocks,
+ * pagesToBlocks.
  */
 import type { DocumentBlock } from "./chunking";
 import { MAX_HEADING_DEPTH } from "./markdown";
@@ -109,25 +113,49 @@ export function inferHeadingLevels(lines: readonly PdfLine[]): number[] {
 
 /** Lines and their levels into blocks, with `title` as the outermost path element. */
 export function linesToBlocks(lines: readonly PdfLine[], title: string): DocumentBlock[] {
-  const levels = inferHeadingLevels(lines);
+  return pagesToBlocks([{ lines }], title);
+}
+
+/** One page of a PDF: its text-layer lines, or — when it had none worth keeping — the lines
+ * text recognition read off its image, and the name the page goes by in the heading path. */
+export interface PdfPageContent {
+  lines: readonly PdfLine[];
+  recognized?: { label: string; lines: readonly string[] };
+}
+
+/**
+ * Pages into blocks, in order. Heading levels are inferred over the text-layer lines of every
+ * page at once, because "the most common height" is a property of the book, not of a page;
+ * recognized pages have no heights and take no part in it.
+ */
+export function pagesToBlocks(pages: readonly PdfPageContent[], title: string): DocumentBlock[] {
+  const levels = inferHeadingLevels(pages.flatMap((page) => page.lines));
   const blocks: DocumentBlock[] = [];
   const stack: string[] = [];
   let buffer: string[] = [];
+  let index = 0;
   const flush = () => {
     const text = buffer.join("\n").trim();
     buffer = [];
     if (text !== "") blocks.push({ headings: [title, ...stack], text });
   };
-  lines.forEach((line, index) => {
-    const level = levels[index] ?? 0;
-    if (level === 0) {
-      buffer.push(line.text);
-      return;
+  for (const page of pages) {
+    for (const line of page.lines) {
+      const level = levels[index] ?? 0;
+      index += 1;
+      if (level === 0) {
+        buffer.push(line.text);
+        continue;
+      }
+      flush();
+      stack.length = Math.min(stack.length, level - 1);
+      stack[level - 1] = line.text;
     }
+    if (page.recognized === undefined) continue;
     flush();
-    stack.length = Math.min(stack.length, level - 1);
-    stack[level - 1] = line.text;
-  });
+    const text = page.recognized.lines.join("\n").trim();
+    if (text !== "") blocks.push({ headings: [title, ...stack, page.recognized.label], text });
+  }
   flush();
   return blocks;
 }

@@ -22,10 +22,10 @@ export interface PickedFile {
 }
 
 /** What the file input offers. Mirrors LIBRARY_MEDIA_TYPES. */
-export const LIBRARY_FILE_ACCEPT = ".pdf,.md,.markdown,.txt";
+export const LIBRARY_FILE_ACCEPT = ".pdf,.md,.markdown,.txt,.png,.jpg,.jpeg";
 
 /** The extensions the desktop dialog filters on — the same list, without the dots. */
-const DIALOG_EXTENSIONS = ["pdf", "md", "markdown", "txt"];
+const DIALOG_EXTENSIONS = ["pdf", "md", "markdown", "txt", "png", "jpg", "jpeg"];
 
 async function pickInBrowser(): Promise<PickedFile | null> {
   return new Promise((resolve) => {

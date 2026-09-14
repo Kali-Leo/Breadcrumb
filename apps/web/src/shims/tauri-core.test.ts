@@ -13,6 +13,7 @@ const exportDatabaseFile = vi.fn();
 const importDatabaseFile = vi.fn();
 const openBrowserDatabase = vi.fn(async () => ({ transaction }));
 const embedTextsInBrowser = vi.fn();
+const recognizePageInBrowser = vi.fn();
 
 vi.mock("./sqlite", () => ({
   openBrowserDatabase: () => openBrowserDatabase(),
@@ -21,6 +22,10 @@ vi.mock("./sqlite", () => ({
 }));
 vi.mock("./embeddings", () => ({
   embedTextsInBrowser: (texts: string[], allow: boolean) => embedTextsInBrowser(texts, allow),
+}));
+vi.mock("./ocr", () => ({
+  recognizePageInBrowser: (rgba: Uint8Array, width: number, height: number, allow: boolean) =>
+    recognizePageInBrowser(rgba, width, height, allow),
 }));
 
 const { invoke } = await import("./tauri-core");
@@ -71,6 +76,21 @@ describe("what the browser answers when the app calls a Rust command", () => {
       [0.1],
     ]);
     expect(embedTextsInBrowser).toHaveBeenCalledWith(["a"], true);
+  });
+
+  it("hands a page's pixels and the headers that describe them to the recognizer", async () => {
+    const rgba = new Uint8Array(2 * 3 * 4);
+    recognizePageInBrowser.mockResolvedValue([{ text: "第一章", score: 0.9 }]);
+    await expect(
+      invoke("ocr_page", rgba, {
+        headers: { "x-width": "2", "x-height": "3", "x-allow-download": "1" },
+      }),
+    ).resolves.toEqual([{ text: "第一章", score: 0.9 }]);
+    expect(recognizePageInBrowser).toHaveBeenCalledWith(rgba, 2, 3, true);
+  });
+
+  it("refuses a page that did not arrive as raw bytes, the way the Rust command does", async () => {
+    await expect(invoke("ocr_page", { rgba: [1, 2, 3] })).rejects.toThrow("raw RGBA bytes");
   });
 
   it.each(REFUSED)("refuses %s by name", async (command) => {
