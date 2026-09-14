@@ -68,13 +68,13 @@ export function Sidebar({
   // Discovery is in both editions: it reads this app's own database, so there is nothing
   // left for one edition to have and the other to lack.
   const navEntries: NavEntry[] = [
-    [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
+    [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
+    [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
+    [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
     // The one nav label that does not live in `common`: every string this feature added
     // is in its own namespace, and one key in two places is how catalogues drift.
     [BookOpen, tLibrary("title"), onOpenLibrary, activeView === "library"],
-    [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
-    [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
-    [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
+    [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
   ];
 
   return (
@@ -116,8 +116,7 @@ export function Sidebar({
           <TrailList isChatViewActive={activeView === "chat"} onOpenChat={onOpenChat} />
         )}
       </nav>
-      {/* Icon order and even spread: 设置 · 词汇 · 地图 · 伙伴,
-          with 发现 added in front of the map.
+      {/* Icon order: 地图 · 发现 · 词汇 · 我的资料 · 设置 · 伙伴.
           One Lucide line-icon set (emoji mixed with a text glyph could never look uniform). */}
       <SidebarNav
         entries={navEntries}
