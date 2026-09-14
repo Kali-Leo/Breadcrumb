@@ -104,7 +104,6 @@
     "estimate": "environ {{cost}} {{cadence}}",
     "estimateUnknownModel": "Le modèle utilisé n'est pas dans la liste de prix intégrée, il n'y a donc pas d'estimation par utilisation",
     "estimateFree": "Ne coûte rien",
-    "estimateUnmeasured": "Le coût d'une utilisation n'a pas encore été mesuré",
     "cadencePerRound": "par échange",
     "cadencePerMessage": "par message envoyé",
     "cadencePerAnswer": "par réponse",
@@ -132,7 +131,7 @@
       "webSearchEvidence": {
         "name": "Recherche sur le web ouvert pour les preuves (Zhipu)",
         "price": "environ ¥{{price}} par requête",
-        "hint": "Quand c'est activé, le service de recherche de Zhipu est sollicité pour trouver des sources sur le web ouvert en plus de Wikidata et de Wikipédia, ce qui atteint des éléments qu'une encyclopédie n'a jamais consignés. Facturé à la requête sur le compte Zhipu, à part du service d'IA ci-dessus ; dans l'édition navigateur sur un réseau de Chine continentale, c'est la seule source disponible. Chinois, anglais et swahili seulement : dans les autres langues, les résultats se sont révélés peu fiables aux tests et cette voie n'est pas utilisée pour elles.",
+        "hint": "Quand c'est activé, le service de recherche de Zhipu est sollicité pour trouver des sources sur le web ouvert en plus de Wikidata et de Wikipédia, ce qui atteint des éléments qu'une encyclopédie n'a jamais consignés. Facturé à la requête sur le compte Zhipu ; dans l'édition navigateur sur un réseau de Chine continentale, c'est la seule source disponible. Chinois, anglais et swahili seulement.",
         "disclosure": "Quand c'est activé, les termes de recherche extraits de la question sont envoyés à un moteur de recherche. C'est un nouveau canal sortant.",
         "keyLabel": "Clé API du service de recherche Zhipu",
         "keyPlaceholder": "À obtenir sur open.bigmodel.cn, puis à saisir ici",
@@ -168,7 +167,7 @@
       },
       "feedbackLab": {
         "name": "Ces derniers temps",
-        "hint": "Le panneau de revue à côté de la carte, entièrement calculé à partir de données locales et sans coût."
+        "hint": "Le panneau de revue à côté de la carte, entièrement calculé à partir de données locales."
       },
       "trailSummary": {
         "name": "La trace d'hier",
@@ -197,7 +196,7 @@
     }
   },
   "research": {
-    "panelIntro": "Chaque chiffre de cette page a été calculé par cette machine. Les tâches de recherche sont relues et leurs sources vérifiables ; les données ne quittent pas cet appareil d'elles-mêmes, et rien de tout cela n'a de coût.",
+    "panelIntro": "Chaque chiffre de cette page a été calculé par cette machine. Les tâches de recherche sont relues et leurs sources vérifiables.",
     "offNotice": "Les tâches de recherche sont éteintes : aucune nouvelle tâche ne sera exécutée. Les résultats existants sont conservés et peuvent être lus ou supprimés un par un.",
     "loading": "Chargement",
     "emptyTitle": "Pas encore de résultat de recherche",
@@ -222,10 +221,9 @@
     "deleteConfirmPrompt": "Un résultat supprimé ne peut pas être rétabli.",
     "deleteConfirmAction": "Supprimer",
     "settingsRowTitle": "Recherche",
-    "settingsRowHint": "Exécute localement des tâches de recherche relues et affiche les résultats ; les données ne quittent pas cet appareil d'elles-mêmes et cela ne coûte rien.",
+    "settingsRowHint": "Exécute localement des tâches de recherche relues et affiche les résultats.",
     "closeConfirmTitle": "Éteindre la plateforme de recherche",
     "closeConfirmWhatItDoes": "La plateforme de recherche exécute localement des tâches relues et signées par le projet, calcule les statistiques et les affiche.",
-    "closeConfirmDataStaysLocal": "Tout le calcul se fait localement, et les données ne quittent pas cet appareil d'elles-mêmes.",
     "closeConfirmResearchValue": "Des statistiques agrégées locales de ce type permettent aux chercheurs d'étudier comment les gens apprennent sans recueillir de données personnelles.",
     "closeConfirmWhatChanges": "Une fois éteinte, aucune tâche de recherche ne sera exécutée et cette question ne sera plus posée. Les résultats existants ne sont pas affectés et restent dans le panneau.",
     "closeConfirmAction": "L'éteindre"

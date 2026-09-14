@@ -26,7 +26,7 @@
     "pairDownloadFailed": "词库未下载完成，可以重新选择。当前语言保持不变。",
     "noPackForLanguage": "AI 当前以{{language}}回答，该语言尚无词库。已有词库的语言：{{languages}}。将 AI 回答的语言改为其中一种即可开始学习。",
     "placementTitle": "词汇量测试",
-    "placementHint": "30 个词，约两分钟。测试后新词从已掌握的水平开始，无需从最简单的词看起。可以跳过。",
+    "placementHint": "30 个词，约两分钟。测试后新词从已掌握的水平开始。可以跳过。",
     "placementStart": "开始",
     "placementRetake": "重新测试",
     "placementSkip": "跳过测试",

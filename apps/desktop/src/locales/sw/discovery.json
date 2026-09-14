@@ -2,7 +2,7 @@
   "title": "Gundua",
   "setup": {
     "title": "Gundua",
-    "intro": "Baada ya skripti moja ya kivinjari kusakinishwa, unachotazama kwenye Bilibili na YouTube huonekana kwenye ukurasa huu. Kila kitu huchakatwa kwenye kifaa chako mwenyewe na hakitumwi popote.",
+    "intro": "Baada ya skripti moja ya kivinjari kusakinishwa, unachotazama kwenye Bilibili na YouTube huonekana kwenye ukurasa huu. Kila kitu huchakatwa kwenye kifaa chako mwenyewe.",
     "step1Title": "Hatua ya 1: sakinisha kiendelezi cha kivinjari kinachoweza kuendesha skripti",
     "step1Body": "Violentmonkey ni bure. Kisakinishe, kisha urudi kwenye ukurasa huu.",
     "step1Button": "Fungua ukurasa wa usakinishaji wa Violentmonkey",
@@ -13,11 +13,11 @@
     "step3Title": "Hatua ya 3: unganisha kivinjari",
     "step3Body": "Fungua ukurasa wa mwanzo wa Bilibili, bofya aikoni ya kiungo iliyo chini kushoto ya upau wa swichi, na ubandike msimbo ulio hapa chini. Rudia mara moja kwenye ukurasa wa mwanzo wa YouTube.",
     "step3TitleWeb": "Hatua ya 3: acha Breadcrumb ikiwa wazi",
-    "step3BodyWeb": "Skripti hukabidhi ilichorekodi wakati wowote Breadcrumb ikiwa wazi. Hakuna kingine kinachohitajika.",
+    "step3BodyWeb": "Skripti hukabidhi ilichorekodi wakati wowote Breadcrumb ikiwa wazi.",
     "codeUsed": "Msimbo uliopita umetumika. Msimbo mpya unatengenezwa.",
     "connected": "Imeunganishwa. Tumia Bilibili na YouTube kama kawaida; unachotazama kitaonekana kwenye ukurasa huu."
   },
-  "intro": "Ukurasa huu unaonyesha yaliyotazamwa kwenye Bilibili na YouTube, na mada zinazovutia. Kila kitu huchakatwa kwenye kompyuta hii na hakitumwi mahali pengine.",
+  "intro": "Ukurasa huu unaonyesha yaliyotazamwa kwenye Bilibili na YouTube, na mada zinazovutia. Kila kitu huchakatwa kwenye kompyuta hii.",
   "emotion": {
     "title": "Jinsi maudhui yalivyokugusa",
     "all": "Yote",

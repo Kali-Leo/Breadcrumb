@@ -103,7 +103,6 @@
     "estimate": "takribani {{cost}} {{cadence}}",
     "estimateUnknownModel": "Modeli inayotumika haipo kwenye orodha ya bei iliyojengwa ndani, hivyo makadirio kwa kila matumizi hayapatikani",
     "estimateFree": "Haigharimu chochote",
-    "estimateUnmeasured": "Gharama ya matumizi moja bado haijapimwa",
     "cadencePerRound": "kwa kila mzunguko wa mazungumzo",
     "cadencePerMessage": "kwa kila ujumbe unaotumwa",
     "cadencePerAnswer": "kwa kila jibu",
@@ -131,7 +130,7 @@
       "webSearchEvidence": {
         "name": "Utafutaji wa ushahidi kwenye wavuti huria (Zhipu)",
         "price": "takriban ¥{{price}} kwa utafutaji",
-        "hint": "Ikiwa imewashwa, huduma ya utafutaji ya Zhipu huombwa kutafuta vyanzo kwenye wavuti huria zaidi ya Wikidata na Wikipedia, jambo linalofikia mambo ambayo ensaiklopidia haijawahi kuandika. Hutozwa kwa kila ombi kwenye akaunti ya Zhipu, tofauti na huduma ya AI hapo juu; kwenye toleo la kivinjari katika mtandao wa China bara ndicho chanzo pekee kinachopatikana. Kichina, Kiingereza na Kiswahili pekee: matokeo katika lugha nyingine yalionekana kutoaminika kwenye majaribio, hivyo njia hii haitumiki kwazo.",
+        "hint": "Ikiwa imewashwa, huduma ya utafutaji ya Zhipu huombwa kutafuta vyanzo kwenye wavuti huria zaidi ya Wikidata na Wikipedia, jambo linalofikia mambo ambayo ensaiklopidia haijawahi kuandika. Hutozwa kwa kila ombi kwenye akaunti ya Zhipu; kwenye toleo la kivinjari katika mtandao wa China bara ndicho chanzo pekee kinachopatikana. Kichina, Kiingereza na Kiswahili pekee.",
         "disclosure": "Ikiwa imewashwa, maneno ya utafutaji yaliyotolewa kutoka swali hutumwa kwa injini ya utafutaji. Hii ni njia mpya ya kutoka nje.",
         "keyLabel": "Ufunguo wa API wa huduma ya utafutaji ya Zhipu",
         "keyPlaceholder": "Upate kwenye open.bigmodel.cn na uuweke hapa",
@@ -167,7 +166,7 @@
       },
       "feedbackLab": {
         "name": "Hivi karibuni",
-        "hint": "Kidirisha cha kupitia kando ya ramani, kinachohesabiwa kabisa kwa data ya hapa hapa na kisichogharimu chochote."
+        "hint": "Kidirisha cha kupitia kando ya ramani, kinachohesabiwa kabisa kwa data ya hapa hapa."
       },
       "trailSummary": {
         "name": "Nyayo za jana",
@@ -196,7 +195,7 @@
     }
   },
   "research": {
-    "panelIntro": "Kila namba kwenye ukurasa huu imehesabiwa na mashine hii. Kazi za utafiti zimepitiwa na vyanzo vyake vinaweza kukaguliwa; data haitoki yenyewe kwenye kifaa hiki, na hakuna kinachogharimu chochote.",
+    "panelIntro": "Kila namba kwenye ukurasa huu imehesabiwa na mashine hii. Kazi za utafiti zimepitiwa na vyanzo vyake vinaweza kukaguliwa.",
     "offNotice": "Kazi za utafiti zimezimwa: hakuna kazi mpya itakayoendeshwa. Matokeo yaliyopo yanahifadhiwa na yanaweza kusomwa au kufutwa moja baada ya jingine.",
     "loading": "Inapakia",
     "emptyTitle": "Bado hakuna matokeo ya utafiti",
@@ -221,10 +220,9 @@
     "deleteConfirmPrompt": "Matokeo yaliyofutwa hayawezi kurudishwa.",
     "deleteConfirmAction": "Futa",
     "settingsRowTitle": "Utafiti",
-    "settingsRowHint": "Huendesha kazi za utafiti zilizopitiwa hapa hapa na huonyesha matokeo; data haitoki yenyewe kwenye kifaa hiki na haigharimu chochote.",
+    "settingsRowHint": "Huendesha kazi za utafiti zilizopitiwa hapa hapa na huonyesha matokeo.",
     "closeConfirmTitle": "Kuzima jukwaa la utafiti",
     "closeConfirmWhatItDoes": "Jukwaa la utafiti huendesha hapa hapa kazi zilizopitiwa na kusainiwa na mradi, huhesabu takwimu na kuzionyesha.",
-    "closeConfirmDataStaysLocal": "Hesabu zote hufanyika hapa hapa, na data haitoki yenyewe kwenye kifaa hiki.",
     "closeConfirmResearchValue": "Takwimu za jumla za hapa hapa za aina hii huwezesha watafiti kusoma jinsi watu wanavyojifunza bila kukusanya data binafsi.",
     "closeConfirmWhatChanges": "Baada ya kuzima hakuna kazi ya utafiti itakayoendeshwa na swali hili halitaulizwa tena. Matokeo yaliyopo hayaathiriki na yanabaki kwenye kidirisha.",
     "closeConfirmAction": "Izime"

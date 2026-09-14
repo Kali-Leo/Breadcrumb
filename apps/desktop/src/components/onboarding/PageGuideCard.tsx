@@ -1,6 +1,6 @@
 /**
- * Purpose: one page's own short note — what the page is, what it is for, and what it does not
- * do — as a small card in the corner rather than a screen-filling dialog.
+ * Purpose: one page's own short note — what the page is and what it is for — as a small card
+ * in the corner rather than a screen-filling dialog.
  *
  * Deliberately not a modal: the point of these is to be read next to the thing they describe,
  * so the page stays visible and stays usable while the card is up. It sits in the top corner
@@ -50,10 +50,6 @@ export function PageGuideCard({ page, onDismiss }: PageGuideCardProps) {
           <span>{t(`pageGuide.${page}.point2` as never)}</span>
         </li>
       </ul>
-
-      <p className="mt-3 border-stone-100 border-t pt-3 text-sm text-stone-500 leading-relaxed">
-        {t(`pageGuide.${page}.limit` as never)}
-      </p>
 
       <button
         type="button"

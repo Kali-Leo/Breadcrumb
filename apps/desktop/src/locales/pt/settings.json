@@ -104,7 +104,6 @@
     "estimate": "cerca de {{cost}} {{cadence}}",
     "estimateUnknownModel": "O modelo em uso não está na lista de preços embutida, portanto não há estimativa por uso",
     "estimateFree": "Não custa nada",
-    "estimateUnmeasured": "O custo de um uso ainda não foi medido",
     "cadencePerRound": "por troca de mensagens",
     "cadencePerMessage": "por mensagem enviada",
     "cadencePerAnswer": "por resposta",
@@ -132,7 +131,7 @@
       "webSearchEvidence": {
         "name": "Busca na web aberta para evidências (Zhipu)",
         "price": "cerca de ¥{{price}} por consulta",
-        "hint": "Enquanto está ligado, o serviço de busca da Zhipu é acionado para encontrar fontes na web aberta, além da Wikidata e da Wikipédia, o que alcança material que uma enciclopédia nunca registrou. É cobrado por consulta na conta Zhipu, separado do serviço de IA acima; na edição para navegador em uma rede da China continental é a única fonte disponível. Apenas chinês, inglês e suaíli: nos outros idiomas os resultados se mostraram pouco confiáveis nos testes e este caminho não é usado para eles.",
+        "hint": "Enquanto está ligado, o serviço de busca da Zhipu é acionado para encontrar fontes na web aberta, além da Wikidata e da Wikipédia, o que alcança material que uma enciclopédia nunca registrou. É cobrado por consulta na conta Zhipu; na edição para navegador em uma rede da China continental é a única fonte disponível. Apenas chinês, inglês e suaíli.",
         "disclosure": "Enquanto está ligado, os termos de busca extraídos da pergunta são enviados a um mecanismo de busca. É um novo canal de saída.",
         "keyLabel": "Chave de API do serviço de busca da Zhipu",
         "keyPlaceholder": "Obtenha em open.bigmodel.cn e insira aqui",
@@ -168,7 +167,7 @@
       },
       "feedbackLab": {
         "name": "Recentemente",
-        "hint": "O painel de revisão ao lado do mapa, calculado inteiramente com dados locais e sem custo."
+        "hint": "O painel de revisão ao lado do mapa, calculado inteiramente com dados locais."
       },
       "trailSummary": {
         "name": "O rastro de ontem",
@@ -197,7 +196,7 @@
     }
   },
   "research": {
-    "panelIntro": "Todos os números desta página foram calculados por esta máquina. As tarefas de pesquisa são revisadas e suas fontes podem ser conferidas; os dados não saem sozinhos deste aparelho e nada disso tem custo.",
+    "panelIntro": "Todos os números desta página foram calculados por esta máquina. As tarefas de pesquisa são revisadas e suas fontes podem ser conferidas.",
     "offNotice": "As tarefas de pesquisa estão desligadas: nenhuma nova será executada. Os resultados existentes são mantidos e podem ser lidos ou apagados um a um.",
     "loading": "Carregando",
     "emptyTitle": "Ainda não há resultados de pesquisa",
@@ -222,10 +221,9 @@
     "deleteConfirmPrompt": "Um resultado apagado não pode ser restaurado.",
     "deleteConfirmAction": "Apagar",
     "settingsRowTitle": "Pesquisa",
-    "settingsRowHint": "Executa localmente tarefas de pesquisa revisadas e mostra os resultados; os dados não saem sozinhos deste aparelho e não custa nada.",
+    "settingsRowHint": "Executa localmente tarefas de pesquisa revisadas e mostra os resultados.",
     "closeConfirmTitle": "Desligar a plataforma de pesquisa",
     "closeConfirmWhatItDoes": "A plataforma de pesquisa executa localmente tarefas revisadas e assinadas pelo projeto, calcula as estatísticas e as exibe.",
-    "closeConfirmDataStaysLocal": "Todo o cálculo acontece localmente, e os dados não saem sozinhos deste aparelho.",
     "closeConfirmResearchValue": "Estatísticas agregadas locais deste tipo permitem que pesquisadores estudem como as pessoas aprendem sem recolher dados pessoais.",
     "closeConfirmWhatChanges": "Uma vez desligado, nenhuma tarefa de pesquisa será executada e esta pergunta não será feita de novo. Os resultados existentes não são afetados e permanecem no painel.",
     "closeConfirmAction": "Desligar"

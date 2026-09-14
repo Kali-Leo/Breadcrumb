@@ -26,7 +26,7 @@
     "pairDownloadFailed": "Upakuaji haukukamilika. Inaweza kuchaguliwa tena. Lugha ya sasa haijabadilika.",
     "noPackForLanguage": "Kwa sasa AI hujibu kwa {{language}}, na hakuna data ya maneno ya lugha hiyo. Data ya maneno ipo kwa: {{languages}}. Kubadilisha lugha ambayo AI hujibu kwayo iwe mojawapo huruhusu kujifunza kuanza.",
     "placementTitle": "Jaribio la msamiati",
-    "placementHint": "Maneno thelathini, kama dakika mbili. Baadaye maneno mapya huanzia kiwango kilichofikiwa tayari, si tangu mwanzo kabisa. Jaribio linaweza kurukwa.",
+    "placementHint": "Maneno thelathini, kama dakika mbili. Baadaye maneno mapya huanzia kiwango kilichofikiwa tayari. Jaribio linaweza kurukwa.",
     "placementStart": "Anza",
     "placementRetake": "Fanya jaribio tena",
     "placementSkip": "Ruka jaribio",

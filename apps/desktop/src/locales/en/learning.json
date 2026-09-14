@@ -26,7 +26,7 @@
     "pairDownloadFailed": "The download did not finish. It can be selected again. The current language is unchanged.",
     "noPackForLanguage": "The AI currently answers in {{language}}, and there is no word data for that language. Word data exists for: {{languages}}. Changing the language the AI answers in to one of those allows learning to start.",
     "placementTitle": "Vocabulary check",
-    "placementHint": "Thirty words, about two minutes. Afterwards new words start from the level already reached, rather than from the very beginning. It can be skipped.",
+    "placementHint": "Thirty words, about two minutes. Afterwards new words start from the level already reached. It can be skipped.",
     "placementStart": "Start",
     "placementRetake": "Take it again",
     "placementSkip": "Skip the check",

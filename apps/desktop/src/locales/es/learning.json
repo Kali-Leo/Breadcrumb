@@ -26,7 +26,7 @@
     "pairDownloadFailed": "La descarga no terminó. Se puede seleccionar de nuevo. El idioma actual no cambia.",
     "noPackForLanguage": "La IA responde actualmente en {{language}} y no hay datos de palabras para ese idioma. Hay datos de palabras para: {{languages}}. Cambiar a uno de esos el idioma en que responde la IA permite empezar a aprender.",
     "placementTitle": "Comprobación de vocabulario",
-    "placementHint": "Treinta palabras, unos dos minutos. Después las palabras nuevas empiezan en el nivel ya alcanzado, en lugar de desde el principio. Se puede omitir.",
+    "placementHint": "Treinta palabras, unos dos minutos. Después las palabras nuevas empiezan en el nivel ya alcanzado. Se puede omitir.",
     "placementStart": "Empezar",
     "placementRetake": "Volver a hacerlo",
     "placementSkip": "Omitir la comprobación",

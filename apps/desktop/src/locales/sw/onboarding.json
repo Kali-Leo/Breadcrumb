@@ -5,11 +5,11 @@
   "welcome": {
     "label": "Utangulizi",
     "card1Title": "Utangulizi",
-    "card1Body": "Breadcrumb ni mwenzako wa kujifunza. Chochote unachotaka kuelewa kinaweza kujadiliwa hapa na AI; kando ya majibu, yaliyozungumzwa yanarekodiwa yenyewe. Hakuna madokezo ya kuandika wala kuripoti kila siku.",
+    "card1Body": "Breadcrumb ni mwenzako wa kujifunza. Chochote unachotaka kuelewa kinaweza kujadiliwa hapa na AI; kando ya majibu, yaliyozungumzwa yanarekodiwa yenyewe.",
     "card2Title": "Mazungumzo hukuza ramani",
-    "card2Body": "Kila dhana inayojitokeza inakuwa kisiwa kwenye ramani, ikiwekwa na kupangwa yenyewe. Maeneo yasiyoguswa kwa muda hufifia, jambo linaloonyesha sehemu zilizowekwa kando, si ubora wa matokeo yako.",
+    "card2Body": "Kila dhana inayojitokeza inakuwa kisiwa kwenye ramani, ikiwekwa na kupangwa yenyewe. Maeneo yasiyoguswa kwa muda hufifia, jambo linaloonyesha sehemu zilizowekwa kando.",
     "card3Title": "Data inakaa wapi, na kinachogharimu",
-    "card3Body": "Mazungumzo, ramani na msamiati vyote vinahifadhiwa kwenye kompyuta hii. Hakuna akaunti wala usawazishaji wa wingu. Kinachogharimu ni huduma ya AI unayoiweka mwenyewe, ikilipiwa kwa matumizi; kila kipengele kinachotumia fedha kinaweza kuzimwa peke yake, na bei yake imeandikwa kando yake katika mipangilio.",
+    "card3Body": "Mazungumzo, ramani na msamiati vyote vinahifadhiwa kwenye kompyuta hii. Kinachogharimu ni huduma ya AI unayoiweka mwenyewe, ikilipiwa kwa matumizi; kila kipengele kinachotumia fedha kinaweza kuzimwa peke yake, na bei yake imeandikwa kando yake katika mipangilio.",
     "start": "Anza",
     "tryDemo": "Pakia data ya mfano kwanza",
     "demoNote": "Mfano ni kumbukumbu ya kujifunza ya miezi mitatu na inaweza kuondolewa kwa hatua moja.",
@@ -24,11 +24,11 @@
     "trailTitle": "Mazungumzo yameorodheshwa kwenye upau wa kando",
     "trailBody": "Vichwa hutengenezwa vyenyewe, katika umbo la «dhana ya kwanza hadi dhana ya mwisho». Kichwa kikishabadilishwa jina kwa mkono, hakibadilishwi tena kamwe.",
     "mapTitle": "Mazungumzo hukuza ramani",
-    "mapBody": "Visiwa hivi vilikusanywa kutoka kwenye mazungumzo vyenyewe; hakuna kilichorekodiwa kwa mkono. Kusogeza juu huingia ngazi moja ndani.",
+    "mapBody": "Visiwa hivi vilikusanywa kutoka kwenye mazungumzo vyenyewe. Kusogeza juu huingia ngazi moja ndani.",
     "mapEmptyTitle": "Kwa sasa hii ni bahari wazi",
-    "mapEmptyBody": "Dhana zinazoguswa katika kila mzunguko wa mazungumzo huwa visiwa hapa zenyewe. Hakuna kinachohitaji kurekodiwa kwa mkono.",
+    "mapEmptyBody": "Dhana zinazoguswa katika kila mzunguko wa mazungumzo huwa visiwa hapa zenyewe.",
     "mirrorTitle": "Kufifia kwa rangi ni jambo la kawaida",
-    "mirrorBody": "Paneli hizi mbili zinaonyesha kiasi gani kimejifunzwa na kiasi gani bado kinakumbukwa. Sehemu zisizoguswa kwa muda mrefu hufifia zenyewe; hilo ni dokezo, si adhabu. Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii na hakigharimu chochote.",
+    "mirrorBody": "Paneli hizi mbili zinaonyesha kiasi gani kimejifunzwa na kiasi gani bado kinakumbukwa. Sehemu zisizoguswa kwa muda mrefu hufifia zenyewe. Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii.",
     "spendingTitle": "Gharama hutajwa mapema",
     "spendingBody": "Kila kipengele kinachogharimu fedha kiko kwenye ukurasa huu na kinaweza kuzimwa peke yake. Gharama ya takribani ya matumizi moja imeandikwa hapa kabla hakijawashwa, na namba hiyo imepimwa badala ya kukadiriwa.",
     "yourTurnTitle": "Uliza swali",
@@ -41,44 +41,38 @@
     "chat": {
       "title": "Kuzungumza na AI",
       "body": "Uliza chochote unachotaka kuelewa. Swichi iliyo juu huamua majibu yanavyokuja: hali ya kusoma hurudisha maswali na kukualika ueleze mwenyewe, na mazungumzo huru ni maongezi ya kawaida.",
-      "point1": "Dhana zinazojitokeza hupangwa kwenye ramani zenyewe, bila kitu cha kurekodiwa kwa mkono",
-      "point2": "Vichwa vya mazungumzo hutengenezwa vyenyewe na huacha kubadilika baada ya kubadilishwa jina kwa mkono",
-      "limit": "Haitengenezi ratiba, wala haitumi vikumbusho baada ya siku chache za kutokuwepo."
+      "point1": "Dhana zinazojitokeza hupangwa kwenye ramani zenyewe",
+      "point2": "Vichwa vya mazungumzo hutengenezwa vyenyewe na huacha kubadilika baada ya kubadilishwa jina kwa mkono"
     },
     "map": {
       "title": "Ramani ya yaliyojifunzwa",
       "body": "Kila kisiwa ni dhana iliyojadiliwa, iliyowekwa na kupangwa yenyewe. Kuingia ngazi moja ndani huonyesha undani, pamoja na mazungumzo yaliyoigusa.",
       "point1": "Sehemu nyeusi ziliguswa hivi karibuni; zilizofifia zimewekwa kando kwa muda",
-      "point2": "Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii na hakigharimu chochote",
-      "limit": "Si daftari: maingizo hayawezi kuongezwa kwa mkono, na ramani hukua kutokana na mazungumzo pekee."
+      "point2": "Kila kitu kwenye ukurasa huu huhesabiwa kwenye mashine hii"
     },
     "vocab": {
       "title": "Kujifunza lugha wakati wa mazungumzo",
       "body": "Hii ikiwashwa, baadhi ya maneno katika majibu ya AI huja kwa lugha inayojifunzwa, na yanaweza kukisiwa kabla maana kuonyeshwa. Ukurasa huu unaorodhesha maneno yanayoendelea, na hapa ndipo kamusi zinapopakuliwa na kubadilishwa.",
       "point1": "Jaribio la msamiati linaweza kufanywa kwanza, ili maneno mapya yaanzie kiwango kilichofikiwa tayari",
-      "point2": "Matamshi na maana yanatoka kwenye kamusi iliyopakuliwa, inayokaa kwenye mashine hii na kufanya kazi bila mtandao",
-      "limit": "Haifundishi sarufi wala haitoi seti za mazoezi; inabadilisha maneno tu ndani ya sentensi ambazo zingesomwa vivyo hivyo."
+      "point2": "Matamshi na maana yanatoka kwenye kamusi iliyopakuliwa, inayokaa kwenye mashine hii na kufanya kazi bila mtandao"
     },
     "discovery": {
       "title": "Yanayotazamwa kila siku, yamekusanywa katika ukurasa mmoja",
       "body": "Baada ya skripti ya kivinjari kusakinishwa, unachotazama kwenye Bilibili na YouTube hukusanywa hapa: maneno yanayojirudia, mada zilizojitokeza hivi karibuni, na maudhui marefu yaliyotazamwa. Yote huchakatwa kwenye kompyuta hii.",
       "point1": "Ukurasa huu hufunguka kabla skripti yoyote kusakinishwa, na huorodhesha hatua zinazohitajika",
-      "point2": "Kumbukumbu ya utazamaji inabaki kwenye mashine hii na haitumwi popote",
-      "limit": "Hauamui kitakachotazamwa wala hauwekei alama yaliyotazamwa."
+      "point2": "Kumbukumbu ya utazamaji inabaki kwenye mashine hii"
     },
     "companions": {
       "title": "Wenzako wanaokuja na maswali",
-      "body": "Kila siku wahusika wachache hufika na maswali yanayotokana na yaliyojifunzwa hivi karibuni. Kuwaeleza jambo ni njia ya kuangalia kama linaweza kuelezwa kwa uwazi. Mazungumzo haya hufanyika kwenye dirisha dogo la pekee na hayaathiri mazungumzo yaliyopo.",
+      "body": "Kila siku wahusika wachache hufika na maswali yanayotokana na yaliyojifunzwa hivi karibuni. Kuwaeleza jambo ni njia ya kuangalia kama linaweza kuelezwa kwa uwazi. Mazungumzo haya hufanyika kwenye dirisha dogo la pekee.",
       "point1": "Wanachouliza kinatoka kwenye kumbukumbu yako mwenyewe ya kujifunza",
-      "point2": "Kipengele kizima kinaweza kuzimwa katika mipangilio",
-      "limit": "Si watu halisi; ukiondoka hawasubiri wala hawakuiti urudi."
+      "point2": "Kipengele kizima kinaweza kuzimwa katika mipangilio"
     },
     "settings": {
       "title": "Ufunguo, lugha na matumizi",
       "body": "Hatua ya kwanza ni kuweka anwani na ufunguo wa huduma ya AI, bila ambayo vipengele vinavyotegemea AI haviwezi kufanya kazi. Ukurasa huu pia hubadilisha lugha ya kiolesura, lugha ambayo AI hujibu kwayo, na kama programu inaunganishwa na mtandao.",
       "point1": "«Swichi na matumizi» huorodhesha kila kipengele kinachogharimu fedha, kila kimoja na swichi yake na gharama ya takribani ya matumizi moja",
-      "point2": "Ufunguo huhifadhiwa kwenye kompyuta hii pekee na hautumwi nje pamoja na kitu chochote",
-      "limit": "Huduma ya AI yenyewe haitolewi hapa; ufunguo unapaswa kupatikana kutoka kwa mtoa huduma."
+      "point2": "Ufunguo huhifadhiwa kwenye kompyuta hii pekee"
     }
   },
   "checklist": {

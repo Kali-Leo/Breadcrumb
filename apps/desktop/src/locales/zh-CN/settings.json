@@ -102,7 +102,6 @@
     "estimate": "约 {{cost}} {{cadence}}",
     "estimateUnknownModel": "所用模型不在内置价目表中，无法估算单次花费",
     "estimateFree": "不产生费用",
-    "estimateUnmeasured": "该项尚未测量单次花费",
     "cadencePerRound": "每轮对话",
     "cadencePerMessage": "每条消息",
     "cadencePerAnswer": "每条回答",
@@ -130,7 +129,7 @@
       "webSearchEvidence": {
         "name": "联网搜索取证（智谱）",
         "price": "约 ¥{{price}}/次",
-        "hint": "开启后，除维基数据和维基百科外，还会通过智谱的搜索接口在公开网络上搜索资料，可以查到百科未收录的内容。按次计费，从智谱账号扣除，不计入上述 AI 服务的账单；在大陆网络下的网页版中，它是唯一可用的来源。仅对中文、英文、斯瓦希里语开放，其他语言的实测结果不可靠，不会启用。",
+        "hint": "开启后，除维基数据和维基百科外，还会通过智谱的搜索接口在公开网络上搜索资料，可以查到百科未收录的内容。按次计费，从智谱账号扣除；在大陆网络下的网页版中，它是唯一可用的来源。仅对中文、英文、斯瓦希里语开放。",
         "disclosure": "开启后，从问题中提取的检索词会发送给搜索引擎。这是一条新的外发渠道。",
         "keyLabel": "智谱搜索服务 API Key",
         "keyPlaceholder": "在 open.bigmodel.cn 申请后填写",
@@ -166,7 +165,7 @@
       },
       "feedbackLab": {
         "name": "这段时间",
-        "hint": "地图侧栏的回顾内容，全部由本地数据计算，不产生费用。"
+        "hint": "地图侧栏的回顾内容，全部由本地数据计算。"
       },
       "trailSummary": {
         "name": "昨天的足迹",
@@ -195,7 +194,7 @@
     }
   },
   "research": {
-    "panelIntro": "本页的统计结果均由本机计算；研究任务经过审查、来源可查，数据不会自动离开本设备，也不产生任何费用。",
+    "panelIntro": "本页的统计结果均由本机计算；研究任务经过审查、来源可查。",
     "offNotice": "研究课题已关闭：不再运行新的任务。已有结果仍然保留，可以逐条查看或删除。",
     "loading": "正在加载",
     "emptyTitle": "还没有研究结果",
@@ -220,10 +219,9 @@
     "deleteConfirmPrompt": "删除后该结果无法恢复。",
     "deleteConfirmAction": "确认删除",
     "settingsRowTitle": "研究课题",
-    "settingsRowHint": "在本地运行经审查的研究任务并展示结果；数据不会自动离开本设备，也不产生费用。",
+    "settingsRowHint": "在本地运行经审查的研究任务并展示结果。",
     "closeConfirmTitle": "关闭研究课题平台",
     "closeConfirmWhatItDoes": "研究课题平台在本地运行经审查、经项目方签名的研究任务，计算统计结果并展示。",
-    "closeConfirmDataStaysLocal": "全部计算在本地完成，数据不会自动离开本设备。",
     "closeConfirmResearchValue": "这类本地聚合统计，使研究者无需收集个人数据也能了解学习规律。",
     "closeConfirmWhatChanges": "关闭后不再运行任何研究任务，也不再询问是否关闭。已有结果不受影响，仍可在面板中查看或删除。",
     "closeConfirmAction": "确认关闭"

@@ -5,11 +5,11 @@
   "welcome": {
     "label": "Perkenalan",
     "card1Title": "Ini apa",
-    "card1Body": "Breadcrumb adalah teman belajar. Apa pun yang ingin kamu pahami dapat dibicarakan di sini dengan AI; di samping jawabannya, isi percakapan dicatat secara otomatis. Tidak ada catatan yang harus ditulis dan tidak ada absen harian.",
+    "card1Body": "Breadcrumb adalah teman belajar. Apa pun yang ingin kamu pahami dapat dibicarakan di sini dengan AI; di samping jawabannya, isi percakapan dicatat secara otomatis.",
     "card2Title": "Percakapan menumbuhkan peta",
-    "card2Body": "Setiap konsep yang muncul menjadi pulau di peta, ditempatkan dan dikelompokkan secara otomatis. Area yang lama tidak disentuh warnanya memudar, yang menandakan bagian mana yang dikesampingkan, bukan seberapa baik hasilmu.",
+    "card2Body": "Setiap konsep yang muncul menjadi pulau di peta, ditempatkan dan dikelompokkan secara otomatis. Area yang lama tidak disentuh warnanya memudar, yang menandakan bagian mana yang dikesampingkan.",
     "card3Title": "Tempat data disimpan, dan apa yang berbiaya",
-    "card3Body": "Percakapan, peta, dan kosakata semuanya tersimpan di komputer ini. Tidak ada akun dan tidak ada sinkronisasi awan. Yang berbiaya hanyalah layanan AI yang kamu sediakan sendiri, ditagih menurut pemakaian; setiap fitur yang mengeluarkan biaya dapat dimatikan sendiri-sendiri, dengan harganya tertulis di sebelahnya di pengaturan.",
+    "card3Body": "Percakapan, peta, dan kosakata semuanya tersimpan di komputer ini. Yang berbiaya hanyalah layanan AI yang kamu sediakan sendiri, ditagih menurut pemakaian; setiap fitur yang mengeluarkan biaya dapat dimatikan sendiri-sendiri, dengan harganya tertulis di sebelahnya di pengaturan.",
     "start": "Mulai",
     "tryDemo": "Muat data contoh dulu",
     "demoNote": "Data contoh adalah catatan belajar selama tiga bulan dan dapat dihapus dalam satu langkah.",
@@ -24,11 +24,11 @@
     "trailTitle": "Percakapan terdaftar di bilah sisi",
     "trailBody": "Judul dibuat otomatis, dalam bentuk «konsep pertama hingga konsep terakhir». Setelah judul diganti secara manual, judul itu tidak berubah lagi.",
     "mapTitle": "Percakapan menumbuhkan peta",
-    "mapBody": "Pulau-pulau ini disusun dari percakapan secara otomatis; tidak ada yang dicatat dengan tangan. Menggulir ke atas masuk satu tingkat ke dalam.",
+    "mapBody": "Pulau-pulau ini disusun dari percakapan secara otomatis. Menggulir ke atas masuk satu tingkat ke dalam.",
     "mapEmptyTitle": "Untuk sekarang ini laut lepas",
-    "mapEmptyBody": "Konsep yang dibahas dalam tiap pertukaran pesan otomatis menjadi pulau di sini. Tidak ada yang perlu dicatat dengan tangan.",
+    "mapEmptyBody": "Konsep yang dibahas dalam tiap pertukaran pesan otomatis menjadi pulau di sini.",
     "mirrorTitle": "Warna yang memudar adalah hal biasa",
-    "mirrorBody": "Kedua panel ini menunjukkan berapa banyak yang sudah dipelajari dan berapa yang masih diingat. Bagian yang lama tidak disentuh memudar dengan sendirinya; ini sebuah catatan, bukan hukuman. Semua di halaman ini dihitung di mesin ini dan tidak berbiaya.",
+    "mirrorBody": "Kedua panel ini menunjukkan berapa banyak yang sudah dipelajari dan berapa yang masih diingat. Bagian yang lama tidak disentuh memudar dengan sendirinya. Semua di halaman ini dihitung di mesin ini.",
     "spendingTitle": "Biaya disebutkan di awal",
     "spendingBody": "Setiap fitur yang berbiaya ada di halaman ini dan dapat dimatikan sendiri-sendiri. Perkiraan biaya sekali pakai tertulis di sini sebelum fitur dinyalakan, dan angka itu diukur, bukan dikira-kira.",
     "yourTurnTitle": "Ajukan pertanyaan",
@@ -41,44 +41,38 @@
     "chat": {
       "title": "Berbicara dengan AI",
       "body": "Tanyakan apa pun yang ingin kamu pahami. Sakelar di atas menentukan bentuk jawaban: mode belajar balik mengajukan pertanyaan dan mengajakmu menjelaskan sendiri, sedangkan obrolan bebas adalah percakapan biasa.",
-      "point1": "Konsep yang muncul masuk ke peta secara otomatis, tanpa ada yang perlu dicatat dengan tangan",
-      "point2": "Judul percakapan dibuat otomatis dan berhenti berubah setelah diganti secara manual",
-      "limit": "Ia tidak menyusun jadwal dan tidak mengirim pengingat setelah beberapa hari tanpa kunjungan."
+      "point1": "Konsep yang muncul masuk ke peta secara otomatis",
+      "point2": "Judul percakapan dibuat otomatis dan berhenti berubah setelah diganti secara manual"
     },
     "map": {
       "title": "Peta dari apa yang sudah dipelajari",
       "body": "Setiap pulau adalah konsep yang pernah dibicarakan, ditempatkan dan dikelompokkan secara otomatis. Turun satu tingkat menampilkan rinciannya, termasuk percakapan mana saja yang menyinggungnya.",
       "point1": "Yang gelap baru saja disentuh; yang pudar sudah lama dikesampingkan",
-      "point2": "Semua di halaman ini dihitung di mesin ini dan tidak berbiaya",
-      "limit": "Ini bukan buku catatan: entri tidak dapat ditambahkan dengan tangan, dan peta hanya tumbuh dari percakapan."
+      "point2": "Semua di halaman ini dihitung di mesin ini"
     },
     "vocab": {
       "title": "Belajar bahasa sambil mengobrol",
       "body": "Setelah dinyalakan, sebagian kata dalam jawaban AI datang dalam bahasa yang sedang dipelajari, dan dapat ditebak sebelum definisinya ditampilkan. Halaman ini memuat daftar kata yang sedang berjalan, dan dari sini pula kamus diunduh dan diganti.",
       "point1": "Cek kosakata dapat dilakukan lebih dulu, sehingga kata baru dimulai dari tingkat yang sudah dicapai",
-      "point2": "Pelafalan dan definisi berasal dari kamus terunduh yang tinggal di mesin ini dan bekerja tanpa jaringan",
-      "limit": "Ia tidak mengajarkan tata bahasa dan tidak menyediakan kumpulan latihan; ia hanya menukar kata pada kalimat yang memang akan dibaca."
+      "point2": "Pelafalan dan definisi berasal dari kamus terunduh yang tinggal di mesin ini dan bekerja tanpa jaringan"
     },
     "discovery": {
       "title": "Tontonan sehari-hari, terkumpul di satu halaman",
       "body": "Setelah skrip peramban dipasang, tontonan di Bilibili dan YouTube dikumpulkan di sini: kata yang sering muncul, topik yang belakangan bermunculan, dan tontonan panjang. Semuanya diolah di komputer ini.",
       "point1": "Halaman ini terbuka sebelum skrip apa pun dipasang, dan memuat langkah-langkah yang diperlukan",
-      "point2": "Catatan tontonan tinggal di mesin ini dan tidak pernah dikirim ke tempat lain",
-      "limit": "Ia tidak memutuskan apa yang harus ditonton dan tidak menilai apa yang sudah ditonton."
+      "point2": "Catatan tontonan tinggal di mesin ini"
     },
     "companions": {
       "title": "Teman yang datang membawa pertanyaan",
-      "body": "Setiap hari beberapa tokoh mampir dengan pertanyaan yang diambil dari materi yang baru dipelajari. Menjelaskan sesuatu kepada mereka adalah cara memeriksa apakah hal itu dapat dijelaskan dengan jelas. Percakapan ini berlangsung di jendela kecil tersendiri dan tidak memengaruhi percakapan yang ada.",
+      "body": "Setiap hari beberapa tokoh mampir dengan pertanyaan yang diambil dari materi yang baru dipelajari. Menjelaskan sesuatu kepada mereka adalah cara memeriksa apakah hal itu dapat dijelaskan dengan jelas. Percakapan ini berlangsung di jendela kecil tersendiri.",
       "point1": "Yang mereka tanyakan diambil dari catatan belajarmu sendiri",
-      "point2": "Seluruh fitur ini dapat dimatikan di pengaturan",
-      "limit": "Mereka bukan orang sungguhan; setelah kamu pergi mereka tidak menunggu dan tidak memanggilmu kembali."
+      "point2": "Seluruh fitur ini dapat dimatikan di pengaturan"
     },
     "settings": {
       "title": "Kunci, bahasa, dan pengeluaran",
       "body": "Langkah pertama adalah mengisi alamat dan kunci sebuah layanan AI, yang tanpanya fitur-fitur yang bergantung pada AI tidak dapat berjalan. Halaman ini juga mengganti bahasa antarmuka, bahasa jawaban AI, dan apakah aplikasi tersambung ke jaringan.",
       "point1": "«Sakelar dan pengeluaran» memuat setiap fitur yang berbiaya, masing-masing dengan sakelarnya dan perkiraan biaya sekali pakai",
-      "point2": "Kunci hanya tersimpan di komputer ini dan tidak pernah dikirim keluar bersama apa pun",
-      "limit": "Layanan AI-nya sendiri tidak disediakan di sini; kuncinya harus diperoleh dari penyedia."
+      "point2": "Kunci hanya tersimpan di komputer ini"
     }
   },
   "checklist": {

@@ -2,8 +2,8 @@
  * Purpose: the "about ¥0.0023 per exchange" line under each feature on the spending page —
  * what one use of this feature costs, worked out from this account's own recorded calls when
  * there are enough of them and from the measured purpose catalogue otherwise, at the
- * configured model's rates. Says plainly when it cannot know rather than showing a number
- * nobody stands behind.
+ * configured model's rates. Says so when the model's prices are unknown, and shows nothing at
+ * all for a feature nobody has measured yet, rather than a number nobody stands behind.
  * Main exports: BillingEstimateLine.
  */
 import { useTranslation } from "react-i18next";
@@ -48,7 +48,7 @@ export function BillingEstimateLine({
     return <p className="text-xs text-stone-400">{t("billing.estimateUnknownModel")}</p>;
   }
   if (estimate.kind === "unmeasured") {
-    return <p className="text-xs text-stone-400">{t("billing.estimateUnmeasured")}</p>;
+    return null;
   }
   return (
     <p className="text-xs text-stone-400">

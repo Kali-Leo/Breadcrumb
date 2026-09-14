@@ -103,7 +103,6 @@
     "estimate": "about {{cost}} {{cadence}}",
     "estimateUnknownModel": "The model in use is not in the built-in price list, so a per-use estimate is not available",
     "estimateFree": "Costs nothing",
-    "estimateUnmeasured": "The cost of one use has not been measured yet",
     "cadencePerRound": "per exchange",
     "cadencePerMessage": "per message sent",
     "cadencePerAnswer": "per answer",
@@ -131,7 +130,7 @@
       "webSearchEvidence": {
         "name": "Open-web search for evidence (Zhipu)",
         "price": "about ¥{{price}} per call",
-        "hint": "While this is on, Zhipu's search service is asked to find sources on the open web in addition to Wikidata and Wikipedia, which reaches material an encyclopaedia never recorded. It is billed per call to the Zhipu account, separately from the AI service above; in the browser edition on a mainland-China network it is the only source available. Chinese, English and Swahili only: results in other languages proved unreliable in testing and this route is not used for them.",
+        "hint": "While this is on, Zhipu's search service is asked to find sources on the open web in addition to Wikidata and Wikipedia, which reaches material an encyclopaedia never recorded. It is billed per call to the Zhipu account; in the browser edition on a mainland-China network it is the only source available. Chinese, English and Swahili only.",
         "disclosure": "While this is on, search terms extracted from the question are sent to a search engine. This is a new outbound channel.",
         "keyLabel": "Zhipu search service API key",
         "keyPlaceholder": "Obtain one at open.bigmodel.cn and enter it here",
@@ -167,7 +166,7 @@
       },
       "feedbackLab": {
         "name": "Recently",
-        "hint": "The review panel beside the map, computed entirely from local data and costing nothing."
+        "hint": "The review panel beside the map, computed entirely from local data."
       },
       "trailSummary": {
         "name": "Yesterday's trail",
@@ -196,7 +195,7 @@
     }
   },
   "research": {
-    "panelIntro": "Every number on this page was computed by this machine. The research tasks are reviewed and their sources can be checked; the data does not leave this device on its own, and none of it costs anything.",
+    "panelIntro": "Every number on this page was computed by this machine. The research tasks are reviewed and their sources can be checked.",
     "offNotice": "Research tasks are off: no new task will run. Existing results are kept and can be read or deleted one by one.",
     "loading": "Loading",
     "emptyTitle": "No research results yet",
@@ -221,10 +220,9 @@
     "deleteConfirmPrompt": "A deleted result cannot be restored.",
     "deleteConfirmAction": "Delete",
     "settingsRowTitle": "Research",
-    "settingsRowHint": "Runs reviewed research tasks locally and shows the results; the data does not leave this device on its own and it costs nothing.",
+    "settingsRowHint": "Runs reviewed research tasks locally and shows the results.",
     "closeConfirmTitle": "Turning off the research platform",
     "closeConfirmWhatItDoes": "The research platform runs reviewed, project-signed tasks locally, computes the statistics and displays them.",
-    "closeConfirmDataStaysLocal": "All computation happens locally, and the data does not leave this device on its own.",
     "closeConfirmResearchValue": "Local aggregate statistics of this kind let researchers study how people learn without collecting personal data.",
     "closeConfirmWhatChanges": "Once off, no research task will run and this question will not be asked again. Existing results are unaffected and remain in the panel.",
     "closeConfirmAction": "Turn it off"

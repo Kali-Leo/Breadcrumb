@@ -26,7 +26,7 @@
     "pairDownloadFailed": "Le téléchargement n'a pas abouti. Il peut être sélectionné de nouveau. La langue actuelle reste inchangée.",
     "noPackForLanguage": "L'IA répond actuellement en {{language}} et il n'existe pas de données de mots pour cette langue. Il en existe pour : {{languages}}. Changer la langue des réponses de l'IA pour l'une d'elles permet de commencer l'apprentissage.",
     "placementTitle": "Point vocabulaire",
-    "placementHint": "Trente mots, environ deux minutes. Ensuite, les mots nouveaux partent du niveau déjà atteint plutôt que du tout début. Le test peut être passé.",
+    "placementHint": "Trente mots, environ deux minutes. Ensuite, les mots nouveaux partent du niveau déjà atteint. Le test peut être passé.",
     "placementStart": "Commencer",
     "placementRetake": "Le refaire",
     "placementSkip": "Passer le test",

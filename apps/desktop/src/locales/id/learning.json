@@ -26,7 +26,7 @@
     "pairDownloadFailed": "Unduhan tidak selesai. Bahasa itu dapat dipilih lagi. Bahasa yang sekarang tidak berubah.",
     "noPackForLanguage": "AI saat ini menjawab dalam {{language}}, dan belum ada data kata untuk bahasa itu. Data kata tersedia untuk: {{languages}}. Mengubah bahasa jawaban AI ke salah satunya memungkinkan pembelajaran dimulai.",
     "placementTitle": "Cek kosakata",
-    "placementHint": "Tiga puluh kata, sekitar dua menit. Setelahnya kata baru dimulai dari tingkat yang sudah dicapai, bukan dari awal. Cek ini boleh dilewati.",
+    "placementHint": "Tiga puluh kata, sekitar dua menit. Setelahnya kata baru dimulai dari tingkat yang sudah dicapai. Cek ini boleh dilewati.",
     "placementStart": "Mulai",
     "placementRetake": "Ulangi",
     "placementSkip": "Lewati cek",

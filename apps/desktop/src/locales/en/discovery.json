@@ -2,7 +2,7 @@
   "title": "Discover",
   "setup": {
     "title": "Discover",
-    "intro": "Once a browser script is installed, what you watch on Bilibili and YouTube appears on this page. Everything is processed on your own device and is never sent elsewhere.",
+    "intro": "Once a browser script is installed, what you watch on Bilibili and YouTube appears on this page. Everything is processed on your own device.",
     "step1Title": "Step 1: install a browser extension that can run scripts",
     "step1Body": "Violentmonkey is free. Install it, then return to this page.",
     "step1Button": "Open the Violentmonkey installation page",
@@ -13,11 +13,11 @@
     "step3Title": "Step 3: connect the browser",
     "step3Body": "Open the Bilibili home page, select the link icon at the bottom left of the switch bar, and paste the code below. Repeat once on the YouTube home page.",
     "step3TitleWeb": "Step 3: keep Breadcrumb open",
-    "step3BodyWeb": "The script submits what it recorded whenever Breadcrumb is open. Nothing else is required.",
+    "step3BodyWeb": "The script submits what it recorded whenever Breadcrumb is open.",
     "codeUsed": "The previous code has been used. A new one is being generated.",
     "connected": "Connected. Browse Bilibili and YouTube as usual, and what you watch will appear on this page."
   },
-  "intro": "This page shows what has been watched on Bilibili and YouTube, and which topics are of interest. Everything is processed on this computer and is never sent elsewhere.",
+  "intro": "This page shows what has been watched on Bilibili and YouTube, and which topics are of interest. Everything is processed on this computer.",
   "emotion": {
     "title": "How the content felt",
     "all": "All",

@@ -2,7 +2,7 @@
   "title": "Découvrir",
   "setup": {
     "title": "Découvrir",
-    "intro": "Une fois un script de navigateur installé, ce que tu regardes sur Bilibili et YouTube apparaît sur cette page. Tout est traité sur ton appareil et n'est jamais envoyé ailleurs.",
+    "intro": "Une fois un script de navigateur installé, ce que tu regardes sur Bilibili et YouTube apparaît sur cette page. Tout est traité sur ton appareil.",
     "step1Title": "Étape 1 : installe une extension de navigateur capable d'exécuter des scripts",
     "step1Body": "Violentmonkey est gratuite. Installe-la, puis reviens sur cette page.",
     "step1Button": "Ouvrir la page d'installation de Violentmonkey",
@@ -13,11 +13,11 @@
     "step3Title": "Étape 3 : relie le navigateur",
     "step3Body": "Ouvre la page d'accueil de Bilibili, sélectionne l'icône de lien en bas à gauche de la barre d'interrupteurs et colle le code ci-dessous. Répète l'opération une fois sur la page d'accueil de YouTube.",
     "step3TitleWeb": "Étape 3 : laisse Breadcrumb ouvert",
-    "step3BodyWeb": "Le script transmet ce qu'il a enregistré chaque fois que Breadcrumb est ouvert. Rien d'autre n'est requis.",
+    "step3BodyWeb": "Le script transmet ce qu'il a enregistré chaque fois que Breadcrumb est ouvert.",
     "codeUsed": "Le code précédent a déjà servi. Un nouveau est en cours de génération.",
     "connected": "Connecté. Utilise Bilibili et YouTube comme d'habitude, et ce que tu regardes apparaîtra sur cette page."
   },
-  "intro": "Cette page montre ce qui a été regardé sur Bilibili et YouTube et quels sujets suscitent de l'intérêt. Tout est traité sur cet ordinateur et n'est jamais envoyé ailleurs.",
+  "intro": "Cette page montre ce qui a été regardé sur Bilibili et YouTube et quels sujets suscitent de l'intérêt. Tout est traité sur cet ordinateur.",
   "emotion": {
     "title": "Ce que le contenu t'a fait",
     "all": "Tout",

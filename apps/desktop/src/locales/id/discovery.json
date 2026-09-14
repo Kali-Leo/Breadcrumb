@@ -2,7 +2,7 @@
   "title": "Jelajah",
   "setup": {
     "title": "Jelajah",
-    "intro": "Setelah satu skrip peramban dipasang, tontonan di Bilibili dan YouTube muncul di halaman ini. Pengolahan dilakukan di perangkat ini dan tidak dikirim ke mana pun.",
+    "intro": "Setelah satu skrip peramban dipasang, tontonan di Bilibili dan YouTube muncul di halaman ini. Pengolahan dilakukan di perangkat ini.",
     "step1Title": "Langkah 1: pasang ekstensi peramban yang dapat menjalankan skrip",
     "step1Body": "Violentmonkey gratis. Pasang, lalu kembali ke halaman ini.",
     "step1Button": "Buka halaman pemasangan Violentmonkey",
@@ -13,11 +13,11 @@
     "step3Title": "Langkah 3: hubungkan peramban",
     "step3Body": "Buka halaman depan Bilibili, tekan ikon tautan di kiri bawah bilah sakelar, lalu tempel kode di bawah ini. Ulangi sekali di halaman depan YouTube.",
     "step3TitleWeb": "Langkah 3: biarkan Breadcrumb terbuka",
-    "step3BodyWeb": "Skrip mengirimkan catatannya setiap kali Breadcrumb terbuka. Tidak ada langkah lain yang diperlukan.",
+    "step3BodyWeb": "Skrip mengirimkan catatannya setiap kali Breadcrumb terbuka.",
     "codeUsed": "Kode sebelumnya sudah terpakai. Kode baru sedang dibuat.",
     "connected": "Terhubung. Gunakan Bilibili dan YouTube seperti biasa, dan tontonanmu akan muncul di halaman ini."
   },
-  "intro": "Halaman ini menampilkan apa yang ditonton di Bilibili dan YouTube serta topik yang menarik minat. Pengolahan dilakukan di komputer ini dan tidak dikirim ke mana pun.",
+  "intro": "Halaman ini menampilkan apa yang ditonton di Bilibili dan YouTube serta topik yang menarik minat. Pengolahan dilakukan di komputer ini.",
   "emotion": {
     "title": "Bagaimana isinya terasa",
     "all": "Semua",

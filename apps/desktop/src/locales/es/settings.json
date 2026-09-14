@@ -104,7 +104,6 @@
     "estimate": "unos {{cost}} {{cadence}}",
     "estimateUnknownModel": "El modelo en uso no está en la lista de precios incorporada, así que no hay estimación por uso",
     "estimateFree": "No cuesta nada",
-    "estimateUnmeasured": "El coste de un uso todavía no se ha medido",
     "cadencePerRound": "por intercambio",
     "cadencePerMessage": "por mensaje enviado",
     "cadencePerAnswer": "por respuesta",
@@ -132,7 +131,7 @@
       "webSearchEvidence": {
         "name": "Búsqueda en la web abierta para evidencias (Zhipu)",
         "price": "unos ¥{{price}} por consulta",
-        "hint": "Mientras está activado, además de Wikidata y Wikipedia, se pide al servicio de búsqueda de Zhipu que encuentre fuentes en la web abierta, lo que alcanza material que una enciclopedia nunca registró. Se cobra por consulta a la cuenta de Zhipu, aparte del servicio de IA de arriba; en la edición para navegador dentro de una red de China continental es la única fuente disponible. Solo chino, inglés y suajili: en otros idiomas los resultados fueron poco fiables en las pruebas y esta vía no se usa para ellos.",
+        "hint": "Mientras está activado, además de Wikidata y Wikipedia, se pide al servicio de búsqueda de Zhipu que encuentre fuentes en la web abierta, lo que alcanza material que una enciclopedia nunca registró. Se cobra por consulta a la cuenta de Zhipu; en la edición para navegador dentro de una red de China continental es la única fuente disponible. Solo chino, inglés y suajili.",
         "disclosure": "Mientras está activado, los términos de búsqueda extraídos de la pregunta se envían a un motor de búsqueda. Es un canal de salida nuevo.",
         "keyLabel": "Clave API del servicio de búsqueda de Zhipu",
         "keyPlaceholder": "Obténla en open.bigmodel.cn e introdúcela aquí",
@@ -168,7 +167,7 @@
       },
       "feedbackLab": {
         "name": "Últimamente",
-        "hint": "El panel de repaso junto al mapa, calculado por completo con datos locales y sin coste."
+        "hint": "El panel de repaso junto al mapa, calculado por completo con datos locales."
       },
       "trailSummary": {
         "name": "El rastro de ayer",
@@ -197,7 +196,7 @@
     }
   },
   "research": {
-    "panelIntro": "Todos los números de esta página los ha calculado esta máquina. Las tareas de investigación están revisadas y sus fuentes se pueden comprobar; los datos no salen solos de este dispositivo y nada de ello cuesta dinero.",
+    "panelIntro": "Todos los números de esta página los ha calculado esta máquina. Las tareas de investigación están revisadas y sus fuentes se pueden comprobar.",
     "offNotice": "Las tareas de investigación están apagadas: no se ejecutará ninguna nueva. Los resultados existentes se conservan y se pueden leer o borrar uno a uno.",
     "loading": "Cargando",
     "emptyTitle": "Todavía no hay resultados de investigación",
@@ -222,10 +221,9 @@
     "deleteConfirmPrompt": "Un resultado borrado no se puede restaurar.",
     "deleteConfirmAction": "Borrar",
     "settingsRowTitle": "Investigación",
-    "settingsRowHint": "Ejecuta localmente tareas de investigación revisadas y muestra los resultados; los datos no salen solos de este dispositivo y no cuesta nada.",
+    "settingsRowHint": "Ejecuta localmente tareas de investigación revisadas y muestra los resultados.",
     "closeConfirmTitle": "Apagar la plataforma de investigación",
     "closeConfirmWhatItDoes": "La plataforma de investigación ejecuta localmente tareas revisadas y firmadas por el proyecto, calcula las estadísticas y las muestra.",
-    "closeConfirmDataStaysLocal": "Todo el cálculo ocurre localmente, y los datos no salen solos de este dispositivo.",
     "closeConfirmResearchValue": "Las estadísticas agregadas locales de este tipo permiten a los investigadores estudiar cómo aprenden las personas sin recoger datos personales.",
     "closeConfirmWhatChanges": "Una vez apagado, no se ejecutará ninguna tarea de investigación y esta pregunta no se volverá a plantear. Los resultados existentes no se ven afectados y permanecen en el panel.",
     "closeConfirmAction": "Apagarlo"

@@ -5,11 +5,11 @@
   "welcome": {
     "label": "Présentation",
     "card1Title": "Ce que c'est",
-    "card1Body": "Breadcrumb est un compagnon d'apprentissage. Tout ce que tu cherches à comprendre peut être abordé ici avec une IA ; à côté des réponses, ce que la conversation a couvert est enregistré automatiquement. Il n'y a ni notes à prendre ni passage quotidien à faire.",
+    "card1Body": "Breadcrumb est un compagnon d'apprentissage. Tout ce que tu cherches à comprendre peut être abordé ici avec une IA ; à côté des réponses, ce que la conversation a couvert est enregistré automatiquement.",
     "card2Title": "Les conversations font pousser une carte",
-    "card2Body": "Chaque notion qui apparaît devient une île sur une carte, placée et regroupée automatiquement. Les zones non touchées depuis un moment pâlissent, ce qui indique quelles parties ont été mises de côté, pas ce que tu vaux.",
+    "card2Body": "Chaque notion qui apparaît devient une île sur une carte, placée et regroupée automatiquement. Les zones non touchées depuis un moment pâlissent, ce qui indique quelles parties ont été mises de côté.",
     "card3Title": "Où restent les données, et ce qui coûte de l'argent",
-    "card3Body": "Les conversations, la carte et le vocabulaire sont tous stockés sur cet ordinateur. Il n'y a ni compte ni synchronisation dans le nuage. La seule chose payante est le service d'IA que tu fournis toi-même, facturé à l'usage ; chaque fonction qui dépense peut être éteinte séparément, avec le prix écrit à côté dans les réglages.",
+    "card3Body": "Les conversations, la carte et le vocabulaire sont tous stockés sur cet ordinateur. La seule chose payante est le service d'IA que tu fournis toi-même, facturé à l'usage ; chaque fonction qui dépense peut être éteinte séparément, avec le prix écrit à côté dans les réglages.",
     "start": "Commencer",
     "tryDemo": "Charger d'abord les données d'exemple",
     "demoNote": "L'exemple est un relevé de trois mois d'apprentissage et peut être retiré en une seule étape.",
@@ -24,11 +24,11 @@
     "trailTitle": "Les conversations sont listées dans la barre latérale",
     "trailBody": "Les titres sont générés automatiquement, sous la forme « de la première notion à la dernière ». Une fois qu'un titre est renommé à la main, il n'est plus jamais modifié.",
     "mapTitle": "Les conversations font pousser la carte",
-    "mapBody": "Ces îles ont été assemblées automatiquement à partir des conversations ; rien n'a été enregistré à la main. La molette vers le haut fait entrer d'un niveau.",
+    "mapBody": "Ces îles ont été assemblées automatiquement à partir des conversations. La molette vers le haut fait entrer d'un niveau.",
     "mapEmptyTitle": "C'est la pleine mer pour l'instant",
-    "mapEmptyBody": "Les notions abordées à chaque échange deviennent ici des îles automatiquement. Rien n'a à être enregistré à la main.",
+    "mapEmptyBody": "Les notions abordées à chaque échange deviennent ici des îles automatiquement.",
     "mirrorTitle": "L'atténuation des couleurs est normale",
-    "mirrorBody": "Ces deux panneaux montrent ce qui a été appris et ce dont il reste un souvenir. Les parties non touchées depuis longtemps s'estompent d'elles-mêmes ; c'est une indication, pas une pénalité. Tout ce que montre cette page est calculé sur cette machine et ne coûte rien.",
+    "mirrorBody": "Ces deux panneaux montrent ce qui a été appris et ce dont il reste un souvenir. Les parties non touchées depuis longtemps s'estompent d'elles-mêmes. Tout ce que montre cette page est calculé sur cette machine.",
     "spendingTitle": "Les coûts sont indiqués à l'avance",
     "spendingBody": "Toutes les fonctions payantes sont sur cette page et peuvent être éteintes séparément. Le coût approximatif d'une utilisation est écrit ici avant l'activation, et ce chiffre est mesuré, pas estimé.",
     "yourTurnTitle": "Poser une question",
@@ -41,44 +41,38 @@
     "chat": {
       "title": "Conversation avec l'IA",
       "body": "Pose une question sur ce que tu veux comprendre. L'interrupteur au-dessus décide de la forme des réponses : le mode étude renvoie des questions et invite à expliquer soi-même, tandis que la discussion libre est un échange ordinaire.",
-      "point1": "Les notions abordées sont rangées dans la carte automatiquement, sans rien à noter à la main",
-      "point2": "Les titres de conversation sont générés automatiquement et cessent de changer une fois renommés à la main",
-      "limit": "Il n'établit pas d'emploi du temps et n'envoie pas de rappels après quelques jours d'absence."
+      "point1": "Les notions abordées sont rangées dans la carte automatiquement",
+      "point2": "Les titres de conversation sont générés automatiquement et cessent de changer une fois renommés à la main"
     },
     "map": {
       "title": "Une carte de ce qui a été appris",
       "body": "Chaque île est une notion qui a été abordée, placée et regroupée automatiquement. Descendre d'un niveau montre le détail, y compris les conversations qui l'ont touchée.",
       "point1": "Les endroits foncés ont été touchés récemment ; les pâles sont mis de côté depuis un moment",
-      "point2": "Tout ce que montre cette page est calculé sur cette machine et ne coûte rien",
-      "limit": "Ce n'est pas un carnet : aucune entrée ne peut être ajoutée à la main, et la carte ne pousse qu'à partir des conversations."
+      "point2": "Tout ce que montre cette page est calculé sur cette machine"
     },
     "vocab": {
       "title": "Apprendre une langue en discutant",
       "body": "Une fois activé, certains mots des réponses de l'IA arrivent dans la langue en cours d'apprentissage et peuvent être devinés avant l'affichage de la définition. Cette page liste les mots en cours et sert à télécharger et à changer les dictionnaires.",
       "point1": "Un test de vocabulaire peut être passé d'abord, pour que les mots nouveaux partent du niveau déjà atteint",
-      "point2": "La prononciation et les définitions viennent d'un dictionnaire téléchargé qui reste sur cette machine et fonctionne hors ligne",
-      "limit": "Il n'enseigne pas la grammaire et ne propose pas de séries d'exercices ; il remplace seulement des mots dans des phrases que tu allais lire de toute façon."
+      "point2": "La prononciation et les définitions viennent d'un dictionnaire téléchargé qui reste sur cette machine et fonctionne hors ligne"
     },
     "discovery": {
       "title": "Les visionnages quotidiens, rassemblés sur une page",
       "body": "Une fois un script de navigateur installé, ce que tu regardes sur Bilibili et YouTube est rassemblé ici : les mots qui reviennent, les sujets apparus récemment et les contenus longs regardés. Tout est traité sur cet ordinateur.",
       "point1": "Cette page s'ouvre avant l'installation de tout script et énumère les étapes nécessaires",
-      "point2": "L'historique de visionnage reste sur cette machine et n'est jamais envoyé ailleurs",
-      "limit": "Elle ne décide pas de ce qu'il faut regarder et ne note pas ce qui a été regardé."
+      "point2": "L'historique de visionnage reste sur cette machine"
     },
     "companions": {
       "title": "Des compagnons qui viennent avec des questions",
-      "body": "Chaque jour, quelques personnages viennent avec des questions tirées de ce qui a été appris récemment. Leur expliquer quelque chose est une façon de vérifier si cela peut être expliqué clairement. Ces échanges se déroulent dans une petite fenêtre séparée et n'affectent pas la conversation en cours.",
+      "body": "Chaque jour, quelques personnages viennent avec des questions tirées de ce qui a été appris récemment. Leur expliquer quelque chose est une façon de vérifier si cela peut être expliqué clairement. Ces échanges se déroulent dans une petite fenêtre séparée.",
       "point1": "Ce qu'ils demandent est tiré de ton propre historique d'apprentissage",
-      "point2": "La fonction entière peut être éteinte dans les réglages",
-      "limit": "Ce ne sont pas de vraies personnes ; une fois que tu pars, ils n'attendent pas et ne te rappellent pas."
+      "point2": "La fonction entière peut être éteinte dans les réglages"
     },
     "settings": {
       "title": "Clés, langues et dépenses",
       "body": "La première étape consiste à saisir l'adresse et la clé d'un service d'IA, sans quoi les fonctions qui dépendent de l'IA ne peuvent pas fonctionner. Cette page change aussi la langue de l'interface, la langue des réponses de l'IA et l'accès au réseau.",
       "point1": "« Interrupteurs et dépenses » énumère chaque fonction payante, avec son propre interrupteur et le coût approximatif d'une utilisation",
-      "point2": "La clé est stockée uniquement sur cet ordinateur et n'est jamais envoyée avec quoi que ce soit",
-      "limit": "Le service d'IA lui-même n'est pas fourni ici ; la clé doit être obtenue auprès d'un prestataire."
+      "point2": "La clé est stockée uniquement sur cet ordinateur"
     }
   },
   "checklist": {

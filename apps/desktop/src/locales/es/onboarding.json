@@ -5,11 +5,11 @@
   "welcome": {
     "label": "Presentación",
     "card1Title": "Qué es esto",
-    "card1Body": "Breadcrumb es un compañero de aprendizaje. Cualquier cosa que quieras entender se puede tratar aquí con una IA; junto a las respuestas, lo que la conversación cubrió queda registrado automáticamente. No hay apuntes que tomar ni visita diaria que hacer.",
+    "card1Body": "Breadcrumb es un compañero de aprendizaje. Cualquier cosa que quieras entender se puede tratar aquí con una IA; junto a las respuestas, lo que la conversación cubrió queda registrado automáticamente.",
     "card2Title": "Las conversaciones hacen crecer un mapa",
-    "card2Body": "Cada concepto que aparece se convierte en una isla del mapa, colocada y agrupada automáticamente. Las zonas sin tocar durante un tiempo se aclaran, lo que indica qué partes se han dejado de lado, no qué tal lo haces.",
+    "card2Body": "Cada concepto que aparece se convierte en una isla del mapa, colocada y agrupada automáticamente. Las zonas sin tocar durante un tiempo se aclaran, lo que indica qué partes se han dejado de lado.",
     "card3Title": "Dónde se quedan los datos y qué cuesta dinero",
-    "card3Body": "Las conversaciones, el mapa y el vocabulario se guardan todos en este ordenador. No hay cuenta ni sincronización en la nube. Lo único que cuesta dinero es el servicio de IA que aportas tú, cobrado por uso; cada función que gasta algo se puede apagar por separado, con el precio escrito al lado en los ajustes.",
+    "card3Body": "Las conversaciones, el mapa y el vocabulario se guardan todos en este ordenador. Lo único que cuesta dinero es el servicio de IA que aportas tú, cobrado por uso; cada función que gasta algo se puede apagar por separado, con el precio escrito al lado en los ajustes.",
     "start": "Empezar",
     "tryDemo": "Cargar primero los datos de ejemplo",
     "demoNote": "El ejemplo es un registro de tres meses de aprendizaje y se puede quitar en un solo paso.",
@@ -24,11 +24,11 @@
     "trailTitle": "Las conversaciones se listan en la barra lateral",
     "trailBody": "Los títulos se generan automáticamente, con la forma «del primer concepto al último». Una vez que un título se renombra a mano, ya no vuelve a cambiar.",
     "mapTitle": "Las conversaciones hacen crecer el mapa",
-    "mapBody": "Estas islas se han montado automáticamente a partir de las conversaciones; nada se registró a mano. Rodar hacia arriba entra un nivel.",
+    "mapBody": "Estas islas se han montado automáticamente a partir de las conversaciones. Rodar hacia arriba entra un nivel.",
     "mapEmptyTitle": "Esto es mar abierto por ahora",
-    "mapEmptyBody": "Los conceptos tratados en cada intercambio se convierten aquí en islas de forma automática. No hay que registrar nada a mano.",
+    "mapEmptyBody": "Los conceptos tratados en cada intercambio se convierten aquí en islas de forma automática.",
     "mirrorTitle": "Que el color se atenúe es normal",
-    "mirrorBody": "Estos dos paneles muestran cuánto se ha aprendido y cuánto se recuerda todavía. Las partes sin tocar durante mucho tiempo se atenúan solas; esto es un aviso, no una penalización. Todo lo de esta página se calcula en esta máquina y no cuesta nada.",
+    "mirrorBody": "Estos dos paneles muestran cuánto se ha aprendido y cuánto se recuerda todavía. Las partes sin tocar durante mucho tiempo se atenúan solas. Todo lo de esta página se calcula en esta máquina.",
     "spendingTitle": "Los costes se indican de antemano",
     "spendingBody": "Todas las funciones que cuestan dinero están en esta página y se pueden apagar por separado. El coste aproximado de un uso aparece aquí antes de activarla, y esa cifra está medida, no estimada.",
     "yourTurnTitle": "Hacer una pregunta",
@@ -41,44 +41,38 @@
     "chat": {
       "title": "Conversación con la IA",
       "body": "Pregunta sobre lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio devuelve preguntas e invita a explicarlo con tus propias palabras, mientras que la charla libre es un intercambio normal.",
-      "point1": "Los conceptos que salen se archivan en el mapa automáticamente, sin nada que anotar a mano",
-      "point2": "Los títulos de las conversaciones se generan automáticamente y dejan de cambiar una vez renombrados a mano",
-      "limit": "No planifica un horario ni envía recordatorios tras unos días de ausencia."
+      "point1": "Los conceptos que salen se archivan en el mapa automáticamente",
+      "point2": "Los títulos de las conversaciones se generan automáticamente y dejan de cambiar una vez renombrados a mano"
     },
     "map": {
       "title": "Un mapa de lo aprendido",
       "body": "Cada isla es un concepto que se ha tratado, colocado y agrupado automáticamente. Entrar un nivel muestra el detalle, incluidas las conversaciones que lo tocaron.",
       "point1": "Los lugares oscuros se tocaron hace poco; los pálidos llevan un tiempo apartados",
-      "point2": "Todo lo de esta página se calcula en esta máquina y no cuesta nada",
-      "limit": "No es un cuaderno: no se pueden añadir entradas a mano, y el mapa solo crece a partir de las conversaciones."
+      "point2": "Todo lo de esta página se calcula en esta máquina"
     },
     "vocab": {
       "title": "Aprender un idioma mientras se conversa",
       "body": "Con esto activado, algunas palabras de las respuestas de la IA llegan en el idioma que se está aprendiendo, y se pueden adivinar antes de mostrar la definición. Esta página lista las palabras en curso y es donde se descargan y se cambian los diccionarios.",
       "point1": "Se puede hacer antes una comprobación de vocabulario, para que las palabras nuevas empiecen en el nivel ya alcanzado",
-      "point2": "La pronunciación y las definiciones salen de un diccionario descargado que se queda en esta máquina y funciona sin conexión",
-      "limit": "No enseña gramática ni ofrece series de ejercicios; solo cambia palabras en frases que ibas a leer de todos modos."
+      "point2": "La pronunciación y las definiciones salen de un diccionario descargado que se queda en esta máquina y funciona sin conexión"
     },
     "discovery": {
       "title": "Lo que se ve a diario, reunido en una página",
       "body": "Una vez instalado un script de navegador, lo que ves en Bilibili y YouTube se reúne aquí: las palabras que se repiten, los temas que han aparecido hace poco y los contenidos largos que has visto. Todo se procesa en este ordenador.",
       "point1": "Esta página se abre antes de instalar cualquier script y enumera los pasos necesarios",
-      "point2": "El registro de visionado se queda en esta máquina y nunca se envía a otro lugar",
-      "limit": "No decide qué ver ni puntúa lo que se ha visto."
+      "point2": "El registro de visionado se queda en esta máquina"
     },
     "companions": {
       "title": "Compañeros que vienen con preguntas",
-      "body": "Cada día vienen unos personajes con preguntas sacadas de material aprendido hace poco. Explicarles algo es una forma de comprobar si se puede explicar con claridad. Estas conversaciones ocurren en una ventana pequeña aparte y no afectan a la conversación existente.",
+      "body": "Cada día vienen unos personajes con preguntas sacadas de material aprendido hace poco. Explicarles algo es una forma de comprobar si se puede explicar con claridad. Estas conversaciones ocurren en una ventana pequeña aparte.",
       "point1": "Lo que preguntan sale de tu propio registro de aprendizaje",
-      "point2": "Toda la función se puede apagar en los ajustes",
-      "limit": "No son personas reales; cuando te vas, no esperan ni te llaman de vuelta."
+      "point2": "Toda la función se puede apagar en los ajustes"
     },
     "settings": {
       "title": "Claves, idiomas y gasto",
       "body": "El primer paso es introducir la dirección y la clave de un servicio de IA, sin lo cual las funciones que dependen de la IA no pueden ejecutarse. Esta página también cambia el idioma de la interfaz, el idioma en que responde la IA y si la aplicación se conecta a la red.",
       "point1": "«Interruptores y gasto» enumera cada función que cuesta dinero, con su propio interruptor y el coste aproximado de un uso",
-      "point2": "La clave se guarda solo en este ordenador y nunca se envía junto con nada",
-      "limit": "El servicio de IA en sí no se ofrece aquí; la clave hay que obtenerla de un proveedor."
+      "point2": "La clave se guarda solo en este ordenador"
     }
   },
   "checklist": {

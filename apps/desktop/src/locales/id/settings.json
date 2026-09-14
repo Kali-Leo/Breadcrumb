@@ -102,7 +102,6 @@
     "estimate": "sekitar {{cost}} {{cadence}}",
     "estimateUnknownModel": "Model yang dipakai tidak ada di daftar harga bawaan, jadi perkiraan per pemakaian tidak tersedia",
     "estimateFree": "Tidak memakan biaya",
-    "estimateUnmeasured": "Biaya satu kali pakai belum diukur",
     "cadencePerRound": "per pertukaran pesan",
     "cadencePerMessage": "per pesan terkirim",
     "cadencePerAnswer": "per jawaban",
@@ -130,7 +129,7 @@
       "webSearchEvidence": {
         "name": "Pencarian bukti di web terbuka (Zhipu)",
         "price": "sekitar ¥{{price}} per pencarian",
-        "hint": "Saat menyala, layanan pencarian Zhipu diminta mencari sumber di web terbuka sebagai tambahan atas Wikidata dan Wikipedia, sehingga menjangkau materi yang tidak pernah dicatat ensiklopedia. Penagihannya per panggilan ke akun Zhipu, terpisah dari layanan AI di atas; pada edisi peramban di jaringan Tiongkok daratan, inilah satu-satunya sumber yang tersedia. Hanya untuk bahasa Mandarin, Inggris, dan Swahili: hasil dalam bahasa lain terbukti tidak andal saat diuji, dan jalur ini tidak dipakai untuk bahasa tersebut.",
+        "hint": "Saat menyala, layanan pencarian Zhipu diminta mencari sumber di web terbuka sebagai tambahan atas Wikidata dan Wikipedia, sehingga menjangkau materi yang tidak pernah dicatat ensiklopedia. Penagihannya per panggilan ke akun Zhipu; pada edisi peramban di jaringan Tiongkok daratan, inilah satu-satunya sumber yang tersedia. Hanya untuk bahasa Mandarin, Inggris, dan Swahili.",
         "disclosure": "Saat menyala, kata pencarian yang diambil dari pertanyaan dikirim ke mesin pencari. Ini saluran keluar yang baru.",
         "keyLabel": "Kunci API layanan pencarian Zhipu",
         "keyPlaceholder": "Dapatkan di open.bigmodel.cn lalu masukkan di sini",
@@ -166,7 +165,7 @@
       },
       "feedbackLab": {
         "name": "Belakangan ini",
-        "hint": "Panel tinjauan di samping peta, dihitung sepenuhnya dari data lokal dan tanpa biaya."
+        "hint": "Panel tinjauan di samping peta, dihitung sepenuhnya dari data lokal."
       },
       "trailSummary": {
         "name": "Jejak kemarin",
@@ -195,7 +194,7 @@
     }
   },
   "research": {
-    "panelIntro": "Semua angka di halaman ini dihitung oleh mesin ini. Tugas risetnya sudah ditelaah dan sumbernya dapat diperiksa; datanya tidak keluar sendiri dari perangkat ini, dan tidak ada yang memakan biaya.",
+    "panelIntro": "Semua angka di halaman ini dihitung oleh mesin ini. Tugas risetnya sudah ditelaah dan sumbernya dapat diperiksa.",
     "offNotice": "Tugas riset dimatikan: tidak ada tugas baru yang dijalankan. Hasil yang ada tetap tersimpan dan dapat dibaca atau dihapus satu per satu.",
     "loading": "Memuat",
     "emptyTitle": "Belum ada hasil riset",
@@ -220,10 +219,9 @@
     "deleteConfirmPrompt": "Hasil yang dihapus tidak dapat dipulihkan.",
     "deleteConfirmAction": "Hapus",
     "settingsRowTitle": "Riset",
-    "settingsRowHint": "Menjalankan tugas riset yang sudah ditelaah di mesin ini dan menampilkan hasilnya; datanya tidak keluar sendiri dari perangkat ini dan tidak memakan biaya.",
+    "settingsRowHint": "Menjalankan tugas riset yang sudah ditelaah di mesin ini dan menampilkan hasilnya.",
     "closeConfirmTitle": "Mematikan platform riset",
     "closeConfirmWhatItDoes": "Platform riset menjalankan tugas yang sudah ditelaah dan ditandatangani proyek secara lokal, menghitung statistiknya, dan menampilkannya.",
-    "closeConfirmDataStaysLocal": "Seluruh penghitungan berlangsung secara lokal, dan datanya tidak keluar sendiri dari perangkat ini.",
     "closeConfirmResearchValue": "Statistik agregat lokal semacam ini memungkinkan peneliti mempelajari cara orang belajar tanpa mengumpulkan data pribadi.",
     "closeConfirmWhatChanges": "Setelah dimatikan, tidak ada tugas riset yang berjalan dan pertanyaan ini tidak diajukan lagi. Hasil yang ada tidak terpengaruh dan tetap berada di panel.",
     "closeConfirmAction": "Matikan"

@@ -13,10 +13,10 @@ const DEMO_RESEARCH_TASK = {
   payload: {
     id: "breadcrumb-demo-task",
     institution: "Breadcrumb 项目组",
-    title: "示例研究:概念接触与学习活跃度的关联",
+    title: "示例研究：概念接触与学习活跃度的关联",
     purpose:
-      "这是内置的示例研究任务,用于演示研究课题平台的完整链路:项目方签名的任务在本地计算三项聚合统计,结果只增加,你可以随时删除。它不对应任何真实机构的数据需求。",
-    ethicsNote: "示例任务,无需伦理审查;真实任务的伦理审查备注会显示在这个位置。",
+      "内置的示例研究任务，用于演示研究课题平台的完整链路：项目方签名的任务在本机计算三项聚合统计。",
+    ethicsNote: "真实任务的伦理审查备注会显示在此处。",
     calls: [
       { fn: "count", metric: "concepts_known" },
       { fn: "histogram", metric: "encounters_per_node", bucketCount: 6 },
@@ -28,7 +28,7 @@ const DEMO_RESEARCH_TASK = {
       },
     ],
     display: [
-      { kind: "text", text: "以下三项统计全部为本地聚合计算,只输出聚合结果,不包含任何单条记录。" },
+      { kind: "text", text: "以下三项统计均在本机聚合计算，只输出聚合结果。" },
       { kind: "stat", label: "认识的概念数", callIndex: 0 },
       { kind: "bars", label: "各概念的接触次数分布", callIndex: 1 },
       {
@@ -40,7 +40,7 @@ const DEMO_RESEARCH_TASK = {
     expiresAt: "2030-01-01",
   },
   signature:
-    "b48d93352c681842608bc2f86e85f7e63ff6c0e93cd44a94fc5012fe7dab16b3ab337dc51ca40e4e1f7371ba2956a1c52159dee920a4ab8c15dc6be9228a8206",
+    "80397e0770a3abe41e7c0ecadd75531774b9e7098d5c4f820ca84b5ea66ad16e25151edeeb266acd1edecda15a7e557f9ced6846298afb4fe7934562da5d380d",
 };
 
 /** The demo task's own user-visible text. It is *content*, not interface copy: the bytes are

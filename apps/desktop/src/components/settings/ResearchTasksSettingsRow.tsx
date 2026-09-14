@@ -1,7 +1,7 @@
 /**
  * Purpose: the 🔬 research task platform's settings-page switch row. Turning
  * it on needs no confirmation; turning it off shows RESEARCH_COPY's one-time plain
- * explanation first (no guilt-trip retention, state the four facts
+ * explanation first (no guilt-trip retention, state the three facts
  * once, then never ask again). Zero token cost, so it carries no spend line.
  * Main exports: ResearchTasksSettingsRow.
  */
@@ -39,7 +39,6 @@ export function ResearchTasksSettingsRow() {
         <div className="mt-3 space-y-2 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
           <p className="font-semibold text-stone-700">{t("research.closeConfirmTitle")}</p>
           <p>{t("research.closeConfirmWhatItDoes")}</p>
-          <p>{t("research.closeConfirmDataStaysLocal")}</p>
           <p>{t("research.closeConfirmResearchValue")}</p>
           <p>{t("research.closeConfirmWhatChanges")}</p>
           <div className="flex gap-2 pt-1">
