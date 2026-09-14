@@ -78,6 +78,12 @@ export async function invoke<T>(command: string, args?: Record<string, unknown>)
     case "piper_synthesize":
       throw new UnavailableInBrowser(command);
 
+    // The cross-encoder reranker is a Rust model. Library retrieval treats a rejection here
+    // as "no second stage" and answers in fused order, so the browser edition searches the
+    // reader's material with one stage fewer rather than not at all.
+    case "rerank_pairs":
+      throw new UnavailableInBrowser(command);
+
     // The browsing collector is a listener bound to 127.0.0.1, which only the desktop build
     // can open. This edition receives the same events a different way — a script on this very
     // page hands them over with postMessage (lib/platform/browsingChannels.ts) — so the

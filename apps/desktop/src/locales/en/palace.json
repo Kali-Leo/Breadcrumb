@@ -29,8 +29,8 @@
   },
   "map": {
     "loadFailed": "The map did not load. Leaving this page and returning triggers another attempt.",
-    "emptySea": "This is still open sea. After a chat, the first island surfaces.",
-    "devDemoHint": "DEV: press 0 to load the demo chart",
+    "emptySea": "The map opens after some learning.",
+    "devDemoHint": "DEV: press 0 to load the demo map",
     "zoomInHint": "Scroll up: enter the area under the pointer",
     "zoomOutHint": "Scroll down: back one level",
     "clickNameHint": "Select a name: go straight there",

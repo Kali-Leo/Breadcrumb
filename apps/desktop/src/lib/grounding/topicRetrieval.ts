@@ -3,15 +3,18 @@
  * whether this round needs new material at all.
  *
  * The order is: is this still the same topic? — if yes, reuse what is already in the prompt
- * (a follow-up costs no requests and no seconds); if no, ask the evidence layer about the
- * learner's question and take the top passages. What the providers are actually asked is
- * topicQueries' business (a whole question is too long a conjunction for a full-text index);
- * this retrieval is per topic, not per claim, so there is no extraction and no model call in
- * the path.
+ * (a follow-up costs no requests and no seconds); if no, search the reader's own library
+ * first and fill what is left of the passage budget from the evidence layer. The library
+ * comes first and sits first: the resources page promises exactly that, and a reader who
+ * imported a book asked for it to be the answer's ground before any encyclopaedia is. What
+ * the providers are actually asked is topicQueries' business (a whole question is too long a
+ * conjunction for a full-text index); this retrieval is per topic, not per claim, so there is
+ * no extraction and no model call in the path.
  *
- * A failure of any kind — no providers reachable here, the network switch off, every search
- * blocked — degrades to no material, which the round handles by teaching without a source
- * block rather than by refusing to answer.
+ * The network switch closes the network and nothing else. The library is on this machine, so
+ * a round with the switch off still reads it and simply asks no provider; a round where
+ * neither has anything — every search blocked, the library empty — degrades to no material,
+ * which the round handles by teaching without a source block rather than by refusing.
  * Main exports: prepareRoundMaterial, openRoundMaterial.
  */
 import type { ChatMessage } from "@breadcrumb/core-llm";
@@ -32,6 +35,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { embedTexts } from "../platform/embeddings";
 import { degradeSilently } from "../platform/failureLog";
 import { currentEvidenceProviders } from "./evidenceProviders";
+import { gatherLibraryEvidence } from "./libraryEvidence";
 
 /** The material this round should be taught against, or null when there is none to be had. */
 export async function prepareRoundMaterial(
@@ -39,8 +43,7 @@ export async function prepareRoundMaterial(
   question: string,
 ): Promise<TopicMaterial | null> {
   const settings = useSettingsStore.getState();
-  if (!settings.networkEnabled) return null;
-  const providers = currentEvidenceProviders(settings);
+  const providers = settings.networkEnabled ? currentEvidenceProviders(settings) : [];
 
   // The question is only embedded when there is something to compare it against: on the first
   // question of a conversation the answer is "fetch" whatever the vector says, and asking for
@@ -55,18 +58,18 @@ export async function prepareRoundMaterial(
   const held = useGroundingStore.getState().materialByConversation.get(conversationId) ?? null;
   const retrievalQuestion = held === null ? question : prefixTopicEntities(question, held.entities);
   if (held !== null && topicStillCovered(await embedOne(retrievalQuestion), held.vectors ?? [])) {
-    // With no source reachable from here there is nothing to fetch either way.
-    if (providers.length === 0) return held;
     // Same topic. Passages already in hand are this topic's material; a follow-up costs
     // nothing. With none in hand (an earlier search found nothing) the rewritten question is
-    // what gets asked, because it is the one that carries the subject.
+    // what gets asked, because it is the one that carries the subject — and the reranker is
+    // not, because the subject did not change (rerankPolicy.ts: spend it on a new pool).
     if (held.passages.length > 0) return held;
-    return fetchMaterial(conversationId, question, retrievalQuestion, providers);
+    return fetchMaterial(conversationId, question, retrievalQuestion, providers, false);
   }
-  if (providers.length === 0) return held;
-  // Drifted: the previous topic's words would be contamination, so the new subject goes to the
-  // index exactly as the reader wrote it.
-  return fetchMaterial(conversationId, question, question, providers);
+  // Drifted, or the first question: the previous topic's words would be contamination, so the
+  // new subject goes to the index exactly as the reader wrote it. This is the one judgement
+  // both the rewrite above and the rerank below are made from, so the two cannot disagree
+  // within a turn — the reason core-retrieval's own tracker is not instantiated here.
+  return fetchMaterial(conversationId, question, question, providers, true);
 }
 
 async function fetchMaterial(
@@ -74,16 +77,20 @@ async function fetchMaterial(
   question: string,
   retrievalQuestion: string,
   providers: readonly EvidenceProvider[],
+  newSubject: boolean,
 ): Promise<TopicMaterial | null> {
   const store = useGroundingStore.getState();
   store.setGathering(conversationId, true);
   try {
-    const found = await gatherTopicEvidence(
-      providers,
-      topicQueries(retrievalQuestion),
-      TOPIC_PASSAGE_COUNT,
-    );
-    const passages = buildTopicPassages(found);
+    // The reader's own material takes the budget first; the network fills what is left. A
+    // library that answers the whole question sends no request at all.
+    const own = await gatherLibraryEvidence(retrievalQuestion, newSubject);
+    const remaining = TOPIC_PASSAGE_COUNT - own.length;
+    const found =
+      remaining > 0 && providers.length > 0
+        ? await gatherTopicEvidence(providers, topicQueries(retrievalQuestion), remaining)
+        : [];
+    const passages = buildTopicPassages([...own, ...found]);
     // A search that came back with nothing is not a reason to throw away material that is
     // still on screen: the previous topic's passages are wrong for this question, but so is
     // an empty block, and the answer is labelled against whatever it was actually shown.

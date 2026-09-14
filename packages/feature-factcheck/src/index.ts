@@ -71,6 +71,7 @@ export { TOPIC_ENTITY_MIN_CHARS, topicEntities } from "./grounding/entities";
 export {
   buildTopicPassages,
   formatPassageBlock,
+  LIBRARY_SOURCE,
   orderForAttention,
   TOPIC_PASSAGE_COUNT,
   type TopicPassage,

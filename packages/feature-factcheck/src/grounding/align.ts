@@ -52,6 +52,9 @@ export interface PassageSentence {
   /** 1-based passage number, as shown to the reader. */
   passageIndex: number;
   source: string;
+  /** The passage's own title — for the reader's library, the "书名 → 章 → 节" path, which is
+   * what a reader needs on screen to know which of their own books a quote is from. */
+  title: string;
   /** Verbatim from the passage — this is what gets quoted on screen. */
   text: string;
 }
@@ -80,6 +83,7 @@ export function passageSentences(passages: readonly TopicPassage[]): PassageSent
     splitSentences(passage.text).map((sentence) => ({
       passageIndex: passage.index,
       source: passage.source,
+      title: passage.title,
       text: sentence.text,
     })),
   );

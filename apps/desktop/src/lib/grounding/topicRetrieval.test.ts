@@ -1,8 +1,10 @@
 /**
  * Purpose: the one decision this wiring makes that the pure layer cannot — whether this round
- * fetches sources at all. A follow-up on the same topic must reuse what is already in the
- * prompt (no requests, no seconds), a question that moved must fetch again, and a round with
- * no reachable source must degrade to teaching without a source block rather than failing.
+ * fetches sources at all, and from where. A follow-up on the same topic must reuse what is
+ * already in the prompt (no requests, no seconds), a question that moved must fetch again,
+ * the reader's own library comes before any network source and is read with the network
+ * switch off, and a round with no source anywhere must degrade to teaching without a source
+ * block rather than failing.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,6 +22,11 @@ const gatherEvidenceMock = vi.fn();
 vi.mock("@breadcrumb/feature-factcheck", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@breadcrumb/feature-factcheck")>()),
   gatherTopicEvidence: (...args: unknown[]) => gatherEvidenceMock(...args),
+}));
+
+const retrieveFromLibraryMock = vi.fn();
+vi.mock("../library/libraryRetrieval", () => ({
+  retrieveFromLibrary: (...args: unknown[]) => retrieveFromLibraryMock(...args),
 }));
 
 const embedTextsMock = vi.fn();
@@ -43,6 +50,15 @@ function evidence(index: number) {
   };
 }
 
+function ownPassage(index: number) {
+  return {
+    id: `passage-${index}`,
+    documentId: "doc-1",
+    headingPath: `《测量史》 → 第一章 → 第 ${index} 节`,
+    body: `珠穆朗玛峰的岩面高度为 8844.43 米。资料第 ${index} 节。`,
+  };
+}
+
 /** Unit vectors whose cosine is exactly `Math.cos(angle)` against [1, 0, 0]. */
 function atAngle(angle: number): number[] {
   return [Math.cos(angle), Math.sin(angle), 0];
@@ -54,6 +70,8 @@ beforeEach(() => {
   providers = [{ name: "wikipedia" }];
   settings.networkEnabled = true;
   gatherEvidenceMock.mockReset();
+  retrieveFromLibraryMock.mockReset();
+  retrieveFromLibraryMock.mockResolvedValue([]);
   embedTextsMock.mockReset();
   useGroundingStore.setState({
     materialByConversation: new Map(),
@@ -104,13 +122,15 @@ describe("prepareRoundMaterial", () => {
     expect(gatherEvidenceMock).toHaveBeenCalledTimes(2);
   });
 
-  it("asks for nothing while the network switch is off", async () => {
+  it("reads the library but no provider while the network switch is off", async () => {
     settings.networkEnabled = false;
-    expect(await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高")).toBeNull();
+    retrieveFromLibraryMock.mockResolvedValue([ownPassage(1)]);
+    const material = await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(material?.passages.map((passage) => passage.source)).toEqual(["library"]);
     expect(gatherEvidenceMock).not.toHaveBeenCalled();
   });
 
-  it("says so rather than searching when no source is reachable from here", async () => {
+  it("degrades to no material when the library is empty and no source is reachable", async () => {
     providers = [];
     expect(await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高")).toBeNull();
     expect(gatherEvidenceMock).not.toHaveBeenCalled();
@@ -197,6 +217,64 @@ describe("an elliptical follow-up", () => {
       expect.anything(),
       ["光合作用是怎么回事"],
       8,
+    );
+  });
+});
+
+describe("the reader's own library", () => {
+  it("is searched first and its passages lead the material", async () => {
+    retrieveFromLibraryMock.mockResolvedValue([ownPassage(1), ownPassage(2)]);
+    const material = await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(retrieveFromLibraryMock).toHaveBeenCalledWith("珠穆朗玛峰有多高", expect.any(String), {
+      topK: 8,
+      rerank: true,
+    });
+    // Attention order: rank 1 opens the block, rank 2 closes it; the network fills between.
+    const sources = material?.passages.map((passage) => passage.source);
+    expect(sources?.[0]).toBe("library");
+    expect(sources?.at(-1)).toBe("library");
+    expect(sources).toHaveLength(4);
+    expect(material?.passages[0]).toMatchObject({
+      title: "《测量史》 → 第一章 → 第 1 节",
+      url: "library:passage-1",
+      text: "珠穆朗玛峰的岩面高度为 8844.43 米。资料第 1 节。",
+    });
+  });
+
+  it("asks the network only for what the library left of the budget", async () => {
+    retrieveFromLibraryMock.mockResolvedValue([1, 2, 3, 4, 5].map(ownPassage));
+    await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(gatherEvidenceMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), 3);
+  });
+
+  it("sends no request at all when the library fills the budget", async () => {
+    retrieveFromLibraryMock.mockResolvedValue([1, 2, 3, 4, 5, 6, 7, 8].map(ownPassage));
+    const material = await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(gatherEvidenceMock).not.toHaveBeenCalled();
+    expect(material?.passages).toHaveLength(8);
+  });
+
+  it("spends the reranker on a new subject and not on a same-topic re-ask", async () => {
+    gatherEvidenceMock.mockResolvedValueOnce([]);
+    await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(retrieveFromLibraryMock).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ rerank: true }),
+    );
+    // Nothing was held, so the same-topic follow-up retrieves again — without the reranker.
+    useGroundingStore.getState().setMaterial(CONVERSATION, {
+      question: "珠穆朗玛峰有多高",
+      passages: [],
+      entities: ["珠穆朗玛峰"],
+      vectors: [atAngle(0)],
+    });
+    embedTextsMock.mockResolvedValueOnce([ON_TOPIC]);
+    await prepareRoundMaterial(CONVERSATION, "那它有多高");
+    expect(retrieveFromLibraryMock).toHaveBeenLastCalledWith(
+      "珠穆朗玛峰 那它有多高",
+      expect.anything(),
+      expect.objectContaining({ rerank: false }),
     );
   });
 });

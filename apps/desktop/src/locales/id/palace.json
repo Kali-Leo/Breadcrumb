@@ -27,8 +27,8 @@
   },
   "map": {
     "loadFailed": "Peta tidak termuat. Meninggalkan halaman ini lalu kembali memicu percobaan ulang.",
-    "emptySea": "Di sini masih laut lepas. Setelah sebuah percakapan, pulau pertama muncul.",
-    "devDemoHint": "DEV: tekan 0 untuk memuat peta contoh",
+    "emptySea": "Peta terbuka setelah beberapa waktu belajar.",
+    "devDemoHint": "DEV: tekan 0 untuk memuat peta demo",
     "zoomInHint": "Gulir ke atas: masuk ke wilayah di bawah kursor",
     "zoomOutHint": "Gulir ke bawah: naik satu tingkat",
     "clickNameHint": "Klik sebuah nama: langsung menuju ke sana",

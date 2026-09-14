@@ -7,6 +7,7 @@
  * for the rest of the session, first island or not.
  * Main exports: MapStateOverlay, MapOverlayState.
  */
+import { Map as MapIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /** null = the map speaks for itself. */
@@ -25,7 +26,7 @@ export function MapStateOverlay({ state }: { state: Exclude<MapOverlayState, nul
   const { t } = useTranslation(["palace"]);
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-stone-50 text-stone-400">
-      <span className="text-4xl">🏛️</span>
+      <MapIcon className="h-10 w-10" strokeWidth={1.5} aria-hidden="true" />
       <p className="text-sm">
         {state === "loadFailed" ? t("palace:map.loadFailed") : t("palace:map.emptySea")}
       </p>

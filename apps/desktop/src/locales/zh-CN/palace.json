@@ -27,8 +27,8 @@
   },
   "map": {
     "loadFailed": "地图加载失败。离开本页后返回会重新尝试。",
-    "emptySea": "这里仍是一片海。开始对话后，第一座岛屿会浮现。",
-    "devDemoHint": "DEV：按 0 载入演示海图",
+    "emptySea": "学习一段时间后地图开放。",
+    "devDemoHint": "DEV：按 0 载入演示地图",
     "zoomInHint": "滚轮向上：进入指针所指的区域",
     "zoomOutHint": "滚轮向下：返回上一层",
     "clickNameHint": "点击地名：直接前往",

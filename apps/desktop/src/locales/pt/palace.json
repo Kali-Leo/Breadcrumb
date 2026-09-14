@@ -31,8 +31,8 @@
   },
   "map": {
     "loadFailed": "O mapa não carregou. Sair desta página e voltar dispara outra tentativa.",
-    "emptySea": "Isto ainda é mar aberto. Depois de uma conversa, a primeira ilha aparece.",
-    "devDemoHint": "DEV: aperte 0 para carregar a carta de exemplo",
+    "emptySea": "O mapa abre após algum tempo de aprendizado.",
+    "devDemoHint": "DEV: pressione 0 para carregar o mapa de demonstração",
     "zoomInHint": "Rolar para cima: entrar na área sob o ponteiro",
     "zoomOutHint": "Rolar para baixo: voltar um nível",
     "clickNameHint": "Selecionar um nome: ir direto para lá",

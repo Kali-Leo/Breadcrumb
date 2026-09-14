@@ -14,13 +14,18 @@
  *    material.
  * Nothing here is UI: the block is prompt text, and the passage list is what the annotation
  * layer later aligns the answer against.
- * Main exports: TopicPassage, TOPIC_PASSAGE_COUNT, orderForAttention, buildTopicPassages,
- * formatPassageBlock.
+ * Main exports: TopicPassage, TOPIC_PASSAGE_COUNT, LIBRARY_SOURCE, orderForAttention,
+ * buildTopicPassages, formatPassageBlock.
  */
 import type { EvidenceItem } from "../evidence/provider";
 
 /** How many passages one topic carries into the prompt. */
 export const TOPIC_PASSAGE_COUNT = 8;
+
+/** The `source` of a passage from the reader's own library. Reserved next to the provider
+ * names so that the app that builds such passages and the screen that names them agree on
+ * one id; for these, `title` is the passage's heading path rather than a page name. */
+export const LIBRARY_SOURCE = "library";
 
 export interface TopicPassage {
   /** 1-based, and it is the display order — `[3]` is the third block in the prompt. */

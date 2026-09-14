@@ -31,7 +31,7 @@
   },
   "map": {
     "loadFailed": "La carte ne s'est pas chargée. Quitter cette page puis revenir déclenche une nouvelle tentative.",
-    "emptySea": "C'est encore la pleine mer. Après une conversation, la première île fait surface.",
+    "emptySea": "La carte s'ouvre après un temps d'apprentissage.",
     "devDemoHint": "DEV : appuie sur 0 pour charger la carte de démonstration",
     "zoomInHint": "Molette vers le haut : entrer dans la zone sous le pointeur",
     "zoomOutHint": "Molette vers le bas : remonter d'un niveau",
