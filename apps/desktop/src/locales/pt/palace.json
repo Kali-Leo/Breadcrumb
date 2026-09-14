@@ -200,7 +200,8 @@
     "interest": "Temas de interesse",
     "helps": "Onde o já aprendido ajuda",
     "difficulty": "Passos mais leves",
-    "goalGap": "Rumo à meta",
-    "reset": "Restaurar o padrão"
+    "reset": "Restaurar o padrão",
+    "endIgnore": "Ignorado",
+    "endPrefer": "Prioritário"
   }
 }

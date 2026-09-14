@@ -184,7 +184,8 @@
     "interest": "感兴趣的内容",
     "helps": "已学内容能帮上忙的",
     "difficulty": "难度较低的",
-    "goalGap": "朝向目标的",
-    "reset": "恢复默认"
+    "reset": "恢复默认",
+    "endIgnore": "不考虑",
+    "endPrefer": "优先"
   }
 }

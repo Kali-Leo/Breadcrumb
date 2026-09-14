@@ -184,7 +184,8 @@
     "interest": "Topik yang menarik",
     "helps": "Tempat pengetahuan yang ada membantu",
     "difficulty": "Langkah yang lebih ringan",
-    "goalGap": "Menuju tujuan",
-    "reset": "Pulihkan pengaturan bawaan"
+    "reset": "Pulihkan pengaturan bawaan",
+    "endIgnore": "Diabaikan",
+    "endPrefer": "Diutamakan"
   }
 }

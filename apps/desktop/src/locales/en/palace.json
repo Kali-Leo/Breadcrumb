@@ -192,7 +192,8 @@
     "interest": "Topics of interest",
     "helps": "Where existing knowledge helps",
     "difficulty": "Lighter steps",
-    "goalGap": "Toward the goal",
-    "reset": "Restore defaults"
+    "reset": "Restore defaults",
+    "endIgnore": "Ignored",
+    "endPrefer": "Preferred"
   }
 }

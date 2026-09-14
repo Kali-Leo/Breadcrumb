@@ -15,28 +15,24 @@ import {
 import { usePlannerStore } from "../../stores/plannerStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 
-/** goalGap only matters in ranked mode, where a goal exists to weigh toward. */
-const SLIDER_ORDER: (keyof UserRecommendationWeights)[] = [
+/** goalGap is not a slider: inside a goal everything is toward it, so the weight keeps its
+ * default and the learner tunes the three factors that actually trade off. */
+const SLIDER_ORDER = [
   "interest",
   "helps",
   "difficulty",
-  "goalGap",
-];
+] as const satisfies readonly (keyof UserRecommendationWeights)[];
 
 export function RecommendTuningCard() {
   const { t } = useTranslation("palace");
   const weights = useSettingsStore((state) => state.recommendationWeights);
-  const learningMode = useSettingsStore((state) => state.learningMode);
 
   async function apply(next: UserRecommendationWeights): Promise<void> {
     await useSettingsStore.getState().setRecommendationWeights(next);
     void usePlannerStore.getState().recompute();
   }
 
-  const shown = SLIDER_ORDER.filter(
-    (component) => component !== "goalGap" || learningMode === "ranked",
-  );
-  const isDefault = shown.every(
+  const isDefault = SLIDER_ORDER.every(
     (component) => weights[component] === USER_WEIGHT_DEFAULTS[component],
   );
 
@@ -45,7 +41,7 @@ export function RecommendTuningCard() {
       <h3 className="font-semibold text-stone-600">{t("tuning.title")}</h3>
       <p className="mt-1 text-stone-400">{t("tuning.intro")}</p>
       <ul className="mt-2 space-y-2">
-        {shown.map((component) => (
+        {SLIDER_ORDER.map((component) => (
           <li key={component}>
             <label className="block text-stone-600">
               {t(`tuning.${component}`)}
@@ -61,6 +57,10 @@ export function RecommendTuningCard() {
                 className="mt-0.5 block w-full accent-amber-500"
               />
             </label>
+            <div className="flex justify-between text-[10px] text-stone-400" aria-hidden="true">
+              <span>{t("tuning.endIgnore")}</span>
+              <span>{t("tuning.endPrefer")}</span>
+            </div>
           </li>
         ))}
       </ul>

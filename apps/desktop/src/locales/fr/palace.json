@@ -200,7 +200,8 @@
     "interest": "Sujets d'intérêt",
     "helps": "Là où les acquis aident",
     "difficulty": "Pas plus légers",
-    "goalGap": "Vers l'objectif",
-    "reset": "Rétablir les valeurs par défaut"
+    "reset": "Rétablir les valeurs par défaut",
+    "endIgnore": "Ignoré",
+    "endPrefer": "Prioritaire"
   }
 }

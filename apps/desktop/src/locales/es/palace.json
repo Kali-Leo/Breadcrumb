@@ -200,7 +200,8 @@
     "interest": "Temas de interés",
     "helps": "Donde lo ya aprendido ayuda",
     "difficulty": "Pasos más ligeros",
-    "goalGap": "Hacia el objetivo",
-    "reset": "Restaurar los valores por defecto"
+    "reset": "Restaurar los valores por defecto",
+    "endIgnore": "Se ignora",
+    "endPrefer": "Prioritario"
   }
 }

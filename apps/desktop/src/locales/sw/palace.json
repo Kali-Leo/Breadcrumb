@@ -192,7 +192,8 @@
     "interest": "Mada zinazovutia",
     "helps": "Pale ujuzi uliopo unaposaidia",
     "difficulty": "Hatua nyepesi",
-    "goalGap": "Kuelekea lengo",
-    "reset": "Rudisha chaguo-msingi"
+    "reset": "Rudisha chaguo-msingi",
+    "endIgnore": "Haizingatiwi",
+    "endPrefer": "Kipaumbele"
   }
 }
