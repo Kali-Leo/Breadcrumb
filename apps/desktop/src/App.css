@@ -81,3 +81,43 @@ summary {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* The 推荐偏好 sliders are balances, not amounts: the default sits in the middle and the
+   thumb leans toward one of two results. The stock control paints the track from its start
+   edge up to the thumb, which reads as "how much", so the track is drawn here instead — a
+   flat line with a tick at the default, the same in both writing directions. */
+.lean-slider {
+  appearance: none;
+  height: 0.875rem;
+  background:
+    linear-gradient(#78716c, #78716c) center / 2px 0.75rem no-repeat,
+    linear-gradient(#d6d3d1, #d6d3d1) center / 100% 0.1875rem no-repeat;
+}
+.lean-slider::-webkit-slider-runnable-track {
+  height: 0.875rem;
+  background: transparent;
+}
+.lean-slider::-moz-range-track {
+  height: 0.875rem;
+  background: transparent;
+}
+/* One rule per engine: a selector list with a pseudo-element the engine does not know is
+   dropped whole, thumb and all. */
+.lean-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  background: #f59e0b;
+  box-shadow: 0 0 0 1px #d6d3d1;
+}
+.lean-slider::-moz-range-thumb {
+  appearance: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  background: #f59e0b;
+  box-shadow: 0 0 0 1px #d6d3d1;
+}

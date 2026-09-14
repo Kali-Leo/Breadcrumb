@@ -201,11 +201,11 @@
     "reset": "Restaurar o padrão",
     "interest": {
       "low": "Fora dos interesses recentes",
-      "high": "Seguindo os interesses recentes"
+      "high": "Segundo os interesses recentes"
     },
     "helps": {
-      "low": "Terreno totalmente novo",
-      "high": "Continuação do já aprendido"
+      "low": "Terreno novo",
+      "high": "Continuação do aprendido"
     },
     "difficulty": {
       "low": "Mais desafiador",

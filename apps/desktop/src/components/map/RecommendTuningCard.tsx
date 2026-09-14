@@ -66,18 +66,14 @@ export function RecommendTuningCard() {
                 value={lean}
                 aria-label={`${low} / ${high}`}
                 aria-valuetext={current}
-                list={`tuning-${component}-stops`}
                 onChange={(event) =>
                   void apply({
                     ...weights,
                     [component]: leanToWeight(component, Number(event.target.value)),
                   })
                 }
-                className="block w-full accent-amber-500"
+                className="lean-slider block w-full cursor-pointer"
               />
-              <datalist id={`tuning-${component}-stops`}>
-                <option value="0" />
-              </datalist>
               <div className="flex gap-1 text-[10px] text-stone-400" aria-hidden="true">
                 <span className={`${END_LABEL} text-start ${lean < 0 ? CURRENT : ""}`}>{low}</span>
                 <span className={`shrink-0 ${lean === 0 ? CURRENT : ""}`}>

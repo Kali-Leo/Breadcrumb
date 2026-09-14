@@ -201,11 +201,11 @@
     "reset": "Restaurar los valores por defecto",
     "interest": {
       "low": "Fuera de los intereses recientes",
-      "high": "Siguiendo los intereses recientes"
+      "high": "Según los intereses recientes"
     },
     "helps": {
-      "low": "Terreno completamente nuevo",
-      "high": "Continuación de lo ya aprendido"
+      "low": "Terreno nuevo",
+      "high": "Continuación de lo aprendido"
     },
     "difficulty": {
       "low": "Más desafiante",

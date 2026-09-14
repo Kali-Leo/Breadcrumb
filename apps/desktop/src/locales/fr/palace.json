@@ -200,11 +200,11 @@
     "default": "Par défaut",
     "reset": "Rétablir les valeurs par défaut",
     "interest": {
-      "low": "En dehors des intérêts récents",
-      "high": "Dans la ligne des intérêts récents"
+      "low": "Hors des intérêts récents",
+      "high": "Selon les intérêts récents"
     },
     "helps": {
-      "low": "Terrain entièrement nouveau",
+      "low": "Terrain nouveau",
       "high": "Prolongement des acquis"
     },
     "difficulty": {
