@@ -1,6 +1,6 @@
 {
   "title": "Mis materiales",
-  "intro": "Importa material cuyo uso te esté permitido. Las preguntas posteriores buscan primero en este material.",
+  "intro": "Importa tu propio material. Las preguntas posteriores buscan primero en este material.",
   "import": "Importar un archivo",
   "importing": "Leyendo",
   "formats": "Se admiten PDF, Markdown y texto sin formato",

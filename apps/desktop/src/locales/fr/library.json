@@ -1,6 +1,6 @@
 {
   "title": "Mes documents",
-  "intro": "Importe des documents que tu as le droit d'utiliser. Les questions posées ensuite sont d'abord recherchées dans ces documents.",
+  "intro": "Importe tes propres documents. Les questions posées ensuite sont d'abord recherchées dans ces documents.",
   "import": "Importer un fichier",
   "importing": "Lecture en cours",
   "formats": "Les formats PDF, Markdown et texte brut sont pris en charge",
