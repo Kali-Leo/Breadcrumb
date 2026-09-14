@@ -40,7 +40,7 @@
     "openButton": "À propos de cette page",
     "chat": {
       "title": "Conversation avec l'IA",
-      "body": "Pose une question sur ce que tu veux comprendre. L'interrupteur au-dessus décide de la forme des réponses : le mode étude renvoie des questions et invite à expliquer soi-même, tandis que la discussion libre est un échange ordinaire.",
+      "body": "Pose une question sur ce que tu veux comprendre. L'interrupteur au-dessus décide de la forme des réponses : le mode étude explique selon le type de question et, pour un exercice, commence par un indice, tandis que la discussion libre est un échange ordinaire.",
       "point1": "Les notions abordées sont rangées dans la carte automatiquement",
       "point2": "Les titres de conversation sont générés automatiquement et cessent de changer une fois renommés à la main"
     },

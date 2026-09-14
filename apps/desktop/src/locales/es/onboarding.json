@@ -40,7 +40,7 @@
     "openButton": "Sobre esta página",
     "chat": {
       "title": "Conversación con la IA",
-      "body": "Pregunta sobre lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio devuelve preguntas e invita a explicarlo con tus propias palabras, mientras que la charla libre es un intercambio normal.",
+      "body": "Pregunta sobre lo que quieras entender. El interruptor de arriba decide cómo llegan las respuestas: el modo estudio explica según el tipo de pregunta y, en los ejercicios, empieza con una pista, mientras que la charla libre es un intercambio normal.",
       "point1": "Los conceptos que salen se archivan en el mapa automáticamente",
       "point2": "Los títulos de las conversaciones se generan automáticamente y dejan de cambiar una vez renombrados a mano"
     },

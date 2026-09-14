@@ -40,7 +40,7 @@
     "openButton": "Sobre esta página",
     "chat": {
       "title": "Conversa com a IA",
-      "body": "Pergunte sobre o que você quer entender. O interruptor acima decide como as respostas chegam: o modo estudo devolve perguntas e convida a explicar com as próprias palavras, enquanto a conversa livre é um diálogo comum.",
+      "body": "Pergunte sobre o que você quer entender. O interruptor acima decide como as respostas chegam: o modo estudo explica conforme o tipo de pergunta e, nos exercícios, começa por uma dica, enquanto a conversa livre é um diálogo comum.",
       "point1": "Os conceitos que surgem são arquivados no mapa automaticamente",
       "point2": "Os títulos das conversas são gerados automaticamente e param de mudar depois de renomeados à mão"
     },

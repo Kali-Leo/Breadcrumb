@@ -40,7 +40,7 @@
     "openButton": "About this page",
     "chat": {
       "title": "Talking to the AI",
-      "body": "Ask about anything you want to understand. The switch above decides how replies come back: study mode asks questions in return and invites you to explain things yourself, while free chat is an ordinary back-and-forth.",
+      "body": "Ask about anything you want to understand. The switch above decides how replies come back: study mode explains according to the kind of question and starts with a hint when you are working through an exercise, while free chat is an ordinary back-and-forth.",
       "point1": "Concepts that come up are filed into the map automatically",
       "point2": "Chat titles are generated automatically and stop changing once renamed by hand"
     },

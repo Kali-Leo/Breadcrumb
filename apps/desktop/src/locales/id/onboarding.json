@@ -40,7 +40,7 @@
     "openButton": "Tentang halaman ini",
     "chat": {
       "title": "Berbicara dengan AI",
-      "body": "Tanyakan apa pun yang ingin kamu pahami. Sakelar di atas menentukan bentuk jawaban: mode belajar balik mengajukan pertanyaan dan mengajakmu menjelaskan sendiri, sedangkan obrolan bebas adalah percakapan biasa.",
+      "body": "Tanyakan apa pun yang ingin kamu pahami. Sakelar di atas menentukan bentuk jawaban: mode belajar menjelaskan sesuai jenis pertanyaan dan memberi petunjuk lebih dulu saat mengerjakan latihan, sedangkan obrolan bebas adalah percakapan biasa.",
       "point1": "Konsep yang muncul masuk ke peta secara otomatis",
       "point2": "Judul percakapan dibuat otomatis dan berhenti berubah setelah diganti secara manual"
     },
