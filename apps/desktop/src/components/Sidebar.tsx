@@ -69,11 +69,11 @@ export function Sidebar({
   // left for one edition to have and the other to lack.
   const navEntries: NavEntry[] = [
     [Settings, t("nav.settings"), onOpenSettings, activeView === "settings"],
-    [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
-    [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
     // The one nav label that does not live in `common`: every string this feature added
     // is in its own namespace, and one key in two places is how catalogues drift.
     [BookOpen, tLibrary("title"), onOpenLibrary, activeView === "library"],
+    [ALargeSmall, t("nav.vocabulary"), onOpenVocab, activeView === "vocab"],
+    [Compass, t("nav.discover"), onOpenDiscovery, activeView === "discovery"],
     [MapIcon, t("nav.map"), onOpenMap, activeView === "map"],
   ];
 

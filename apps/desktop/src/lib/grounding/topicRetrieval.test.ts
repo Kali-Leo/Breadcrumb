@@ -6,7 +6,7 @@
  * switch off, and a round with no source anywhere must degrade to teaching without a source
  * block rather than failing.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const settings = { networkEnabled: true };
 vi.mock("../../stores/settingsStore", () => ({
@@ -38,6 +38,11 @@ vi.mock("../platform/failureLog", () => ({ degradeSilently: vi.fn() }));
 
 const { useGroundingStore } = await import("../../stores/groundingStore");
 const { openRoundMaterial, prepareRoundMaterial } = await import("./topicRetrieval");
+const { initI18n } = await import("../../i18n");
+
+beforeAll(async () => {
+  await initI18n();
+});
 
 const CONVERSATION = "conversation-1";
 
