@@ -10,21 +10,23 @@
 // "present" is a question about whole files, each written to a `.part` sibling and renamed
 // into place only once its body has fully arrived and passed its check.
 //
-// This module answers where a file belongs and whether the copy on disk is whole; fetching
-// one and deciding whether to keep what came back is model_download.rs.
+// This module answers where a file belongs and whether the copy on disk is whole; which host
+// to ask is model_sources.rs, and fetching one file and deciding whether to keep what came
+// back is model_download.rs.
 
-use crate::model_download::download;
+use crate::model_sources::{fetch_missing, sources_for};
 use std::path::{Path, PathBuf};
 
 /// Overridable so a build can be pointed at a local file server or a fork's own assets
-/// without a recompile; the default is where the released packs live.
+/// without a recompile; the default is where the released packs live. The override replaces
+/// this one source, not the list — the mirror behind it stays.
 ///
 /// GitHub release assets, not a repository tree: these graphs are 311 MB and 570 MB, and a
 /// file in a git repository may be 100. A release download redirects to a host that sends no
 /// CORS headers, which is why the browser edition reads split copies out of the repository
 /// instead — reqwest has no such rule, so this edition takes the whole file in one request.
 /// Mirrored in packages/core-vectors/src/embeddingModel.ts (DEFAULT_MODEL_FILE_BASE_URL).
-const MODEL_BASE_URL_ENV: &str = "BREADCRUMB_MODEL_BASE_URL";
+pub const MODEL_BASE_URL_ENV: &str = "BREADCRUMB_MODEL_BASE_URL";
 pub const DEFAULT_MODEL_BASE_URL: &str =
     "https://github.com/Kali-Leo/breadcrumb-language-packs/releases/download/";
 
@@ -51,7 +53,18 @@ pub struct ModelFile {
     pub sha256: &'static str,
 }
 
-/// The base every model URL is built from, with the trailing slash the callers assume.
+/// Everything the download machinery needs to know about one model, so the embedder and the
+/// reranker each hand over one value and neither repeats the other's plumbing.
+pub struct ModelSpec {
+    /// The directory the files live in on disk, and the folder the mirror publishes them under.
+    pub dir: &'static str,
+    /// The GitHub release the whole files hang off — also the git tag the mirror's pieces are
+    /// pinned to, so one string names one set of bytes on both sources.
+    pub release: &'static str,
+    pub files: &'static [ModelFile],
+}
+
+/// The base every release URL is built from, with the trailing slash the callers assume.
 pub fn model_base_url() -> String {
     let configured = std::env::var(MODEL_BASE_URL_ENV)
         .ok()
@@ -106,36 +119,19 @@ pub fn is_complete_file(path: &Path) -> bool {
 }
 
 /// Makes sure every file is on disk, downloading only the ones that are not. Returns an error
-/// without touching the network when something is missing and `allow_download` is false.
-///
-/// `release` is the tag the model's assets hang off, which is the whole of the path between
-/// the base URL and the file name.
-pub async fn ensure(
-    dir: &Path,
-    release: &str,
-    files: &[ModelFile],
-    allow_download: bool,
-) -> Result<(), String> {
-    if is_cached(dir, files) {
+/// without touching the network when something is missing and `allow_download` is false —
+/// before a source is even named, which is what makes "zero requests" true.
+pub async fn ensure(dir: &Path, spec: &ModelSpec, allow_download: bool) -> Result<(), String> {
+    if is_cached(dir, spec.files) {
         return Ok(());
     }
     if !allow_download {
         return Err(format!(
-            "{release} is not downloaded and the network switch is off"
+            "{} is not downloaded and the network switch is off",
+            spec.release
         ));
     }
-    let missing = files
-        .iter()
-        .filter(|file| !is_complete_file(&dir.join(file.name)));
-    let base = model_base_url();
-    let client = reqwest::Client::builder()
-        .build()
-        .map_err(|error| error.to_string())?;
-    for file in missing {
-        let url = format!("{base}{release}/{}", file.name);
-        download(&client, &url, &dir.join(file.name), file).await?;
-    }
-    Ok(())
+    fetch_missing(dir, spec, &sources_for(spec)).await
 }
 
 /// Reads the tokenizer quartet a user-defined fastembed model is constructed from.

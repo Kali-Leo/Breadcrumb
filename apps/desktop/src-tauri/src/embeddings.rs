@@ -19,7 +19,7 @@
 // onnxruntime rehydrates 85M weights on every inference instead of folding the dequantize
 // away; by batch 8 that cost is spread out and the gap nearly closes. Size, not latency.
 
-use crate::model_files::{self, ModelFile};
+use crate::model_files::{self, ModelFile, ModelSpec};
 use fastembed::{
     InitOptionsUserDefined, Pooling, QuantizationMode, TextEmbedding, UserDefinedEmbeddingModel,
 };
@@ -89,6 +89,13 @@ const MODEL_FILES: [ModelFile; 5] = [
         sha256: "24cebbf2ef20fc317256e03e52ac7b2ca326586f946a8427ecac036332bf0933",
     },
 ];
+
+/// What model_files hands to the download machinery; the tests read the pieces above.
+pub(crate) const SPEC: ModelSpec = ModelSpec {
+    dir: LOCAL_DIR,
+    release: RELEASE_TAG,
+    files: &MODEL_FILES,
+};
 
 /// Keeps the first [`EMBEDDING_DIMENSIONS`] values of a vector and makes it unit length again.
 ///
@@ -163,7 +170,7 @@ pub async fn embed_texts(
         return Err("text too long to embed".into());
     }
     let dir = model_files::model_dir(&app, LOCAL_DIR)?;
-    model_files::ensure(&dir, RELEASE_TAG, &MODEL_FILES, allow_download).await?;
+    model_files::ensure(&dir, &SPEC, allow_download).await?;
     // On the blocking pool: loading the graph and running it are both long synchronous calls,
     // and a tokio worker held for the duration of either is a frozen window.
     tauri::async_runtime::spawn_blocking(move || embed_blocking(dir, texts))

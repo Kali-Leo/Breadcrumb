@@ -23,6 +23,8 @@ mod fsrs_optim;
 // a switched-off network. Shared by the embedder and the reranker.
 mod model_download;
 mod model_files;
+mod model_shards;
+mod model_sources;
 mod open_database;
 #[cfg(test)]
 mod open_database_tests;

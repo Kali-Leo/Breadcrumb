@@ -18,8 +18,8 @@
  * number with no meaning. So `model` is read, not just written: anything that is not
  * EMBEDDING_MODEL is treated as absent everywhere, and nothing mixes.
  * Main exports: EMBEDDING_MODEL, EMBEDDING_MODEL_REPO, EMBEDDING_DIMENSIONS, RERANKER_MODEL,
- * MODEL_PACKS_REPO, MODEL_FILE_BASE_URL_ENV, EMBEDDING_MODEL_TAG, isCurrentEmbedding,
- * truncateToStoredWidth.
+ * MODEL_PACKS_REPO, MODEL_FILE_BASE_URL_ENV, EMBEDDING_MODEL_TAG, modelMirrorDirectory,
+ * isCurrentEmbedding, truncateToStoredWidth.
  */
 import { l2Normalize } from "./similarity";
 
@@ -88,6 +88,20 @@ export const RERANKER_MODEL_DIR = "bge-reranker-v2-m3";
  */
 export const EMBEDDING_MODEL_TAG = "gte-multilingual-base-int8-v1";
 export const RERANKER_MODEL_TAG = "bge-reranker-v2-m3-int8-v1";
+
+/**
+ * The CDN that serves the repository tree, where each graph sits in 18 MiB pieces beside a
+ * manifest. The browser's only way to the files (release assets carry no CORS headers) and
+ * the desktop's second, after the release — and the one a user on the mainland actually gets,
+ * since jsDelivr is reachable there and GitHub's release host mostly is not. Mirrored in
+ * apps/desktop/src-tauri/src/model_sources.rs (MIRROR_BASE).
+ */
+export const MODEL_MIRROR_BASE = "https://cdn.jsdelivr.net/gh/";
+
+/** The directory a model's pieces are read from on the mirror, trailing slash included. */
+export function modelMirrorDirectory(dir: string, tag: string): string {
+  return `${MODEL_MIRROR_BASE}${MODEL_PACKS_REPO}@${tag}/models/${dir}/`;
+}
 
 /** True only for vectors this build can compare against the ones it computes now. Every
  * caller that reads a stored vector goes through this rather than trusting the row. */

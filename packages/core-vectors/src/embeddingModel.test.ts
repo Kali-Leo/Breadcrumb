@@ -5,10 +5,16 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_MODEL_FILE_BASE_URL,
   EMBEDDING_DIMENSIONS,
   EMBEDDING_MODEL,
+  EMBEDDING_MODEL_DIR,
+  EMBEDDING_MODEL_TAG,
   EMBEDDING_QUERY_PREFIX,
   isCurrentEmbedding,
+  modelMirrorDirectory,
+  RERANKER_MODEL_DIR,
+  RERANKER_MODEL_TAG,
   truncateToStoredWidth,
 } from "./embeddingModel";
 
@@ -21,6 +27,24 @@ describe("embedding model identity", () => {
 
   it("uses no task prefix, unlike the e5 model it replaces", () => {
     expect(EMBEDDING_QUERY_PREFIX).toBe("");
+  });
+
+  /**
+   * The desktop builds these same URLs in Rust (model_files.rs DEFAULT_MODEL_BASE_URL,
+   * model_sources.rs MIRROR_BASE, embeddings.rs and reranker.rs RELEASE_TAG / LOCAL_DIR) and
+   * pins them in its own tests; a change on one side that is not made on the other shows up
+   * here or there as a literal that no longer matches, rather than as a 404 on a user's machine.
+   */
+  it("names the same release and mirror locations the desktop downloads from", () => {
+    expect(DEFAULT_MODEL_FILE_BASE_URL).toBe(
+      "https://github.com/Kali-Leo/breadcrumb-language-packs/releases/download/",
+    );
+    expect(modelMirrorDirectory(EMBEDDING_MODEL_DIR, EMBEDDING_MODEL_TAG)).toBe(
+      "https://cdn.jsdelivr.net/gh/Kali-Leo/breadcrumb-language-packs@gte-multilingual-base-int8-v1/models/gte-multilingual-base/",
+    );
+    expect(modelMirrorDirectory(RERANKER_MODEL_DIR, RERANKER_MODEL_TAG)).toBe(
+      "https://cdn.jsdelivr.net/gh/Kali-Leo/breadcrumb-language-packs@bge-reranker-v2-m3-int8-v1/models/bge-reranker-v2-m3/",
+    );
   });
 
   it("treats any other model's vectors as not comparable", () => {

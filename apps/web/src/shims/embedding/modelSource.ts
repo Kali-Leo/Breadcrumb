@@ -14,6 +14,7 @@ import {
   EMBEDDING_MODEL_DIR,
   EMBEDDING_MODEL_TAG,
   MODEL_PACKS_REPO,
+  modelMirrorDirectory,
 } from "@breadcrumb/core-vectors";
 
 /**
@@ -30,8 +31,8 @@ export const MODEL_DIR = EMBEDDING_MODEL_DIR;
 const REPO_PATH = `models/${MODEL_DIR}/`;
 
 /**
- * jsDelivr first. The desktop's copies of these files are GitHub release assets, which this
- * edition cannot touch at all — a release download redirects to a host that answers without
+ * jsDelivr first — the same mirror the desktop falls back to, built from the same constants.
+ * The desktop's first choice is GitHub release assets, which this edition cannot touch at all — a release download redirects to a host that answers without
  * CORS headers, so the fetch fails before a byte arrives. What is left is the repository tree,
  * and of the ways to read it jsDelivr is the one that is both reachable from the mainland and
  * unmetered. Its limit is 20 MB per file, which is why the graph is published in pieces
@@ -41,7 +42,7 @@ const REPO_PATH = `models/${MODEL_DIR}/`;
  * fallback for a network that blocks the CDN; it is second because it is slow from the places
  * that most need this to work.
  */
-export const JSDELIVR_BASE = `https://cdn.jsdelivr.net/gh/${MODEL_ID}@${EMBEDDING_MODEL_TAG}/${REPO_PATH}`;
+export const JSDELIVR_BASE = modelMirrorDirectory(MODEL_DIR, EMBEDDING_MODEL_TAG);
 export const RAW_GITHUB_BASE = `https://raw.githubusercontent.com/${MODEL_ID}/${EMBEDDING_MODEL_TAG}/${REPO_PATH}`;
 export const MODEL_SOURCES: readonly string[] = [JSDELIVR_BASE, RAW_GITHUB_BASE];
 

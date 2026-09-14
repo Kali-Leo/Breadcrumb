@@ -5,7 +5,7 @@
 // honestly takes a few cache directories built by hand.
 
 use super::{
-    is_cached, is_complete_file, model_base_url, ModelFile, DEFAULT_MODEL_BASE_URL,
+    is_cached, is_complete_file, model_base_url, ModelFile, ModelSpec, DEFAULT_MODEL_BASE_URL,
     MODEL_BASE_URL_ENV,
 };
 
@@ -16,6 +16,11 @@ const FILES: [ModelFile; 2] = [
     ModelFile { name: "model_int8.onnx", bytes: 7, sha256: "" },
     ModelFile { name: "tokenizer.json", bytes: 7, sha256: "" },
 ];
+const SPEC: ModelSpec = ModelSpec {
+    dir: "gte-multilingual-base",
+    release: "gte-multilingual-base-int8-v1",
+    files: &FILES,
+};
 
 struct Scratch(std::path::PathBuf);
 
@@ -92,20 +97,10 @@ fn an_empty_file_is_not_a_downloaded_file() {
 #[test]
 fn the_network_switch_is_answered_before_anything_is_fetched() {
     let scratch = Scratch::new("switch");
-    let refused = tauri::async_runtime::block_on(super::ensure(
-        &scratch.0,
-        "gte-multilingual-base-int8-v1",
-        &FILES,
-        false,
-    ));
+    let refused = tauri::async_runtime::block_on(super::ensure(&scratch.0, &SPEC, false));
     assert!(refused.is_err(), "a missing model must not be fetched behind the switch");
     scratch.complete();
-    let allowed = tauri::async_runtime::block_on(super::ensure(
-        &scratch.0,
-        "gte-multilingual-base-int8-v1",
-        &FILES,
-        false,
-    ));
+    let allowed = tauri::async_runtime::block_on(super::ensure(&scratch.0, &SPEC, false));
     assert!(allowed.is_ok(), "a cached model must work with the switch off");
 }
 

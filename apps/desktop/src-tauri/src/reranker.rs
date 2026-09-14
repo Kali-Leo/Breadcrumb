@@ -18,7 +18,7 @@
 // against fp32 and runs 2.5x faster than the weight-only alternative. Two models, opposite
 // answers, and neither one is a precedent for the other.
 
-use crate::model_files::{self, ModelFile};
+use crate::model_files::{self, ModelFile, ModelSpec};
 use fastembed::{RerankInitOptionsUserDefined, RerankResult, TextRerank, UserDefinedRerankingModel};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -78,6 +78,13 @@ const MODEL_FILES: [ModelFile; 5] = [
         sha256: "7e4c1cc848840aeccdd763458c18dd525eb0f795c992e00ebe9c28554e7db2d4",
     },
 ];
+
+/// What model_files hands to the download machinery; the tests read the pieces above.
+pub(crate) const SPEC: ModelSpec = ModelSpec {
+    dir: LOCAL_DIR,
+    release: RELEASE_TAG,
+    files: &MODEL_FILES,
+};
 
 /// Puts fastembed's results back into the order the passages arrived in.
 ///
@@ -155,7 +162,7 @@ pub async fn rerank_pairs(
         return Err("passage too long to rerank".into());
     }
     let dir = model_files::model_dir(&app, LOCAL_DIR)?;
-    model_files::ensure(&dir, RELEASE_TAG, &MODEL_FILES, allow_download).await?;
+    model_files::ensure(&dir, &SPEC, allow_download).await?;
     tauri::async_runtime::spawn_blocking(move || rerank_blocking(dir, query, passages))
         .await
         .map_err(|error| error.to_string())?
