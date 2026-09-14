@@ -104,6 +104,7 @@ export function LibraryPanel() {
           type="button"
           onClick={() => void importDocument()}
           disabled={importing}
+          data-hint="libraryImport"
           className="flex items-center gap-2 rounded-lg bg-stone-800 px-3 py-2 text-sm text-white transition-colors hover:bg-stone-700 disabled:opacity-50"
         >
           <Upload size={15} strokeWidth={1.8} />

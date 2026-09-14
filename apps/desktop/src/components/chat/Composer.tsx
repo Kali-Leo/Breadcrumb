@@ -66,12 +66,15 @@ export function Composer(props: ComposerProps) {
     // pb: the soft keyboard's height, when a browser is telling us (apps/web/src/main.tsx
     // publishes --keyboard-inset); zero everywhere else, so nothing moves on a desktop.
     <div
-      data-tour="composer"
+      data-composer
       className="border-t border-stone-200 bg-white pb-[var(--keyboard-inset,0px)]"
     >
       {onSetStudyMode !== undefined && (
         <div className="px-3 pt-2">
-          <div className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm">
+          <div
+            data-hint="chatMode"
+            className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm"
+          >
             {(
               [
                 [false, t("composer.freeLabel"), t("composer.freeHint")],
@@ -108,6 +111,9 @@ export function Composer(props: ComposerProps) {
             }
           }}
           enterKeyHint={coarse ? "enter" : undefined}
+          // Only the plain chat composer introduces itself; a companion window's is the same
+          // control in a different conversation.
+          data-hint={onSetStudyMode === undefined ? undefined : "composer"}
           rows={2}
           disabled={disabled}
           placeholder={t(coarse ? "composer.placeholderTouch" : "composer.placeholder")}

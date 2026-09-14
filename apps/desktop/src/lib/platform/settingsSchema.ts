@@ -5,9 +5,9 @@
  * it holds no state and imports nothing from the stores, so any module can read the schema
  * without pulling zustand in.
  * Main exports: ApiConfig, PriceOverride, FeatureSwitches, CompareCategory, LearningMode,
- * RouteParams, PageGuideId, PageGuidesSeen, the SETTINGS_KEYS constants,
- * DEFAULT_ROUTE_PARAMS, DEFAULT_SWITCHES, PAGE_GUIDE_IDS, pageGuidesSeenSchema,
- * parsePageGuidesSeen, guessLanguage, guessMainlandNetwork.
+ * RouteParams, FeatureHintId, HintsSeen, the SETTINGS_KEYS constants,
+ * DEFAULT_ROUTE_PARAMS, DEFAULT_SWITCHES, FEATURE_HINT_IDS, hintsSeenSchema,
+ * parseHintsSeen, guessLanguage, guessMainlandNetwork.
  */
 import { matchLanguage } from "@breadcrumb/core-i18n";
 import type { Currency } from "@breadcrumb/core-llm";
@@ -106,13 +106,10 @@ export const API_CONNECTION_OK_KEY = "apiConnectionOk";
 export const NETWORK_ENABLED_KEY = "networkEnabled";
 /** Zhipu search key for the open-web evidence layer — its own row, not part of API_CONFIG_KEY. */
 export const WEB_SEARCH_KEY_KEY = "webSearchApiKey";
-/** Set once the first-run guide has been finished or skipped, so it never reappears. */
+/** Set once the opening slides have been finished or skipped, so they never reappear. */
 export const ONBOARDING_SEEN_KEY = "onboardingSeen";
-/** Separate from ONBOARDING_SEEN_KEY: the checklist is meant to outlive the tour and survive
- * restarts, so "has seen the introduction" and "is done with the checklist" are two answers. */
-export const CHECKLIST_DISMISSED_KEY = "onboardingChecklistDismissed";
-/** Which pages have already shown their own short guide — one object, not one row per page. */
-export const PAGE_GUIDES_SEEN_KEY = "onboardingPageGuidesSeen";
+/** Which features have already shown their first-use hint — one object, not one row each. */
+export const HINTS_SEEN_KEY = "onboardingHintsSeen";
 export const FEATURE_SWITCHES_KEY = "featureSwitches";
 export const MAINLAND_NETWORK_KEY = "mainlandNetwork";
 export const LEARNING_MODE_KEY = "learningMode";
@@ -148,36 +145,35 @@ export const DEFAULT_SWITCHES: FeatureSwitches = {
   trailSummary: true,
 };
 
-/** The pages that carry a guide of their own: the four views the sidebar switches between,
- * plus the settings page and the companions roster that opens over whatever is on screen. */
-export const PAGE_GUIDE_IDS = [
-  "chat",
-  "map",
-  "vocab",
-  "discovery",
-  "companions",
-  "settings",
+/** Every feature that says one sentence about itself the first time it is on screen. The
+ * order is the order two hints visible at once are shown in. */
+export const FEATURE_HINT_IDS = [
+  "chatMode",
+  "composer",
+  "groundingMark",
+  "mapFirstIsland",
+  "discoveryScript",
+  "libraryImport",
+  "settingsApi",
 ] as const;
 
-export type PageGuideId = (typeof PAGE_GUIDE_IDS)[number];
+export type FeatureHintId = (typeof FEATURE_HINT_IDS)[number];
 
-/** A page is present here once its guide has been read; absent means "not yet". Every field
- * is optional so a page added later starts unseen for everyone, with no migration. */
-export const pageGuidesSeenSchema = z.object({
-  chat: z.boolean().optional(),
-  map: z.boolean().optional(),
-  vocab: z.boolean().optional(),
-  discovery: z.boolean().optional(),
-  companions: z.boolean().optional(),
-  settings: z.boolean().optional(),
-});
+/** A feature is present here once its hint has been shown; absent means "not yet". Every
+ * field is optional so a feature added later starts unseen for everyone, with no migration. */
+export const hintsSeenSchema = z.object(
+  Object.fromEntries(FEATURE_HINT_IDS.map((id) => [id, z.boolean().optional()])) as Record<
+    FeatureHintId,
+    z.ZodOptional<z.ZodBoolean>
+  >,
+);
 
-export type PageGuidesSeen = z.infer<typeof pageGuidesSeenSchema>;
+export type HintsSeen = z.infer<typeof hintsSeenSchema>;
 
-/** A stored row that cannot be read means nobody can prove a guide was shown, and showing a
- * short card again is the harmless direction to fail in. */
-export function parsePageGuidesSeen(stored: unknown): PageGuidesSeen {
-  const parsed = pageGuidesSeenSchema.safeParse(stored ?? {});
+/** A stored row that cannot be read means nobody can prove a hint was shown, and showing a
+ * one-line bubble again is the harmless direction to fail in. */
+export function parseHintsSeen(stored: unknown): HintsSeen {
+  const parsed = hintsSeenSchema.safeParse(stored ?? {});
   return parsed.success ? parsed.data : {};
 }
 

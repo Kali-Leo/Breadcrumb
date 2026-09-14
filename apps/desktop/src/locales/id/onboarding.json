@@ -1,98 +1,60 @@
 {
-  "next": "Lanjut",
-  "back": "Kembali",
-  "skip": "Lewati perkenalan",
+  "next": "Berikutnya",
+  "back": "Sebelumnya",
+  "skip": "Lewati",
   "welcome": {
     "label": "Perkenalan",
-    "card1Title": "Ini apa",
-    "card1Body": "Breadcrumb adalah teman belajar. Apa pun yang ingin kamu pahami dapat dibicarakan di sini dengan AI; di samping jawabannya, isi percakapan dicatat secara otomatis.",
-    "card2Title": "Percakapan menumbuhkan peta",
-    "card2Body": "Setiap konsep yang muncul menjadi pulau di peta, ditempatkan dan dikelompokkan secara otomatis. Area yang lama tidak disentuh warnanya memudar, yang menandakan bagian mana yang dikesampingkan.",
-    "card3Title": "Tempat data disimpan, dan apa yang berbiaya",
-    "card3Body": "Percakapan, peta, dan kosakata semuanya tersimpan di komputer ini. Yang berbiaya hanyalah layanan AI yang kamu sediakan sendiri, ditagih menurut pemakaian; setiap fitur yang mengeluarkan biaya dapat dimatikan sendiri-sendiri, dengan harganya tertulis di sebelahnya di pengaturan.",
     "start": "Mulai",
-    "tryDemo": "Muat data contoh dulu",
-    "demoNote": "Data contoh adalah catatan belajar selama tiga bulan dan dapat dihapus dalam satu langkah.",
-    "installing": "Menyiapkan data contoh"
-  },
-  "tour": {
-    "label": "Tur berpemandu",
-    "finish": "Mulai memakainya",
-    "exit": "Keluar dari tur",
-    "chatTitle": "Semua bermula di sini",
-    "chatBody": "Cukup ketikkan teks di sini. Pada sakelar di atas, jawaban mode belajar menuntun berpikir dan berlatih, sedangkan obrolan bebas adalah percakapan biasa.",
-    "trailTitle": "Percakapan terdaftar di bilah sisi",
-    "trailBody": "Judul dibuat otomatis, dalam bentuk «konsep pertama hingga konsep terakhir». Setelah judul diganti secara manual, judul itu tidak berubah lagi.",
-    "mapTitle": "Percakapan menumbuhkan peta",
-    "mapBody": "Pulau-pulau ini disusun dari percakapan secara otomatis. Menggulir ke atas masuk satu tingkat ke dalam.",
-    "mapEmptyTitle": "Untuk sekarang ini laut lepas",
-    "mapEmptyBody": "Konsep yang dibahas dalam tiap pertukaran pesan otomatis menjadi pulau di sini.",
-    "mirrorTitle": "Warna yang memudar adalah hal biasa",
-    "mirrorBody": "Kedua panel ini menunjukkan berapa banyak yang sudah dipelajari dan berapa yang masih diingat. Bagian yang lama tidak disentuh memudar dengan sendirinya. Semua di halaman ini dihitung di mesin ini.",
-    "spendingTitle": "Biaya disebutkan di awal",
-    "spendingBody": "Setiap fitur yang berbiaya ada di halaman ini dan dapat dimatikan sendiri-sendiri. Perkiraan biaya sekali pakai tertulis di sini sebelum fitur dinyalakan, dan angka itu diukur, bukan dikira-kira.",
-    "yourTurnTitle": "Ajukan pertanyaan",
-    "yourTurnBody": "Tanyakan sesuatu yang benar-benar ingin kamu pahami. Peta mengikuti percakapan dengan sendirinya."
-  },
-  "pageGuide": {
-    "label": "Tentang halaman ini",
-    "gotIt": "OK",
-    "openButton": "Tentang halaman ini",
-    "chat": {
-      "title": "Berbicara dengan AI",
-      "body": "Tanyakan apa pun yang ingin kamu pahami. Sakelar di atas menentukan bentuk jawaban: mode belajar menjelaskan sesuai jenis pertanyaan dan memberi petunjuk lebih dulu saat mengerjakan latihan, sedangkan obrolan bebas adalah percakapan biasa.",
-      "point1": "Konsep yang muncul masuk ke peta secara otomatis",
-      "point2": "Judul percakapan dibuat otomatis dan berhenti berubah setelah diganti secara manual"
-    },
-    "map": {
-      "title": "Peta dari apa yang sudah dipelajari",
-      "body": "Setiap pulau adalah konsep yang pernah dibicarakan, ditempatkan dan dikelompokkan secara otomatis. Turun satu tingkat menampilkan rinciannya, termasuk percakapan mana saja yang menyinggungnya.",
-      "point1": "Yang gelap baru saja disentuh; yang pudar sudah lama dikesampingkan",
-      "point2": "Semua di halaman ini dihitung di mesin ini"
-    },
-    "vocab": {
-      "title": "Belajar bahasa sambil mengobrol",
-      "body": "Setelah dinyalakan, sebagian kata dalam jawaban AI datang dalam bahasa yang sedang dipelajari, dan dapat ditebak sebelum definisinya ditampilkan. Halaman ini memuat daftar kata yang sedang berjalan, dan dari sini pula kamus diunduh dan diganti.",
-      "point1": "Cek kosakata dapat dilakukan lebih dulu, sehingga kata baru dimulai dari tingkat yang sudah dicapai",
-      "point2": "Pelafalan dan definisi berasal dari kamus terunduh yang tinggal di mesin ini dan bekerja tanpa jaringan"
-    },
-    "discovery": {
-      "title": "Tontonan sehari-hari, terkumpul di satu halaman",
-      "body": "Setelah skrip peramban dipasang, tontonan di Bilibili dan YouTube dikumpulkan di sini: kata yang sering muncul, topik yang belakangan bermunculan, dan tontonan panjang. Semuanya diolah di komputer ini.",
-      "point1": "Halaman ini terbuka sebelum skrip apa pun dipasang, dan memuat langkah-langkah yang diperlukan",
-      "point2": "Catatan tontonan tinggal di mesin ini"
-    },
-    "companions": {
-      "title": "Teman yang datang membawa pertanyaan",
-      "body": "Setiap hari beberapa tokoh mampir dengan pertanyaan yang diambil dari materi yang baru dipelajari. Menjelaskan sesuatu kepada mereka adalah cara memeriksa apakah hal itu dapat dijelaskan dengan jelas. Percakapan ini berlangsung di jendela kecil tersendiri.",
-      "point1": "Yang mereka tanyakan diambil dari catatan belajarmu sendiri",
-      "point2": "Seluruh fitur ini dapat dimatikan di pengaturan"
-    },
-    "settings": {
-      "title": "Kunci, bahasa, dan pengeluaran",
-      "body": "Langkah pertama adalah mengisi alamat dan kunci sebuah layanan AI, yang tanpanya fitur-fitur yang bergantung pada AI tidak dapat berjalan. Halaman ini juga mengganti bahasa antarmuka, bahasa jawaban AI, dan apakah aplikasi tersambung ke jaringan.",
-      "point1": "«Sakelar dan pengeluaran» memuat setiap fitur yang berbiaya, masing-masing dengan sakelarnya dan perkiraan biaya sekali pakai",
-      "point2": "Kunci hanya tersimpan di komputer ini"
+    "tryDemo": "Muat data contoh",
+    "demoNote": "Contohnya adalah riwayat tiga bulan seorang pelajar dan bisa dihapus dari pengaturan dalam satu langkah.",
+    "installing": "Menyiapkan data contoh",
+    "slides": {
+      "chat": {
+        "title": "Obrolan",
+        "body": "Tanyakan di sini apa pun yang ingin dipahami. Mode belajar memandu penalaran dan latihan; ngobrol bebas adalah percakapan biasa."
+      },
+      "map": {
+        "title": "Peta",
+        "body": "Setiap konsep yang muncul dalam obrolan ditata di peta sebagai pulau, ditempatkan dan dikelompokkan secara otomatis."
+      },
+      "discovery": {
+        "title": "Jelajah",
+        "body": "Tonton Bilibili dan YouTube seperti biasa. Setelah skrip dipasang, apa yang ditonton terkumpul di sini, dan minat masuk dari situ."
+      },
+      "library": {
+        "title": "Materi saya",
+        "body": "Impor materi milik sendiri; jawaban dicari lebih dulu di dalamnya."
+      },
+      "companions": {
+        "title": "Rekan",
+        "body": "Beberapa rekan datang bertanya tentang apa yang baru dipelajari, dan giliran kamu yang menjelaskan."
+      },
+      "memory": {
+        "title": "Ingatan",
+        "body": "Pulau yang lama tidak disentuh memudar, sehingga terlihat bagian mana yang sudah lama dikesampingkan."
+      },
+      "start": {
+        "title": "Mulai",
+        "body": "Obrolan, peta, dan materi tetap di komputer ini. Data contoh bisa dimuat lebih dulu untuk melihat seperti apa tiga bulan."
+      }
     }
   },
-  "checklist": {
-    "title": "Mulai dari sini",
-    "connect": "Hubungkan layanan AI",
-    "ask": "Ajukan pertanyaan pertama",
-    "map": "Buka peta",
-    "dismiss": "Sembunyikan daftar ini",
-    "demoNote": "Peta saat ini menampilkan data contoh.",
-    "removeDemo": "Hapus data contoh",
-    "removingDemo": "Menghapus",
-    "takeTour": "Mulai tur",
-    "tourNote": "Sekitar dua menit, sambil menunjuk layar yang sebenarnya. Escape keluar dari tur."
+  "hints": {
+    "label": "Petunjuk fitur",
+    "chatMode": "Mode belajar memandu penalaran dan latihan; ngobrol bebas adalah percakapan biasa.",
+    "composer": "Tulis pertanyaan di sini; konsep yang dibahas dalam obrolan ditata ke peta secara otomatis.",
+    "groundingMark": "Titik di akhir kalimat menandai sumbernya; klik untuk membaca teks aslinya.",
+    "mapFirstIsland": "Pulau terbentuk dari konsep yang muncul dalam obrolan; pulau yang lama tidak disentuh memudar.",
+    "discoveryScript": "Satu skrip untuk Bilibili dan satu untuk YouTube, masing-masing dipasang sekali; setelah itu, tonton seperti biasa dan apa yang ditonton terkumpul di halaman ini secara otomatis.",
+    "libraryImport": "Materi yang diimpor tetap di komputer ini; pertanyaan dicari lebih dulu di dalamnya, lalu dijawab oleh AI.",
+    "settingsApi": "Masukkan alamat dan kunci layanan AI di sini; kuncinya tetap di komputer ini."
   },
   "settings": {
-    "title": "Tur berpemandu",
-    "hint": "Perkenalan dapat dilihat lagi, catatan tiap halaman dipulihkan, dan data contoh dihapus.",
-    "replay": "Lihat perkenalan lagi",
-    "resetGuides": "Pulihkan semua catatan halaman",
-    "guidesRestored": "Sudah dipulihkan. Tiap halaman menampilkan catatannya sekali lagi saat berikutnya dibuka.",
+    "title": "Langkah awal",
+    "hint": "Perkenalan bisa diputar lagi, semua petunjuk fitur dimunculkan kembali, dan data contoh dihapus.",
+    "replay": "Putar perkenalan lagi",
+    "resetHints": "Atur ulang petunjuk",
+    "hintsRestored": "Sudah diatur ulang. Setiap fitur menampilkan petunjuknya sekali lagi saat berikutnya muncul di layar.",
     "removeDemo": "Hapus data contoh",
     "demoAbsent": "Tidak ada data contoh"
   }

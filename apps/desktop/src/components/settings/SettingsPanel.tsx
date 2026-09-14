@@ -45,7 +45,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <button
             key={target}
             type="button"
-            data-tour={target === "billing" ? "billing-tab" : undefined}
             onClick={() => setPage(target)}
             className={tabClass(page === target)}
           >

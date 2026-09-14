@@ -1,12 +1,12 @@
 /**
- * Purpose: the settings row that lets someone see the introduction again, bring back every
- * page's own note, take the guided tour, and take the example data away.
+ * Purpose: the settings row that lets someone see the opening slides again, bring back every
+ * feature's first-use bubble, and take the example data away.
  *
  * They matter for the same reason: an introduction that can only happen once is a trap for
  * anyone who skipped it in a hurry, and example data you cannot remove is not an example, it
- * is contamination. Restoring the page notes needs no reload — nothing is showing them yet,
- * and they appear on the next visit to each page. Removing the example data does reload,
- * because half the app is already holding those rows in memory.
+ * is contamination. Bringing the bubbles back needs no reload — nothing is showing them yet,
+ * and each appears the next time its feature is on screen. Removing the example data does
+ * reload, because half the app is already holding those rows in memory.
  * Main exports: OnboardingSettingsRow.
  */
 import { useEffect, useState } from "react";
@@ -14,11 +14,14 @@ import { useTranslation } from "react-i18next";
 import { hasDemoData, removeDemoData } from "../../lib/platform/demoData";
 import { useSettingsStore } from "../../stores/settingsStore";
 
+const BUTTON =
+  "rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-60 coarse:min-h-11";
+
 export function OnboardingSettingsRow() {
   const { t } = useTranslation("onboarding");
   const [demoInstalled, setDemoInstalled] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [guidesRestored, setGuidesRestored] = useState(false);
+  const [hintsRestored, setHintsRestored] = useState(false);
 
   useEffect(() => {
     void hasDemoData().then(setDemoInstalled);
@@ -37,7 +40,7 @@ export function OnboardingSettingsRow() {
               .resetOnboarding()
               .then(() => window.location.reload());
           }}
-          className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 coarse:min-h-11"
+          className={BUTTON}
         >
           {t("settings.replay")}
         </button>
@@ -46,12 +49,12 @@ export function OnboardingSettingsRow() {
           onClick={() => {
             void useSettingsStore
               .getState()
-              .resetPageGuides()
-              .then(() => setGuidesRestored(true));
+              .resetHints()
+              .then(() => setHintsRestored(true));
           }}
-          className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 coarse:min-h-11"
+          className={BUTTON}
         >
-          {t("settings.resetGuides")}
+          {t("settings.resetHints")}
         </button>
         {demoInstalled ? (
           <button
@@ -61,7 +64,7 @@ export function OnboardingSettingsRow() {
               setBusy(true);
               void removeDemoData().then(() => window.location.reload());
             }}
-            className="rounded-xl border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 disabled:opacity-60 coarse:min-h-11"
+            className={BUTTON}
           >
             {t("settings.removeDemo")}
           </button>
@@ -69,7 +72,7 @@ export function OnboardingSettingsRow() {
           <span className="text-stone-400 text-xs">{t("settings.demoAbsent")}</span>
         )}
       </div>
-      {guidesRestored && <p className="text-stone-500 text-sm">{t("settings.guidesRestored")}</p>}
+      {hintsRestored && <p className="text-stone-500 text-sm">{t("settings.hintsRestored")}</p>}
     </section>
   );
 }

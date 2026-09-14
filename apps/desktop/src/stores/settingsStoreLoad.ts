@@ -20,7 +20,6 @@ import {
   API_CONFIG_KEY,
   API_CONNECTION_OK_KEY,
   type ApiConfig,
-  CHECKLIST_DISMISSED_KEY,
   COMPARE_CATEGORY_KEY,
   type CompareCategory,
   DEFAULT_SWITCHES,
@@ -28,14 +27,14 @@ import {
   type FeatureSwitches,
   guessLanguage,
   guessMainlandNetwork,
+  HINTS_SEEN_KEY,
   LANGUAGE_KEY,
   LEARNING_MODE_KEY,
   type LearningMode,
   MAINLAND_NETWORK_KEY,
   NETWORK_ENABLED_KEY,
   ONBOARDING_SEEN_KEY,
-  PAGE_GUIDES_SEEN_KEY,
-  parsePageGuidesSeen,
+  parseHintsSeen,
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
@@ -53,8 +52,7 @@ export type SettingsSnapshot = Pick<
   | "apiConnectionOk"
   | "networkEnabled"
   | "onboardingSeen"
-  | "checklistDismissed"
-  | "pageGuidesSeen"
+  | "hintsSeen"
   | "featureSwitches"
   | "mainlandNetwork"
   | "webSearchApiKey"
@@ -74,8 +72,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     apiConnectionOk,
     networkEnabled,
     onboardingSeen,
-    checklistDismissed,
-    storedPageGuidesSeen,
+    storedHintsSeen,
     featureSwitches,
     mainlandNetwork,
     storedWebSearchApiKey,
@@ -90,8 +87,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     repos.settings.get<boolean>(API_CONNECTION_OK_KEY),
     repos.settings.get<boolean>(NETWORK_ENABLED_KEY),
     repos.settings.get<boolean>(ONBOARDING_SEEN_KEY),
-    repos.settings.get<boolean>(CHECKLIST_DISMISSED_KEY),
-    repos.settings.get<unknown>(PAGE_GUIDES_SEEN_KEY),
+    repos.settings.get<unknown>(HINTS_SEEN_KEY),
     repos.settings.get<FeatureSwitches>(FEATURE_SWITCHES_KEY),
     repos.settings.get<boolean>(MAINLAND_NETWORK_KEY),
     repos.settings.get<string>(WEB_SEARCH_KEY_KEY),
@@ -109,8 +105,7 @@ export async function loadSettingsSnapshot(): Promise<SettingsSnapshot> {
     apiConnectionOk: apiConnectionOk ?? false,
     networkEnabled: networkEnabled ?? true,
     onboardingSeen: onboardingSeen ?? false,
-    checklistDismissed: checklistDismissed ?? false,
-    pageGuidesSeen: parsePageGuidesSeen(storedPageGuidesSeen),
+    hintsSeen: parseHintsSeen(storedHintsSeen),
     featureSwitches: { ...DEFAULT_SWITCHES, ...featureSwitches },
     mainlandNetwork: mainlandNetwork ?? guessMainlandNetwork(),
     webSearchApiKey: typeof storedWebSearchApiKey === "string" ? storedWebSearchApiKey : "",

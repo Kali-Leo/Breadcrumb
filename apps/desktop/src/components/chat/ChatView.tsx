@@ -71,10 +71,10 @@ export function ChatView() {
   }, [locatedMessageId, messages]);
 
   // The composer's height, published to the enclosing <main> as --composer-height so an
-  // overlay anchored to its bottom corner (the first-steps checklist) can sit above the input
-  // row instead of on the send button where the screen is too small for both.
+  // overlay anchored to its bottom corner (the selection focus prompt) can sit above the
+  // input row instead of on the send button where the screen is too small for both.
   useEffect(() => {
-    const composer = rootRef.current?.querySelector<HTMLElement>('[data-tour="composer"]');
+    const composer = rootRef.current?.querySelector<HTMLElement>("[data-composer]");
     const host = rootRef.current?.closest("main");
     if (!composer || !host) return;
     const observer = new ResizeObserver(() =>

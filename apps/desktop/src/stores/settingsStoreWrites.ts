@@ -19,20 +19,19 @@ import {
   API_CONFIG_KEY,
   API_CONNECTION_OK_KEY,
   type ApiConfig,
-  CHECKLIST_DISMISSED_KEY,
   COMPARE_CATEGORY_KEY,
   type CompareCategory,
   FEATURE_SWITCHES_KEY,
+  type FeatureHintId,
   type FeatureSwitches,
+  HINTS_SEEN_KEY,
+  hintsSeenSchema,
   LANGUAGE_KEY,
   LEARNING_MODE_KEY,
   type LearningMode,
   MAINLAND_NETWORK_KEY,
   NETWORK_ENABLED_KEY,
   ONBOARDING_SEEN_KEY,
-  PAGE_GUIDES_SEEN_KEY,
-  type PageGuideId,
-  pageGuidesSeenSchema,
   RECOMMENDATION_WEIGHTS_KEY,
   ROUTE_PARAMS_KEY,
   type RouteParams,
@@ -46,9 +45,8 @@ export interface SettingsWriteActions {
   setApiConnectionOk(ok: boolean): Promise<void>;
   markOnboardingSeen(): Promise<void>;
   resetOnboarding(): Promise<void>;
-  dismissChecklist(): Promise<void>;
-  markPageGuideSeen(page: PageGuideId): Promise<void>;
-  resetPageGuides(): Promise<void>;
+  markHintSeen(id: FeatureHintId): Promise<void>;
+  resetHints(): Promise<void>;
   setNetworkEnabled(enabled: boolean): Promise<void>;
   setFeatureSwitch(feature: keyof FeatureSwitches, enabled: boolean): Promise<void>;
   setMainlandNetwork(enabled: boolean): Promise<void>;
@@ -81,36 +79,30 @@ export function createSettingsWriteActions(
       set({ apiConnectionOk: ok });
     },
 
-    /** Puts the newcomer experience back so it runs again on the next load. */
+    /** Puts the opening slides back so they run again on the next load. */
     async resetOnboarding() {
       const repos = await getRepos();
       await repos.settings.set(ONBOARDING_SEEN_KEY, false, nowIso());
-      await repos.settings.set(CHECKLIST_DISMISSED_KEY, false, nowIso());
-      set({ onboardingSeen: false, checklistDismissed: false });
+      set({ onboardingSeen: false });
     },
 
-    async dismissChecklist() {
+    /** One feature's hint has been on screen. Parsed on the way out as well as on the way
+     * in: the settings table takes whatever it is handed, and this row is read back by name.
+     * The store is updated first, so two hints deciding in the same frame cannot both win. */
+    async markHintSeen(id) {
+      const hintsSeen = hintsSeenSchema.parse({ ...get().hintsSeen, [id]: true });
+      set({ hintsSeen });
       const repos = await getRepos();
-      await repos.settings.set(CHECKLIST_DISMISSED_KEY, true, nowIso());
-      set({ checklistDismissed: true });
+      await repos.settings.set(HINTS_SEEN_KEY, hintsSeen, nowIso());
     },
 
-    /** One page's guide has been read. Parsed on the way out as well as on the way in: the
-     * settings table takes whatever it is handed, and this row is read back by name. */
-    async markPageGuideSeen(page) {
-      const pageGuidesSeen = pageGuidesSeenSchema.parse({ ...get().pageGuidesSeen, [page]: true });
+    /** Every hint becomes unseen again, so each one appears once more the next time its
+     * feature is on screen. Separate from resetOnboarding: someone who wants the bubbles back
+     * is not asking to sit through the slides again. */
+    async resetHints() {
       const repos = await getRepos();
-      await repos.settings.set(PAGE_GUIDES_SEEN_KEY, pageGuidesSeen, nowIso());
-      set({ pageGuidesSeen });
-    },
-
-    /** Every page guide becomes unread again, so each one appears once more the next time
-     * that page is opened. Separate from resetOnboarding: someone who wants the page notes
-     * back is not asking to be walked through the introduction again. */
-    async resetPageGuides() {
-      const repos = await getRepos();
-      await repos.settings.set(PAGE_GUIDES_SEEN_KEY, {}, nowIso());
-      set({ pageGuidesSeen: {} });
+      await repos.settings.set(HINTS_SEEN_KEY, {}, nowIso());
+      set({ hintsSeen: {} });
     },
 
     async markOnboardingSeen() {

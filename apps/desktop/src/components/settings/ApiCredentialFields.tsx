@@ -31,6 +31,7 @@ export function ApiCredentialFields({
         {t("api.apiKey")}
         <input
           type="password"
+          data-hint="settingsApi"
           value={apiKey}
           onChange={(e) => onEdit({ apiKey: e.target.value })}
           placeholder="sk-…"

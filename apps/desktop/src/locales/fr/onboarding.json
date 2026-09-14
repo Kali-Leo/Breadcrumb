@@ -1,98 +1,60 @@
 {
   "next": "Suivant",
-  "back": "Retour",
-  "skip": "Passer l'introduction",
+  "back": "Précédent",
+  "skip": "Passer",
   "welcome": {
     "label": "Présentation",
-    "card1Title": "Ce que c'est",
-    "card1Body": "Breadcrumb est un compagnon d'apprentissage. Tout ce que tu cherches à comprendre peut être abordé ici avec une IA ; à côté des réponses, ce que la conversation a couvert est enregistré automatiquement.",
-    "card2Title": "Les conversations font pousser une carte",
-    "card2Body": "Chaque notion qui apparaît devient une île sur une carte, placée et regroupée automatiquement. Les zones non touchées depuis un moment pâlissent, ce qui indique quelles parties ont été mises de côté.",
-    "card3Title": "Où restent les données, et ce qui coûte de l'argent",
-    "card3Body": "Les conversations, la carte et le vocabulaire sont tous stockés sur cet ordinateur. La seule chose payante est le service d'IA que tu fournis toi-même, facturé à l'usage ; chaque fonction qui dépense peut être éteinte séparément, avec le prix écrit à côté dans les réglages.",
     "start": "Commencer",
-    "tryDemo": "Charger d'abord les données d'exemple",
-    "demoNote": "L'exemple est un relevé de trois mois d'apprentissage et peut être retiré en une seule étape.",
-    "installing": "Préparation des données d'exemple"
-  },
-  "tour": {
-    "label": "Visite guidée",
-    "finish": "Commencer à l'utiliser",
-    "exit": "Quitter la visite",
-    "chatTitle": "Tout commence ici",
-    "chatBody": "Il suffit de saisir du texte ici. Dans l'interrupteur au-dessus, les réponses du mode étude guident vers la réflexion et l'exercice, et la discussion libre est une conversation ordinaire.",
-    "trailTitle": "Les conversations sont listées dans la barre latérale",
-    "trailBody": "Les titres sont générés automatiquement, sous la forme « de la première notion à la dernière ». Une fois qu'un titre est renommé à la main, il n'est plus jamais modifié.",
-    "mapTitle": "Les conversations font pousser la carte",
-    "mapBody": "Ces îles ont été assemblées automatiquement à partir des conversations. La molette vers le haut fait entrer d'un niveau.",
-    "mapEmptyTitle": "C'est la pleine mer pour l'instant",
-    "mapEmptyBody": "Les notions abordées à chaque échange deviennent ici des îles automatiquement.",
-    "mirrorTitle": "L'atténuation des couleurs est normale",
-    "mirrorBody": "Ces deux panneaux montrent ce qui a été appris et ce dont il reste un souvenir. Les parties non touchées depuis longtemps s'estompent d'elles-mêmes. Tout ce que montre cette page est calculé sur cette machine.",
-    "spendingTitle": "Les coûts sont indiqués à l'avance",
-    "spendingBody": "Toutes les fonctions payantes sont sur cette page et peuvent être éteintes séparément. Le coût approximatif d'une utilisation est écrit ici avant l'activation, et ce chiffre est mesuré, pas estimé.",
-    "yourTurnTitle": "Poser une question",
-    "yourTurnBody": "Pose une question sur quelque chose que tu veux vraiment comprendre. La carte suit d'elle-même."
-  },
-  "pageGuide": {
-    "label": "À propos de cette page",
-    "gotIt": "OK",
-    "openButton": "À propos de cette page",
-    "chat": {
-      "title": "Conversation avec l'IA",
-      "body": "Pose une question sur ce que tu veux comprendre. L'interrupteur au-dessus décide de la forme des réponses : le mode étude explique selon le type de question et, pour un exercice, commence par un indice, tandis que la discussion libre est un échange ordinaire.",
-      "point1": "Les notions abordées sont rangées dans la carte automatiquement",
-      "point2": "Les titres de conversation sont générés automatiquement et cessent de changer une fois renommés à la main"
-    },
-    "map": {
-      "title": "Une carte de ce qui a été appris",
-      "body": "Chaque île est une notion qui a été abordée, placée et regroupée automatiquement. Descendre d'un niveau montre le détail, y compris les conversations qui l'ont touchée.",
-      "point1": "Les endroits foncés ont été touchés récemment ; les pâles sont mis de côté depuis un moment",
-      "point2": "Tout ce que montre cette page est calculé sur cette machine"
-    },
-    "vocab": {
-      "title": "Apprendre une langue en discutant",
-      "body": "Une fois activé, certains mots des réponses de l'IA arrivent dans la langue en cours d'apprentissage et peuvent être devinés avant l'affichage de la définition. Cette page liste les mots en cours et sert à télécharger et à changer les dictionnaires.",
-      "point1": "Un test de vocabulaire peut être passé d'abord, pour que les mots nouveaux partent du niveau déjà atteint",
-      "point2": "La prononciation et les définitions viennent d'un dictionnaire téléchargé qui reste sur cette machine et fonctionne hors ligne"
-    },
-    "discovery": {
-      "title": "Les visionnages quotidiens, rassemblés sur une page",
-      "body": "Une fois un script de navigateur installé, ce que tu regardes sur Bilibili et YouTube est rassemblé ici : les mots qui reviennent, les sujets apparus récemment et les contenus longs regardés. Tout est traité sur cet ordinateur.",
-      "point1": "Cette page s'ouvre avant l'installation de tout script et énumère les étapes nécessaires",
-      "point2": "L'historique de visionnage reste sur cette machine"
-    },
-    "companions": {
-      "title": "Des compagnons qui viennent avec des questions",
-      "body": "Chaque jour, quelques personnages viennent avec des questions tirées de ce qui a été appris récemment. Leur expliquer quelque chose est une façon de vérifier si cela peut être expliqué clairement. Ces échanges se déroulent dans une petite fenêtre séparée.",
-      "point1": "Ce qu'ils demandent est tiré de ton propre historique d'apprentissage",
-      "point2": "La fonction entière peut être éteinte dans les réglages"
-    },
-    "settings": {
-      "title": "Clés, langues et dépenses",
-      "body": "La première étape consiste à saisir l'adresse et la clé d'un service d'IA, sans quoi les fonctions qui dépendent de l'IA ne peuvent pas fonctionner. Cette page change aussi la langue de l'interface, la langue des réponses de l'IA et l'accès au réseau.",
-      "point1": "« Interrupteurs et dépenses » énumère chaque fonction payante, avec son propre interrupteur et le coût approximatif d'une utilisation",
-      "point2": "La clé est stockée uniquement sur cet ordinateur"
+    "tryDemo": "Charger des données d'exemple",
+    "demoNote": "L'exemple est l'historique de trois mois d'un apprenant et se retire depuis les réglages en une étape.",
+    "installing": "Préparation des données d'exemple",
+    "slides": {
+      "chat": {
+        "title": "Discussion",
+        "body": "Pose ici les questions sur ce que tu cherches à comprendre. Le mode étude guide la réflexion et l'entraînement ; la discussion libre est un échange ordinaire."
+      },
+      "map": {
+        "title": "Carte",
+        "body": "Chaque notion qui apparaît dans la discussion est rangée sur une carte sous forme d'île, placée et regroupée automatiquement."
+      },
+      "discovery": {
+        "title": "Découvrir",
+        "body": "Regarde Bilibili et YouTube comme d'habitude. Une fois le script installé, ce qui a été regardé se rassemble ici, et les centres d'intérêt entrent par là."
+      },
+      "library": {
+        "title": "Mes documents",
+        "body": "Importe tes propres documents ; les réponses y sont cherchées en premier."
+      },
+      "companions": {
+        "title": "Compagnons",
+        "body": "Quelques compagnons viennent poser des questions sur ce qui a été appris récemment, et c'est à toi d'expliquer."
+      },
+      "memory": {
+        "title": "Mémoire",
+        "body": "Les îles laissées longtemps sans visite pâlissent, ce qui montre quelles parties sont mises de côté depuis un moment."
+      },
+      "start": {
+        "title": "Commencer",
+        "body": "Les discussions, la carte et les documents restent sur cet ordinateur. Des données d'exemple peuvent être chargées d'abord, pour voir à quoi ressemblent trois mois."
+      }
     }
   },
-  "checklist": {
-    "title": "Commence ici",
-    "connect": "Connecter un service d'IA",
-    "ask": "Poser la première question",
-    "map": "Ouvrir la carte",
-    "dismiss": "Masquer cette liste",
-    "demoNote": "La carte affiche actuellement des données d'exemple.",
-    "removeDemo": "Retirer les données d'exemple",
-    "removingDemo": "Retrait",
-    "takeTour": "Commencer la visite",
-    "tourNote": "Environ deux minutes, en montrant l'écran réel. Échap quitte la visite."
+  "hints": {
+    "label": "Bulle d'aide",
+    "chatMode": "Le mode étude guide la réflexion et l'entraînement ; la discussion libre est un échange ordinaire.",
+    "composer": "Écris ici une question ; les notions abordées dans la discussion sont rangées sur la carte automatiquement.",
+    "groundingMark": "Le point à la fin d'une phrase marque sa source ; un clic dessus affiche l'original.",
+    "mapFirstIsland": "Les îles se forment à partir des notions apparues dans la discussion ; les îles laissées longtemps sans visite pâlissent.",
+    "discoveryScript": "Un script est pour Bilibili et l'autre pour YouTube, chacun installé une seule fois ; ensuite, navigue comme d'habitude et ce qui a été regardé se rassemble sur cette page automatiquement.",
+    "libraryImport": "Les documents importés restent sur cet ordinateur ; une question y est d'abord cherchée, puis l'IA répond.",
+    "settingsApi": "Saisis ici l'adresse et la clé d'un service d'IA ; la clé reste sur cet ordinateur."
   },
   "settings": {
-    "title": "Visite guidée",
-    "hint": "La présentation peut être revue, les notes de page rétablies et les données d'exemple retirées.",
-    "replay": "Revoir la présentation",
-    "resetGuides": "Rétablir toutes les notes de page",
-    "guidesRestored": "Rétablies. Chaque page affiche sa note une fois de plus à la prochaine ouverture.",
+    "title": "Premiers pas",
+    "hint": "La présentation peut être rejouée, toutes les bulles d'aide ramenées, et les données d'exemple retirées.",
+    "replay": "Rejouer la présentation",
+    "resetHints": "Réinitialiser les bulles d'aide",
+    "hintsRestored": "Réinitialisées. Chaque fonction affichera sa bulle une fois de plus la prochaine fois qu'elle sera à l'écran.",
     "removeDemo": "Retirer les données d'exemple",
     "demoAbsent": "Pas de données d'exemple"
   }

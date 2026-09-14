@@ -20,8 +20,8 @@ import {
   DEFAULT_SWITCHES,
   type FeatureSwitches,
   guessMainlandNetwork,
+  type HintsSeen,
   type LearningMode,
-  type PageGuidesSeen,
   type RouteParams,
 } from "../lib/platform/settingsSchema";
 import { loadSettingsSnapshot } from "./settingsStoreLoad";
@@ -30,10 +30,10 @@ import { createSettingsWriteActions, type SettingsWriteActions } from "./setting
 export type {
   ApiConfig,
   CompareCategory,
+  FeatureHintId,
   FeatureSwitches,
+  HintsSeen,
   LearningMode,
-  PageGuideId,
-  PageGuidesSeen,
   PriceOverride,
   RouteParams,
 } from "../lib/platform/settingsSchema";
@@ -45,12 +45,10 @@ export interface SettingsState extends SettingsWriteActions {
    * Saving new credentials clears it: an untested configuration has not been shown to work. */
   apiConnectionOk: boolean;
   networkEnabled: boolean;
-  /** False until the newcomer guide has been shown. */
+  /** False until the opening slides have been shown. */
   onboardingSeen: boolean;
-  /** True once the first-steps checklist has been dismissed. */
-  checklistDismissed: boolean;
-  /** Which pages have already shown their own guide. Empty means none of them have. */
-  pageGuidesSeen: PageGuidesSeen;
+  /** Which features have already shown their first-use hint. Empty means none have. */
+  hintsSeen: HintsSeen;
   featureSwitches: FeatureSwitches;
   /** True = evidence sources restricted to ones reachable from mainland China. */
   mainlandNetwork: boolean;
@@ -83,8 +81,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   apiConnectionOk: false,
   networkEnabled: true,
   onboardingSeen: true,
-  checklistDismissed: true,
-  pageGuidesSeen: {},
+  hintsSeen: {},
   featureSwitches: DEFAULT_SWITCHES,
   mainlandNetwork: guessMainlandNetwork(),
   webSearchApiKey: "",

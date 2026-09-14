@@ -90,7 +90,7 @@ export function DiscoverySetupSteps() {
       <div className="mt-8 space-y-3">
         <StepHeading>{t("setup.step2Title")}</StepHeading>
         <Note>{t("setup.step2Body")}</Note>
-        <div className="flex flex-wrap gap-2">
+        <div data-hint="discoveryScript" className="flex flex-wrap gap-2">
           <LinkButton label={t("setup.bilibiliScript")} url={scriptUrl("bilibili", pairing)} />
           <LinkButton label={t("setup.youtubeScript")} url={scriptUrl("youtube", pairing)} />
         </div>

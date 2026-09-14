@@ -6,7 +6,7 @@
  *
  * The drawer closes on the scrim, on Escape, on its ✕, and whenever something in it is
  * chosen — a conversation, a view, the roster — because after choosing, the content is what
- * the person wants to see. The tour asks for it to open when a step points inside it.
+ * the person wants to see.
  * Main exports: ShellSidebar.
  */
 import { Menu } from "lucide-react";
@@ -14,7 +14,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLayoutMode } from "../../lib/platform/layoutMode";
 import { Sidebar, type SidebarProps } from "../Sidebar";
-import { onDrawerRequest } from "./drawerRequests";
 
 export function ShellSidebar(props: SidebarProps) {
   const { t } = useTranslation("common");
@@ -37,22 +36,6 @@ export function ShellSidebar(props: SidebarProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [drawerOpen, close]);
 
-  // A tour step about to point at something: open the drawer if that is where it lives,
-  // close it otherwise so the content it points at is not covered. The view may still be
-  // switching when the request arrives, so the lookup waits for the next frame.
-  useEffect(() => {
-    if (!stacked) return;
-    return onDrawerRequest((target) => {
-      requestAnimationFrame(() => {
-        const inside =
-          target !== undefined &&
-          document.querySelector(`[data-shell="sidebar"] [data-tour="${CSS.escape(target)}"]`) !==
-            null;
-        setDrawerOpen(inside);
-      });
-    });
-  }, [stacked]);
-
   const closing = (action: () => void) => () => {
     action();
     close();
@@ -70,8 +53,6 @@ export function ShellSidebar(props: SidebarProps) {
         >
           <Menu size={22} strokeWidth={1.8} />
         </button>
-        {/* Chrome that must never cover content (the onboarding pill) portals in here. */}
-        <div id="shell-topbar-slot" className="ms-auto me-2 flex items-center" />
       </header>
       {drawerOpen && (
         <button

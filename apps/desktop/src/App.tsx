@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next";
 import "./App.css";
 import "./lib/platform/zodConfig";
 import { LazyBoundary } from "./components/LazyBoundary";
+import { FeatureHintHost } from "./components/onboarding/FeatureHintHost";
 import { LanguageFirstRun } from "./components/onboarding/LanguageFirstRun";
-import { PageGuideHost } from "./components/onboarding/PageGuideHost";
 import { ShellSidebar } from "./components/shell/ShellSidebar";
 import {
   ChatView,
@@ -89,17 +89,10 @@ export default function App() {
     void useFocusSessionsStore.getState().ensureLoaded(activeConversationId);
   }, [activeConversationId]);
 
-  // First run: an introduction, then a checklist; the tour is chosen from there rather than
-  // started automatically. Driven by OnboardingHost; App only supplies what it alone knows —
-  // how to change view, and whether the map has been opened yet (a checklist item ticks off
-  // that). Each page's own note is separate and lives for the life of the app: see
-  // PageGuideHost below.
+  // First run: the opening slides, driven by OnboardingHost; App only supplies what it alone
+  // knows, which is how to change view. Each feature's own one-line hint is separate and
+  // lives for the life of the app: see FeatureHintHost below.
   const onboardingSeen = useSettingsStore((state) => state.onboardingSeen);
-  const checklistDismissed = useSettingsStore((state) => state.checklistDismissed);
-  const [sawMap, setSawMap] = useState(false);
-  useEffect(() => {
-    if (view === "map") setSawMap(true);
-  }, [view]);
 
   // Helper conversations open in the floating popup, never the main view.
   useEffect(() => {
@@ -118,11 +111,11 @@ export default function App() {
   // first, before any of the app's own words appear.
   if (settingsLoaded && languageUnchosen) return <LanguageFirstRun />;
 
-  // The host settles on "done" and renders null once both flags are in, which is every launch
+  // The host settles on "done" and renders null once the flag is in, which is every launch
   // after the first — so the same condition decides whether to fetch its code at all. Before
-  // settings arrive it renders null too, and the tour it drives installs the demo learner,
-  // which carries a three-megabyte language pack behind it.
-  const onboardingRunning = settingsLoaded && !(onboardingSeen && checklistDismissed);
+  // settings arrive it renders null too, and the slides it drives can install the demo
+  // learner, which carries a three-megabyte language pack behind it.
+  const onboardingRunning = settingsLoaded && !onboardingSeen;
 
   return (
     <div className="flex h-dvh flex-col text-stone-800">
@@ -164,21 +157,12 @@ export default function App() {
               </div>
             </>
           )}
-          {/* Not inside the first-run condition: a page opened for the first time months
-              later still explains itself. */}
-          {/* Every view but this one gets a card the first time it is opened. The library
-              explains itself in its own first paragraph — what to put in it and what not to —
-              so a card over the top would say the same thing twice and be in the way. */}
-          {view !== "library" && <PageGuideHost view={view} companionsOpen={companionsOpen} />}
+          {/* Not inside the first-run condition: a feature met for the first time months
+              later still introduces itself. */}
+          <FeatureHintHost />
           <LazyBoundary resetKey={view}>
             {onboardingRunning && (
-              <OnboardingHost
-                ready={settingsLoaded}
-                seen={onboardingSeen}
-                checklistDismissed={checklistDismissed}
-                onNavigate={setView}
-                sawMap={sawMap}
-              />
+              <OnboardingHost ready={settingsLoaded} seen={onboardingSeen} onNavigate={setView} />
             )}
           </LazyBoundary>
           <LazyBoundary resetKey={helperPopup?.conversationId ?? ""}>

@@ -1,98 +1,60 @@
 {
-  "next": "Avançar",
-  "back": "Voltar",
-  "skip": "Pular a introdução",
+  "next": "Seguinte",
+  "back": "Anterior",
+  "skip": "Pular",
   "welcome": {
     "label": "Apresentação",
-    "card1Title": "O que é isto",
-    "card1Body": "O Breadcrumb é um companheiro de estudo. Qualquer coisa que você queira entender pode ser tratada aqui com uma IA; ao lado das respostas, o que a conversa cobriu é registrado automaticamente.",
-    "card2Title": "As conversas fazem um mapa crescer",
-    "card2Body": "Cada conceito que aparece vira uma ilha no mapa, posicionada e agrupada automaticamente. As áreas sem contato há algum tempo ficam mais claras, o que indica quais partes foram deixadas de lado.",
-    "card3Title": "Onde os dados ficam e o que custa dinheiro",
-    "card3Body": "As conversas, o mapa e o vocabulário ficam todos armazenados neste computador. A única coisa que custa dinheiro é o serviço de IA que você mesmo fornece, cobrado por uso; cada recurso que gasta algo pode ser desligado separadamente, com o preço escrito ao lado nas configurações.",
     "start": "Começar",
-    "tryDemo": "Carregar primeiro os dados de exemplo",
-    "demoNote": "O exemplo é um registro de três meses de estudo e pode ser removido em um único passo.",
-    "installing": "Preparando os dados de exemplo"
-  },
-  "tour": {
-    "label": "Tour guiado",
-    "finish": "Começar a usar",
-    "exit": "Sair do tour",
-    "chatTitle": "Tudo começa aqui",
-    "chatBody": "Basta escrever aqui. Na chave acima, as respostas do modo estudo orientam a reflexão e a prática, e a conversa livre é uma conversa comum.",
-    "trailTitle": "As conversas são listadas na barra lateral",
-    "trailBody": "Os títulos são gerados automaticamente, na forma «do primeiro conceito ao último». Depois que um título é renomeado à mão, ele nunca mais é alterado.",
-    "mapTitle": "As conversas fazem o mapa crescer",
-    "mapBody": "Estas ilhas foram montadas automaticamente a partir das conversas. Rolar para cima entra um nível.",
-    "mapEmptyTitle": "Isto é mar aberto por enquanto",
-    "mapEmptyBody": "Os conceitos tratados em cada troca viram ilhas aqui automaticamente.",
-    "mirrorTitle": "O desbotamento da cor é normal",
-    "mirrorBody": "Estes dois painéis mostram quanto foi aprendido e quanto ainda é lembrado. As partes sem contato há muito tempo desbotam sozinhas. Tudo nesta página é calculado nesta máquina.",
-    "spendingTitle": "Os custos são informados com antecedência",
-    "spendingBody": "Todos os recursos que custam dinheiro estão nesta página e podem ser desligados separadamente. O custo aproximado de um uso está escrito aqui antes de ser ligado, e esse número é medido, não estimado.",
-    "yourTurnTitle": "Fazer uma pergunta",
-    "yourTurnBody": "Pergunte sobre algo que você realmente queira entender. O mapa acompanha sozinho."
-  },
-  "pageGuide": {
-    "label": "Sobre esta página",
-    "gotIt": "OK",
-    "openButton": "Sobre esta página",
-    "chat": {
-      "title": "Conversa com a IA",
-      "body": "Pergunte sobre o que você quer entender. O interruptor acima decide como as respostas chegam: o modo estudo explica conforme o tipo de pergunta e, nos exercícios, começa por uma dica, enquanto a conversa livre é um diálogo comum.",
-      "point1": "Os conceitos que surgem são arquivados no mapa automaticamente",
-      "point2": "Os títulos das conversas são gerados automaticamente e param de mudar depois de renomeados à mão"
-    },
-    "map": {
-      "title": "Um mapa do que foi aprendido",
-      "body": "Cada ilha é um conceito que foi discutido, posicionado e agrupado automaticamente. Entrar um nível mostra o detalhe, inclusive quais conversas o tocaram.",
-      "point1": "Os lugares escuros foram tocados há pouco; os claros estão de lado há um tempo",
-      "point2": "Tudo nesta página é calculado nesta máquina"
-    },
-    "vocab": {
-      "title": "Aprender um idioma enquanto se conversa",
-      "body": "Com isto ligado, algumas palavras das respostas da IA chegam no idioma que está sendo aprendido e podem ser adivinhadas antes de a definição ser mostrada. Esta página lista as palavras em curso e é onde os dicionários são baixados e trocados.",
-      "point1": "Uma checagem de vocabulário pode ser feita antes, para que as palavras novas comecem no nível já alcançado",
-      "point2": "A pronúncia e as definições vêm de um dicionário baixado que fica nesta máquina e funciona sem conexão"
-    },
-    "discovery": {
-      "title": "O que é assistido no dia a dia, reunido em uma página",
-      "body": "Depois de instalar um script de navegador, o que você assiste no Bilibili e no YouTube é reunido aqui: as palavras que se repetem, os temas que surgiram recentemente e os conteúdos longos assistidos. Tudo é processado neste computador.",
-      "point1": "Esta página abre antes de qualquer script ser instalado e lista os passos necessários",
-      "point2": "O registro do que é assistido fica nesta máquina"
-    },
-    "companions": {
-      "title": "Companheiros que vêm com perguntas",
-      "body": "Todo dia alguns personagens vêm com perguntas tiradas de material aprendido recentemente. Explicar algo a eles é uma forma de verificar se dá para explicar com clareza. Essas conversas acontecem em uma janela pequena separada.",
-      "point1": "O que eles perguntam sai do seu próprio registro de aprendizado",
-      "point2": "O recurso inteiro pode ser desligado nas configurações"
-    },
-    "settings": {
-      "title": "Chave de acesso, idiomas e gastos",
-      "body": "O primeiro passo é inserir o endereço e a chave de um serviço de IA, sem os quais os recursos que dependem da IA não funcionam. Esta página também troca o idioma da interface, o idioma em que a IA responde e o acesso à rede.",
-      "point1": "«Chaves e gastos» lista cada recurso que custa dinheiro, com o próprio interruptor e o custo aproximado de um uso",
-      "point2": "A chave é guardada somente neste computador"
+    "tryDemo": "Carregar dados de exemplo",
+    "demoNote": "O exemplo é o histórico de três meses de um aprendiz e pode ser removido nas configurações em um passo.",
+    "installing": "Preparando os dados de exemplo",
+    "slides": {
+      "chat": {
+        "title": "Conversa",
+        "body": "Pergunte aqui sobre o que quiser entender. O modo estudo guia o raciocínio e a prática; a conversa livre é uma troca comum."
+      },
+      "map": {
+        "title": "Mapa",
+        "body": "Cada conceito que surge na conversa é organizado num mapa como uma ilha, posicionada e agrupada automaticamente."
+      },
+      "discovery": {
+        "title": "Descobrir",
+        "body": "Assista ao Bilibili e ao YouTube como sempre. Com o script instalado, o que foi assistido se reúne aqui, e por aí entram os interesses."
+      },
+      "library": {
+        "title": "Meus materiais",
+        "body": "Importe seus próprios materiais; as respostas são buscadas primeiro neles."
+      },
+      "companions": {
+        "title": "Companheiros",
+        "body": "Alguns companheiros vêm perguntar sobre o que foi aprendido há pouco, e é a sua vez de explicar."
+      },
+      "memory": {
+        "title": "Memória",
+        "body": "Ilhas deixadas muito tempo sem visita vão desbotando, mostrando quais partes estão de lado há algum tempo."
+      },
+      "start": {
+        "title": "Começar",
+        "body": "Conversas, mapa e materiais ficam neste computador. Dados de exemplo podem ser carregados antes, para ver como ficam três meses."
+      }
     }
   },
-  "checklist": {
-    "title": "Comece por aqui",
-    "connect": "Conectar um serviço de IA",
-    "ask": "Fazer a primeira pergunta",
-    "map": "Abrir o mapa",
-    "dismiss": "Dispensar esta lista",
-    "demoNote": "O mapa está mostrando dados de exemplo no momento.",
-    "removeDemo": "Remover os dados de exemplo",
-    "removingDemo": "Removendo",
-    "takeTour": "Iniciar o tour",
-    "tourNote": "Cerca de dois minutos, apontando para a tela real. Esc sai do tour."
+  "hints": {
+    "label": "Dica de função",
+    "chatMode": "O modo estudo guia o raciocínio e a prática; a conversa livre é uma troca comum.",
+    "composer": "Escreva aqui uma pergunta; os conceitos que a conversa abordar são organizados no mapa automaticamente.",
+    "groundingMark": "O ponto no fim de uma frase marca a fonte dela; ao clicar, o original aparece.",
+    "mapFirstIsland": "As ilhas se formam a partir dos conceitos que surgiram na conversa; ilhas deixadas muito tempo sem visita vão desbotando.",
+    "discoveryScript": "Um script é para o Bilibili e outro para o YouTube, cada um instalado uma vez; depois, navegue como sempre e o que foi assistido se reúne nesta página automaticamente.",
+    "libraryImport": "Os materiais importados ficam neste computador; uma pergunta é buscada primeiro neles e depois respondida pela IA.",
+    "settingsApi": "Informe aqui o endereço e a chave de um serviço de IA; a chave fica neste computador."
   },
   "settings": {
-    "title": "Tour guiado",
-    "hint": "A apresentação pode ser vista de novo, as notas das páginas restauradas e os dados de exemplo removidos.",
-    "replay": "Ver a apresentação de novo",
-    "resetGuides": "Restaurar todas as notas das páginas",
-    "guidesRestored": "Restauradas. Cada página mostra a nota mais uma vez na próxima abertura.",
+    "title": "Primeiros passos",
+    "hint": "A apresentação pode ser exibida de novo, todas as dicas de função trazidas de volta, e os dados de exemplo removidos.",
+    "replay": "Exibir a apresentação de novo",
+    "resetHints": "Redefinir as dicas",
+    "hintsRestored": "Redefinidas. Cada função mostra sua dica mais uma vez na próxima vez em que estiver na tela.",
     "removeDemo": "Remover dados de exemplo",
     "demoAbsent": "Sem dados de exemplo"
   }

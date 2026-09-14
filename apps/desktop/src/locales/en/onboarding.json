@@ -1,98 +1,60 @@
 {
   "next": "Next",
   "back": "Back",
-  "skip": "Skip the introduction",
+  "skip": "Skip",
   "welcome": {
     "label": "Introduction",
-    "card1Title": "What this is",
-    "card1Body": "Breadcrumb is a learning companion. Anything you are trying to understand can be discussed here with an AI; alongside the answers, what the conversation covered is recorded automatically.",
-    "card2Title": "Conversations grow a map",
-    "card2Body": "Every concept that comes up becomes an island on a map, placed and grouped automatically. Areas untouched for a while go pale, which shows which parts have been set aside.",
-    "card3Title": "Where the data stays, and what costs money",
-    "card3Body": "Conversations, the map and the vocabulary are all stored on this computer. The only thing that costs money is the AI service you supply yourself, billed by usage; every feature that spends anything can be switched off on its own, with the price written beside it in settings.",
-    "start": "Start using it",
-    "tryDemo": "Load the example data first",
-    "demoNote": "The example is a three-month learning record and can be removed in one step.",
-    "installing": "Preparing the example data"
-  },
-  "tour": {
-    "label": "Guided tour",
-    "finish": "Start using it",
-    "exit": "Leave the tour",
-    "chatTitle": "Everything starts here",
-    "chatBody": "Entering text here is all that is required. In the switch above, Study mode replies guide you to think and practise, and Free chat is an ordinary conversation.",
-    "trailTitle": "Chats are listed in the sidebar",
-    "trailBody": "Titles are generated automatically, in the form \"first concept to last concept\". Once a title is renamed by hand, it is never changed again.",
-    "mapTitle": "Conversations grow the map",
-    "mapBody": "These islands were assembled from the conversations automatically. Scrolling up goes one level in.",
-    "mapEmptyTitle": "This is open sea for now",
-    "mapEmptyBody": "The concepts covered in each exchange become islands here automatically.",
-    "mirrorTitle": "Colour fading is normal",
-    "mirrorBody": "These two panels show how much has been learned and how much is still remembered. Parts untouched for a long time fade on their own. Everything on this page is computed on this machine.",
-    "spendingTitle": "Costs are stated in advance",
-    "spendingBody": "Every feature that costs money is on this page and can be switched off on its own. The approximate cost of one use is written here before it is turned on, and that figure is measured rather than estimated.",
-    "yourTurnTitle": "Ask a question",
-    "yourTurnBody": "Ask about something you genuinely want to understand. The map follows on its own."
-  },
-  "pageGuide": {
-    "label": "About this page",
-    "gotIt": "OK",
-    "openButton": "About this page",
-    "chat": {
-      "title": "Talking to the AI",
-      "body": "Ask about anything you want to understand. The switch above decides how replies come back: study mode explains according to the kind of question and starts with a hint when you are working through an exercise, while free chat is an ordinary back-and-forth.",
-      "point1": "Concepts that come up are filed into the map automatically",
-      "point2": "Chat titles are generated automatically and stop changing once renamed by hand"
-    },
-    "map": {
-      "title": "A map of what has been learned",
-      "body": "Each island is a concept that has been discussed, placed and grouped automatically. Going one level in shows the detail, including which conversations touched it.",
-      "point1": "Darker places were touched recently; pale ones have been set aside for a while",
-      "point2": "Everything on this page is computed on this machine"
-    },
-    "vocab": {
-      "title": "Learning a language while chatting",
-      "body": "Once this is on, some words in the AI's replies arrive in the language being learned, and can be guessed at before the definition is shown. This page lists the words in progress and is where dictionaries are downloaded and switched.",
-      "point1": "A vocabulary check can be taken first, so new words start from the level already reached",
-      "point2": "Pronunciation and definitions come from a downloaded dictionary that stays on this machine and works offline"
-    },
-    "discovery": {
-      "title": "Everyday viewing, gathered on one page",
-      "body": "Once a browser script is installed, what you watch on Bilibili and YouTube is gathered here: the words that keep appearing, topics that have come up recently, and the longer content watched. All of it is processed on this computer.",
-      "point1": "This page opens before any script is installed, and lists the steps required",
-      "point2": "The viewing record stays on this machine"
-    },
-    "companions": {
-      "title": "Companions who come with questions",
-      "body": "A few characters come by each day with questions drawn from recently learned material. Explaining something to them is a way to check whether it can be explained clearly. These conversations run in a separate small window.",
-      "point1": "What they ask about is drawn from your own learning record",
-      "point2": "The whole feature can be switched off in settings"
-    },
-    "settings": {
-      "title": "Keys, languages and spending",
-      "body": "The first step is entering the address and key of an AI service, without which the features that depend on the AI cannot run. This page also changes the interface language, the language the AI answers in, and whether the app goes online at all.",
-      "point1": "Switches and spending lists every feature that costs money, each with its own switch and the approximate cost of one use",
-      "point2": "The key is stored on this computer only"
+    "start": "Start",
+    "tryDemo": "Load example data",
+    "demoNote": "The example is three months of one learner's history and can be removed from settings in one step.",
+    "installing": "Preparing the example data",
+    "slides": {
+      "chat": {
+        "title": "Chat",
+        "body": "Ask about anything you are trying to understand. Study mode guides thinking and practice; free chat is an ordinary exchange."
+      },
+      "map": {
+        "title": "Map",
+        "body": "Every concept that comes up in conversation is organised onto a map as an island, positioned and grouped automatically."
+      },
+      "discovery": {
+        "title": "Discover",
+        "body": "Watch Bilibili and YouTube as usual. With the script installed, what was watched is gathered here, and interests find their way in."
+      },
+      "library": {
+        "title": "My material",
+        "body": "Import your own material; answers are searched for in it first."
+      },
+      "companions": {
+        "title": "Companions",
+        "body": "A few companions come to ask about what was recently learned, and it is your turn to explain."
+      },
+      "memory": {
+        "title": "Memory",
+        "body": "Islands left untouched for a long time fade, showing which parts have been set aside for a while."
+      },
+      "start": {
+        "title": "Start",
+        "body": "Conversations, the map and material stay on this computer. Example data can be loaded first, to see what three months look like."
+      }
     }
   },
-  "checklist": {
-    "title": "Start here",
-    "connect": "Connect an AI service",
-    "ask": "Ask the first question",
-    "map": "Open the map",
-    "dismiss": "Dismiss this list",
-    "demoNote": "The map is currently showing example data.",
-    "removeDemo": "Remove the example data",
-    "removingDemo": "Removing",
-    "takeTour": "Start the tour",
-    "tourNote": "About two minutes, pointing at the actual screen. Escape leaves the tour."
+  "hints": {
+    "label": "Feature hint",
+    "chatMode": "Study mode guides thinking and practice; free chat is an ordinary exchange.",
+    "composer": "Type a question here; the concepts the conversation covers are organised onto the map automatically.",
+    "groundingMark": "The dot at the end of a sentence marks its source; click it to read the original.",
+    "mapFirstIsland": "Islands form from the concepts that came up in conversation; islands left untouched for a long time fade.",
+    "discoveryScript": "One script is for Bilibili and one for YouTube, each installed once; after that, browse as usual and what was watched is gathered on this page automatically.",
+    "libraryImport": "Imported material stays on this computer; a question is searched for in it first, then answered by the AI.",
+    "settingsApi": "Enter the address and key of an AI service here; the key stays on this computer."
   },
   "settings": {
-    "title": "Guided tour",
-    "hint": "The introduction can be viewed again, the page notes restored, and the example data removed.",
-    "replay": "View the introduction again",
-    "resetGuides": "Restore all page notes",
-    "guidesRestored": "Restored. Each page shows its note once more the next time it is opened.",
+    "title": "Getting started",
+    "hint": "The introduction can be played again, every feature hint brought back, and the example data removed.",
+    "replay": "Play the introduction again",
+    "resetHints": "Reset hints",
+    "hintsRestored": "Reset. Each feature shows its hint once more the next time it is on screen.",
     "removeDemo": "Remove example data",
     "demoAbsent": "No example data"
   }

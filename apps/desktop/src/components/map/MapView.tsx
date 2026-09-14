@@ -136,7 +136,8 @@ export function MapView() {
         <div className={MAP_BOX} style={{ aspectRatio: "1 / 1" }}>
           <div
             ref={containerRef}
-            data-tour="map-canvas"
+            // The first island is the moment the map has something to say about itself.
+            data-hint={world.islands.length > 0 ? "mapFirstIsland" : undefined}
             className="h-full w-full overflow-hidden"
           />
           <MapCanvasChrome

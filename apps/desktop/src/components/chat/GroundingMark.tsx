@@ -43,6 +43,7 @@ export function GroundingMark({ sentence }: GroundingMarkProps) {
       <button
         type="button"
         data-grounding-mark={sentence.label}
+        data-hint="groundingMark"
         aria-label={hover}
         title={hover}
         aria-expanded={quote === null ? undefined : open}
