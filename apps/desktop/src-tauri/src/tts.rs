@@ -104,9 +104,14 @@ fn synthesize_blocking(
                 .write_all(text.as_bytes())
                 .map_err(|error| format!("failed to write to piper: {error}"))
         });
+    // A child that exits before reading its input closes the pipe under the write, which
+    // reports as a broken pipe here. The exit status is the better story in that case, so
+    // the write error is only final when the child is still running.
     if let Err(error) = written {
-        stop(&mut child);
-        return Err(error);
+        if !matches!(child.try_wait(), Ok(Some(_))) {
+            stop(&mut child);
+            return Err(error);
+        }
     }
     let status = wait_with_timeout(&mut child, timeout)?;
     if !status.success() {
