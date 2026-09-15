@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "Recherche des sources",
+    "preparingRanking": "Préparation du classement des passages (première fois seulement)",
     "conflictHeading": "Les sources divergent sur les phrases suivantes. Les deux versions sont indiquées :",
     "alsoSays": "Une autre source :",
     "wikidataFact": "{{subject}} — {{property}} : {{value}}.",

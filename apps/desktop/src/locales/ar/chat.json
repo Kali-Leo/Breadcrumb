@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "البحث في المصادر",
+    "preparingRanking": "جارٍ تجهيز ترتيب المقاطع (للمرة الأولى فقط)",
     "conflictHeading": "تختلف المصادر حول العبارات التالية، وفيما يلي الروايتان:",
     "alsoSays": "مصدر آخر:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",

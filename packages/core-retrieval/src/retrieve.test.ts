@@ -7,7 +7,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { createRerankPolicy } from "./rerankPolicy";
-import { type RetrievalDeps, type RetrievedPassage, retrieve } from "./retrieve";
+import { type RetrievalDeps, type RetrievedPassage, type RouteHit, retrieve } from "./retrieve";
 import { TOPIC_OVERLAP_THRESHOLD } from "./topicDrift";
 
 function parent(id: string): RetrievedPassage {
@@ -19,10 +19,15 @@ function parentOfChild(childId: string): RetrievedPassage {
   return parent(childId === "c1b" ? "p1" : childId.replace("c", "p"));
 }
 
+/** Vector hits with a high, then descending, cosine — all clearly about the question. */
+function hits(ids: readonly string[], top = 0.9): RouteHit[] {
+  return ids.map((id, index) => ({ id, score: top - index * 0.05 }));
+}
+
 function deps(overrides: Partial<RetrievalDeps> = {}): RetrievalDeps {
   return {
     keywordSearch: async () => ["c1", "c2"],
-    vectorSearch: async () => ["c3", "c1"],
+    vectorSearch: async () => hits(["c3", "c1"]),
     resolveParents: async (ids) => new Map(ids.map((id) => [id, parentOfChild(id)])),
     ...overrides,
   };
@@ -110,6 +115,105 @@ describe("retrieve", () => {
 
   it("returns nothing rather than everything for a topK of zero", async () => {
     expect(await retrieve("q", deps(), { topK: 0 })).toEqual([]);
+  });
+
+  it("reads only as deep as the budget says and keeps the rest in fused order", async () => {
+    const seen: string[][] = [];
+    const rerank = async (_q: string, passages: readonly RetrievedPassage[]) => {
+      seen.push(passages.map((passage) => passage.id));
+      return passages.map((passage) => (passage.id === "p3" ? 9 : 0));
+    };
+    const found = await retrieve("q", deps({ rerank }), { topK: 3, rerank: true, rerankDepth: 2 });
+    expect(seen).toEqual([["p1", "p3"]]);
+    expect(found.map((passage) => passage.id)).toEqual(["p3", "p1", "p2"]);
+  });
+
+  it("carries each passage's evidence: best child cosine, keyword hit, reranker score", async () => {
+    const rerank = async (_q: string, passages: readonly RetrievedPassage[]) =>
+      passages.map((passage) => (passage.id === "p1" ? 4.5 : -3));
+    const [first] = await retrieve(
+      "q",
+      deps({
+        keywordSearch: async () => ["c1b"],
+        vectorSearch: async () => hits(["c1", "c3"]),
+        rerank,
+      }),
+      { topK: 1, rerank: true },
+    );
+    expect(first?.id).toBe("p1");
+    expect(first?.relevance).toEqual({
+      cosine: 0.9,
+      keywordHit: true,
+      rerank: 4.5,
+      coverage: null,
+    });
+  });
+});
+
+describe("retrieve with onlyRelevant", () => {
+  it("returns nothing for a question the library is not about, and spends no reranker", async () => {
+    const rerank = vi.fn(async (_q: string, passages: readonly RetrievedPassage[]) =>
+      passages.map(() => 5),
+    );
+    const far = deps({ vectorSearch: async () => hits(["c3", "c1"], 0.4), rerank });
+    const found = await retrieve("珠穆朗玛峰有多高", far, { rerank: true, onlyRelevant: true });
+    expect(found).toEqual([]);
+    expect(rerank).not.toHaveBeenCalled();
+  });
+
+  it("lets the reranker's score decide once it has read a passage", async () => {
+    const rerank = async (_q: string, passages: readonly RetrievedPassage[]) =>
+      passages.map((passage) => (passage.id === "p3" ? 1 : -9));
+    const found = await retrieve("q", deps({ rerank }), { rerank: true, onlyRelevant: true });
+    expect(found.map((passage) => passage.id)).toEqual(["p3"]);
+  });
+
+  it("falls back to the cosine line when there is no reranker", async () => {
+    const found = await retrieve(
+      "q",
+      deps({
+        keywordSearch: async () => ["c2", "c1"],
+        vectorSearch: async () => [
+          { id: "c3", score: 0.8 },
+          { id: "c1", score: 0.68 },
+          { id: "c2", score: 0.5 },
+        ],
+      }),
+      { onlyRelevant: true },
+    );
+    // p3 clears the line; p1 does not, and a keyword hit is measured to lift nothing.
+    expect(found.map((passage) => passage.id)).toEqual(["p3"]);
+  });
+
+  it("measures how much of the question a passage holds while there are no vectors yet", async () => {
+    const parents = new Map([
+      ["c1", { ...parent("p1"), body: "复利是本金和利息一起再计息的方式" }],
+      ["c2", { ...parent("p2"), body: "本条例自公布之日起施行" }],
+    ]);
+    const found = await retrieve(
+      "复利是什么",
+      deps({
+        keywordSearch: async () => ["c2", "c1"],
+        vectorSearch: async () => [],
+        resolveParents: async () => parents,
+        language: "zh-CN",
+      }),
+      { onlyRelevant: true },
+    );
+    expect(found.map((passage) => passage.id)).toEqual(["p1"]);
+    expect(found[0]?.relevance.coverage).toBeGreaterThanOrEqual(0.4);
+  });
+
+  it("does not lift a passage below the vector top-100 on a keyword hit alone", async () => {
+    const found = await retrieve(
+      "q",
+      deps({
+        keywordSearch: async () => ["c9"],
+        vectorSearch: async () => [{ id: "c3", score: 0.9 }],
+      }),
+      { onlyRelevant: true },
+    );
+    expect(found.map((passage) => passage.id)).toEqual(["p3"]);
   });
 });
 

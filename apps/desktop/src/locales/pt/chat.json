@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "Buscando fontes",
+    "preparingRanking": "Preparando a ordenação de trechos (apenas na primeira vez)",
     "conflictHeading": "As fontes divergem sobre as frases seguintes. As duas versões estão listadas:",
     "alsoSays": "Outra fonte:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",

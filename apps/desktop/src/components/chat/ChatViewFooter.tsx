@@ -15,6 +15,7 @@ import type { CopyMessage } from "@breadcrumb/core-i18n";
 import { useTranslation } from "react-i18next";
 import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { useGroundingStore } from "../../stores/groundingStore";
+import { useRerankerStore } from "../../stores/rerankerStore";
 import { MessageBubble } from "./MessageBubble";
 
 interface ChatViewFooterProps {
@@ -38,13 +39,23 @@ export function ChatViewFooter({
   const gathering = useGroundingStore((state) =>
     conversationId === null ? false : state.gatheringConversationIds.has(conversationId),
   );
+  // The one-time download of the passage-ranking model runs for minutes behind the chat. It is
+  // named here, beside the search it will improve, because a reader who sees network traffic
+  // deserves to know what it is — and because this round did not wait for it.
+  const preparingRanking = useRerankerStore((state) => state.status === "downloading");
 
   return (
     <div className="space-y-3">
       {gathering && (
         <p className="ps-1 text-xs text-stone-600">
           <span className="animate-pulse">🔍</span> {t("chat:grounding.gathering")}
+          {preparingRanking && (
+            <span className="ms-2 text-stone-400">{t("chat:grounding.preparingRanking")}</span>
+          )}
         </p>
+      )}
+      {!gathering && preparingRanking && (
+        <p className="ps-1 text-xs text-stone-400">{t("chat:grounding.preparingRanking")}</p>
       )}
       {streamingText !== null && (
         <MessageBubble

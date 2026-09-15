@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "正在搜索来源",
+    "preparingRanking": "正在准备资料排序（首次）",
     "conflictHeading": "以下语句的来源之间存在分歧，两种说法一并列出：",
     "alsoSays": "另一来源：",
     "wikidataFact": "{{subject}}，{{property}}：{{value}}。",

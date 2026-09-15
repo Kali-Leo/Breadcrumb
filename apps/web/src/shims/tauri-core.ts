@@ -86,7 +86,9 @@ export async function invoke<T>(
       return embeddingSpeed() as T;
 
     // Reading a scanned page. The pixels arrive as the raw body, the way the Rust command
-    // takes them, and the size and the network switch ride in the headers.
+    // takes them, and the size and the network switch ride in the headers. The `x-formulas`
+    // header is not read: the browser has no formula model, so its answer never has formula
+    // blocks, and the desktop bridge composes the page from whatever blocks it gets.
     case "ocr_page": {
       if (!(args instanceof Uint8Array)) throw new Error("ocr_page takes raw RGBA bytes");
       const width = Number(header(options, "x-width"));
@@ -108,7 +110,10 @@ export async function invoke<T>(
 
     // The cross-encoder reranker is a Rust model. Library retrieval treats a rejection here
     // as "no second stage" and answers in fused order, so the browser edition searches the
-    // reader's material with one stage fewer rather than not at all.
+    // reader's material with one stage fewer rather than not at all. The readiness check
+    // rejects too, which is what tells the app to stop asking rather than to download.
+    case "reranker_available":
+    case "prepare_reranker":
     case "rerank_pairs":
       throw new UnavailableInBrowser(command);
 

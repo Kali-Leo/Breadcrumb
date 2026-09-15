@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "Mencari sumber",
+    "preparingRanking": "Menyiapkan pengurutan kutipan (hanya pertama kali)",
     "conflictHeading": "Sumber berbeda mengenai pernyataan berikut. Kedua pembacaan dicantumkan:",
     "alsoSays": "Sumber lain:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",

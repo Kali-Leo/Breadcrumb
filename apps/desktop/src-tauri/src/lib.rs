@@ -28,8 +28,15 @@ mod model_sources;
 // Reading the text off scanned pages: the pixel conversion it starts with, the models, and
 // the order the lines come back in.
 mod ocr;
+mod ocr_engine;
+mod ocr_formula;
 mod ocr_image;
+mod ocr_layout;
+mod ocr_models;
 mod ocr_order;
+mod ocr_page;
+mod ocr_table;
+mod ocr_table_grid;
 mod open_database;
 #[cfg(test)]
 mod open_database_tests;
@@ -37,6 +44,7 @@ mod open_database_tests;
 // both them and the sqlx defaults underneath them.
 mod pragma_defaults;
 mod reranker;
+mod reranker_ready;
 #[cfg(test)]
 mod test_http;
 mod transactions;
@@ -101,6 +109,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             embeddings::embed_texts,
             reranker::rerank_pairs,
+            reranker_ready::reranker_available,
+            reranker_ready::prepare_reranker,
             ocr::ocr_page,
             fsrs_optim::optimize_fsrs_parameters,
             collector::browsing_collector_info,

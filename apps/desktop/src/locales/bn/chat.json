@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "উৎস অনুসন্ধান করা হচ্ছে",
+    "preparingRanking": "অনুচ্ছেদ সাজানোর প্রস্তুতি চলছে (শুধু প্রথমবার)",
     "conflictHeading": "নিচের বাক্যগুলো নিয়ে উৎসগুলোর মধ্যে মতভেদ আছে। দুটি পাঠই এখানে দেওয়া হলো:",
     "alsoSays": "আরেকটি উৎস:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}।",

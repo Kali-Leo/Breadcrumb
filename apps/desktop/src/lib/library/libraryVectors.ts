@@ -1,6 +1,6 @@
 /**
  * Purpose: the dense route — every stored vector, scored against the question's vector, best
- * first.
+ * first, each hit carrying its cosine because the relevance gate reads it.
  *
  * Brute force, deliberately. A personal library is thousands of passages, and a dot product
  * over a few thousand 384-float rows is milliseconds; an approximate index would be a second
@@ -19,6 +19,7 @@
 
 import type { LibraryPassageEmbeddingRow } from "@breadcrumb/core-db";
 import { parseVectorColumn } from "@breadcrumb/core-db";
+import type { RouteHit } from "@breadcrumb/core-retrieval";
 import { cosineSimilarity, EMBEDDING_MODEL } from "@breadcrumb/core-vectors";
 
 export { EMBEDDING_MODEL, parseVectorColumn };
@@ -27,8 +28,8 @@ export function rankByCosine(
   query: readonly number[],
   rows: readonly LibraryPassageEmbeddingRow[],
   limit: number,
-): string[] {
-  const scored: { id: string; score: number }[] = [];
+): RouteHit[] {
+  const scored: RouteHit[] = [];
   for (const row of rows) {
     const vector = parseVectorColumn(row.vector_json);
     if (vector === null) continue;
@@ -39,5 +40,5 @@ export function rankByCosine(
     scored.push({ id: row.passage_id, score });
   }
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, limit).map((entry) => entry.id);
+  return scored.slice(0, limit);
 }

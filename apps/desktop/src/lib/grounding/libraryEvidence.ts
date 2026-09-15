@@ -15,6 +15,11 @@
  * The reranker is asked for only when the caller says the subject changed — see
  * core-retrieval's rerankPolicy for why it is not every turn — and the browser edition, which
  * has no reranker at all, comes back in fused order rather than with an error.
+ *
+ * Only passages that pass the relevance gate are evidence. Before the gate, a library of one
+ * book answered 「珠穆朗玛峰有多高」 with eight passages of that book, the whole budget was
+ * spent, and no encyclopaedia was ever asked; now a question the library is not about comes
+ * back empty and the round fills the budget from the network, as it always should have.
  * Main exports: libraryEvidence, gatherLibraryEvidence.
  */
 import type { RetrievedPassage } from "@breadcrumb/core-retrieval";
@@ -42,15 +47,17 @@ export function libraryEvidence(passage: RetrievedPassage): EvidenceItem {
  * list — the round then fills the whole budget from the network instead.
  *
  * A conversation tied to some documents is answered from those first. Only when they hold
- * nothing for the question does the search widen to the whole library: the reader chose the
- * books, and a passage from another book is a fallback, not a peer.
+ * nothing relevant for the question does the search widen to the whole library: the reader
+ * chose the books, and a passage from another book is a fallback, not a peer. The gate
+ * applies inside the chosen books too — being chosen does not make a passage about the
+ * question — which is what makes "hold nothing" a judgement rather than an emptiness check.
  */
 export async function gatherLibraryEvidence(
   question: string,
   rerank: boolean,
   linkedDocumentIds: readonly string[] = [],
 ): Promise<EvidenceItem[]> {
-  const options = { topK: TOPIC_PASSAGE_COUNT, rerank };
+  const options = { topK: TOPIC_PASSAGE_COUNT, rerank, onlyRelevant: true };
   if (linkedDocumentIds.length > 0) {
     const linked = await retrieveFromLibrary(question, i18next.language, {
       ...options,

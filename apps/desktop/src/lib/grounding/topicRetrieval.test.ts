@@ -258,6 +258,7 @@ describe("the reader's own library", () => {
     expect(retrieveFromLibraryMock).toHaveBeenCalledWith("珠穆朗玛峰有多高", expect.any(String), {
       topK: 8,
       rerank: true,
+      onlyRelevant: true,
     });
     // Attention order: rank 1 opens the block, rank 2 closes it; the network fills between.
     const sources = material?.passages.map((passage) => passage.source);

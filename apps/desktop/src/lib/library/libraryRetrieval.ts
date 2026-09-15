@@ -9,9 +9,11 @@
  * the question is in.
  *
  * The reranker is wired as a hook rather than a step. It is worth a great deal — macro
- * nDCG@10 0.476 → 0.750 — and costs about five seconds for fifty candidates on a desktop
- * processor, so whether to spend it is a policy decision, and the policy lives with the
- * conversation (createRerankPolicy), not here.
+ * nDCG@10 0.476 → 0.750 — and costs seconds on a desktop processor, so whether to spend it is
+ * a policy decision that lives with the conversation (createRerankPolicy), how much of it to
+ * spend is a budget (core-retrieval's rerank clock, fed by the wall time measured here), and
+ * whether it is even on this machine yet is rerankerReadiness.ts. A turn on which it is not
+ * ready answers in fused order rather than waiting.
  *
  * A scope — the documents one conversation is tied to — narrows both routes at the source:
  * the keyword index and the vector table are asked for those documents only, so a passage
@@ -19,9 +21,12 @@
  * Main exports: retrieveFromLibrary, libraryRetrievalDeps, LibraryRetrieveOptions.
  */
 import {
+  createRerankClock,
+  type RankedPassage,
   type RetrievalDeps,
   type RetrievedPassage,
   type RetrieveOptions,
+  type RouteHit,
   retrieve,
 } from "@breadcrumb/core-retrieval";
 import { loadStemmer } from "@breadcrumb/core-text";
@@ -30,6 +35,32 @@ import { getRepos } from "../platform/db";
 import { embedTexts } from "../platform/embeddings";
 import { degradeSilently } from "../platform/failureLog";
 import { EMBEDDING_MODEL, rankByCosine } from "./libraryVectors";
+import { rerankerReady } from "./rerankerReadiness";
+
+/** Where the machine's measured pace is kept between sessions, so the first question of the
+ * next one reads a depth that fits rather than a guess. */
+const RERANK_PACE_KEY = "breadcrumb.rerankMsPerPair";
+
+function storedPace(): number | null {
+  try {
+    const raw = globalThis.localStorage?.getItem(RERANK_PACE_KEY);
+    return raw === null || raw === undefined ? null : Number(raw);
+  } catch {
+    return null;
+  }
+}
+
+/** One clock for the session: the machine does not change between questions. */
+const rerankClock = createRerankClock({
+  initialMsPerPair: storedPace(),
+  onEstimate(msPerPair) {
+    try {
+      globalThis.localStorage?.setItem(RERANK_PACE_KEY, String(Math.round(msPerPair)));
+    } catch {
+      // Storage can be unavailable; the estimate still serves this session.
+    }
+  },
+});
 
 /**
  * The stored vectors are read BEFORE the question is embedded, and that order is the whole
@@ -42,7 +73,7 @@ async function vectorSearch(
   question: string,
   limit: number,
   documentIds: readonly string[] | undefined,
-): Promise<string[]> {
+): Promise<RouteHit[]> {
   const repos = await getRepos();
   const rows = await repos.library.listPassageVectors(EMBEDDING_MODEL, documentIds);
   if (rows.length === 0) return [];
@@ -87,17 +118,23 @@ async function resolveParents(childIds: readonly string[]): Promise<Map<string, 
   return byChild;
 }
 
-/** One score per passage, in the order given. Null on any failure — the caller treats a
- * missing reranker as "no second stage", which is a good answer rather than no answer. */
+/** One score per passage, in the order given. Throws on any failure — the caller treats a
+ * missing reranker as "no second stage", which is a good answer rather than no answer. The
+ * model is never downloaded from inside a question: readiness starts that in the background
+ * and this turn goes on without it. */
 async function rerank(
   question: string,
   passages: readonly RetrievedPassage[],
 ): Promise<readonly number[]> {
-  return invoke<number[]>("rerank_pairs", {
+  if (!(await rerankerReady())) throw new Error("reranker not ready");
+  const started = performance.now();
+  const scores = await invoke<number[]>("rerank_pairs", {
     query: question,
     passages: passages.map((passage) => `${passage.headingPath}\n${passage.body}`),
     allowDownload: false,
   });
+  rerankClock.record(passages.length, performance.now() - started);
+  return scores;
 }
 
 export interface LibraryRetrieveOptions extends RetrieveOptions {
@@ -130,10 +167,10 @@ export async function retrieveFromLibrary(
   question: string,
   language: string,
   options: LibraryRetrieveOptions = {},
-): Promise<RetrievedPassage[]> {
+): Promise<RankedPassage[]> {
   try {
     const deps = await libraryRetrievalDeps(language, options.documentIds);
-    return await retrieve(question, deps, options);
+    return await retrieve(question, deps, { rerankDepth: rerankClock.depth(), ...options });
   } catch (error) {
     void degradeSilently("libraryRetrieval", error);
     return [];

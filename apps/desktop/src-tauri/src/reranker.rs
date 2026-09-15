@@ -1,4 +1,5 @@
 // Purpose: cross-encoder reranking of retrieval candidates — bge-reranker-v2-m3, int8 ONNX.
+// Getting the model here and into memory ahead of a question is reranker_ready.rs.
 // Main export: the `rerank_pairs` Tauri command.
 //
 // fastembed does know this model, and its built-in entry downloads a 2.3 GB fp32 graph. That
@@ -23,7 +24,7 @@ use fastembed::{RerankInitOptionsUserDefined, RerankResult, TextRerank, UserDefi
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-static MODEL: Mutex<Option<TextRerank>> = Mutex::new(None);
+pub(crate) static MODEL: Mutex<Option<TextRerank>> = Mutex::new(None);
 
 /// The reranking pool is the top 50 of the vector search. The cap sits a little above that so
 /// a caller widening the pool slightly is not rejected, and far enough below anything that
@@ -36,7 +37,7 @@ const MAX_QUERY_CHARS: usize = 1000;
 const MAX_PASSAGE_CHARS: usize = 4000;
 
 /// The directory this model's files live in on disk.
-const LOCAL_DIR: &str = "bge-reranker-v2-m3";
+pub(crate) const LOCAL_DIR: &str = "bge-reranker-v2-m3";
 /// The GitHub release its files are downloaded from. Mirrored in
 /// packages/core-vectors/src/embeddingModel.ts (RERANKER_MODEL_TAG). This model is desktop-only,
 /// so unlike the embedder nothing but the release publishes it.
@@ -51,7 +52,7 @@ const ONNX_FILE: &str = "model_int8.onnx";
 pub const RERANKER_MODEL_ID: &str = "bge-reranker-v2-m3-int8";
 
 /// Measured from the artefacts in `/data/leo/bench-retrieval/gte-int8/out/`.
-const MODEL_FILES: [ModelFile; 5] = [
+pub(crate) const MODEL_FILES: [ModelFile; 5] = [
     ModelFile {
         name: ONNX_FILE,
         bytes: 570_698_919,
@@ -105,7 +106,7 @@ fn scores_in_input_order(results: &[RerankResult], count: usize) -> Result<Vec<f
         .ok_or_else(|| "the reranker did not score every passage".to_string())
 }
 
-fn load_model(dir: &Path) -> Result<TextRerank, String> {
+pub(crate) fn load_model(dir: &Path) -> Result<TextRerank, String> {
     let onnx = std::fs::read(dir.join(ONNX_FILE)).map_err(|error| error.to_string())?;
     let model = UserDefinedRerankingModel::new(onnx, model_files::tokenizer_files(dir)?);
     TextRerank::try_new_from_user_defined(model, RerankInitOptionsUserDefined::new())
@@ -137,9 +138,9 @@ fn rerank_blocking(
 }
 
 /// Scores each passage against the query with a cross-encoder, returning one score per
-/// passage **in the order they were given**. The first call downloads the model; as with the
-/// embedder, `allow_download` carries the app's network switch and nothing is fetched behind
-/// a user who turned it off.
+/// passage **in the order they were given**. `allow_download` carries the app's network
+/// switch and nothing is fetched behind a user who turned it off; the app passes false here
+/// and downloads through `prepare_reranker` instead, so that no question waits on a fetch.
 #[tauri::command]
 pub async fn rerank_pairs(
     app: tauri::AppHandle,

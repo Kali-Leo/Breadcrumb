@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "Searching sources",
+    "preparingRanking": "Preparing passage ranking (first time only)",
     "conflictHeading": "The sources disagree about the following statements. Both readings are listed:",
     "alsoSays": "Another source:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",

@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "स्रोत खोजे जा रहे हैं",
+    "preparingRanking": "अंशों की रैंकिंग तैयार की जा रही है (केवल पहली बार)",
     "conflictHeading": "निम्नलिखित वाक्यों पर स्रोतों में मतभेद है। दोनों पाठ यहाँ दिए गए हैं:",
     "alsoSays": "दूसरा स्रोत:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}।",

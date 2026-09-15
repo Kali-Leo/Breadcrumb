@@ -25,6 +25,7 @@
   },
   "grounding": {
     "gathering": "Vyanzo vinatafutwa",
+    "preparingRanking": "Upangaji wa vifungu unaandaliwa (mara ya kwanza tu)",
     "conflictHeading": "Vyanzo vinatofautiana kuhusu sentensi zifuatazo. Maelezo yote mawili yameorodheshwa:",
     "alsoSays": "Chanzo kingine:",
     "wikidataFact": "{{subject}} — {{property}}: {{value}}.",

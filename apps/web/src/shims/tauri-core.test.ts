@@ -80,12 +80,16 @@ describe("what the browser answers when the app calls a Rust command", () => {
 
   it("hands a page's pixels and the headers that describe them to the recognizer", async () => {
     const rgba = new Uint8Array(2 * 3 * 4);
-    recognizePageInBrowser.mockResolvedValue([{ text: "第一章", score: 0.9 }]);
+    const page = {
+      lines: [{ text: "第一章", score: 0.9, box: { x0: 0, y0: 0, x1: 2, y1: 1 } }],
+      blocks: [],
+    };
+    recognizePageInBrowser.mockResolvedValue(page);
     await expect(
       invoke("ocr_page", rgba, {
-        headers: { "x-width": "2", "x-height": "3", "x-allow-download": "1" },
+        headers: { "x-width": "2", "x-height": "3", "x-allow-download": "1", "x-formulas": "1" },
       }),
-    ).resolves.toEqual([{ text: "第一章", score: 0.9 }]);
+    ).resolves.toEqual(page);
     expect(recognizePageInBrowser).toHaveBeenCalledWith(rgba, 2, 3, true);
   });
 

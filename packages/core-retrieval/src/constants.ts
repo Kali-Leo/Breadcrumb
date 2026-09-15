@@ -27,6 +27,12 @@ export const VECTOR_WEIGHT = 3;
  * concave in it, so every step down looks like a bargain and none of them is: 30 costs 8% of
  * Chinese-and-English nDCG@10, 20 costs 12% (and 16% of R@8), 10 costs 22%. There is no
  * cheap middle to find. Fifty.
+ *
+ * Those numbers are from corpora of millions of passages, where the relevant one is often
+ * thirty places down. A personal library is a few thousand, and there the same ablation says
+ * the top 20 already hold what 50 would find (2026-09-15-资料相关度阈值与重排预算-实测.md). So
+ * fifty is the ceiling of the pool a caller may ask for, and rerankBudget.ts decides how much
+ * of it one turn can afford.
  */
 export const RERANK_DEPTH = 50;
 
