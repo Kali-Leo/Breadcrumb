@@ -12,17 +12,20 @@
 
 use super::{fetch_missing, sources_for, Source};
 use crate::model_files::{is_complete_file, ModelFile, ModelSpec, MODEL_BASE_URL_ENV};
+use crate::test_http::LocalRelease;
 
+/// Seven bytes of "graph!!" and three of "{;}" — what the local release below serves, with
+/// the digests of exactly those bodies so a file that lands is also a file that is kept.
 const FILES: [ModelFile; 2] = [
     ModelFile {
         name: "model_int8.onnx",
         bytes: 7,
-        sha256: "",
+        sha256: "def6ba583d5564455d7cd30272966d2f34cb94571e44a5d220dffb9582dfbcd4",
     },
     ModelFile {
         name: "config.json",
         bytes: 3,
-        sha256: "",
+        sha256: "34eb75c8b7ab6234e4741f96ce66907ee7e263054381cc18fcabf828c6fca884",
     },
 ];
 const SPEC: ModelSpec = ModelSpec {
@@ -89,6 +92,52 @@ fn when_no_source_answers_the_error_names_each_and_nothing_lands() {
     assert!(
         std::fs::read_dir(&dir).expect("dir").next().is_none(),
         "no file should land"
+    );
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+const BODIES: [(&str, &[u8]); 2] = [("model_int8.onnx", b"graph!!"), ("config.json", b"{;}")];
+
+/// One refusal is not the answer: the source that served the probe and then said 403 is
+/// asked once more, and the second answer is the one that counts. The file that was refused
+/// is the only one fetched again — the other landed the first time and is left alone.
+#[test]
+fn a_source_that_refuses_a_file_once_is_asked_again() {
+    let dir = scratch("flaky");
+    let release = LocalRelease::serve(&BODIES, Some("model_int8.onnx"));
+    let sources = [Source::Release { base: release.base }];
+    let result = tauri::async_runtime::block_on(fetch_missing(&dir, &SPEC, &sources));
+    assert_eq!(result, Ok(()));
+    assert_eq!(
+        std::fs::read(dir.join("model_int8.onnx")).expect("graph"),
+        b"graph!!"
+    );
+    assert!(is_complete_file(&dir.join("config.json")));
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// Two callers, one absent model, and every file crosses the wire once: the second caller
+/// waits for the first and finds the files there. Without the lock both wrote the same
+/// `.part` and one of them failed after a second full download (seen 2026-09-15: two
+/// `embed_texts` during a first run, one answered "没有那个文件或目录").
+#[test]
+fn two_callers_asking_for_the_same_absent_model_download_it_once() {
+    let dir = scratch("twice");
+    let release = LocalRelease::serve(&BODIES, None);
+    let sources = [Source::Release { base: release.base }];
+    let (first, second) = tauri::async_runtime::block_on(async {
+        tokio::join!(
+            fetch_missing(&dir, &SPEC, &sources),
+            fetch_missing(&dir, &SPEC, &sources)
+        )
+    });
+    assert_eq!((first, second), (Ok(()), Ok(())));
+    assert!(is_complete_file(&dir.join("model_int8.onnx")));
+    assert!(is_complete_file(&dir.join("config.json")));
+    assert_eq!(
+        release.requests.load(std::sync::atomic::Ordering::SeqCst),
+        BODIES.len(),
+        "each file should be fetched once"
     );
     std::fs::remove_dir_all(&dir).ok();
 }

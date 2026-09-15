@@ -9,6 +9,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCopyMessage } from "../../i18n/useCopyMessage";
 import { appEventBus, useChatStore } from "../../stores/chatStore";
 import { useFocusSessionsStore } from "../../stores/focusSessionsStore";
 import { CompanionChatBanners } from "../companion/CompanionChatBanners";
@@ -28,6 +29,7 @@ const LOCATE_HIGHLIGHT_MS = 2000;
 
 export function ChatView() {
   const { t } = useTranslation(["chat", "common"]);
+  const copy = useCopyMessage();
 
   const messages = useChatStore((state) => state.messages);
   const streamingText = useChatStore((state) => state.streamingText);
@@ -103,6 +105,14 @@ export function ChatView() {
           <div className="flex h-full flex-col items-center justify-center gap-2 text-stone-400">
             <span className="text-4xl">🍞</span>
             <p>{t("emptyLine")}</p>
+            {/* A send refused before any message existed — the network switch off, no API
+                configured — has no footer to land in; without this line the button did
+                nothing visible (desktop run, 2026-09-15). */}
+            {errorText !== null && (
+              <p className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-3 text-center text-sm text-stone-600">
+                {copy(errorText)}
+              </p>
+            )}
           </div>
         ) : (
           <MessageList

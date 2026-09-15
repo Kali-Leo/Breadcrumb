@@ -529,6 +529,7 @@ dependencies = [
  "tauri-plugin-http",
  "tauri-plugin-opener",
  "tauri-plugin-sql",
+ "tokio",
 ]
 
 [[package]]

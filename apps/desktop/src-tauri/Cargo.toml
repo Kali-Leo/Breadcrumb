@@ -43,6 +43,10 @@ tauri-plugin-dialog = "2"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 # For the digests those downloads are checked against. Already built for sqlx underneath.
 sha2 = "0.10"
+# The pause before a model source is asked a second time, and the lock that keeps model
+# downloads to one at a time (both model_sources.rs). Tauri's own runtime is this tokio;
+# naming it adds two features to a crate already in the build.
+tokio = { version = "1", features = ["time", "sync"] }
 # Reading scanned pages: PaddleOCR's PP-OCRv6 graphs through the same onnxruntime fastembed
 # links (both pin ort 2.0.0-rc.13, so one runtime is built, not two). The core crate rather
 # than `oar-ocr` itself, which would bring a PDF renderer, a font stack and a CLI along.

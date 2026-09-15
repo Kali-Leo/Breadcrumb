@@ -37,6 +37,8 @@ mod open_database_tests;
 // both them and the sqlx defaults underneath them.
 mod pragma_defaults;
 mod reranker;
+#[cfg(test)]
+mod test_http;
 mod transactions;
 mod tts;
 // The renderer-supplied path checks tts.rs runs before it executes anything.

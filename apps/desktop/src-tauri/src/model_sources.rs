@@ -16,10 +16,11 @@
 // reaches the same conclusion from the network itself, one timeout later.
 
 use crate::model_download::{download, download_pieces};
-use crate::model_files::{is_complete_file, model_base_url, ModelSpec};
+use crate::model_files::{is_cached, is_complete_file, model_base_url, ModelSpec};
 use crate::model_shards::fetch_manifest;
 use std::path::Path;
 use std::time::Duration;
+use tokio::sync::Mutex;
 
 /// jsDelivr's GitHub endpoint; the repository, tag and folder follow. Mirrored in
 /// packages/core-vectors/src/embeddingModel.ts (MODEL_MIRROR_BASE, modelMirrorDirectory), which
@@ -124,9 +125,46 @@ async fn fetch_from(
     Ok(())
 }
 
+/// How long to wait before asking a source that answered the probe and then refused a file
+/// a second time. Seen once (2026-09-15, desktop run, release host unreachable): jsDelivr
+/// served the manifest and the first graph of the OCR model, answered 403 for the first piece
+/// of the second, and served that same piece whole a minute later. The mirror is the last
+/// source there is, so a refusal that is not repeated should not be the reader's answer.
+const RETRY_PAUSE: Duration = Duration::from_secs(2);
+
+/// One source, tried twice. Files that landed the first time are not fetched again —
+/// fetch_from only asks for what is still missing — so the second try costs the failed file
+/// and nothing else.
+async fn fetch_from_twice(
+    client: &reqwest::Client,
+    dir: &Path,
+    spec: &ModelSpec,
+    source: &Source,
+) -> Result<(), String> {
+    let first = match fetch_from(client, dir, spec, source).await {
+        Ok(()) => return Ok(()),
+        Err(problem) => problem,
+    };
+    tokio::time::sleep(RETRY_PAUSE).await;
+    fetch_from(client, dir, spec, source)
+        .await
+        .map_err(|second| format!("{first}; tried again: {second}"))
+}
+
+/// One download at a time, across models. Two commands asking for the same absent model at
+/// once — the library's vector pass and a question's embedding, both on a first run — used
+/// to write the same `.part` from two handles; whichever finished second found its file
+/// already renamed away and failed after a second full download. The second caller now
+/// waits, and usually finds the files it wanted already there.
+static ONE_AT_A_TIME: Mutex<()> = Mutex::const_new(());
+
 /// Tries the sources in order and returns on the first that delivers every missing file.
 /// Nothing here consults the network switch — model_files::ensure has already answered it.
 pub async fn fetch_missing(dir: &Path, spec: &ModelSpec, sources: &[Source]) -> Result<(), String> {
+    let _turn = ONE_AT_A_TIME.lock().await;
+    if is_cached(dir, spec.files) {
+        return Ok(());
+    }
     let client = client()?;
     let mut refusals = Vec::new();
     for source in sources {
@@ -134,7 +172,7 @@ pub async fn fetch_missing(dir: &Path, spec: &ModelSpec, sources: &[Source]) -> 
             refusals.push(format!("{} did not answer", source.name()));
             continue;
         }
-        match fetch_from(&client, dir, spec, source).await {
+        match fetch_from_twice(&client, dir, spec, source).await {
             Ok(()) => return Ok(()),
             Err(problem) => refusals.push(format!("{}: {problem}", source.name())),
         }
