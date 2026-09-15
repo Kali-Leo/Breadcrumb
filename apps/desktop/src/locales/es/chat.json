@@ -43,6 +43,28 @@
       "library": "Mis materiales"
     }
   },
+  "links": {
+    "entry": "Materiales vinculados",
+    "intro": "Las respuestas se basan primero en los materiales vinculados.",
+    "linked": "Vinculados",
+    "none": "Todavía no hay materiales vinculados.",
+    "unlink": "Quitar «{{title}}»",
+    "collections": "Conjuntos guardados",
+    "noCollections": "Cuando una conversación se vincula a dos o más documentos y se envía un mensaje, ese conjunto se guarda automáticamente.",
+    "apply": "Usar el conjunto «{{name}}»",
+    "documents": "Mis materiales",
+    "noDocuments": "Todavía no hay documentos en Mis materiales; se pueden importar en la página Mis materiales.",
+    "close": "Cerrar el panel de vinculación",
+    "drift": "Los materiales vinculados difieren del conjunto «{{name}}».",
+    "updateCollection": "Actualizar el conjunto",
+    "onlyThisConversation": "Solo esta conversación",
+    "autoName": {
+      "pair": "{{first}}, {{second}}",
+      "more_one": "{{first}}, {{second}} y otros ({{count}} documento en total)",
+      "more_many": "{{first}}, {{second}} y otros ({{count}} documentos en total)",
+      "more_other": "{{first}}, {{second}} y otros ({{count}} documentos en total)"
+    }
+  },
   "companion": {
     "chatDisabled": "La conversación con compañeros está desactivada. Vuelve a activar «Conversación con compañeros» en los ajustes para continuar.",
     "credits": "Los compañeros vienen de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0; sus personalidades escritas son una obra derivada con cambios y no implican respaldo del autor original.",

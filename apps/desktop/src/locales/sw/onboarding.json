@@ -43,6 +43,7 @@
     "label": "Kidokezo cha kipengele",
     "chatMode": "Hali ya kusoma huongoza kufikiri na mazoezi; mazungumzo huru ni mazungumzo ya kawaida.",
     "composer": "Andika swali hapa; dhana zinazojadiliwa kwenye mazungumzo hupangwa kwenye ramani zenyewe.",
+    "chatLinks": "Mazungumzo yanaweza kuunganishwa na hati katika Nyenzo zangu; majibu hutegemea kwanza hati hizo.",
     "groundingMark": "Nukta mwishoni mwa sentensi huonyesha chanzo chake; bofya ili kusoma maandishi asilia.",
     "mapFirstIsland": "Visiwa huundwa kutoka dhana zilizojitokeza kwenye mazungumzo; visiwa vilivyoachwa muda mrefu bila kuguswa hufifia.",
     "discoveryScript": "Hati moja ni ya Bilibili na nyingine ya YouTube, kila moja husakinishwa mara moja; baada ya hapo tazama kama kawaida, na yaliyotazamwa hukusanywa kwenye ukurasa huu yenyewe.",

@@ -43,6 +43,27 @@
       "library": "My material"
     }
   },
+  "links": {
+    "entry": "Linked material",
+    "intro": "Answers draw on the linked material first.",
+    "linked": "Linked",
+    "none": "No material is linked yet.",
+    "unlink": "Remove “{{title}}”",
+    "collections": "Saved sets",
+    "noCollections": "Once a chat is linked to two or more documents and a message has been sent, that set is saved automatically.",
+    "apply": "Use the set “{{name}}”",
+    "documents": "My material",
+    "noDocuments": "There are no documents in My material yet; they can be imported on the My material page.",
+    "close": "Close the linking panel",
+    "drift": "The linked material differs from the set “{{name}}”.",
+    "updateCollection": "Update the set",
+    "onlyThisConversation": "This chat only",
+    "autoName": {
+      "pair": "{{first}}, {{second}}",
+      "more_one": "{{first}}, {{second}} and others ({{count}} document in all)",
+      "more_other": "{{first}}, {{second}} and others ({{count}} documents in all)"
+    }
+  },
   "companion": {
     "chatDisabled": "Companion chat is off. Turn \"Companion chat\" back on in settings to continue.",
     "credits": "The companions come from David Revoy's Pepper&Carrot (peppercarrot.com), CC-BY 4.0; their written personalities are a derivative work with changes, and imply no endorsement by the original author.",

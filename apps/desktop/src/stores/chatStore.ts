@@ -78,6 +78,10 @@ export const useChatStore = create<ChatState>((set, get) => {
       setRoundError,
       clearDraft: (key) => get().setDraft(key, ""),
       readNewConversationStudyMode: () => get().newConversationStudyMode,
+      adoptNewConversationLinks: async (id) => {
+        const { useConversationLinksStore } = await import("./conversationLinksStore");
+        await useConversationLinksStore.getState().adoptNewConversation(id);
+      },
       setGlobalMeters: (patch) => set(patch),
       emitMessageSent: (payload) => appEventBus.emit("chat:messageSent", payload),
       isConversationLive: (id) => get().sessions.has(id),

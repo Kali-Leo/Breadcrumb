@@ -66,6 +66,7 @@ function conversationRow(
     companion_id: null,
     auto_title: null,
     study_mode: 0,
+    library_collection_id: null,
   };
 }
 

@@ -65,6 +65,7 @@ describe("refreshConversationAutoTitle", () => {
       companion_id: null,
       auto_title: null,
       study_mode: 0,
+      library_collection_id: null,
     };
     const { repos, writes } = makeRepos(
       conversation,
@@ -85,6 +86,7 @@ describe("refreshConversationAutoTitle", () => {
       companion_id: null,
       auto_title: null,
       study_mode: 0,
+      library_collection_id: null,
     };
     const { repos, writes } = makeRepos(
       conversation,
@@ -104,6 +106,7 @@ describe("refreshConversationAutoTitle", () => {
       kind: "chat",
       companion_id: null,
       study_mode: 0,
+      library_collection_id: null,
       auto_title: "「闭包」",
     };
     const { repos, writes } = makeRepos(

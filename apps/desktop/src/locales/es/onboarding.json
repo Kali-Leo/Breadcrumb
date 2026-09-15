@@ -43,6 +43,7 @@
     "label": "Pista de función",
     "chatMode": "El modo estudio guía el razonamiento y la práctica; la charla libre es un intercambio corriente.",
     "composer": "Escribe aquí una pregunta; los conceptos que trate la charla se ordenan en el mapa automáticamente.",
+    "chatLinks": "Una conversación se puede vincular a documentos de Mis materiales; las respuestas se basan primero en esos documentos.",
     "groundingMark": "El punto al final de una frase marca su fuente; al pulsarlo se lee el original.",
     "mapFirstIsland": "Las islas se forman con los conceptos que aparecieron en la charla; las islas que llevan mucho tiempo sin tocarse se van apagando.",
     "discoveryScript": "Un script es para Bilibili y otro para YouTube, cada uno se instala una vez; después, navega como siempre y lo visto se reúne en esta página automáticamente.",

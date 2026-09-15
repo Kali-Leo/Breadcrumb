@@ -36,6 +36,7 @@ export const CONVERSATION_SCOPED_TABLES: readonly string[] = [
   "term_marks", // target_kind='message', no declared FK
   "knowledge_edges", // source_message_id only: the edge itself survives, the link is cleared
   "llm_calls", // the row survives, only conversation_id is cleared
+  "conversation_library_links",
   "messages",
   "conversations",
 ];
@@ -69,6 +70,7 @@ export function buildConversationDeleteStatements(id: string): SqlTransactionSta
       sql: "UPDATE llm_calls SET conversation_id = NULL WHERE conversation_id = ?",
       params: [id],
     },
+    { sql: "DELETE FROM conversation_library_links WHERE conversation_id = ?", params: [id] },
     { sql: "DELETE FROM messages WHERE conversation_id = ?", params: [id] },
     { sql: "DELETE FROM conversations WHERE id = ?", params: [id] },
   ];

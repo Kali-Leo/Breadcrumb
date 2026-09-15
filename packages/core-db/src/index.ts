@@ -24,6 +24,7 @@ export * from "./goalRepositories";
 export * from "./interestRepositories";
 export * from "./jsonColumns";
 export * from "./knowledgeTypes";
+export * from "./libraryCollectionsRepository";
 export * from "./libraryRepository";
 export * from "./libraryTypes";
 export * from "./llmCallsRepository";

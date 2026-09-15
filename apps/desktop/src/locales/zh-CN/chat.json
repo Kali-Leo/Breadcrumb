@@ -43,6 +43,26 @@
       "library": "我的资料"
     }
   },
+  "links": {
+    "entry": "关联资料",
+    "intro": "回答将优先依据关联的资料。",
+    "linked": "已关联",
+    "none": "尚未关联资料。",
+    "unlink": "移除「{{title}}」",
+    "collections": "已保存的组合",
+    "noCollections": "对话关联两份以上资料并发送消息后，这组资料会自动保存为组合。",
+    "apply": "套用组合「{{name}}」",
+    "documents": "我的资料",
+    "noDocuments": "我的资料中尚无文档，可在「我的资料」页导入。",
+    "close": "关闭关联面板",
+    "drift": "已关联的资料与组合「{{name}}」不同。",
+    "updateCollection": "更新组合",
+    "onlyThisConversation": "仅此对话",
+    "autoName": {
+      "pair": "{{first}}、{{second}}",
+      "more": "{{first}}、{{second}} 等 {{count}} 份"
+    }
+  },
   "companion": {
     "chatDisabled": "伙伴对话已关闭。在设置中开启「伙伴对话」后可继续。",
     "credits": "伙伴角色源自 David Revoy《Pepper&Carrot》(peppercarrot.com)，CC-BY 4.0；文字人设为衍生创作，有改动；不代表原作者对本产品的背书。",

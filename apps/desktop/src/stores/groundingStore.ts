@@ -33,6 +33,10 @@ interface GroundingState {
   gatheringConversationIds: ReadonlySet<string>;
   annotationByMessage: ReadonlyMap<string, AnswerGrounding>;
   setMaterial(conversationId: string, material: TopicMaterial): void;
+  /** Forgets a conversation's material — the next round fetches afresh. Called when the
+   * documents the conversation is tied to change, since what was gathered under the old
+   * scope is not this scope's material. */
+  clearMaterial(conversationId: string): void;
   setGathering(conversationId: string, gathering: boolean): void;
   setAnnotation(messageId: string, annotation: AnswerGrounding): void;
 }
@@ -46,6 +50,13 @@ export const useGroundingStore = create<GroundingState>((set, get) => ({
     set({
       materialByConversation: new Map(get().materialByConversation).set(conversationId, material),
     });
+  },
+
+  clearMaterial(conversationId) {
+    if (!get().materialByConversation.has(conversationId)) return;
+    const next = new Map(get().materialByConversation);
+    next.delete(conversationId);
+    set({ materialByConversation: next });
   },
 
   setGathering(conversationId, gathering) {

@@ -12,7 +12,11 @@
  * nDCG@10 0.476 → 0.750 — and costs about five seconds for fifty candidates on a desktop
  * processor, so whether to spend it is a policy decision, and the policy lives with the
  * conversation (createRerankPolicy), not here.
- * Main exports: retrieveFromLibrary, libraryRetrievalDeps.
+ *
+ * A scope — the documents one conversation is tied to — narrows both routes at the source:
+ * the keyword index and the vector table are asked for those documents only, so a passage
+ * from an unlinked book cannot reach the fusion stage at all.
+ * Main exports: retrieveFromLibrary, libraryRetrievalDeps, LibraryRetrieveOptions.
  */
 import {
   type RetrievalDeps,
@@ -34,9 +38,13 @@ import { EMBEDDING_MODEL, rankByCosine } from "./libraryVectors";
  * — spent to rank an empty list. Reading the rows first means search in that window costs one
  * cheap query and answers on keywords alone, which is exactly what it is supposed to do.
  */
-async function vectorSearch(question: string, limit: number): Promise<string[]> {
+async function vectorSearch(
+  question: string,
+  limit: number,
+  documentIds: readonly string[] | undefined,
+): Promise<string[]> {
   const repos = await getRepos();
-  const rows = await repos.library.listPassageVectors(EMBEDDING_MODEL);
+  const rows = await repos.library.listPassageVectors(EMBEDDING_MODEL, documentIds);
   if (rows.length === 0) return [];
   const vectors = await embedTexts([question]);
   const query = vectors?.[0];
@@ -44,9 +52,13 @@ async function vectorSearch(question: string, limit: number): Promise<string[]> 
   return rankByCosine(query, rows, limit);
 }
 
-async function keywordSearch(match: string, limit: number): Promise<string[]> {
+async function keywordSearch(
+  match: string,
+  limit: number,
+  documentIds: readonly string[] | undefined,
+): Promise<string[]> {
   const repos = await getRepos();
-  const hits = await repos.library.searchKeyword(match, limit);
+  const hits = await repos.library.searchKeyword(match, limit, documentIds);
   return hits.map((hit) => hit.passage_id);
 }
 
@@ -88,10 +100,18 @@ async function rerank(
   });
 }
 
-export async function libraryRetrievalDeps(language: string): Promise<RetrievalDeps> {
+export interface LibraryRetrieveOptions extends RetrieveOptions {
+  /** Only these documents are searched. Undefined means the whole library. */
+  documentIds?: readonly string[];
+}
+
+export async function libraryRetrievalDeps(
+  language: string,
+  documentIds?: readonly string[],
+): Promise<RetrievalDeps> {
   return {
-    keywordSearch,
-    vectorSearch,
+    keywordSearch: (match, limit) => keywordSearch(match, limit, documentIds),
+    vectorSearch: (question, limit) => vectorSearch(question, limit, documentIds),
     resolveParents,
     rerank,
     language,
@@ -109,10 +129,11 @@ export async function libraryRetrievalDeps(language: string): Promise<RetrievalD
 export async function retrieveFromLibrary(
   question: string,
   language: string,
-  options: RetrieveOptions = {},
+  options: LibraryRetrieveOptions = {},
 ): Promise<RetrievedPassage[]> {
   try {
-    return await retrieve(question, await libraryRetrievalDeps(language), options);
+    const deps = await libraryRetrievalDeps(language, options.documentIds);
+    return await retrieve(question, deps, options);
   } catch (error) {
     void degradeSilently("libraryRetrieval", error);
     return [];

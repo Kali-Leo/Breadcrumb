@@ -32,6 +32,7 @@ import {
 } from "@breadcrumb/feature-factcheck";
 import { type TopicMaterial, useGroundingStore } from "../../stores/groundingStore";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { getRepos } from "../platform/db";
 import { embedTexts } from "../platform/embeddings";
 import { degradeSilently } from "../platform/failureLog";
 import { currentEvidenceProviders } from "./evidenceProviders";
@@ -82,9 +83,11 @@ async function fetchMaterial(
   const store = useGroundingStore.getState();
   store.setGathering(conversationId, true);
   try {
-    // The reader's own material takes the budget first; the network fills what is left. A
-    // library that answers the whole question sends no request at all.
-    const own = await gatherLibraryEvidence(retrievalQuestion, newSubject);
+    // The reader's own material takes the budget first — the documents this conversation is
+    // tied to before the rest of the library — and the network fills what is left. A library
+    // that answers the whole question sends no request at all.
+    const linked = await linkedDocumentIds(conversationId);
+    const own = await gatherLibraryEvidence(retrievalQuestion, newSubject, linked);
     const remaining = TOPIC_PASSAGE_COUNT - own.length;
     const found =
       remaining > 0 && providers.length > 0
@@ -114,6 +117,13 @@ async function fetchMaterial(
   } finally {
     useGroundingStore.getState().setGathering(conversationId, false);
   }
+}
+
+/** The documents the conversation is tied to, read from the row rather than from any store:
+ * the round may run in a window whose panel never loaded them. */
+async function linkedDocumentIds(conversationId: string): Promise<string[]> {
+  const repos = await getRepos();
+  return repos.libraryCollections.listLinkedDocumentIds(conversationId);
 }
 
 /** Fills in a stored topic's passage vectors once the embedder answers. Writes nothing if the

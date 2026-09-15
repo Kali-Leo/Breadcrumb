@@ -43,6 +43,26 @@
       "library": "Materi saya"
     }
   },
+  "links": {
+    "entry": "Materi tertaut",
+    "intro": "Jawaban mengutamakan materi yang tertaut.",
+    "linked": "Tertaut",
+    "none": "Belum ada materi yang tertaut.",
+    "unlink": "Hapus “{{title}}”",
+    "collections": "Kumpulan tersimpan",
+    "noCollections": "Saat sebuah percakapan tertaut ke dua dokumen atau lebih dan sebuah pesan dikirim, kumpulan itu disimpan secara otomatis.",
+    "apply": "Gunakan kumpulan “{{name}}”",
+    "documents": "Materi saya",
+    "noDocuments": "Belum ada dokumen di Materi saya; dokumen dapat diimpor di halaman Materi saya.",
+    "close": "Tutup panel penautan",
+    "drift": "Materi yang tertaut berbeda dari kumpulan “{{name}}”.",
+    "updateCollection": "Perbarui kumpulan",
+    "onlyThisConversation": "Hanya percakapan ini",
+    "autoName": {
+      "pair": "{{first}}, {{second}}",
+      "more_other": "{{first}}, {{second}} dan lainnya ({{count}} dokumen seluruhnya)"
+    }
+  },
   "companion": {
     "chatDisabled": "Obrolan dengan teman dimatikan. Nyalakan kembali «Obrolan dengan teman» di pengaturan untuk melanjutkan.",
     "credits": "Para teman berasal dari Pepper&Carrot karya David Revoy (peppercarrot.com), CC-BY 4.0; kepribadian tertulis mereka adalah karya turunan dengan perubahan dan tidak berarti didukung oleh penulis aslinya.",

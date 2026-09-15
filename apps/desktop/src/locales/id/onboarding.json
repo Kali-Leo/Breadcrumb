@@ -43,6 +43,7 @@
     "label": "Petunjuk fitur",
     "chatMode": "Mode belajar memandu penalaran dan latihan; ngobrol bebas adalah percakapan biasa.",
     "composer": "Tulis pertanyaan di sini; konsep yang dibahas dalam obrolan ditata ke peta secara otomatis.",
+    "chatLinks": "Percakapan dapat ditautkan ke dokumen di Materi saya; jawaban lalu mengutamakan dokumen tersebut.",
     "groundingMark": "Titik di akhir kalimat menandai sumbernya; klik untuk membaca teks aslinya.",
     "mapFirstIsland": "Pulau terbentuk dari konsep yang muncul dalam obrolan; pulau yang lama tidak disentuh memudar.",
     "discoveryScript": "Satu skrip untuk Bilibili dan satu untuk YouTube, masing-masing dipasang sekali; setelah itu, tonton seperti biasa dan apa yang ditonton terkumpul di halaman ini secara otomatis.",

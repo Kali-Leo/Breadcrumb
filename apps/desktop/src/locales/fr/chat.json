@@ -43,6 +43,28 @@
       "library": "Mes documents"
     }
   },
+  "links": {
+    "entry": "Documents liés",
+    "intro": "Les réponses s'appuient d'abord sur les documents liés.",
+    "linked": "Liés",
+    "none": "Aucun document n'est encore lié.",
+    "unlink": "Retirer « {{title}} »",
+    "collections": "Ensembles enregistrés",
+    "noCollections": "Quand une conversation est liée à deux documents ou plus et qu'un message a été envoyé, cet ensemble est enregistré automatiquement.",
+    "apply": "Utiliser l'ensemble « {{name}} »",
+    "documents": "Mes documents",
+    "noDocuments": "Il n'y a encore aucun document dans Mes documents ; tu peux en importer sur la page Mes documents.",
+    "close": "Fermer le panneau de liaison",
+    "drift": "Les documents liés diffèrent de l'ensemble « {{name}} ».",
+    "updateCollection": "Mettre à jour l'ensemble",
+    "onlyThisConversation": "Cette conversation seulement",
+    "autoName": {
+      "pair": "{{first}}, {{second}}",
+      "more_one": "{{first}}, {{second}} et d'autres ({{count}} document en tout)",
+      "more_many": "{{first}}, {{second}} et d'autres ({{count}} documents en tout)",
+      "more_other": "{{first}}, {{second}} et d'autres ({{count}} documents en tout)"
+    }
+  },
   "companion": {
     "chatDisabled": "La conversation avec les compagnons est désactivée. Réactive « Conversation avec les compagnons » dans les réglages pour continuer.",
     "credits": "Les compagnons viennent de Pepper&Carrot de David Revoy (peppercarrot.com), CC-BY 4.0 ; leurs personnalités écrites sont une œuvre dérivée avec modifications et n'impliquent aucune approbation de l'auteur d'origine.",

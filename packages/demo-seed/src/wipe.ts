@@ -45,6 +45,7 @@ export const WIPE_DEMO_REFERENCING_TABLES: readonly string[] = [
   "llm_calls",
   "focus_sessions",
   "companion_knowledge_state",
+  "conversation_library_links",
 ];
 
 /** Deletes children before parents. Safe on an empty/never-seeded database — every
@@ -83,6 +84,8 @@ export async function wipeDemoData(sql: SqlClient): Promise<void> {
     },
     { sql: "DELETE FROM focus_sessions WHERE conversation_id LIKE 'demo-%'" },
     { sql: "DELETE FROM companion_knowledge_state WHERE conversation_id LIKE 'demo-%'" },
+    // A demo conversation the learner tied to their own documents.
+    { sql: "DELETE FROM conversation_library_links WHERE conversation_id LIKE 'demo-%'" },
     // Rows the seed writes directly (plus any app-added rows hanging off demo parents).
     {
       sql: "DELETE FROM node_sightings WHERE id LIKE 'demo-%' OR node_id LIKE 'demo-%' OR conversation_id LIKE 'demo-%'",

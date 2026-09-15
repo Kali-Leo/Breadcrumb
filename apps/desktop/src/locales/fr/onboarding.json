@@ -43,6 +43,7 @@
     "label": "Bulle d'aide",
     "chatMode": "Le mode étude guide la réflexion et l'entraînement ; la discussion libre est un échange ordinaire.",
     "composer": "Écris ici une question ; les notions abordées dans la discussion sont rangées sur la carte automatiquement.",
+    "chatLinks": "Une conversation peut être liée à des documents de Mes documents ; les réponses s'appuient alors d'abord sur eux.",
     "groundingMark": "Le point à la fin d'une phrase marque sa source ; un clic dessus affiche l'original.",
     "mapFirstIsland": "Les îles se forment à partir des notions apparues dans la discussion ; les îles laissées longtemps sans visite pâlissent.",
     "discoveryScript": "Un script est pour Bilibili et l'autre pour YouTube, chacun installé une seule fois ; ensuite, navigue comme d'habitude et ce qui a été regardé se rassemble sur cette page automatiquement.",

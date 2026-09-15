@@ -1,6 +1,8 @@
 /**
  * Purpose: SQL for the library — writing an imported document and its passages atomically,
- * reading the keyword index, and keeping track of which passages still need a vector.
+ * reading the keyword index and the stored vectors (the whole library, or only some of its
+ * documents), and removing a document with everything that named it. The vector bookkeeping
+ * is libraryEmbeddingQueue.ts, spread in here.
  *
  * Two shapes here are deliberate. Import writes through executeTransaction, because a
  * half-imported book (rows in library_passages, nothing in the FTS index) is a document that
@@ -9,12 +11,12 @@
  * weaker match, it is an incomparable one, so it counts as absent everywhere.
  * Main exports: createLibraryRepo, PassageInsert.
  */
+import { createLibraryEmbeddingQueue } from "./libraryEmbeddingQueue";
 import type {
   KeywordHit,
   LibraryDocumentRow,
   LibraryPassageEmbeddingRow,
   LibraryPassageRow,
-  LibraryProgress,
 } from "./libraryTypes";
 import type { SqlClient, SqlTransactionStatement } from "./types";
 
@@ -54,8 +56,15 @@ function insertStatements(entries: readonly PassageInsert[]): SqlTransactionStat
   return statements;
 }
 
+/** `AND p.document_id IN (?, ?, …)` for a scope, or nothing for the whole library. */
+function scopeClause(documentIds: readonly string[] | undefined): string {
+  if (documentIds === undefined) return "";
+  return ` AND p.document_id IN (${documentIds.map(() => "?").join(", ")})`;
+}
+
 export function createLibraryRepo(sql: SqlClient) {
   return {
+    ...createLibraryEmbeddingQueue(sql),
     /** One document and all its passages, or nothing. */
     async importDocument(
       document: LibraryDocumentRow,
@@ -87,9 +96,29 @@ export function createLibraryRepo(sql: SqlClient) {
     },
 
     /** The FTS index has no foreign key, so its rows are removed by hand and in the same
-     * transaction — an orphaned index row would keep answering for a deleted book. */
+     * transaction — an orphaned index row would keep answering for a deleted book. The
+     * conversation links and collection memberships that named the document go too, and a
+     * collection left with no members is not a collection any more: it is removed, and any
+     * conversation still pointing at it is unbound. */
     async deleteDocument(documentId: string): Promise<void> {
       await sql.executeTransaction([
+        {
+          sql: "DELETE FROM conversation_library_links WHERE document_id = ?",
+          params: [documentId],
+        },
+        {
+          sql: "DELETE FROM library_collection_members WHERE document_id = ?",
+          params: [documentId],
+        },
+        {
+          sql: `UPDATE conversations SET library_collection_id = NULL
+                WHERE library_collection_id IS NOT NULL AND library_collection_id NOT IN
+                (SELECT collection_id FROM library_collection_members)`,
+        },
+        {
+          sql: `DELETE FROM library_collections WHERE id NOT IN
+                (SELECT collection_id FROM library_collection_members)`,
+        },
         {
           sql: `DELETE FROM library_passage_fts WHERE passage_id IN
                 (SELECT id FROM library_passages WHERE document_id = ?)`,
@@ -110,14 +139,21 @@ export function createLibraryRepo(sql: SqlClient) {
      * quotes every term, so nothing a learner types can be read as FTS5 syntax.
      * The stems field is weighted below the literal words: a stem match is real evidence, a
      * literal match is better evidence, and bm25()'s per-column weights are how FTS5 says so.
+     * With `documentIds`, only passages of those documents are hits; an empty scope is no
+     * scope to search, not the whole library.
      */
-    async searchKeyword(match: string, limit: number): Promise<KeywordHit[]> {
-      if (match === "") return [];
+    async searchKeyword(
+      match: string,
+      limit: number,
+      documentIds?: readonly string[],
+    ): Promise<KeywordHit[]> {
+      if (match === "" || documentIds?.length === 0) return [];
       return sql.select<KeywordHit>(
-        `SELECT passage_id, bm25(library_passage_fts, 0.0, 1.0, 0.5) AS score
-         FROM library_passage_fts WHERE library_passage_fts MATCH ?
+        `SELECT library_passage_fts.passage_id, bm25(library_passage_fts, 0.0, 1.0, 0.5) AS score
+         FROM library_passage_fts JOIN library_passages p ON p.id = library_passage_fts.passage_id
+         WHERE library_passage_fts MATCH ?${scopeClause(documentIds)}
          ORDER BY score LIMIT ?`,
-        [match, limit],
+        [match, ...(documentIds ?? []), limit],
       );
     },
 
@@ -130,50 +166,20 @@ export function createLibraryRepo(sql: SqlClient) {
       );
     },
 
-    /** Every child passage's vector for the model in use. Read whole because the search is a
-     * brute-force dot product, the same as everywhere else in this product. */
-    async listPassageVectors(model: string): Promise<LibraryPassageEmbeddingRow[]> {
+    /** Every child passage's vector for the model in use — of the whole library, or of the
+     * given documents only. Read whole because the search is a brute-force dot product, the
+     * same as everywhere else in this product. */
+    async listPassageVectors(
+      model: string,
+      documentIds?: readonly string[],
+    ): Promise<LibraryPassageEmbeddingRow[]> {
+      if (documentIds?.length === 0) return [];
       return sql.select<LibraryPassageEmbeddingRow>(
-        "SELECT * FROM library_passage_embeddings WHERE model = ?",
-        [model],
+        `SELECT e.* FROM library_passage_embeddings e
+         JOIN library_passages p ON p.id = e.passage_id
+         WHERE e.model = ?${scopeClause(documentIds)}`,
+        [model, ...(documentIds ?? [])],
       );
-    },
-
-    /**
-     * The background queue: child passages with no usable vector. "No row" and "a row from
-     * another model" are the same thing here, which is the whole reason the model column is
-     * read at all.
-     */
-    async listPassagesMissingEmbedding(model: string, limit: number): Promise<LibraryPassageRow[]> {
-      return sql.select<LibraryPassageRow>(
-        `SELECT p.* FROM library_passages p
-         LEFT JOIN library_passage_embeddings e ON e.passage_id = p.id AND e.model = ?
-         WHERE p.parent_id IS NOT NULL AND e.passage_id IS NULL
-         ORDER BY p.document_id, p.ordinal LIMIT ?`,
-        [model, limit],
-      );
-    },
-
-    async upsertPassageEmbedding(row: LibraryPassageEmbeddingRow): Promise<void> {
-      await sql.execute(
-        `INSERT INTO library_passage_embeddings (passage_id, model, vector_json, created_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(passage_id) DO UPDATE SET
-           model = excluded.model, vector_json = excluded.vector_json,
-           created_at = excluded.created_at`,
-        [row.passage_id, row.model, row.vector_json, row.created_at],
-      );
-    },
-
-    /** What the progress line reads. Children only: parents are never embedded. */
-    async embeddingProgress(model: string): Promise<LibraryProgress> {
-      const rows = await sql.select<LibraryProgress>(
-        `SELECT
-           (SELECT COUNT(*) FROM library_passage_embeddings WHERE model = ?) AS embedded,
-           (SELECT COUNT(*) FROM library_passages WHERE parent_id IS NOT NULL) AS total`,
-        [model],
-      );
-      return rows[0] ?? { embedded: 0, total: 0 };
     },
   };
 }

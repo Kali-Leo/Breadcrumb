@@ -150,6 +150,7 @@ export const DEFAULT_SWITCHES: FeatureSwitches = {
 export const FEATURE_HINT_IDS = [
   "chatMode",
   "composer",
+  "chatLinks",
   "groundingMark",
   "mapFirstIsland",
   "discoveryScript",

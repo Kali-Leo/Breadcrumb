@@ -113,6 +113,7 @@ function makeFakeSql() {
           companion_id,
           auto_title: null,
           study_mode: 0,
+          library_collection_id: null,
         });
       } else if (sql.includes("INTO companion_memories")) {
         const [id, companion_id, kind, content, importance, created_at, last_accessed_at] = p as [

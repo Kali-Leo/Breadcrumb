@@ -20,6 +20,7 @@ import {
   createInterestSignalsRepo,
   createKnowledgeEdgesRepo,
   createKnowledgeNodesRepo,
+  createLibraryCollectionsRepo,
   createLibraryRepo,
   createLlmCallsRepo,
   createMapPlaceNamesRepo,
@@ -51,6 +52,7 @@ export interface Repos {
   knowledgeNodes: ReturnType<typeof createKnowledgeNodesRepo>;
   nodeSightings: ReturnType<typeof createNodeSightingsRepo>;
   library: ReturnType<typeof createLibraryRepo>;
+  libraryCollections: ReturnType<typeof createLibraryCollectionsRepo>;
   nodeEmbeddings: ReturnType<typeof createNodeEmbeddingsRepo>;
   nodeAliases: ReturnType<typeof createNodeAliasesRepo>;
   nodeMerge: ReturnType<typeof createNodeMergeRepo>;
@@ -123,6 +125,7 @@ async function buildRepos(): Promise<Repos> {
     knowledgeNodes: createKnowledgeNodesRepo(sqlClient),
     nodeSightings: createNodeSightingsRepo(sqlClient),
     library: createLibraryRepo(sqlClient),
+    libraryCollections: createLibraryCollectionsRepo(sqlClient),
     nodeEmbeddings: createNodeEmbeddingsRepo(sqlClient),
     nodeAliases: createNodeAliasesRepo(sqlClient),
     nodeMerge: createNodeMergeRepo(sqlClient),

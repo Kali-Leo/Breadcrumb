@@ -2,7 +2,8 @@
  * Purpose: the row shapes of the library — documents the learner brought in, the passages
  * they were cut into, and the vectors computed for those passages.
  * Main exports: LibraryDocumentRow, LibraryPassageRow, LibraryPassageEmbeddingRow,
- * LibraryOrigin, LibraryMediaType, KeywordHit, LibraryProgress.
+ * LibraryOrigin, LibraryMediaType, KeywordHit, LibraryProgress, LibraryCollectionRow,
+ * LibraryCollection, ConversationLibraryLinkRow.
  */
 
 /** Where the material came from. 'bundled' is the seam for knowledge points shipped with the
@@ -56,4 +57,26 @@ export interface KeywordHit {
 export interface LibraryProgress {
   embedded: number;
   total: number;
+}
+
+/** A remembered set of documents under a name (migration 0060). The members live in
+ * library_collection_members; LibraryCollection is the row with them read in. */
+export interface LibraryCollectionRow {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LibraryCollection extends LibraryCollectionRow {
+  /** Member document ids in the order they were saved. */
+  documentIds: string[];
+}
+
+/** One document a conversation is answered from. */
+export interface ConversationLibraryLinkRow {
+  conversation_id: string;
+  document_id: string;
+  ordinal: number;
+  created_at: string;
 }

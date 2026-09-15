@@ -43,6 +43,7 @@
     "label": "Feature hint",
     "chatMode": "Study mode guides thinking and practice; free chat is an ordinary exchange.",
     "composer": "Type a question here; the concepts the conversation covers are organised onto the map automatically.",
+    "chatLinks": "A chat can be linked to documents in My material; answers then draw on those documents first.",
     "groundingMark": "The dot at the end of a sentence marks its source; click it to read the original.",
     "mapFirstIsland": "Islands form from the concepts that came up in conversation; islands left untouched for a long time fade.",
     "discoveryScript": "One script is for Bilibili and one for YouTube, each installed once; after that, browse as usual and what was watched is gathered on this page automatically.",

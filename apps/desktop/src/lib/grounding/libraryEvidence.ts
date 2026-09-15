@@ -40,14 +40,24 @@ export function libraryEvidence(passage: RetrievedPassage): EvidenceItem {
  * The library's best passages for one question, at most a full topic's worth. An empty
  * library, a library still being indexed, or any failure underneath comes back as an empty
  * list — the round then fills the whole budget from the network instead.
+ *
+ * A conversation tied to some documents is answered from those first. Only when they hold
+ * nothing for the question does the search widen to the whole library: the reader chose the
+ * books, and a passage from another book is a fallback, not a peer.
  */
 export async function gatherLibraryEvidence(
   question: string,
   rerank: boolean,
+  linkedDocumentIds: readonly string[] = [],
 ): Promise<EvidenceItem[]> {
-  const passages = await retrieveFromLibrary(question, i18next.language, {
-    topK: TOPIC_PASSAGE_COUNT,
-    rerank,
-  });
+  const options = { topK: TOPIC_PASSAGE_COUNT, rerank };
+  if (linkedDocumentIds.length > 0) {
+    const linked = await retrieveFromLibrary(question, i18next.language, {
+      ...options,
+      documentIds: linkedDocumentIds,
+    });
+    if (linked.length > 0) return linked.map(libraryEvidence);
+  }
+  const passages = await retrieveFromLibrary(question, i18next.language, options);
   return passages.map(libraryEvidence);
 }

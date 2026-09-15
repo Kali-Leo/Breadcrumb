@@ -29,6 +29,9 @@ export interface ChatSendDeps extends AssistantRoundDeps {
   /** The new-conversation composer's 学习模式 state — a brand-new conversation
    * is born with whatever the toggle showed when the first message was sent. */
   readNewConversationStudyMode(): boolean;
+  /** Moves the new-conversation composer's library links onto the conversation just born,
+   * before its first round reads them. */
+  adoptNewConversationLinks(conversationId: string): Promise<void>;
   emitMessageSent(payload: { conversationId: string; messageId: string; sentAt: string }): void;
 }
 
@@ -88,6 +91,7 @@ async function sendRound(
     session = freshChatSession(studyMode);
     // A draft main view follows its newborn conversation; other windows are unaffected.
     deps.putSession(conversationId, session, deps.activeConversationId() === null);
+    await deps.adoptNewConversationLinks(conversationId);
   } else {
     conversationId = requestedId;
     session = await deps.ensureSession(conversationId);

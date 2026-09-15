@@ -11,6 +11,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useInputMode } from "../../lib/platform/inputMode";
 import { appEventBus } from "../../stores/chatStore";
+import { ConversationLinksEntry } from "./ConversationLinksEntry";
 
 /* Study-mode switch: a pill segmented switch above
    the input box, both states named — the same form as the map's 休闲|目标 pill and ChatGPT's
@@ -70,7 +71,7 @@ export function Composer(props: ComposerProps) {
       className="border-t border-stone-200 bg-white pb-[var(--keyboard-inset,0px)]"
     >
       {onSetStudyMode !== undefined && (
-        <div className="px-3 pt-2">
+        <div className="flex items-center gap-2 px-3 pt-2">
           <div
             data-hint="chatMode"
             className="inline-flex overflow-hidden rounded-full border border-stone-300 bg-white text-xs shadow-sm"
@@ -95,6 +96,8 @@ export function Composer(props: ComposerProps) {
               </button>
             ))}
           </div>
+          {/* Which of the reader's documents this conversation is answered from. */}
+          <ConversationLinksEntry conversationId={conversationId} />
         </div>
       )}
       {/* Bottom padding grows by the safe area so a home indicator never sits on the row.

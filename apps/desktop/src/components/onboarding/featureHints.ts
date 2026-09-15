@@ -22,6 +22,7 @@ import type { HintPlace } from "./hintPlacement";
 export const HINT_PLACEMENT: Record<FeatureHintId, HintPlace> = {
   chatMode: "top",
   composer: "top",
+  chatLinks: "top",
   groundingMark: "bottom",
   mapFirstIsland: "top",
   discoveryScript: "bottom",

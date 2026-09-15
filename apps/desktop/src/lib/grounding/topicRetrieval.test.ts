@@ -36,6 +36,13 @@ vi.mock("../platform/embeddings", () => ({
 
 vi.mock("../platform/failureLog", () => ({ degradeSilently: vi.fn() }));
 
+let linkedDocumentIds: string[] = [];
+vi.mock("../platform/db", () => ({
+  getRepos: async () => ({
+    libraryCollections: { listLinkedDocumentIds: async () => linkedDocumentIds },
+  }),
+}));
+
 const { useGroundingStore } = await import("../../stores/groundingStore");
 const { openRoundMaterial, prepareRoundMaterial } = await import("./topicRetrieval");
 const { initI18n } = await import("../../i18n");
@@ -73,6 +80,7 @@ const OFF_TOPIC = atAngle(Math.acos(0.3));
 
 beforeEach(() => {
   providers = [{ name: "wikipedia" }];
+  linkedDocumentIds = [];
   settings.networkEnabled = true;
   gatherEvidenceMock.mockReset();
   retrieveFromLibraryMock.mockReset();
@@ -133,6 +141,23 @@ describe("prepareRoundMaterial", () => {
     const material = await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
     expect(material?.passages.map((passage) => passage.source)).toEqual(["library"]);
     expect(gatherEvidenceMock).not.toHaveBeenCalled();
+  });
+
+  it("searches the linked documents first, and the whole library only when they are silent", async () => {
+    linkedDocumentIds = ["doc-1", "doc-2"];
+    retrieveFromLibraryMock.mockResolvedValueOnce([ownPassage(1)]);
+    await prepareRoundMaterial(CONVERSATION, "珠穆朗玛峰有多高");
+    expect(retrieveFromLibraryMock).toHaveBeenCalledTimes(1);
+    expect(retrieveFromLibraryMock.mock.calls[0]?.[2]).toMatchObject({
+      documentIds: ["doc-1", "doc-2"],
+    });
+
+    retrieveFromLibraryMock.mockReset();
+    retrieveFromLibraryMock.mockResolvedValue([]);
+    embedTextsMock.mockResolvedValueOnce([OFF_TOPIC]);
+    await prepareRoundMaterial(CONVERSATION, "光合作用是怎么回事");
+    expect(retrieveFromLibraryMock).toHaveBeenCalledTimes(2);
+    expect(retrieveFromLibraryMock.mock.calls[1]?.[2]).not.toHaveProperty("documentIds");
   });
 
   it("degrades to no material when the library is empty and no source is reachable", async () => {

@@ -15,7 +15,10 @@ export function createConversationsRepo(sql: SqlClient) {
      * keep typechecking without touching every call site. auto_title is never set at creation
      * — it starts NULL and is filled in once the trail has stations, via setAutoTitle. */
     async create(
-      row: Omit<ConversationRow, "companion_id" | "auto_title" | "study_mode"> & {
+      row: Omit<
+        ConversationRow,
+        "companion_id" | "auto_title" | "study_mode" | "library_collection_id"
+      > & {
         companion_id?: string | null;
         study_mode?: 0 | 1;
       },
@@ -99,6 +102,13 @@ export function createConversationsRepo(sql: SqlClient) {
      * does not reshuffle the sidebar. */
     async setStudyMode(id: string, studyMode: 0 | 1): Promise<void> {
       await sql.execute("UPDATE conversations SET study_mode = ? WHERE id = ?", [studyMode, id]);
+    },
+    /** Records (or clears) which collection the conversation's library links came from. */
+    async setLibraryCollection(id: string, collectionId: string | null): Promise<void> {
+      await sql.execute("UPDATE conversations SET library_collection_id = ? WHERE id = ?", [
+        collectionId,
+        id,
+      ]);
     },
   };
 }

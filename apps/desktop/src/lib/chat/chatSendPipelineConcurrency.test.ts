@@ -91,6 +91,7 @@ function deps(): ChatSendDeps {
     setRoundError: vi.fn(),
     clearDraft: vi.fn(),
     readNewConversationStudyMode: () => false,
+    adoptNewConversationLinks: vi.fn(async () => {}),
     setGlobalMeters: vi.fn(),
     emitMessageSent: vi.fn(),
     emitResponseFinished: vi.fn(),

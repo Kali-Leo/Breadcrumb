@@ -36,6 +36,10 @@ export interface ConversationRow {
   /** The composer's 学习模式 toggle, chat kind only: 0 = free chat (default),
    * 1 = guided learning. Other kinds ignore it — their prompts are fixed by kind. */
   study_mode: 0 | 1;
+  /** The collection this conversation's library links were taken from (migration 0060), or
+   * null when the links were picked by hand or there are none. Cleared when the reader keeps
+   * a changed set for this conversation only, or when the collection is deleted. */
+  library_collection_id: string | null;
 }
 
 export interface MessageRow {

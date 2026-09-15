@@ -43,6 +43,27 @@
       "library": "Nyenzo zangu"
     }
   },
+  "links": {
+    "entry": "Nyenzo zilizounganishwa",
+    "intro": "Majibu huegemea kwanza nyenzo zilizounganishwa.",
+    "linked": "Zimeunganishwa",
+    "none": "Bado hakuna nyenzo iliyounganishwa.",
+    "unlink": "Ondoa “{{title}}”",
+    "collections": "Seti zilizohifadhiwa",
+    "noCollections": "Mazungumzo yakiunganishwa na hati mbili au zaidi na ujumbe ukatumwa, seti hiyo huhifadhiwa yenyewe.",
+    "apply": "Tumia seti “{{name}}”",
+    "documents": "Nyenzo zangu",
+    "noDocuments": "Bado hakuna hati katika Nyenzo zangu; zinaweza kuletwa kwenye ukurasa wa Nyenzo zangu.",
+    "close": "Funga paneli ya kuunganisha",
+    "drift": "Nyenzo zilizounganishwa zinatofautiana na seti “{{name}}”.",
+    "updateCollection": "Sasisha seti",
+    "onlyThisConversation": "Mazungumzo haya pekee",
+    "autoName": {
+      "pair": "{{first}}, {{second}}",
+      "more_one": "{{first}}, {{second}} na nyingine (hati {{count}} kwa jumla)",
+      "more_other": "{{first}}, {{second}} na nyingine (hati {{count}} kwa jumla)"
+    }
+  },
   "companion": {
     "chatDisabled": "Mazungumzo na wenzako yamezimwa. Washa tena «Mazungumzo na wenzako» kwenye mipangilio ili kuendelea.",
     "credits": "Wenzako wanatoka Pepper&Carrot ya David Revoy (peppercarrot.com), CC-BY 4.0; tabia zao zilizoandikwa ni kazi tokanayo yenye mabadiliko na haimaanishi kuungwa mkono na mwandishi wa awali.",
