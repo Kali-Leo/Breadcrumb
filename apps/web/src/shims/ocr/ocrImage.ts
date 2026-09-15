@@ -7,8 +7,11 @@
  * Both functions hand back the three colour planes in BGR order, because that is the order
  * PaddleOCR's models were trained on: a canvas gives RGBA, and swapping the channels here
  * once is cheaper than remembering to everywhere else.
- * Main exports: resizeRgbaToBgrPlanes, sampleQuadToBgrPlanes.
+ * A third function cuts a region out of the page for the table model, which takes its crop
+ * as RGBA and does its own resizing (ocrTable.ts).
+ * Main exports: resizeRgbaToBgrPlanes, sampleQuadToBgrPlanes, cropRegion, TableCrop.
  */
+import type { OcrBox } from "@desktop/lib/library/ocrPage";
 import type { Quad } from "./ocrGeometry";
 
 /** The colour at a fractional position, per channel, edges clamped. `x` and `y` are in
@@ -137,4 +140,33 @@ export function sampleQuadToBgrPlanes(
     }
   }
   return out;
+}
+
+/** A region of the page as its own RGBA image. */
+export interface TableCrop {
+  rgba: Uint8Array;
+  width: number;
+  height: number;
+}
+
+/** Pixels of one region of the page, cut out with a margin and clamped to the page. */
+export function cropRegion(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+  box: OcrBox,
+  margin: number,
+): TableCrop & { box: OcrBox } {
+  const x0 = Math.max(0, Math.floor(box.x0 - margin));
+  const y0 = Math.max(0, Math.floor(box.y0 - margin));
+  const x1 = Math.min(width, Math.ceil(box.x1 + margin));
+  const y1 = Math.min(height, Math.ceil(box.y1 + margin));
+  const cropWidth = Math.max(1, x1 - x0);
+  const cropHeight = Math.max(1, y1 - y0);
+  const out = new Uint8Array(cropWidth * cropHeight * 4);
+  for (let y = 0; y < cropHeight; y += 1) {
+    const source = ((y0 + y) * width + x0) * 4;
+    out.set(rgba.subarray(source, source + cropWidth * 4), y * cropWidth * 4);
+  }
+  return { rgba: out, width: cropWidth, height: cropHeight, box: { x0, y0, x1, y1 } };
 }

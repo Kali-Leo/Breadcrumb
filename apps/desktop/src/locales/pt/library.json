@@ -7,6 +7,10 @@
   "empty": "Nenhum material foi importado ainda.",
   "remove": "Remover",
   "page": "Página {{page}}",
+  "formulas": {
+    "label": "Reconhecer fórmulas em páginas digitalizadas",
+    "download": "O primeiro uso descarrega cerca de {{mb}} MB."
+  },
   "progress": {
     "building": "Processando o trecho {{embedded}} / {{total}}",
     "ready": "O material já foi processado",

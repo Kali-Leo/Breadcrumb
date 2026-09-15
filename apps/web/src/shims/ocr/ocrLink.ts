@@ -8,7 +8,7 @@
  * other way round.
  * Main exports: OcrLink, createOcrLink.
  */
-import type { OcrLine, OcrReply, OcrRequest } from "./ocrProtocol";
+import type { OcrPageResult, OcrReply, OcrRequest } from "./ocrProtocol";
 
 export interface OcrLink {
   recognize(
@@ -16,7 +16,7 @@ export interface OcrLink {
     width: number,
     height: number,
     allowDownload: boolean,
-  ): Promise<OcrLine[]>;
+  ): Promise<OcrPageResult>;
 }
 
 type Settle = (reply: OcrReply | Error) => void;
@@ -59,7 +59,7 @@ export function createOcrLink(spawn: () => Worker): OcrLink {
       return new Promise((resolve, reject) => {
         pending.set(id, (reply) => {
           if (reply instanceof Error) reject(reply);
-          else if (reply.ok) resolve(reply.lines);
+          else if (reply.ok) resolve(reply.page);
           else reject(new Error(reply.error));
         });
         const request: OcrRequest = { id, rgba, width, height, allowDownload };

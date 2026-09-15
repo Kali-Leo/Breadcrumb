@@ -1,15 +1,14 @@
 /**
  * Purpose: the messages between the page and the OCR Worker. One request, exactly one reply
  * with the same id — the same shape the embedding and SQLite workers use, so the page keeps
- * one promise per call.
- * Main exports: OcrRequest, OcrReply, OcrLine.
+ * one promise per call. What comes back is the page as the desktop's Rust command returns
+ * it (apps/desktop/src/lib/library/ocrPage.ts): lines with their boxes, and the blocks that
+ * are not running text.
+ * Main exports: OcrRequest, OcrReply, OcrPageResult (re-exported).
  */
+import type { OcrPageResult } from "@desktop/lib/library/ocrPage";
 
-export interface OcrLine {
-  text: string;
-  /** Mean confidence of the characters read, 0 to 1. */
-  score: number;
-}
+export type { OcrBlock, OcrBox, OcrLine, OcrPageResult } from "@desktop/lib/library/ocrPage";
 
 export interface OcrRequest {
   id: number;
@@ -17,11 +16,11 @@ export interface OcrRequest {
   rgba: Uint8Array;
   width: number;
   height: number;
-  /** The app's network switch. The model download is the only request this feature ever
+  /** The app's network switch. The model downloads are the only requests this feature ever
    * makes; an already-cached model loads with the switch off. */
   allowDownload: boolean;
 }
 
 export type OcrReply =
-  | { id: number; ok: true; lines: OcrLine[]; msPerPage: number }
+  | { id: number; ok: true; page: OcrPageResult; msPerPage: number }
   | { id: number; ok: false; error: string };

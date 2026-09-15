@@ -1,8 +1,11 @@
 /**
  * Purpose: runs PP-OCRv6 tiny in the browser, inside a Worker: the detector over the page,
- * the recogniser over each line it found, on the same onnxruntime WebAssembly the embedding
- * worker uses — the same files from public/ort/, so the second model costs no second runtime
+ * the recogniser over each line it found, then the layout model for tables and the table
+ * model over each one (ocrStructure.ts) — all on the same onnxruntime WebAssembly the
+ * embedding worker uses, the same files from public/ort/, so no model costs a second runtime
  * download. It has to be a Worker: a page is a second or more of synchronous arithmetic.
+ * The reply is the page as the desktop's Rust command returns it: lines with their boxes,
+ * and the blocks that are not running text.
  *
  * Threads follow the page's isolation, as the embedding worker's do: four where the page is
  * cross-origin isolated and one otherwise. The research note measured 1.3 s a page on four
@@ -19,14 +22,17 @@ import * as ort from "onnxruntime-web/webgpu";
 import { isCrossOriginIsolated } from "../embedding/backend";
 import { ortWasmPaths } from "../embedding/ortAssets";
 import { boxesFromMap, detectorInputSize, detectorTensor, sortBoxes } from "./ocrDetect";
+import type { Quad } from "./ocrGeometry";
 import { defaultOcrModelDeps, loadOcrModelFiles } from "./ocrModelFiles";
-import type { OcrLine, OcrReply, OcrRequest } from "./ocrProtocol";
+import type { OcrLine, OcrPageResult, OcrReply, OcrRequest } from "./ocrProtocol";
 import { decodeCtc, planRecognitionBatches, recognitionTensor } from "./ocrRecognize";
+import { findTables, loadStructureEngine, type StructureEngine } from "./ocrStructure";
 
 interface Engine {
   det: ort.InferenceSession;
   rec: ort.InferenceSession;
   alphabet: string[];
+  structure: StructureEngine;
 }
 
 let loading: Promise<Engine> | null = null;
@@ -47,7 +53,8 @@ async function loadEngine(allowDownload: boolean): Promise<Engine> {
   };
   const det = await ort.InferenceSession.create(files.det, options);
   const rec = await ort.InferenceSession.create(files.rec, options);
-  return { det, rec, alphabet: [...files.dict, " "] };
+  const structure = await loadStructureEngine(ort, allowDownload, options);
+  return { det, rec, alphabet: [...files.dict, " "], structure };
 }
 
 function getEngine(allowDownload: boolean): Promise<Engine> {
@@ -72,7 +79,14 @@ async function runSession(
   return { data: output.data as Float32Array, dims: output.dims };
 }
 
-async function readPage(engine: Engine, request: OcrRequest): Promise<OcrLine[]> {
+/** The axis-aligned box around a detected line's four corners. */
+function boxOf(quad: Quad): OcrLine["box"] {
+  const xs = quad.map((point) => point[0]);
+  const ys = quad.map((point) => point[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+async function readPage(engine: Engine, request: OcrRequest): Promise<OcrPageResult> {
   const { rgba, width, height } = request;
   const target = detectorInputSize(width, height);
   const input = detectorTensor(rgba, width, height, target);
@@ -85,18 +99,21 @@ async function readPage(engine: Engine, request: OcrRequest): Promise<OcrLine[]>
     const output = await runSession(engine.rec, tensor.data, tensor.dims);
     const decoded = decodeCtc(output.data, output.dims, engine.alphabet);
     batch.forEach((line, slot) => {
-      lines[line.index] = decoded[slot] ?? null;
+      const read = decoded[slot];
+      lines[line.index] = read === undefined ? null : { ...read, box: boxOf(line.quad) };
     });
   }
-  return lines.filter((line): line is OcrLine => line !== null && line.text.trim() !== "");
+  const kept = lines.filter((line): line is OcrLine => line !== null && line.text.trim() !== "");
+  const blocks = await findTables(ort, engine.structure, request, kept);
+  return { lines: kept, blocks };
 }
 
 async function handle(request: OcrRequest): Promise<OcrReply> {
   try {
     const engine = await getEngine(request.allowDownload);
     const startedAt = performance.now();
-    const lines = await readPage(engine, request);
-    return { id: request.id, ok: true, lines, msPerPage: performance.now() - startedAt };
+    const page = await readPage(engine, request);
+    return { id: request.id, ok: true, page, msPerPage: performance.now() - startedAt };
   } catch (error) {
     return {
       id: request.id,

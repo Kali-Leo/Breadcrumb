@@ -7,6 +7,10 @@
   "empty": "Aucun document n'a encore été importé.",
   "remove": "Retirer",
   "page": "Page {{page}}",
+  "formulas": {
+    "label": "Reconnaître les formules des pages numérisées",
+    "download": "La première utilisation télécharge environ {{mb}} Mo."
+  },
   "progress": {
     "building": "Traitement du passage {{embedded}} / {{total}}",
     "ready": "Les documents sont traités",

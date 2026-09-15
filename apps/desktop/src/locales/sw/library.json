@@ -7,6 +7,10 @@
   "empty": "Bado hakuna nyenzo iliyoingizwa.",
   "remove": "Ondoa",
   "page": "Ukurasa {{page}}",
+  "formulas": {
+    "label": "Tambua fomula kwenye kurasa zilizoskaniwa",
+    "download": "Matumizi ya kwanza hupakua takriban MB {{mb}}."
+  },
   "progress": {
     "building": "Inachakata sehemu {{embedded}} / {{total}}",
     "ready": "Nyenzo zimechakatwa",

@@ -7,6 +7,10 @@
   "empty": "Belum ada materi yang diimpor.",
   "remove": "Hapus",
   "page": "Halaman {{page}}",
+  "formulas": {
+    "label": "Kenali rumus pada halaman hasil pindaian",
+    "download": "Penggunaan pertama mengunduh sekitar {{mb}} MB."
+  },
   "progress": {
     "building": "Memproses bagian {{embedded}} / {{total}}",
     "ready": "Materi selesai diproses",

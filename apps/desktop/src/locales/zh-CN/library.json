@@ -7,6 +7,10 @@
   "empty": "尚未导入任何资料。",
   "remove": "移除",
   "page": "第 {{page}} 页",
+  "formulas": {
+    "label": "识别扫描件中的公式",
+    "download": "首次使用需下载约 {{mb}} MB。"
+  },
   "progress": {
     "building": "正在处理第 {{embedded}} / {{total}} 段",
     "ready": "资料已处理完成",

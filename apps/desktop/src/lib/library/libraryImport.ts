@@ -12,6 +12,8 @@
  * That happens here, page by page, through the recognizer the platform provides
  * (lib/platform/ocr.ts), and the caller is told which page is being read so the screen can
  * say so — a book takes a second or two a page, which is minutes, and minutes need a line.
+ * A recognized page arrives as lines of text; a table on it is already a Markdown table and a
+ * formula already LaTeX between `$$`, so a passage cut from it reads as one.
  * Main exports: importFile, LIBRARY_MEDIA_TYPES, mediaTypeOf, ImportProgress.
  */
 import type { LibraryDocumentRow, LibraryMediaType, PassageInsert } from "@breadcrumb/core-db";
@@ -29,7 +31,7 @@ import { analyze, analyzedFields, loadStemmer } from "@breadcrumb/core-text";
 import i18next from "i18next";
 import { asStoredText } from "../../i18n/storedText";
 import { getRepos } from "../platform/db";
-import { recognizePage } from "../platform/ocr";
+import { createPageRecognizer } from "../platform/ocr";
 import { nowIso } from "../platform/time";
 import { decodeImageFile } from "./imageFiles";
 import { ensurePdfWorker } from "./pdfWorker";
@@ -56,7 +58,7 @@ export interface ImportInput {
   fileName: string;
   bytes: Uint8Array;
   /** The reader's interface language: picks a stemmer for Latin script, and the recognizer
-   * for a scanned page. */
+   * for a scanned page — the first guess at it; the page itself decides. */
   language: string;
   /** Called before each scanned page is read: which one, of how many. */
   onProgress?: (progress: ImportProgress) => void;
@@ -76,11 +78,13 @@ function documentId(): string {
   return `lib_${crypto.randomUUID()}`;
 }
 
-/** The recognizer, with the progress line wired in. */
+/** The recognizer, with the progress line wired in. One per import: it remembers which engine
+ * read the last page, so a book in Hindi is not re-decided on every page. */
 function recognizer(input: ImportInput) {
+  const recognize = createPageRecognizer(input.language);
   return async (image: PageImage, page: { number: number; count: number }) => {
     input.onProgress?.({ page: page.number, pageCount: page.count });
-    return recognizePage(image, input.language);
+    return recognize(image);
   };
 }
 

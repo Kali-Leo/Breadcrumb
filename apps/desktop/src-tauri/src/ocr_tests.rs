@@ -1,58 +1,26 @@
-// Purpose: the tests for ocr.rs. The download table is pinned the way the embedder's is, and
-// one test — `#[ignore]`d, run by hand — downloads the real model and reads a real page:
+// Purpose: the tests for ocr.rs. The pure parts — the page shapes, the grid, the dedupe, the
+// loop check — are tested beside their own files; here are the ones that need the real
+// models, `#[ignore]`d and run by hand:
 //
-//     cargo test --lib ocr -- --ignored --nocapture
+//     BREADCRUMB_OCR_MODELS=/data/leo/bench-retrieval/ocr/models/structure \
+//         cargo test --lib ocr -- --ignored --nocapture
 //
-// It fetches 31 MB into a temp directory, runs the same simulated scan of a Chinese textbook
-// page the research note measured (/data/leo/bench-retrieval/ocr), and prints the character
-// error rate against the page's text layer. The note's figure for this model is around 1%
-// on that set; the assertion below leaves room for the odd page but not for a broken
-// pipeline, which reads at 30% or worse.
+// With that variable set, the layout, table and formula graphs are copied from that directory
+// (the text model under its published names, the rest under their pre-publication ones) into
+// the temp directory and no network is needed; without it every model is fetched from the
+// release. The first test reads the same simulated
+// scan of a Chinese textbook the research note measured and prints the character error rate
+// against the page's text layer, around 1% for this model; the others read a table page and a
+// formula page and print what came back, with the time each stage took.
 
-use super::{load_engine, read_page, MODEL_FILES, SPEC};
-use crate::model_files::ModelFile;
+use super::{read_lines, read_page};
+use crate::ocr_engine::{load_engine, load_formula, Engine, ModelDirs};
+use crate::ocr_models::{
+    DET_FILE, DICT_FILE, FORMULA_FILE, FORMULA_SPEC, FORMULA_TOKENIZER_FILE, LAYOUT_FILE,
+    LAYOUT_SPEC, OCR_SPEC, REC_FILE, TABLE_DICT_FILE, TABLE_FILE, TABLE_SPEC,
+};
 
 const BENCH: &str = "/data/leo/bench-retrieval/ocr";
-
-#[test]
-fn the_download_table_names_the_detector_the_recogniser_and_its_dictionary() {
-    let names: Vec<&str> = MODEL_FILES.iter().map(|file| file.name).collect();
-    assert_eq!(
-        names,
-        vec![
-            "PP-OCRv6_small_det.onnx",
-            "PP-OCRv6_small_rec.onnx",
-            "PP-OCRv6_small_rec_dict.txt"
-        ]
-    );
-    assert_eq!(SPEC.release, "pp-ocrv6-small-v1");
-    assert_eq!(SPEC.dir, "pp-ocrv6-small");
-}
-
-/// Same rule as the embedder's table: a blank or mistyped entry does not weaken the check, it
-/// makes the model undownloadable, so every entry has to be filled in.
-#[test]
-fn every_file_is_pinned_to_a_size_and_a_well_formed_digest() {
-    for ModelFile {
-        name,
-        bytes,
-        sha256,
-    } in &MODEL_FILES
-    {
-        assert!(*bytes > 0, "{name} has no recorded size");
-        assert_eq!(sha256.len(), 64, "{name} has no SHA-256");
-        assert!(sha256
-            .bytes()
-            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit()));
-    }
-    let digests: std::collections::HashSet<&str> =
-        MODEL_FILES.iter().map(|file| file.sha256).collect();
-    assert_eq!(
-        digests.len(),
-        MODEL_FILES.len(),
-        "one digest was pasted twice"
-    );
-}
 
 /// Levenshtein distance over characters, whitespace removed on both sides — the same measure
 /// the research note reports for Chinese pages.
@@ -82,16 +50,72 @@ fn the_error_rate_counts_edits_over_the_truth_length() {
     assert_eq!(character_error_rate("", "深度学习"), 1.0);
 }
 
-#[test]
-#[ignore = "downloads 31 MB and runs the model; run with -- --ignored --nocapture"]
-fn the_real_model_reads_a_scanned_textbook_page_at_around_one_percent_error() {
-    let dir = std::env::temp_dir().join(format!("breadcrumb-ocr-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).expect("temp dir");
-    let sources = crate::model_sources::sources_for(&SPEC);
-    tauri::async_runtime::block_on(crate::model_sources::fetch_missing(&dir, &SPEC, &sources))
-        .expect("the model downloads");
-    let engine = load_engine(&dir).expect("the model loads");
+/// Copies a published file from BREADCRUMB_OCR_MODELS under its published name, when the
+/// variable names a directory holding it under its original one.
+fn local_copy(dir: &std::path::Path, published: &str, original: &str) -> bool {
+    let Ok(models) = std::env::var("BREADCRUMB_OCR_MODELS") else {
+        return false;
+    };
+    let source = std::path::Path::new(&models).join(original);
+    source.exists() && std::fs::copy(&source, dir.join(published)).is_ok()
+}
 
+/// Every model in a temp directory: the text model from the release, the rest from the local
+/// directory when there is one, otherwise from their releases too.
+fn prepared_dirs(with_formula: bool) -> (ModelDirs, std::path::PathBuf) {
+    let root = std::env::temp_dir().join(format!("breadcrumb-ocr-{}", std::process::id()));
+    let dirs = ModelDirs {
+        ocr: root.join(OCR_SPEC.dir),
+        layout: root.join(LAYOUT_SPEC.dir),
+        table: root.join(TABLE_SPEC.dir),
+        formula: root.join(FORMULA_SPEC.dir),
+    };
+    for dir in [&dirs.ocr, &dirs.layout, &dirs.table, &dirs.formula] {
+        std::fs::create_dir_all(dir).expect("temp dir");
+    }
+    for file in [DET_FILE, REC_FILE, DICT_FILE] {
+        local_copy(&dirs.ocr, file, file);
+    }
+    local_copy(&dirs.layout, LAYOUT_FILE, "pp-doclayout-m.onnx");
+    local_copy(&dirs.table, TABLE_FILE, "slanet_plus.onnx");
+    local_copy(&dirs.table, TABLE_DICT_FILE, "table_structure_dict_ch.txt");
+    if with_formula {
+        local_copy(&dirs.formula, FORMULA_FILE, "pp-formulanet-s.onnx");
+        local_copy(
+            &dirs.formula,
+            FORMULA_TOKENIZER_FILE,
+            "pp-formulanet-tokenizer.json",
+        );
+    }
+    let mut specs = vec![
+        (&dirs.ocr, &OCR_SPEC),
+        (&dirs.layout, &LAYOUT_SPEC),
+        (&dirs.table, &TABLE_SPEC),
+    ];
+    if with_formula {
+        specs.push((&dirs.formula, &FORMULA_SPEC));
+    }
+    for (dir, spec) in specs {
+        let sources = crate::model_sources::sources_for(spec);
+        tauri::async_runtime::block_on(crate::model_sources::fetch_missing(dir, spec, &sources))
+            .expect("the model is there or downloads");
+    }
+    (dirs, root)
+}
+
+pub(super) fn prepared_engine(with_formula: bool) -> (Engine, std::path::PathBuf) {
+    let (dirs, root) = prepared_dirs(with_formula);
+    let mut engine = load_engine(&dirs).expect("the models load");
+    if with_formula {
+        load_formula(&mut engine, &dirs.formula).expect("the formula model loads");
+    }
+    (engine, root)
+}
+
+#[test]
+#[ignore = "downloads 62 MB and runs the models; run with -- --ignored --nocapture"]
+fn the_real_model_reads_a_scanned_textbook_page_at_around_one_percent_error() {
+    let (engine, dir) = prepared_engine(false);
     let truth: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(format!("{BENCH}/data/gt.json")).unwrap())
             .unwrap();
@@ -105,8 +129,10 @@ fn the_real_model_reads_a_scanned_textbook_page_at_around_one_percent_error() {
             .expect("ground truth");
         let page = image::open(&path).expect("page image").to_rgb8();
         let started = std::time::Instant::now();
-        let lines = read_page(&engine, page).expect("the page reads");
-        let elapsed = started.elapsed().as_secs_f64();
+        let lines = read_lines(&engine, &page).expect("the page reads");
+        let text_elapsed = started.elapsed().as_secs_f64();
+        let whole = read_page(&engine, &page).expect("the page reads");
+        let elapsed = started.elapsed().as_secs_f64() - text_elapsed;
         let read: Vec<String> = lines.into_iter().map(|line| line.text).collect();
         // BREADCRUMB_OCR_DUMP=<file> appends each page's text in the bench's own jsonl shape,
         // so its eval.py can score this run with the same normalisation as every other.
@@ -127,9 +153,10 @@ fn the_real_model_reads_a_scanned_textbook_page_at_around_one_percent_error() {
         total_edits += rate * chars;
         total_chars += chars;
         println!(
-            "{stem}: CER {:.2}% in {elapsed:.2}s ({} lines)",
+            "{stem}: CER {:.2}% text {text_elapsed:.2}s, text+layout {elapsed:.2}s ({} lines, {} blocks)",
             rate * 100.0,
-            read.len()
+            read.len(),
+            whole.blocks.len()
         );
     }
     let overall = total_edits / total_chars;
@@ -144,3 +171,6 @@ fn the_real_model_reads_a_scanned_textbook_page_at_around_one_percent_error() {
     );
     std::fs::remove_dir_all(&dir).ok();
 }
+
+#[path = "ocr_tests_pages.rs"]
+mod pages;

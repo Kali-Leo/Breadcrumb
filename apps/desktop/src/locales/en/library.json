@@ -7,6 +7,10 @@
   "empty": "No material has been imported yet.",
   "remove": "Remove",
   "page": "Page {{page}}",
+  "formulas": {
+    "label": "Read formulas on scanned pages",
+    "download": "First use downloads about {{mb}} MB."
+  },
   "progress": {
     "building": "Processing passage {{embedded}} / {{total}}",
     "ready": "The material has been processed",

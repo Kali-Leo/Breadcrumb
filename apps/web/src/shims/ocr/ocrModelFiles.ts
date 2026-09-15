@@ -1,7 +1,9 @@
 /**
- * Purpose: getting the recognition model's three files into memory — from the Cache API when
- * a previous visit downloaded them, from a reachable host otherwise, and never from anywhere
- * behind a switched-off network switch.
+ * Purpose: getting a model's files into memory — from the Cache API when a previous visit
+ * downloaded them, from a reachable host otherwise, and never from anywhere behind a
+ * switched-off network switch. One loader for every model the OCR worker runs: the text
+ * pair (ocrModel.ts) and the layout and table models (ocrStructureModel.ts) differ only in
+ * which directory of the packs repository they sit in.
  *
  * The same rules as the embedding model, through the same pieces: the host is chosen by
  * probing (createSourceResolver), the cache is keyed to one host whichever one answered
@@ -9,8 +11,8 @@
  * the length the table records and hashes to exactly the digest beside it. A file that is
  * wrong is deleted from the cache as well, so a corrupt copy costs one download and not a
  * session of unreadable pages.
- * Main exports: OCR_CACHE_NAME, loadOcrModelFiles, defaultOcrModelDeps, OcrModelBytes,
- * OFFLINE_OCR_MESSAGE.
+ * Main exports: OCR_CACHE_NAME, loadModelSet, loadOcrModelFiles, modelSetDeps,
+ * defaultOcrModelDeps, OcrModelBytes, OFFLINE_OCR_MESSAGE, dictionaryLines.
  */
 import { createModelCache, type ModelCache } from "../embedding/modelCache";
 import {
@@ -73,19 +75,19 @@ async function download(deps: OcrModelFilesDeps, base: string, file: OcrModelFil
 }
 
 /**
- * Every file, cache first. Only when something is missing is a host probed, and only with
- * `allowDownload` — the switch is answered before any request is built, which is what makes
- * "zero requests" true. A host that answered the probe and then fails a download is passed
- * over for the next, as the desktop does; the error a caller finally sees names each.
+ * Every file of one model, cache first, by name. Only when something is missing is a host
+ * probed, and only with `allowDownload` — the switch is answered before any request is
+ * built, which is what makes "zero requests" true. A host that answered the probe and then
+ * fails a download is passed over for the next, as the desktop does; the error a caller
+ * finally sees names each. `sources` are the model's own directory on each host.
  */
-export async function loadOcrModelFiles(
+export async function loadModelSet(
   allowDownload: boolean,
   deps: OcrModelFilesDeps,
-): Promise<OcrModelBytes> {
-  const sources = ocrModelSources();
+  files: readonly OcrModelFile[],
+  sources: readonly string[],
+): Promise<Map<string, Uint8Array>> {
   const preferred = sources[0] ?? "";
-  const table = deps.files ?? FILES;
-  const files = [table.det, table.rec, table.dict];
   const loaded = new Map<string, Uint8Array>();
   for (const file of files) {
     const hit = await fromCache(deps, `${preferred}${file.name}`, file);
@@ -110,26 +112,48 @@ export async function loadOcrModelFiles(
       throw new Error(`the recognition model could not be downloaded — ${refusals.join("; ")}`);
     }
   }
-  const dictText = new TextDecoder().decode(loaded.get(table.dict.name));
+  return loaded;
+}
+
+/** A one-entry-per-line list file as its entries; the newline that ends it is not one. */
+export function dictionaryLines(bytes: Uint8Array | undefined): string[] {
+  return new TextDecoder()
+    .decode(bytes)
+    .replace(/\r?\n$/, "")
+    .split(/\r?\n/);
+}
+
+/** The text recognition pair with its character list. */
+export async function loadOcrModelFiles(
+  allowDownload: boolean,
+  deps: OcrModelFilesDeps,
+): Promise<OcrModelBytes> {
+  const table = deps.files ?? FILES;
+  const loaded = await loadModelSet(
+    allowDownload,
+    deps,
+    [table.det, table.rec, table.dict],
+    ocrModelSources(),
+  );
   return {
     det: loaded.get(table.det.name) ?? new Uint8Array(),
     rec: loaded.get(table.rec.name) ?? new Uint8Array(),
-    // The list ends with a newline, which is not a character of the alphabet.
-    dict: dictText.replace(/\r?\n$/, "").split(/\r?\n/),
+    dict: dictionaryLines(loaded.get(table.dict.name)),
   };
 }
 
-/** The production wiring: the worker's own fetch, the Cache API, the probe over the
- * published sources. */
-export function defaultOcrModelDeps(): OcrModelFilesDeps {
+/** The production wiring for one model directory: the worker's own fetch, the Cache API,
+ * the probe over that directory on the published hosts. Every model shares one cache, keyed
+ * by URL, so directories cannot collide. */
+export function modelSetDeps(sources: readonly string[], probeFile: string): OcrModelFilesDeps {
   const fetchFn: FetchLike = (input, init) => fetch(input, init);
   return {
     fetch: fetchFn,
-    cache: createModelCache(() => caches.open(OCR_CACHE_NAME), ocrModelSources()),
-    sources: createSourceResolver({
-      fetch: fetchFn,
-      sources: ocrModelSources(),
-      probeFile: FILES.dict.name,
-    }),
+    cache: createModelCache(() => caches.open(OCR_CACHE_NAME), sources),
+    sources: createSourceResolver({ fetch: fetchFn, sources, probeFile }),
   };
+}
+
+export function defaultOcrModelDeps(): OcrModelFilesDeps {
+  return modelSetDeps(ocrModelSources(), FILES.dict.name);
 }

@@ -23,6 +23,7 @@ import { Trash2, Upload } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLibraryStore } from "../../stores/libraryStore";
+import { FormulaChoice } from "./FormulaChoice";
 import { LibrarySearch } from "./LibrarySearch";
 
 /** The same line, in one of three states: a scan being read (page N of M), the vector pass
@@ -133,6 +134,8 @@ export function LibraryPanel() {
         </button>
         <span className="text-stone-400 text-xs">{t("formats")}</span>
       </div>
+
+      <FormulaChoice />
 
       {errorKey !== null && <p className="text-rose-600 text-sm">{t(errorKey)}</p>}
 

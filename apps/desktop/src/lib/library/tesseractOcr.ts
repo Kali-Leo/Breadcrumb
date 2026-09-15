@@ -6,8 +6,9 @@
  * script-specific models were measured at 10–16% character error, and tesseract's fast Hindi
  * data reads the same pages at 0.9% (docs/research/2026-09-14-OCR方案调研与实测.md). It is
  * chosen by the interface language, which is the one thing about the reader's material this
- * app can know before reading it; a reader of Hindi importing an English scan gets tesseract's
- * English-less Hindi model, which is the limit of choosing by interface language.
+ * app can know before reading it — but only as the first guess. Which engine a page actually
+ * gets is decided from what the engines say about it (lib/library/ocrRouting.ts), and for
+ * that this module reports tesseract's own confidence in what it read beside the lines.
  *
  * Nothing of tesseract's is on the first screen: the library, its worker and its 3.9 MB
  * engine are separate chunks fetched on first use, and the language data comes from the same
@@ -89,16 +90,23 @@ function toBlob(image: PageImage): Promise<Blob> {
   });
 }
 
-/** Lines of text, in reading order; blank lines dropped. */
+export interface TesseractReading {
+  /** Lines of text, in reading order; blank lines dropped. */
+  lines: string[];
+  /** tesseract's mean word confidence over the page, 0 to 100. */
+  confidence: number;
+}
+
 export async function recognizeWithTesseract(
   image: PageImage,
   language: TesseractLanguage,
   allowDownload: boolean,
-): Promise<string[]> {
+): Promise<TesseractReading> {
   const worker = await getWorker(language, allowDownload);
   const { data } = await worker.recognize(await toBlob(image));
-  return data.text
+  const lines = data.text
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "");
+  return { lines, confidence: data.confidence };
 }

@@ -7,6 +7,10 @@
   "empty": "Todavía no se ha importado ningún material.",
   "remove": "Quitar",
   "page": "Página {{page}}",
+  "formulas": {
+    "label": "Reconocer fórmulas en páginas escaneadas",
+    "download": "El primer uso descarga unos {{mb}} MB."
+  },
   "progress": {
     "building": "Procesando el fragmento {{embedded}} / {{total}}",
     "ready": "El material ya está procesado",
